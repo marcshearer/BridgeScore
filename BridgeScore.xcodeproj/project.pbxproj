@@ -7,22 +7,114 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		B26BCDFA2799A1AC00B73501 /* BridgeScoreApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCDF92799A1AC00B73501 /* BridgeScoreApp.swift */; };
-		B26BCDFC2799A1AC00B73501 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCDFB2799A1AC00B73501 /* ContentView.swift */; };
-		B26BCDFE2799A1AE00B73501 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B26BCDFD2799A1AE00B73501 /* Assets.xcassets */; };
+		B21CC0BC279FDD3A001AECC1 /* New Scorecard View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21CC0BB279FDD3A001AECC1 /* New Scorecard View.swift */; };
+		B21CC0BE27A01293001AECC1 /* Date Picker Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21CC0BD27A01292001AECC1 /* Date Picker Input.swift */; };
+		B21CC0C027A02A2A001AECC1 /* Stepper Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21CC0BF27A02A2A001AECC1 /* Stepper Input.swift */; };
+		B22D40A027A2BD6D002F2470 /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22D409F27A2BD6D002F2470 /* CanvasView.swift */; };
+		B26BCDFA2799A1AC00B73501 /* BridgeScore App.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCDF92799A1AC00B73501 /* BridgeScore App.swift */; };
 		B26BCE012799A1AE00B73501 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B26BCE002799A1AE00B73501 /* Preview Assets.xcassets */; };
-		B26BCE032799A1AE00B73501 /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE022799A1AE00B73501 /* Persistence.swift */; };
-		B26BCE062799A1AE00B73501 /* BridgeScore.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE042799A1AE00B73501 /* BridgeScore.xcdatamodeld */; };
+		B26BCE2D2799AB6700B73501 /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE282799AB6700B73501 /* Persistence.swift */; };
+		B26BCE302799AB6700B73501 /* MyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE2C2799AB6700B73501 /* MyApp.swift */; };
+		B26BCE322799ABF000B73501 /* Declarations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE312799ABF000B73501 /* Declarations.swift */; };
+		B26BCE362799AD1700B73501 /* Config.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE352799AD1700B73501 /* Config.swift */; };
+		B26BCE382799AD5800B73501 /* Version.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE372799AD5800B73501 /* Version.swift */; };
+		B26BCE3A2799AD6D00B73501 /* Core Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE392799AD6D00B73501 /* Core Data.swift */; };
+		B26BCE472799AD8900B73501 /* Utility.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE3B2799AD8800B73501 /* Utility.swift */; };
+		B26BCE482799AD8900B73501 /* Day Number.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE3C2799AD8800B73501 /* Day Number.swift */; };
+		B26BCE492799AD8900B73501 /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE3D2799AD8800B73501 /* Palette.swift */; };
+		B26BCE4B2799AD8900B73501 /* Date Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE3F2799AD8800B73501 /* Date Extensions.swift */; };
+		B26BCE4C2799AD8900B73501 /* My Image.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE402799AD8900B73501 /* My Image.swift */; };
+		B26BCE4D2799AD8900B73501 /* String Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE412799AD8900B73501 /* String Extensions.swift */; };
+		B26BCE4E2799AD8900B73501 /* Link Presentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE422799AD8900B73501 /* Link Presentation.swift */; };
+		B26BCE4F2799AD8900B73501 /* Utility Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE432799AD8900B73501 /* Utility Extension.swift */; };
+		B26BCE502799AD8900B73501 /* Other Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE442799AD8900B73501 /* Other Extensions.swift */; };
+		B26BCE512799AD8900B73501 /* My Color.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE452799AD8900B73501 /* My Color.swift */; };
+		B26BCE522799AD8900B73501 /* Themes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE462799AD8900B73501 /* Themes.swift */; };
+		B26BCE542799AE4D00B73501 /* Master Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE532799AE4D00B73501 /* Master Data.swift */; };
+		B26BCE562799AE6400B73501 /* Preview Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE552799AE6400B73501 /* Preview Data.swift */; };
+		B26BCE622799AED700B73501 /* Target View Modifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE572799AED700B73501 /* Target View Modifiers.swift */; };
+		B26BCE632799AED700B73501 /* Image Capture.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE582799AED700B73501 /* Image Capture.swift */; };
+		B26BCE642799AED700B73501 /* Message Box.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE592799AED700B73501 /* Message Box.swift */; };
+		B26BCE652799AED700B73501 /* Picker Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE5A2799AED700B73501 /* Picker Input.swift */; };
+		B26BCE662799AED700B73501 /* Banner.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE5B2799AED700B73501 /* Banner.swift */; };
+		B26BCE672799AED700B73501 /* Swipe Gestures.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE5C2799AED700B73501 /* Swipe Gestures.swift */; };
+		B26BCE692799AED700B73501 /* Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE5E2799AED700B73501 /* Input.swift */; };
+		B26BCE6A2799AED700B73501 /* Standard View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE5F2799AED700B73501 /* Standard View.swift */; };
+		B26BCE6B2799AED700B73501 /* Input Title.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE602799AED700B73501 /* Input Title.swift */; };
+		B26BCE6C2799AED700B73501 /* Separator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE612799AED700B73501 /* Separator.swift */; };
+		B26BCE6F279AEB6C00B73501 /* Scorecard List View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE6E279AEB6C00B73501 /* Scorecard List View.swift */; };
+		B26BCE72279B188600B73501 /* BridgeScore.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE70279B188600B73501 /* BridgeScore.xcdatamodeld */; };
+		B26BCE74279B236F00B73501 /* Layout Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE73279B236F00B73501 /* Layout Managed Object.swift */; };
+		B26BCE76279BEBA500B73501 /* Scorecard Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */; };
+		B2BE9BD027A15B6B002A6F8F /* Inset View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2BE9BCF27A15B6B002A6F8F /* Inset View.swift */; };
+		B2BE9BD227A1863F002A6F8F /* Scorecard View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2BE9BD127A1863F002A6F8F /* Scorecard View.swift */; };
+		B2EB3D66279D54D500D64225 /* Board Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D65279D54D500D64225 /* Board Managed Object.swift */; };
+		B2EB3D68279D65CC00D64225 /* Player Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D67279D65CC00D64225 /* Player Managed Object.swift */; };
+		B2EB3D6A279D666800D64225 /* Location Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D69279D666800D64225 /* Location Managed Object.swift */; };
+		B2EB3D6E279D6BA700D64225 /* Layout View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D6D279D6BA600D64225 /* Layout View Model.swift */; };
+		B2EB3D71279D717F00D64225 /* Player View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D70279D717F00D64225 /* Player View Model.swift */; };
+		B2EB3D73279D734700D64225 /* Location View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D72279D734700D64225 /* Location View Model.swift */; };
+		B2EB3D75279D73E100D64225 /* Board View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D74279D73E100D64225 /* Board View Model.swift */; };
+		B2EB3D77279D73FC00D64225 /* Scorecard View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D76279D73FC00D64225 /* Scorecard View Model.swift */; };
+		B2EB3D79279DB80000D64225 /* Scorecard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D78279DB80000D64225 /* Scorecard.swift */; };
+		B2EB3D7B279DCBCB00D64225 /* Default Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D7A279DCBCB00D64225 /* Default Data.swift */; };
+		B2FCC05127A05BA500A3D9F5 /* Input Toggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2FCC05027A05BA500A3D9F5 /* Input Toggle.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		B21CC0BB279FDD3A001AECC1 /* New Scorecard View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "New Scorecard View.swift"; sourceTree = "<group>"; };
+		B21CC0BD27A01292001AECC1 /* Date Picker Input.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date Picker Input.swift"; sourceTree = "<group>"; };
+		B21CC0BF27A02A2A001AECC1 /* Stepper Input.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Stepper Input.swift"; sourceTree = "<group>"; };
+		B22D409F27A2BD6D002F2470 /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasView.swift; sourceTree = "<group>"; };
 		B26BCDF62799A1AC00B73501 /* BridgeScore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BridgeScore.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		B26BCDF92799A1AC00B73501 /* BridgeScoreApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BridgeScoreApp.swift; sourceTree = "<group>"; };
-		B26BCDFB2799A1AC00B73501 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		B26BCDFD2799A1AE00B73501 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B26BCDF92799A1AC00B73501 /* BridgeScore App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BridgeScore App.swift"; sourceTree = "<group>"; };
 		B26BCE002799A1AE00B73501 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		B26BCE022799A1AE00B73501 /* Persistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Persistence.swift; sourceTree = "<group>"; };
-		B26BCE052799A1AE00B73501 /* BridgeScore.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = BridgeScore.xcdatamodel; sourceTree = "<group>"; };
+		B26BCE282799AB6700B73501 /* Persistence.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Persistence.swift; sourceTree = "<group>"; };
+		B26BCE2C2799AB6700B73501 /* MyApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MyApp.swift; sourceTree = "<group>"; };
+		B26BCE312799ABF000B73501 /* Declarations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Declarations.swift; sourceTree = "<group>"; };
+		B26BCE352799AD1700B73501 /* Config.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Config.swift; sourceTree = "<group>"; };
+		B26BCE372799AD5800B73501 /* Version.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Version.swift; sourceTree = "<group>"; };
+		B26BCE392799AD6D00B73501 /* Core Data.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Core Data.swift"; sourceTree = "<group>"; };
+		B26BCE3B2799AD8800B73501 /* Utility.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Utility.swift; sourceTree = "<group>"; };
+		B26BCE3C2799AD8800B73501 /* Day Number.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Day Number.swift"; sourceTree = "<group>"; };
+		B26BCE3D2799AD8800B73501 /* Palette.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Palette.swift; sourceTree = "<group>"; };
+		B26BCE3F2799AD8800B73501 /* Date Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Date Extensions.swift"; sourceTree = "<group>"; };
+		B26BCE402799AD8900B73501 /* My Image.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "My Image.swift"; sourceTree = "<group>"; };
+		B26BCE412799AD8900B73501 /* String Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "String Extensions.swift"; sourceTree = "<group>"; };
+		B26BCE422799AD8900B73501 /* Link Presentation.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Link Presentation.swift"; sourceTree = "<group>"; };
+		B26BCE432799AD8900B73501 /* Utility Extension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Utility Extension.swift"; sourceTree = "<group>"; };
+		B26BCE442799AD8900B73501 /* Other Extensions.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Other Extensions.swift"; sourceTree = "<group>"; };
+		B26BCE452799AD8900B73501 /* My Color.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "My Color.swift"; sourceTree = "<group>"; };
+		B26BCE462799AD8900B73501 /* Themes.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Themes.swift; sourceTree = "<group>"; };
+		B26BCE532799AE4D00B73501 /* Master Data.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Master Data.swift"; sourceTree = "<group>"; };
+		B26BCE552799AE6400B73501 /* Preview Data.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Preview Data.swift"; sourceTree = "<group>"; };
+		B26BCE572799AED700B73501 /* Target View Modifiers.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Target View Modifiers.swift"; sourceTree = "<group>"; };
+		B26BCE582799AED700B73501 /* Image Capture.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Image Capture.swift"; sourceTree = "<group>"; };
+		B26BCE592799AED700B73501 /* Message Box.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Message Box.swift"; sourceTree = "<group>"; };
+		B26BCE5A2799AED700B73501 /* Picker Input.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Picker Input.swift"; sourceTree = "<group>"; };
+		B26BCE5B2799AED700B73501 /* Banner.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Banner.swift; sourceTree = "<group>"; };
+		B26BCE5C2799AED700B73501 /* Swipe Gestures.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Swipe Gestures.swift"; sourceTree = "<group>"; };
+		B26BCE5E2799AED700B73501 /* Input.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Input.swift; sourceTree = "<group>"; };
+		B26BCE5F2799AED700B73501 /* Standard View.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Standard View.swift"; sourceTree = "<group>"; };
+		B26BCE602799AED700B73501 /* Input Title.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Input Title.swift"; sourceTree = "<group>"; };
+		B26BCE612799AED700B73501 /* Separator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Separator.swift; sourceTree = "<group>"; };
+		B26BCE6E279AEB6C00B73501 /* Scorecard List View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard List View.swift"; sourceTree = "<group>"; };
+		B26BCE71279B188600B73501 /* BridgeScore.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = BridgeScore.xcdatamodel; sourceTree = "<group>"; };
+		B26BCE73279B236F00B73501 /* Layout Managed Object.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Layout Managed Object.swift"; sourceTree = "<group>"; };
+		B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Managed Object.swift"; sourceTree = "<group>"; };
+		B2BE9BCF27A15B6B002A6F8F /* Inset View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Inset View.swift"; sourceTree = "<group>"; };
+		B2BE9BD127A1863F002A6F8F /* Scorecard View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard View.swift"; sourceTree = "<group>"; };
+		B2EB3D65279D54D500D64225 /* Board Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Board Managed Object.swift"; sourceTree = "<group>"; };
+		B2EB3D67279D65CC00D64225 /* Player Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Player Managed Object.swift"; sourceTree = "<group>"; };
+		B2EB3D69279D666800D64225 /* Location Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Location Managed Object.swift"; sourceTree = "<group>"; };
+		B2EB3D6D279D6BA600D64225 /* Layout View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Layout View Model.swift"; sourceTree = "<group>"; };
+		B2EB3D70279D717F00D64225 /* Player View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Player View Model.swift"; sourceTree = "<group>"; };
+		B2EB3D72279D734700D64225 /* Location View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Location View Model.swift"; sourceTree = "<group>"; };
+		B2EB3D74279D73E100D64225 /* Board View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Board View Model.swift"; sourceTree = "<group>"; };
+		B2EB3D76279D73FC00D64225 /* Scorecard View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard View Model.swift"; sourceTree = "<group>"; };
+		B2EB3D78279DB80000D64225 /* Scorecard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scorecard.swift; sourceTree = "<group>"; };
+		B2EB3D7A279DCBCB00D64225 /* Default Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Default Data.swift"; sourceTree = "<group>"; };
+		B2FCC05027A05BA500A3D9F5 /* Input Toggle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Input Toggle.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,12 +147,9 @@
 		B26BCDF82799A1AC00B73501 /* BridgeScore */ = {
 			isa = PBXGroup;
 			children = (
-				B26BCDF92799A1AC00B73501 /* BridgeScoreApp.swift */,
-				B26BCDFB2799A1AC00B73501 /* ContentView.swift */,
-				B26BCDFD2799A1AE00B73501 /* Assets.xcassets */,
-				B26BCE022799A1AE00B73501 /* Persistence.swift */,
-				B26BCE042799A1AE00B73501 /* BridgeScore.xcdatamodeld */,
-				B26BCDFF2799A1AE00B73501 /* Preview Content */,
+				B26BCE1A2799A86800B73501 /* Shared */,
+				B26BCE182799A7C200B73501 /* Main App */,
+				B26BCE192799A7DC00B73501 /* Widget App */,
 			);
 			path = BridgeScore;
 			sourceTree = "<group>";
@@ -71,6 +160,159 @@
 				B26BCE002799A1AE00B73501 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		B26BCE182799A7C200B73501 /* Main App */ = {
+			isa = PBXGroup;
+			children = (
+				B26BCE242799AA6C00B73501 /* Standard Components */,
+				B26BCE252799AA7900B73501 /* View Models */,
+				B26BCE6D279AEB4C00B73501 /* Views */,
+				B2EB3D7C279F0E6000D64225 /* Shared Views */,
+				B26BCE232799AA6300B73501 /* Utilities */,
+				B26BCE222799AA5800B73501 /* Reusable UI Components */,
+				B26BCDFF2799A1AE00B73501 /* Preview Content */,
+			);
+			path = "Main App";
+			sourceTree = "<group>";
+		};
+		B26BCE192799A7DC00B73501 /* Widget App */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = "Widget App";
+			sourceTree = "<group>";
+		};
+		B26BCE1A2799A86800B73501 /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				B26BCE1D2799A99400B73501 /* Standard Components */,
+				B26BCE1E2799A9C600B73501 /* Managed Object Models */,
+				B26BCE262799AAEB00B73501 /* Utilities */,
+				B26BCE212799AA0A00B73501 /* Libraries */,
+			);
+			path = Shared;
+			sourceTree = "<group>";
+		};
+		B26BCE1D2799A99400B73501 /* Standard Components */ = {
+			isa = PBXGroup;
+			children = (
+				B26BCE70279B188600B73501 /* BridgeScore.xcdatamodeld */,
+				B26BCE2C2799AB6700B73501 /* MyApp.swift */,
+				B26BCE282799AB6700B73501 /* Persistence.swift */,
+				B26BCE312799ABF000B73501 /* Declarations.swift */,
+				B26BCE352799AD1700B73501 /* Config.swift */,
+			);
+			name = "Standard Components";
+			sourceTree = "<group>";
+		};
+		B26BCE1E2799A9C600B73501 /* Managed Object Models */ = {
+			isa = PBXGroup;
+			children = (
+				B26BCE73279B236F00B73501 /* Layout Managed Object.swift */,
+				B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */,
+				B2EB3D65279D54D500D64225 /* Board Managed Object.swift */,
+				B2EB3D67279D65CC00D64225 /* Player Managed Object.swift */,
+				B2EB3D69279D666800D64225 /* Location Managed Object.swift */,
+			);
+			name = "Managed Object Models";
+			sourceTree = "<group>";
+		};
+		B26BCE212799AA0A00B73501 /* Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				B26BCE3D2799AD8800B73501 /* Palette.swift */,
+				B26BCE462799AD8900B73501 /* Themes.swift */,
+				B26BCE392799AD6D00B73501 /* Core Data.swift */,
+				B26BCE3B2799AD8800B73501 /* Utility.swift */,
+				B26BCE432799AD8900B73501 /* Utility Extension.swift */,
+				B26BCE452799AD8900B73501 /* My Color.swift */,
+				B26BCE402799AD8900B73501 /* My Image.swift */,
+				B26BCE3F2799AD8800B73501 /* Date Extensions.swift */,
+				B26BCE3C2799AD8800B73501 /* Day Number.swift */,
+				B26BCE412799AD8900B73501 /* String Extensions.swift */,
+				B26BCE442799AD8900B73501 /* Other Extensions.swift */,
+				B26BCE422799AD8900B73501 /* Link Presentation.swift */,
+			);
+			name = Libraries;
+			sourceTree = "<group>";
+		};
+		B26BCE222799AA5800B73501 /* Reusable UI Components */ = {
+			isa = PBXGroup;
+			children = (
+				B26BCE5B2799AED700B73501 /* Banner.swift */,
+				B26BCE582799AED700B73501 /* Image Capture.swift */,
+				B26BCE602799AED700B73501 /* Input Title.swift */,
+				B26BCE5E2799AED700B73501 /* Input.swift */,
+				B2FCC05027A05BA500A3D9F5 /* Input Toggle.swift */,
+				B26BCE5A2799AED700B73501 /* Picker Input.swift */,
+				B21CC0BD27A01292001AECC1 /* Date Picker Input.swift */,
+				B21CC0BF27A02A2A001AECC1 /* Stepper Input.swift */,
+				B26BCE612799AED700B73501 /* Separator.swift */,
+				B26BCE5F2799AED700B73501 /* Standard View.swift */,
+				B2BE9BCF27A15B6B002A6F8F /* Inset View.swift */,
+				B26BCE592799AED700B73501 /* Message Box.swift */,
+				B26BCE5C2799AED700B73501 /* Swipe Gestures.swift */,
+				B26BCE572799AED700B73501 /* Target View Modifiers.swift */,
+				B22D409F27A2BD6D002F2470 /* CanvasView.swift */,
+			);
+			name = "Reusable UI Components";
+			sourceTree = "<group>";
+		};
+		B26BCE232799AA6300B73501 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Utilities;
+			sourceTree = "<group>";
+		};
+		B26BCE242799AA6C00B73501 /* Standard Components */ = {
+			isa = PBXGroup;
+			children = (
+				B26BCDF92799A1AC00B73501 /* BridgeScore App.swift */,
+				B26BCE532799AE4D00B73501 /* Master Data.swift */,
+				B2EB3D78279DB80000D64225 /* Scorecard.swift */,
+				B26BCE552799AE6400B73501 /* Preview Data.swift */,
+				B2EB3D7A279DCBCB00D64225 /* Default Data.swift */,
+			);
+			name = "Standard Components";
+			sourceTree = "<group>";
+		};
+		B26BCE252799AA7900B73501 /* View Models */ = {
+			isa = PBXGroup;
+			children = (
+				B2EB3D6D279D6BA600D64225 /* Layout View Model.swift */,
+				B2EB3D76279D73FC00D64225 /* Scorecard View Model.swift */,
+				B2EB3D74279D73E100D64225 /* Board View Model.swift */,
+				B2EB3D70279D717F00D64225 /* Player View Model.swift */,
+				B2EB3D72279D734700D64225 /* Location View Model.swift */,
+			);
+			name = "View Models";
+			sourceTree = "<group>";
+		};
+		B26BCE262799AAEB00B73501 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				B26BCE372799AD5800B73501 /* Version.swift */,
+			);
+			name = Utilities;
+			sourceTree = "<group>";
+		};
+		B26BCE6D279AEB4C00B73501 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				B26BCE6E279AEB6C00B73501 /* Scorecard List View.swift */,
+				B21CC0BB279FDD3A001AECC1 /* New Scorecard View.swift */,
+				B2BE9BD127A1863F002A6F8F /* Scorecard View.swift */,
+			);
+			name = Views;
+			sourceTree = "<group>";
+		};
+		B2EB3D7C279F0E6000D64225 /* Shared Views */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = "Shared Views";
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -132,7 +374,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				B26BCE012799A1AE00B73501 /* Preview Assets.xcassets in Resources */,
-				B26BCDFE2799A1AE00B73501 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -143,10 +384,57 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				B26BCE032799A1AE00B73501 /* Persistence.swift in Sources */,
-				B26BCE062799A1AE00B73501 /* BridgeScore.xcdatamodeld in Sources */,
-				B26BCDFC2799A1AC00B73501 /* ContentView.swift in Sources */,
-				B26BCDFA2799A1AC00B73501 /* BridgeScoreApp.swift in Sources */,
+				B2EB3D66279D54D500D64225 /* Board Managed Object.swift in Sources */,
+				B26BCE692799AED700B73501 /* Input.swift in Sources */,
+				B26BCE322799ABF000B73501 /* Declarations.swift in Sources */,
+				B26BCE6C2799AED700B73501 /* Separator.swift in Sources */,
+				B26BCE492799AD8900B73501 /* Palette.swift in Sources */,
+				B26BCE502799AD8900B73501 /* Other Extensions.swift in Sources */,
+				B26BCE472799AD8900B73501 /* Utility.swift in Sources */,
+				B21CC0BC279FDD3A001AECC1 /* New Scorecard View.swift in Sources */,
+				B2EB3D68279D65CC00D64225 /* Player Managed Object.swift in Sources */,
+				B26BCE672799AED700B73501 /* Swipe Gestures.swift in Sources */,
+				B2EB3D73279D734700D64225 /* Location View Model.swift in Sources */,
+				B2EB3D75279D73E100D64225 /* Board View Model.swift in Sources */,
+				B2BE9BD027A15B6B002A6F8F /* Inset View.swift in Sources */,
+				B26BCE2D2799AB6700B73501 /* Persistence.swift in Sources */,
+				B2EB3D6E279D6BA700D64225 /* Layout View Model.swift in Sources */,
+				B26BCE512799AD8900B73501 /* My Color.swift in Sources */,
+				B2FCC05127A05BA500A3D9F5 /* Input Toggle.swift in Sources */,
+				B2EB3D79279DB80000D64225 /* Scorecard.swift in Sources */,
+				B26BCE4D2799AD8900B73501 /* String Extensions.swift in Sources */,
+				B26BCE482799AD8900B73501 /* Day Number.swift in Sources */,
+				B26BCE6F279AEB6C00B73501 /* Scorecard List View.swift in Sources */,
+				B26BCE4C2799AD8900B73501 /* My Image.swift in Sources */,
+				B21CC0C027A02A2A001AECC1 /* Stepper Input.swift in Sources */,
+				B26BCE542799AE4D00B73501 /* Master Data.swift in Sources */,
+				B26BCE4B2799AD8900B73501 /* Date Extensions.swift in Sources */,
+				B26BCDFA2799A1AC00B73501 /* BridgeScore App.swift in Sources */,
+				B26BCE632799AED700B73501 /* Image Capture.swift in Sources */,
+				B2EB3D6A279D666800D64225 /* Location Managed Object.swift in Sources */,
+				B26BCE622799AED700B73501 /* Target View Modifiers.swift in Sources */,
+				B26BCE4F2799AD8900B73501 /* Utility Extension.swift in Sources */,
+				B2BE9BD227A1863F002A6F8F /* Scorecard View.swift in Sources */,
+				B26BCE522799AD8900B73501 /* Themes.swift in Sources */,
+				B2EB3D71279D717F00D64225 /* Player View Model.swift in Sources */,
+				B26BCE382799AD5800B73501 /* Version.swift in Sources */,
+				B26BCE3A2799AD6D00B73501 /* Core Data.swift in Sources */,
+				B26BCE562799AE6400B73501 /* Preview Data.swift in Sources */,
+				B26BCE76279BEBA500B73501 /* Scorecard Managed Object.swift in Sources */,
+				B26BCE662799AED700B73501 /* Banner.swift in Sources */,
+				B26BCE6A2799AED700B73501 /* Standard View.swift in Sources */,
+				B2EB3D77279D73FC00D64225 /* Scorecard View Model.swift in Sources */,
+				B21CC0BE27A01293001AECC1 /* Date Picker Input.swift in Sources */,
+				B26BCE72279B188600B73501 /* BridgeScore.xcdatamodeld in Sources */,
+				B26BCE642799AED700B73501 /* Message Box.swift in Sources */,
+				B26BCE652799AED700B73501 /* Picker Input.swift in Sources */,
+				B26BCE4E2799AD8900B73501 /* Link Presentation.swift in Sources */,
+				B26BCE74279B236F00B73501 /* Layout Managed Object.swift in Sources */,
+				B2EB3D7B279DCBCB00D64225 /* Default Data.swift in Sources */,
+				B26BCE302799AB6700B73501 /* MyApp.swift in Sources */,
+				B26BCE362799AD1700B73501 /* Config.swift in Sources */,
+				B26BCE6B2799AED700B73501 /* Input Title.swift in Sources */,
+				B22D40A027A2BD6D002F2470 /* CanvasView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -276,7 +564,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"BridgeScore/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"BridgeScore/Main App/Preview Content\"";
 				DEVELOPMENT_TEAM = 3T7CT2S464;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -305,7 +593,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_ASSET_PATHS = "\"BridgeScore/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"BridgeScore/Main App/Preview Content\"";
 				DEVELOPMENT_TEAM = 3T7CT2S464;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -351,12 +639,12 @@
 /* End XCConfigurationList section */
 
 /* Begin XCVersionGroup section */
-		B26BCE042799A1AE00B73501 /* BridgeScore.xcdatamodeld */ = {
+		B26BCE70279B188600B73501 /* BridgeScore.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
-				B26BCE052799A1AE00B73501 /* BridgeScore.xcdatamodel */,
+				B26BCE71279B188600B73501 /* BridgeScore.xcdatamodel */,
 			);
-			currentVersion = B26BCE052799A1AE00B73501 /* BridgeScore.xcdatamodel */;
+			currentVersion = B26BCE71279B188600B73501 /* BridgeScore.xcdatamodel */;
 			path = BridgeScore.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;
