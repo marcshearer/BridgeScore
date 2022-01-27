@@ -11,6 +11,7 @@
 		B21CC0BE27A01293001AECC1 /* Date Picker Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21CC0BD27A01292001AECC1 /* Date Picker Input.swift */; };
 		B21CC0C027A02A2A001AECC1 /* Stepper Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21CC0BF27A02A2A001AECC1 /* Stepper Input.swift */; };
 		B22D40A027A2BD6D002F2470 /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22D409F27A2BD6D002F2470 /* CanvasView.swift */; };
+		B22D40A227A2CF3E002F2470 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B22D40A127A2CF3E002F2470 /* Assets.xcassets */; };
 		B26BCDFA2799A1AC00B73501 /* BridgeScore App.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCDF92799A1AC00B73501 /* BridgeScore App.swift */; };
 		B26BCE012799A1AE00B73501 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B26BCE002799A1AE00B73501 /* Preview Assets.xcassets */; };
 		B26BCE2D2799AB6700B73501 /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE282799AB6700B73501 /* Persistence.swift */; };
@@ -66,6 +67,7 @@
 		B21CC0BD27A01292001AECC1 /* Date Picker Input.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date Picker Input.swift"; sourceTree = "<group>"; };
 		B21CC0BF27A02A2A001AECC1 /* Stepper Input.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Stepper Input.swift"; sourceTree = "<group>"; };
 		B22D409F27A2BD6D002F2470 /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasView.swift; sourceTree = "<group>"; };
+		B22D40A127A2CF3E002F2470 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B26BCDF62799A1AC00B73501 /* BridgeScore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BridgeScore.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B26BCDF92799A1AC00B73501 /* BridgeScore App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BridgeScore App.swift"; sourceTree = "<group>"; };
 		B26BCE002799A1AE00B73501 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
@@ -269,6 +271,7 @@
 		B26BCE242799AA6C00B73501 /* Standard Components */ = {
 			isa = PBXGroup;
 			children = (
+				B22D40A127A2CF3E002F2470 /* Assets.xcassets */,
 				B26BCDF92799A1AC00B73501 /* BridgeScore App.swift */,
 				B26BCE532799AE4D00B73501 /* Master Data.swift */,
 				B2EB3D78279DB80000D64225 /* Scorecard.swift */,
@@ -373,6 +376,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B22D40A227A2CF3E002F2470 /* Assets.xcassets in Resources */,
 				B26BCE012799A1AE00B73501 /* Preview Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
