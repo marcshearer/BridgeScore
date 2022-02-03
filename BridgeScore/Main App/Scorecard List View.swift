@@ -32,7 +32,9 @@ struct ScorecardListView: View {
                     }
                 )}
                 .onTapGesture {
+                    self.scorecard = ScorecardViewModel()
                     self.scorecard.reset()
+                    self.scorecard.backupCurrent()
                     self.linkToEdit = true
                 }
                 LazyVStack {
@@ -88,8 +90,7 @@ struct ScorecardListView: View {
                         )} )
                         .onTapGesture {
                             // Copy this entry to current scorecard
-                            self.scorecard.scorecardMO = scorecard.scorecardMO
-                            self.scorecard.revert()
+                            self.scorecard = scorecard
                             self.linkToEdit = true
                         }
                     }
