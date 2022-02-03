@@ -39,55 +39,7 @@ struct ScorecardListView: View {
                 }
                 LazyVStack {
                     ForEach(scorecards) { (scorecard) in
-                        ListTileView(content: { AnyView(
-                            GeometryReader { geometry in
-                                HStack {
-                                    VStack {
-                                        Spacer().frame(height: 10)
-                                        HStack {
-                                            Spacer().frame(width: 50)
-                                            Text(scorecard.desc)
-                                            Spacer()
-                                        }
-                                        .font(.title)
-                                        Spacer()
-                                        HStack {
-                                            Spacer().frame(width: 50)
-                                            HStack {
-                                                Text("Partner: ")
-                                                Text(scorecard.partner?.name ?? "").font(.callout).bold()
-                                                Spacer()
-                                            }
-                                            .frame(width: geometry.size.width * 0.33)
-                                            HStack {
-                                                Text("Location: ")
-                                                Text(scorecard.location?.name ?? "").font(.callout).bold()
-                                                
-                                                Spacer()
-                                            }
-                                            .frame(width: geometry.size.width * 0.30)
-                                            Text("Date: ")
-                                                // Text(scorecard.date.toFullString()).font(.callout).bold()
-                                            Text(Utility.dateString(Date.startOfDay(from: scorecard.date)!, style: .short, doesRelativeDateFormatting: true, localized: false)).font(.callout).bold()
-                                            Spacer()
-                                        }
-                                        .font(.callout)
-                                        Spacer().frame(height: 8)
-                                    }
-                                    VStack {
-                                        Spacer()
-                                        Button {
-                                            MessageBox.shared.show("This will delete the scorecard permanently.\nAre you sure you want to do this?", cancelText: "Cancel", okText: "Confirm", okAction: {
-                                                scorecard.remove()
-                                            })
-                                        } label: {
-                                            Image(systemName: "trash.circle.fill").font(.largeTitle)
-                                        }
-                                        Spacer()
-                                    }
-                                }
-                            }
-                        )} )
+                        ScorecardSummaryView(scorecard: scorecard)
                         .onTapGesture {
                             // Copy this entry to current scorecard
                             self.scorecard = scorecard
@@ -105,6 +57,65 @@ struct ScorecardListView: View {
             }
             NavigationLink(destination: ScorecardDetailsView(scorecard: $scorecard), isActive: $linkToEdit) {EmptyView()}
         }
+    }
+}
+
+struct ScorecardSummaryView: View {
+    @ObservedObject var scorecard: ScorecardViewModel
+    
+    var body: some View {
+        ListTileView(content: { AnyView(
+            GeometryReader { geometry in
+                AnyView(
+                HStack {
+                    VStack {
+                        Spacer().frame(height: 10)
+                        HStack {
+                            Spacer().frame(width: 50)
+                            Text(scorecard.desc)
+                            Spacer()
+                        }
+                        .font(.title)
+                        Spacer()
+                        HStack {
+                            Spacer().frame(width: 50)
+                            HStack {
+                                Text("Partner: ")
+                                Text(scorecard.partner?.name ?? "").font(.callout).bold()
+                                Spacer()
+                            }
+                            .frame(width: geometry.size.width * 0.33)
+                            HStack {
+                                Text("Location: ")
+                                Text(scorecard.location?.name ?? "").font(.callout).bold()
+                                
+                                Spacer()
+                            }
+                            .frame(width: geometry.size.width * 0.30)
+                            Text("Date: ")
+                                // Text(scorecard.date.toFullString()).font(.callout).bold()
+                            Text(Utility.dateString(Date.startOfDay(from: scorecard.date)!, style: .short, doesRelativeDateFormatting: true, localized: false)).font(.callout).bold()
+                            Spacer()
+                        }
+                        .font(.callout)
+                        Spacer().frame(height: 8)
+                    }
+                    VStack {
+                        Spacer()
+                        Button {
+                            MessageBox.shared.show("This will delete the scorecard permanently.\nAre you sure you want to do this?", cancelText: "Cancel", okText: "Confirm", okAction: {
+                                scorecard.remove()
+                            })
+                        } label: {
+                            Image(systemName: "trash.circle.fill").font(.largeTitle)
+                        }
+                        Spacer()
+                    }
+                }
+                )
+            }
+        )} )
+        
     }
 }
 

@@ -172,7 +172,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     }
     
     private func descExists(_ name: String) -> Bool {
-        return !MasterData.shared.scorecards.compactMap{$1}.filter({$0.desc == desc && $0.scorecardId != self.scorecardId}).isEmpty
+        return !MasterData.shared.scorecards.contains(where: {$0.value.desc == desc && $0.value != self})
     }
     
     public var description: String {
