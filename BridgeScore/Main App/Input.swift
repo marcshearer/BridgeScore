@@ -32,7 +32,6 @@ struct Input : View {
     var message: Binding<String>?
     var topSpace: CGFloat = 16
     var height: CGFloat = 40
-    var onChange: ((String)->())?
     var keyboardType: KeyboardType = .default
     var autoCapitalize: CapitalizationType = .sentences
     var autoCorrect: Bool = true

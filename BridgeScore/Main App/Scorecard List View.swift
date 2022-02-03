@@ -11,15 +11,17 @@ struct ScorecardListView: View {
     @State var title = "Scorecards"
     @State var scorecard = ScorecardViewModel()
     @State var linkToEdit = false
-
+    @ObservedObject var data = MasterData.shared
     
     var body: some View {
         let menuOptions = [BannerOption(text: "Standard layouts", action: { }),
                            BannerOption(text: "Players",  action: {  }),
                            BannerOption(text: "Locations", action: { }),
                            BannerOption(text: "About \(appName)", action: { MessageBox.shared.show("A Bridge scoring app from\nShearer Online Ltd", showIcon: true, showVersion: true) })]
+        
         StandardView(navigation: true) {
-            let scorecards = MasterData.shared.scorecards.map{$1}.sorted(by: {$0.date > $1.date})
+            let scorecards = data.scorecards.map{$1}.sorted(by: {$0.date > $1.date})
+            
             VStack {
                 Banner(title: $title, back: false, optionMode: .menu, options: menuOptions)
                 Spacer().frame(height: 12)
@@ -37,42 +39,57 @@ struct ScorecardListView: View {
                     ForEach(scorecards) { (scorecard) in
                         ListTileView(content: { AnyView(
                             GeometryReader { geometry in
-                                VStack {
-                                    Spacer().frame(height: 10)
-                                    HStack {
-                                        Spacer().frame(width: 50)
-                                        Text(scorecard.desc)
-                                        Spacer()
-                                    }
-                                    .font(.title)
-                                    Spacer()
-                                    HStack {
-                                        Spacer().frame(width: 50)
+                                HStack {
+                                    VStack {
+                                        Spacer().frame(height: 10)
                                         HStack {
-                                            Text("Partner: ")
-                                            Text(scorecard.partner?.name ?? "").font(.callout).bold()
+                                            Spacer().frame(width: 50)
+                                            Text(scorecard.desc)
                                             Spacer()
                                         }
-                                        .frame(width: geometry.size.width * 0.33)
+                                        .font(.title)
+                                        Spacer()
                                         HStack {
-                                            Text("Location: ")
-                                            Text(scorecard.location?.name ?? "").font(.callout).bold()
-                                            
+                                            Spacer().frame(width: 50)
+                                            HStack {
+                                                Text("Partner: ")
+                                                Text(scorecard.partner?.name ?? "").font(.callout).bold()
+                                                Spacer()
+                                            }
+                                            .frame(width: geometry.size.width * 0.33)
+                                            HStack {
+                                                Text("Location: ")
+                                                Text(scorecard.location?.name ?? "").font(.callout).bold()
+                                                
+                                                Spacer()
+                                            }
+                                            .frame(width: geometry.size.width * 0.30)
+                                            Text("Date: ")
+                                                // Text(scorecard.date.toFullString()).font(.callout).bold()
+                                            Text(Utility.dateString(Date.startOfDay(from: scorecard.date)!, style: .short, doesRelativeDateFormatting: true, localized: false)).font(.callout).bold()
                                             Spacer()
                                         }
-                                        .frame(width: geometry.size.width * 0.33)
-                                        Text("Date: ")
-                                        // Text(scorecard.date.toFullString()).font(.callout).bold()
-                                        Text(Utility.dateString(Date.startOfDay(from: scorecard.date)!, style: .short, doesRelativeDateFormatting: true, localized: false)).font(.callout).bold()
+                                        .font(.callout)
+                                        Spacer().frame(height: 8)
+                                    }
+                                    VStack {
+                                        Spacer()
+                                        Button {
+                                            MessageBox.shared.show("This will delete the scorecard permanently.\nAre you sure you want to do this?", cancelText: "Cancel", okText: "Confirm", okAction: {
+                                                scorecard.remove()
+                                            })
+                                        } label: {
+                                            Image(systemName: "trash.circle.fill").font(.largeTitle)
+                                        }
                                         Spacer()
                                     }
-                                    .font(.callout)
-                                    Spacer().frame(height: 8)
                                 }
                             }
                         )} )
                         .onTapGesture {
-                            self.scorecard = scorecard
+                            // Copy this entry to current scorecard
+                            self.scorecard.scorecardMO = scorecard.scorecardMO
+                            self.scorecard.revert()
                             self.linkToEdit = true
                         }
                     }
@@ -85,7 +102,7 @@ struct ScorecardListView: View {
                     linkToEdit = true
                 }
             }
-            NavigationLink(destination: NewScorecardView(scorecard: $scorecard), isActive: $linkToEdit) {EmptyView()}
+            NavigationLink(destination: ScorecardDetailsView(scorecard: $scorecard), isActive: $linkToEdit) {EmptyView()}
         }
     }
 }

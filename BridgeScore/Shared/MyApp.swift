@@ -176,15 +176,14 @@ class MyApp {
         self.registerDefaults()
         #if !widget
         Version.current.load()
-        // Remove (CAREFULLY) if you want to clear the iCloud DB
-        //DatabaseUtilities.initialiseAllCloud() {
+        // Remove comment (CAREFULLY) if you want to clear the iCloud DB
+        // DatabaseUtilities.initialiseAllCloud() {
             // Remove (CAREFULLY) if you want to clear the Core Data DB
             //DatabaseUtilities.initialiseAllCoreData()
             self.setupDatabase()
             // self.setupPreviewData()
         //}
-        
-        
+              
         #if canImport(UIKit)
         UITextView.appearance().backgroundColor = .clear
         #endif

@@ -14,6 +14,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
 
     // Properties in core data model
     @Published private(set) var scorecardId: UUID
+    public var id: UUID { self.scorecardId }
     @Published public var date: Date
     @Published public var location: LocationViewModel?
     @Published public var desc: String
@@ -36,6 +37,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     @Published private(set) var saveMessage: String = ""
     @Published private(set) var canSave: Bool = false
     @Published internal var canExit: Bool = false
+    @Published internal var editTitle: String = "New Scorecard"
     
     // Auto-cleanup
     private var cancellableSet: Set<AnyCancellable> = []
@@ -93,6 +95,14 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             }
         .assign(to: \.saveMessage, on: self)
         .store(in: &cancellableSet)
+        
+        Publishers.CombineLatest($desc, $scorecardMO)
+            .receive(on: RunLoop.main)
+            .map { (desc, scorecardMO) in
+                return scorecardMO == nil ? "New Scorecard" : desc
+            }
+        .assign(to: \.editTitle, on: self)
+        .store(in: &cancellableSet)
               
         $saveMessage
             .receive(on: RunLoop.main)
@@ -112,7 +122,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
  
     }
     
-    private func revert() {
+    public func revert() {
         if let mo = self.scorecardMO {
             self.scorecardId = mo.scorecardId
             self.date = mo.date
@@ -149,10 +159,16 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     
     public func insert() {
         MasterData.shared.insert(scorecard: self)
+        UserDefault.currentUnsaved.set(false)
     }
     
     public func remove() {
         MasterData.shared.remove(scorecard: self)
+        UserDefault.currentUnsaved.set(false)
+    }
+    
+    public var isNew: Bool {
+        return self.scorecardMO == nil
     }
     
     private func descExists(_ name: String) -> Bool {
@@ -210,6 +226,14 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     
     public func restoreCurrent() {
         UserDefault.currentUnsaved.set(true)
+        
+        // First try to read existing
+        if let id = UserDefault.currentId.uuid {
+            let savedScorecard = MasterData.shared.scorecard(id: id)
+            self.scorecardMO = savedScorecard?.scorecardMO
+        }
+        
+        // Now overwrite with backed up data
         self.scorecardId = UserDefault.currentId.uuid ?? UUID()
         self.date = UserDefault.currentDate.date
         self.location = MasterData.shared.location(id: UserDefault.currentLocation.uuid)

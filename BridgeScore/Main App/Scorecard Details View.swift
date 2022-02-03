@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct NewScorecardView: View {
+struct ScorecardDetailsView: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
 
     @State var title = "New Scorecard"
@@ -33,7 +33,7 @@ struct NewScorecardView: View {
                 if refresh { EmptyView() }
                 
                 let bannerOptions = [ BannerOption(image: AnyView(Image(systemName: "chevron.right")), likeBack: true, action: {  linkToScorecard = true}) ]
-                Banner(title: $title, back: true, backImage: AnyView(Image(systemName: "xmark")), backAction: backAction, optionMode: .buttons, options: bannerOptions)
+                Banner(title: $scorecard.editTitle, back: true, backImage: AnyView(Image(systemName: "xmark")), backAction: backAction, optionMode: .buttons, options: bannerOptions)
                 
                 ScrollView(showsIndicators: false) {
                     
@@ -92,8 +92,8 @@ struct NewScorecardView: View {
                 locationIndex = locations.firstIndex(where: {$0 == scorecard.location}) ?? 0
                 playerIndex = players.firstIndex(where: {$0 == scorecard.partner}) ?? 0
                 typeIndex = types.firstIndex(where: {$0 == scorecard.type}) ?? 0
-                if UserDefault.currentUnsaved.bool {
-                    linkToScorecard = true
+                if !scorecard.isNew {
+                    title = scorecard.desc
                 }
             }
             NavigationLink(destination: ScorecardView(scorecard: $scorecard), isActive: $linkToScorecard) {EmptyView()}

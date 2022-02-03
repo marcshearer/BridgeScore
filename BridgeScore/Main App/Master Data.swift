@@ -134,6 +134,7 @@ extension MasterData {
             scorecard.scorecardMO = ScorecardMO()
             self.updateMO(scorecard: scorecard)
             self.scorecards[scorecard.scorecardId] = scorecard
+            print("Insert \(scorecard.scorecardId.uuidString)")
         })
     }
     

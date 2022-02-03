@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UIKit
+import CoreData
 
 @main
 struct BridgeScoreApp: App {
@@ -16,6 +17,7 @@ struct BridgeScoreApp: App {
 
     init() {
         CoreData.context = context
+        
         MyApp.shared.start()
     }
     
