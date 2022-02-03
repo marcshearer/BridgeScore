@@ -33,7 +33,6 @@ struct MyScene: Scene {
                 ScorecardListView()
                 .onAppear() {
                     MyApp.format = (min(geometry.size.width, geometry.size.height) < 600 ? .phone : .tablet)
-                    print(MyApp.format)
                 }
             }
         }

@@ -45,7 +45,7 @@ class Version {
                 // New install - just use current version
             } else if compare(self.lastVersion, self.version) == .lessThan {
                 // Version has increased - check for upgrade
-                MessageBox.shared.show("Upgrading to latest version...", closeButton: false)
+                MessageBox.shared.show("Upgrading to latest version...", okText: nil, showIcon: true)
                 self.upgradeToVersion()
                 MessageBox.shared.hide()
             }
@@ -56,14 +56,14 @@ class Version {
         
         // Check this version is acceptable
         if compare(version, minVersion) == .lessThan {
-            MessageBox.shared.show(minMessage) {
+            MessageBox.shared.show(minMessage, showIcon: true, okAction: {
                 exit(1)
-            }
+            })
         }
         
         // Show info message if it is setup
         if infoMessage != "" {
-            MessageBox.shared.show(infoMessage)
+            MessageBox.shared.show(infoMessage, showIcon: true)
         }
     }
     

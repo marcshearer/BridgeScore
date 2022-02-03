@@ -17,6 +17,9 @@ extension CanvasView: UIViewRepresentable {
     canvasView.tool = PKInkingTool(.pen, color: .blue, width: 8)
     #if targetEnvironment(simulator)
       canvasView.drawingPolicy = .anyInput
+      canvasView.backgroundColor = .clear
+      canvasView.isOpaque = false
+      canvasView.sizeToFit()
     #endif
     return canvasView
   }

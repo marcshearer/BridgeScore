@@ -365,7 +365,7 @@ class Utility {
     public static var _animating = false
     public static var animating:Bool { get { return _animating } }
     
-    public class func animate(if animate: Bool = true, view: UIView, duration: TimeInterval = 0.5, curve: UIView.AnimationCurve = .linear, afterDelay: TimeInterval? = 0.0, layout: Bool = true, completion: (()->())? = nil, animations: @escaping ()->()) {
+    public class func animate(if animate: Bool = true, view: UIView, duration: TimeInterval = 0.5, curve: UIView.AnimationCurve = .linear, afterDelay: TimeInterval? = 0.0, layout: Bool = true, okAction: (()->())? = nil, animations: @escaping ()->()) {
         if animate {
             if layout {
                 view.layoutIfNeeded()
@@ -379,12 +379,12 @@ class Utility {
             }
             animation.addCompletion { (_) in
                 Utility._animating = false
-                completion?()
+                okAction?()
             }
             animation.startAnimation(afterDelay: afterDelay ?? 0.01)
         } else {
             animations()
-            completion?()
+            okAction?()
         }
     }
     #endif

@@ -31,13 +31,15 @@ var captionFont = Font.system(size: (MyApp.format == .tablet ? 20.0 : 16.0))
 var inputTitleFont = Font.system(size: (MyApp.format == .tablet ? 20.0 : 16.0))
 var inputFont = Font.system(size: (MyApp.format == .tablet ? 16.0 : 12.0))
 var messageFont = Font.system(size: (MyApp.format == .tablet ? 16.0 : 12.0))
-var titleFont = Font.system(size: (MyApp.format == .tablet ? 16.0 : 12.0), weight: .bold)
-var cellFont = Font.system(size: (MyApp.format == .tablet ? 16.0 : 12.0))
+
+var titleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 16.0 : 12.0), weight: .bold)
+var cellFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 16.0 : 12.0))
+var boardFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 20.0))
 
 // Localisable names
 
 public let appName = "Bridge Score"
-public let appImage = "BridgeScore"
+public let appImage = "bridge score"
 
 public let dateFormat = "EEEE d MMMM"
 

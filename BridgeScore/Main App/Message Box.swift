@@ -11,22 +11,24 @@ class MessageBox : ObservableObject {
     
     public static let shared = MessageBox()
     
-    @Published public var text: String?
-    public var closeButton = false
-    public var showVersion = false
-    public var completion: (()->())? = nil
-    
+    @Published fileprivate var text: String?
+    fileprivate var okText: String?
+    fileprivate var cancelText: String?
+    fileprivate var showIcon: Bool = false
+    fileprivate var showVersion = false
+    fileprivate var okAction: (()->())? = nil
+    fileprivate var cancelAction: (()->())? = nil
+
     public var isShown: Bool { MessageBox.shared.text != nil }
     
-    public func show(_ text: String, closeButton: Bool = true, showVersion: Bool = true, completion: (()->())? = nil) {
+    public func show(_ text: String, cancelText: String? = nil, okText: String? = "Close", showIcon: Bool = false, showVersion: Bool = false, cancelAction: (()->())? = nil, okAction: (()->())? = nil) {
         MessageBox.shared.text = text
-        MessageBox.shared.closeButton = closeButton
+        MessageBox.shared.okText = okText
+        MessageBox.shared.cancelText = cancelText
+        MessageBox.shared.showIcon = showIcon
         MessageBox.shared.showVersion = showVersion
-        MessageBox.shared.completion = completion
-    }
-
-    public func show(closeButton: Bool = true) {
-        MessageBox.shared.closeButton = closeButton
+        MessageBox.shared.okAction = okAction
+        MessageBox.shared.cancelAction = cancelAction
     }
     
     public func hide() {
@@ -36,15 +38,15 @@ class MessageBox : ObservableObject {
 
 struct MessageBoxView: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
+    @State var suppressIcon: Bool = false
     @ObservedObject var values = MessageBox.shared
-    @State var showIcon = true
 
     var body: some View {
         ZStack {
             Palette.background.background
                 .ignoresSafeArea(edges: .all)
             HStack(spacing: 0) {
-                if showIcon {
+                if values.showIcon && !suppressIcon {
                     Spacer().frame(width: 30)
                     VStack {
                         Spacer()
@@ -54,7 +56,7 @@ struct MessageBoxView: View {
                                 Spacer()
                                 HStack {
                                     Spacer()
-                                    Image(appImage).resizable().frame(width: 60, height: 60)
+                                    Image(appImage).resizable().frame(width: 80, height: 80)
                                     Spacer()
                                 }
                                 Spacer()
@@ -76,20 +78,41 @@ struct MessageBoxView: View {
                         Text(message).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true).font(.callout).minimumScaleFactor(0.5)
                     }
                     Spacer().frame(height: 30)
-                    if MessageBox.shared.closeButton {
-                        Button {
-                            values.completion?()
-                            $values.text.wrappedValue = nil
-                        } label: {
-                            Text("Close")
-                                .foregroundColor(Palette.highlightButton.text)
-                                .font(.callout).minimumScaleFactor(0.5)
-                                .frame(width: 100, height: 30)
-                                .background(Palette.highlightButton.background)
-                                .cornerRadius(15)
+                    HStack {
+                        if let okText = values.okText {
+                            Button {
+                                values.okAction?()
+                                $values.text.wrappedValue = nil
+                            } label: {
+                                Text(okText)
+                                    .foregroundColor(Palette.highlightButton.text)
+                                    .font(.callout).minimumScaleFactor(0.5)
+                                    .frame(width: 100, height: 30)
+                                    .background(Palette.highlightButton.background)
+                                    .cornerRadius(15)
+                            }
                         }
-                    } else {
-                        Text("").frame(width: 100, height: 30)
+                        
+                        if let cancelText = values.cancelText {
+                            if values.okText != nil {
+                                Spacer().frame(width: 30)
+                            }
+                            Button {
+                                values.cancelAction?()
+                                $values.text.wrappedValue = nil
+                            } label: {
+                                Text(cancelText)
+                                    .foregroundColor(Palette.highlightButton.text)
+                                    .font(.callout).minimumScaleFactor(0.5)
+                                    .frame(width: 100, height: 30)
+                                    .background(Palette.highlightButton.background)
+                                    .cornerRadius(15)
+                            }
+                        }
+                        
+                        if values.okText == nil && values.cancelText == nil {
+                            Text("").frame(width: 100, height: 30)
+                        }
                     }
                     Spacer()
                 }

@@ -103,6 +103,7 @@ extension MasterData {
             CoreData.update(updateLogic: {
                 self.updateMO(layout: layout)
             })
+            self.layouts[layout.layoutId] = layout
         }
     }
     
@@ -152,6 +153,7 @@ extension MasterData {
             CoreData.update(updateLogic: {
                 self.updateMO(scorecard: scorecard)
             })
+            self.scorecards[scorecard.scorecardId] = scorecard
         }
     }
     
@@ -171,6 +173,8 @@ extension MasterData {
         scorecard.scorecardMO!.type = scorecard.type
         scorecard.scorecardMO!.tableTotal = scorecard.tableTotal
         scorecard.scorecardMO!.totalScore = scorecard.totalScore
+        scorecard.scorecardMO!.drawing = scorecard.drawing
+        scorecard.scorecardMO!.drawingWidth = scorecard.drawingWidth
     }
 }
 
@@ -205,6 +209,7 @@ extension MasterData {
             CoreData.update(updateLogic: {
                 self.updateMO(player: player)
             })
+            self.players[player.playerId] = player
         }
     }
     
@@ -250,6 +255,7 @@ extension MasterData {
             CoreData.update(updateLogic: {
                 self.updateMO(location: location)
             })
+            self.locations[location.locationId] = location
         }
     }
     

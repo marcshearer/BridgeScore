@@ -8,8 +8,10 @@
 import SwiftUI
 
 struct NewScorecardView: View {
+    @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
+
     @State var title = "New Scorecard"
-    @State var scorecard = ScorecardViewModel()
+    @Binding var scorecard: ScorecardViewModel
     @State var refresh = false
     @State var minValue = 1
     @State var linkToScorecard = false
@@ -31,7 +33,7 @@ struct NewScorecardView: View {
                 if refresh { EmptyView() }
                 
                 let bannerOptions = [ BannerOption(image: AnyView(Image(systemName: "chevron.right")), likeBack: true, action: {  linkToScorecard = true}) ]
-                Banner(title: $title, back: true, optionMode: .buttons, options: bannerOptions)
+                Banner(title: $title, back: true, backImage: AnyView(Image(systemName: "xmark")), backAction: backAction, optionMode: .buttons, options: bannerOptions)
                 
                 ScrollView(showsIndicators: false) {
                     
@@ -81,14 +83,26 @@ struct NewScorecardView: View {
                     Spacer()
                 }
             }
+            .onChange(of: linkToScorecard) { (linkToScorecard) in
+                if linkToScorecard {
+                    scorecard.backupCurrent()
+                }
+            }
             .onAppear {
                 locationIndex = locations.firstIndex(where: {$0 == scorecard.location}) ?? 0
                 playerIndex = players.firstIndex(where: {$0 == scorecard.partner}) ?? 0
                 typeIndex = types.firstIndex(where: {$0 == scorecard.type}) ?? 0
-                print(locationIndex)
+                if UserDefault.currentUnsaved.bool {
+                    linkToScorecard = true
+                }
             }
             NavigationLink(destination: ScorecardView(scorecard: $scorecard), isActive: $linkToScorecard) {EmptyView()}
         }
+    }
+    
+    func backAction() -> Bool {
+        scorecard.save()
+        return true
     }
                                  
     func boardsTableLabel(boardsTable: Int) -> String {
@@ -104,10 +118,4 @@ struct NewScorecardView: View {
         return (value <= 1 ? text : text + "s")
     }
 
-}
-
-struct NewScorecardView_Previews: PreviewProvider {
-    static var previews: some View {
-        NewScorecardView()
-    }
 }

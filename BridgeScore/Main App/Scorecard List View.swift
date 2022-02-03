@@ -9,46 +9,92 @@ import SwiftUI
 
 struct ScorecardListView: View {
     @State var title = "Scorecards"
-    @State var linkToNew = false
-    @State var linkToEditScorecard: ScorecardViewModel?
+    @State var scorecard = ScorecardViewModel()
     @State var linkToEdit = false
+
     
     var body: some View {
         let menuOptions = [BannerOption(text: "Standard layouts", action: { }),
                            BannerOption(text: "Players",  action: {  }),
-                           BannerOption(text: "Locations", action: { })]
+                           BannerOption(text: "Locations", action: { }),
+                           BannerOption(text: "About \(appName)", action: { MessageBox.shared.show("A Bridge scoring app from\nShearer Online Ltd", showIcon: true, showVersion: true) })]
         StandardView(navigation: true) {
+            let scorecards = MasterData.shared.scorecards.map{$1}.sorted(by: {$0.date > $1.date})
             VStack {
                 Banner(title: $title, back: false, optionMode: .menu, options: menuOptions)
                 Spacer().frame(height: 12)
-                ListTileView(content: { AnyView( HStack {
-                    Image(systemName: "plus.square")
-                    Text("New Scorecard")
-                })})
+                ListTileView(color: Palette.contrastTile) { AnyView(
+                    HStack {
+                        Image(systemName: "plus.square")
+                        Text("New Scorecard")
+                    }
+                )}
                 .onTapGesture {
-                    self.linkToNew = true
+                    self.scorecard.reset()
+                    self.linkToEdit = true
                 }
                 LazyVStack {
-                    ForEach(MasterData.shared.scorecards.map{$1}) { (scorecard) in
-                        ListTileView(content: { AnyView(Text("Scorecard")) } )
+                    ForEach(scorecards) { (scorecard) in
+                        ListTileView(content: { AnyView(
+                            GeometryReader { geometry in
+                                VStack {
+                                    Spacer().frame(height: 10)
+                                    HStack {
+                                        Spacer().frame(width: 50)
+                                        Text(scorecard.desc)
+                                        Spacer()
+                                    }
+                                    .font(.title)
+                                    Spacer()
+                                    HStack {
+                                        Spacer().frame(width: 50)
+                                        HStack {
+                                            Text("Partner: ")
+                                            Text(scorecard.partner?.name ?? "").font(.callout).bold()
+                                            Spacer()
+                                        }
+                                        .frame(width: geometry.size.width * 0.33)
+                                        HStack {
+                                            Text("Location: ")
+                                            Text(scorecard.location?.name ?? "").font(.callout).bold()
+                                            
+                                            Spacer()
+                                        }
+                                        .frame(width: geometry.size.width * 0.33)
+                                        Text("Date: ")
+                                        // Text(scorecard.date.toFullString()).font(.callout).bold()
+                                        Text(Utility.dateString(Date.startOfDay(from: scorecard.date)!, style: .short, doesRelativeDateFormatting: true, localized: false)).font(.callout).bold()
+                                        Spacer()
+                                    }
+                                    .font(.callout)
+                                    Spacer().frame(height: 8)
+                                }
+                            }
+                        )} )
                         .onTapGesture {
+                            self.scorecard = scorecard
                             self.linkToEdit = true
-                            self.linkToEditScorecard = scorecard
                         }
                     }
                 }
                 Spacer()
             }
-            NavigationLink(destination: NewScorecardView(), isActive: $linkToNew) {EmptyView()}
+            .onAppear {
+                if UserDefault.currentUnsaved.bool {
+                    scorecard.restoreCurrent()
+                    linkToEdit = true
+                }
+            }
+            NavigationLink(destination: NewScorecardView(scorecard: $scorecard), isActive: $linkToEdit) {EmptyView()}
         }
     }
 }
 
 struct ListTileView: View {
-    @State var content: (()->AnyView)
     @State var color: PaletteColor = Palette.tile
     @State var font: Font = .largeTitle
-   
+    @State var content: (()->AnyView)
+
     var body: some View {
         VStack {
             Spacer().frame(height: 6)

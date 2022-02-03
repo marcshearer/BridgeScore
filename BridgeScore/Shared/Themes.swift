@@ -75,6 +75,7 @@ enum ThemeBackgroundColorName: CaseIterable {
     case background
     case alternate
     case tile
+    case contrastTile
     case inset
     case gridHeader
     case gridBody
@@ -344,6 +345,7 @@ class Themes {
                 .destructiveButton           : ThemeColor(#colorLiteral(red: 0.9981788993, green: 0.2295429707, blue: 0.1891850233, alpha: 1), nil, .darkBackground),
                 .background                  : ThemeColor(#colorLiteral(red: 0.999904573, green: 1, blue: 0.9998808503, alpha: 1), #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1), .lightBackground, .darkBackground),
                 .alternate                   : ThemeColor(#colorLiteral(red: 0.9411764706, green: 0.9411764706, blue: 0.9411764706, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1), .lightBackground, .darkBackground),
+                .contrastTile                : ThemeColor(#colorLiteral(red: 0, green: 0.3921568627, blue: 0.7058823529, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1), .darkBackground, .darkBackground),
                 .tile                        : ThemeColor(#colorLiteral(red: 0.1960784314, green: 0.8274509804, blue: 1, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1), .midBackground, .darkBackground),
                 .inset                       : ThemeColor(#colorLiteral(red: 0.8616076436, green: 0.8620930367, blue: 0.8620918949, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1), .lightBackground, .lightBackground),
                 .divider                     : ThemeColor(#colorLiteral(red: 0, green: 0, blue: 0, alpha: 1), #colorLiteral(red: 0.6286649108, green: 0.6231410503, blue: 0.6192827821, alpha: 1), .darkBackground,  .lightBackground),

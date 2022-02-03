@@ -16,10 +16,24 @@ enum UserDefault: String, CaseIterable {
     case minVersion
     case minMessage
     case infoMessage
+    case currentUnsaved
+    case currentId
+    case currentLocation
+    case currentPartner
+    case currentDate
+    case currentDescription
+    case currentComment
+    case currentType
+    case currentBoards
+    case currentBoardsTable
+    case currentTableTotal
+    case currentTotalScore
+    case currentDrawing
+    case currentWidth
 
     public var name: String { "\(self)" }
     
-    public var defaultValue: Any {
+    public var defaultValue: Any? {
         switch self {
         case .database:
             return "unknown"
@@ -33,11 +47,47 @@ enum UserDefault: String, CaseIterable {
             return ""
         case .infoMessage:
             return ""
+        case .currentUnsaved:
+            return false
+        case .currentId:
+            return nil
+        case .currentLocation:
+            return nil
+        case .currentPartner:
+            return nil
+        case .currentDate:
+            return Date()
+        case .currentDescription:
+            return ""
+        case .currentComment:
+            return ""
+        case .currentType:
+            return Type.imp.rawValue
+        case .currentBoards:
+            return 1
+        case .currentBoardsTable:
+            return 1
+        case .currentTableTotal:
+            return false
+        case .currentTotalScore:
+            return 0.0
+        case .currentDrawing:
+            return Data()
+        case .currentWidth:
+            return 0.0
         }
     }
     
     public func set(_ value: Any) {
-        MyApp.defaults.set(value, forKey: self.name)
+        if let uuid = value as? UUID {
+            MyApp.defaults.set(uuid.uuidString, forKey: self.name)
+        } else if let type = value as? Type {
+            MyApp.defaults.set(type.rawValue, forKey: self.name)
+        } else if let date = value as? Date {
+            MyApp.defaults.set(date.toFullString(), forKey: self.name)
+        } else {
+            MyApp.defaults.set(value, forKey: self.name)
+        }
     }
     
     public var string: String {
@@ -48,8 +98,32 @@ enum UserDefault: String, CaseIterable {
         return MyApp.defaults.integer(forKey: self.name)
     }
     
+    public var float: Float {
+        return MyApp.defaults.float(forKey: self.name)
+    }
+    
     public var bool: Bool {
         return MyApp.defaults.bool(forKey: self.name)
+    }
+    
+    public var data: Data {
+        return MyApp.defaults.data(forKey: self.name)!
+    }
+    
+    public var date: Date {
+        return Date(from: MyApp.defaults.string(forKey: self.name) ?? "", format: Date.fullDateFormat)
+    }
+    
+    public var uuid: UUID? {
+        var result: UUID?
+        if let uuid = UUID(uuidString: MyApp.defaults.string(forKey: self.name)!) {
+            result = uuid
+        }
+        return result
+    }
+    
+    public var type: Type {
+        return Type(rawValue: MyApp.defaults.integer(forKey: self.name)) ?? Type.percent
     }
 }
 
@@ -70,7 +144,7 @@ class MyApp {
     enum Database: String {
         case development = "Development"
         case production = "Production"
-        case unknown = "Unknown"
+        case unknown = ""
         
         public var name: String {
             return self.rawValue
@@ -142,7 +216,7 @@ class MyApp {
     private func registerDefaults() {
         var initial: [String:Any] = [:]
         for value in UserDefault.allCases {
-            initial[value.name] = value.defaultValue
+            initial[value.name] = value.defaultValue ?? ""
         }
         MyApp.defaults.register(defaults: initial)
     }

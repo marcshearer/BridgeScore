@@ -6,6 +6,8 @@
 //
 
 import CoreData
+import CoreGraphics
+import PencilKit
 
 @objc(ScorecardMO)
 public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
@@ -24,6 +26,8 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var type16: Int16
     @NSManaged public var tableTotal: Bool
     @NSManaged public var totalScore: Float
+    @NSManaged public var drawingData: Data
+    @NSManaged public var drawingWidthFloat: Float
     
     convenience init() {
         self.init(context: CoreData.context)
@@ -43,5 +47,15 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
     public var type: Type {
         get { Type(rawValue: Int(type16)) ?? .percent }
         set { self.type16 = Int16(newValue.rawValue) }
+    }
+    
+    public var drawingWidth: CGFloat {
+        get { CGFloat(self.drawingWidthFloat) }
+        set { self.drawingWidthFloat = Float(newValue)}
+    }
+    
+    public var drawing: PKDrawing {
+        get { (try? PKDrawing(data: self.drawingData)) ?? PKDrawing() }
+        set { self.drawingData = newValue.dataRepresentation() }
     }
 }

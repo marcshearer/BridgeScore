@@ -34,7 +34,8 @@ struct Banner: View {
     var color: PaletteColor = Palette.banner
     var back: Bool = true
     var backEnabled: Binding<Bool>?
-    var backAction: (()->())?
+    var backImage: AnyView? = AnyView(Image(systemName: "chevron.left"))
+    var backAction: (()->(Bool))?
     var optionMode: BannerOptionMode = .none
     var menuImage: AnyView? = nil
     var options: [BannerOption]? = nil
@@ -82,12 +83,13 @@ struct Banner: View {
         let enabled = backEnabled?.wrappedValue ?? true
         return Button(action: {
             if enabled {
-                backAction?()
-                self.presentationMode.wrappedValue.dismiss()
+                if backAction?() ?? true {
+                    self.presentationMode.wrappedValue.dismiss()
+                }
             }
         }, label: {
             HStack {
-                Image(systemName: "chevron.left")
+                backImage
                     .font(.largeTitle)
                     .foregroundColor(Palette.bannerBackButton.opacity(enabled ? 1.0 : 0.5))
             }

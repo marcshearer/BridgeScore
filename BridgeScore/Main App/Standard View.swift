@@ -44,7 +44,7 @@ struct StandardView <Content> : View where Content : View {
                             Spacer()
                             let width = min(geometry.size.width - 40, 400)
                             let height = min(geometry.size.height - 40, 250)
-                            MessageBoxView(showIcon: width >= 400)
+                            MessageBoxView(suppressIcon: width < 400)
                                 .frame(width: width, height: height)
                                 .cornerRadius(20)
                             Spacer()

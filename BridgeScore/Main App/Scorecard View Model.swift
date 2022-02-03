@@ -8,6 +8,7 @@
 import Combine
 import SwiftUI
 import CoreData
+import PencilKit
 
 public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, CustomDebugStringConvertible {
 
@@ -23,6 +24,10 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     @Published public var type: Type = .percent
     @Published public var tableTotal: Bool = false
     @Published public var totalScore: Float = 0
+    @Published public var drawingWidth: CGFloat = 0.0
+    @Published public var drawing = PKDrawing()
+    
+    public var tables: Int { get { boards / max(1, boardsTable) } }
     
     // Linked managed objects - should only be referenced in this and the Data classes
     @Published internal var scorecardMO: ScorecardMO?
@@ -47,7 +52,11 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
                 self.boards != mo.boards ||
                 self.boardsTable != mo.boardsTable ||
                 self.type != mo.type ||
-                self.tableTotal != mo.tableTotal {
+                self.tableTotal != mo.tableTotal ||
+                self.totalScore != mo.totalScore ||
+                self.drawing != mo.drawing ||
+                self.drawingWidth != mo.drawingWidth
+            {
                     result = true
             }
         }
@@ -106,6 +115,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     private func revert() {
         if let mo = self.scorecardMO {
             self.scorecardId = mo.scorecardId
+            self.date = mo.date
             if let location = MasterData.shared.location(id: mo.locationId) {
                 self.location = location
             }
@@ -118,6 +128,9 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             self.boardsTable = mo.boardsTable
             self.type = mo.type
             self.tableTotal = mo.tableTotal
+            self.totalScore = mo.totalScore
+            self.drawing = mo.drawing
+            self.drawingWidth = mo.drawingWidth
         }
     }
     
@@ -131,6 +144,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         } else {
             MasterData.shared.save(scorecard: self)
         }
+        UserDefault.currentUnsaved.set(false)
     }
     
     public func insert() {
@@ -150,4 +164,64 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     }
     
     public var debugDescription: String { self.description }
+    
+    public func backupCurrent() {
+        UserDefault.currentId.set(self.scorecardId)
+        UserDefault.currentDate.set(self.date)
+        if let locationId = self.location?.locationId {
+            UserDefault.currentLocation.set(locationId)
+        }
+        UserDefault.currentDescription.set(self.desc)
+        UserDefault.currentComment.set(self.comment)
+        if let partnerId = self.partner?.playerId {
+            UserDefault.currentPartner.set(partnerId)
+        }
+        UserDefault.currentBoards.set(self.boards)
+        UserDefault.currentBoardsTable.set(self.boardsTable)
+        UserDefault.currentType.set(self.type)
+        UserDefault.currentTableTotal.set(self.tableTotal)
+        UserDefault.currentTotalScore.set(self.totalScore)
+        backupCurrentDrawing()
+    }
+    
+    public func backupCurrentDrawing(drawing: PKDrawing? = nil, width: CGFloat? = nil) {
+        UserDefault.currentDrawing.set((drawing ?? self.drawing).dataRepresentation())
+        UserDefault.currentWidth.set(Float(width ?? self.drawingWidth))
+        UserDefault.currentUnsaved.set(true)
+    }
+    
+    public func reset() {
+        UserDefault.currentUnsaved.set(true)
+        self.scorecardId = UUID()
+        self.date = Date()
+        self.location = MasterData.shared.locations.compactMap{ $0.value }.sorted(by: {$0.sequence < $1.sequence}).first!
+        self.desc = ""
+        self.comment = ""
+        self.partner = MasterData.shared.players.compactMap{ $0.value }.sorted(by: {$0.sequence < $1.sequence}).first!
+        self.boards = 24
+        self.boardsTable = 3
+        self.type = .percent
+        self.tableTotal = true
+        self.totalScore = 0
+        self.drawing = PKDrawing()
+        self.drawingWidth = 0
+        self.scorecardMO = nil
+    }
+    
+    public func restoreCurrent() {
+        UserDefault.currentUnsaved.set(true)
+        self.scorecardId = UserDefault.currentId.uuid ?? UUID()
+        self.date = UserDefault.currentDate.date
+        self.location = MasterData.shared.location(id: UserDefault.currentLocation.uuid)
+        self.desc = UserDefault.currentDescription.string
+        self.comment = UserDefault.currentComment.string
+        self.partner = MasterData.shared.player(id: UserDefault.currentPartner.uuid)
+        self.boards = UserDefault.currentBoards.int
+        self.boardsTable = UserDefault.currentBoardsTable.int
+        self.type = UserDefault.currentType.type
+        self.tableTotal = UserDefault.currentTableTotal.bool
+        self.totalScore = UserDefault.currentTotalScore.float
+        self.drawing = (try? PKDrawing(data: UserDefault.currentDrawing.data)) ?? PKDrawing()
+        self.drawingWidth = CGFloat(UserDefault.currentWidth.float)
+    }
 }
