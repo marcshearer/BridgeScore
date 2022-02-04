@@ -9,53 +9,61 @@ import SwiftUI
 
 struct LayoutSetupView: View {
     @State private var title = "Layouts"
-    @State private var layout = LayoutViewModel()
-    @State private var selected: LayoutViewModel?
+    @State var selected = LayoutViewModel()
     
     var body: some View {
         StandardView() {
             VStack(spacing: 0) {
                 Banner(title: $title, bottomSpace: false, back: true)
                 DoubleColumnView {
-                    LayoutSelectionView(layout: $layout)
+                    LayoutSelectionView(update: update)
+                        .environmentObject(selected)
                 } rightView: {
-                    if selected != nil {
-                        LayoutDetailView(layout: $layout)
-                    } else {
-                        EmptyView()
-                    }
+                    LayoutDetailView()
+                        .environmentObject(selected)
                 }
             }
-            .onChange(of: layout) { (layout) in
-                selected = layout
-            }
         }
+        .onAppear {
+            selected = MasterData.shared.layouts.compactMap{$0.value}.sorted(by: {$0.sequence < $1.sequence}).first!
+        }
+    }
+    
+    func update(to: LayoutViewModel) {
+        selected = to
     }
 }
 
 struct LayoutSelectionView : View {
-    @Binding var layout: LayoutViewModel
+    @State var update: (LayoutViewModel)->()
+    
+    @EnvironmentObject var selected: LayoutViewModel
     
     var body: some View {
+        let disabled = !selected.canSave
+        
         VStack {
             HStack {
                 LazyVStack {
                     ForEach(MasterData.shared.layouts.compactMap{$0.value}.sorted(by: {$0.sequence < $1.sequence})) { layout in
+                        
+                        let thisSelected = (selected == layout)
+                        let color = (thisSelected ? Palette.tile : Palette.background)
                         VStack {
                             Spacer().frame(height: 16)
                             HStack {
                                 Spacer().frame(width: 40)
-                                Text(layout.desc)
+                                Text((layout.desc == "" ? "<Blank>" : layout.desc))
                                     .font(.title)
                                 Spacer()
                             }
                             Spacer().frame(height: 16)
                             Separator()
                         }
-                        .background(Rectangle().fill(Palette.background.background))
-                        .foregroundColor(Palette.background.text)
+                        .background(Rectangle().fill(color.background))
+                        .foregroundColor(color.text.opacity(disabled ? 0.3 : 1.0))
                         .onTapGesture {
-                            self.layout = layout
+                            update(layout)
                         }
                     }
                 }
@@ -63,12 +71,13 @@ struct LayoutSelectionView : View {
             }
             Spacer()
         }
+        .disabled(disabled)
         .background(Palette.background.background)
     }
 }
 
 struct LayoutDetailView : View {
-    @Binding var layout: LayoutViewModel
+    @EnvironmentObject var selected: LayoutViewModel
     
     @State var minValue = 1
     
@@ -80,6 +89,7 @@ struct LayoutDetailView : View {
     
     let players = MasterData.shared.players.compactMap { $0.value }.sorted(by: {$0.sequence < $1.sequence})
     @State private var playerIndex: Int = 0
+    
     var body: some View {
         VStack {
             HStack {
@@ -87,19 +97,19 @@ struct LayoutDetailView : View {
                     
                     InsetView(content: { AnyView( VStack {
                         
-                        Input(title: "Description", field: $layout.desc, message: $layout.descMessage)
-
+                        Input(title: "Description", field: $selected.desc, message: $selected.descMessage)
+                        
                         PickerInput(title: "Location", field: $locationIndex, values: locations.map {$0.name})
                         { index in
-                            layout.location = locations[index]
+                            selected.location = locations[index]
                         }
                         
                         PickerInput(title: "Partner", field: $playerIndex, values: players.map {$0.name})
                         { index in
-                            layout.partner = players[index]
+                            selected.partner = players[index]
                         }
                         
-                        Input(title: "Default scorecard description", field: $layout.scorecardDesc)
+                        Input(title: "Default scorecard description", field: $selected.scorecardDesc)
                         
                         Spacer().frame(height: 16)
                     })})
@@ -108,17 +118,17 @@ struct LayoutDetailView : View {
                         
                         PickerInput(title: "Scoring Method", field: $typeIndex, values: types.map{$0.string})
                         { index in
-                            layout.type = types[index]
+                            selected.type = types[index]
                         }
                         
-                        StepperInput(title: "Boards / Tables", field: $layout.boardsTable, label: { value in "\(value) boards per round" }, minValue: $minValue, width: 400) { (newValue) in
-                            layout.boards = max(layout.boards, newValue)
-                            layout.boards = max(newValue, ((layout.boards / newValue) * newValue))
+                        StepperInput(title: "Boards / Tables", field: $selected.boardsTable, label: { value in "\(value) boards per round" }, minValue: $minValue, width: 400) { (newValue) in
+                            selected.boards = max(selected.boards, newValue)
+                            selected.boards = max(newValue, ((selected.boards / newValue) * newValue))
                         }
                         
-                        StepperInput(field: $layout.boards, label: boardsLabel, minValue: $layout.boardsTable, increment: $layout.boardsTable, topSpace: 0, width: 400)
+                        StepperInput(field: $selected.boards, label: boardsLabel, minValue: $selected.boardsTable, increment: $selected.boardsTable, topSpace: 0, width: 400)
                         
-                        InputToggle(title: "Options", text: "Show table totals", field: $layout.tableTotal)
+                        InputToggle(title: "Options", text: "Show table totals", field: $selected.tableTotal)
                         
                         Spacer().frame(height: 16)
                         
@@ -126,7 +136,7 @@ struct LayoutDetailView : View {
                     
                     Spacer()
                 }
-                .onChange(of: layout) { (layout) in
+                .onChange(of: selected) { (layout) in
                     locationIndex = locations.firstIndex(where: {$0 == layout.location}) ?? 0
                     playerIndex = players.firstIndex(where: {$0 == layout.partner}) ?? 0
                     typeIndex = types.firstIndex(where: {$0 == layout.type}) ?? 0
@@ -138,7 +148,7 @@ struct LayoutDetailView : View {
     }
     
     func boardsLabel(boards: Int) -> String {
-        let tables = boards / max(1, layout.boardsTable)
+        let tables = boards / max(1, selected.boardsTable)
         return "\(tables) \(plural("table", tables)) - \(boards) \(plural("board", boards)) in total"
     }
     
