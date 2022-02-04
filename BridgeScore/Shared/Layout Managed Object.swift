@@ -17,6 +17,7 @@ public class LayoutMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var sequence16: Int16
     @NSManaged public var desc: String
     @NSManaged public var locationId: UUID?
+    @NSManaged public var scorecardDesc: String
     @NSManaged public var partnerId: UUID?
     @NSManaged public var boards16: Int16
     @NSManaged public var boardsTable16: Int16

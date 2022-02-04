@@ -11,9 +11,9 @@ struct LayoutListView: View {
     @Environment(\.dismiss) var dismiss
     @Binding var selected: Bool
     @Binding var layout: LayoutViewModel
-    @State var title = "Select Layout"
-    @State var linkToEdit = false
-    @ObservedObject var data = MasterData.shared
+    @State private var title = "Select Layout"
+    @State private var linkToEdit = false
+    @ObservedObject private var data = MasterData.shared
  
     var body: some View {
         let layouts = data.layouts.map{$1}.sorted(by: {$0.sequence < $1.sequence})

@@ -10,9 +10,9 @@ import SwiftUI
 struct ScorecardDetailView: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
 
-    @State var title = "New Scorecard"
+    @State private var title = "New Scorecard"
     @Binding var scorecard: ScorecardViewModel
-    @State var linkToScorecard = false
+    @State private var linkToScorecard = false
     
     var body: some View {
         StandardView {

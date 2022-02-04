@@ -9,7 +9,8 @@ import SwiftUI
 
 struct LayoutSetupView: View {
     @State private var title = "Layouts"
-    @State private var layout: LayoutViewModel?
+    @State private var layout = LayoutViewModel()
+    @State private var selected: LayoutViewModel?
     
     var body: some View {
         StandardView() {
@@ -18,19 +19,22 @@ struct LayoutSetupView: View {
                 DoubleColumnView {
                     LayoutSelectionView(layout: $layout)
                 } rightView: {
-                    if let layout = layout {
-                        LayoutDetailView(layout: layout)
+                    if selected != nil {
+                        LayoutDetailView(layout: $layout)
                     } else {
                         EmptyView()
                     }
                 }
+            }
+            .onChange(of: layout) { (layout) in
+                selected = layout
             }
         }
     }
 }
 
 struct LayoutSelectionView : View {
-    @Binding var layout: LayoutViewModel?
+    @Binding var layout: LayoutViewModel
     
     var body: some View {
         VStack {
@@ -64,7 +68,7 @@ struct LayoutSelectionView : View {
 }
 
 struct LayoutDetailView : View {
-    @ObservedObject var layout: LayoutViewModel
+    @Binding var layout: LayoutViewModel
     
     @State var minValue = 1
     
@@ -83,6 +87,8 @@ struct LayoutDetailView : View {
                     
                     InsetView(content: { AnyView( VStack {
                         
+                        Input(title: "Description", field: $layout.desc, message: $layout.descMessage)
+
                         PickerInput(title: "Location", field: $locationIndex, values: locations.map {$0.name})
                         { index in
                             layout.location = locations[index]
@@ -93,7 +99,7 @@ struct LayoutDetailView : View {
                             layout.partner = players[index]
                         }
                         
-                        Input(title: "Description", field: $layout.desc, message: $layout.descMessage)
+                        Input(title: "Default scorecard description", field: $layout.scorecardDesc)
                         
                         Spacer().frame(height: 16)
                     })})
@@ -120,7 +126,7 @@ struct LayoutDetailView : View {
                     
                     Spacer()
                 }
-                .onAppear {
+                .onChange(of: layout) { (layout) in
                     locationIndex = locations.firstIndex(where: {$0 == layout.location}) ?? 0
                     playerIndex = players.firstIndex(where: {$0 == layout.partner}) ?? 0
                     typeIndex = types.firstIndex(where: {$0 == layout.type}) ?? 0

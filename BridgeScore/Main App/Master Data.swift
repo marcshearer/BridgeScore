@@ -117,6 +117,7 @@ extension MasterData {
         layout.layoutMO!.locationId = layout.location?.locationId
         layout.layoutMO!.partnerId = layout.partner?.playerId
         layout.layoutMO!.desc = layout.desc
+        layout.layoutMO!.scorecardDesc = layout.scorecardDesc
         layout.layoutMO!.boards = layout.boards
         layout.layoutMO!.boardsTable = layout.boardsTable
         layout.layoutMO!.type = layout.type

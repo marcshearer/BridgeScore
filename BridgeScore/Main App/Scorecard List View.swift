@@ -8,15 +8,15 @@
 import SwiftUI
 
 struct ScorecardListView: View {
-    @State var title = "Scorecards"
-    @State var scorecard = ScorecardViewModel()
-    @State var layout = LayoutViewModel()
-    @State var layoutSelected = false
-    @State var linkToNew = false
-    @State var linkToEdit = false
-    @State var linkToLayouts = false
-    @State var linkToPlayers = false
-    @State var linkToLocations = false
+    @State private var title = "Scorecards"
+    @State private var scorecard = ScorecardViewModel()
+    @State private var layout = LayoutViewModel()
+    @State private var layoutSelected = false
+    @State private var linkToNew = false
+    @State private var linkToEdit = false
+    @State private var linkToLayouts = false
+    @State private var linkToPlayers = false
+    @State private var linkToLocations = false
     @ObservedObject var data = MasterData.shared
     
     var body: some View {

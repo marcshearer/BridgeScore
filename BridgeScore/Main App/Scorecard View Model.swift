@@ -72,7 +72,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     
     public convenience init(layout: LayoutViewModel) {
         self.init()
-        self.desc = layout.desc
+        self.desc = layout.scorecardDesc
         self.location = layout.location
         self.partner = layout.partner
         self.boards = layout.boards

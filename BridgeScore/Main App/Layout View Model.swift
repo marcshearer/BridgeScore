@@ -9,7 +9,7 @@ import Combine
 import SwiftUI
 import CoreData
 
-public class LayoutViewModel : ObservableObject, Identifiable, CustomDebugStringConvertible {
+public class LayoutViewModel : ObservableObject, Identifiable, Equatable, CustomDebugStringConvertible {
 
     // Properties in core data model
     @Published private(set) var layoutId: UUID
@@ -17,6 +17,7 @@ public class LayoutViewModel : ObservableObject, Identifiable, CustomDebugString
     @Published public var location: LocationViewModel?
     @Published public var partner: PlayerViewModel?
     @Published public var desc: String
+    @Published public var scorecardDesc: String = ""
     @Published public var boards: Int = 0
     @Published public var boardsTable: Int = 0
     @Published public var type: Type = .percent
@@ -41,6 +42,7 @@ public class LayoutViewModel : ObservableObject, Identifiable, CustomDebugString
                 self.location?.locationId != mo.locationId ||
                 self.partner?.playerId != mo.partnerId ||
                 self.desc != mo.desc ||
+                self.scorecardDesc != mo.scorecardDesc ||
                 self.sequence != mo.sequence ||
                 self.boards != mo.boards ||
                 self.boardsTable != mo.boardsTable ||
@@ -65,6 +67,10 @@ public class LayoutViewModel : ObservableObject, Identifiable, CustomDebugString
         self.revert()
     }
     
+    public static func == (lhs: LayoutViewModel, rhs: LayoutViewModel) -> Bool {
+        return lhs.layoutId == rhs.layoutId
+    }
+    
     private func setupMappings() {
         $desc
             .receive(on: RunLoop.main)
@@ -72,6 +78,14 @@ public class LayoutViewModel : ObservableObject, Identifiable, CustomDebugString
                 return (desc == "" ? "Layout description must not be left blank. Either enter a valid description or delete this layout" : (self.descExists(desc) ? "This description already exists on another layout. The description must be unique" : ""))
             }
         .assign(to: \.saveMessage, on: self)
+        .store(in: &cancellableSet)
+        
+        $desc
+            .receive(on: RunLoop.main)
+            .map { (desc) in
+                return (desc == "" ? "Must be non-blank" : (self.descExists(desc) ? "Must be unique" : ""))
+            }
+        .assign(to: \.descMessage, on: self)
         .store(in: &cancellableSet)
               
         $saveMessage
@@ -103,11 +117,25 @@ public class LayoutViewModel : ObservableObject, Identifiable, CustomDebugString
                 self.partner = partner
             }
             self.desc = mo.desc
+            self.scorecardDesc = mo.scorecardDesc
             self.boards = mo.boards
             self.boardsTable = mo.boardsTable
             self.type = mo.type
             self.tableTotal = mo.tableTotal
         }
+    }
+    
+    public func copy(from: LayoutViewModel) {
+        self.layoutId = from.layoutId
+        self.sequence = from.sequence
+        self.location = from.location
+        self.partner = from.partner
+        self.desc = from.desc
+        self.scorecardDesc = from.scorecardDesc
+        self.boards = from.boards
+        self.boardsTable = from.boardsTable
+        self.type = from.type
+        self.tableTotal = from.tableTotal
     }
     
     public func save() {
