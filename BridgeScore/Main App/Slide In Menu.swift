@@ -132,7 +132,7 @@ struct SlideInMenuView : View {
                 offset = values.shown ? 0 : values.width + 20
                 $animate.wrappedValue = true
             })
-            .animation($animate.wrappedValue || values.shown ? .easeInOut : .none) //, value: offset)
+            .animation($animate.wrappedValue || values.shown ? .easeInOut : .none, value: offset)
         }
     }
 }
