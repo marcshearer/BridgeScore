@@ -38,6 +38,7 @@ struct Banner: View {
     var backAction: (()->(Bool))?
     var optionMode: BannerOptionMode = .none
     var menuImage: AnyView? = nil
+    var menuTitle: String = appName
     var options: [BannerOption]? = nil
     
     var body: some View {
@@ -65,7 +66,7 @@ struct Banner: View {
                             Spacer()
                             switch optionMode {
                             case .menu:
-                                Banner_Menu(image: menuImage, options: options!)
+                                Banner_Menu(image: menuImage, title: menuTitle, options: options!)
                             case .buttons:
                                 Banner_Buttons(options: options!)
                             default:
@@ -104,34 +105,22 @@ struct Banner: View {
 
 struct Banner_Menu : View {
     var image: AnyView?
+    var title: String
     
     var options: [BannerOption]
     let menuStyle = DefaultMenuStyle()
 
     var body: some View {
-        let menuLabel = image ?? AnyView(Image(systemName: "gearshape").foregroundColor(Palette.banner.text).font(.largeTitle))
-        Menu {
-            ForEach(0..<(options.count)) { (index) in
-                let option = options[index]
-                Button {
-                    option.action()
-                } label: {
-                    if option.image != nil {
-                        option.image
-                    }
-                    if option.image != nil && option.text != nil {
-                        Spacer().frame(width: 16)
-                    }
-                    if option.text != nil {
-                        Text(option.text!)
-                            .minimumScaleFactor(0.5)
+        Button {
+                SlideInMenu.shared.show(title: title, options: options.map{$0.text ?? ""}, top: 80) { (option) in
+                    if let selected = options.first(where: {$0.text == option}) {
+                        selected.action()
                     }
                 }
-                .menuStyle(menuStyle)
+            } label : {
+                image ?? AnyView(Image(systemName: "gearshape").foregroundColor(Palette.banner.text).font(.largeTitle))
             }
-        } label: {
-            menuLabel
-        }
+    
     }
 }
 

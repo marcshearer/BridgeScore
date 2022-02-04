@@ -35,6 +35,7 @@ class SlideInMenu : ObservableObject {
 
 struct SlideInMenuView : View {
     @ObservedObject var values = SlideInMenu.shared
+    @State private var offset: CGFloat = 320
     
     @State private var animate = false
         
@@ -65,11 +66,11 @@ struct SlideInMenuView : View {
                                         }
                                         Spacer()
                                     }
+                                    .frame(height: slideInMenuRowHeight * 1.4)
                                     .background(Palette.header.background)
-                                    .frame(height: SlideInMenuRowHeight * 1.2)
                                 }
                                 let options = $values.options.wrappedValue
-                                ScrollView {
+                                HStack {
                                     VStack {
                                         ForEach(options, id: \.self) { (option) in
                                             VStack(spacing: 0) {
@@ -90,15 +91,14 @@ struct SlideInMenuView : View {
                                                 values.shown = false
                                             }
                                             .background(Palette.background.background)
-                                            .frame(height: SlideInMenuRowHeight)
+                                            .frame(height: slideInMenuRowHeight)
                                         }
                                         .listRowInsets(EdgeInsets())
                                         .listStyle(PlainListStyle())
                                     }
                                 }
                                 .background(Palette.background.background)
-                                .environment(\.defaultMinListRowHeight, SlideInMenuRowHeight)
-                                .frame(height: max(0, min(CGFloat(values.options.count) * SlideInMenuRowHeight, fullGeometry.size.height - values.top - (3.0 * SlideInMenuRowHeight))))
+                                .environment(\.defaultMinListRowHeight, slideInMenuRowHeight)
                                 VStack(spacing: 0) {
                                     Spacer()
                                     HStack {
@@ -114,7 +114,7 @@ struct SlideInMenuView : View {
                                 .onTapGesture {
                                     values.shown = false
                                 }
-                                .frame(height: SlideInMenuRowHeight).layoutPriority(.greatestFiniteMagnitude)
+                                .frame(height: slideInMenuRowHeight).layoutPriority(.greatestFiniteMagnitude)
                             }
                             .background(Palette.background.background)
                             .frame(width: values.width)
@@ -124,14 +124,15 @@ struct SlideInMenuView : View {
                         Spacer()
 
                     }
-                    .offset(x: values.shown ? 0 : values.width + 20)
+                    .offset(x: offset)
                 }
             }
             .ignoresSafeArea()
             .onChange(of: values.shown, perform: { value in
+                offset = values.shown ? 0 : values.width + 20
                 $animate.wrappedValue = true
             })
-            .animation($animate.wrappedValue || values.shown ? .easeInOut : .none)
+            .animation($animate.wrappedValue || values.shown ? .easeInOut : .none) //, value: offset)
         }
     }
 }

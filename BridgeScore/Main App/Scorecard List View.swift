@@ -26,7 +26,7 @@ struct ScorecardListView: View {
             let scorecards = data.scorecards.map{$1}.sorted(by: {$0.date > $1.date})
             
             VStack {
-                Banner(title: $title, back: false, optionMode: .menu, options: menuOptions)
+                Banner(title: $title, back: false, optionMode: .menu, menuTitle: "Setup", options: menuOptions)
                 Spacer().frame(height: 12)
                 
                 ListTileView(color: Palette.contrastTile) { AnyView(
