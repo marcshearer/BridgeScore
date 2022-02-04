@@ -13,7 +13,7 @@ struct StandardView <Content> : View where Content : View {
     var animate = false
     var content: Content
     var backgroundColor: PaletteColor
-    
+
     init(navigation: Bool = false, animate: Bool = false, backgroundColor: PaletteColor = Palette.background, @ViewBuilder content: ()->Content) {
         self.navigation = navigation
         self.animate = animate

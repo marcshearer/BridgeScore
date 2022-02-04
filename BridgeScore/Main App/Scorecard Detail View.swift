@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ScorecardDetailsView: View {
+struct ScorecardDetailView: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
 
     @State var title = "New Scorecard"
@@ -23,7 +23,7 @@ struct ScorecardDetailsView: View {
                 
                 ScrollView(showsIndicators: false) {
                     
-                    ScorecardDetailView(scorecard: scorecard)
+                    ScorecardDetailsView(scorecard: scorecard)
                 }
             }
             .onChange(of: linkToScorecard) { (linkToScorecard) in
@@ -57,7 +57,7 @@ struct ScorecardDetailsView: View {
     }
 }
 
-struct ScorecardDetailView: View {
+struct ScorecardDetailsView: View {
     @ObservedObject var scorecard: ScorecardViewModel
     @State var minValue = 1
 

@@ -14,12 +14,15 @@ struct ScorecardListView: View {
     @State var layoutSelected = false
     @State var linkToNew = false
     @State var linkToEdit = false
+    @State var linkToLayouts = false
+    @State var linkToPlayers = false
+    @State var linkToLocations = false
     @ObservedObject var data = MasterData.shared
     
     var body: some View {
-        let menuOptions = [BannerOption(text: "Standard layouts", action: { }),
-                           BannerOption(text: "Players",  action: {  }),
-                           BannerOption(text: "Locations", action: { }),
+        let menuOptions = [BannerOption(text: "Standard layouts", action: { linkToLayouts = true }),
+                           BannerOption(text: "Players",  action: { linkToPlayers = true }),
+                           BannerOption(text: "Locations", action: { linkToLocations = true }),
                            BannerOption(text: "About \(appName)", action: { MessageBox.shared.show("A Bridge scoring app from\nShearer Online Ltd", showIcon: true, showVersion: true) })]
         
         StandardView(navigation: true) {
@@ -58,8 +61,8 @@ struct ScorecardListView: View {
                     linkToEdit = true
                 }
             }
-            // NavigationLink(destination: LayoutListView(scorecard: $scorecard), isActive: $linkToNew) {EmptyView()}
-            NavigationLink(destination: ScorecardDetailsView(scorecard: $scorecard), isActive: $linkToEdit) {EmptyView()}
+            NavigationLink(destination: LayoutSetupView(), isActive: $linkToLayouts) {EmptyView()}
+            NavigationLink(destination: ScorecardDetailView(scorecard: $scorecard), isActive: $linkToEdit) {EmptyView()}
         }
         .sheet(isPresented: $linkToNew, onDismiss: {
             print("Dismissed \(layoutSelected) \(layout.desc)")

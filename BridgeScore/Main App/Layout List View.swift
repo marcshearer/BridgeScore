@@ -31,12 +31,6 @@ struct LayoutListView: View {
                                 Spacer().frame(width: 40)
                                 Text(layout.desc)
                                     .font(.largeTitle)
-                                    .onTapGesture {
-                                        // Return this layout
-                                        self.layout = layout
-                                        self.selected = true
-                                        dismiss()
-                                    }
                                 Spacer()
                             }
                             Spacer().frame(height: 16)

@@ -28,10 +28,11 @@ enum BannerOptionMode {
 }
 
 struct Banner: View {
-    @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
+    @Environment(\.presentationMode) private var presentationMode: Binding<PresentationMode>
 
     @Binding var title: String
     var color: PaletteColor = Palette.banner
+    var bottomSpace: Bool = true
     var back: Bool = true
     var backEnabled: Binding<Bool>?
     var backImage: AnyView? = AnyView(Image(systemName: "chevron.left"))
