@@ -10,6 +10,9 @@ import SwiftUI
 struct ScorecardListView: View {
     @State var title = "Scorecards"
     @State var scorecard = ScorecardViewModel()
+    @State var layout = LayoutViewModel()
+    @State var layoutSelected = false
+    @State var linkToNew = false
     @State var linkToEdit = false
     @ObservedObject var data = MasterData.shared
     
@@ -25,6 +28,7 @@ struct ScorecardListView: View {
             VStack {
                 Banner(title: $title, back: false, optionMode: .menu, options: menuOptions)
                 Spacer().frame(height: 12)
+                
                 ListTileView(color: Palette.contrastTile) { AnyView(
                     HStack {
                         Image(systemName: "plus.square")
@@ -32,11 +36,9 @@ struct ScorecardListView: View {
                     }
                 )}
                 .onTapGesture {
-                    self.scorecard = ScorecardViewModel()
-                    self.scorecard.reset()
-                    self.scorecard.backupCurrent()
-                    self.linkToEdit = true
+                    self.linkToNew = true
                 }
+                
                 LazyVStack {
                     ForEach(scorecards) { (scorecard) in
                         ScorecardSummaryView(scorecard: scorecard)
@@ -47,6 +49,7 @@ struct ScorecardListView: View {
                         }
                     }
                 }
+                
                 Spacer()
             }
             .onAppear {
@@ -55,7 +58,17 @@ struct ScorecardListView: View {
                     linkToEdit = true
                 }
             }
+            // NavigationLink(destination: LayoutListView(scorecard: $scorecard), isActive: $linkToNew) {EmptyView()}
             NavigationLink(destination: ScorecardDetailsView(scorecard: $scorecard), isActive: $linkToEdit) {EmptyView()}
+        }
+        .sheet(isPresented: $linkToNew, onDismiss: {
+            print("Dismissed \(layoutSelected) \(layout.desc)")
+            if layoutSelected {
+                self.scorecard = ScorecardViewModel(layout: layout)
+                self.linkToEdit = true
+            }
+        }) {
+            LayoutListView(selected: $layoutSelected, layout: $layout)
         }
     }
 }
@@ -71,33 +84,38 @@ struct ScorecardSummaryView: View {
                     VStack {
                         Spacer().frame(height: 10)
                         HStack {
-                            Spacer().frame(width: 50)
-                            Text(scorecard.desc)
+                            HStack {
+                                Text(scorecard.desc)
+                                Spacer()
+                                Text(scorecard.totalScore)
+                                    
+                                Spacer().frame(width: 30)
+                            }
                             Spacer()
                         }
+                        .foregroundColor(Palette.tile.text)
                         .font(.title)
                         Spacer()
                         HStack {
-                            Spacer().frame(width: 50)
+                            // Text(scorecard.date.toFullString()).font(.callout).bold()
+                            Text(Utility.dateString(Date.startOfDay(from: scorecard.date)!, style: .short, doesRelativeDateFormatting: true, localized: false)).font(.callout).bold()
+                            Spacer()
                             HStack {
-                                Text("Partner: ")
+                                Text("With: ")
                                 Text(scorecard.partner?.name ?? "").font(.callout).bold()
                                 Spacer()
                             }
-                            .frame(width: geometry.size.width * 0.33)
+                            .frame(width: geometry.size.width * 0.3)
                             HStack {
-                                Text("Location: ")
+                                Text("At: ")
                                 Text(scorecard.location?.name ?? "").font(.callout).bold()
-                                
                                 Spacer()
                             }
-                            .frame(width: geometry.size.width * 0.30)
-                            Text("Date: ")
-                                // Text(scorecard.date.toFullString()).font(.callout).bold()
-                            Text(Utility.dateString(Date.startOfDay(from: scorecard.date)!, style: .short, doesRelativeDateFormatting: true, localized: false)).font(.callout).bold()
-                            Spacer()
+                            .frame(width: geometry.size.width * 0.37)
                         }
+                        .foregroundColor(Palette.tile.contrastText)
                         .font(.callout)
+                        .minimumScaleFactor(0.5)
                         Spacer().frame(height: 8)
                     }
                     VStack {

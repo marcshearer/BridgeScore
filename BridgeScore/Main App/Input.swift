@@ -32,6 +32,7 @@ struct Input : View {
     var message: Binding<String>?
     var topSpace: CGFloat = 16
     var height: CGFloat = 40
+    var width: CGFloat?
     var keyboardType: KeyboardType = .default
     var autoCapitalize: CapitalizationType = .sentences
     var autoCorrect: Bool = true
@@ -46,7 +47,10 @@ struct Input : View {
             if refresh { EmptyView() }
             
             if title != nil {
-                InputTitle(title: title, message: message, topSpace: topSpace)
+                HStack {
+                    InputTitle(title: title, message: message, topSpace: topSpace)
+                    Spacer().frame(width: clearText ? 20 : 0)
+                }
                 Spacer().frame(height: 8)
             }
             HStack {
@@ -59,8 +63,15 @@ struct Input : View {
                     .autocapitalization(autoCapitalize)
                     .disableAutocorrection(!autoCorrect)
                     .cornerRadius(12)
+                    .if(width != nil) { (view) in
+                        view.frame(width: width)
+                    }
                 
-                Spacer().frame(width: 8)
+                if width == nil {
+                    Spacer().frame(width: 8)
+                } else {
+                    Spacer()
+                }
                 
                 if clearText {
                     VStack {
@@ -68,10 +79,10 @@ struct Input : View {
                         Button {
                             field = ""
                         } label: {
-                            Image(systemName: "xmark.circle").font(inputTitleFont).foregroundColor(Palette.input.strongText)
+                            Image(systemName: "xmark.circle").font(inputTitleFont).foregroundColor(Palette.input.themeText)
                         }
                         Spacer()
-                    }
+                    }.frame(width: 20)
                 }
                 
                 Spacer().frame(width: 8)

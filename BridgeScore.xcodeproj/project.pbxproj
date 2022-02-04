@@ -14,6 +14,7 @@
 		B2276D5A27A692A40025DA80 /* Constraint.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2276D5927A692A40025DA80 /* Constraint.swift */; };
 		B22D40A027A2BD6D002F2470 /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22D409F27A2BD6D002F2470 /* CanvasView.swift */; };
 		B22D40A227A2CF3E002F2470 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B22D40A127A2CF3E002F2470 /* Assets.xcassets */; };
+		B2633A0E27AC3A460081B258 /* Layout List View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2633A0D27AC3A460081B258 /* Layout List View.swift */; };
 		B26BCDFA2799A1AC00B73501 /* BridgeScore App.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCDF92799A1AC00B73501 /* BridgeScore App.swift */; };
 		B26BCE012799A1AE00B73501 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B26BCE002799A1AE00B73501 /* Preview Assets.xcassets */; };
 		B26BCE2D2799AB6700B73501 /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE282799AB6700B73501 /* Persistence.swift */; };
@@ -49,6 +50,7 @@
 		B26BCE72279B188600B73501 /* BridgeScore.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE70279B188600B73501 /* BridgeScore.xcdatamodeld */; };
 		B26BCE74279B236F00B73501 /* Layout Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE73279B236F00B73501 /* Layout Managed Object.swift */; };
 		B26BCE76279BEBA500B73501 /* Scorecard Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */; };
+		B2AF750D27AD14FD00233693 /* Slide In Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AF750C27AD14FD00233693 /* Slide In Menu.swift */; };
 		B2BE9BD027A15B6B002A6F8F /* Inset View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2BE9BCF27A15B6B002A6F8F /* Inset View.swift */; };
 		B2EB3D66279D54D500D64225 /* Board Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D65279D54D500D64225 /* Board Managed Object.swift */; };
 		B2EB3D68279D65CC00D64225 /* Player Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D67279D65CC00D64225 /* Player Managed Object.swift */; };
@@ -71,6 +73,7 @@
 		B2276D5927A692A40025DA80 /* Constraint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constraint.swift; sourceTree = "<group>"; };
 		B22D409F27A2BD6D002F2470 /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasView.swift; sourceTree = "<group>"; };
 		B22D40A127A2CF3E002F2470 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B2633A0D27AC3A460081B258 /* Layout List View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Layout List View.swift"; sourceTree = "<group>"; };
 		B26BCDF62799A1AC00B73501 /* BridgeScore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BridgeScore.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B26BCDF92799A1AC00B73501 /* BridgeScore App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BridgeScore App.swift"; sourceTree = "<group>"; };
 		B26BCE002799A1AE00B73501 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
@@ -107,6 +110,7 @@
 		B26BCE71279B188600B73501 /* BridgeScore.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = BridgeScore.xcdatamodel; sourceTree = "<group>"; };
 		B26BCE73279B236F00B73501 /* Layout Managed Object.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Layout Managed Object.swift"; sourceTree = "<group>"; };
 		B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Managed Object.swift"; sourceTree = "<group>"; };
+		B2AF750C27AD14FD00233693 /* Slide In Menu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Slide In Menu.swift"; sourceTree = "<group>"; };
 		B2BE9BCF27A15B6B002A6F8F /* Inset View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Inset View.swift"; sourceTree = "<group>"; };
 		B2EB3D65279D54D500D64225 /* Board Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Board Managed Object.swift"; sourceTree = "<group>"; };
 		B2EB3D67279D65CC00D64225 /* Player Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Player Managed Object.swift"; sourceTree = "<group>"; };
@@ -256,6 +260,7 @@
 				B26BCE5F2799AED700B73501 /* Standard View.swift */,
 				B2BE9BCF27A15B6B002A6F8F /* Inset View.swift */,
 				B26BCE592799AED700B73501 /* Message Box.swift */,
+				B2AF750C27AD14FD00233693 /* Slide In Menu.swift */,
 				B26BCE5C2799AED700B73501 /* Swipe Gestures.swift */,
 				B26BCE572799AED700B73501 /* Target View Modifiers.swift */,
 				B22D409F27A2BD6D002F2470 /* CanvasView.swift */,
@@ -308,6 +313,7 @@
 			isa = PBXGroup;
 			children = (
 				B26BCE6E279AEB6C00B73501 /* Scorecard List View.swift */,
+				B2633A0D27AC3A460081B258 /* Layout List View.swift */,
 				B21CC0BB279FDD3A001AECC1 /* Scorecard Details View.swift */,
 				B2276D5727A5A2C90025DA80 /* UIKit Scorecard View.swift */,
 			);
@@ -418,6 +424,7 @@
 				B26BCE542799AE4D00B73501 /* Master Data.swift in Sources */,
 				B26BCE4B2799AD8900B73501 /* Date Extensions.swift in Sources */,
 				B26BCDFA2799A1AC00B73501 /* BridgeScore App.swift in Sources */,
+				B2AF750D27AD14FD00233693 /* Slide In Menu.swift in Sources */,
 				B26BCE632799AED700B73501 /* Image Capture.swift in Sources */,
 				B2EB3D6A279D666800D64225 /* Location Managed Object.swift in Sources */,
 				B26BCE622799AED700B73501 /* Target View Modifiers.swift in Sources */,
@@ -427,6 +434,7 @@
 				B26BCE382799AD5800B73501 /* Version.swift in Sources */,
 				B26BCE3A2799AD6D00B73501 /* Core Data.swift in Sources */,
 				B26BCE562799AE6400B73501 /* Preview Data.swift in Sources */,
+				B2633A0E27AC3A460081B258 /* Layout List View.swift in Sources */,
 				B26BCE76279BEBA500B73501 /* Scorecard Managed Object.swift in Sources */,
 				B26BCE662799AED700B73501 /* Banner.swift in Sources */,
 				B26BCE6A2799AED700B73501 /* Standard View.swift in Sources */,

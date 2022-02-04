@@ -48,10 +48,12 @@ struct ScorecardColumn: Codable {
 }
 
 struct ScorecardView: View {
+    @Environment(\.undoManager) private var undoManager
+
     @Binding var scorecard: ScorecardViewModel
     @State var refresh = false
     @State var linkToScorecard = false
-    @State var toolPickerVisible: Bool = false
+    @State var toolPickerVisible: Bool = true
     @State var canvasView = PKCanvasView()
     
     var body: some View {
@@ -62,7 +64,10 @@ struct ScorecardView: View {
                 if refresh { EmptyView() }
     
                 // Banner
-                let options = [BannerOption(image: AnyView(Image(systemName: "paintpalette")), likeBack: true, action: { toolPickerVisible.toggle() })]
+                let options = [
+                    BannerOption(image: AnyView(Image(systemName: "arrow.uturn.backward")), likeBack: true, action: { undoDrawing() }),
+                    BannerOption(image: AnyView(Image(systemName: "trash.fill")), likeBack: true, action: { clearDrawing() }),
+                    BannerOption(image: AnyView(Image(systemName: "paintpalette")), likeBack: true, action: { toolPickerVisible.toggle() })]
                 Banner(title: $scorecard.desc, back: true, backAction: backAction, optionMode: .buttons, options: options)
                 
                 GeometryReader { geometry in
@@ -77,6 +82,16 @@ struct ScorecardView: View {
         scorecard.drawing = canvasView.drawing
         scorecard.drawingWidth = canvasView.frame.width
         return true
+    }
+    
+    func clearDrawing() {
+        MessageBox.shared.show("This will clear the contents of the drawing.\nAre you sure you want to do this?", cancelText: "Cancel", okText: "Clear", okAction: {
+            canvasView.drawing = PKDrawing()
+        })
+    }
+    
+    func undoDrawing() {
+        undoManager?.undo()
     }
 }
 

@@ -47,11 +47,13 @@ struct Banner: View {
             VStack {
                 Spacer()
                 HStack {
-                    Spacer().frame(width: 32)
+                    Spacer().frame(width: 20)
                     ZStack {
                         HStack {
                             if back {
                                 Spacer()
+                            } else {
+                                Spacer().frame(width: 12)
                             }
                             Text(title).font(.largeTitle).bold().foregroundColor(Palette.banner.text)
                             Spacer()
@@ -71,6 +73,7 @@ struct Banner: View {
                             }
                         }
                     }
+                    Spacer().frame(width: 20)
                 }
                 Spacer().frame(height: bannerBottom)
             }
@@ -92,6 +95,7 @@ struct Banner: View {
                 backImage
                     .font(.largeTitle)
                     .foregroundColor(Palette.bannerBackButton.opacity(enabled ? 1.0 : 0.5))
+                    
             }
         })
         .disabled(!(enabled))
@@ -128,7 +132,6 @@ struct Banner_Menu : View {
         } label: {
             menuLabel
         }
-        Spacer().frame(width: 16)
     }
 }
 
@@ -141,32 +144,43 @@ struct Banner_Buttons : View {
                 let option = options[index]
                 let backgroundColor = (option.likeBack ? Palette.banner.background : Palette.bannerButton.background)
                 let foregroundColor = (option.likeBack ? Palette.bannerBackButton : Palette.bannerButton.text)
-                Button {
-                    option.action()
-                } label: {
-                    VStack {
-                        Spacer().frame(height: 6)
-                        HStack {
-                            Spacer().frame(width: 16)
-                            if option.image != nil {
-                                option.image.foregroundColor(foregroundColor)
+                HStack {
+                    Button {
+                        option.action()
+                    } label: {
+                        VStack {
+                            if !option.likeBack {
+                                Spacer().frame(height: 6)
                             }
-                            if option.image != nil && option.text != nil {
-                                Spacer().frame(width: 16)
+                            HStack {
+                                if !option.likeBack {
+                                    Spacer().frame(width: 16)
+                                }
+                                if option.image != nil {
+                                    option.image.foregroundColor(foregroundColor)
+                                }
+                                if option.image != nil && option.text != nil {
+                                    Spacer().frame(width: 16)
+                                }
+                                if option.text != nil {
+                                    Text(option.text ?? "").foregroundColor(foregroundColor)
+                                }
+                                if !option.likeBack {
+                                    Spacer().frame(width: 16)
+                                }
                             }
-                            if option.text != nil {
-                                Text(option.text ?? "").foregroundColor(foregroundColor)
+                            if !option.likeBack {
+                                Spacer().frame(height: 6)
                             }
-                            Spacer().frame(width: 16)
                         }
-                        Spacer().frame(height: 6)
+                    }
+                    .font(option.likeBack ? .largeTitle : .title)
+                    .background(backgroundColor)
+                    .cornerRadius(option.likeBack ? 0 : 10.0)
+                    if index != options.count - 1 {
+                        Spacer().frame(width: 16)
                     }
                 }
-                .font(option.likeBack ? .largeTitle : .title)
-                .background(backgroundColor)
-                .cornerRadius(10.0)
-                Spacer().frame(width: 16)
-                
             }
         }
     }

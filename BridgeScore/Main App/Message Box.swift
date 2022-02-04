@@ -40,6 +40,7 @@ struct MessageBoxView: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     @State var suppressIcon: Bool = false
     @ObservedObject var values = MessageBox.shared
+    @State var showIcon = true
 
     var body: some View {
         ZStack {

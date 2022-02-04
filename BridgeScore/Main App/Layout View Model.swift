@@ -14,6 +14,8 @@ public class LayoutViewModel : ObservableObject, Identifiable, CustomDebugString
     // Properties in core data model
     @Published private(set) var layoutId: UUID
     @Published public var sequence: Int
+    @Published public var location: LocationViewModel?
+    @Published public var partner: PlayerViewModel?
     @Published public var desc: String
     @Published public var boards: Int = 0
     @Published public var boardsTable: Int = 0
@@ -36,6 +38,8 @@ public class LayoutViewModel : ObservableObject, Identifiable, CustomDebugString
         var result = false
         if let mo = self.layoutMO {
             if self.layoutId != mo.layoutId ||
+                self.location?.locationId != mo.locationId ||
+                self.partner?.playerId != mo.partnerId ||
                 self.desc != mo.desc ||
                 self.sequence != mo.sequence ||
                 self.boards != mo.boards ||
@@ -92,6 +96,12 @@ public class LayoutViewModel : ObservableObject, Identifiable, CustomDebugString
         if let mo = self.layoutMO {
             self.layoutId = mo.layoutId
             self.sequence = mo.sequence
+            if let location = MasterData.shared.location(id: mo.locationId) {
+                self.location = location
+            }
+            if let partner = MasterData.shared.player(id: mo.partnerId) {
+                self.partner = partner
+            }
             self.desc = mo.desc
             self.boards = mo.boards
             self.boardsTable = mo.boardsTable

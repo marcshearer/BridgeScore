@@ -28,18 +28,6 @@ class MasterData: ObservableObject {
         let locationMOs = CoreData.fetch(from: LocationMO.tableName, sort: (key: #keyPath(LocationMO.sequence16), direction: .ascending)) as! [LocationMO]
         let scorecardMOs = CoreData.fetch(from: ScorecardMO.tableName, sort: (key: #keyPath(ScorecardMO.date), direction: .descending)) as! [ScorecardMO]
         
-        // Setup layouts
-        self.layouts = [:]
-        for layoutMO in layoutMOs {
-            self.layouts[layoutMO.layoutId] = LayoutViewModel(layoutMO: layoutMO)
-        }
-        if layouts.count == 0 {
-            // No layouts - create defaults
-            for layout in DefaultData.layouts {
-                self.insert(layout: layout)
-            }
-        }
-        
         // Setup players
         self.players = [:]
         for playerMO in playerMOs {
@@ -61,6 +49,19 @@ class MasterData: ObservableObject {
             // No locations - create defaults
             for location in DefaultData.locations {
                 self.insert(location: location)
+            }
+        }
+        
+        // Setup layouts
+        self.layouts = [:]
+        for layoutMO in layoutMOs {
+            self.layouts[layoutMO.layoutId] = LayoutViewModel(layoutMO: layoutMO)
+        }
+        if layouts.count == 0 {
+            // No layouts - create defaults
+            let layouts = DefaultData.layouts(players: players.map{$0.value}, locations: locations.map{$0.value})
+            for layout in layouts {
+                self.insert(layout: layout)
             }
         }
   
@@ -113,12 +114,14 @@ extension MasterData {
     
     private func updateMO(layout: LayoutViewModel) {
         layout.layoutMO!.layoutId = layout.layoutId
-        layout.layoutMO!.sequence = layout.sequence
+        layout.layoutMO!.locationId = layout.location?.locationId
+        layout.layoutMO!.partnerId = layout.partner?.playerId
         layout.layoutMO!.desc = layout.desc
         layout.layoutMO!.boards = layout.boards
         layout.layoutMO!.boardsTable = layout.boardsTable
         layout.layoutMO!.type = layout.type
         layout.layoutMO!.tableTotal = layout.tableTotal
+        layout.layoutMO!.sequence = layout.sequence
     }
 }
 
@@ -134,7 +137,6 @@ extension MasterData {
             scorecard.scorecardMO = ScorecardMO()
             self.updateMO(scorecard: scorecard)
             self.scorecards[scorecard.scorecardId] = scorecard
-            print("Insert \(scorecard.scorecardId.uuidString)")
         })
     }
     

@@ -13,18 +13,18 @@ import PencilKit
 public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, CustomDebugStringConvertible {
 
     // Properties in core data model
-    @Published private(set) var scorecardId: UUID
+    @Published private(set) var scorecardId = UUID()
     public var id: UUID { self.scorecardId }
-    @Published public var date: Date
+    @Published public var date = Date()
     @Published public var location: LocationViewModel?
-    @Published public var desc: String
+    @Published public var desc: String = ""
     @Published public var comment: String = ""
     @Published public var partner: PlayerViewModel?
     @Published public var boards: Int = 0
     @Published public var boardsTable: Int = 0
     @Published public var type: Type = .percent
     @Published public var tableTotal: Bool = false
-    @Published public var totalScore: Float = 0
+    @Published public var totalScore: String = ""
     @Published public var drawingWidth: CGFloat = 0.0
     @Published public var drawing = PKDrawing()
     
@@ -66,15 +66,15 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     }
     
     public init() {
-        self.scorecardId = UUID()
-        self.date = Date()
-        self.desc = ""
+        self.reset()
         self.setupMappings()
     }
     
     public convenience init(layout: LayoutViewModel) {
         self.init()
         self.desc = layout.desc
+        self.location = layout.location
+        self.partner = layout.partner
         self.boards = layout.boards
         self.boardsTable = layout.boardsTable
         self.type = layout.type
@@ -91,9 +91,17 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         $desc
             .receive(on: RunLoop.main)
             .map { (desc) in
-                return (desc == "" ? "Scorecard description must not be left blank. Either enter a valid description or delete this scorecard" : (self.descExists(desc) ? "This description already exists on another scorecard. The description must be unique" : ""))
+                return (desc == "" ? "Description must be non-blank.\nPlease re-edit and enter a valid description or delete this scorecard." : "")
             }
         .assign(to: \.saveMessage, on: self)
+        .store(in: &cancellableSet)
+        
+        $desc
+            .receive(on: RunLoop.main)
+            .map { (desc) in
+                return (desc == "" ? "Must be non-blank" : "")
+            }
+        .assign(to: \.descMessage, on: self)
         .store(in: &cancellableSet)
         
         Publishers.CombineLatest($desc, $scorecardMO)
@@ -207,7 +215,6 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     }
     
     public func reset() {
-        UserDefault.currentUnsaved.set(true)
         self.scorecardId = UUID()
         self.date = Date()
         self.location = MasterData.shared.locations.compactMap{ $0.value }.sorted(by: {$0.sequence < $1.sequence}).first!
@@ -218,15 +225,13 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.boardsTable = 3
         self.type = .percent
         self.tableTotal = true
-        self.totalScore = 0
+        self.totalScore = ""
         self.drawing = PKDrawing()
         self.drawingWidth = 0
         self.scorecardMO = nil
     }
     
     public func restoreCurrent() {
-        UserDefault.currentUnsaved.set(true)
-        
         // First try to read existing
         if let id = UserDefault.currentId.uuid {
             let savedScorecard = MasterData.shared.scorecard(id: id)
@@ -244,7 +249,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.boardsTable = UserDefault.currentBoardsTable.int
         self.type = UserDefault.currentType.type
         self.tableTotal = UserDefault.currentTableTotal.bool
-        self.totalScore = UserDefault.currentTotalScore.float
+        self.totalScore = UserDefault.currentTotalScore.string
         self.drawing = (try? PKDrawing(data: UserDefault.currentDrawing.data)) ?? PKDrawing()
         self.drawingWidth = CGFloat(UserDefault.currentWidth.float)
     }

@@ -8,13 +8,16 @@
 import SwiftUI
 
 struct StandardView <Content> : View where Content : View {
-    @ObservedObject var messageBox = MessageBox.shared
+    @ObservedObject private var messageBox = MessageBox.shared
     var navigation: Bool
-    @State var animate = false
+    var animate = false
     var content: Content
+    var backgroundColor: PaletteColor
     
-    init(navigation: Bool = false, @ViewBuilder content: ()->Content) {
+    init(navigation: Bool = false, animate: Bool = false, backgroundColor: PaletteColor = Palette.background, @ViewBuilder content: ()->Content) {
         self.navigation = navigation
+        self.animate = animate
+        self.backgroundColor = backgroundColor
         self.content = content()
     }
         
@@ -30,31 +33,37 @@ struct StandardView <Content> : View where Content : View {
     }
     
     private func contentView() -> some View {
-        return ZStack {
-            Palette.background.background
-                .ignoresSafeArea(edges: .all)
-            self.content
+        GeometryReader { (geometry) in
+        ZStack {
+            backgroundColor.background
+                .ignoresSafeArea()
+            
+            VStack {
+                Spacer().frame(height: geometry.safeAreaInsets.top)
+                self.content
+            }
+            SlideInMenuView()
             if messageBox.isShown {
                 Palette.maskBackground
                     .ignoresSafeArea(edges: .all)
-                GeometryReader { geometry in
-                    VStack() {
+                VStack() {
+                    Spacer()
+                    HStack {
                         Spacer()
-                        HStack {
-                            Spacer()
-                            let width = min(geometry.size.width - 40, 400)
-                            let height = min(geometry.size.height - 40, 250)
-                            MessageBoxView(suppressIcon: width < 400)
-                                .frame(width: width, height: height)
-                                .cornerRadius(20)
-                            Spacer()
-                        }
+                        let width = min(geometry.size.width - 40, 400)
+                        let height = min(geometry.size.height - 40, 250)
+                        MessageBoxView(showIcon: width >= 400)
+                            .frame(width: width, height: height)
+                            .cornerRadius(20)
                         Spacer()
                     }
+                    Spacer()
                 }
             }
         }
+        .ignoresSafeArea()
+        .animation(animate || messageBox.isShown ? .easeInOut(duration: 0.5) : nil)
         .noNavigationBar
+        }
     }
 }
-

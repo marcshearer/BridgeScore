@@ -70,7 +70,7 @@ enum UserDefault: String, CaseIterable {
         case .currentTableTotal:
             return false
         case .currentTotalScore:
-            return 0.0
+            return ""
         case .currentDrawing:
             return Data()
         case .currentWidth:

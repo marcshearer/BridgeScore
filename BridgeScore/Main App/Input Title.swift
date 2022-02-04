@@ -53,9 +53,9 @@ struct InputTitle : View {
                             Spacer()
                             Text(message)
                                 .foregroundColor(Palette.background.strongText)
-                                .font(captionFont)
+                                .font(messageFont)
                         }
-                        Spacer().frame(width: 32)
+                        Spacer().frame(width: 16)
                     }
                 }
             }
