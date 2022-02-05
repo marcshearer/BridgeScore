@@ -36,7 +36,6 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     @Published public var descMessage: String = ""
     @Published private(set) var saveMessage: String = ""
     @Published private(set) var canSave: Bool = false
-    @Published internal var canExit: Bool = false
     @Published internal var editTitle: String = "New Scorecard"
     
     // Auto-cleanup
@@ -120,14 +119,6 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         .assign(to: \.canSave, on: self)
         .store(in: &cancellableSet)
         
-        Publishers.CombineLatest3($desc, $scorecardMO, $canSave)
-            .receive(on: RunLoop.main)
-            .map { (desc, scorecardMO, canSave) in
-                return (canSave || (scorecardMO == nil && desc == ""))
-            }
-        .assign(to: \.canExit, on: self)
-        .store(in: &cancellableSet)
- 
     }
     
     public func revert() {

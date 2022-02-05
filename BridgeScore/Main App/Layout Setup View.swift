@@ -9,36 +9,63 @@ import SwiftUI
 
 struct LayoutSetupView: View {
     @State private var title = "Layouts"
-    @State var selected = LayoutViewModel()
+    @StateObject var selected = LayoutViewModel()
     
     var body: some View {
         StandardView() {
             VStack(spacing: 0) {
-                Banner(title: $title, bottomSpace: false, back: true)
+                Banner(title: $title, bottomSpace: false, back: true, backEnabled: { return selected.canSave })
                 DoubleColumnView {
-                    LayoutSelectionView(update: update)
-                        .environmentObject(selected)
+                    LayoutSelectionView(selected: selected, changeSelection: changeSelection, removeSelection: removeSelection, addLayout: addLayout)
                 } rightView: {
-                    LayoutDetailView()
-                        .environmentObject(selected)
+                    LayoutDetailView(selected: selected)
                 }
             }
         }
         .onAppear {
-            selected = MasterData.shared.layouts.compactMap{$0.value}.sorted(by: {$0.sequence < $1.sequence}).first!
+            selected.copy(from: MasterData.shared.layouts.compactMap{$0.value}.sorted(by: {$0.sequence < $1.sequence}).first!)
+        }
+        .onDisappear {
+            save(layout: selected)
         }
     }
     
-    func update(to: LayoutViewModel) {
-        selected = to
+    func changeSelection(newLayout: LayoutViewModel) {
+        save(layout: selected)
+        selected.copy(from: newLayout)
+    }
+    
+    func removeSelection(removeLayout: LayoutViewModel) {
+        if let master = MasterData.shared.layout(id: removeLayout.layoutId) {
+            MasterData.shared.remove(layout: master)
+        }
+        selected.copy(from: MasterData.shared.layouts.compactMap{$0.value}.sorted(by: {$0.sequence < $1.sequence}).first!)
+    }
+
+    func addLayout() {
+        save(layout: selected)
+        selected.copy(from: LayoutViewModel())
+        selected.sequence = MasterData.shared.layouts.compactMap{$0.value}.sorted(by: {$0.sequence < $1.sequence}).last!.sequence + 1
+    }
+    
+    func save(layout: LayoutViewModel) {
+        if let master = MasterData.shared.layout(id: layout.layoutId) {
+            master.copy(from: layout)
+            MasterData.shared.save(layout: master)
+        } else {
+            let master = LayoutViewModel()
+            master.copy(from: layout)
+            MasterData.shared.insert(layout: master)
+        }
     }
 }
 
 struct LayoutSelectionView : View {
-    @State var update: (LayoutViewModel)->()
-    
-    @EnvironmentObject var selected: LayoutViewModel
-    
+    @ObservedObject var selected: LayoutViewModel
+    @State var changeSelection: (LayoutViewModel)->()
+    @State var removeSelection: (LayoutViewModel)->()
+    @State var addLayout: ()->()
+
     var body: some View {
         let disabled = !selected.canSave
         
@@ -63,21 +90,59 @@ struct LayoutSelectionView : View {
                         .background(Rectangle().fill(color.background))
                         .foregroundColor(color.text.opacity(disabled ? 0.3 : 1.0))
                         .onTapGesture {
-                            update(layout)
+                            changeSelection(layout)
                         }
                     }
                 }
                 Spacer()
             }
+            .disabled(disabled)
             Spacer()
+            LayoutToolbarView(selected: selected, removeSelection: removeSelection, addLayout: addLayout)
         }
-        .disabled(disabled)
         .background(Palette.background.background)
     }
 }
 
+struct LayoutToolbarView : View {
+    @ObservedObject var selected: LayoutViewModel
+    @State var removeSelection: (LayoutViewModel)->()
+    @State var addLayout: ()->()
+
+    var body: some View {
+        ZStack {
+            Rectangle()
+                .fill(Palette.alternate.background)
+                .frame(height: 50)
+            HStack {
+                Spacer().frame(width: 20)
+                Button {
+                    addLayout()
+                } label: {
+                    Image(systemName: "plus")
+                }
+                .opacity(!selected.canSave ? 0.3 : 1.0)
+                .disabled(!selected.canSave)
+                
+                let canDelete = (selected.isNew || MasterData.shared.layouts.count > 1) // Can't delete last one
+                Spacer().frame(width: 20)
+                Button {
+                    removeSelection(selected)
+                } label: {
+                    Image(systemName: "minus")
+                }
+                .opacity(!canDelete ? 0.3 : 1.0)
+                .disabled(!canDelete)
+                Spacer()
+            }
+            .font(.title)
+            .foregroundColor(Palette.alternate.text)
+        }
+    }
+}
+
 struct LayoutDetailView : View {
-    @EnvironmentObject var selected: LayoutViewModel
+    @ObservedObject var selected: LayoutViewModel
     
     @State var minValue = 1
     

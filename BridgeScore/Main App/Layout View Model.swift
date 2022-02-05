@@ -29,7 +29,6 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
     @Published public var descMessage: String = ""
     @Published private(set) var saveMessage: String = ""
     @Published private(set) var canSave: Bool = false
-    @Published internal var canExit: Bool = false
     
     // Auto-cleanup
     private var cancellableSet: Set<AnyCancellable> = []
@@ -95,15 +94,6 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
             }
         .assign(to: \.canSave, on: self)
         .store(in: &cancellableSet)
-        
-        Publishers.CombineLatest3($desc, $layoutMO, $canSave)
-            .receive(on: RunLoop.main)
-            .map { (desc, layoutMO, canSave) in
-                return (canSave || (layoutMO == nil && desc == ""))
-            }
-        .assign(to: \.canExit, on: self)
-        .store(in: &cancellableSet)
- 
     }
     
     private func revert() {
@@ -136,6 +126,7 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
         self.boardsTable = from.boardsTable
         self.type = from.type
         self.tableTotal = from.tableTotal
+        self.layoutMO = from.layoutMO
     }
     
     public func save() {
@@ -152,6 +143,10 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
     
     public func remove() {
         MasterData.shared.remove(layout: self)
+    }
+    
+    public var isNew: Bool {
+        return self.layoutMO == nil
     }
     
     private func descExists(_ name: String) -> Bool {

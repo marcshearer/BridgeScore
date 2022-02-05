@@ -22,7 +22,6 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
     @Published public var nameMessage: String = ""
     @Published private(set) var saveMessage: String = ""
     @Published private(set) var canSave: Bool = false
-    @Published internal var canExit: Bool = false
     
     // Auto-cleanup
     private var cancellableSet: Set<AnyCancellable> = []
@@ -75,14 +74,6 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
         .assign(to: \.canSave, on: self)
         .store(in: &cancellableSet)
         
-        Publishers.CombineLatest3($name, $playerMO, $canSave)
-            .receive(on: RunLoop.main)
-            .map { (name, playerMO, canSave) in
-                return (canSave || (playerMO == nil && name == ""))
-            }
-        .assign(to: \.canExit, on: self)
-        .store(in: &cancellableSet)
- 
     }
     
     private func revert() {
@@ -107,6 +98,10 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
     
     public func remove() {
         MasterData.shared.remove(player: self)
+    }
+    
+    public var isNew: Bool {
+        return self.playerMO == nil
     }
     
     private func nameExists(_ name: String) -> Bool {

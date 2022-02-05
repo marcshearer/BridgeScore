@@ -34,7 +34,7 @@ struct Banner: View {
     var color: PaletteColor = Palette.banner
     var bottomSpace: Bool = true
     var back: Bool = true
-    var backEnabled: Binding<Bool>?
+    var backEnabled: (()->(Bool))?
     var backImage: AnyView? = AnyView(Image(systemName: "chevron.left"))
     var backAction: (()->(Bool))?
     var optionMode: BannerOptionMode = .none
@@ -85,7 +85,7 @@ struct Banner: View {
     }
     
     var backButton: some View {
-        let enabled = backEnabled?.wrappedValue ?? true
+        let enabled = backEnabled?() ?? true
         return Button(action: {
             if enabled {
                 if backAction?() ?? true {
@@ -118,7 +118,7 @@ struct Banner_Menu : View {
                         selected.action()
                     }
                 }
-            } label : {
+            } label: {
                 image ?? AnyView(Image(systemName: "gearshape").foregroundColor(Palette.banner.text).font(.largeTitle))
             }
     

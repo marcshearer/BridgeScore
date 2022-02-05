@@ -22,7 +22,6 @@ public class LocationViewModel : ObservableObject, Identifiable, Equatable, Cust
     @Published public var nameMessage: String = ""
     @Published private(set) var saveMessage: String = ""
     @Published private(set) var canSave: Bool = false
-    @Published internal var canExit: Bool = false
     
     // Auto-cleanup
     private var cancellableSet: Set<AnyCancellable> = []
@@ -75,14 +74,6 @@ public class LocationViewModel : ObservableObject, Identifiable, Equatable, Cust
         .assign(to: \.canSave, on: self)
         .store(in: &cancellableSet)
         
-        Publishers.CombineLatest3($name, $locationMO, $canSave)
-            .receive(on: RunLoop.main)
-            .map { (name, locationMO, canSave) in
-                return (canSave || (locationMO == nil && name == ""))
-            }
-        .assign(to: \.canExit, on: self)
-        .store(in: &cancellableSet)
- 
     }
     
     private func revert() {
@@ -107,6 +98,10 @@ public class LocationViewModel : ObservableObject, Identifiable, Equatable, Cust
     
     public func remove() {
         MasterData.shared.remove(location: self)
+    }
+    
+    public var isNew: Bool {
+        return self.locationMO == nil
     }
     
     private func nameExists(_ name: String) -> Bool {

@@ -65,7 +65,6 @@ struct ScorecardListView: View {
             NavigationLink(destination: ScorecardDetailView(scorecard: $scorecard), isActive: $linkToEdit) {EmptyView()}
         }
         .sheet(isPresented: $linkToNew, onDismiss: {
-            print("Dismissed \(layoutSelected) \(layout.desc)")
             if layoutSelected {
                 self.scorecard = ScorecardViewModel(layout: layout)
                 self.linkToEdit = true

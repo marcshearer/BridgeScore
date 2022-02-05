@@ -28,7 +28,6 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
     
     @Published private(set) var saveMessage: String = ""
     @Published private(set) var canSave: Bool = true
-    @Published internal var canExit: Bool = true
     
     // Auto-cleanup
     private var cancellableSet: Set<AnyCancellable> = []
@@ -106,6 +105,10 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
         if Scorecard.current.match(scorecard: self.scorecard) {
             Scorecard.current.remove(board: self)
         }
+    }
+    
+    public var isNew: Bool {
+        return self.boardMO == nil
     }
     
     public var description: String {
