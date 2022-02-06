@@ -25,6 +25,8 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     @Published public var type: Type = .percent
     @Published public var tableTotal: Bool = false
     @Published public var totalScore: String = ""
+    @Published public var position: Int = 0
+    @Published public var entry: Int = 0
     @Published public var drawingWidth: CGFloat = 0.0
     @Published public var drawing = PKDrawing()
     
@@ -55,6 +57,8 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
                 self.type != mo.type ||
                 self.tableTotal != mo.tableTotal ||
                 self.totalScore != mo.totalScore ||
+                self.position != mo.position ||
+                self.entry != mo.entry ||
                 self.drawing != mo.drawing ||
                 self.drawingWidth != mo.drawingWidth
             {
@@ -138,25 +142,33 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             self.type = mo.type
             self.tableTotal = mo.tableTotal
             self.totalScore = mo.totalScore
+            self.position = mo.position
+            self.entry = mo.entry
             self.drawing = mo.drawing
             self.drawingWidth = mo.drawingWidth
         }
     }
     
     public func updateMO() {
-        self.scorecardMO!.scorecardId = self.scorecardId
-        self.scorecardMO!.date = self.date
-        self.scorecardMO!.locationId = self.location?.locationId
-        self.scorecardMO!.desc = self.desc
-        self.scorecardMO!.comment = self.comment
-        self.scorecardMO!.partnerId = self.partner?.playerId
-        self.scorecardMO!.boards = self.boards
-        self.scorecardMO!.boardsTable = self.boardsTable
-        self.scorecardMO!.type = self.type
-        self.scorecardMO!.tableTotal = self.tableTotal
-        self.scorecardMO!.totalScore = self.totalScore
-        self.scorecardMO!.drawing = self.drawing
-        self.scorecardMO!.drawingWidth = self.drawingWidth
+        if let mo = self.scorecardMO {
+            mo.scorecardId = self.scorecardId
+            mo.date = self.date
+            mo.locationId = self.location?.locationId
+            mo.desc = self.desc
+            mo.comment = self.comment
+            mo.partnerId = self.partner?.playerId
+            mo.boards = self.boards
+            mo.boardsTable = self.boardsTable
+            mo.type = self.type
+            mo.tableTotal = self.tableTotal
+            mo.totalScore = self.totalScore
+            mo.position = self.position
+            mo.entry = self.entry
+            mo.drawing = self.drawing
+            mo.drawingWidth = self.drawingWidth
+        } else {
+            fatalError("No managed object")
+        }
     }
     
     public static func == (lhs: ScorecardViewModel, rhs: ScorecardViewModel) -> Bool {
@@ -212,6 +224,8 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         UserDefault.currentType.set(self.type)
         UserDefault.currentTableTotal.set(self.tableTotal)
         UserDefault.currentTotalScore.set(self.totalScore)
+        UserDefault.currentPosition.set(self.position)
+        UserDefault.currentEntry.set(self.entry)
         backupCurrentDrawing()
     }
     
@@ -233,6 +247,8 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.type = .percent
         self.tableTotal = true
         self.totalScore = ""
+        self.position = 0
+        self.entry = 0
         self.drawing = PKDrawing()
         self.drawingWidth = 0
         self.scorecardMO = nil
@@ -257,6 +273,8 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.type = UserDefault.currentType.type
         self.tableTotal = UserDefault.currentTableTotal.bool
         self.totalScore = UserDefault.currentTotalScore.string
+        self.position = UserDefault.currentPosition.int
+        self.entry = UserDefault.currentEntry.int
         self.drawing = (try? PKDrawing(data: UserDefault.currentDrawing.data)) ?? PKDrawing()
         self.drawingWidth = CGFloat(UserDefault.currentWidth.float)
     }

@@ -26,6 +26,8 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var type16: Int16
     @NSManaged public var tableTotal: Bool
     @NSManaged public var totalScore: String
+    @NSManaged public var position16: Int16
+    @NSManaged public var entry16: Int16
     @NSManaged public var drawingData: Data
     @NSManaged public var drawingWidthFloat: Float
     
@@ -42,6 +44,16 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
     public var boardsTable: Int {
         get { Int(self.boardsTable16) }
         set { self.boardsTable16 = Int16(newValue)}
+    }
+    
+    public var position: Int {
+        get { Int(self.position16) }
+        set { self.position16 = Int16(newValue)}
+    }
+    
+    public var entry: Int {
+        get { Int(self.entry16) }
+        set { self.entry16 = Int16(newValue)}
     }
     
     public var type: Type {

@@ -94,6 +94,14 @@ struct ScorecardDetailsView: View {
                 
                 Input(title: "Score", field: $scorecard.totalScore, width: 100)
                 
+                InputTitle(title: " Position")
+                HStack {
+                    StepperInput(field: $scorecard.position, label: { value in "\(value)" }, width: 180)
+                    Text("    of ")
+                    StepperInput(field: $scorecard.entry, label: { value in "\(value)" }, width: 180)
+                    Spacer()
+                }
+                
                 Spacer().frame(height: 16)
             })})
             

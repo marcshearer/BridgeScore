@@ -108,9 +108,9 @@ class Utility {
         // Special case for short dates
         if style == .short && doesRelativeDateFormatting && format == "dd MMM yyyy" && result.contains("/") {
             if date > Date.startOfDay(days: -365)! {
-                result = dateString(date, format: "dd MMMM", localized: localized)
+                result = dateString(date, format: "EEE dd MMMM", localized: localized)
             } else {
-                result = dateString(date, format: "dd MMM yyyy", localized: localized)
+                result = dateString(date, format: "EEE dd MMM yyyy", localized: localized)
             }
         }
         

@@ -39,24 +39,21 @@ struct StepperInput: View {
                 Spacer().frame(height: topSpace)
             }
             HStack {
-                HStack {
-                    Spacer().frame(width: 32)
-                    Stepper {
-                        if let label = label {
-                            Text(label(field))
-                        } else {
-                            Text(String(field))
-                        }
-                    } onIncrement: {
-                        change(direction: 1)
-                    } onDecrement: {
-                        change(direction: -1)
+                Spacer().frame(width: 32)
+                Stepper {
+                    if let label = label {
+                        Text(label(field))
+                    } else {
+                        Text(String(field))
                     }
+                } onIncrement: {
+                    change(direction: 1)
+                } onDecrement: {
+                    change(direction: -1)
                 }
-                .font(inputFont)
-                .frame(width: width)
-                Spacer()
             }
+            .font(inputFont)
+            .frame(width: width)
             Spacer()
         }
         .frame(height: self.height + self.topSpace + (title == nil ? 0 : 30))

@@ -91,12 +91,21 @@ struct ScorecardSummaryView: View {
                             HStack {
                                 Text(scorecard.desc)
                                 Spacer()
-                                Text(scorecard.totalScore)
+                                if scorecard.position != 0 && scorecard.entry != 0 {
+                                    Text("\(scorecard.position) / \(scorecard.entry)")
+                                        .frame(width: 100)
+                                }
+                                HStack {
+                                    Spacer()
+                                    Text(scorecard.totalScore)
+                                }
+                                .frame(width: 100)
                                     
                                 Spacer().frame(width: 30)
                             }
                             Spacer()
                         }
+                        .minimumScaleFactor(0.5)
                         .foregroundColor(Palette.tile.text)
                         .font(.title)
                         Spacer()

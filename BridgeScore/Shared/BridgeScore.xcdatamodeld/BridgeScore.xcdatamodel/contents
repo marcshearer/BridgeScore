@@ -44,8 +44,10 @@
         <attribute name="desc" optional="YES" attributeType="String"/>
         <attribute name="drawingData" optional="YES" attributeType="Binary"/>
         <attribute name="drawingWidthFloat" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="entry16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="locationId" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="partnerId" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="position16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="scorecardId" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="tableTotal" attributeType="Boolean" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="totalScore" attributeType="String"/>
@@ -56,6 +58,6 @@
         <element name="Layout" positionX="-45" positionY="0" width="128" height="179"/>
         <element name="Location" positionX="27" positionY="189" width="128" height="89"/>
         <element name="Player" positionX="9" positionY="171" width="128" height="89"/>
-        <element name="Scorecard" positionX="-18" positionY="81" width="128" height="224"/>
+        <element name="Scorecard" positionX="-18" positionY="81" width="128" height="254"/>
     </elements>
 </model>
