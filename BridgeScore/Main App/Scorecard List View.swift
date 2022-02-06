@@ -63,6 +63,7 @@ struct ScorecardListView: View {
             }
             NavigationLink(destination: LayoutSetupView(), isActive: $linkToLayouts) {EmptyView()}
             NavigationLink(destination: PlayerSetupView(), isActive: $linkToPlayers) {EmptyView()}
+            NavigationLink(destination: LocationSetupView(), isActive: $linkToLocations) {EmptyView()}
             NavigationLink(destination: ScorecardDetailView(scorecard: $scorecard), isActive: $linkToEdit) {EmptyView()}
         }
         .sheet(isPresented: $linkToNew, onDismiss: {

@@ -76,12 +76,12 @@ struct ScorecardDetailsView: View {
             
             InsetView(content: { AnyView( VStack {
                 
-                PickerInput(title: "Location", field: $locationIndex, values: locations.map{$0.name})
+                PickerInput(title: "Location", field: $locationIndex, values: {locations.filter{!$0.retired || $0 == scorecard.location}.map{$0.name}})
                 { index in
                     scorecard.location = locations[index]
                 }
                 
-                PickerInput(title: "Partner", field: $playerIndex, values: players.map{$0.name})
+                PickerInput(title: "Partner", field: $playerIndex, values: {players.filter{!$0.retired || $0 == scorecard.partner}.map{$0.name}})
                 { index in
                     scorecard.partner = players[index]
                 }
@@ -99,7 +99,7 @@ struct ScorecardDetailsView: View {
             
             InsetView(content: { AnyView( VStack {
                 
-                PickerInput(title: "Scoring Method", field: $typeIndex, values: types.map{$0.string})
+                PickerInput(title: "Scoring Method", field: $typeIndex, values: {types.map{$0.string}})
                 { index in
                     scorecard.type = types[index]
                 }

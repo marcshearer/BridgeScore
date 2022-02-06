@@ -52,6 +52,7 @@
 		B26BCE76279BEBA500B73501 /* Scorecard Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */; };
 		B2A2053527AFC2E400C83C88 /* Player Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053427AFC2E400C83C88 /* Player Setup View.swift */; };
 		B2A2053727AFC41500C83C88 /* Toolbar View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053627AFC41500C83C88 /* Toolbar View.swift */; };
+		B2A2053927B01D0000C83C88 /* Location Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053827B01D0000C83C88 /* Location Setup View.swift */; };
 		B2AF750D27AD14FD00233693 /* Slide In Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AF750C27AD14FD00233693 /* Slide In Menu.swift */; };
 		B2AF750F27AD384900233693 /* Layout Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AF750E27AD384900233693 /* Layout Setup View.swift */; };
 		B2BE9BD027A15B6B002A6F8F /* Inset View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2BE9BCF27A15B6B002A6F8F /* Inset View.swift */; };
@@ -115,6 +116,7 @@
 		B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Managed Object.swift"; sourceTree = "<group>"; };
 		B2A2053427AFC2E400C83C88 /* Player Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Player Setup View.swift"; sourceTree = "<group>"; };
 		B2A2053627AFC41500C83C88 /* Toolbar View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Toolbar View.swift"; sourceTree = "<group>"; };
+		B2A2053827B01D0000C83C88 /* Location Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Location Setup View.swift"; sourceTree = "<group>"; };
 		B2AF750C27AD14FD00233693 /* Slide In Menu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Slide In Menu.swift"; sourceTree = "<group>"; };
 		B2AF750E27AD384900233693 /* Layout Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Layout Setup View.swift"; sourceTree = "<group>"; };
 		B2BE9BCF27A15B6B002A6F8F /* Inset View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Inset View.swift"; sourceTree = "<group>"; };
@@ -333,6 +335,7 @@
 			children = (
 				B2AF750E27AD384900233693 /* Layout Setup View.swift */,
 				B2A2053427AFC2E400C83C88 /* Player Setup View.swift */,
+				B2A2053827B01D0000C83C88 /* Location Setup View.swift */,
 			);
 			name = "Setup Views";
 			sourceTree = "<group>";
@@ -457,6 +460,7 @@
 				B2A2053727AFC41500C83C88 /* Toolbar View.swift in Sources */,
 				B26BCE76279BEBA500B73501 /* Scorecard Managed Object.swift in Sources */,
 				B26BCE662799AED700B73501 /* Banner.swift in Sources */,
+				B2A2053927B01D0000C83C88 /* Location Setup View.swift in Sources */,
 				B26BCE6A2799AED700B73501 /* Standard View.swift in Sources */,
 				B2276D5827A5A2C90025DA80 /* UIKit Scorecard View.swift in Sources */,
 				B2EB3D77279D73FC00D64225 /* Scorecard View Model.swift in Sources */,
