@@ -143,12 +143,12 @@ struct LayoutDetailView : View {
                         
                         Input(title: "Description", field: $selected.desc, message: $selected.descMessage)
                         
-                        PickerInput2(title: "Location", field: $locationIndex, values: locations.map{$0.name})
+                        PickerInput(title: "Location", field: $locationIndex, values: locations.map{$0.name})
                         { index in
                             selected.location = locations[index]
                         }
                         
-                        PickerInput2(title: "Partner", field: $playerIndex, values: players.map{$0.name})
+                        PickerInput(title: "Partner", field: $playerIndex, values: players.map{$0.name})
                         { index in
                             selected.partner = players[index]
                         }
@@ -160,7 +160,7 @@ struct LayoutDetailView : View {
                     
                     InsetView(content: { AnyView( VStack {
                         
-                        PickerInput2(title: "Scoring Method", field: $typeIndex, values: types.map{$0.string})
+                        PickerInput(title: "Scoring Method", field: $typeIndex, values: types.map{$0.string})
                         { index in
                             selected.type = types[index]
                         }

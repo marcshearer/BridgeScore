@@ -7,9 +7,7 @@
 
 import SwiftUI
 
-
-
-struct PickerInput2 : View {
+struct PickerInput : View {
     
     var title: String
     @Binding var field: Int
