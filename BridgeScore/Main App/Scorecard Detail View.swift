@@ -61,13 +61,13 @@ struct ScorecardDetailsView: View {
     @ObservedObject var scorecard: ScorecardViewModel
     @State var minValue = 1
 
-    var locations = MasterData.shared.locations.compactMap { $0.value }.sorted(by: {$0.sequence < $1.sequence})
+    var locations = MasterData.shared.locations
     @State private var locationIndex: Int = 0
     
     let types = Type.allCases
     @State private var typeIndex: Int = 0
     
-    let players = MasterData.shared.players.compactMap { $0.value }.sorted(by: {$0.sequence < $1.sequence})
+    let players = MasterData.shared.players
     @State private var playerIndex: Int = 0
     
     var body: some View {
@@ -76,12 +76,12 @@ struct ScorecardDetailsView: View {
             
             InsetView(content: { AnyView( VStack {
                 
-                PickerInput(title: "Location", field: $locationIndex, values: locations.map {$0.name})
+                PickerInput2(title: "Location", field: $locationIndex, values: locations.map{$0.name})
                 { index in
                     scorecard.location = locations[index]
                 }
                 
-                PickerInput(title: "Partner", field: $playerIndex, values: players.map {$0.name})
+                PickerInput2(title: "Partner", field: $playerIndex, values: players.map{$0.name})
                 { index in
                     scorecard.partner = players[index]
                 }
@@ -99,7 +99,7 @@ struct ScorecardDetailsView: View {
             
             InsetView(content: { AnyView( VStack {
                 
-                PickerInput(title: "Scoring Method", field: $typeIndex, values: types.map{$0.string})
+                PickerInput2(title: "Scoring Method", field: $typeIndex, values: types.map{$0.string})
                 { index in
                     scorecard.type = types[index]
                 }

@@ -12,8 +12,8 @@
 		B21CC0C027A02A2A001AECC1 /* Stepper Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21CC0BF27A02A2A001AECC1 /* Stepper Input.swift */; };
 		B2276D5827A5A2C90025DA80 /* UIKit Scorecard View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2276D5727A5A2C90025DA80 /* UIKit Scorecard View.swift */; };
 		B2276D5A27A692A40025DA80 /* Constraint.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2276D5927A692A40025DA80 /* Constraint.swift */; };
-		B22D40A027A2BD6D002F2470 /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22D409F27A2BD6D002F2470 /* CanvasView.swift */; };
 		B22D40A227A2CF3E002F2470 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B22D40A127A2CF3E002F2470 /* Assets.xcassets */; };
+		B25ADA5E27AEB279007062AA /* Double Column View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25ADA5D27AEB279007062AA /* Double Column View.swift */; };
 		B2633A0E27AC3A460081B258 /* Layout List View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2633A0D27AC3A460081B258 /* Layout List View.swift */; };
 		B26BCDFA2799A1AC00B73501 /* BridgeScore App.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCDF92799A1AC00B73501 /* BridgeScore App.swift */; };
 		B26BCE012799A1AE00B73501 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B26BCE002799A1AE00B73501 /* Preview Assets.xcassets */; };
@@ -50,6 +50,8 @@
 		B26BCE72279B188600B73501 /* BridgeScore.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE70279B188600B73501 /* BridgeScore.xcdatamodeld */; };
 		B26BCE74279B236F00B73501 /* Layout Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE73279B236F00B73501 /* Layout Managed Object.swift */; };
 		B26BCE76279BEBA500B73501 /* Scorecard Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */; };
+		B2A2053527AFC2E400C83C88 /* Player Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053427AFC2E400C83C88 /* Player Setup View.swift */; };
+		B2A2053727AFC41500C83C88 /* Toolbar View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053627AFC41500C83C88 /* Toolbar View.swift */; };
 		B2AF750D27AD14FD00233693 /* Slide In Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AF750C27AD14FD00233693 /* Slide In Menu.swift */; };
 		B2AF750F27AD384900233693 /* Layout Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AF750E27AD384900233693 /* Layout Setup View.swift */; };
 		B2BE9BD027A15B6B002A6F8F /* Inset View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2BE9BCF27A15B6B002A6F8F /* Inset View.swift */; };
@@ -72,8 +74,8 @@
 		B21CC0BF27A02A2A001AECC1 /* Stepper Input.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Stepper Input.swift"; sourceTree = "<group>"; };
 		B2276D5727A5A2C90025DA80 /* UIKit Scorecard View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIKit Scorecard View.swift"; sourceTree = "<group>"; };
 		B2276D5927A692A40025DA80 /* Constraint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constraint.swift; sourceTree = "<group>"; };
-		B22D409F27A2BD6D002F2470 /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasView.swift; sourceTree = "<group>"; };
 		B22D40A127A2CF3E002F2470 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B25ADA5D27AEB279007062AA /* Double Column View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Double Column View.swift"; sourceTree = "<group>"; };
 		B2633A0D27AC3A460081B258 /* Layout List View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Layout List View.swift"; sourceTree = "<group>"; };
 		B26BCDF62799A1AC00B73501 /* BridgeScore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BridgeScore.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B26BCDF92799A1AC00B73501 /* BridgeScore App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BridgeScore App.swift"; sourceTree = "<group>"; };
@@ -111,6 +113,8 @@
 		B26BCE71279B188600B73501 /* BridgeScore.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = BridgeScore.xcdatamodel; sourceTree = "<group>"; };
 		B26BCE73279B236F00B73501 /* Layout Managed Object.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Layout Managed Object.swift"; sourceTree = "<group>"; };
 		B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Managed Object.swift"; sourceTree = "<group>"; };
+		B2A2053427AFC2E400C83C88 /* Player Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Player Setup View.swift"; sourceTree = "<group>"; };
+		B2A2053627AFC41500C83C88 /* Toolbar View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Toolbar View.swift"; sourceTree = "<group>"; };
 		B2AF750C27AD14FD00233693 /* Slide In Menu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Slide In Menu.swift"; sourceTree = "<group>"; };
 		B2AF750E27AD384900233693 /* Layout Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Layout Setup View.swift"; sourceTree = "<group>"; };
 		B2BE9BCF27A15B6B002A6F8F /* Inset View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Inset View.swift"; sourceTree = "<group>"; };
@@ -177,7 +181,8 @@
 			children = (
 				B26BCE242799AA6C00B73501 /* Standard Components */,
 				B26BCE252799AA7900B73501 /* View Models */,
-				B26BCE6D279AEB4C00B73501 /* Views */,
+				B26BCE6D279AEB4C00B73501 /* Main Views */,
+				B2A2053327AFBFB900C83C88 /* Setup Views */,
 				B2EB3D7C279F0E6000D64225 /* Shared Views */,
 				B26BCE232799AA6300B73501 /* Utilities */,
 				B26BCE222799AA5800B73501 /* Reusable UI Components */,
@@ -260,12 +265,13 @@
 				B21CC0BF27A02A2A001AECC1 /* Stepper Input.swift */,
 				B26BCE612799AED700B73501 /* Separator.swift */,
 				B26BCE5F2799AED700B73501 /* Standard View.swift */,
+				B25ADA5D27AEB279007062AA /* Double Column View.swift */,
+				B2A2053627AFC41500C83C88 /* Toolbar View.swift */,
 				B2BE9BCF27A15B6B002A6F8F /* Inset View.swift */,
 				B26BCE592799AED700B73501 /* Message Box.swift */,
 				B2AF750C27AD14FD00233693 /* Slide In Menu.swift */,
 				B26BCE5C2799AED700B73501 /* Swipe Gestures.swift */,
 				B26BCE572799AED700B73501 /* Target View Modifiers.swift */,
-				B22D409F27A2BD6D002F2470 /* CanvasView.swift */,
 			);
 			name = "Reusable UI Components";
 			sourceTree = "<group>";
@@ -311,16 +317,24 @@
 			name = Utilities;
 			sourceTree = "<group>";
 		};
-		B26BCE6D279AEB4C00B73501 /* Views */ = {
+		B26BCE6D279AEB4C00B73501 /* Main Views */ = {
 			isa = PBXGroup;
 			children = (
 				B26BCE6E279AEB6C00B73501 /* Scorecard List View.swift */,
 				B2633A0D27AC3A460081B258 /* Layout List View.swift */,
 				B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */,
 				B2276D5727A5A2C90025DA80 /* UIKit Scorecard View.swift */,
-				B2AF750E27AD384900233693 /* Layout Setup View.swift */,
 			);
-			name = Views;
+			name = "Main Views";
+			sourceTree = "<group>";
+		};
+		B2A2053327AFBFB900C83C88 /* Setup Views */ = {
+			isa = PBXGroup;
+			children = (
+				B2AF750E27AD384900233693 /* Layout Setup View.swift */,
+				B2A2053427AFC2E400C83C88 /* Player Setup View.swift */,
+			);
+			name = "Setup Views";
 			sourceTree = "<group>";
 		};
 		B2EB3D7C279F0E6000D64225 /* Shared Views */ = {
@@ -423,9 +437,11 @@
 				B26BCE482799AD8900B73501 /* Day Number.swift in Sources */,
 				B26BCE6F279AEB6C00B73501 /* Scorecard List View.swift in Sources */,
 				B26BCE4C2799AD8900B73501 /* My Image.swift in Sources */,
+				B25ADA5E27AEB279007062AA /* Double Column View.swift in Sources */,
 				B21CC0C027A02A2A001AECC1 /* Stepper Input.swift in Sources */,
 				B26BCE542799AE4D00B73501 /* Master Data.swift in Sources */,
 				B26BCE4B2799AD8900B73501 /* Date Extensions.swift in Sources */,
+				B2A2053527AFC2E400C83C88 /* Player Setup View.swift in Sources */,
 				B26BCDFA2799A1AC00B73501 /* BridgeScore App.swift in Sources */,
 				B2AF750D27AD14FD00233693 /* Slide In Menu.swift in Sources */,
 				B26BCE632799AED700B73501 /* Image Capture.swift in Sources */,
@@ -438,6 +454,7 @@
 				B26BCE3A2799AD6D00B73501 /* Core Data.swift in Sources */,
 				B26BCE562799AE6400B73501 /* Preview Data.swift in Sources */,
 				B2633A0E27AC3A460081B258 /* Layout List View.swift in Sources */,
+				B2A2053727AFC41500C83C88 /* Toolbar View.swift in Sources */,
 				B26BCE76279BEBA500B73501 /* Scorecard Managed Object.swift in Sources */,
 				B26BCE662799AED700B73501 /* Banner.swift in Sources */,
 				B26BCE6A2799AED700B73501 /* Standard View.swift in Sources */,
@@ -454,7 +471,6 @@
 				B26BCE362799AD1700B73501 /* Config.swift in Sources */,
 				B2AF750F27AD384900233693 /* Layout Setup View.swift in Sources */,
 				B26BCE6B2799AED700B73501 /* Input Title.swift in Sources */,
-				B22D40A027A2BD6D002F2470 /* CanvasView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

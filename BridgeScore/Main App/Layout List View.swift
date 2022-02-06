@@ -16,7 +16,7 @@ struct LayoutListView: View {
     @ObservedObject private var data = MasterData.shared
  
     var body: some View {
-        let layouts = data.layouts.map{$1}.sorted(by: {$0.sequence < $1.sequence})
+        let layouts = data.layouts
         
         StandardView {
             VStack(spacing: 0) {

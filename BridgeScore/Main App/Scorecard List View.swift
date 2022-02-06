@@ -26,7 +26,7 @@ struct ScorecardListView: View {
                            BannerOption(text: "About \(appName)", action: { MessageBox.shared.show("A Bridge scoring app from\nShearer Online Ltd", showIcon: true, showVersion: true) })]
         
         StandardView(navigation: true) {
-            let scorecards = data.scorecards.map{$1}.sorted(by: {$0.date > $1.date})
+            let scorecards = data.scorecards
             
             VStack {
                 Banner(title: $title, back: false, optionMode: .menu, menuTitle: "Setup", options: menuOptions)
@@ -62,6 +62,7 @@ struct ScorecardListView: View {
                 }
             }
             NavigationLink(destination: LayoutSetupView(), isActive: $linkToLayouts) {EmptyView()}
+            NavigationLink(destination: PlayerSetupView(), isActive: $linkToPlayers) {EmptyView()}
             NavigationLink(destination: ScorecardDetailView(scorecard: $scorecard), isActive: $linkToEdit) {EmptyView()}
         }
         .sheet(isPresented: $linkToNew, onDismiss: {
@@ -100,7 +101,7 @@ struct ScorecardSummaryView: View {
                         Spacer()
                         HStack {
                             // Text(scorecard.date.toFullString()).font(.callout).bold()
-                            Text(Utility.dateString(Date.startOfDay(from: scorecard.date)!, style: .short, doesRelativeDateFormatting: true, localized: false)).font(.callout).bold()
+                            Text(Utility.dateString(Date.startOfDay(from: scorecard.date)!, format: "dd MMM yyyy", style: .short, doesRelativeDateFormatting: true)).font(.callout).bold()
                             Spacer()
                             HStack {
                                 Text("With: ")
@@ -163,11 +164,5 @@ struct ListTileView: View {
         }
         .foregroundColor(color.text)
         .font(font)
-    }
-}
-
-struct DefaultView_Previews: PreviewProvider {
-    static var previews: some View {
-        ScorecardListView()
     }
 }

@@ -30,9 +30,11 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
     @Published private(set) var saveMessage: String = ""
     @Published private(set) var canSave: Bool = false
     
+    public let itemProvider = NSItemProvider(contentsOf: URL(string: "com.sheareronline.bridgescore.layout")!)!
+    
     // Auto-cleanup
     private var cancellableSet: Set<AnyCancellable> = []
-    
+        
     // Check if view model matches managed object
     public var changed: Bool {
         var result = false
@@ -129,6 +131,19 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
         self.layoutMO = from.layoutMO
     }
     
+    public func updateMO() {
+        self.layoutMO!.layoutId = self.layoutId
+        self.layoutMO!.locationId = self.location?.locationId
+        self.layoutMO!.partnerId = self.partner?.playerId
+        self.layoutMO!.desc = self.desc
+        self.layoutMO!.scorecardDesc = self.scorecardDesc
+        self.layoutMO!.boards = self.boards
+        self.layoutMO!.boardsTable = self.boardsTable
+        self.layoutMO!.type = self.type
+        self.layoutMO!.tableTotal = self.tableTotal
+        self.layoutMO!.sequence = self.sequence
+    }
+    
     public func save() {
         if self.layoutMO == nil {
             MasterData.shared.insert(layout: self)
@@ -150,7 +165,7 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
     }
     
     private func descExists(_ name: String) -> Bool {
-        return !MasterData.shared.layouts.compactMap{$1}.filter({$0.desc == desc && $0.layoutId != self.layoutId}).isEmpty
+        return !MasterData.shared.layouts.filter({$0.desc == desc && $0.layoutId != self.layoutId}).isEmpty
     }
     
     public var description: String {

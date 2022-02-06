@@ -16,7 +16,8 @@ public class PlayerMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var playerId: UUID
     @NSManaged public var sequence16: Int16
     @NSManaged public var name: String
-    
+    @NSManaged public var retired: Bool
+
     convenience init() {
         self.init(context: CoreData.context)
         self.playerId = UUID()

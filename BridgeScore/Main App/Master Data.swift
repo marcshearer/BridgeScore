@@ -12,10 +12,10 @@ class MasterData: ObservableObject {
     
     public static let shared = MasterData()
     
-    @Published private(set) var layouts: [UUID:LayoutViewModel] = [:]                  // Layout Id
-    @Published private(set) var players: [UUID:PlayerViewModel] = [:]                  // Player Id
-    @Published private(set) var locations: [UUID:LocationViewModel] = [:]              // Location Id
-    @Published private(set) var scorecards: [UUID:ScorecardViewModel] = [:]            // Scorecard Id
+    @Published private(set) var layouts: [LayoutViewModel] = []                  // Layout Id
+    @Published private(set) var players: [PlayerViewModel] = []                  // Player Id
+    @Published private(set) var locations: [LocationViewModel] = []              // Location Id
+    @Published private(set) var scorecards: [ScorecardViewModel] = []            // Scorecard Id
    
     public func load() {
         
@@ -29,9 +29,9 @@ class MasterData: ObservableObject {
         let scorecardMOs = CoreData.fetch(from: ScorecardMO.tableName, sort: (key: #keyPath(ScorecardMO.date), direction: .descending)) as! [ScorecardMO]
         
         // Setup players
-        self.players = [:]
+        self.players = []
         for playerMO in playerMOs {
-            players[playerMO.playerId] = PlayerViewModel(playerMO: playerMO)
+            players.append(PlayerViewModel(playerMO: playerMO))
         }
         if players.count == 0 {
             // No players - create defaults
@@ -41,9 +41,9 @@ class MasterData: ObservableObject {
         }
         
         // Setup locations
-        self.locations = [:]
+        self.locations = []
         for locationMO in locationMOs {
-            locations[locationMO.locationId] = LocationViewModel(locationMO: locationMO)
+            locations.append(LocationViewModel(locationMO: locationMO))
         }
         if locations.count == 0 {
             // No locations - create defaults
@@ -53,22 +53,22 @@ class MasterData: ObservableObject {
         }
         
         // Setup layouts
-        self.layouts = [:]
+        self.layouts = []
         for layoutMO in layoutMOs {
-            self.layouts[layoutMO.layoutId] = LayoutViewModel(layoutMO: layoutMO)
+            self.layouts.append(LayoutViewModel(layoutMO: layoutMO))
         }
         if layouts.count == 0 {
             // No layouts - create defaults
-            let layouts = DefaultData.layouts(players: players.map{$0.value}, locations: locations.map{$0.value})
+            let layouts = DefaultData.layouts(players: players, locations: locations)
             for layout in layouts {
                 self.insert(layout: layout)
             }
         }
   
         // Setup scorecards
-        self.scorecards = [:]
+        self.scorecards = []
         for scorecardMO in scorecardMOs {
-            scorecards[scorecardMO.scorecardId] = ScorecardViewModel(scorecardMO: scorecardMO)
+            scorecards.append(ScorecardViewModel(scorecardMO: scorecardMO))
         }
     }
 }
@@ -79,50 +79,58 @@ extension MasterData {
     
     public func insert(layout: LayoutViewModel) {
         assert(layout.layoutMO == nil, "Cannot insert a layout which already has a managed object")
-        assert(self.layouts[layout.layoutId] == nil, "Layout already exists and cannot be created")
-        assert(self.layouts[layout.layoutId]?.desc == nil, "Layout must have a non-blank description")
-        CoreData.update(updateLogic: {
+        assert(self.layout(id: layout.layoutId) == nil, "Layout already exists and cannot be created")
+        assert(self.layout(id: layout.layoutId)?.desc == nil, "Layout must have a non-blank description")
+        CoreData.update {
             layout.layoutMO = LayoutMO()
-            self.updateMO(layout: layout)
-            self.layouts[layout.layoutId] = layout
-        })
+            layout.updateMO()
+            let index = self.layouts.firstIndex(where: {$0.sequence > layout.sequence}) ?? layouts.endIndex
+            self.layouts.insert(layout, at: index)
+        }
     }
     
     public func remove(layout: LayoutViewModel) {
         assert(layout.layoutMO != nil, "Cannot remove a layout which doesn't already have a managed object")
-        assert(self.layouts[layout.layoutId] != nil, "Layout does not exist and cannot be deleted")
-        CoreData.update(updateLogic: {
+        assert(self.layout(id: layout.layoutId) != nil, "Layout does not exist and cannot be deleted")
+        CoreData.update {
             CoreData.context.delete(layout.layoutMO!)
-            self.layouts[layout.layoutId] = nil
-        })
+            if let index = self.layouts.firstIndex(where: {$0 == layout}) {
+                self.layouts.remove(at: index)
+            }
+        }
     }
     
     public func save(layout: LayoutViewModel) {
         assert(layout.layoutMO != nil, "Cannot save a layout which doesn't already have managed objects")
-        assert(self.layouts[layout.layoutId] != nil, "Layout does not exist and cannot be updated")
+        assert(self.layout(id: layout.layoutId) != nil, "Layout does not exist and cannot be updated")
         if layout.changed {
-            CoreData.update(updateLogic: {
-                self.updateMO(layout: layout)
-            })
-            self.layouts[layout.layoutId] = layout
+            CoreData.update {
+                layout.updateMO()
+            }
+            if let index = self.layouts.firstIndex(where: {$0 == layout}) {
+                self.layouts[index] = layout
+            }
+        }
+    }
+    
+    public func move(layouts indexSet: IndexSet, to index: Int) {
+        self.layouts.move(fromOffsets: indexSet, toOffset: index)
+        self.updateLayoutSequence()
+    }
+    
+    public func updateLayoutSequence() {
+        var last = 0
+        for layout in self.layouts {
+            if layout.sequence != last + 1 {
+                layout.sequence = last + 1
+                layout.save()
+            }
+            last = layout.sequence
         }
     }
     
     public func layout(id layoutId: UUID?) -> LayoutViewModel? {
-        return (layoutId == nil ? nil : self.layouts[layoutId!])
-    }
-    
-    private func updateMO(layout: LayoutViewModel) {
-        layout.layoutMO!.layoutId = layout.layoutId
-        layout.layoutMO!.locationId = layout.location?.locationId
-        layout.layoutMO!.partnerId = layout.partner?.playerId
-        layout.layoutMO!.desc = layout.desc
-        layout.layoutMO!.scorecardDesc = layout.scorecardDesc
-        layout.layoutMO!.boards = layout.boards
-        layout.layoutMO!.boardsTable = layout.boardsTable
-        layout.layoutMO!.type = layout.type
-        layout.layoutMO!.tableTotal = layout.tableTotal
-        layout.layoutMO!.sequence = layout.sequence
+        return (layoutId == nil ? nil : self.layouts.first(where: {$0.layoutId == layoutId}))
     }
 }
 
@@ -132,53 +140,42 @@ extension MasterData {
     
     public func insert(scorecard: ScorecardViewModel) {
         assert(scorecard.scorecardMO == nil, "Cannot insert a scorecard which already has a managed object")
-        assert(self.scorecards[scorecard.scorecardId] == nil, "Scorecard already exists and cannot be created")
-        assert(self.scorecards[scorecard.scorecardId]?.desc == nil, "Scorecard must have a non-blank description")
-        CoreData.update(updateLogic: {
+        assert(self.scorecard(id: scorecard.scorecardId) == nil, "Scorecard already exists and cannot be created")
+        assert(self.scorecard(id: scorecard.scorecardId)?.desc == nil, "Scorecard must have a non-blank description")
+        CoreData.update {
             scorecard.scorecardMO = ScorecardMO()
-            self.updateMO(scorecard: scorecard)
-            self.scorecards[scorecard.scorecardId] = scorecard
-        })
+            scorecard.updateMO()
+            let index = self.scorecards.firstIndex(where: {$0.date < scorecard.date}) ?? scorecards.endIndex
+            self.scorecards.insert(scorecard, at: index)
+        }
     }
     
     public func remove(scorecard: ScorecardViewModel) {
         assert(scorecard.scorecardMO != nil, "Cannot remove a scorecard which doesn't already have a managed object")
-        assert(self.scorecards[scorecard.scorecardId] != nil, "Scorecard does not exist and cannot be deleted")
-        CoreData.update(updateLogic: {
+        assert(self.scorecard(id: scorecard.scorecardId) != nil, "Scorecard does not exist and cannot be deleted")
+        CoreData.update {
             CoreData.context.delete(scorecard.scorecardMO!)
-            self.scorecards[scorecard.scorecardId] = nil
-        })
+            if let index = self.scorecards.firstIndex(where: {$0 == scorecard}) {
+                self.scorecards.remove(at: index)
+            }
+        }
     }
     
     public func save(scorecard: ScorecardViewModel) {
         assert(scorecard.scorecardMO != nil, "Cannot save a scorecard which doesn't already have managed objects")
-        assert(self.scorecards[scorecard.scorecardId] != nil, "Scorecard does not exist and cannot be updated")
+        assert(self.scorecard(id: scorecard.scorecardId) != nil, "Scorecard does not exist and cannot be updated")
         if scorecard.changed {
-            CoreData.update(updateLogic: {
-                self.updateMO(scorecard: scorecard)
-            })
-            self.scorecards[scorecard.scorecardId] = scorecard
+            CoreData.update {
+                scorecard.updateMO()
+            }
+            if let index = self.scorecards.firstIndex(where: {$0 == scorecard}) {
+                self.scorecards[index] = scorecard
+            }
         }
     }
-    
+       
     public func scorecard(id scorecardId: UUID?) -> ScorecardViewModel? {
-        return (scorecardId == nil ? nil : self.scorecards[scorecardId!])
-    }
-    
-    private func updateMO(scorecard: ScorecardViewModel) {
-        scorecard.scorecardMO!.scorecardId = scorecard.scorecardId
-        scorecard.scorecardMO!.date = scorecard.date
-        scorecard.scorecardMO!.locationId = scorecard.location?.locationId
-        scorecard.scorecardMO!.desc = scorecard.desc
-        scorecard.scorecardMO!.comment = scorecard.comment
-        scorecard.scorecardMO!.partnerId = scorecard.partner?.playerId
-        scorecard.scorecardMO!.boards = scorecard.boards
-        scorecard.scorecardMO!.boardsTable = scorecard.boardsTable
-        scorecard.scorecardMO!.type = scorecard.type
-        scorecard.scorecardMO!.tableTotal = scorecard.tableTotal
-        scorecard.scorecardMO!.totalScore = scorecard.totalScore
-        scorecard.scorecardMO!.drawing = scorecard.drawing
-        scorecard.scorecardMO!.drawingWidth = scorecard.drawingWidth
+        return (scorecardId == nil ? nil : self.scorecards.first(where: {$0.scorecardId == scorecardId}))
     }
 }
 
@@ -188,43 +185,58 @@ extension MasterData {
     
     public func insert(player: PlayerViewModel) {
         assert(player.playerMO == nil, "Cannot insert a player which already has a managed object")
-        assert(self.players[player.playerId] == nil, "Player already exists and cannot be created")
-        assert(self.players[player.playerId]?.name == nil, "Player must have a non-blank name")
-        CoreData.update(updateLogic: {
+        assert(self.player(id: player.playerId) == nil, "Player already exists and cannot be created")
+        assert(self.player(id: player.playerId)?.name == nil, "Player must have a non-blank name")
+        CoreData.update {
             player.playerMO = PlayerMO()
-            self.updateMO(player: player)
-            self.players[player.playerId] = player
-        })
+            player.updateMO()
+            let index = self.players.firstIndex(where: {$0.sequence > player.sequence}) ?? players.endIndex
+            self.players.insert(player, at: index)
+        }
     }
     
     public func remove(player: PlayerViewModel) {
         assert(player.playerMO != nil, "Cannot remove a player which doesn't already have a managed object")
-        assert(self.players[player.playerId] != nil, "Player does not exist and cannot be deleted")
-        CoreData.update(updateLogic: {
+        assert(self.player(id: player.playerId) != nil, "Player does not exist and cannot be deleted")
+        CoreData.update {
             CoreData.context.delete(player.playerMO!)
-            self.players[player.playerId] = nil
-        })
+            if let index = self.players.firstIndex(where: {$0 == player}) {
+                self.players.remove(at: index)
+            }
+        }
     }
     
     public func save(player: PlayerViewModel) {
         assert(player.playerMO != nil, "Cannot save a player which doesn't already have managed objects")
-        assert(self.players[player.playerId] != nil, "Player does not exist and cannot be updated")
+        assert(self.player(id: player.playerId) != nil, "Player does not exist and cannot be updated")
         if player.changed {
-            CoreData.update(updateLogic: {
-                self.updateMO(player: player)
-            })
-            self.players[player.playerId] = player
+            CoreData.update {
+                player.updateMO()
+            }
+            if let index = self.players.firstIndex(where: {$0 == player}) {
+                self.players[index] = player
+            }
+        }
+    }
+    
+    public func move(players indexSet: IndexSet, to index: Int) {
+        self.players.move(fromOffsets: indexSet, toOffset: index)
+        self.updatePlayerSequence()
+    }
+    
+    public func updatePlayerSequence() {
+        var last = 0
+        for player in self.players {
+            if player.sequence != last + 1 {
+                player.sequence = last + 1
+                player.save()
+            }
+            last = player.sequence
         }
     }
     
     public func player(id playerId: UUID?) -> PlayerViewModel? {
-        return (playerId == nil ? nil : self.players[playerId!])
-    }
-    
-    private func updateMO(player: PlayerViewModel) {
-        player.playerMO!.playerId = player.playerId
-        player.playerMO!.sequence = player.sequence
-        player.playerMO!.name = player.name
+        return (playerId == nil ? nil : self.players.first(where: {$0.playerId == playerId}))
     }
 }
 
@@ -234,42 +246,57 @@ extension MasterData {
     
     public func insert(location: LocationViewModel) {
         assert(location.locationMO == nil, "Cannot insert a location which already has a managed object")
-        assert(self.locations[location.locationId] == nil, "Location already exists and cannot be created")
-        assert(self.locations[location.locationId]?.name == nil, "Location must have a non-blank name")
-        CoreData.update(updateLogic: {
+        assert(self.location(id: location.locationId) == nil, "Location already exists and cannot be created")
+        assert(self.location(id: location.locationId)?.name == nil, "Location must have a non-blank name")
+        CoreData.update {
             location.locationMO = LocationMO()
-            self.updateMO(location: location)
-            self.locations[location.locationId] = location
-        })
+            location.updateMO()
+            let index = self.locations.firstIndex(where: {$0.sequence > location.sequence}) ?? locations.endIndex
+            self.locations.insert(location, at: index)
+        }
     }
     
     public func remove(location: LocationViewModel) {
         assert(location.locationMO != nil, "Cannot remove a location which doesn't already have a managed object")
-        assert(self.locations[location.locationId] != nil, "Location does not exist and cannot be deleted")
-        CoreData.update(updateLogic: {
+        assert(self.location(id: location.locationId) != nil, "Location does not exist and cannot be deleted")
+        CoreData.update {
             CoreData.context.delete(location.locationMO!)
-            self.locations[location.locationId] = nil
-        })
+            if let index = self.locations.firstIndex(where: {$0 == location}) {
+                self.locations.remove(at: index)
+            }
+        }
     }
     
     public func save(location: LocationViewModel) {
         assert(location.locationMO != nil, "Cannot save a location which doesn't already have managed objects")
-        assert(self.locations[location.locationId] != nil, "Location does not exist and cannot be updated")
+        assert(self.location(id: location.locationId) != nil, "Location does not exist and cannot be updated")
         if location.changed {
-            CoreData.update(updateLogic: {
-                self.updateMO(location: location)
-            })
-            self.locations[location.locationId] = location
+            CoreData.update {
+                location.updateMO()
+            }
+            if let index = self.locations.firstIndex(where: {$0 == location}) {
+                self.locations[index] = location
+            }
+        }
+    }
+    
+    public func move(locations indexSet: IndexSet, to index: Int) {
+        self.locations.move(fromOffsets: indexSet, toOffset: index)
+        self.updateLocationSequence()
+    }
+    
+    public func updateLocationSequence() {
+        var last = 0
+        for location in self.locations {
+            if location.sequence != last + 1 {
+                location.sequence = last + 1
+                location.save()
+            }
+            last = location.sequence
         }
     }
     
     public func location(id locationId: UUID?) -> LocationViewModel? {
-        return (locationId == nil ? nil : self.locations[locationId!])
-    }
-    
-    private func updateMO(location: LocationViewModel) {
-        location.locationMO!.locationId = location.locationId
-        location.locationMO!.sequence = location.sequence
-        location.locationMO!.name = location.name
+        return (locationId == nil ? nil : self.locations.first(where: {$0.locationId == locationId}))
     }
 }

@@ -15,6 +15,7 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
     @Published private(set) var playerId: UUID
     @Published public var sequence: Int
     @Published public var name: String
+    @Published public var retired: Bool
     
     // Linked managed objects - should only be referenced in this and the Data classes
     @Published internal var playerMO: PlayerMO?
@@ -23,7 +24,9 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
     @Published private(set) var saveMessage: String = ""
     @Published private(set) var canSave: Bool = false
     
-    // Auto-cleanup
+    public let itemProvider = NSItemProvider(contentsOf: URL(string: "com.sheareronline.bridgescore.player")!)!
+
+        // Auto-cleanup
     private var cancellableSet: Set<AnyCancellable> = []
     
     // Equals
@@ -37,7 +40,8 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
         if let mo = self.playerMO {
             if self.playerId != mo.playerId ||
                 self.sequence != mo.sequence ||
-                self.name != mo.name {
+                self.name != mo.name ||
+                self.retired != mo.retired {
                     result = true
             }
         }
@@ -48,6 +52,7 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
         self.playerId = UUID()
         self.sequence = Int.max
         self.name = ""
+        self.retired = false
         self.setupMappings()
     }
     
@@ -81,7 +86,23 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
             self.playerId = mo.playerId
             self.sequence = mo.sequence
             self.name = mo.name
+            self.retired = mo.retired
         }
+    }
+    
+    public func copy(from: PlayerViewModel) {
+        self.playerId = from.playerId
+        self.sequence = from.sequence
+        self.name = from.name
+        self.retired = from.retired
+        self.playerMO = from.playerMO
+    }
+    
+    public func updateMO() {
+        self.playerMO!.playerId = self.playerId
+        self.playerMO!.sequence = self.sequence
+        self.playerMO!.retired = self.retired
+        self.playerMO!.name = self.name
     }
     
     public func save() {
@@ -105,7 +126,7 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
     }
     
     private func nameExists(_ name: String) -> Bool {
-        return !MasterData.shared.players.compactMap{$1}.filter({$0.name == name && $0.playerId != self.playerId}).isEmpty
+        return !MasterData.shared.players.filter({$0.name == name && $0.playerId != self.playerId}).isEmpty
     }
     
     public var description: String {

@@ -143,6 +143,22 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         }
     }
     
+    public func updateMO() {
+        self.scorecardMO!.scorecardId = self.scorecardId
+        self.scorecardMO!.date = self.date
+        self.scorecardMO!.locationId = self.location?.locationId
+        self.scorecardMO!.desc = self.desc
+        self.scorecardMO!.comment = self.comment
+        self.scorecardMO!.partnerId = self.partner?.playerId
+        self.scorecardMO!.boards = self.boards
+        self.scorecardMO!.boardsTable = self.boardsTable
+        self.scorecardMO!.type = self.type
+        self.scorecardMO!.tableTotal = self.tableTotal
+        self.scorecardMO!.totalScore = self.totalScore
+        self.scorecardMO!.drawing = self.drawing
+        self.scorecardMO!.drawingWidth = self.drawingWidth
+    }
+    
     public static func == (lhs: ScorecardViewModel, rhs: ScorecardViewModel) -> Bool {
         return lhs.scorecardId == rhs.scorecardId
     }
@@ -171,7 +187,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     }
     
     private func descExists(_ name: String) -> Bool {
-        return !MasterData.shared.scorecards.contains(where: {$0.value.desc == desc && $0.value != self})
+        return !MasterData.shared.scorecards.contains(where: {$0.desc == desc && $0 != self})
     }
     
     public var description: String {
@@ -208,10 +224,10 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     public func reset() {
         self.scorecardId = UUID()
         self.date = Date()
-        self.location = MasterData.shared.locations.compactMap{ $0.value }.sorted(by: {$0.sequence < $1.sequence}).first!
+        self.location = MasterData.shared.locations.first!
         self.desc = ""
         self.comment = ""
-        self.partner = MasterData.shared.players.compactMap{ $0.value }.sorted(by: {$0.sequence < $1.sequence}).first!
+        self.partner = MasterData.shared.players.first!
         self.boards = 24
         self.boardsTable = 3
         self.type = .percent

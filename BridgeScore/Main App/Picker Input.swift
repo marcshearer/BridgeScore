@@ -7,7 +7,9 @@
 
 import SwiftUI
 
-struct PickerInput : View {
+
+
+struct PickerInput2 : View {
     
     var title: String
     @Binding var field: Int
@@ -16,7 +18,7 @@ struct PickerInput : View {
     var width: CGFloat = 200
     var height: CGFloat = 40
     var onChange: ((Int)->())?
-    
+        
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             InputTitle(title: title, topSpace: topSpace)
@@ -31,7 +33,7 @@ struct PickerInput : View {
                     }
                 } label: {
                     HStack {
-                        Text(values[field])
+                        Text(field < values.count ? values[field] : "")
                             .foregroundColor(Palette.background.text)
                             .font(inputFont)
                         Spacer()

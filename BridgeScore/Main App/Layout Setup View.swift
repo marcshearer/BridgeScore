@@ -16,14 +16,14 @@ struct LayoutSetupView: View {
             VStack(spacing: 0) {
                 Banner(title: $title, bottomSpace: false, back: true, backEnabled: { return selected.canSave })
                 DoubleColumnView {
-                    LayoutSelectionView(selected: selected, changeSelection: changeSelection, removeSelection: removeSelection, addLayout: addLayout)
+                    LayoutSelectionView(selected: selected, changeSelected: changeSelection, removeSelected: removeSelection, addLayout: addLayout)
                 } rightView: {
                     LayoutDetailView(selected: selected)
                 }
             }
         }
         .onAppear {
-            selected.copy(from: MasterData.shared.layouts.compactMap{$0.value}.sorted(by: {$0.sequence < $1.sequence}).first!)
+            selected.copy(from: MasterData.shared.layouts.first!)
         }
         .onDisappear {
             save(layout: selected)
@@ -36,16 +36,26 @@ struct LayoutSetupView: View {
     }
     
     func removeSelection(removeLayout: LayoutViewModel) {
-        if let master = MasterData.shared.layout(id: removeLayout.layoutId) {
-            MasterData.shared.remove(layout: master)
+        func remove() {
+            if let master = MasterData.shared.layout(id: removeLayout.layoutId) {
+                MasterData.shared.remove(layout: master)
+            }
+            selected.copy(from: MasterData.shared.layouts.first!)
         }
-        selected.copy(from: MasterData.shared.layouts.compactMap{$0.value}.sorted(by: {$0.sequence < $1.sequence}).first!)
+        
+        if selected.isNew {
+            remove()
+        } else {
+            MessageBox.shared.show("This will delete the layout permanently. Are you sure you want to do this?", cancelText: "Cancel", okText: "Delete", okAction: {
+                remove()
+            })
+        }
     }
 
     func addLayout() {
         save(layout: selected)
         selected.copy(from: LayoutViewModel())
-        selected.sequence = MasterData.shared.layouts.compactMap{$0.value}.sorted(by: {$0.sequence < $1.sequence}).last!.sequence + 1
+        selected.sequence = MasterData.shared.layouts.last!.sequence + 1
     }
     
     func save(layout: LayoutViewModel) {
@@ -62,8 +72,8 @@ struct LayoutSetupView: View {
 
 struct LayoutSelectionView : View {
     @ObservedObject var selected: LayoutViewModel
-    @State var changeSelection: (LayoutViewModel)->()
-    @State var removeSelection: (LayoutViewModel)->()
+    @State var changeSelected: (LayoutViewModel)->()
+    @State var removeSelected: (LayoutViewModel)->()
     @State var addLayout: ()->()
 
     var body: some View {
@@ -71,8 +81,8 @@ struct LayoutSelectionView : View {
         
         VStack {
             HStack {
-                LazyVStack {
-                    ForEach(MasterData.shared.layouts.compactMap{$0.value}.sorted(by: {$0.sequence < $1.sequence})) { layout in
+                List {
+                    ForEach(MasterData.shared.layouts) { layout in
                         
                         let thisSelected = (selected == layout)
                         let color = (thisSelected ? Palette.tile : Palette.background)
@@ -85,74 +95,43 @@ struct LayoutSelectionView : View {
                                 Spacer()
                             }
                             Spacer().frame(height: 16)
-                            Separator()
                         }
                         .background(Rectangle().fill(color.background))
                         .foregroundColor(color.text.opacity(disabled ? 0.3 : 1.0))
+                        .onDrag({layout.itemProvider})
                         .onTapGesture {
-                            changeSelection(layout)
+                            changeSelected(layout)
                         }
                     }
+                    .onMove { (indexSet, toIndex) in
+                        MasterData.shared.move(layouts: indexSet, to: toIndex)
+                        selected.sequence = MasterData.shared.layout(id: selected.layoutId)?.sequence ?? selected.sequence
+                    }
                 }
+                .listStyle(.plain)
                 Spacer()
             }
             .disabled(disabled)
             Spacer()
-            LayoutToolbarView(selected: selected, removeSelection: removeSelection, addLayout: addLayout)
+            ToolbarView(canAdd: {selected.canSave}, canRemove: {selected.isNew || MasterData.shared.layouts.count > 1}, addAction: addLayout, removeAction: { removeSelected(selected)})
         }
         .background(Palette.background.background)
     }
 }
 
-struct LayoutToolbarView : View {
-    @ObservedObject var selected: LayoutViewModel
-    @State var removeSelection: (LayoutViewModel)->()
-    @State var addLayout: ()->()
-
-    var body: some View {
-        ZStack {
-            Rectangle()
-                .fill(Palette.alternate.background)
-                .frame(height: 50)
-            HStack {
-                Spacer().frame(width: 20)
-                Button {
-                    addLayout()
-                } label: {
-                    Image(systemName: "plus")
-                }
-                .opacity(!selected.canSave ? 0.3 : 1.0)
-                .disabled(!selected.canSave)
-                
-                let canDelete = (selected.isNew || MasterData.shared.layouts.count > 1) // Can't delete last one
-                Spacer().frame(width: 20)
-                Button {
-                    removeSelection(selected)
-                } label: {
-                    Image(systemName: "minus")
-                }
-                .opacity(!canDelete ? 0.3 : 1.0)
-                .disabled(!canDelete)
-                Spacer()
-            }
-            .font(.title)
-            .foregroundColor(Palette.alternate.text)
-        }
-    }
-}
 
 struct LayoutDetailView : View {
     @ObservedObject var selected: LayoutViewModel
     
     @State var minValue = 1
     
-    var locations = MasterData.shared.locations.compactMap { $0.value }.sorted(by: {$0.sequence < $1.sequence})
+    var locations = MasterData.shared.locations
     @State private var locationIndex: Int = 0
     
     let types = Type.allCases
     @State private var typeIndex: Int = 0
     
-    let players = MasterData.shared.players.compactMap { $0.value }.sorted(by: {$0.sequence < $1.sequence})
+    @State private var players = MasterData.shared.players
     @State private var playerIndex: Int = 0
     
     var body: some View {
@@ -164,12 +143,12 @@ struct LayoutDetailView : View {
                         
                         Input(title: "Description", field: $selected.desc, message: $selected.descMessage)
                         
-                        PickerInput(title: "Location", field: $locationIndex, values: locations.map {$0.name})
+                        PickerInput2(title: "Location", field: $locationIndex, values: locations.map{$0.name})
                         { index in
                             selected.location = locations[index]
                         }
                         
-                        PickerInput(title: "Partner", field: $playerIndex, values: players.map {$0.name})
+                        PickerInput2(title: "Partner", field: $playerIndex, values: players.map{$0.name})
                         { index in
                             selected.partner = players[index]
                         }
@@ -181,7 +160,7 @@ struct LayoutDetailView : View {
                     
                     InsetView(content: { AnyView( VStack {
                         
-                        PickerInput(title: "Scoring Method", field: $typeIndex, values: types.map{$0.string})
+                        PickerInput2(title: "Scoring Method", field: $typeIndex, values: types.map{$0.string})
                         { index in
                             selected.type = types[index]
                         }
@@ -201,10 +180,11 @@ struct LayoutDetailView : View {
                     
                     Spacer()
                 }
-                .onChange(of: selected) { (layout) in
-                    locationIndex = locations.firstIndex(where: {$0 == layout.location}) ?? 0
-                    playerIndex = players.firstIndex(where: {$0 == layout.partner}) ?? 0
-                    typeIndex = types.firstIndex(where: {$0 == layout.type}) ?? 0
+                .onChange(of: selected.layoutId) { (layoutId) in
+                    let selected = MasterData.shared.layout(id: layoutId)!
+                    locationIndex = locations.firstIndex(where: {$0 == selected.location}) ?? 0
+                    playerIndex = players.firstIndex(where: {$0 == selected.partner}) ?? 0
+                    typeIndex = types.firstIndex(where: {$0 == selected.type}) ?? 0
                 }
             }
             Spacer()
@@ -219,32 +199,6 @@ struct LayoutDetailView : View {
     
     func plural(_ text: String, _ value: Int) -> String {
         return (value <= 1 ? text : text + "s")
-    }
-}
-
-struct DoubleColumnView <LeftContent, RightContent> : View where LeftContent : View, RightContent : View {
-    var leftView: LeftContent
-    var rightView: RightContent
-    var leftWidth: CGFloat = 300
-    
-    init(@ViewBuilder leftView: ()->LeftContent, @ViewBuilder rightView: ()->RightContent) {
-        self.leftView = leftView()
-        self.rightView = rightView()
-    }
-    var body: some View {
-        HStack(spacing: 0) {
-            VStack {
-                leftView
-                Spacer()
-            }
-            .frame(width: leftWidth)
-            Divider()
-            VStack {
-                rightView
-                Spacer()
-            }
-            Spacer()
-        }
     }
 }
 

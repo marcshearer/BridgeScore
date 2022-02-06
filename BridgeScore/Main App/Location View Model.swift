@@ -15,6 +15,7 @@ public class LocationViewModel : ObservableObject, Identifiable, Equatable, Cust
     @Published private(set) var locationId: UUID
     @Published public var sequence: Int
     @Published public var name: String
+    @Published public var retired: Bool
     
     // Linked managed objects - should only be referenced in this and the Data classes
     @Published internal var locationMO: LocationMO?
@@ -23,7 +24,9 @@ public class LocationViewModel : ObservableObject, Identifiable, Equatable, Cust
     @Published private(set) var saveMessage: String = ""
     @Published private(set) var canSave: Bool = false
     
-    // Auto-cleanup
+    public let itemProvider = NSItemProvider(contentsOf: URL(string: "com.sheareronline.bridgescore.location")!)!
+
+        // Auto-cleanup
     private var cancellableSet: Set<AnyCancellable> = []
     
     // Equals
@@ -37,7 +40,8 @@ public class LocationViewModel : ObservableObject, Identifiable, Equatable, Cust
         if let mo = self.locationMO {
             if self.locationId != mo.locationId ||
                 self.sequence != mo.sequence ||
-                self.name != mo.name {
+                self.name != mo.name ||
+                self.retired != mo.retired {
                     result = true
             }
         }
@@ -48,6 +52,7 @@ public class LocationViewModel : ObservableObject, Identifiable, Equatable, Cust
         self.locationId = UUID()
         self.sequence = Int.max
         self.name = ""
+        self.retired = false
         self.setupMappings()
     }
     
@@ -81,9 +86,25 @@ public class LocationViewModel : ObservableObject, Identifiable, Equatable, Cust
             self.locationId = mo.locationId
             self.sequence = mo.sequence
             self.name = mo.name
+            self.retired = mo.retired
         }
     }
     
+    public func copy(from: LocationViewModel) {
+        self.locationId = from.locationId
+        self.sequence = from.sequence
+        self.name = from.name
+        self.retired = from.retired
+        self.locationMO = from.locationMO
+    }
+    
+    public func updateMO() {
+        self.locationMO!.locationId = self.locationId
+        self.locationMO!.sequence = self.sequence
+        self.locationMO!.name = self.name
+        self.locationMO!.retired = self.retired
+    }
+
     public func save() {
         if self.locationMO == nil {
             MasterData.shared.insert(location: self)
@@ -105,7 +126,7 @@ public class LocationViewModel : ObservableObject, Identifiable, Equatable, Cust
     }
     
     private func nameExists(_ name: String) -> Bool {
-        return !MasterData.shared.locations.compactMap{$1}.filter({$0.name == name && $0.locationId != self.locationId}).isEmpty
+        return !MasterData.shared.locations.filter({$0.name == name && $0.locationId != self.locationId}).isEmpty
     }
     
     public var description: String {

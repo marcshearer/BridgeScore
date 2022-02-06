@@ -103,7 +103,18 @@ class Utility {
                 formatter.dateFormat = format
             }
         }
-        return formatter.string(from: date)
+        var result = formatter.string(from: date)
+        
+        // Special case for short dates
+        if style == .short && doesRelativeDateFormatting && format == "dd MMM yyyy" && result.contains("/") {
+            if date > Date.startOfDay(days: -365)! {
+                result = dateString(date, format: "dd MMMM", localized: localized)
+            } else {
+                result = dateString(date, format: "dd MMM yyyy", localized: localized)
+            }
+        }
+        
+        return result
     }
     
     class func dateFromString(_ dateString: String, format: String = "dd/MM/yyyy", localized: Bool = true) -> Date? {
