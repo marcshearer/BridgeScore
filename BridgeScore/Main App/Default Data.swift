@@ -13,6 +13,7 @@ class DefaultData {
         
         let layout1 = LayoutViewModel()
         layout1.desc = "St Andrews Pairs"
+        layout1.scorecardDesc = "St Andrews Pairs"
         layout1.location = locations.first(where: {$0.name == "St Andrews"})
         layout1.partner = players.first(where: {$0.name == "George Watson"})
         layout1.sequence = 1
@@ -24,6 +25,7 @@ class DefaultData {
         
         let layout2 = LayoutViewModel()
         layout2.desc = "Tuesday Pairs"
+        layout2.scorecardDesc = "Tuesday Pairs"
         layout2.location = locations.first(where: {$0.name == "SBU"})
         layout2.partner = players.first(where: {$0.name == "Michele Grainger"})
         layout2.sequence = 0
@@ -35,6 +37,7 @@ class DefaultData {
         
         let layout3 = LayoutViewModel()
         layout3.desc = "Leven Pairs"
+        layout3.scorecardDesc = "Leven Pairs"
         layout3.location = locations.first(where: {$0.name == "Leven"})
         layout3.partner = players.first(where: {$0.name == "Jack Shearer"})
         layout3.sequence = 0
@@ -46,6 +49,7 @@ class DefaultData {
         
         let layout4 = LayoutViewModel()
         layout4.desc = "Thursday Teams"
+        layout4.scorecardDesc = "Scottish Swiss Teams 11 - Week "
         layout4.location = locations.first(where: {$0.name == "Online Swiss Teams"})
         layout4.partner = players.first(where: {$0.name == "George Watson"})
         layout4.sequence = 0
@@ -57,6 +61,7 @@ class DefaultData {
         
         let layout5 = LayoutViewModel()
         layout5.desc = "Saturday Swiss Pairs"
+        layout5.scorecardDesc = "Saturday Swiss Pairs"
         layout5.location = locations.first(where: {$0.name == "SBU"})
         layout5.partner = players.first(where: {$0.name == "Michele Grainger"})
         layout5.sequence = 0
@@ -68,6 +73,7 @@ class DefaultData {
         
         let layout6 = LayoutViewModel()
         layout6.desc = "EBU Pairs"
+        layout6.scorecardDesc = "EBU Pairs"
         layout6.location = locations.first(where: {$0.name == "EBU"})
         layout6.partner = players.first(where: {$0.name == "Jack Shearer"})
         layout6.sequence = 0
@@ -79,6 +85,7 @@ class DefaultData {
         
         let layout7 = LayoutViewModel()
         layout7.desc = "ARBC Pairs"
+        layout7.scorecardDesc = "ARBC Pairs"
         layout7.location = locations.first(where: {$0.name == "Andrew Robson"})
         layout7.partner = players.first(where: {$0.name == "Michele Grainger"})
         layout7.sequence = 0
