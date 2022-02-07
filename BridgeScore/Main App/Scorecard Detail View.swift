@@ -26,7 +26,8 @@ struct ScorecardDetailView: View {
                     ScorecardDetailsView(scorecard: scorecard)
                 }
             }
-           .onChange(of: linkToScorecard) { (linkToScorecard) in
+            .keyboardAdaptive
+            .onChange(of: linkToScorecard) { (linkToScorecard) in
                 if linkToScorecard {
                     scorecard.backupCurrent()
                 }

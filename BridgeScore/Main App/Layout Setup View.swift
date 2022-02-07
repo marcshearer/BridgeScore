@@ -10,7 +10,7 @@ import SwiftUI
 struct LayoutSetupView: View {
     @State private var title = "Layouts"
     @StateObject var selected = LayoutViewModel()
-    
+        
     var body: some View {
         StandardView() {
             VStack(spacing: 0) {
@@ -22,6 +22,7 @@ struct LayoutSetupView: View {
                 }
             }
         }
+        .keyboardAdaptive
         .onAppear {
             selected.copy(from: MasterData.shared.layouts.first!)
         }
@@ -138,7 +139,6 @@ struct LayoutDetailView : View {
         VStack {
             HStack {
                 VStack {
-                    
                     InsetView(content: { AnyView( VStack {
                         
                         Input(title: "Description", field: $selected.desc, message: $selected.descMessage)

@@ -28,25 +28,31 @@ extension Notification {
 }
 
 struct KeyboardAdaptive: ViewModifier {
-    @Binding var bottomPadding: CGFloat
+    @State private var bottomPadding: CGFloat = 0
+    @State private var offset: CGFloat = 0
 
     func body(content: Content) -> some View {
         GeometryReader { (geometry) in
             content
-                .padding(.bottom, self.bottomPadding)
                 .onReceive(Publishers.keyboardHeight) { (keyboardHeight) in
-                    let keyboardTop = geometry.frame(in: .global).height - keyboardHeight
-                    let focusedTextInputBottom = UIResponder.currentFirstResponder?.globalFrame?.maxY ?? 0
-                    self.bottomPadding = max(0, focusedTextInputBottom - keyboardTop - geometry.safeAreaInsets.bottom)
-                    print(self.bottomPadding)
+                    if keyboardHeight == 0 {
+                        offset = 0
+                    } else {
+                        let keyboardTop = geometry.frame(in: .global).height - keyboardHeight
+                        let focusedTextInputBottom = (UIResponder.currentFirstResponder?.globalFrame?.maxY ?? 0) + offset
+                        bottomPadding = max(0, focusedTextInputBottom - keyboardTop - geometry.safeAreaInsets.bottom)
+                        print("\(offset) \(focusedTextInputBottom) \(bottomPadding)")
+                        offset = bottomPadding
+                    }
                 }
+                .offset(y: -offset)
         }
     }
 }
 
 extension View {
-    func keyboardAdaptive(_ bottomPadding: Binding<CGFloat>) -> some View {
-        self.modifier(KeyboardAdaptive(bottomPadding: bottomPadding))
+    var keyboardAdaptive: some View {
+        self.modifier(KeyboardAdaptive())
     }
 }
 
