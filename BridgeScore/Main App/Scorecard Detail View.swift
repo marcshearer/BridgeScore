@@ -26,7 +26,7 @@ struct ScorecardDetailView: View {
                     ScorecardDetailsView(scorecard: scorecard)
                 }
             }
-            .onChange(of: linkToScorecard) { (linkToScorecard) in
+           .onChange(of: linkToScorecard) { (linkToScorecard) in
                 if linkToScorecard {
                     scorecard.backupCurrent()
                 }
@@ -91,14 +91,21 @@ struct ScorecardDetailsView: View {
                 Input(title: "Description", field: $scorecard.desc, message: $scorecard.descMessage)
                 
                 Input(title: "Comments", field: $scorecard.comment, height: 100)
-                
-                Input(title: "Score", field: $scorecard.totalScore, width: 100)
+            
+                HStack {
+                    Input(title: "Score", field: $scorecard.totalScore, width: 100, clearText: false)
+                    Spacer()
+                }
                 
                 InputTitle(title: " Position")
                 HStack {
-                    StepperInput(field: $scorecard.position, label: { value in "\(value)" }, width: 180)
-                    Text("    of ")
-                    StepperInput(field: $scorecard.entry, label: { value in "\(value)" }, width: 180)
+            
+                    InputInt(field: $scorecard.position, topSpace: 0, width: 60)
+            
+                    Text(" of ")
+                    
+                    InputInt(field: $scorecard.entry, topSpace: 0, leadingSpace: 0, width: 60)
+                    
                     Spacer()
                 }
                 
@@ -112,12 +119,12 @@ struct ScorecardDetailsView: View {
                     scorecard.type = types[index]
                 }
                 
-                StepperInput(title: "Boards / Tables", field: $scorecard.boardsTable, label: { value in "\(value) boards per round" }, minValue: $minValue, width: 400) { (newValue) in
+                StepperInput(title: "Boards / Tables", field: $scorecard.boardsTable, label: { value in "\(value) boards per round" }, minValue: $minValue, labelWidth: 300) { (newValue) in
                     scorecard.boards = max(scorecard.boards, newValue)
                     scorecard.boards = max(newValue, ((scorecard.boards / newValue) * newValue))
                 }
                 
-                StepperInput(field: $scorecard.boards, label: boardsLabel, minValue: $scorecard.boardsTable, increment: $scorecard.boardsTable, topSpace: 0, width: 400)
+                StepperInput(field: $scorecard.boards, label: boardsLabel, minValue: $scorecard.boardsTable, increment: $scorecard.boardsTable, topSpace: 0, labelWidth: 300)
                 
                 InputToggle(title: "Options", text: "Show table totals", field: $scorecard.tableTotal)
                 

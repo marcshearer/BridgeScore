@@ -19,8 +19,10 @@ struct StepperInput: View {
     var increment: Binding<Int>? = nil
     var message: Binding<String>?
     var topSpace: CGFloat = 16
+    var leadingSpace: CGFloat = 32
     var height: CGFloat = 40
-    var width: CGFloat? = nil
+    var width: CGFloat?
+    var labelWidth: CGFloat = 300
     var onChange: ((Int)->())? = nil
 
     @State private var refresh = false
@@ -33,28 +35,32 @@ struct StepperInput: View {
             if refresh { EmptyView() }
             
             if title != nil {
-                InputTitle(title: title, message: message, topSpace: topSpace)
+                InputTitle(title: title, message: message, topSpace: topSpace, width: (width == nil ? nil : width! + leadingSpace + 16))
                 Spacer().frame(height: 8)
             } else {
                 Spacer().frame(height: topSpace)
             }
             HStack {
-                Spacer().frame(width: 32)
-                Stepper {
-                    if let label = label {
-                        Text(label(field))
-                    } else {
-                        Text(String(field))
+                HStack {
+                    Spacer().frame(width: leadingSpace)
+                    Stepper {
+                        if let label = label {
+                            Text(label(field))
+                        } else {
+                            Text(String(field))
+                        }
+                    } onIncrement: {
+                        change(direction: 1)
+                    } onDecrement: {
+                        change(direction: -1)
                     }
-                } onIncrement: {
-                    change(direction: 1)
-                } onDecrement: {
-                    change(direction: -1)
+                    .frame(width: labelWidth + 100)
+                }
+                .font(inputFont)
+                if width == nil {
+                    Spacer()
                 }
             }
-            .font(inputFont)
-            .frame(width: width)
-            Spacer()
         }
         .frame(height: self.height + self.topSpace + (title == nil ? 0 : 30))
         .onAppear {

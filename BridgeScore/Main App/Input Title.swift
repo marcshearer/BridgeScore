@@ -12,6 +12,7 @@ struct InputTitle : View {
     @State var title: String?
     var message: Binding<String>? = nil
     var topSpace: CGFloat = 16
+    var width: CGFloat?
     var buttonImage: AnyView?
     var buttonText: String?
     var buttonAction: (()->())?
@@ -60,5 +61,6 @@ struct InputTitle : View {
                 }
             }
         }
+        .frame(width: width)
     }
 }

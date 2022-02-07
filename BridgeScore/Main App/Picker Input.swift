@@ -13,16 +13,18 @@ struct PickerInput : View {
     @Binding var field: Int
     var values: ()->[String]
     var topSpace: CGFloat = 16
-    var width: CGFloat = 200
+    var leadingSpace: CGFloat = 32
+    var width: CGFloat?
     var height: CGFloat = 40
+    var pickerWidth: CGFloat = 200
     var onChange: ((Int)->())?
         
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            InputTitle(title: title, topSpace: topSpace)
+            InputTitle(title: title, topSpace: topSpace, width: (width == nil ? nil : width! + leadingSpace + 16))
             let values = values()
             HStack {
-                Spacer().frame(width: 38)
+                Spacer().frame(width: leadingSpace + 6)
                 Menu {
                     ForEach(values, id: \.self) { (value) in
                         if let index = values.firstIndex(where: {$0 == value}) {
@@ -43,7 +45,7 @@ struct PickerInput : View {
                         Spacer().frame(width: 24)
                     }
                 }
-                .frame(width: width, height: height)
+                .frame(width: pickerWidth - 6, height: height)
                 .background(Color.clear)
                 .frame(height: self.height)
                 

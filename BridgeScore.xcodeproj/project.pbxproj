@@ -42,7 +42,7 @@
 		B26BCE652799AED700B73501 /* Picker Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE5A2799AED700B73501 /* Picker Input.swift */; };
 		B26BCE662799AED700B73501 /* Banner.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE5B2799AED700B73501 /* Banner.swift */; };
 		B26BCE672799AED700B73501 /* Swipe Gestures.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE5C2799AED700B73501 /* Swipe Gestures.swift */; };
-		B26BCE692799AED700B73501 /* Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE5E2799AED700B73501 /* Input.swift */; };
+		B26BCE692799AED700B73501 /* Input String.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE5E2799AED700B73501 /* Input String.swift */; };
 		B26BCE6A2799AED700B73501 /* Standard View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE5F2799AED700B73501 /* Standard View.swift */; };
 		B26BCE6B2799AED700B73501 /* Input Title.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE602799AED700B73501 /* Input Title.swift */; };
 		B26BCE6C2799AED700B73501 /* Separator.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE612799AED700B73501 /* Separator.swift */; };
@@ -53,6 +53,8 @@
 		B2A2053527AFC2E400C83C88 /* Player Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053427AFC2E400C83C88 /* Player Setup View.swift */; };
 		B2A2053727AFC41500C83C88 /* Toolbar View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053627AFC41500C83C88 /* Toolbar View.swift */; };
 		B2A2053927B01D0000C83C88 /* Location Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053827B01D0000C83C88 /* Location Setup View.swift */; };
+		B2A2053B27B108C700C83C88 /* Input Integer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053A27B108C700C83C88 /* Input Integer.swift */; };
+		B2A2053D27B13F2F00C83C88 /* Keyboard Adaptive.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053C27B13F2F00C83C88 /* Keyboard Adaptive.swift */; };
 		B2AF750D27AD14FD00233693 /* Slide In Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AF750C27AD14FD00233693 /* Slide In Menu.swift */; };
 		B2AF750F27AD384900233693 /* Layout Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AF750E27AD384900233693 /* Layout Setup View.swift */; };
 		B2BE9BD027A15B6B002A6F8F /* Inset View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2BE9BCF27A15B6B002A6F8F /* Inset View.swift */; };
@@ -106,7 +108,7 @@
 		B26BCE5A2799AED700B73501 /* Picker Input.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Picker Input.swift"; sourceTree = "<group>"; };
 		B26BCE5B2799AED700B73501 /* Banner.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Banner.swift; sourceTree = "<group>"; };
 		B26BCE5C2799AED700B73501 /* Swipe Gestures.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Swipe Gestures.swift"; sourceTree = "<group>"; };
-		B26BCE5E2799AED700B73501 /* Input.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Input.swift; sourceTree = "<group>"; };
+		B26BCE5E2799AED700B73501 /* Input String.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Input String.swift"; sourceTree = "<group>"; };
 		B26BCE5F2799AED700B73501 /* Standard View.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Standard View.swift"; sourceTree = "<group>"; };
 		B26BCE602799AED700B73501 /* Input Title.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Input Title.swift"; sourceTree = "<group>"; };
 		B26BCE612799AED700B73501 /* Separator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Separator.swift; sourceTree = "<group>"; };
@@ -117,6 +119,8 @@
 		B2A2053427AFC2E400C83C88 /* Player Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Player Setup View.swift"; sourceTree = "<group>"; };
 		B2A2053627AFC41500C83C88 /* Toolbar View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Toolbar View.swift"; sourceTree = "<group>"; };
 		B2A2053827B01D0000C83C88 /* Location Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Location Setup View.swift"; sourceTree = "<group>"; };
+		B2A2053A27B108C700C83C88 /* Input Integer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Input Integer.swift"; sourceTree = "<group>"; };
+		B2A2053C27B13F2F00C83C88 /* Keyboard Adaptive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Keyboard Adaptive.swift"; sourceTree = "<group>"; };
 		B2AF750C27AD14FD00233693 /* Slide In Menu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Slide In Menu.swift"; sourceTree = "<group>"; };
 		B2AF750E27AD384900233693 /* Layout Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Layout Setup View.swift"; sourceTree = "<group>"; };
 		B2BE9BCF27A15B6B002A6F8F /* Inset View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Inset View.swift"; sourceTree = "<group>"; };
@@ -260,7 +264,8 @@
 				B26BCE5B2799AED700B73501 /* Banner.swift */,
 				B26BCE582799AED700B73501 /* Image Capture.swift */,
 				B26BCE602799AED700B73501 /* Input Title.swift */,
-				B26BCE5E2799AED700B73501 /* Input.swift */,
+				B26BCE5E2799AED700B73501 /* Input String.swift */,
+				B2A2053A27B108C700C83C88 /* Input Integer.swift */,
 				B2FCC05027A05BA500A3D9F5 /* Input Toggle.swift */,
 				B26BCE5A2799AED700B73501 /* Picker Input.swift */,
 				B21CC0BD27A01292001AECC1 /* Date Picker Input.swift */,
@@ -274,6 +279,7 @@
 				B2AF750C27AD14FD00233693 /* Slide In Menu.swift */,
 				B26BCE5C2799AED700B73501 /* Swipe Gestures.swift */,
 				B26BCE572799AED700B73501 /* Target View Modifiers.swift */,
+				B2A2053C27B13F2F00C83C88 /* Keyboard Adaptive.swift */,
 			);
 			name = "Reusable UI Components";
 			sourceTree = "<group>";
@@ -418,7 +424,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B2EB3D66279D54D500D64225 /* Board Managed Object.swift in Sources */,
-				B26BCE692799AED700B73501 /* Input.swift in Sources */,
+				B26BCE692799AED700B73501 /* Input String.swift in Sources */,
 				B26BCE322799ABF000B73501 /* Declarations.swift in Sources */,
 				B26BCE6C2799AED700B73501 /* Separator.swift in Sources */,
 				B26BCE492799AD8900B73501 /* Palette.swift in Sources */,
@@ -430,6 +436,7 @@
 				B2EB3D73279D734700D64225 /* Location View Model.swift in Sources */,
 				B2EB3D75279D73E100D64225 /* Board View Model.swift in Sources */,
 				B2276D5A27A692A40025DA80 /* Constraint.swift in Sources */,
+				B2A2053B27B108C700C83C88 /* Input Integer.swift in Sources */,
 				B2BE9BD027A15B6B002A6F8F /* Inset View.swift in Sources */,
 				B26BCE2D2799AB6700B73501 /* Persistence.swift in Sources */,
 				B2EB3D6E279D6BA700D64225 /* Layout View Model.swift in Sources */,
@@ -437,6 +444,7 @@
 				B2FCC05127A05BA500A3D9F5 /* Input Toggle.swift in Sources */,
 				B2EB3D79279DB80000D64225 /* Scorecard.swift in Sources */,
 				B26BCE4D2799AD8900B73501 /* String Extensions.swift in Sources */,
+				B2A2053D27B13F2F00C83C88 /* Keyboard Adaptive.swift in Sources */,
 				B26BCE482799AD8900B73501 /* Day Number.swift in Sources */,
 				B26BCE6F279AEB6C00B73501 /* Scorecard List View.swift in Sources */,
 				B26BCE4C2799AD8900B73501 /* My Image.swift in Sources */,
