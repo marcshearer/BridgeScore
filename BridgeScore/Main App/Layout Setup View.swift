@@ -165,12 +165,12 @@ struct LayoutDetailView : View {
                             selected.type = types[index]
                         }
                         
-                        StepperInput(title: "Boards / Tables", field: $selected.boardsTable, label: { value in "\(value) boards per round" }, minValue: $minValue, width: 400) { (newValue) in
+                        StepperInput(title: "Boards / Tables", field: $selected.boardsTable, label: { value in "\(value) boards per round" }, minValue: $minValue) { (newValue) in
                             selected.boards = max(selected.boards, newValue)
                             selected.boards = max(newValue, ((selected.boards / newValue) * newValue))
                         }
                         
-                        StepperInput(field: $selected.boards, label: boardsLabel, minValue: $selected.boardsTable, increment: $selected.boardsTable, topSpace: 0, width: 400)
+                        StepperInput(field: $selected.boards, label: boardsLabel, minValue: $selected.boardsTable, increment: $selected.boardsTable, topSpace: 0)
                         
                         InputToggle(title: "Options", text: "Show table totals", field: $selected.tableTotal)
                         
