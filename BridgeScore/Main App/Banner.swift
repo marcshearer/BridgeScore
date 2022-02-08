@@ -67,9 +67,14 @@ struct Banner: View {
                             HStack {
                                 backButton
                                 Spacer()
+                                menu
+                            }
+                            HStack {
+                                Spacer().frame(width: 80)
+                                Spacer()
                                 titleText
                                 Spacer()
-                                menu
+                                Spacer().frame(width: 80)
                             }
                         }
                     }
