@@ -102,7 +102,7 @@ struct ScorecardSummaryView: View {
                             }
                             Spacer()
                         }
-                        .minimumScaleFactor(0.5)
+                        .minimumScaleFactor(0.7)
                         .foregroundColor(Palette.tile.text)
                         .font(.title)
                         Spacer()
