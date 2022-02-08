@@ -84,7 +84,7 @@
 		B23ADBED27B1CC68001B6B38 /* Notes.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Notes.txt; sourceTree = "<group>"; };
 		B23ADBF127B25356001B6B38 /* List Tile View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "List Tile View.swift"; sourceTree = "<group>"; };
 		B23ADBF327B28D68001B6B38 /* Local Authentication.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Local Authentication.swift"; sourceTree = "<group>"; };
-		B23ADBF527B28F65001B6B38 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		B23ADBF527B28F65001B6B38 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B25ADA5D27AEB279007062AA /* Double Column View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Double Column View.swift"; sourceTree = "<group>"; };
 		B2633A0D27AC3A460081B258 /* Layout List View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Layout List View.swift"; sourceTree = "<group>"; };
 		B26BCDF62799A1AC00B73501 /* BridgeScore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BridgeScore.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -174,7 +174,6 @@
 		B26BCDF82799A1AC00B73501 /* BridgeScore */ = {
 			isa = PBXGroup;
 			children = (
-				B23ADBF527B28F65001B6B38 /* Info.plist */,
 				B26BCE1A2799A86800B73501 /* Shared */,
 				B26BCE182799A7C200B73501 /* Main App */,
 				B26BCE192799A7DC00B73501 /* Widget App */,
@@ -227,6 +226,7 @@
 		B26BCE1D2799A99400B73501 /* Standard Components */ = {
 			isa = PBXGroup;
 			children = (
+				B23ADBF527B28F65001B6B38 /* Info.plist */,
 				B26BCE70279B188600B73501 /* BridgeScore.xcdatamodeld */,
 				B26BCE2C2799AB6700B73501 /* MyApp.swift */,
 				B26BCE282799AB6700B73501 /* Persistence.swift */,
