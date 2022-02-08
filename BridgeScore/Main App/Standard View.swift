@@ -62,7 +62,7 @@ struct StandardView <Content> : View where Content : View {
             }
         }
         .ignoresSafeArea()
-        .animation(animate || messageBox.isShown ? .easeInOut(duration: 0.5) : nil)
+        .animation(animate || messageBox.isShown ? .easeInOut(duration: 1.0) : .none, value: messageBox.isShown)
         .noNavigationBar
         }
     }

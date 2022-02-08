@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct ScorecardListView: View {
+    @StateObject private var scorecard = ScorecardViewModel()
     @State private var title = "Scorecards"
-    @State private var scorecard = ScorecardViewModel()
     @State private var layout = LayoutViewModel()
     @State private var layoutSelected = false
     @State private var linkToNew = false
@@ -17,7 +17,6 @@ struct ScorecardListView: View {
     @State private var linkToLayouts = false
     @State private var linkToPlayers = false
     @State private var linkToLocations = false
-    @ObservedObject var data = MasterData.shared
     
     var body: some View {
         let menuOptions = [BannerOption(text: "Standard layouts", action: { linkToLayouts = true }),
@@ -26,7 +25,6 @@ struct ScorecardListView: View {
                            BannerOption(text: "About \(appName)", action: { MessageBox.shared.show("A Bridge scoring app from\nShearer Online Ltd", showIcon: true, showVersion: true) })]
         
         StandardView(navigation: true) {
-            let scorecards = data.scorecards
             
             VStack {
                 Banner(title: $title, back: false, optionMode: .menu, menuTitle: "Setup", options: menuOptions)
@@ -43,11 +41,11 @@ struct ScorecardListView: View {
                 }
                 
                 LazyVStack {
-                    ForEach(scorecards) { (scorecard) in
+                    ForEach(MasterData.shared.scorecards) { (scorecard) in
                         ScorecardSummaryView(scorecard: scorecard)
                         .onTapGesture {
                             // Copy this entry to current scorecard
-                            self.scorecard = scorecard
+                            self.scorecard.copy(from: scorecard)
                             self.linkToEdit = true
                         }
                     }
@@ -64,11 +62,11 @@ struct ScorecardListView: View {
             NavigationLink(destination: LayoutSetupView(), isActive: $linkToLayouts) {EmptyView()}
             NavigationLink(destination: PlayerSetupView(), isActive: $linkToPlayers) {EmptyView()}
             NavigationLink(destination: LocationSetupView(), isActive: $linkToLocations) {EmptyView()}
-            NavigationLink(destination: ScorecardDetailView(scorecard: $scorecard), isActive: $linkToEdit) {EmptyView()}
+            NavigationLink(destination: ScorecardDetailView(scorecard: scorecard), isActive: $linkToEdit) {EmptyView()}
         }
         .sheet(isPresented: $linkToNew, onDismiss: {
             if layoutSelected {
-                self.scorecard = ScorecardViewModel(layout: layout)
+                self.scorecard.reset(from: layout)
                 self.linkToEdit = true
             }
         }) {

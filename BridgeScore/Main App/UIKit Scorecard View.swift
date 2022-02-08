@@ -8,6 +8,7 @@
 import UIKit
 import SwiftUI
 import PencilKit
+import Vision
 
 enum RowType: Int {
     case heading = 0
@@ -34,27 +35,28 @@ enum ColumnSize: Codable {
     case flexible
 }
 
-struct ScorecardRow {
+struct ScorecardCanvasRow {
     var type: RowType
     var table: Int?
     var board: Int?
 }
 
-struct ScorecardColumn: Codable {
+struct ScorecardCanvasColumn: Codable {
     var type: ColumnType
     var heading: String
     var size: ColumnSize
     var width: CGFloat?
 }
 
-struct ScorecardView: View {
+struct ScorecardCanvasView: View {
     @Environment(\.undoManager) private var undoManager
 
-    @Binding var scorecard: ScorecardViewModel
+    @ObservedObject var scorecard: ScorecardViewModel
     @State var refresh = false
     @State var linkToScorecard = false
     @State var toolPickerVisible: Bool = true
     @State var canvasView = PKCanvasView()
+    @State var decodePressed: Bool = false
     
     var body: some View {
         StandardView {
@@ -65,14 +67,15 @@ struct ScorecardView: View {
     
                 // Banner
                 let options = [
+                    //BannerOption(image: AnyView(Image(systemName: "rectangle.and.pencil.and.ellipsis")), likeBack: true, action: { decodeDrawing() }),
                     BannerOption(image: AnyView(Image(systemName: "arrow.uturn.backward")), likeBack: true, action: { undoDrawing() }),
                     BannerOption(image: AnyView(Image(systemName: "trash.fill")), likeBack: true, action: { clearDrawing() }),
                     BannerOption(image: AnyView(Image(systemName: "paintpalette")), likeBack: true, action: { toolPickerVisible.toggle() })]
                 Banner(title: $scorecard.desc, back: true, backAction: backAction, optionMode: .buttons, options: options)
-                
+
                 GeometryReader { geometry in
-                    ScorecardUIViewWrapper(frame: geometry.frame(in: .local), scorecard: $scorecard, toolPickerVisible: $toolPickerVisible, canvasView: $canvasView)
-                        .ignoresSafeArea(edges: .all)
+                    ScorecardCanvasUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), toolPickerVisible: $toolPickerVisible, decodePressed: $decodePressed, canvasView: $canvasView)
+                    .ignoresSafeArea(edges: .all)
                 }
             }
         }
@@ -93,26 +96,57 @@ struct ScorecardView: View {
     func undoDrawing() {
         undoManager?.undo()
     }
+    
+    func decodeDrawing() {
+        decodePressed = true
+    }
 }
 
-struct ScorecardUIViewWrapper: UIViewRepresentable {
+struct ScorecardCanvasUIViewWrapper: UIViewRepresentable {
+    @ObservedObject var  scorecard: ScorecardViewModel
     @State var frame: CGRect
-    @Binding var scorecard: ScorecardViewModel
     @Binding var toolPickerVisible: Bool
+    @Binding var decodePressed: Bool
     @Binding var canvasView: PKCanvasView
     
-    func makeUIView(context: Context) -> ScorecardUIView {
+    func makeUIView(context: Context) -> ScorecardCanvasUIView {
         
-        ScorecardUIView(frame: frame, scorecard: scorecard, canvasView: canvasView)
+        let view = ScorecardCanvasUIView(frame: frame, scorecard: scorecard, canvasView: canvasView)
+        view.delegate = context.coordinator
         
+        return view
     }
 
-    func updateUIView(_ uiView: ScorecardUIView, context: Context) {
+    func updateUIView(_ uiView: ScorecardCanvasUIView, context: Context) {
         uiView.setToolPicker(visible: toolPickerVisible)
-   }
+        if decodePressed {
+            uiView.decode()
+        }
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator($decodePressed)
+    }
+    
+    class Coordinator: NSObject, ScorecardCanvasUIViewDelegate {
+        @Binding var decodePressed: Bool
+        
+        init(_ decodePressed: Binding<Bool>) {
+            _decodePressed = decodePressed
+        }
+        
+        func clearDecodePressed() {
+            decodePressed = false
+        }
+    }
+    
 }
 
-class ScorecardUIView : UIView, UITableViewDataSource, UITableViewDelegate, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, PKToolPickerObserver, PKCanvasViewDelegate {
+protocol ScorecardCanvasUIViewDelegate {
+    func clearDecodePressed()
+}
+
+class ScorecardCanvasUIView : UIView, UITableViewDataSource, UITableViewDelegate, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, PKToolPickerObserver, PKCanvasViewDelegate {
         
     var scorecard: ScorecardViewModel
     var scrollView = UIScrollView()
@@ -120,17 +154,18 @@ class ScorecardUIView : UIView, UITableViewDataSource, UITableViewDelegate, UICo
     var mainTableView = UITableView()
     var canvasView: PKCanvasView
     var toolPicker = PKToolPicker()
+    var delegate: ScorecardCanvasUIViewDelegate?
     
     var columns = [
-        ScorecardColumn(type: .board, heading: "Board", size: .fixed(70)),
-        ScorecardColumn(type: .contract, heading: "Contract", size: .fixed(90)),
-        ScorecardColumn(type: .declarer, heading: "By", size: .fixed(60)),
-        ScorecardColumn(type: .result, heading: "Result", size: .fixed(70)),
-        ScorecardColumn(type: .score, heading: "Score", size: .fixed(70)),
-        ScorecardColumn(type: .comment, heading: "Comment", size: .flexible),
-        ScorecardColumn(type: .responsible, heading: "Resp", size: .fixed(60))
+        ScorecardCanvasColumn(type: .board, heading: "Board", size: .fixed(70)),
+        ScorecardCanvasColumn(type: .contract, heading: "Contract", size: .fixed(90)),
+        ScorecardCanvasColumn(type: .declarer, heading: "By", size: .fixed(60)),
+        ScorecardCanvasColumn(type: .result, heading: "Result", size: .fixed(70)),
+        ScorecardCanvasColumn(type: .score, heading: "Score", size: .fixed(70)),
+        ScorecardCanvasColumn(type: .comment, heading: "Comment", size: .flexible),
+        ScorecardCanvasColumn(type: .responsible, heading: "Resp", size: .fixed(60))
     ]
-    var rows: [ScorecardRow] = []
+    var rows: [ScorecardCanvasRow] = []
     let headingHeight: CGFloat = 40
     let rowHeight: CGFloat = 90
     var totalHeight: CGFloat
@@ -167,7 +202,7 @@ class ScorecardUIView : UIView, UITableViewDataSource, UITableViewDelegate, UICo
         self.headingTableView.delegate = self
         self.headingTableView.dataSource = self
         self.headingTableView.tag = RowType.heading.rawValue
-        self.headingTableView.register(ScorecardUIViewTableViewCell.self, forCellReuseIdentifier: "ScorecardUIViewTableViewCell")
+        self.headingTableView.register(ScorecardCanvasUIViewTableViewCell.self, forCellReuseIdentifier: "ScorecardUIViewTableViewCell")
         self.headingTableView.isScrollEnabled = false
         
         // Setup scroll view
@@ -178,7 +213,7 @@ class ScorecardUIView : UIView, UITableViewDataSource, UITableViewDelegate, UICo
         self.mainTableView.delegate = self
         self.mainTableView.dataSource = self
         self.mainTableView.tag = RowType.body.rawValue
-        self.mainTableView.register(ScorecardUIViewTableViewCell.self, forCellReuseIdentifier: "ScorecardUIViewTableViewCell")
+        self.mainTableView.register(ScorecardCanvasUIViewTableViewCell.self, forCellReuseIdentifier: "ScorecardUIViewTableViewCell")
         
         // Setup pencil canvas
         canvasView.tool = PKInkingTool(.pen, color: .blue, width: 4)
@@ -209,6 +244,49 @@ class ScorecardUIView : UIView, UITableViewDataSource, UITableViewDelegate, UICo
         }
     }
 
+    public func decode() {
+        for rowNumber in 0..<(rows.count - 1) {
+            for columnNumber in 0..<columns.count {
+                if let row = mainTableView.cellForRow(at: IndexPath(row: rowNumber, section: 0)) as? ScorecardCanvasUIViewTableViewCell {
+                    if let cell = row.collectionView.cellForItem(at: IndexPath(item: columnNumber, section: 0)) as? ScorecardCanvasUIViewCollectionViewCell {
+                        let frame = row.convert(cell.frame, to: canvasView)
+                        let image = canvasView.drawing.image(from: frame, scale: 1)
+                        print(frame)
+                        decodeImage(image: image, completion: { text in
+                            Utility.executeAfter(delay: 0.1) {
+                                self.delegate?.clearDecodePressed()
+                            }
+                            if let text = text {
+                                cell.label.text = "  " + text
+                            }
+                        })
+                    }
+                }
+            }
+        }
+    }
+    
+    func decodeImage(image: UIImage, completion: @escaping (String?)->()) {
+        var text: String? = nil
+        let request = VNRecognizeTextRequest { (request, error) in
+            if error == nil {
+                if let observations = request.results as? [VNRecognizedTextObservation] {
+                    for observation in observations {
+                        for candidate in observation.topCandidates(1) {
+                            text = (text ?? "") + " \(candidate.string)"
+                        }
+                    }
+                    completion(text?.ltrim())
+                }
+            }
+        }
+        request.recognitionLevel = .accurate
+        request.usesLanguageCorrection = true
+        request.customWords = ["C", "D", "H", "S", "N", "O"]
+        let handler = VNImageRequestHandler(cgImage: image.cgImage!, options: [:])
+        try? handler.perform([request])
+    }
+    
     func canvasViewDrawingDidChange(_ canvasView: PKCanvasView) {
         scorecard.backupCurrentDrawing(drawing: canvasView.drawing, width: self.canvasWidth)
     }
@@ -253,7 +331,7 @@ class ScorecardUIView : UIView, UITableViewDataSource, UITableViewDelegate, UICo
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ScorecardUIViewTableViewCell", for: indexPath) as! ScorecardUIViewTableViewCell
+        let cell = tableView.dequeueReusableCell(withIdentifier: "ScorecardUIViewTableViewCell", for: indexPath) as! ScorecardCanvasUIViewTableViewCell
         cell.setCollectionViewDataSourceDelegate(self, forRow: (RowType(rawValue: tableView.tag) == .heading ? 0 : indexPath.row + 1))
         return cell
     }
@@ -274,7 +352,7 @@ class ScorecardUIView : UIView, UITableViewDataSource, UITableViewDelegate, UICo
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ScorecardUIViewCollectionViewCell", for: indexPath) as! ScorecardUIViewCollectionViewCell
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ScorecardUIViewCollectionViewCell", for: indexPath) as! ScorecardCanvasUIViewCollectionViewCell
         let column = columns[indexPath.item]
         let row = rows[collectionView.tag]
         cell.set(row: row, column: column)
@@ -330,32 +408,32 @@ class ScorecardUIView : UIView, UITableViewDataSource, UITableViewDelegate, UICo
     func setupRows(){
         rows = []
         
-        rows.append(ScorecardRow(type: .heading))
+        rows.append(ScorecardCanvasRow(type: .heading))
         
         for table in 1...scorecard.tables {
             
             // Add body rows
             for tableBoard in 1...scorecard.boardsTable {
                 let board = ((table - 1) * scorecard.boardsTable) + tableBoard
-                rows.append(ScorecardRow(type: .body, table: table, board: board))
+                rows.append(ScorecardCanvasRow(type: .body, table: table, board: board))
             }
             
             // Add total rows
-            rows.append(ScorecardRow(type: .total, table: table))
+            rows.append(ScorecardCanvasRow(type: .total, table: table))
         }
     }
 }
 
 // MARK: - Cell classes ================================================================ -
 
-class ScorecardUIViewTableViewCell: UITableViewCell {
+class ScorecardCanvasUIViewTableViewCell: UITableViewCell {
     fileprivate var collectionView: UICollectionView!
     private var layout: UICollectionViewFlowLayout!
            
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         self.layout = UICollectionViewFlowLayout()
         self.collectionView = UICollectionView(frame: CGRect(), collectionViewLayout: layout)
-        self.collectionView.register(ScorecardUIViewCollectionViewCell.self, forCellWithReuseIdentifier: "ScorecardUIViewCollectionViewCell")
+        self.collectionView.register(ScorecardCanvasUIViewCollectionViewCell.self, forCellWithReuseIdentifier: "ScorecardUIViewCollectionViewCell")
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         self.contentView.addSubview(collectionView)
         Constraint.anchor(view: self.contentView, control: self.collectionView, attributes: .leading, .trailing, .top, .bottom)
@@ -377,7 +455,7 @@ class ScorecardUIViewTableViewCell: UITableViewCell {
     }
 }
 
-class ScorecardUIViewCollectionViewCell: UICollectionViewCell {
+class ScorecardCanvasUIViewCollectionViewCell: UICollectionViewCell {
     fileprivate var label: UILabel
     
     override init(frame: CGRect) {
@@ -395,7 +473,7 @@ class ScorecardUIViewCollectionViewCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func set(row: ScorecardRow, column: ScorecardColumn) {
+    func set(row: ScorecardCanvasRow, column: ScorecardCanvasColumn) {
         var color: PaletteColor
         switch row.type {
         case .heading:
@@ -409,6 +487,9 @@ class ScorecardUIViewCollectionViewCell: UICollectionViewCell {
             } else {
                 self.label.font = cellFont
             }
+            if column.type == .comment {
+                self.label.textAlignment = .left
+            }
             color = Palette.gridBody
         case .total:
             self.label.font = cellFont
@@ -420,5 +501,6 @@ class ScorecardUIViewCollectionViewCell: UICollectionViewCell {
     
     override func prepareForReuse() {
         self.label.text = ""
+        self.label.textAlignment = .center
     }
 }

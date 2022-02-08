@@ -13,6 +13,7 @@
 		B2276D5827A5A2C90025DA80 /* UIKit Scorecard View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2276D5727A5A2C90025DA80 /* UIKit Scorecard View.swift */; };
 		B2276D5A27A692A40025DA80 /* Constraint.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2276D5927A692A40025DA80 /* Constraint.swift */; };
 		B22D40A227A2CF3E002F2470 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B22D40A127A2CF3E002F2470 /* Assets.xcassets */; };
+		B23ADBEE27B1CC68001B6B38 /* Notes.txt in Resources */ = {isa = PBXBuildFile; fileRef = B23ADBED27B1CC68001B6B38 /* Notes.txt */; };
 		B25ADA5E27AEB279007062AA /* Double Column View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25ADA5D27AEB279007062AA /* Double Column View.swift */; };
 		B2633A0E27AC3A460081B258 /* Layout List View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2633A0D27AC3A460081B258 /* Layout List View.swift */; };
 		B26BCDFA2799A1AC00B73501 /* BridgeScore App.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCDF92799A1AC00B73501 /* BridgeScore App.swift */; };
@@ -78,6 +79,7 @@
 		B2276D5727A5A2C90025DA80 /* UIKit Scorecard View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIKit Scorecard View.swift"; sourceTree = "<group>"; };
 		B2276D5927A692A40025DA80 /* Constraint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constraint.swift; sourceTree = "<group>"; };
 		B22D40A127A2CF3E002F2470 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B23ADBED27B1CC68001B6B38 /* Notes.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Notes.txt; sourceTree = "<group>"; };
 		B25ADA5D27AEB279007062AA /* Double Column View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Double Column View.swift"; sourceTree = "<group>"; };
 		B2633A0D27AC3A460081B258 /* Layout List View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Layout List View.swift"; sourceTree = "<group>"; };
 		B26BCDF62799A1AC00B73501 /* BridgeScore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BridgeScore.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -207,6 +209,7 @@
 		B26BCE1A2799A86800B73501 /* Shared */ = {
 			isa = PBXGroup;
 			children = (
+				B23ADBED27B1CC68001B6B38 /* Notes.txt */,
 				B26BCE1D2799A99400B73501 /* Standard Components */,
 				B26BCE1E2799A9C600B73501 /* Managed Object Models */,
 				B26BCE262799AAEB00B73501 /* Utilities */,
@@ -412,6 +415,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				B22D40A227A2CF3E002F2470 /* Assets.xcassets in Resources */,
+				B23ADBEE27B1CC68001B6B38 /* Notes.txt in Resources */,
 				B26BCE012799A1AE00B73501 /* Preview Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

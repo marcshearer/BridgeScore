@@ -73,17 +73,6 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.setupMappings()
     }
     
-    public convenience init(layout: LayoutViewModel) {
-        self.init()
-        self.desc = layout.scorecardDesc
-        self.location = layout.location
-        self.partner = layout.partner
-        self.boards = layout.boards
-        self.boardsTable = layout.boardsTable
-        self.type = layout.type
-        self.tableTotal = layout.tableTotal
-    }
-    
     public convenience init(scorecardMO: ScorecardMO) {
         self.init()
         self.scorecardMO = scorecardMO
@@ -123,6 +112,45 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         .assign(to: \.canSave, on: self)
         .store(in: &cancellableSet)
         
+    }
+    
+    public func reset(from: LayoutViewModel? = nil) {
+        self.scorecardId = UUID()
+        let layout = from ?? MasterData.shared.layouts.first!
+        self.desc = layout.scorecardDesc
+        self.location = layout.location
+        self.partner = layout.partner
+        self.boards = layout.boards
+        self.boardsTable = layout.boardsTable
+        self.type = layout.type
+        self.tableTotal = layout.tableTotal
+        self.date = Date()
+        self.comment = ""
+        self.totalScore = ""
+        self.position = 0
+        self.entry = 0
+        self.drawing = PKDrawing()
+        self.drawingWidth = 0
+        self.scorecardMO = nil
+    }
+    
+    public func copy(from: ScorecardViewModel) {
+        self.scorecardId = from.scorecardId
+        self.date = from.date
+        self.location = from.location
+        self.desc = from.desc
+        self.comment = from.comment
+        self.partner = from.partner
+        self.boards = from.boards
+        self.boardsTable = from.boardsTable
+        self.type = from.type
+        self.tableTotal = from.tableTotal
+        self.totalScore = from.totalScore
+        self.position = from.position
+        self.entry = from.entry
+        self.drawing = from.drawing
+        self.drawingWidth = from.drawingWidth
+        self.scorecardMO = from.scorecardMO
     }
     
     public func revert() {
@@ -233,25 +261,6 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         UserDefault.currentDrawing.set((drawing ?? self.drawing).dataRepresentation())
         UserDefault.currentWidth.set(Float(width ?? self.drawingWidth))
         UserDefault.currentUnsaved.set(true)
-    }
-    
-    public func reset() {
-        self.scorecardId = UUID()
-        self.date = Date()
-        self.location = MasterData.shared.locations.first!
-        self.desc = ""
-        self.comment = ""
-        self.partner = MasterData.shared.players.first!
-        self.boards = 24
-        self.boardsTable = 3
-        self.type = .percent
-        self.tableTotal = true
-        self.totalScore = ""
-        self.position = 0
-        self.entry = 0
-        self.drawing = PKDrawing()
-        self.drawingWidth = 0
-        self.scorecardMO = nil
     }
     
     public func restoreCurrent() {

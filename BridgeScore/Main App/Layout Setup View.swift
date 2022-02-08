@@ -8,8 +8,8 @@
 import SwiftUI
 
 struct LayoutSetupView: View {
-    @State private var title = "Layouts"
     @StateObject var selected = LayoutViewModel()
+    @State private var title = "Layouts"
         
     var body: some View {
         StandardView() {

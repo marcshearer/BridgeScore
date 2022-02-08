@@ -10,8 +10,8 @@ import SwiftUI
 struct ScorecardDetailView: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
 
+    @ObservedObject var scorecard: ScorecardViewModel
     @State private var title = "New Scorecard"
-    @Binding var scorecard: ScorecardViewModel
     @State private var linkToScorecard = false
     
     var body: some View {
@@ -37,7 +37,7 @@ struct ScorecardDetailView: View {
                     title = scorecard.desc
                 }
             }
-            NavigationLink(destination: ScorecardView(scorecard: $scorecard), isActive: $linkToScorecard) {EmptyView()}
+            NavigationLink(destination: ScorecardCanvasView(scorecard: scorecard), isActive: $linkToScorecard) {EmptyView()}
         }
     }
     
@@ -52,7 +52,14 @@ struct ScorecardDetailView: View {
             })
             return false
         } else {
-            scorecard.save()
+            if let master = MasterData.shared.scorecard(id: scorecard.scorecardId) {
+                master.copy(from: scorecard)
+                master.save()
+            } else {
+                let master = ScorecardViewModel()
+                master.copy(from: scorecard)
+                master.insert()
+            }
             return true
         }
     }

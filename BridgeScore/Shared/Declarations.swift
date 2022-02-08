@@ -33,7 +33,7 @@ var inputFont = Font.system(size: (MyApp.format == .tablet ? 16.0 : 12.0))
 var messageFont = Font.system(size: (MyApp.format == .tablet ? 16.0 : 12.0))
 
 var titleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 16.0 : 12.0), weight: .bold)
-var cellFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 16.0 : 12.0))
+var cellFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 16.0))
 var boardFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 20.0))
 
 // Localisable names
