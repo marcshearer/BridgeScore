@@ -72,7 +72,7 @@ struct ScorecardCanvasView: View {
                     BannerOption(image: AnyView(Image(systemName: "arrow.uturn.backward")), likeBack: true, action: { undoDrawing() }),
                     BannerOption(image: AnyView(Image(systemName: "trash.fill")), likeBack: true, action: { clearDrawing() }),
                     BannerOption(image: AnyView(Image(systemName: "paintpalette")), likeBack: true, action: { toolPickerVisible.toggle() })]
-                Banner(title: $scorecard.desc, back: true, backAction: backAction, optionMode: .buttons, options: options)
+                Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .buttons, options: options)
 
                 GeometryReader { geometry in
                     ScorecardCanvasUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), toolPickerVisible: $toolPickerVisible, decodePressed: $decodePressed, canvasView: $canvasView)

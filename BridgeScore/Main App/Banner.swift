@@ -37,6 +37,7 @@ struct Banner: View {
     var backEnabled: (()->(Bool))?
     var backImage: AnyView? = AnyView(Image(systemName: "chevron.left"))
     var backAction: (()->(Bool))?
+    var leftTitle: Bool?
     var optionMode: BannerOptionMode = .none
     var menuImage: AnyView? = nil
     var menuTitle: String = appName
@@ -50,31 +51,29 @@ struct Banner: View {
                 Spacer()
                 HStack {
                     Spacer().frame(width: 20)
-                    ZStack {
+
+                    if (leftTitle ?? !back) {
                         HStack {
-                            if back {
-                                Spacer()
-                            } else {
-                                Spacer().frame(width: 12)
-                            }
-                            Text(title).font(.largeTitle).bold().foregroundColor(Palette.banner.text)
+                            backButton
+                            Spacer().frame(width: 12)
+                            titleText
+                            Spacer().frame(width: 20)
                             Spacer()
+                            menu
                         }
-                        HStack {
-                            if back {
+                        
+                    } else {
+                        ZStack {
+                            HStack {
                                 backButton
-                            }
-                            Spacer()
-                            switch optionMode {
-                            case .menu:
-                                Banner_Menu(image: menuImage, title: menuTitle, options: options!)
-                            case .buttons:
-                                Banner_Buttons(options: options!)
-                            default:
-                                EmptyView()
+                                Spacer()
+                                titleText
+                                Spacer()
+                                menu
                             }
                         }
                     }
+                
                     Spacer().frame(width: 20)
                 }
                 Spacer().frame(height: bannerBottom)
@@ -83,24 +82,50 @@ struct Banner: View {
         .frame(height: bannerHeight)
         .background(Palette.banner.background)
     }
-    
+        
     var backButton: some View {
-        let enabled = backEnabled?() ?? true
-        return Button(action: {
-            if enabled {
-                if backAction?() ?? true {
-                    self.presentationMode.wrappedValue.dismiss()
-                }
+        HStack {
+            if back {
+                let enabled = backEnabled?() ?? true
+                Button(action: {
+                    if enabled {
+                        if backAction?() ?? true {
+                            self.presentationMode.wrappedValue.dismiss()
+                        }
+                    }
+                }, label: {
+                    HStack {
+                        backImage
+                            .font(.largeTitle)
+                            .foregroundColor(Palette.bannerBackButton.opacity(enabled ? 1.0 : 0.5))
+                        
+                    }
+                })
+                .disabled(!(enabled))
+            } else {
+                EmptyView()
             }
-        }, label: {
-            HStack {
-                backImage
-                    .font(.largeTitle)
-                    .foregroundColor(Palette.bannerBackButton.opacity(enabled ? 1.0 : 0.5))
-                    
+        }
+    }
+    
+    var titleText: some View {
+        Text(title)
+            .font(.largeTitle).bold()
+            .foregroundColor(Palette.banner.text)
+            .minimumScaleFactor(0.8)
+    }
+    
+    var menu: some View {
+        HStack {
+            switch optionMode {
+            case .menu:
+                Banner_Menu(image: menuImage, title: menuTitle, options: options!)
+            case .buttons:
+                Banner_Buttons(options: options!)
+            default:
+                EmptyView()
             }
-        })
-        .disabled(!(enabled))
+        }
     }
 }
 

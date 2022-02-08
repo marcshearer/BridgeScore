@@ -10,11 +10,12 @@
 		B21CC0BC279FDD3A001AECC1 /* Scorecard Detail View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */; };
 		B21CC0BE27A01293001AECC1 /* Date Picker Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21CC0BD27A01292001AECC1 /* Date Picker Input.swift */; };
 		B21CC0C027A02A2A001AECC1 /* Stepper Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21CC0BF27A02A2A001AECC1 /* Stepper Input.swift */; };
-		B2276D5827A5A2C90025DA80 /* UIKit Scorecard View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2276D5727A5A2C90025DA80 /* UIKit Scorecard View.swift */; };
+		B2276D5827A5A2C90025DA80 /* Scorecard Canvas View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2276D5727A5A2C90025DA80 /* Scorecard Canvas View.swift */; };
 		B2276D5A27A692A40025DA80 /* Constraint.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2276D5927A692A40025DA80 /* Constraint.swift */; };
 		B22D40A227A2CF3E002F2470 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B22D40A127A2CF3E002F2470 /* Assets.xcassets */; };
 		B23ADBEE27B1CC68001B6B38 /* Notes.txt in Resources */ = {isa = PBXBuildFile; fileRef = B23ADBED27B1CC68001B6B38 /* Notes.txt */; };
 		B23ADBF227B25356001B6B38 /* List Tile View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23ADBF127B25356001B6B38 /* List Tile View.swift */; };
+		B23ADBF427B28D68001B6B38 /* Local Authentication.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23ADBF327B28D68001B6B38 /* Local Authentication.swift */; };
 		B25ADA5E27AEB279007062AA /* Double Column View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25ADA5D27AEB279007062AA /* Double Column View.swift */; };
 		B2633A0E27AC3A460081B258 /* Layout List View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2633A0D27AC3A460081B258 /* Layout List View.swift */; };
 		B26BCDFA2799A1AC00B73501 /* BridgeScore App.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCDF92799A1AC00B73501 /* BridgeScore App.swift */; };
@@ -77,11 +78,13 @@
 		B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Detail View.swift"; sourceTree = "<group>"; };
 		B21CC0BD27A01292001AECC1 /* Date Picker Input.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date Picker Input.swift"; sourceTree = "<group>"; };
 		B21CC0BF27A02A2A001AECC1 /* Stepper Input.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Stepper Input.swift"; sourceTree = "<group>"; };
-		B2276D5727A5A2C90025DA80 /* UIKit Scorecard View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIKit Scorecard View.swift"; sourceTree = "<group>"; };
+		B2276D5727A5A2C90025DA80 /* Scorecard Canvas View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Canvas View.swift"; sourceTree = "<group>"; };
 		B2276D5927A692A40025DA80 /* Constraint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constraint.swift; sourceTree = "<group>"; };
 		B22D40A127A2CF3E002F2470 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B23ADBED27B1CC68001B6B38 /* Notes.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Notes.txt; sourceTree = "<group>"; };
 		B23ADBF127B25356001B6B38 /* List Tile View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "List Tile View.swift"; sourceTree = "<group>"; };
+		B23ADBF327B28D68001B6B38 /* Local Authentication.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Local Authentication.swift"; sourceTree = "<group>"; };
+		B23ADBF527B28F65001B6B38 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		B25ADA5D27AEB279007062AA /* Double Column View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Double Column View.swift"; sourceTree = "<group>"; };
 		B2633A0D27AC3A460081B258 /* Layout List View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Layout List View.swift"; sourceTree = "<group>"; };
 		B26BCDF62799A1AC00B73501 /* BridgeScore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BridgeScore.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -171,6 +174,7 @@
 		B26BCDF82799A1AC00B73501 /* BridgeScore */ = {
 			isa = PBXGroup;
 			children = (
+				B23ADBF527B28F65001B6B38 /* Info.plist */,
 				B26BCE1A2799A86800B73501 /* Shared */,
 				B26BCE182799A7C200B73501 /* Main App */,
 				B26BCE192799A7DC00B73501 /* Widget App */,
@@ -259,6 +263,7 @@
 				B26BCE412799AD8900B73501 /* String Extensions.swift */,
 				B26BCE442799AD8900B73501 /* Other Extensions.swift */,
 				B26BCE422799AD8900B73501 /* Link Presentation.swift */,
+				B23ADBF327B28D68001B6B38 /* Local Authentication.swift */,
 			);
 			name = Libraries;
 			sourceTree = "<group>";
@@ -337,7 +342,7 @@
 				B26BCE6E279AEB6C00B73501 /* Scorecard List View.swift */,
 				B2633A0D27AC3A460081B258 /* Layout List View.swift */,
 				B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */,
-				B2276D5727A5A2C90025DA80 /* UIKit Scorecard View.swift */,
+				B2276D5727A5A2C90025DA80 /* Scorecard Canvas View.swift */,
 			);
 			name = "Main Views";
 			sourceTree = "<group>";
@@ -476,8 +481,9 @@
 				B26BCE76279BEBA500B73501 /* Scorecard Managed Object.swift in Sources */,
 				B26BCE662799AED700B73501 /* Banner.swift in Sources */,
 				B2A2053927B01D0000C83C88 /* Location Setup View.swift in Sources */,
+				B23ADBF427B28D68001B6B38 /* Local Authentication.swift in Sources */,
 				B26BCE6A2799AED700B73501 /* Standard View.swift in Sources */,
-				B2276D5827A5A2C90025DA80 /* UIKit Scorecard View.swift in Sources */,
+				B2276D5827A5A2C90025DA80 /* Scorecard Canvas View.swift in Sources */,
 				B2EB3D77279D73FC00D64225 /* Scorecard View Model.swift in Sources */,
 				B21CC0BE27A01293001AECC1 /* Date Picker Input.swift in Sources */,
 				B26BCE72279B188600B73501 /* BridgeScore.xcdatamodeld in Sources */,
@@ -624,6 +630,8 @@
 				DEVELOPMENT_TEAM = 3T7CT2S464;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BridgeScore/Info.plist;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "This app requires access to Face ID to avoid unauthenticated access to  scorecard details";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -653,6 +661,8 @@
 				DEVELOPMENT_TEAM = 3T7CT2S464;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BridgeScore/Info.plist;
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "This app requires access to Face ID to avoid unauthenticated access to  scorecard details";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

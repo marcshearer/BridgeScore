@@ -12,13 +12,14 @@ struct ScorecardDetailView: View {
 
     @ObservedObject var scorecard: ScorecardViewModel
     @State private var title = "New Scorecard"
-    @State private var linkToScorecard = false
+    @State private var linkToCanvas = false
+    @State private var authenticatedScorecard: ScorecardViewModel?
     
     var body: some View {
         StandardView {
             VStack(spacing: 0) {
                 
-                let bannerOptions = [ BannerOption(image: AnyView(Image(systemName: "square.and.pencil").rotationEffect(Angle.init(degrees: 90))), likeBack: true, action: {  linkToScorecard = true})]
+                let bannerOptions = [ BannerOption(image: AnyView(Image(systemName: "square.and.pencil").rotationEffect(Angle.init(degrees: 90))), likeBack: true, action: canvasAction)]
                 Banner(title: $scorecard.editTitle, back: true, backImage: AnyView(Image(systemName: "xmark")), backAction: backAction, optionMode: .buttons, options: bannerOptions)
                 
                 ScrollView(showsIndicators: false) {
@@ -27,7 +28,7 @@ struct ScorecardDetailView: View {
                 }
             }
             .keyboardAdaptive
-            .onChange(of: linkToScorecard) { (linkToScorecard) in
+            .onChange(of: linkToCanvas) { (linkToScorecard) in
                 if linkToScorecard {
                     scorecard.backupCurrent()
                 }
@@ -37,7 +38,20 @@ struct ScorecardDetailView: View {
                     title = scorecard.desc
                 }
             }
-            NavigationLink(destination: ScorecardCanvasView(scorecard: scorecard), isActive: $linkToScorecard) {EmptyView()}
+            NavigationLink(destination: ScorecardCanvasView(scorecard: scorecard), isActive: $linkToCanvas) {EmptyView()}
+        }
+    }
+    
+    func canvasAction() {
+        if scorecard == authenticatedScorecard {
+            linkToCanvas = true
+        } else {
+            LocalAuthentication.authenticate(reason: "You must authenticate to access the scorecard detail") {
+                authenticatedScorecard = scorecard
+                linkToCanvas = true
+            } failure: {
+                authenticatedScorecard = nil
+            }
         }
     }
     
