@@ -82,63 +82,67 @@ struct ScorecardDetailsView: View {
         
         VStack {
             
-            InsetView(content: { AnyView( VStack {
-                
-                PickerInput(title: "Location", field: $locationIndex, values: {locations.filter{!$0.retired || $0 == scorecard.location}.map{$0.name}})
-                { index in
-                    scorecard.location = locations[index]
-                }
-                
-                PickerInput(title: "Partner", field: $playerIndex, values: {players.filter{!$0.retired || $0 == scorecard.partner}.map{$0.name}})
-                { index in
-                    scorecard.partner = players[index]
-                }
-                
-                DatePickerInput(title: "Date", field: $scorecard.date, to: Date())
-                
-                Input(title: "Description", field: $scorecard.desc, message: $scorecard.descMessage)
-                
-                Input(title: "Comments", field: $scorecard.comment, height: 100)
-            
-                HStack {
-                    Input(title: "Score", field: $scorecard.totalScore, width: 100, clearText: false)
-                    Spacer()
-                }
-                
-                InputTitle(title: " Position")
-                HStack {
-            
-                    InputInt(field: $scorecard.position, topSpace: 0, width: 60)
-            
-                    Text(" of ")
+            InsetView {
+                VStack {
                     
-                    InputInt(field: $scorecard.entry, topSpace: 0, leadingSpace: 0, width: 60)
+                    PickerInput(title: "Location", field: $locationIndex, values: {locations.filter{!$0.retired || $0 == scorecard.location}.map{$0.name}})
+                    { index in
+                        scorecard.location = locations[index]
+                    }
                     
-                    Spacer()
+                    PickerInput(title: "Partner", field: $playerIndex, values: {players.filter{!$0.retired || $0 == scorecard.partner}.map{$0.name}})
+                    { index in
+                        scorecard.partner = players[index]
+                    }
+                    
+                    DatePickerInput(title: "Date", field: $scorecard.date, to: Date())
+                    
+                    Input(title: "Description", field: $scorecard.desc, message: $scorecard.descMessage)
+                    
+                    Input(title: "Comments", field: $scorecard.comment, height: 100)
+                    
+                    HStack {
+                        Input(title: "Score", field: $scorecard.totalScore, width: 100, clearText: false)
+                        Spacer()
+                    }
+                    
+                    InputTitle(title: " Position")
+                    HStack {
+                        
+                        InputInt(field: $scorecard.position, topSpace: 0, width: 60)
+                        
+                        Text(" of ")
+                        
+                        InputInt(field: $scorecard.entry, topSpace: 0, leadingSpace: 0, width: 60)
+                        
+                        Spacer()
+                    }
+                    
+                    Spacer().frame(height: 16)
                 }
-                
-                Spacer().frame(height: 16)
-            })})
+            }
             
-            InsetView(content: { AnyView( VStack {
-                
-                PickerInput(title: "Scoring Method", field: $typeIndex, values: {types.map{$0.string}})
-                { index in
-                    scorecard.type = types[index]
+            InsetView {
+                VStack {
+                    
+                    PickerInput(title: "Scoring Method", field: $typeIndex, values: {types.map{$0.string}})
+                    { index in
+                        scorecard.type = types[index]
+                    }
+                    
+                    StepperInput(title: "Boards / Tables", field: $scorecard.boardsTable, label: { value in "\(value) boards per round" }, minValue: $minValue, labelWidth: 300) { (newValue) in
+                        scorecard.boards = max(scorecard.boards, newValue)
+                        scorecard.boards = max(newValue, ((scorecard.boards / newValue) * newValue))
+                    }
+                    
+                    StepperInput(field: $scorecard.boards, label: boardsLabel, minValue: $scorecard.boardsTable, increment: $scorecard.boardsTable, topSpace: 0, labelWidth: 300)
+                    
+                    InputToggle(title: "Options", text: "Show table totals", field: $scorecard.tableTotal)
+                    
+                    Spacer().frame(height: 16)
+                    
                 }
-                
-                StepperInput(title: "Boards / Tables", field: $scorecard.boardsTable, label: { value in "\(value) boards per round" }, minValue: $minValue, labelWidth: 300) { (newValue) in
-                    scorecard.boards = max(scorecard.boards, newValue)
-                    scorecard.boards = max(newValue, ((scorecard.boards / newValue) * newValue))
-                }
-                
-                StepperInput(field: $scorecard.boards, label: boardsLabel, minValue: $scorecard.boardsTable, increment: $scorecard.boardsTable, topSpace: 0, labelWidth: 300)
-                
-                InputToggle(title: "Options", text: "Show table totals", field: $scorecard.tableTotal)
-                
-                Spacer().frame(height: 16)
-                
-            })})
+            }
             
             Spacer()
         }

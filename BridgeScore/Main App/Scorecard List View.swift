@@ -30,12 +30,12 @@ struct ScorecardListView: View {
                 Banner(title: $title, back: false, optionMode: .menu, menuTitle: "Setup", options: menuOptions)
                 Spacer().frame(height: 12)
                 
-                ListTileView(color: Palette.contrastTile) { AnyView(
+                ListTileView(color: Palette.contrastTile) {
                     HStack {
                         Image(systemName: "plus.square")
                         Text("New Scorecard")
                     }
-                )}
+                }
                 .onTapGesture {
                     self.linkToNew = true
                 }
@@ -79,9 +79,8 @@ struct ScorecardSummaryView: View {
     @ObservedObject var scorecard: ScorecardViewModel
     
     var body: some View {
-        ListTileView(content: { AnyView(
+        ListTileView {
             GeometryReader { geometry in
-                AnyView(
                 HStack {
                     VStack {
                         Spacer().frame(height: 10)
@@ -141,36 +140,7 @@ struct ScorecardSummaryView: View {
                         Spacer()
                     }
                 }
-                )
             }
-        )} )
-        
-    }
-}
-
-struct ListTileView: View {
-    @State var color: PaletteColor = Palette.tile
-    @State var font: Font = .largeTitle
-    @State var content: (()->AnyView)
-
-    var body: some View {
-        VStack {
-            Spacer().frame(height: 6)
-            HStack {
-                Spacer().frame(width: 16)
-                HStack {
-                    Spacer().frame(width: 16)
-                    content()
-                    Spacer()
-                }
-                .frame(height: 80)
-                .background(color.background)
-                .cornerRadius(16)
-            Spacer().frame(width: 16)
-            }
-            Spacer().frame(height: 6)
         }
-        .foregroundColor(color.text)
-        .font(font)
     }
 }

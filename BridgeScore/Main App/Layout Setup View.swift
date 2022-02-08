@@ -139,44 +139,48 @@ struct LayoutDetailView : View {
         VStack {
             HStack {
                 VStack {
-                    InsetView(content: { AnyView( VStack {
-                        
-                        Input(title: "Description", field: $selected.desc, message: $selected.descMessage)
-                        
-                        PickerInput(title: "Location", field: $locationIndex, values: {locations.filter{!$0.retired || $0 == selected.location}.map{$0.name}})
-                        { index in
-                            selected.location = locations[index]
+                    InsetView {
+                        VStack {
+                            
+                            Input(title: "Description", field: $selected.desc, message: $selected.descMessage)
+                            
+                            PickerInput(title: "Location", field: $locationIndex, values: {locations.filter{!$0.retired || $0 == selected.location}.map{$0.name}})
+                            { index in
+                                selected.location = locations[index]
+                            }
+                            
+                            PickerInput(title: "Partner", field: $playerIndex, values: {players.filter{!$0.retired || $0 == selected.partner}.map{$0.name}})
+                            { index in
+                                selected.partner = players[index]
+                            }
+                            
+                            Input(title: "Default scorecard description", field: $selected.scorecardDesc)
+                            
+                            Spacer().frame(height: 16)
                         }
-                        
-                        PickerInput(title: "Partner", field: $playerIndex, values: {players.filter{!$0.retired || $0 == selected.partner}.map{$0.name}})
-                        { index in
-                            selected.partner = players[index]
-                        }
-                        
-                        Input(title: "Default scorecard description", field: $selected.scorecardDesc)
-                        
-                        Spacer().frame(height: 16)
-                    })})
+                    }
                     
-                    InsetView(content: { AnyView( VStack {
-                        
-                        PickerInput(title: "Scoring Method", field: $typeIndex, values: {types.map{$0.string}})
-                        { index in
-                            selected.type = types[index]
+                    InsetView {
+                        VStack {
+                            
+                            PickerInput(title: "Scoring Method", field: $typeIndex, values: {types.map{$0.string}})
+                            { index in
+                                selected.type = types[index]
+                            }
+                            
+                            StepperInput(title: "Boards / Tables", field: $selected.boardsTable, label: { value in "\(value) boards per round" }, minValue: $minValue) { (newValue) in
+                                selected.boards = max(selected.boards, newValue)
+                                selected.boards = max(newValue, ((selected.boards / newValue) * newValue))
+                            }
+                            
+                            StepperInput(field: $selected.boards, label: boardsLabel, minValue: $selected.boardsTable, increment: $selected.boardsTable, topSpace: 0)
+                            
+                            InputToggle(title: "Options", text: "Show table totals", field: $selected.tableTotal)
+                            
+                            Spacer().frame(height: 16)
+                            
                         }
-                        
-                        StepperInput(title: "Boards / Tables", field: $selected.boardsTable, label: { value in "\(value) boards per round" }, minValue: $minValue) { (newValue) in
-                            selected.boards = max(selected.boards, newValue)
-                            selected.boards = max(newValue, ((selected.boards / newValue) * newValue))
-                        }
-                        
-                        StepperInput(field: $selected.boards, label: boardsLabel, minValue: $selected.boardsTable, increment: $selected.boardsTable, topSpace: 0)
-                        
-                        InputToggle(title: "Options", text: "Show table totals", field: $selected.tableTotal)
-                        
-                        Spacer().frame(height: 16)
-                        
-                    })})
+                    }
                     
                     Spacer()
                 }

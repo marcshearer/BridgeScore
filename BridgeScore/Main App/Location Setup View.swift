@@ -138,44 +138,46 @@ struct LocationDetailView : View {
             HStack {
                 VStack {
                     
-                    InsetView(content: { AnyView( VStack {
-                        
-                        Input(title: "Name", field: $selected.name, message: $selected.nameMessage)
-                        
-                        if selected.retired {
-                            InputTitle(title: "This location has been marked as retired", topSpace: 50)
-                            Spacer().frame(height: 16)
+                    InsetView {
+                        VStack {
                             
-                            HStack {
-                                Spacer().frame(width: 32)
-                                Button {
-                                    // Remove retired flag and resequence above all other retired locations
-                                    selected.retired = false
-                                    if let index = MasterData.shared.locations.firstIndex(where: {$0 == selected}) {
-                                        let toIndex = MasterData.shared.locations.firstIndex(where: {$0.retired}) ?? MasterData.shared.locations.endIndex
-                                        MasterData.shared.move(locations: IndexSet(integer: index), to: toIndex)
-                                    }
-                                } label: {
-                                    VStack {
-                                        Spacer().frame(height: 6)
-                                        HStack {
-                                            Spacer().frame(width: 16)
-                                            Text("Reinstate")
-                                                .foregroundColor(Palette.enabledButton.text)
-                                                .font(.title2)
-                                            Spacer().frame(width: 16)
+                            Input(title: "Name", field: $selected.name, message: $selected.nameMessage)
+                            
+                            if selected.retired {
+                                InputTitle(title: "This location has been marked as retired", topSpace: 50)
+                                Spacer().frame(height: 16)
+                                
+                                HStack {
+                                    Spacer().frame(width: 32)
+                                    Button {
+                                            // Remove retired flag and resequence above all other retired locations
+                                        selected.retired = false
+                                        if let index = MasterData.shared.locations.firstIndex(where: {$0 == selected}) {
+                                            let toIndex = MasterData.shared.locations.firstIndex(where: {$0.retired}) ?? MasterData.shared.locations.endIndex
+                                            MasterData.shared.move(locations: IndexSet(integer: index), to: toIndex)
                                         }
-                                        Spacer().frame(height: 6)
+                                    } label: {
+                                        VStack {
+                                            Spacer().frame(height: 6)
+                                            HStack {
+                                                Spacer().frame(width: 16)
+                                                Text("Reinstate")
+                                                    .foregroundColor(Palette.enabledButton.text)
+                                                    .font(.title2)
+                                                Spacer().frame(width: 16)
+                                            }
+                                            Spacer().frame(height: 6)
+                                        }
+                                        .background(Palette.enabledButton.background)
+                                        .cornerRadius(10)
                                     }
-                                    .background(Palette.enabledButton.background)
-                                    .cornerRadius(10)
+                                    Spacer()
                                 }
-                                Spacer()
                             }
+                            
+                            Spacer().frame(height: 16)
                         }
-                        
-                        Spacer().frame(height: 16)
-                    })})
+                    }
                     
                     Spacer()
                 }

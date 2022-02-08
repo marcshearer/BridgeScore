@@ -1,26 +1,26 @@
 //
-//  Inset View.swift
+//  List Tile View.swift
 //  BridgeScore
 //
-//  Created by Marc Shearer on 26/01/2022.
+//  Created by Marc Shearer on 08/02/2022.
 //
 
 import SwiftUI
 
-struct InsetView <Content>: View where Content: View {
+struct ListTileView <Content> : View where Content : View {
     var color: PaletteColor
     var font: Font
     var content: Content
-
-    init(color: PaletteColor = Palette.inset, font: Font = .body, @ViewBuilder content: ()->Content) {
+    
+    init(color: PaletteColor = Palette.tile, font: Font = .largeTitle, @ViewBuilder content: ()->Content) {
         self.color = color
         self.font = font
         self.content = content()
     }
-    
+
     var body: some View {
         VStack {
-            Spacer().frame(height: 16)
+            Spacer().frame(height: 6)
             HStack {
                 Spacer().frame(width: 16)
                 HStack {
@@ -28,10 +28,12 @@ struct InsetView <Content>: View where Content: View {
                     content
                     Spacer()
                 }
+                .frame(height: 80)
                 .background(color.background)
                 .cornerRadius(16)
-                Spacer().frame(width: 16)
+            Spacer().frame(width: 16)
             }
+            Spacer().frame(height: 6)
         }
         .foregroundColor(color.text)
         .font(font)
