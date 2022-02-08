@@ -1,5 +1,5 @@
 //
-//  ScorecardView.swift
+//  Scorecard Canvas View.swift
 //  BridgeScore
 //
 //  Created by Marc Shearer on 29/01/2022.
@@ -36,6 +36,7 @@ enum ColumnSize: Codable {
 }
 
 struct ScorecardCanvasRow {
+    var row: Int
     var type: RowType
     var table: Int?
     var board: Int?
@@ -67,7 +68,7 @@ struct ScorecardCanvasView: View {
     
                 // Banner
                 let options = [
-                    //BannerOption(image: AnyView(Image(systemName: "rectangle.and.pencil.and.ellipsis")), likeBack: true, action: { decodeDrawing() }),
+                    BannerOption(image: AnyView(Image(systemName: "rectangle.and.pencil.and.ellipsis")), likeBack: true, action: { decodeDrawing() }),
                     BannerOption(image: AnyView(Image(systemName: "arrow.uturn.backward")), likeBack: true, action: { undoDrawing() }),
                     BannerOption(image: AnyView(Image(systemName: "trash.fill")), likeBack: true, action: { clearDrawing() }),
                     BannerOption(image: AnyView(Image(systemName: "paintpalette")), likeBack: true, action: { toolPickerVisible.toggle() })]
@@ -245,25 +246,49 @@ class ScorecardCanvasUIView : UIView, UITableViewDataSource, UITableViewDelegate
     }
 
     public func decode() {
-        for rowNumber in 0..<(rows.count - 1) {
-            for columnNumber in 0..<columns.count {
-                if let row = mainTableView.cellForRow(at: IndexPath(row: rowNumber, section: 0)) as? ScorecardCanvasUIViewTableViewCell {
-                    if let cell = row.collectionView.cellForItem(at: IndexPath(item: columnNumber, section: 0)) as? ScorecardCanvasUIViewCollectionViewCell {
-                        let frame = row.convert(cell.frame, to: canvasView)
-                        let image = canvasView.drawing.image(from: frame, scale: 1)
-                        print(frame)
-                        decodeImage(image: image, completion: { text in
+        var queue: [ScorecardCanvasUIViewCollectionViewCell] = []
+
+        func decodeCell(_ index: Int) {
+            let cell = queue[index]
+            let frame = cell.view.convert(cell.frame, to: canvasView)
+            Utility.executeAfter(delay: 0.01) { [self] in
+                let currentY = scrollView.contentOffset.y
+                var scrollY = currentY
+                if frame.minY < currentY {
+                    scrollY = frame.minY
+                } else if frame.maxY > currentY + scrollView.frame.height {
+                    scrollY = frame.maxY - scrollView.frame.height
+                }
+                UIView.animate(withDuration: 0.01) {
+                    self.scrollView.setContentOffset(CGPoint(x: self.mainTableView.frame.minX, y: scrollY), animated: false)
+                } completion: { (result) in
+                    let image = canvasView.drawing.image(from: frame, scale: 1)
+                    decodeImage(image: image, completion: { text in
+                        if let text = text {
+                            cell.label.text = "  " + text
+                        }
+                        if index < queue.count - 1 {
+                            decodeCell(index + 1)
+                        } else {
                             Utility.executeAfter(delay: 0.1) {
                                 self.delegate?.clearDecodePressed()
                             }
-                            if let text = text {
-                                cell.label.text = "  " + text
-                            }
-                        })
+                        }
+                    })
+                }
+            }
+        }
+        
+        for row in 0..<mainTableView.numberOfRows(inSection: 0) {
+            if let tableView = mainTableView.cellForRow(at: IndexPath(row: row, section: 0)) as? ScorecardCanvasUIViewTableViewCell {
+                for columnNumber in 0..<tableView.collectionView.numberOfItems(inSection: 0) {
+                    if let cell = tableView.collectionView.cellForItem(at: IndexPath(item: columnNumber, section: 0)) as? ScorecardCanvasUIViewCollectionViewCell {
+                        queue.append(cell)
                     }
                 }
             }
         }
+        decodeCell(0)
     }
     
     func decodeImage(image: UIImage, completion: @escaping (String?)->()) {
@@ -355,7 +380,7 @@ class ScorecardCanvasUIView : UIView, UITableViewDataSource, UITableViewDelegate
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ScorecardUIViewCollectionViewCell", for: indexPath) as! ScorecardCanvasUIViewCollectionViewCell
         let column = columns[indexPath.item]
         let row = rows[collectionView.tag]
-        cell.set(row: row, column: column)
+        cell.set(view: collectionView, row: row, column: column)
         return cell
     }
     
@@ -408,18 +433,18 @@ class ScorecardCanvasUIView : UIView, UITableViewDataSource, UITableViewDelegate
     func setupRows(){
         rows = []
         
-        rows.append(ScorecardCanvasRow(type: .heading))
+        rows.append(ScorecardCanvasRow(row: 0, type: .heading))
         
         for table in 1...scorecard.tables {
             
             // Add body rows
             for tableBoard in 1...scorecard.boardsTable {
                 let board = ((table - 1) * scorecard.boardsTable) + tableBoard
-                rows.append(ScorecardCanvasRow(type: .body, table: table, board: board))
+                rows.append(ScorecardCanvasRow(row: rows.count, type: .body, table: table, board: board))
             }
             
             // Add total rows
-            rows.append(ScorecardCanvasRow(type: .total, table: table))
+            rows.append(ScorecardCanvasRow(row: rows.count, type: .total, table: table))
         }
     }
 }
@@ -457,6 +482,9 @@ class ScorecardCanvasUIViewTableViewCell: UITableViewCell {
 
 class ScorecardCanvasUIViewCollectionViewCell: UICollectionViewCell {
     fileprivate var label: UILabel
+    fileprivate var row: ScorecardCanvasRow!
+    fileprivate var column: ScorecardCanvasColumn!
+    fileprivate var view: UICollectionView!
     
     override init(frame: CGRect) {
         self.label = UILabel()
@@ -473,8 +501,12 @@ class ScorecardCanvasUIViewCollectionViewCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func set(row: ScorecardCanvasRow, column: ScorecardCanvasColumn) {
+    func set(view: UICollectionView, row: ScorecardCanvasRow, column: ScorecardCanvasColumn) {
         var color: PaletteColor
+        self.view = view
+        self.row = row
+        self.column = column
+        
         switch row.type {
         case .heading:
             self.label.text = column.heading
