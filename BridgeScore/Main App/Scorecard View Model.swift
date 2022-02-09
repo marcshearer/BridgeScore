@@ -68,6 +68,10 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         return result
     }
     
+    public var noDrawing: Bool {
+        self.drawing.strokes.isEmpty
+    }
+    
     public init() {
         self.reset()
         self.setupMappings()

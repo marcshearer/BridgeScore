@@ -1,5 +1,5 @@
 To Do
 =====
 
-List not refreshed when change a scorecard
+Sort out dark mode
 

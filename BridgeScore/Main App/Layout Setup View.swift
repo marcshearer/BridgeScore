@@ -185,7 +185,6 @@ struct LayoutDetailView : View {
                     Spacer()
                 }
                 .onChange(of: selected.layoutId) { (layoutId) in
-                    let selected = MasterData.shared.layout(id: layoutId)!
                     locationIndex = locations.firstIndex(where: {$0 == selected.location}) ?? 0
                     playerIndex = players.firstIndex(where: {$0 == selected.partner}) ?? 0
                     typeIndex = types.firstIndex(where: {$0 == selected.type}) ?? 0

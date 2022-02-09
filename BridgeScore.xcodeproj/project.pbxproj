@@ -84,7 +84,6 @@
 		B23ADBED27B1CC68001B6B38 /* Notes.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Notes.txt; sourceTree = "<group>"; };
 		B23ADBF127B25356001B6B38 /* List Tile View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "List Tile View.swift"; sourceTree = "<group>"; };
 		B23ADBF327B28D68001B6B38 /* Local Authentication.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Local Authentication.swift"; sourceTree = "<group>"; };
-		B23ADBF527B28F65001B6B38 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B25ADA5D27AEB279007062AA /* Double Column View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Double Column View.swift"; sourceTree = "<group>"; };
 		B2633A0D27AC3A460081B258 /* Layout List View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Layout List View.swift"; sourceTree = "<group>"; };
 		B26BCDF62799A1AC00B73501 /* BridgeScore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BridgeScore.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -226,7 +225,6 @@
 		B26BCE1D2799A99400B73501 /* Standard Components */ = {
 			isa = PBXGroup;
 			children = (
-				B23ADBF527B28F65001B6B38 /* Info.plist */,
 				B26BCE70279B188600B73501 /* BridgeScore.xcdatamodeld */,
 				B26BCE2C2799AB6700B73501 /* MyApp.swift */,
 				B26BCE282799AB6700B73501 /* Persistence.swift */,
@@ -340,9 +338,9 @@
 			isa = PBXGroup;
 			children = (
 				B26BCE6E279AEB6C00B73501 /* Scorecard List View.swift */,
-				B2633A0D27AC3A460081B258 /* Layout List View.swift */,
 				B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */,
 				B2276D5727A5A2C90025DA80 /* Scorecard Canvas View.swift */,
+				B2633A0D27AC3A460081B258 /* Layout List View.swift */,
 			);
 			name = "Main Views";
 			sourceTree = "<group>";
@@ -624,19 +622,21 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"BridgeScore/Main App/Preview Content\"";
 				DEVELOPMENT_TEAM = 3T7CT2S464;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = BridgeScore/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "This app requires access to Face ID to avoid unauthenticated access to  scorecard details";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -644,6 +644,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = MarcShearer.BridgeScore;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -655,19 +656,21 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"BridgeScore/Main App/Preview Content\"";
 				DEVELOPMENT_TEAM = 3T7CT2S464;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = BridgeScore/Info.plist;
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "This app requires access to Face ID to avoid unauthenticated access to  scorecard details";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -675,6 +678,7 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = MarcShearer.BridgeScore;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

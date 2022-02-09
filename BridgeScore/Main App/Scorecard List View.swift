@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ScorecardListView: View {
     @StateObject private var scorecard = ScorecardViewModel()
+    @ObservedObject private var data = MasterData.shared
     @State private var title = "Scorecards"
     @State private var layout = LayoutViewModel()
     @State private var layoutSelected = false
@@ -40,17 +41,18 @@ struct ScorecardListView: View {
                     self.linkToNew = true
                 }
                 
-                LazyVStack {
-                    ForEach(MasterData.shared.scorecards) { (scorecard) in
-                        ScorecardSummaryView(scorecard: scorecard)
-                        .onTapGesture {
-                            // Copy this entry to current scorecard
-                            self.scorecard.copy(from: scorecard)
-                            self.linkToEdit = true
+                ScrollView {
+                    LazyVStack {
+                        ForEach(data.scorecards) { (scorecard) in
+                            ScorecardSummaryView(scorecard: scorecard)
+                                .onTapGesture {
+                                        // Copy this entry to current scorecard
+                                    self.scorecard.copy(from: scorecard)
+                                    self.linkToEdit = true
+                                }
                         }
                     }
                 }
-                
                 Spacer()
             }
             .onAppear {
@@ -93,8 +95,9 @@ struct ScorecardSummaryView: View {
                                         .frame(width: 100)
                                 }
                                 HStack {
+                                    let score = scorecard.totalScore
                                     Spacer()
-                                    Text(scorecard.totalScore)
+                                    Text("\(score)\(scorecard.type == .imp || score == "" || score.rtrim().right(1) == "%" ? "" : "%")")
                                 }
                                 .frame(width: 100)
                                     

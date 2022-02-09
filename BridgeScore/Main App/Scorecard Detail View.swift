@@ -43,7 +43,7 @@ struct ScorecardDetailView: View {
     }
     
     func canvasAction() {
-        if scorecard == authenticatedScorecard {
+        if scorecard == authenticatedScorecard || scorecard.noDrawing {
             linkToCanvas = true
         } else {
             LocalAuthentication.authenticate(reason: "You must authenticate to access the scorecard detail") {
