@@ -68,7 +68,7 @@ struct ScorecardCanvasView: View {
     
                 // Banner
                 let options = [
-                    BannerOption(image: AnyView(Image(systemName: "rectangle.and.pencil.and.ellipsis")), likeBack: true, action: { decodeDrawing() }),
+//                  BannerOption(image: AnyView(Image(systemName: "rectangle.and.pencil.and.ellipsis")), likeBack: true, action: { decodeDrawing() }),
                     BannerOption(image: AnyView(Image(systemName: "arrow.uturn.backward")), likeBack: true, action: { undoDrawing() }),
                     BannerOption(image: AnyView(Image(systemName: "trash.fill")), likeBack: true, action: { clearDrawing() }),
                     BannerOption(image: AnyView(Image(systemName: "paintpalette")), likeBack: true, action: { toolPickerVisible.toggle() })]
