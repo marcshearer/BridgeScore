@@ -53,6 +53,7 @@
 		B26BCE72279B188600B73501 /* BridgeScore.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE70279B188600B73501 /* BridgeScore.xcdatamodeld */; };
 		B26BCE74279B236F00B73501 /* Layout Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE73279B236F00B73501 /* Layout Managed Object.swift */; };
 		B26BCE76279BEBA500B73501 /* Scorecard Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */; };
+		B28E4EE827B55F9A0059819C /* Backup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28E4EE727B55F9A0059819C /* Backup.swift */; };
 		B2A2053527AFC2E400C83C88 /* Player Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053427AFC2E400C83C88 /* Player Setup View.swift */; };
 		B2A2053727AFC41500C83C88 /* Toolbar View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053627AFC41500C83C88 /* Toolbar View.swift */; };
 		B2A2053927B01D0000C83C88 /* Location Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053827B01D0000C83C88 /* Location Setup View.swift */; };
@@ -122,6 +123,8 @@
 		B26BCE71279B188600B73501 /* BridgeScore.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = BridgeScore.xcdatamodel; sourceTree = "<group>"; };
 		B26BCE73279B236F00B73501 /* Layout Managed Object.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Layout Managed Object.swift"; sourceTree = "<group>"; };
 		B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Managed Object.swift"; sourceTree = "<group>"; };
+		B28E4EE727B55F9A0059819C /* Backup.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Backup.swift; sourceTree = "<group>"; };
+		B28E4EE927B566300059819C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B2A2053427AFC2E400C83C88 /* Player Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Player Setup View.swift"; sourceTree = "<group>"; };
 		B2A2053627AFC41500C83C88 /* Toolbar View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Toolbar View.swift"; sourceTree = "<group>"; };
 		B2A2053827B01D0000C83C88 /* Location Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Location Setup View.swift"; sourceTree = "<group>"; };
@@ -225,6 +228,7 @@
 		B26BCE1D2799A99400B73501 /* Standard Components */ = {
 			isa = PBXGroup;
 			children = (
+				B28E4EE927B566300059819C /* Info.plist */,
 				B26BCE70279B188600B73501 /* BridgeScore.xcdatamodeld */,
 				B26BCE2C2799AB6700B73501 /* MyApp.swift */,
 				B26BCE282799AB6700B73501 /* Persistence.swift */,
@@ -262,6 +266,7 @@
 				B26BCE442799AD8900B73501 /* Other Extensions.swift */,
 				B26BCE422799AD8900B73501 /* Link Presentation.swift */,
 				B23ADBF327B28D68001B6B38 /* Local Authentication.swift */,
+				B28E4EE727B55F9A0059819C /* Backup.swift */,
 			);
 			name = Libraries;
 			sourceTree = "<group>";
@@ -493,6 +498,7 @@
 				B26BCE302799AB6700B73501 /* MyApp.swift in Sources */,
 				B26BCE362799AD1700B73501 /* Config.swift in Sources */,
 				B2AF750F27AD384900233693 /* Layout Setup View.swift in Sources */,
+				B28E4EE827B55F9A0059819C /* Backup.swift in Sources */,
 				B26BCE6B2799AED700B73501 /* Input Title.swift in Sources */,
 				B23ADBF227B25356001B6B38 /* List Tile View.swift in Sources */,
 			);
@@ -629,7 +635,9 @@
 				DEVELOPMENT_TEAM = 3T7CT2S464;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BridgeScore/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "This app requires access to Face ID to avoid unauthenticated access to  scorecard details";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -663,7 +671,9 @@
 				DEVELOPMENT_TEAM = 3T7CT2S464;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BridgeScore/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "This app requires access to Face ID to avoid unauthenticated access to  scorecard details";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

@@ -48,6 +48,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         var result = false
         if let mo = self.scorecardMO {
             if self.scorecardId != mo.scorecardId ||
+                self.date != mo.date ||
                 self.location?.locationId != mo.locationId ||
                 self.desc != mo.desc ||
                 self.comment != mo.comment ||

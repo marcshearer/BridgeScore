@@ -20,7 +20,7 @@ struct ScorecardDetailView: View {
             VStack(spacing: 0) {
                 
                 let bannerOptions = [ BannerOption(image: AnyView(Image(systemName: "square.and.pencil").rotationEffect(Angle.init(degrees: 90))), likeBack: true, action: canvasAction)]
-                Banner(title: $scorecard.editTitle, back: true, backImage: AnyView(Image(systemName: "xmark")), backAction: backAction, optionMode: .buttons, options: bannerOptions)
+                Banner(title: $scorecard.editTitle, back: true, backAction: backAction, optionMode: .buttons, options: bannerOptions)
                 
                 ScrollView(showsIndicators: false) {
                     
@@ -116,7 +116,7 @@ struct ScorecardDetailsView: View {
                     Input(title: "Comments", field: $scorecard.comment, height: 100)
                     
                     HStack {
-                        Input(title: "Score", field: $scorecard.totalScore, width: 100, clearText: false)
+                        Input(title: "Score", field: $scorecard.totalScore, width: 100, keyboardType: .numberPad, clearText: false)
                         Spacer()
                     }
                     

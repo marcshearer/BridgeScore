@@ -2,4 +2,12 @@ To Do
 =====
 
 Sort out dark mode
+New layout doesn't have partner (or location?) unless you change it
+Maybe remove file sharing in Info.plist once can backup from Mac
 
+Enhancements
+============
+Filter list of scorecards
+Share scorecards via iCloud?
+Stats?
+Text Inputs on scorecard canvas?

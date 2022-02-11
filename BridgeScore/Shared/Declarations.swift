@@ -36,6 +36,10 @@ var titleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 16.0 : 12.0
 var cellFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 16.0))
 var boardFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 20.0))
 
+// Backups
+let backupDirectoryDateFormat = "yyyy-MM-dd-HH-mm-ss-SSS"
+let backupDateFormat = "yyyy-MM-dd HH:mm:ss.SSS Z"
+
 // Localisable names
 
 public let appName = "Bridge Score"
@@ -51,14 +55,17 @@ public enum UIMode {
 
 public enum Type: Int, CaseIterable {
     case percent = 0
-    case imp = 1
+    case vp = 1
+    case imp = 2
     
     public var string: String {
         switch self {
         case .percent:
-            return "Match Points (%)"
+            return "Match Points Pairs (%)"
         case .imp:
-            return "IMPs"
+            return "IMP Pairs"
+        case .vp:
+            return "Victory Point Teams"
         }
     }
 }
