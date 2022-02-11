@@ -88,3 +88,43 @@ public let target: UIMode = .appKit
 public let target: UIMode = .unknow
 #endif
 
+// Scorecard view types
+
+enum RowType: Int {
+    case heading = 0
+    case body = 1
+    case total = 2
+}
+
+enum ColumnType: Codable {
+    case board
+    case contract
+    case declarer
+    case result
+    case score
+    case comment
+    case responsible
+    
+    var string: String {
+        return "\(self)"
+    }
+}
+
+enum ColumnSize: Codable {
+    case fixed(CGFloat)
+    case flexible
+}
+
+struct ScorecardRow {
+    var row: Int
+    var type: RowType
+    var table: Int?
+    var board: Int?
+}
+
+struct ScorecardColumn: Codable {
+    var type: ColumnType
+    var heading: String
+    var size: ColumnSize
+    var width: CGFloat?
+}

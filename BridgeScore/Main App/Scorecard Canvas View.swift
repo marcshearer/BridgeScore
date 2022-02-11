@@ -10,45 +10,6 @@ import SwiftUI
 import PencilKit
 import Vision
 
-enum RowType: Int {
-    case heading = 0
-    case body = 1
-    case total = 2
-}
-
-enum ColumnType: Codable {
-    case board
-    case contract
-    case declarer
-    case result
-    case score
-    case comment
-    case responsible
-    
-    var string: String {
-        return "\(self)"
-    }
-}
-
-enum ColumnSize: Codable {
-    case fixed(CGFloat)
-    case flexible
-}
-
-struct ScorecardCanvasRow {
-    var row: Int
-    var type: RowType
-    var table: Int?
-    var board: Int?
-}
-
-struct ScorecardCanvasColumn: Codable {
-    var type: ColumnType
-    var heading: String
-    var size: ColumnSize
-    var width: CGFloat?
-}
-
 struct ScorecardCanvasView: View {
     @Environment(\.undoManager) private var undoManager
 
@@ -158,15 +119,15 @@ class ScorecardCanvasUIView : UIView, UITableViewDataSource, UITableViewDelegate
     var delegate: ScorecardCanvasUIViewDelegate?
     
     var columns = [
-        ScorecardCanvasColumn(type: .board, heading: "Board", size: .fixed(70)),
-        ScorecardCanvasColumn(type: .contract, heading: "Contract", size: .fixed(90)),
-        ScorecardCanvasColumn(type: .declarer, heading: "By", size: .fixed(60)),
-        ScorecardCanvasColumn(type: .result, heading: "Result", size: .fixed(70)),
-        ScorecardCanvasColumn(type: .score, heading: "Score", size: .fixed(70)),
-        ScorecardCanvasColumn(type: .comment, heading: "Comment", size: .flexible),
-        ScorecardCanvasColumn(type: .responsible, heading: "Resp", size: .fixed(60))
+        ScorecardColumn(type: .board, heading: "Board", size: .fixed(70)),
+        ScorecardColumn(type: .contract, heading: "Contract", size: .fixed(90)),
+        ScorecardColumn(type: .declarer, heading: "By", size: .fixed(60)),
+        ScorecardColumn(type: .result, heading: "Result", size: .fixed(70)),
+        ScorecardColumn(type: .score, heading: "Score", size: .fixed(70)),
+        ScorecardColumn(type: .comment, heading: "Comment", size: .flexible),
+        ScorecardColumn(type: .responsible, heading: "Resp", size: .fixed(60))
     ]
-    var rows: [ScorecardCanvasRow] = []
+    var rows: [ScorecardRow] = []
     let headingHeight: CGFloat = 40
     let rowHeight: CGFloat = 90
     var totalHeight: CGFloat
@@ -433,18 +394,18 @@ class ScorecardCanvasUIView : UIView, UITableViewDataSource, UITableViewDelegate
     func setupRows(){
         rows = []
         
-        rows.append(ScorecardCanvasRow(row: 0, type: .heading))
+        rows.append(ScorecardRow(row: 0, type: .heading))
         
         for table in 1...scorecard.tables {
             
             // Add body rows
             for tableBoard in 1...scorecard.boardsTable {
                 let board = ((table - 1) * scorecard.boardsTable) + tableBoard
-                rows.append(ScorecardCanvasRow(row: rows.count, type: .body, table: table, board: board))
+                rows.append(ScorecardRow(row: rows.count, type: .body, table: table, board: board))
             }
             
             // Add total rows
-            rows.append(ScorecardCanvasRow(row: rows.count, type: .total, table: table))
+            rows.append(ScorecardRow(row: rows.count, type: .total, table: table))
         }
     }
 }
@@ -482,8 +443,8 @@ class ScorecardCanvasUIViewTableViewCell: UITableViewCell {
 
 class ScorecardCanvasUIViewCollectionViewCell: UICollectionViewCell {
     fileprivate var label: UILabel
-    fileprivate var row: ScorecardCanvasRow!
-    fileprivate var column: ScorecardCanvasColumn!
+    fileprivate var row: ScorecardRow!
+    fileprivate var column: ScorecardColumn!
     fileprivate var view: UICollectionView!
     
     override init(frame: CGRect) {
@@ -501,7 +462,7 @@ class ScorecardCanvasUIViewCollectionViewCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func set(view: UICollectionView, row: ScorecardCanvasRow, column: ScorecardCanvasColumn) {
+    func set(view: UICollectionView, row: ScorecardRow, column: ScorecardColumn) {
         var color: PaletteColor
         self.view = view
         self.row = row
