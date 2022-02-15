@@ -35,7 +35,7 @@ var messageFont = Font.system(size: (MyApp.format == .tablet ? 16.0 : 12.0))
 var titleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 16.0 : 12.0), weight: .bold)
 var cellFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 16.0))
 var boardFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 20.0))
-var pickerTitleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 24.0), weight: .bold)
+var pickerTitleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 24.0))
 var pickerCaptionFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 10.0 : 8.0))
 
 // Backups

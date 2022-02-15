@@ -253,15 +253,15 @@ class ScorecardInputUIView : UIView, UITableViewDataSource, UITableViewDelegate,
         
         for table in 1...scorecard.tables {
             
+            // Add total row
+            rows.append(ScorecardRow(row: rows.count, type: .total, table: table))
+            
             // Add body rows
             for tableBoard in 1...scorecard.boardsTable {
                 let boardNumber = ((table - 1) * scorecard.boardsTable) + tableBoard
                 let board = BoardViewModel(scorecard: scorecard, match: table, board: boardNumber)
                 rows.append(ScorecardRow(row: rows.count, type: .body, table: table, board: board))
             }
-            
-            // Add total rows
-            rows.append(ScorecardRow(row: rows.count, type: .total, table: table))
         }
     }
 }
@@ -275,9 +275,9 @@ class ScorecardInputUIViewTableViewCell: UITableViewCell {
            
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         self.layout = UICollectionViewFlowLayout()
-        self.collectionView = UICollectionView(frame: CGRect(), collectionViewLayout: layout)
-        ScorecardInputUIViewCollectionViewCell.register(self.collectionView)
         super.init(style: style, reuseIdentifier: reuseIdentifier)
+        self.collectionView = UICollectionView(frame: self.frame, collectionViewLayout: layout)
+        ScorecardInputUIViewCollectionViewCell.register(self.collectionView)
         self.contentView.addSubview(collectionView, anchored: .all)
         self.contentView.bringSubviewToFront(self.collectionView)
     }
@@ -307,11 +307,12 @@ class ScorecardInputUIViewTableViewCell: UITableViewCell {
     }
 }
 
-class ScorecardInputUIViewCollectionViewCell: UICollectionViewCell, ScrollPickerDelegate, EnumPickerDelegate {
+class ScorecardInputUIViewCollectionViewCell: UICollectionViewCell, ScrollPickerDelegate, EnumPickerDelegate, ContractPickerDelegate {
     
     fileprivate var label: UILabel!
     fileprivate var textField: UITextField
     fileprivate var participantPicker: EnumPicker<Participant>!
+    fileprivate var contractPicker: ContractPicker
     fileprivate var row: ScorecardRow!
     fileprivate var column: ScorecardColumn!
     private static let identifier = "ScorecardInputUIViewCollectionViewCell"
@@ -319,7 +320,8 @@ class ScorecardInputUIViewCollectionViewCell: UICollectionViewCell, ScrollPicker
     override init(frame: CGRect) {
         label = UILabel()
         textField = UITextField()
-        participantPicker = EnumPicker()
+        participantPicker = EnumPicker(frame: frame)
+        contractPicker = ContractPicker(frame: frame)
         super.init(frame: frame)
                 
         addSubview(label, anchored: .all)
@@ -339,6 +341,11 @@ class ScorecardInputUIViewCollectionViewCell: UICollectionViewCell, ScrollPicker
         participantPicker.layer.borderColor = UIColor(Palette.gridLine).cgColor
         participantPicker.layer.borderWidth = 2.0
         participantPicker.delegate = self
+        
+        addSubview(contractPicker, anchored: .all)
+        contractPicker.layer.borderColor = UIColor(Palette.gridLine).cgColor
+        contractPicker.layer.borderWidth = 2.0
+        contractPicker.delegate = self
     }
     
     required init?(coder: NSCoder) {
@@ -382,6 +389,7 @@ class ScorecardInputUIViewCollectionViewCell: UICollectionViewCell, ScrollPicker
         textField.isHidden = true
         label.isHidden = true
         participantPicker.isHidden = true
+        contractPicker.isHidden = true
         textField.text = ""
         label.text = ""
         label.textAlignment = .center
@@ -395,8 +403,8 @@ class ScorecardInputUIViewCollectionViewCell: UICollectionViewCell, ScrollPicker
             label.font = boardFont
             label.text = "\(row.board?.board ?? 0)"
         case .contract:
-            textField.isHidden = false
-            textField.text = row.board?.contract ?? ""
+            contractPicker.isHidden = false
+            // contractPicker.contract = Contract()
         case .declarer:
             participantPicker.isHidden = false
             participantPicker.set(row.board?.declarer ?? .scorer, color: Palette.gridBody, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
@@ -445,140 +453,260 @@ class ScorecardInputUIViewCollectionViewCell: UICollectionViewCell, ScrollPicker
     internal func scrollPickerDidChange(to value: Int) {
         
     }
+    
+    internal func contractPickerDidChange(to value: Contract) {
+        
+    }
+}
+
+enum ContractElement: Int {
+    case level = 0
+    case suit = 1
+    case double = 2
+}
+
+enum ContractLevel: Int, CaseIterable {
+    case blank = 0
+    case passout = -1
+    case one = 1
+    case two = 2
+    case three = 3
+    case four = 4
+    case five = 5
+    case six = 6
+    case seven = 7
+    
+    var string: String {
+        switch self {
+        case .blank:
+            return ""
+        case .passout:
+            return "P"
+        default:
+            return "\(self.rawValue)"
+        }
+    }
+    
+    var hasSuit: Bool {
+        return self != .blank && self != .passout
+    }
+    
+    var hasDouble: Bool {
+        return hasSuit
+    }
+}
+
+enum ContractSuit: Int, CaseIterable {
+    case blank = 0
+    case club = 1
+    case diamond = 2
+    case heart = 3
+    case spade = 4
+    case noTrump = 5
+    
+    var string: String {
+        switch self {
+        case .blank:
+            return ""
+        case .club:
+            return "C"
+        case .diamond:
+            return "D"
+        case .heart:
+            return "H"
+        case .spade:
+            return "S"
+        case .noTrump:
+            return "NT"
+        }
+    }
+    
+    var hasDouble: Bool {
+        return self != .blank
+    }
+}
+
+enum ContractDouble: Int, CaseIterable {
+    case undoubled = 0
+    case doubled = 1
+    case redoubled = 2
+    
+    var string: String {
+        switch self {
+        case .undoubled:
+            return ""
+        case .doubled:
+            return "*"
+        case .redoubled:
+            return "**"
+        }
+    }
+}
+
+class Contract {
+    var level: ContractLevel = .blank
+    var suit: ContractSuit = .blank
+    var double: ContractDouble = .undoubled
+    
+    init(level: ContractLevel = .blank, suit: ContractSuit = .blank, double: ContractDouble = .undoubled) {
+        self.level = level
+        self.suit = suit
+        self.double = double
+    }
+}
+
+protocol ContractPickerDelegate {
+    func contractPickerDidChange(to: Contract)
+}
+
+class ContractPicker: UIView, ScrollPickerDelegate {
+    
+    private var levelPicker: ScrollPicker
+    private var suitPicker: ScrollPicker
+    private var doublePicker: ScrollPicker
+    private var contract: Contract
+    private let levelList = ContractLevel.allCases
+    private var suitList = ContractSuit.allCases
+    private var doubleList = ContractDouble.allCases
+    public var delegate: ContractPickerDelegate?
+    
+    init(frame: CGRect, contract: Contract = Contract(), color: PaletteColor? = nil) {
+        self.contract = contract
+        levelPicker = ScrollPicker(frame: frame, list: levelList.map{$0.string}, color: Palette.tile)
+        levelPicker.tag = ContractElement.level.rawValue
+        suitPicker = ScrollPicker(frame: frame, list: suitList.map{$0.string}, color: Palette.alternate)
+        suitPicker.tag = ContractElement.suit.rawValue
+        doublePicker = ScrollPicker(frame: frame, list: doubleList.map{$0.string}, color: Palette.contrastTile)
+        doublePicker.tag = ContractElement.double.rawValue
+        super.init(frame: frame)
+        levelPicker.delegate = self
+        suitPicker.delegate = self
+        doublePicker.delegate = self
+        self.addSubview(levelPicker, anchored: .leading, .top, .bottom)
+        self.addSubview(suitPicker, anchored: .top, .bottom)
+        self.addSubview(doublePicker, anchored: .trailing, .top, .bottom)
+        Constraint.setWidth(control: suitPicker, width: 50)
+        Constraint.setWidth(control: doublePicker, width: 30, priority: .defaultLow)
+        Constraint.anchor(view: self, control: levelPicker, to: suitPicker, toAttribute: .leading, attributes: .trailing)
+        Constraint.anchor(view: self, control: suitPicker, to: doublePicker, toAttribute: .leading, attributes: .trailing)
+        set(level: contract.level, reflect: true, force: true)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func scrollPickerDidChange(_ scrollPicker: ScrollPicker, to index: Int) {
+        if let element = ContractElement(rawValue: scrollPicker.tag) {
+            var changed = false
+            switch element {
+            case .level:
+                let newValue = levelList[index]
+                changed = set(level: newValue, reflect: true)
+            case .suit:
+                let newValue = suitList[index]
+                changed = set(suit: newValue, reflect: true)
+            case .double:
+                let newValue = doubleList[index]
+                changed = set(double: newValue, reflect: true)
+            }
+            if changed {
+                delegate?.contractPickerDidChange(to: contract)
+            }
+        }
+    }
+    
+    @discardableResult func set(level newValue: ContractLevel, reflect: Bool = false, force: Bool = false) -> Bool {
+        var changed = false
+        if newValue != contract.level || force {
+            if !newValue.hasSuit && (contract.suit != .blank || force) {
+                set(suit: .blank, reflect: reflect, force: force)
+            }
+            contract.level = newValue
+            if reflect {
+                suitPicker.isUserInteractionEnabled = newValue.hasSuit
+            }
+            changed = true
+        }
+        return changed
+    }
+    
+    @discardableResult func set(suit newValue: ContractSuit, reflect: Bool = false, force: Bool = false)  -> Bool {
+        var changed = false
+        if newValue != contract.suit || force {
+            if !newValue.hasDouble && (contract.double != .undoubled || force) {
+                set(double: .undoubled, reflect: reflect, force: force)
+            }
+            contract.suit = newValue
+            if reflect {
+                doublePicker.isUserInteractionEnabled = newValue.hasDouble
+                if let index = self.suitList.firstIndex(where: {$0 == contract.suit}) {
+                    self.suitPicker.set(index)
+                }
+            }
+            changed = true
+        }
+        return changed
+    }
+    
+    @discardableResult func set(double newValue: ContractDouble, reflect: Bool = false, force: Bool = false)  -> Bool {
+        var changed = false
+        if newValue != contract.double || force {
+            contract.double = newValue
+            if reflect {
+                if let index = self.doubleList.firstIndex(where: {$0 == contract.double}) {
+                    self.doublePicker.set(index)
+                }
+            }
+            changed = true
+        }
+        return changed
+    }
 }
 
 protocol EnumPickerDelegate {
     func enumPickerDidChange(to: Any)
 }
 
-protocol EnumPickerType : CaseIterable {
+protocol EnumPickerType : CaseIterable, Equatable {
     var string: String {get}
 }
 
-class EnumPicker<EnumType> : UIView, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, UICollectionViewDataSource, CustomCollectionViewLayoutDelegate where EnumType : EnumPickerType {
+class EnumPicker<EnumType> : UIView, ScrollPickerDelegate where EnumType : EnumPickerType {
      
-    private var collectionView: UICollectionView!
-    private var collectionViewLayout: UICollectionViewLayout!
-    private var color: PaletteColor?
-    private var list = EnumType.allCases.map{$0}
-    private var titleFont = pickerTitleFont
-    private var captionFont = pickerCaptionFont
+    private var scrollPicker: ScrollPicker
+    private var list: [EnumType]
+    private var entryList: [ScrollPickerEntry]
     private(set) var selected: EnumType!
     public var delegate: EnumPickerDelegate?
     
-    init(color: PaletteColor? = nil) {
-        super.init(frame: CGRect())
-        self.color = color
-        let layout = CustomCollectionViewLayout(direction: .vertical)
-        layout.delegate = self
-        collectionView = UICollectionView(frame: CGRect(), collectionViewLayout: layout)
-        collectionView.dataSource = self
-        collectionView.delegate = self
-        collectionView.decelerationRate = .fast
-        collectionView.showsVerticalScrollIndicator = false
-        collectionView.showsHorizontalScrollIndicator = false
-        EnumPickerCell.register(collectionView)
-        self.addSubview(collectionView, anchored: .all)
+    init(frame: CGRect, color: PaletteColor? = nil) {
+        list = EnumType.allCases.map{$0}
+        entryList = list.map{ScrollPickerEntry(title: $0.string.left(1).capitalized, caption: $0.string.capitalized)}
+        scrollPicker = ScrollPicker(frame: frame, list: entryList, color: color)
+        super.init(frame: frame)
+        scrollPicker.delegate = self
+        addSubview(scrollPicker, anchored: .all)
     }
     
     public func set(_ selected: EnumType, color: PaletteColor? = nil, titleFont: UIFont?, captionFont: UIFont? = nil) {
-        self.selected = selected
-        if let color = color {
-            self.color = color
+        if let index = list.firstIndex(where: {$0 == selected}) {
+            scrollPicker.set(index, list: entryList, color: color, titleFont: titleFont, captionFont: captionFont)
         }
-        if let titleFont = titleFont {
-            self.titleFont = titleFont
-        }
-        if let captionFont = captionFont {
-            self.captionFont = captionFont
-        }
-
-        let itemAtCenter = self.list.firstIndex(where: {$0.string == selected.string})!
-        self.collectionView.selectItem(at: IndexPath(item: itemAtCenter, section: 0), animated: true, scrollPosition: .centeredVertically)
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        EnumType.allCases.count
-    }
     
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return frame.size
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = EnumPickerCell.dequeue(collectionView, for: indexPath)
-        let title = list[indexPath.item].string
-        cell.set(titleText: title.left(1).capitalized, captionText: title.capitalized, color: color, titleFont: titleFont, captionFont: captionFont)
-        return cell
-    }
-    
-    internal func changed(_ collectionView: UICollectionView?, itemAtCenter: Int, forceScroll: Bool, animation: ViewAnimation) {
-        Utility.mainThread {
-            self.selected = self.list[itemAtCenter]
-            self.delegate?.enumPickerDidChange(to: self.selected!)
-            collectionView?.reloadData()
-        }
+    func scrollPickerDidChange(to value: Int) {
+        delegate?.enumPickerDidChange(to: list[value])
     }
 }
 
-class EnumPickerCell: UICollectionViewCell {
-    private var title: UILabel!
-    private var caption: UILabel!
-    private static let identifier = "EnumPickerCell"
-    private var captionHeightConstraint: NSLayoutConstraint!
-    
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        title = UILabel(frame: frame)
-        title.font = cellFont
-        title.textAlignment = .center
-        title.minimumScaleFactor = 0.3
-        self.addSubview(title, anchored: .all)
-        caption = UILabel(frame: frame)
-        caption.font = cellFont
-        caption.textAlignment = .center
-        caption.minimumScaleFactor = 0.3
-        self.addSubview(caption, anchored: .leading, .trailing)
-        captionHeightConstraint = Constraint.setHeight(control: caption, height: 0)
-        Constraint.anchor(view: self, control: caption, constant: frame.height / 10, attributes: .bottom)
-    }
-
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    public class func register(_ collectionView: UICollectionView) {
-        collectionView.register(EnumPickerCell.self, forCellWithReuseIdentifier: identifier)
-    }
-    
-    public class func dequeue(_ collectionView: UICollectionView, for indexPath: IndexPath) -> EnumPickerCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: identifier, for: indexPath) as! EnumPickerCell
-        return cell
-    }
-    
-    public func set(titleText: String, captionText: String? = nil, color: PaletteColor? = nil, titleFont: UIFont?, captionFont: UIFont? = nil) {
-        title.text = titleText
-        if let titleFont = titleFont {
-            title.font = titleFont
-        }
-        title.backgroundColor = UIColor(color?.background ?? Color.clear)
-        title.textColor = UIColor(color?.text ?? Palette.background.text)
-        if let captionText = captionText {
-            caption.text = captionText
-            captionHeightConstraint.constant = self.frame.height / 4
-            if let captionFont = captionFont {
-                caption.font = captionFont
-            }
-        }
-    }
-}
-
-protocol ScrollPickerDelegate {
-    func scrollPickerDidChange(to: Int)
+@objc protocol ScrollPickerDelegate {
+    @objc optional func scrollPickerDidChange(to: Int)
+    @objc optional func scrollPickerDidChange(_ scrollPicker: ScrollPicker, to: Int)
 }
 
 struct ScrollPickerEntry: Equatable {
@@ -601,17 +729,17 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
     private(set) var selected: Int?
     public var delegate: ScrollPickerDelegate?
     
-    convenience init(list: [String], color: PaletteColor? = nil) {
-        self.init(list: list.map{ScrollPickerEntry(title: $0, caption: nil)})
+    convenience init(frame: CGRect, list: [String], color: PaletteColor? = nil) {
+        self.init(frame: frame, list: list.map{ScrollPickerEntry(title: $0, caption: nil)})
     }
     
-    init(list: [ScrollPickerEntry], color: PaletteColor? = nil) {
+    init(frame: CGRect, list: [ScrollPickerEntry], color: PaletteColor? = nil) {
         self.list = list
-        super.init(frame: CGRect())
+        super.init(frame: frame)
         self.color = color
         let layout = CustomCollectionViewLayout(direction: .vertical)
         layout.delegate = self
-        collectionView = UICollectionView(frame: CGRect(), collectionViewLayout: layout)
+        collectionView = UICollectionView(frame: self.frame, collectionViewLayout: layout)
         collectionView.dataSource = self
         collectionView.delegate = self
         collectionView.decelerationRate = .fast
@@ -625,7 +753,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
         set(selected, list: list.map{ScrollPickerEntry(title: $0, caption: nil)}, color: color, titleFont: titleFont, captionFont: captionFont)
     }
     
-    public func set(_ selected: Int, list: [ScrollPickerEntry]! = nil, color: PaletteColor? = nil, titleFont: UIFont?, captionFont: UIFont? = nil) {
+    public func set(_ selected: Int, list: [ScrollPickerEntry]! = nil, color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil) {
         if let list = list {
             if list != self.list {
                 self.list = list
@@ -669,7 +797,8 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
     internal func changed(_ collectionView: UICollectionView?, itemAtCenter: Int, forceScroll: Bool, animation: ViewAnimation) {
         Utility.mainThread {
             self.selected = itemAtCenter
-            self.delegate?.scrollPickerDidChange(to: self.selected!)
+            self.delegate?.scrollPickerDidChange?(to: self.selected!)
+            self.delegate?.scrollPickerDidChange?(self, to: self.selected!)
             collectionView?.reloadData()
         }
     }
