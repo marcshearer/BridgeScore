@@ -9,6 +9,29 @@
 
 import UIKit
 
+enum ConstraintAnchor {
+    case leading
+    case trailing
+    case top
+    case bottom
+    case all
+    
+    var constraints: [NSLayoutConstraint.Attribute] {
+        switch self {
+        case .leading:
+            return [.leading]
+        case .trailing:
+            return [.trailing]
+        case .top:
+            return [.top]
+        case .bottom:
+            return [.bottom]
+        case .all:
+            return [.leading, .trailing, .top, .bottom]
+        }
+    }
+}
+
 class Constraint {
     
     @discardableResult public static func setWidth(control: UIView, width: CGFloat, priority: UILayoutPriority = .required) -> NSLayoutConstraint {
@@ -36,9 +59,18 @@ class Constraint {
     ///   - priority: Constraint priority
     ///   - attributes: list of attributes (.leading, .trailing etc)
     /// - Returns: Array of contraints created (discardable)
-    @discardableResult public static func anchor(view: UIView, control: UIView, to: UIView? = nil, multiplier: CGFloat = 1.0, constant: CGFloat = 0.0, toAttribute: NSLayoutConstraint.Attribute? = nil, priority: UILayoutPriority = .required, attributes: NSLayoutConstraint.Attribute...) -> [NSLayoutConstraint] {
+    @discardableResult public static func anchor(view: UIView, control: UIView, to: UIView? = nil, multiplier: CGFloat = 1.0, constant: CGFloat = 0.0, toAttribute: NSLayoutConstraint.Attribute? = nil, priority: UILayoutPriority = .required, attributes: ConstraintAnchor...) -> [NSLayoutConstraint] {
+        
+        Constraint.anchor(view: view, control: control, to: to, multiplier: multiplier, constant: constant, toAttribute: toAttribute, priority: priority, attributes: attributes)
+    }
+    
+    @discardableResult public static func anchor(view: UIView, control: UIView, to: UIView? = nil, multiplier: CGFloat = 1.0, constant: CGFloat = 0.0, toAttribute: NSLayoutConstraint.Attribute? = nil, priority: UILayoutPriority = .required, attributes anchorAttributes: [ConstraintAnchor]) -> [NSLayoutConstraint] {
         var constraints: [NSLayoutConstraint] = []
-        let attributes = (attributes.count == 0 ? [.leading, .trailing, .top, .bottom] : attributes)
+        let anchorAttributes = (anchorAttributes.count == 0 ? [.all] : anchorAttributes)
+        var attributes: [NSLayoutConstraint.Attribute] = []
+        for attribute in anchorAttributes {
+            attributes.append(contentsOf: attribute.constraints)
+        }
         let to = to ?? view
         control.translatesAutoresizingMaskIntoConstraints = false
         control.autoresizingMask = [.flexibleTopMargin, .flexibleBottomMargin, .flexibleLeftMargin, .flexibleRightMargin]

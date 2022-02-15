@@ -62,6 +62,9 @@
 		B2AF750D27AD14FD00233693 /* Slide In Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AF750C27AD14FD00233693 /* Slide In Menu.swift */; };
 		B2AF750F27AD384900233693 /* Layout Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AF750E27AD384900233693 /* Layout Setup View.swift */; };
 		B2BE9BD027A15B6B002A6F8F /* Inset View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2BE9BCF27A15B6B002A6F8F /* Inset View.swift */; };
+		B2C4338C27B6646700796F24 /* Scorecard Input View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C4338B27B6646700796F24 /* Scorecard Input View.swift */; };
+		B2C4338E27B7B56200796F24 /* Custom Collection View Flow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C4338D27B7B56200796F24 /* Custom Collection View Flow.swift */; };
+		B2C4339027B7B59700796F24 /* Custom View Animations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C4338F27B7B59700796F24 /* Custom View Animations.swift */; };
 		B2EB3D66279D54D500D64225 /* Board Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D65279D54D500D64225 /* Board Managed Object.swift */; };
 		B2EB3D68279D65CC00D64225 /* Player Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D67279D65CC00D64225 /* Player Managed Object.swift */; };
 		B2EB3D6A279D666800D64225 /* Location Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D69279D666800D64225 /* Location Managed Object.swift */; };
@@ -133,6 +136,9 @@
 		B2AF750C27AD14FD00233693 /* Slide In Menu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Slide In Menu.swift"; sourceTree = "<group>"; };
 		B2AF750E27AD384900233693 /* Layout Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Layout Setup View.swift"; sourceTree = "<group>"; };
 		B2BE9BCF27A15B6B002A6F8F /* Inset View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Inset View.swift"; sourceTree = "<group>"; };
+		B2C4338B27B6646700796F24 /* Scorecard Input View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Input View.swift"; sourceTree = "<group>"; };
+		B2C4338D27B7B56200796F24 /* Custom Collection View Flow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Custom Collection View Flow.swift"; sourceTree = "<group>"; };
+		B2C4338F27B7B59700796F24 /* Custom View Animations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Custom View Animations.swift"; sourceTree = "<group>"; };
 		B2EB3D65279D54D500D64225 /* Board Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Board Managed Object.swift"; sourceTree = "<group>"; };
 		B2EB3D67279D65CC00D64225 /* Player Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Player Managed Object.swift"; sourceTree = "<group>"; };
 		B2EB3D69279D666800D64225 /* Location Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Location Managed Object.swift"; sourceTree = "<group>"; };
@@ -267,6 +273,8 @@
 				B26BCE422799AD8900B73501 /* Link Presentation.swift */,
 				B23ADBF327B28D68001B6B38 /* Local Authentication.swift */,
 				B28E4EE727B55F9A0059819C /* Backup.swift */,
+				B2C4338D27B7B56200796F24 /* Custom Collection View Flow.swift */,
+				B2C4338F27B7B59700796F24 /* Custom View Animations.swift */,
 			);
 			name = Libraries;
 			sourceTree = "<group>";
@@ -345,6 +353,7 @@
 				B26BCE6E279AEB6C00B73501 /* Scorecard List View.swift */,
 				B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */,
 				B2276D5727A5A2C90025DA80 /* Scorecard Canvas View.swift */,
+				B2C4338B27B6646700796F24 /* Scorecard Input View.swift */,
 				B2633A0D27AC3A460081B258 /* Layout List View.swift */,
 			);
 			name = "Main Views";
@@ -442,6 +451,7 @@
 				B26BCE692799AED700B73501 /* Input String.swift in Sources */,
 				B26BCE322799ABF000B73501 /* Declarations.swift in Sources */,
 				B26BCE6C2799AED700B73501 /* Separator.swift in Sources */,
+				B2C4339027B7B59700796F24 /* Custom View Animations.swift in Sources */,
 				B26BCE492799AD8900B73501 /* Palette.swift in Sources */,
 				B26BCE502799AD8900B73501 /* Other Extensions.swift in Sources */,
 				B26BCE472799AD8900B73501 /* Utility.swift in Sources */,
@@ -492,6 +502,7 @@
 				B26BCE72279B188600B73501 /* BridgeScore.xcdatamodeld in Sources */,
 				B26BCE642799AED700B73501 /* Message Box.swift in Sources */,
 				B26BCE652799AED700B73501 /* Picker Input.swift in Sources */,
+				B2C4338C27B6646700796F24 /* Scorecard Input View.swift in Sources */,
 				B26BCE4E2799AD8900B73501 /* Link Presentation.swift in Sources */,
 				B26BCE74279B236F00B73501 /* Layout Managed Object.swift in Sources */,
 				B2EB3D7B279DCBCB00D64225 /* Default Data.swift in Sources */,
@@ -500,6 +511,7 @@
 				B2AF750F27AD384900233693 /* Layout Setup View.swift in Sources */,
 				B28E4EE827B55F9A0059819C /* Backup.swift in Sources */,
 				B26BCE6B2799AED700B73501 /* Input Title.swift in Sources */,
+				B2C4338E27B7B56200796F24 /* Custom Collection View Flow.swift in Sources */,
 				B23ADBF227B25356001B6B38 /* List Tile View.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

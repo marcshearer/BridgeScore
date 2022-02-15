@@ -26,6 +26,11 @@ extension UIView {
             return CGRect()
         }
     }
+    
+    func addSubview(_ parent: UIView, anchored attributes: ConstraintAnchor...) {
+        self.addSubview(parent)
+        Constraint.anchor(view: self, control: parent, attributes: attributes)
+    }
 }
 #endif
 extension CGPoint {
@@ -228,26 +233,26 @@ extension NSAttributedString {
     }
     
     func labelHeight(width: CGFloat? = nil, font: UIFont? = nil) -> CGFloat {
-        let label = UILabel(frame: CGRect(x: 0, y: 0, width: width ?? CGFloat.greatestFiniteMagnitude, height: 1000))
-        label.numberOfLines = (width == nil ? 1 : 0)
+        let title = UILabel(frame: CGRect(x: 0, y: 0, width: width ?? CGFloat.greatestFiniteMagnitude, height: 1000))
+        title.numberOfLines = (width == nil ? 1 : 0)
         if let font = font {
-            label.font = font
+            title.font = font
         }
-        label.lineBreakMode = .byWordWrapping
-        label.attributedText = self
-        label.sizeToFit()
-        return label.frame.height
+        title.lineBreakMode = .byWordWrapping
+        title.attributedText = self
+        title.sizeToFit()
+        return title.frame.height
     }
 
     func labelWidth(height: CGFloat? = nil, font: UIFont? = nil) -> CGFloat {
-        let label = UILabel(frame: CGRect(x: 0, y: 0, width: CGFloat.greatestFiniteMagnitude, height: height ?? 30))
-        label.numberOfLines = (height == nil ? 1 : 0)
+        let title = UILabel(frame: CGRect(x: 0, y: 0, width: CGFloat.greatestFiniteMagnitude, height: height ?? 30))
+        title.numberOfLines = (height == nil ? 1 : 0)
         if let font = font {
-            label.font = font
+            title.font = font
         }
-        label.attributedText = self
-        label.sizeToFit()
-        return label.frame.width
+        title.attributedText = self
+        title.sizeToFit()
+        return title.frame.width
     }
 }
 #endif

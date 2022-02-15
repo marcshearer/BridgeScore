@@ -35,6 +35,8 @@ var messageFont = Font.system(size: (MyApp.format == .tablet ? 16.0 : 12.0))
 var titleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 16.0 : 12.0), weight: .bold)
 var cellFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 16.0))
 var boardFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 20.0))
+var pickerTitleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 24.0), weight: .bold)
+var pickerCaptionFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 10.0 : 8.0))
 
 // Backups
 let backupDirectoryDateFormat = "yyyy-MM-dd-HH-mm-ss-SSS"
@@ -70,12 +72,15 @@ public enum Type: Int, CaseIterable {
     }
 }
 
-public enum Position: Int, CaseIterable {
+public enum Position: Int, EnumPickerType {
     case scorer = 0
     case partner = 1
     case opponent = 2
     
     public var string: String {
+        if self == .scorer {
+            return "self"
+        }
         return "\(self)"
     }
 }
@@ -100,7 +105,7 @@ enum ColumnType: Codable {
     case board
     case contract
     case declarer
-    case result
+    case made
     case score
     case comment
     case responsible
@@ -119,7 +124,7 @@ struct ScorecardRow {
     var row: Int
     var type: RowType
     var table: Int?
-    var board: Int?
+    var board: BoardViewModel?
 }
 
 struct ScorecardColumn: Codable {

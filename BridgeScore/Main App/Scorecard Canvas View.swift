@@ -15,7 +15,6 @@ struct ScorecardCanvasView: View {
 
     @ObservedObject var scorecard: ScorecardViewModel
     @State var refresh = false
-    @State var linkToScorecard = false
     @State var toolPickerVisible: Bool = true
     @State var canvasView = PKCanvasView()
     @State var decodePressed: Bool = false
@@ -122,7 +121,7 @@ class ScorecardCanvasUIView : UIView, UITableViewDataSource, UITableViewDelegate
         ScorecardColumn(type: .board, heading: "Board", size: .fixed(70)),
         ScorecardColumn(type: .contract, heading: "Contract", size: .fixed(90)),
         ScorecardColumn(type: .declarer, heading: "By", size: .fixed(60)),
-        ScorecardColumn(type: .result, heading: "Result", size: .fixed(70)),
+        ScorecardColumn(type: .made, heading: "Made", size: .fixed(70)),
         ScorecardColumn(type: .score, heading: "Score", size: .fixed(70)),
         ScorecardColumn(type: .comment, heading: "Comment", size: .flexible),
         ScorecardColumn(type: .responsible, heading: "Resp", size: .fixed(60))
@@ -400,7 +399,8 @@ class ScorecardCanvasUIView : UIView, UITableViewDataSource, UITableViewDelegate
             
             // Add body rows
             for tableBoard in 1...scorecard.boardsTable {
-                let board = ((table - 1) * scorecard.boardsTable) + tableBoard
+                let boardNumber = ((table - 1) * scorecard.boardsTable) + tableBoard
+                let board = BoardViewModel(scorecard: scorecard, match: table, board: boardNumber)
                 rows.append(ScorecardRow(row: rows.count, type: .body, table: table, board: board))
             }
             
@@ -476,7 +476,7 @@ class ScorecardCanvasUIViewCollectionViewCell: UICollectionViewCell {
         case .body:
             if column.type == .board {
                 self.label.font = boardFont
-                self.label.text = "\(row.board!)"
+                self.label.text = "\(row.board?.board ?? 0)"
             } else {
                 self.label.font = cellFont
             }

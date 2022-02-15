@@ -13,13 +13,16 @@ struct ScorecardDetailView: View {
     @ObservedObject var scorecard: ScorecardViewModel
     @State private var title = "New Scorecard"
     @State private var linkToCanvas = false
+    @State private var linkToInput = false
     @State private var authenticatedScorecard: ScorecardViewModel?
     
     var body: some View {
         StandardView {
             VStack(spacing: 0) {
                 
-                let bannerOptions = [ BannerOption(image: AnyView(Image(systemName: "square.and.pencil").rotationEffect(Angle.init(degrees: 90))), likeBack: true, action: canvasAction)]
+                let bannerOptions = [
+                    BannerOption(image: AnyView(Image(systemName: "rectangle.split.3x3")), likeBack: true, action: {linkAction({ linkToInput = true })}),
+                    BannerOption(image: AnyView(Image(systemName: "square.and.pencil").rotationEffect(Angle.init(degrees: 90))), likeBack: true, action: {linkAction({ linkToCanvas = true })})]
                 Banner(title: $scorecard.editTitle, back: true, backAction: backAction, optionMode: .buttons, options: bannerOptions)
                 
                 ScrollView(showsIndicators: false) {
@@ -38,17 +41,18 @@ struct ScorecardDetailView: View {
                     title = scorecard.desc
                 }
             }
+            NavigationLink(destination: ScorecardInputView(scorecard: scorecard), isActive: $linkToInput) {EmptyView()}
             NavigationLink(destination: ScorecardCanvasView(scorecard: scorecard), isActive: $linkToCanvas) {EmptyView()}
         }
     }
     
-    func canvasAction() {
+    func linkAction(_ link: @escaping ()->()) {
         if scorecard == authenticatedScorecard || scorecard.noDrawing {
-            linkToCanvas = true
+            link()
         } else {
             LocalAuthentication.authenticate(reason: "You must authenticate to access the scorecard detail") {
                 authenticatedScorecard = scorecard
-                linkToCanvas = true
+                link()
             } failure: {
                 authenticatedScorecard = nil
             }
