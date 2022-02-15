@@ -72,7 +72,7 @@ public enum Type: Int, CaseIterable {
     }
 }
 
-public enum Position: Int, EnumPickerType {
+public enum Participant: Int, EnumPickerType {
     case scorer = 0
     case partner = 1
     case opponent = 2

@@ -45,13 +45,13 @@ public class BoardMO: NSManagedObject, ManagedObject, Identifiable {
         set { self.made16 = Int16(newValue)}
     }
     
-    public var declarer: Position {
-        get { Position(rawValue: Int(declarer16)) ?? .scorer }
+    public var declarer: Participant {
+        get { Participant(rawValue: Int(declarer16)) ?? .scorer }
         set { self.declarer16 = Int16(newValue.rawValue) }
     }
     
-    public var responsible: Position {
-        get { Position(rawValue: Int(responsible16)) ?? .scorer }
+    public var responsible: Participant {
+        get { Participant(rawValue: Int(responsible16)) ?? .scorer }
         set { self.responsible16 = Int16(newValue.rawValue) }
     }
 

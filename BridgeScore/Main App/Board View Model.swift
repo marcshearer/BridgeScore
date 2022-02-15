@@ -16,11 +16,11 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
     @Published public var match: Int
     @Published public var board: Int
     @Published public var contract: String = ""
-    @Published public var declarer: Position = .scorer
+    @Published public var declarer: Participant = .scorer
     @Published public var made: Int = 0
     @Published public var score: Float = 0
     @Published public var comment: String = ""
-    @Published public var responsible: Position = .scorer
+    @Published public var responsible: Participant = .scorer
     @Published public var versus: String = ""
     
     // Linked managed objects - should only be referenced in this and the Data classes
