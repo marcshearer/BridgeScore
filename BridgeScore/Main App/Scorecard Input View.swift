@@ -466,7 +466,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         var list: [String] = []
         var min = 0
         var max = 0
-        if board.contract.level.hasSuit {
+        if board.contract.suit != .blank {
             let tricks = board.contract.level.rawValue
             min = -(6 + tricks)
             max = 7 - tricks
@@ -511,11 +511,16 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         textField.layer.borderColor = UIColor(Palette.gridLine).cgColor
         textField.layer.borderWidth = 2.0
         textField.textAlignment = .center
+        textField.autocapitalizationType = .none
+        textField.autocorrectionType = .no
         textField.font = cellFont
         textField.addTarget(self, action: #selector(ScorecardInputBoardCollectionCell.textFieldChanged), for: .editingChanged)
+        textField.addTarget(self, action: #selector(ScorecardInputBoardCollectionCell.textFieldEndEdit), for: .editingDidEnd)
+        textField.addTarget(self, action: #selector(ScorecardInputBoardCollectionCell.textFieldBeginEdit), for: .editingDidBegin)
         textField.backgroundColor = UIColor(Palette.gridBody.background)
         textField.borderStyle = .bezel
         textField.textColor = UIColor(Palette.gridBody.text)
+        textField.adjustsFontSizeToFitWidth = true
          
         addSubview(participantPicker, anchored: .all)
         participantPicker.layer.borderColor = UIColor(Palette.gridLine).cgColor
@@ -557,6 +562,8 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         label.text = ""
         label.textAlignment = .center
         textField.textAlignment = .center
+        textField.clearsOnBeginEditing = false
+        textField.clearButtonMode = .never
     }
     
     func setTitle(column: ScorecardColumn) {
@@ -595,11 +602,13 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             madePicker.set(board.made - min, list: list, color: Palette.gridBody, titleFont: pickerTitleFont)
         case .score:
             textField.isHidden = false
-            textField.text = "\(board.score)"
+            textField.clearsOnBeginEditing = true
+            textField.text = board.score == 0 ? "" : "\(board.score)"
         case .comment:
             textField.isHidden = false
             textField.textAlignment = .left
             textField.clearButtonMode = .always
+            textField.
             textField.text = board.comment
         case .responsible:
             participantPicker.isHidden = false
@@ -616,7 +625,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             var undoText: String?
             switch self.column.type {
             case .score:
-                undoText = "\(board.score)"
+                undoText = board.score == 0 ? "" : "\(board.score)"
             case .comment:
                 undoText = board.comment
             default:
@@ -635,6 +644,37 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
                 break
             }
             changeDelegate?.scorecardChanged(type: .board, itemNumber: boardNumber, column: column)
+        }
+    }
+    
+    @objc private func textFieldEndEdit(_ textField: UITextField) {
+        let text = textField.text ?? ""
+        if let board = board {
+            switch column.type {
+            case .score:
+                board.score = Float(text) ?? 0
+                textField.text = board.score == 0 ? "" : "\(board.score)"
+            default:
+                break
+            }
+        }
+    }
+    
+    @objc private func textFieldBeginEdit(_ textField: UITextField) {
+        // Record automatic clear on entry in undo
+        var undoText = ""
+        if let board = board {
+            switch column.type {
+            case .comment:
+                undoText = board.comment
+            case .score:
+                undoText = board.score == 0 ? "" : "\(board.score)"
+            default:
+                break
+            }
+            if undoText != "" {
+                textFieldChanged(textField)
+            }
         }
     }
     
@@ -747,6 +787,8 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         textField.font = cellFont
         
         textField.addTarget(self, action: #selector(ScorecardInputTableCollectionCell.textFieldChanged), for: .editingChanged)
+        textField.addTarget(self, action: #selector(ScorecardInputTableCollectionCell.textFieldEndEdit), for: .editingDidEnd)
+        textField.addTarget(self, action: #selector(ScorecardInputTableCollectionCell.textFieldBeginEdit), for: .editingDidBegin)
         textField.backgroundColor = UIColor(Palette.gridTotal.background)
         textField.textColor = UIColor(Palette.gridTotal.text)
 
@@ -782,6 +824,7 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         seatPicker.isHidden = true
         textField.text = ""
         textField.clearButtonMode = .never
+        textField.clearsOnBeginEditing = false
         label.text = ""
         label.textAlignment = .center
         textField.textAlignment = .center
@@ -797,13 +840,14 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         switch column.type {
         case .table:
             label.font = boardFont
-            label.text = "Table \(table.table)"
+            label.text = "Round \(table.table)"
         case .sitting:
             seatPicker.isHidden = false
             seatPicker.set(table.sitting, color: Palette.gridTotal, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
         case .tableScore:
             textField.isHidden = false
-            textField.text = "\(table.score)"
+            textField.clearsOnBeginEditing = true
+            textField.text = table.score == 0 ? "" : "\(table.score)"
         case .versus:
             textField.isHidden = false
             textField.text = table.versus
@@ -824,7 +868,7 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
             var undoText: String?
             switch self.column.type {
             case .tableScore:
-                undoText = "\(table.score)"
+                undoText = table.score == 0 ? "" : "\(table.score)"
             case .versus:
                 undoText = table.versus
             default:
@@ -843,6 +887,37 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
                 break
             }
             changeDelegate?.scorecardChanged(type: .table, itemNumber: tableNumber, column: column)
+        }
+    }
+    
+    @objc private func textFieldEndEdit(_ textField: UITextField) {
+        let text = textField.text ?? ""
+        if let table = table {
+            switch column.type {
+            case .tableScore:
+                table.score = Float(text) ?? 0
+                textField.text = table.score == 0 ? "" : "\(table.score)"
+            default:
+                break
+            }
+        }
+    }
+    
+    @objc private func textFieldBeginEdit(_ textField: UITextField) {
+        // Record automatic clear on entry in undo
+        var undoText = ""
+        if let table = table {
+            switch column.type {
+            case .versus:
+                undoText = table.versus
+            case .tableScore:
+                undoText = table.score == 0 ? "" : "\(table.score)"
+            default:
+                break
+            }
+            if undoText != "" {
+                textFieldChanged(textField)
+            }
         }
     }
     
