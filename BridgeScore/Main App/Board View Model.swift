@@ -13,15 +13,13 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
 
     // Properties in core data model
     @Published private(set) var scorecard: ScorecardViewModel
-    @Published public var match: Int
     @Published public var board: Int
-    @Published public var contract: String = ""
+    @Published public var contract = Contract()
     @Published public var declarer: Participant = .scorer
     @Published public var made: Int = 0
     @Published public var score: Float = 0
     @Published public var comment: String = ""
     @Published public var responsible: Participant = .scorer
-    @Published public var versus: String = ""
     
     // Linked managed objects - should only be referenced in this and the Data classes
     @Published internal var boardMO: BoardMO?
@@ -37,30 +35,27 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
         var result = false
         if let mo = self.boardMO {
             if self.scorecard.scorecardId != mo.scorecardId ||
-                self.match != mo.match ||
                 self.board != mo.board ||
                 self.contract != mo.contract ||
                 self.declarer != mo.declarer ||
                 self.made != mo.made ||
                 self.score != mo.score ||
                 self.comment != mo.comment ||
-                self.responsible != mo.responsible ||
-                self.versus != mo.versus {
+                self.responsible != mo.responsible {
                     result = true
             }
         }
         return result
     }
     
-    public init(scorecard: ScorecardViewModel, match: Int, board: Int) {
+    public init(scorecard: ScorecardViewModel, board: Int) {
         self.scorecard = scorecard
-        self.match = match
         self.board = board
         self.setupMappings()
     }
     
     public convenience init(scorecard: ScorecardViewModel, boardMO: BoardMO) {
-        self.init(scorecard: scorecard, match: boardMO.match, board: boardMO.board)
+        self.init(scorecard: scorecard, board: boardMO.board)
         self.boardMO = boardMO
         self.revert()
     }
@@ -73,7 +68,6 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
             if let scorecard = MasterData.shared.scorecard(id: mo.scorecardId) {
                 self.scorecard = scorecard
             }
-            self.match = mo.match
             self.board = mo.board
             self.contract = mo.contract
             self.declarer = mo.declarer
@@ -81,7 +75,21 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
             self.score = mo.score
             self.comment = mo.comment
             self.responsible = mo.responsible
-            self.versus = mo.versus
+        }
+    }
+    
+    public func updateMO() {
+        if let mo = boardMO {
+            mo.scorecardId = scorecard.scorecardId
+            mo.board = board
+            mo.contract = contract
+            mo.declarer = declarer
+            mo.made = made
+            mo.score = score
+            mo.comment = comment
+            mo.responsible = responsible
+        } else {
+            fatalError("No managed object")
         }
     }
     
@@ -112,7 +120,7 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
     }
     
     public var description: String {
-        return "Scorecard: \(scorecard.desc), Match: \(match) Board: \(board)"
+        return "Scorecard: \(scorecard.desc), Board: \(board)"
     }
     
     public var debugDescription: String { self.description }

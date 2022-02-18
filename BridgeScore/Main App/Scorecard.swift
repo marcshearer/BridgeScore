@@ -12,20 +12,40 @@ class Scorecard {
     public static let current = Scorecard()
     
     @Published private(set) var scorecard: ScorecardViewModel?
-    @Published private(set) var boards: [Int:[Int:BoardViewModel]] = [:]                  // Match / Board
+    @Published private(set) var boards: [Int:BoardViewModel] = [:]   // Board number
+    @Published private(set) var tables: [Int:TableViewModel] = [:]   // Table number
 
     public func load(scorecard: ScorecardViewModel) {
         let scorecardFilter = NSPredicate(format: "scorecardId = %@", scorecard.scorecardId as NSUUID)
-        let boardMOs = CoreData.fetch(from: BoardMO.tableName, filter: scorecardFilter, sort: [ (key: #keyPath(BoardMO.match16), direction: .ascending), (#keyPath(BoardMO.board16), direction: .ascending)]) as! [BoardMO]
+
+        // Load boards
+        let boardMOs = CoreData.fetch(from: BoardMO.tableName, filter: scorecardFilter, sort: [ (#keyPath(BoardMO.board16), direction: .ascending)]) as! [BoardMO]
         
-        self.boards = [:]
+        boards = [:]
         for boardMO in boardMOs {
-            if self.boards[boardMO.match] == nil {
-                self.boards[boardMO.match] = [:]
-            }
-            self.boards[boardMO.match]![boardMO.board] = BoardViewModel(scorecard: scorecard, boardMO: boardMO)
+            boards[boardMO.board] = BoardViewModel(scorecard: scorecard, boardMO: boardMO)
         }
+        // Fill in any gaps
+        for boardNumber in 1...scorecard.boards {
+            if boards[boardNumber] == nil {
+                boards[boardNumber] = BoardViewModel(scorecard: scorecard, board: boardNumber)
+            }
+        }
+
+        // Load tables
+        let tableMOs = CoreData.fetch(from: TableMO.tableName, filter: scorecardFilter, sort: [ (#keyPath(TableMO.table16), direction: .ascending)]) as! [TableMO]
         
+        tables = [:]
+        for tableMO in tableMOs {
+            tables[tableMO.table] = TableViewModel(scorecard: scorecard, tableMO: tableMO)
+        }
+        // Fill in any gaps
+        for tableNumber in 1...scorecard.tables {
+            if tables[tableNumber] == nil {
+                tables[tableNumber] = TableViewModel(scorecard: scorecard, table: tableNumber)
+            }
+        }
+
         self.scorecard = scorecard
     }
     
@@ -34,55 +54,66 @@ class Scorecard {
     }
     
     public func insert(board: BoardViewModel) {
-        assert(board.scorecard == self.scorecard, "Board is not in current scorecard")
+        assert(board.scorecard == scorecard, "Board is not in current scorecard")
         assert(board.boardMO == nil, "Cannot insert a board which already has a managed object")
-        assert(self.boards[board.match]?[board.board] == nil, "Board already exists and cannot be created")
+        assert(boards[board.board] == nil, "Board already exists and cannot be created")
         CoreData.update(updateLogic: {
             board.boardMO = BoardMO()
-            self.updateMO(board: board)
-            if self.boards[board.match] == nil {
-                self.boards[board.match] = [:]
-            }
-            self.boards[board.match]![board.board] = board
+            board.updateMO()
+            boards[board.board] = board
         })
     }
     
     public func remove(board: BoardViewModel) {
-        assert(board.scorecard == self.scorecard, "Board is not in current scorecard")
+        assert(board.scorecard == scorecard, "Board is not in current scorecard")
         assert(board.boardMO != nil, "Cannot remove a board which doesn't already have a managed object")
-        assert(self.boards[board.match]?[board.board] != nil, "Board does not exist and cannot be deleted")
+        assert(boards[board.board] != nil, "Board does not exist and cannot be deleted")
         CoreData.update(updateLogic: {
             CoreData.context.delete(board.boardMO!)
-            self.boards[board.match]?[board.board] = nil
+            boards[board.board] = nil
         })
     }
     
     public func save(board: BoardViewModel) {
-        assert(board.scorecard == self.scorecard, "Board is not in current scorecard")
+        assert(board.scorecard == scorecard, "Board is not in current scorecard")
         assert(board.boardMO != nil, "Cannot save a board which doesn't already have managed objects")
-        assert(self.boards[board.match]?[board.board] != nil, "Board does not exist and cannot be updated")
+        assert(boards[board.board] != nil, "Board does not exist and cannot be updated")
         if board.changed {
             CoreData.update(updateLogic: {
-                self.updateMO(board: board)
+                board.updateMO()
             })
         }
     }
     
-    public func board(match: Int, board: Int) -> BoardViewModel? {
-        return self.boards[match]?[board]
+    public func insert(table: TableViewModel) {
+        assert(table.scorecard == scorecard, "Table is not in current scorecard")
+        assert(table.tableMO == nil, "Cannot insert a table which already has a managed object")
+        assert(tables[table.table] == nil, "Table already exists and cannot be created")
+        CoreData.update(updateLogic: {
+            table.tableMO = TableMO()
+            table.updateMO()
+            tables[table.table] = table
+        })
     }
     
-    private func updateMO(board: BoardViewModel) {
-        board.boardMO!.scorecardId = board.scorecard.scorecardId
-        board.boardMO!.match = board.match
-        board.boardMO!.board = board.board
-        board.boardMO!.contract = board.contract
-        board.boardMO!.declarer = board.declarer
-        board.boardMO!.made = board.made
-        board.boardMO!.score = board.score
-        board.boardMO!.comment = board.comment
-        board.boardMO!.responsible = board.responsible
-        board.boardMO!.versus = board.versus
+    public func remove(table: TableViewModel) {
+        assert(table.scorecard == scorecard, "Table is not in current scorecard")
+        assert(table.tableMO != nil, "Cannot remove a table which doesn't already have a managed object")
+        assert(tables[table.table] != nil, "Table does not exist and cannot be deleted")
+        CoreData.update(updateLogic: {
+            CoreData.context.delete(table.tableMO!)
+            tables[table.table] = nil
+        })
     }
     
+    public func save(table: TableViewModel) {
+        assert(table.scorecard == scorecard, "Table is not in current scorecard")
+        assert(table.tableMO != nil, "Cannot save a table which doesn't already have managed objects")
+        assert(tables[table.table] != nil, "Table does not exist and cannot be updated")
+        if table.changed {
+            CoreData.update(updateLogic: {
+                table.updateMO()
+            })
+        }
+    }
 }

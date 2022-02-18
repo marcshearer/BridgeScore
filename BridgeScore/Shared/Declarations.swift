@@ -33,6 +33,7 @@ var inputFont = Font.system(size: (MyApp.format == .tablet ? 16.0 : 12.0))
 var messageFont = Font.system(size: (MyApp.format == .tablet ? 16.0 : 12.0))
 
 var titleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 16.0 : 12.0), weight: .bold)
+var titleCaptionFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 16.0 : 12.0))
 var cellFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 16.0))
 var boardFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 20.0))
 var pickerTitleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 24.0))
@@ -41,6 +42,9 @@ var pickerCaptionFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 10.
 // Backups
 let backupDirectoryDateFormat = "yyyy-MM-dd-HH-mm-ss-SSS"
 let backupDateFormat = "yyyy-MM-dd HH:mm:ss.SSS Z"
+
+// Other constants
+let tagMultiplier = 1000000
 
 // Localisable names
 
@@ -55,6 +59,7 @@ public enum UIMode {
     case unknown
 }
 
+// Application specific types
 public enum Type: Int, CaseIterable {
     case percent = 0
     case vp = 1
@@ -79,29 +84,42 @@ public enum Participant: Int, EnumPickerType {
     
     public var string: String {
         if self == .scorer {
-            return "self"
+            return "Self"
         }
-        return "\(self)"
+        return "\(self)".capitalized
+    }
+    
+    public var short: String {
+        return string.left(1)
     }
 }
 
-#if canImport(UIKit)
-public let target: UIMode = .uiKit
-#elseif canImport(appKit)
-public let target: UIMode = .appKit
-#else
-public let target: UIMode = .unknow
-#endif
+public enum Seat: Int, EnumPickerType {
+    case unknown = 0
+    case north = 1
+    case east = 2
+    case south = 4
+    case west = 5
+    
+    public var string: String {
+        return "\(self)".capitalized
+    }
+    
+    public var short: String {
+        if self == .unknown {
+            return ""
+        }
+        return string.left(1)
+    }
 
-// Scorecard view types
-
-enum RowType: Int {
-    case heading = 0
-    case body = 1
-    case total = 2
 }
 
+// Scorecard view types
 enum ColumnType: Codable {
+    case table
+    case sitting
+    case tableScore
+    case versus
     case board
     case contract
     case declarer
@@ -120,16 +138,122 @@ enum ColumnSize: Codable {
     case flexible
 }
 
-struct ScorecardRow {
-    var row: Int
-    var type: RowType
-    var table: Int?
-    var board: BoardViewModel?
+enum ContractElement: Int {
+    case level = 0
+    case suit = 1
+    case double = 2
 }
 
-struct ScorecardColumn: Codable {
-    var type: ColumnType
-    var heading: String
-    var size: ColumnSize
-    var width: CGFloat?
+public enum ContractLevel: Int, CaseIterable {
+    case blank = 0
+    case passout = -1
+    case one = 1
+    case two = 2
+    case three = 3
+    case four = 4
+    case five = 5
+    case six = 6
+    case seven = 7
+    
+    var string: String {
+        switch self {
+        case .blank:
+            return ""
+        case .passout:
+            return "P"
+        default:
+            return "\(self.rawValue)"
+        }
+    }
+    
+    var hasSuit: Bool {
+        return self != .blank && self != .passout
+    }
+    
+    var hasDouble: Bool {
+        return hasSuit
+    }
 }
+
+public enum ContractSuit: Int, CaseIterable {
+    case blank = 0
+    case club = 1
+    case diamond = 2
+    case heart = 3
+    case spade = 4
+    case noTrump = 5
+    
+    var string: String {
+        switch self {
+        case .blank:
+            return ""
+        case .club:
+            return "C"
+        case .diamond:
+            return "D"
+        case .heart:
+            return "H"
+        case .spade:
+            return "S"
+        case .noTrump:
+            return "NT"
+        }
+    }
+    
+    var hasDouble: Bool {
+        return self != .blank
+    }
+}
+
+public enum ContractDouble: Int, CaseIterable {
+    case undoubled = 0
+    case doubled = 1
+    case redoubled = 2
+    
+    var string: String {
+        switch self {
+        case .undoubled:
+            return ""
+        case .doubled:
+            return "*"
+        case .redoubled:
+            return "**"
+        }
+    }
+}
+
+public class Contract: Equatable {
+    public var level: ContractLevel = .blank {
+        didSet {
+            if !level.hasSuit {
+                suit = .blank
+            }
+        }
+    }
+    public var suit: ContractSuit = .blank {
+        didSet {
+            if !suit.hasDouble {
+                double = .undoubled
+            }
+        }
+    }
+    public var double: ContractDouble = .undoubled
+    
+    init(level: ContractLevel = .blank, suit: ContractSuit = .blank, double: ContractDouble = .undoubled) {
+        self.level = level
+        self.suit = suit
+        self.double = double
+    }
+    
+    static public func ==(lhs: Contract, rhs: Contract) -> Bool {
+        return lhs.level == rhs.level && lhs.suit == rhs.suit && lhs.double == rhs.double
+    }
+}
+
+#if canImport(UIKit)
+public let target: UIMode = .uiKit
+#elseif canImport(appKit)
+public let target: UIMode = .appKit
+#else
+public let target: UIMode = .unknow
+#endif

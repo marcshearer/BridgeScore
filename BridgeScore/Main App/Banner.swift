@@ -11,13 +11,15 @@ struct BannerOption {
     let image: AnyView?
     let text: String?
     let likeBack: Bool
+    @Binding var isEnabled: Bool
     let action: ()->()
     
-    init(image: AnyView? = nil, text: String? = nil, likeBack: Bool = false, action: @escaping ()->()) {
+    init(image: AnyView? = nil, text: String? = nil, likeBack: Bool = false, isEnabled: Binding<Bool>? = nil, action: @escaping ()->()) {
         self.image = image
         self.text = text
         self.likeBack = likeBack
         self.action = action
+        self._isEnabled = isEnabled ?? Binding.constant(true)
     }
 }
 
@@ -137,13 +139,13 @@ struct Banner: View {
 struct Banner_Menu : View {
     var image: AnyView?
     var title: String
-    
     var options: [BannerOption]
     let menuStyle = DefaultMenuStyle()
 
     var body: some View {
         Button {
-                SlideInMenu.shared.show(title: title, options: options.map{$0.text ?? ""}, top: 80) { (option) in
+            let filteredOptions = options.filter{$0.isEnabled}
+            SlideInMenu.shared.show(title: title, options: filteredOptions.map{$0.text ?? ""}, top: 80) { (option) in
                     if let selected = options.first(where: {$0.text == option}) {
                         selected.action()
                     }
@@ -163,7 +165,7 @@ struct Banner_Buttons : View {
             ForEach(0..<(options.count)) { (index) in
                 let option = options[index]
                 let backgroundColor = (option.likeBack ? Palette.banner.background : Palette.bannerButton.background)
-                let foregroundColor = (option.likeBack ? Palette.bannerBackButton : Palette.bannerButton.text)
+                let foregroundColor = (option.isEnabled ? (option.likeBack ? Palette.bannerBackButton : Palette.bannerButton.text) : Palette.bannerButton.faintText)
                 HStack {
                     Button {
                         option.action()
@@ -194,6 +196,7 @@ struct Banner_Buttons : View {
                             }
                         }
                     }
+                    .disabled(!option.isEnabled)
                     .font(option.likeBack ? .largeTitle : .title)
                     .background(backgroundColor)
                     .cornerRadius(option.likeBack ? 0 : 10.0)

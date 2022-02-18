@@ -27,9 +27,9 @@ extension UIView {
         }
     }
     
-    func addSubview(_ parent: UIView, anchored attributes: ConstraintAnchor...) {
+    func addSubview(_ parent: UIView, constant: CGFloat = 0, anchored attributes: ConstraintAnchor...) {
         self.addSubview(parent)
-        Constraint.anchor(view: self, control: parent, attributes: attributes)
+        Constraint.anchor(view: self, control: parent, constant: constant, attributes: attributes)
     }
 }
 #endif

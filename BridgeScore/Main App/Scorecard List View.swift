@@ -24,8 +24,8 @@ struct ScorecardListView: View {
                            BannerOption(text: "Players",  action: { linkToPlayers = true }),
                            BannerOption(text: "Locations", action: { linkToLocations = true }),
                            BannerOption(text: "Backup", action: { Backup.shared.backup() }),
-//                         BannerOption(text: "Restore", action: {
-//                           Backup.shared.restore(dateString: "2022-02-10-15-10-42-407") }),
+                           /* BannerOption(text: "Restore", action: {
+                              Backup.shared.restore(dateString: "2022-02-10-15-10-42-407") }),*/
                            BannerOption(text: "About \(appName)", action: { MessageBox.shared.show("A Bridge scoring app from\nShearer Online Ltd", showIcon: true, showVersion: true) })]
         
         StandardView(navigation: true) {
@@ -51,6 +51,7 @@ struct ScorecardListView: View {
                                 .onTapGesture {
                                         // Copy this entry to current scorecard
                                     self.scorecard.copy(from: scorecard)
+                                    Scorecard.current.load(scorecard: scorecard)
                                     self.linkToEdit = true
                                 }
                         }
@@ -72,6 +73,7 @@ struct ScorecardListView: View {
         .sheet(isPresented: $linkToNew, onDismiss: {
             if layoutSelected {
                 self.scorecard.reset(from: layout)
+                Scorecard.current.load(scorecard: scorecard)
                 self.linkToEdit = true
             }
         }) {

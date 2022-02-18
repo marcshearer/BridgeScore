@@ -12,27 +12,21 @@ public class BoardMO: NSManagedObject, ManagedObject, Identifiable {
 
     public static let tableName = "Board"
     
-    public var id: (UUID, Int, Int) { (self.scorecardId, self.match, self.board) }
+    public var id: (UUID, Int) { (self.scorecardId, self.board) }
     @NSManaged public var scorecardId: UUID
-    @NSManaged public var match16: Int16
     @NSManaged public var board16: Int16
-    @NSManaged public var contract: String
+    @NSManaged public var contractLevel16: Int16
+    @NSManaged public var contractSuit16: Int16
+    @NSManaged public var contractDouble16: Int16
     @NSManaged public var declarer16: Int16
     @NSManaged public var made16: Int16
     @NSManaged public var score: Float
     @NSManaged public var comment: String
     @NSManaged public var responsible16: Int16
-    @NSManaged public var versus: String
     
     convenience init() {
         self.init(context: CoreData.context)
         self.scorecardId = scorecardId
-        self.board = board
-    }
-    
-    public var match: Int {
-        get { Int(self.match16) }
-        set { self.match16 = Int16(newValue)}
     }
     
     public var board: Int {
@@ -53,6 +47,30 @@ public class BoardMO: NSManagedObject, ManagedObject, Identifiable {
     public var responsible: Participant {
         get { Participant(rawValue: Int(responsible16)) ?? .scorer }
         set { self.responsible16 = Int16(newValue.rawValue) }
+    }
+
+    public var contractLevel: ContractLevel {
+        get { ContractLevel(rawValue: Int(contractLevel16)) ?? .blank }
+        set { self.contractLevel16 = Int16(newValue.rawValue) }
+    }
+    
+    public var contractSuit: ContractSuit {
+        get { ContractSuit(rawValue: Int(contractSuit16)) ?? .blank }
+        set { self.contractSuit16 = Int16(newValue.rawValue) }
+    }
+
+    public var contractDouble: ContractDouble {
+        get { ContractDouble(rawValue: Int(contractDouble16)) ?? .undoubled }
+        set { self.contractDouble16 = Int16(newValue.rawValue) }
+    }
+    
+    public var contract: Contract {
+        get { Contract(level: contractLevel, suit: contractSuit, double: contractDouble) }
+        set {
+            contractLevel = newValue.level
+            contractSuit = newValue.suit
+            contractDouble = newValue.double
+        }
     }
 
 }

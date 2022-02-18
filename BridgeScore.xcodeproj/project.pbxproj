@@ -61,10 +61,15 @@
 		B2A2053D27B13F2F00C83C88 /* Keyboard Adaptive.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053C27B13F2F00C83C88 /* Keyboard Adaptive.swift */; };
 		B2AF750D27AD14FD00233693 /* Slide In Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AF750C27AD14FD00233693 /* Slide In Menu.swift */; };
 		B2AF750F27AD384900233693 /* Layout Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AF750E27AD384900233693 /* Layout Setup View.swift */; };
+		B2BBC8B827BBF4B100D51A26 /* Table Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2BBC8B727BBF4B100D51A26 /* Table Managed Object.swift */; };
+		B2BBC8BA27BBF6BC00D51A26 /* Table View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2BBC8B927BBF6BC00D51A26 /* Table View Model.swift */; };
 		B2BE9BD027A15B6B002A6F8F /* Inset View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2BE9BCF27A15B6B002A6F8F /* Inset View.swift */; };
 		B2C4338C27B6646700796F24 /* Scorecard Input View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C4338B27B6646700796F24 /* Scorecard Input View.swift */; };
 		B2C4338E27B7B56200796F24 /* Custom Collection View Flow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C4338D27B7B56200796F24 /* Custom Collection View Flow.swift */; };
 		B2C4339027B7B59700796F24 /* Custom View Animations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C4338F27B7B59700796F24 /* Custom View Animations.swift */; };
+		B2CC509927BE21060050F22C /* Scroll Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CC509827BE21060050F22C /* Scroll Picker.swift */; };
+		B2CC509E27BE22210050F22C /* Enum Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CC509D27BE22210050F22C /* Enum Picker.swift */; };
+		B2CC50A027BE22900050F22C /* Contract Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CC509F27BE22900050F22C /* Contract Picker.swift */; };
 		B2EB3D66279D54D500D64225 /* Board Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D65279D54D500D64225 /* Board Managed Object.swift */; };
 		B2EB3D68279D65CC00D64225 /* Player Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D67279D65CC00D64225 /* Player Managed Object.swift */; };
 		B2EB3D6A279D666800D64225 /* Location Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D69279D666800D64225 /* Location Managed Object.swift */; };
@@ -135,10 +140,15 @@
 		B2A2053C27B13F2F00C83C88 /* Keyboard Adaptive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Keyboard Adaptive.swift"; sourceTree = "<group>"; };
 		B2AF750C27AD14FD00233693 /* Slide In Menu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Slide In Menu.swift"; sourceTree = "<group>"; };
 		B2AF750E27AD384900233693 /* Layout Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Layout Setup View.swift"; sourceTree = "<group>"; };
+		B2BBC8B727BBF4B100D51A26 /* Table Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Table Managed Object.swift"; sourceTree = "<group>"; };
+		B2BBC8B927BBF6BC00D51A26 /* Table View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Table View Model.swift"; sourceTree = "<group>"; };
 		B2BE9BCF27A15B6B002A6F8F /* Inset View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Inset View.swift"; sourceTree = "<group>"; };
 		B2C4338B27B6646700796F24 /* Scorecard Input View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Input View.swift"; sourceTree = "<group>"; };
 		B2C4338D27B7B56200796F24 /* Custom Collection View Flow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Custom Collection View Flow.swift"; sourceTree = "<group>"; };
 		B2C4338F27B7B59700796F24 /* Custom View Animations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Custom View Animations.swift"; sourceTree = "<group>"; };
+		B2CC509827BE21060050F22C /* Scroll Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Scroll Picker.swift"; path = "../Main App/Scroll Picker.swift"; sourceTree = "<group>"; };
+		B2CC509D27BE22210050F22C /* Enum Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Enum Picker.swift"; sourceTree = "<group>"; };
+		B2CC509F27BE22900050F22C /* Contract Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contract Picker.swift"; sourceTree = "<group>"; };
 		B2EB3D65279D54D500D64225 /* Board Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Board Managed Object.swift"; sourceTree = "<group>"; };
 		B2EB3D67279D65CC00D64225 /* Player Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Player Managed Object.swift"; sourceTree = "<group>"; };
 		B2EB3D69279D666800D64225 /* Location Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Location Managed Object.swift"; sourceTree = "<group>"; };
@@ -206,7 +216,7 @@
 				B2A2053327AFBFB900C83C88 /* Setup Views */,
 				B2EB3D7C279F0E6000D64225 /* Shared Views */,
 				B26BCE232799AA6300B73501 /* Utilities */,
-				B26BCE222799AA5800B73501 /* Reusable UI Components */,
+				B26BCE222799AA5800B73501 /* Reusable SwiftUI Components */,
 				B26BCDFF2799A1AE00B73501 /* Preview Content */,
 			);
 			path = "Main App";
@@ -227,6 +237,7 @@
 				B26BCE1E2799A9C600B73501 /* Managed Object Models */,
 				B26BCE262799AAEB00B73501 /* Utilities */,
 				B26BCE212799AA0A00B73501 /* Libraries */,
+				B2CC509C27BE21D10050F22C /* Reusable UIKit Components */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -250,6 +261,7 @@
 				B26BCE73279B236F00B73501 /* Layout Managed Object.swift */,
 				B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */,
 				B2EB3D65279D54D500D64225 /* Board Managed Object.swift */,
+				B2BBC8B727BBF4B100D51A26 /* Table Managed Object.swift */,
 				B2EB3D67279D65CC00D64225 /* Player Managed Object.swift */,
 				B2EB3D69279D666800D64225 /* Location Managed Object.swift */,
 			);
@@ -279,7 +291,7 @@
 			name = Libraries;
 			sourceTree = "<group>";
 		};
-		B26BCE222799AA5800B73501 /* Reusable UI Components */ = {
+		B26BCE222799AA5800B73501 /* Reusable SwiftUI Components */ = {
 			isa = PBXGroup;
 			children = (
 				B26BCE5B2799AED700B73501 /* Banner.swift */,
@@ -303,7 +315,7 @@
 				B26BCE572799AED700B73501 /* Target View Modifiers.swift */,
 				B2A2053C27B13F2F00C83C88 /* Keyboard Adaptive.swift */,
 			);
-			name = "Reusable UI Components";
+			name = "Reusable SwiftUI Components";
 			sourceTree = "<group>";
 		};
 		B26BCE232799AA6300B73501 /* Utilities */ = {
@@ -332,6 +344,7 @@
 				B2EB3D6D279D6BA600D64225 /* Layout View Model.swift */,
 				B2EB3D76279D73FC00D64225 /* Scorecard View Model.swift */,
 				B2EB3D74279D73E100D64225 /* Board View Model.swift */,
+				B2BBC8B927BBF6BC00D51A26 /* Table View Model.swift */,
 				B2EB3D70279D717F00D64225 /* Player View Model.swift */,
 				B2EB3D72279D734700D64225 /* Location View Model.swift */,
 			);
@@ -369,9 +382,19 @@
 			name = "Setup Views";
 			sourceTree = "<group>";
 		};
+		B2CC509C27BE21D10050F22C /* Reusable UIKit Components */ = {
+			isa = PBXGroup;
+			children = (
+				B2CC509827BE21060050F22C /* Scroll Picker.swift */,
+				B2CC509D27BE22210050F22C /* Enum Picker.swift */,
+			);
+			name = "Reusable UIKit Components";
+			sourceTree = "<group>";
+		};
 		B2EB3D7C279F0E6000D64225 /* Shared Views */ = {
 			isa = PBXGroup;
 			children = (
+				B2CC509F27BE22900050F22C /* Contract Picker.swift */,
 			);
 			name = "Shared Views";
 			sourceTree = "<group>";
@@ -453,12 +476,15 @@
 				B26BCE6C2799AED700B73501 /* Separator.swift in Sources */,
 				B2C4339027B7B59700796F24 /* Custom View Animations.swift in Sources */,
 				B26BCE492799AD8900B73501 /* Palette.swift in Sources */,
+				B2BBC8B827BBF4B100D51A26 /* Table Managed Object.swift in Sources */,
 				B26BCE502799AD8900B73501 /* Other Extensions.swift in Sources */,
 				B26BCE472799AD8900B73501 /* Utility.swift in Sources */,
 				B21CC0BC279FDD3A001AECC1 /* Scorecard Detail View.swift in Sources */,
 				B2EB3D68279D65CC00D64225 /* Player Managed Object.swift in Sources */,
+				B2CC509E27BE22210050F22C /* Enum Picker.swift in Sources */,
 				B26BCE672799AED700B73501 /* Swipe Gestures.swift in Sources */,
 				B2EB3D73279D734700D64225 /* Location View Model.swift in Sources */,
+				B2BBC8BA27BBF6BC00D51A26 /* Table View Model.swift in Sources */,
 				B2EB3D75279D73E100D64225 /* Board View Model.swift in Sources */,
 				B2276D5A27A692A40025DA80 /* Constraint.swift in Sources */,
 				B2A2053B27B108C700C83C88 /* Input Integer.swift in Sources */,
@@ -502,9 +528,11 @@
 				B26BCE72279B188600B73501 /* BridgeScore.xcdatamodeld in Sources */,
 				B26BCE642799AED700B73501 /* Message Box.swift in Sources */,
 				B26BCE652799AED700B73501 /* Picker Input.swift in Sources */,
+				B2CC50A027BE22900050F22C /* Contract Picker.swift in Sources */,
 				B2C4338C27B6646700796F24 /* Scorecard Input View.swift in Sources */,
 				B26BCE4E2799AD8900B73501 /* Link Presentation.swift in Sources */,
 				B26BCE74279B236F00B73501 /* Layout Managed Object.swift in Sources */,
+				B2CC509927BE21060050F22C /* Scroll Picker.swift in Sources */,
 				B2EB3D7B279DCBCB00D64225 /* Default Data.swift in Sources */,
 				B26BCE302799AB6700B73501 /* MyApp.swift in Sources */,
 				B26BCE362799AD1700B73501 /* Config.swift in Sources */,

@@ -6,11 +6,9 @@
         <attribute name="contract" optional="YES" attributeType="String"/>
         <attribute name="declarer16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="made16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="match16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="responsible16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="score" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="scorecardId" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="versus" optional="YES" attributeType="String"/>
     </entity>
     <entity name="Layout" representedClassName="LayoutMO" syncable="YES">
         <attribute name="boards16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
@@ -53,11 +51,19 @@
         <attribute name="totalScore" attributeType="String"/>
         <attribute name="type16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
+    <entity name="Table" representedClassName="Table" syncable="YES" codeGenerationType="class">
+        <attribute name="score" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="scorecardId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="sitting16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="table16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="versus" optional="YES" attributeType="String"/>
+    </entity>
     <elements>
-        <element name="Board" positionX="-9" positionY="144" width="128" height="179"/>
+        <element name="Board" positionX="-9" positionY="144" width="128" height="149"/>
         <element name="Layout" positionX="-45" positionY="0" width="128" height="179"/>
         <element name="Location" positionX="27" positionY="189" width="128" height="89"/>
         <element name="Player" positionX="9" positionY="171" width="128" height="89"/>
         <element name="Scorecard" positionX="-18" positionY="81" width="128" height="254"/>
+        <element name="Table" positionX="-9" positionY="153" width="128" height="104"/>
     </elements>
 </model>

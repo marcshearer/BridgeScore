@@ -10,6 +10,40 @@ import SwiftUI
 import PencilKit
 import Vision
 
+enum CanvasRowType: Int {
+    case heading = 0
+    case body = 1
+    case total = 2
+}
+
+enum CanvasColumnType: Codable {
+    case board
+    case contract
+    case declarer
+    case made
+    case score
+    case comment
+    case responsible
+    
+    var string: String {
+        return "\(self)"
+    }
+}
+
+struct CanvasRow {
+    var row: Int
+    var type: CanvasRowType
+    var table: Int?
+    var board: BoardViewModel?
+}
+
+struct CanvasColumn: Codable {
+    var type: CanvasColumnType
+    var heading: String
+    var size: ColumnSize
+    var width: CGFloat?
+}
+
 struct ScorecardCanvasView: View {
     @Environment(\.undoManager) private var undoManager
 
@@ -28,7 +62,6 @@ struct ScorecardCanvasView: View {
     
                 // Banner
                 let options = [
-//                  BannerOption(image: AnyView(Image(systemName: "rectangle.and.pencil.and.ellipsis")), likeBack: true, action: { decodeDrawing() }),
                     BannerOption(image: AnyView(Image(systemName: "arrow.uturn.backward")), likeBack: true, action: { undoDrawing() }),
                     BannerOption(image: AnyView(Image(systemName: "trash.fill")), likeBack: true, action: { clearDrawing() }),
                     BannerOption(image: AnyView(Image(systemName: "paintpalette")), likeBack: true, action: { toolPickerVisible.toggle() })]
@@ -118,15 +151,15 @@ class ScorecardCanvasUIView : UIView, UITableViewDataSource, UITableViewDelegate
     var delegate: ScorecardCanvasUIViewDelegate?
     
     var columns = [
-        ScorecardColumn(type: .board, heading: "Board", size: .fixed(70)),
-        ScorecardColumn(type: .contract, heading: "Contract", size: .fixed(90)),
-        ScorecardColumn(type: .declarer, heading: "By", size: .fixed(60)),
-        ScorecardColumn(type: .made, heading: "Made", size: .fixed(70)),
-        ScorecardColumn(type: .score, heading: "Score", size: .fixed(70)),
-        ScorecardColumn(type: .comment, heading: "Comment", size: .flexible),
-        ScorecardColumn(type: .responsible, heading: "Resp", size: .fixed(60))
+        CanvasColumn(type: .board, heading: "Board", size: .fixed(70)),
+        CanvasColumn(type: .contract, heading: "Contract", size: .fixed(90)),
+        CanvasColumn(type: .declarer, heading: "By", size: .fixed(60)),
+        CanvasColumn(type: .made, heading: "Made", size: .fixed(70)),
+        CanvasColumn(type: .score, heading: "Score", size: .fixed(70)),
+        CanvasColumn(type: .comment, heading: "Comment", size: .flexible),
+        CanvasColumn(type: .responsible, heading: "Resp", size: .fixed(60))
     ]
-    var rows: [ScorecardRow] = []
+    var rows: [CanvasRow] = []
     let headingHeight: CGFloat = 40
     let rowHeight: CGFloat = 90
     var totalHeight: CGFloat
@@ -162,7 +195,7 @@ class ScorecardCanvasUIView : UIView, UITableViewDataSource, UITableViewDelegate
         // Setup heading table view
         self.headingTableView.delegate = self
         self.headingTableView.dataSource = self
-        self.headingTableView.tag = RowType.heading.rawValue
+        self.headingTableView.tag = CanvasRowType.heading.rawValue
         self.headingTableView.register(ScorecardCanvasUIViewTableViewCell.self, forCellReuseIdentifier: "ScorecardUIViewTableViewCell")
         self.headingTableView.isScrollEnabled = false
         
@@ -173,7 +206,7 @@ class ScorecardCanvasUIView : UIView, UITableViewDataSource, UITableViewDelegate
         // Setup main table view
         self.mainTableView.delegate = self
         self.mainTableView.dataSource = self
-        self.mainTableView.tag = RowType.body.rawValue
+        self.mainTableView.tag = CanvasRowType.body.rawValue
         self.mainTableView.register(ScorecardCanvasUIViewTableViewCell.self, forCellReuseIdentifier: "ScorecardUIViewTableViewCell")
         
         // Setup pencil canvas
@@ -297,7 +330,7 @@ class ScorecardCanvasUIView : UIView, UITableViewDataSource, UITableViewDelegate
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        switch RowType(rawValue: tableView.tag) {
+        switch CanvasRowType(rawValue: tableView.tag) {
         case .heading:
             return 1
         default:
@@ -306,7 +339,7 @@ class ScorecardCanvasUIView : UIView, UITableViewDataSource, UITableViewDelegate
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        switch RowType(rawValue: tableView.tag) {
+        switch CanvasRowType(rawValue: tableView.tag) {
         case .heading:
             return headingHeight
         default:
@@ -317,7 +350,7 @@ class ScorecardCanvasUIView : UIView, UITableViewDataSource, UITableViewDelegate
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "ScorecardUIViewTableViewCell", for: indexPath) as! ScorecardCanvasUIViewTableViewCell
-        cell.setCollectionViewDataSourceDelegate(self, forRow: (RowType(rawValue: tableView.tag) == .heading ? 0 : indexPath.row + 1))
+        cell.setCollectionViewDataSourceDelegate(self, forRow: (CanvasRowType(rawValue: tableView.tag) == .heading ? 0 : indexPath.row + 1))
         return cell
     }
     
@@ -393,19 +426,19 @@ class ScorecardCanvasUIView : UIView, UITableViewDataSource, UITableViewDelegate
     func setupRows(){
         rows = []
         
-        rows.append(ScorecardRow(row: 0, type: .heading))
+        rows.append(CanvasRow(row: 0, type: .heading))
         
         for table in 1...scorecard.tables {
             
             // Add body rows
             for tableBoard in 1...scorecard.boardsTable {
                 let boardNumber = ((table - 1) * scorecard.boardsTable) + tableBoard
-                let board = BoardViewModel(scorecard: scorecard, match: table, board: boardNumber)
-                rows.append(ScorecardRow(row: rows.count, type: .body, table: table, board: board))
+                let board = BoardViewModel(scorecard: scorecard, board: boardNumber)
+                rows.append(CanvasRow(row: rows.count, type: .body, table: table, board: board))
             }
             
             // Add total rows
-            rows.append(ScorecardRow(row: rows.count, type: .total, table: table))
+            rows.append(CanvasRow(row: rows.count, type: .total, table: table))
         }
     }
 }
@@ -443,8 +476,8 @@ class ScorecardCanvasUIViewTableViewCell: UITableViewCell {
 
 class ScorecardCanvasUIViewCollectionViewCell: UICollectionViewCell {
     fileprivate var label: UILabel
-    fileprivate var row: ScorecardRow!
-    fileprivate var column: ScorecardColumn!
+    fileprivate var row: CanvasRow!
+    fileprivate var column: CanvasColumn!
     fileprivate var view: UICollectionView!
     
     override init(frame: CGRect) {
@@ -462,7 +495,7 @@ class ScorecardCanvasUIViewCollectionViewCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func set(view: UICollectionView, row: ScorecardRow, column: ScorecardColumn) {
+    func set(view: UICollectionView, row: CanvasRow, column: CanvasColumn) {
         var color: PaletteColor
         self.view = view
         self.row = row
