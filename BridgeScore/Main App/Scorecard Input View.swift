@@ -69,10 +69,12 @@ struct ScorecardInputView: View {
     
     func undoDrawing() {
         self.undoPressed = true
+        self.canUndo = false
     }
     
     func redoDrawing() {
         self.redoPressed = true
+        self.canRedo = false
     }
 }
 
@@ -668,8 +670,10 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     internal func contractPickerDidChange(to value: Contract) {
         if let board = board {
             let undoValue = board.contract
+            let undoMade = board.made
             undoManager?.registerUndo(withTarget: contractPicker) { (contractPicker) in
                 contractPicker.set(undoValue)
+                board.made = undoMade
                 self.contractPickerDidChange(to: undoValue)
             }
             board.contract = value
