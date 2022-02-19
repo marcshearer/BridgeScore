@@ -456,6 +456,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     private var textView = UITextView()
     private var textViewClear = UIImageView()
     private var participantPicker: EnumPicker<Participant>!
+    private var optionalParticipantPicker: EnumPicker<OptionalParticipant>!
     private var madePicker: ScrollPicker!
     private var contractPicker: ContractPicker
     private var board: BoardViewModel!
@@ -495,6 +496,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     
     override init(frame: CGRect) {
         participantPicker = EnumPicker(frame: frame)
+        optionalParticipantPicker = EnumPicker(frame: frame)
         contractPicker = ContractPicker(frame: frame)
         madePicker = ScrollPicker(frame: frame)
         super.init(frame: frame)
@@ -542,6 +544,9 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         addSubview(participantPicker, constant: 4, anchored: .all)
         participantPicker.delegate = self
         
+        addSubview(optionalParticipantPicker, constant: 4, anchored: .all)
+        optionalParticipantPicker.delegate = self
+
         addSubview(contractPicker, constant: 4, anchored: .all)
         contractPicker.delegate = self
         
@@ -566,6 +571,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     override func prepareForReuse() {
         textField.isHidden = true
         participantPicker.isHidden = true
+        optionalParticipantPicker.isHidden = true
         contractPicker.isHidden = true
         madePicker.isHidden = true
         textField.isHidden = true
@@ -623,8 +629,8 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             textViewClear.isHidden = board.comment == ""
             textView.text = board.comment
         case .responsible:
-            participantPicker.isHidden = false
-            participantPicker.set(board.declarer, color: Palette.gridBoard, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
+            optionalParticipantPicker.isHidden = false
+            optionalParticipantPicker.set(board.responsible, color: Palette.gridBoard, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
         default:
             label.isHidden = false
             label.text = ""
@@ -744,7 +750,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     
     internal func enumPickerDidChange(to value: Any) {
         if let board = board {
-            var undoValue: Participant?
+            var undoValue: Any?
             switch self.column.type {
             case .declarer:
                 undoValue =  board.declarer
@@ -755,7 +761,14 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             }
             if let undoValue = undoValue {
                 undoManager?.registerUndo(withTarget: participantPicker) { (participantPicker) in
-                    participantPicker.set(undoValue)
+                    switch self.column.type {
+                    case .declarer:
+                        self.participantPicker.set(undoValue as! Participant)
+                    case .responsible:
+                        self.optionalParticipantPicker.set(undoValue as! OptionalParticipant)
+                    default:
+                        break
+                    }
                     self.enumPickerDidChange(to: undoValue)
                 }
             }
@@ -763,7 +776,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             case .declarer:
                 board.declarer = value as! Participant
             case .responsible:
-                board.responsible = value as! Participant
+                board.responsible = value as! OptionalParticipant
             default:
                 break
             }

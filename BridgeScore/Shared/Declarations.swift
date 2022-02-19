@@ -95,6 +95,29 @@ public enum Participant: Int, EnumPickerType {
     }
 }
 
+public enum OptionalParticipant: Int, EnumPickerType {
+    case unknown = 0
+    case scorer = 1
+    case partner = 2
+    case opponent = 3
+    
+    public var string: String {
+        if self == .scorer {
+            return "Self"
+        }
+        return "\(self)".capitalized
+    }
+    
+    public var short: String {
+        if self == .unknown {
+            return ""
+        } else {
+            return string.left(1)
+        }
+    }
+    
+}
+
 public enum Seat: Int, EnumPickerType {
     case unknown = 0
     case north = 1
