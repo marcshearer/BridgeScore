@@ -79,23 +79,6 @@ public enum Type: Int, CaseIterable {
 }
 
 public enum Participant: Int, EnumPickerType {
-    case scorer = 0
-    case partner = 1
-    case opponent = 2
-    
-    public var string: String {
-        if self == .scorer {
-            return "Self"
-        }
-        return "\(self)".capitalized
-    }
-    
-    public var short: String {
-        return string.left(1)
-    }
-}
-
-public enum OptionalParticipant: Int, EnumPickerType {
     case unknown = 0
     case scorer = 1
     case partner = 2
@@ -115,7 +98,6 @@ public enum OptionalParticipant: Int, EnumPickerType {
             return string.left(1)
         }
     }
-    
 }
 
 public enum Seat: Int, EnumPickerType {

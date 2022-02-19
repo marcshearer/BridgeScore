@@ -15,11 +15,11 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
     @Published private(set) var scorecard: ScorecardViewModel
     @Published public var board: Int
     @Published public var contract = Contract()
-    @Published public var declarer: Participant = .scorer
+    @Published public var declarer: Participant = .unknown
     @Published public var made: Int = 0
     @Published public var score: Float = 0
     @Published public var comment: String = ""
-    @Published public var responsible: OptionalParticipant = .unknown
+    @Published public var responsible: Participant = .unknown
     
     // Linked managed objects - should only be referenced in this and the Data classes
     @Published internal var boardMO: BoardMO?
