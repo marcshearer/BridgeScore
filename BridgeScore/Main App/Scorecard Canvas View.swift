@@ -505,7 +505,7 @@ class ScorecardCanvasUIViewCollectionViewCell: UICollectionViewCell {
         case .heading:
             self.label.text = column.heading
             self.label.font = titleFont
-            color = Palette.gridHeader
+            color = Palette.gridTitle
         case .body:
             if column.type == .board {
                 self.label.font = boardFont
@@ -516,10 +516,10 @@ class ScorecardCanvasUIViewCollectionViewCell: UICollectionViewCell {
             if column.type == .comment {
                 self.label.textAlignment = .left
             }
-            color = Palette.gridBody
+            color = Palette.gridBoard
         case .total:
             self.label.font = cellFont
-            color = Palette.gridTotal
+            color = Palette.gridTable
         }
         self.label.backgroundColor = UIColor(color.background)
         self.label.textColor = UIColor(color.text)

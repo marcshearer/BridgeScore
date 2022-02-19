@@ -32,6 +32,7 @@ var inputTitleFont = Font.system(size: (MyApp.format == .tablet ? 20.0 : 16.0))
 var inputFont = Font.system(size: (MyApp.format == .tablet ? 16.0 : 12.0))
 var messageFont = Font.system(size: (MyApp.format == .tablet ? 16.0 : 12.0))
 
+// Fonts in scorecard
 var titleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 16.0 : 12.0), weight: .bold)
 var titleCaptionFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 16.0 : 12.0))
 var cellFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 16.0))

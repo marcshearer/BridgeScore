@@ -450,9 +450,11 @@ fileprivate class ScorecardInputTableTableCell: ScorecardInputBaseTableCell {
     }
 }
 
-fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDelegate, EnumPickerDelegate, ContractPickerDelegate {
-    private var label: UILabel!
-    private var textField: UITextField
+fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDelegate, EnumPickerDelegate, ContractPickerDelegate, UITextViewDelegate {
+    private var label = UILabel()
+    private var textField = UITextField()
+    private var textView = UITextView()
+    private var textViewClear = UIImageView()
     private var participantPicker: EnumPicker<Participant>!
     private var madePicker: ScrollPicker!
     private var contractPicker: ContractPicker
@@ -492,8 +494,6 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     }
     
     override init(frame: CGRect) {
-        label = UILabel()
-        textField = UITextField()
         participantPicker = EnumPicker(frame: frame)
         contractPicker = ContractPicker(frame: frame)
         madePicker = ScrollPicker(frame: frame)
@@ -504,12 +504,10 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         label.layer.borderWidth = 2.0
         label.textAlignment = .center
         label.minimumScaleFactor = 0.3
-        label.backgroundColor = UIColor(Palette.gridBody.background)
-        label.textColor = UIColor(Palette.gridBody.text)
+        label.backgroundColor = UIColor(Palette.gridBoard.background)
+        label.textColor = UIColor(Palette.gridBoard.text)
          
-        addSubview(textField, anchored: .all)
-        textField.layer.borderColor = UIColor(Palette.gridLine).cgColor
-        textField.layer.borderWidth = 2.0
+        addSubview(textField, constant: 4, anchored: .all)
         textField.textAlignment = .center
         textField.autocapitalizationType = .none
         textField.autocorrectionType = .no
@@ -517,24 +515,37 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         textField.addTarget(self, action: #selector(ScorecardInputBoardCollectionCell.textFieldChanged), for: .editingChanged)
         textField.addTarget(self, action: #selector(ScorecardInputBoardCollectionCell.textFieldEndEdit), for: .editingDidEnd)
         textField.addTarget(self, action: #selector(ScorecardInputBoardCollectionCell.textFieldBeginEdit), for: .editingDidBegin)
-        textField.backgroundColor = UIColor(Palette.gridBody.background)
-        textField.borderStyle = .bezel
-        textField.textColor = UIColor(Palette.gridBody.text)
+        textField.backgroundColor = UIColor(Palette.gridBoard.background)
+        textField.borderStyle = .none
+        textField.textColor = UIColor(Palette.gridBoard.text)
         textField.adjustsFontSizeToFitWidth = true
-         
-        addSubview(participantPicker, anchored: .all)
-        participantPicker.layer.borderColor = UIColor(Palette.gridLine).cgColor
-        participantPicker.layer.borderWidth = 2.0
+               
+        addSubview(textView, constant: 4, anchored: .leading, .top, .bottom)
+        textView.textAlignment = .left
+        textView.autocapitalizationType = .none
+        textView.autocorrectionType = .no
+        textView.font = cellFont
+        textView.delegate = self
+        textView.backgroundColor = UIColor(Palette.gridBoard.background)
+        textView.textColor = UIColor(Palette.gridBoard.text)
+        
+        addSubview(textViewClear, constant: 4, anchored: .trailing, .top, .bottom)
+        Constraint.setWidth(control: textViewClear, width: 32)
+        Constraint.anchor(view: self, control: textView, to: textViewClear, constant: 8, toAttribute: .leading, attributes: .trailing)
+        textViewClear.image = UIImage(systemName: "x.circle.fill")?.asTemplate
+        textViewClear.tintColor = UIColor(Palette.clearText)
+        textViewClear.contentMode = .scaleAspectFit
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputBoardCollectionCell.textViewClearPressed))
+        textViewClear.addGestureRecognizer(tapGesture)
+        textViewClear.isUserInteractionEnabled = true
+        
+        addSubview(participantPicker, constant: 4, anchored: .all)
         participantPicker.delegate = self
         
-        addSubview(contractPicker, anchored: .all)
-        contractPicker.layer.borderColor = UIColor(Palette.gridLine).cgColor
-        contractPicker.layer.borderWidth = 2.0
+        addSubview(contractPicker, constant: 4, anchored: .all)
         contractPicker.delegate = self
         
-        addSubview(madePicker, anchored: .all)
-        madePicker.layer.borderColor = UIColor(Palette.gridLine).cgColor
-        madePicker.layer.borderWidth = 2.0
+        addSubview(madePicker, constant: 4, anchored: .all)
         madePicker.delegate = self
     }
     
@@ -554,11 +565,14 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     
     override func prepareForReuse() {
         textField.isHidden = true
-        label.isHidden = true
         participantPicker.isHidden = true
         contractPicker.isHidden = true
         madePicker.isHidden = true
+        textField.isHidden = true
+        textView.isHidden = true
+        textViewClear.isHidden = true
         textField.text = ""
+        textView.text = ""
         label.text = ""
         label.textAlignment = .center
         textField.textAlignment = .center
@@ -587,10 +601,10 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             label.text = "\(board.board)"
         case .contract:
             contractPicker.isHidden = false
-            contractPicker.set(board.contract, color: Palette.gridBody, font: pickerTitleFont, force: true)
+            contractPicker.set(board.contract, color: Palette.gridBoard, font: pickerTitleFont, force: true)
         case .declarer:
             participantPicker.isHidden = false
-            participantPicker.set(board.declarer, color: Palette.gridBody, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
+            participantPicker.set(board.declarer, color: Palette.gridBoard, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
         case .made:
             madePicker.isHidden = false
             let (list, min, max) = madeList
@@ -599,20 +613,18 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             } else if board.made > max {
                 board.made = max
             }
-            madePicker.set(board.made - min, list: list, color: Palette.gridBody, titleFont: pickerTitleFont)
+            madePicker.set(board.made - min, list: list, color: Palette.gridBoard, titleFont: pickerTitleFont)
         case .score:
             textField.isHidden = false
             textField.clearsOnBeginEditing = true
             textField.text = board.score == 0 ? "" : "\(board.score)"
         case .comment:
-            textField.isHidden = false
-            textField.textAlignment = .left
-            textField.clearButtonMode = .always
-            textField.
-            textField.text = board.comment
+            textView.isHidden = false
+            textViewClear.isHidden = board.comment == ""
+            textView.text = board.comment
         case .responsible:
             participantPicker.isHidden = false
-            participantPicker.set(board.declarer, color: Palette.gridBody, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
+            participantPicker.set(board.declarer, color: Palette.gridBoard, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
         default:
             label.isHidden = false
             label.text = ""
@@ -674,6 +686,58 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             }
             if undoText != "" {
                 textFieldChanged(textField)
+            }
+        }
+    }
+    
+    internal func textViewDidChange(_ textView: UITextView) {
+        let text = textView.text ?? ""
+        if let board = board {
+            var undoText: String?
+            switch self.column.type {
+            case .comment:
+                undoText = board.comment
+            default:
+                break
+            }
+            undoManager?.registerUndo(withTarget: textView) { (textView) in
+                textView.text = undoText
+                self.textViewDidChange(textView)
+            }
+            switch column.type {
+            case .comment:
+                board.comment = text
+                textViewClear.isHidden = (text == "")
+            default:
+                break
+            }
+            changeDelegate?.scorecardChanged(type: .board, itemNumber: boardNumber, column: column)
+        }
+    }
+    
+    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+        print(text)
+        if text == "3nt" {
+            let mutableText = NSMutableString(string: textView.text)
+            textView.text = mutableText.replacingCharacters(in: range, with: "3NT")
+            textViewDidChange(textView)
+            return false
+        }
+        return true
+    }
+    
+    @objc internal func textViewClearPressed(_ textViewClear: UIView) {
+        if let board = board {
+            var text: String?
+            switch self.column.type {
+            case .comment:
+                text = board.comment
+            default:
+                break
+            }
+            if text != "" {
+                textView.text = ""
+                textViewDidChange(textView)
             }
         }
     }
@@ -753,10 +817,12 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
 }
 
 
-fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumPickerDelegate {
-    fileprivate var caption: UILabel!
-    fileprivate var label: UILabel!
-    fileprivate var textField: UITextField
+fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumPickerDelegate, UITextViewDelegate {
+    fileprivate var caption = UILabel()
+    fileprivate var label = UILabel()
+    fileprivate var textField = UITextField()
+    fileprivate var textView = UITextView()
+    fileprivate var textViewClear = UIImageView()
     fileprivate var seatPicker: EnumPicker<Seat>!
     fileprivate var table: TableViewModel!
     fileprivate var tableNumber: Int!
@@ -766,10 +832,7 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
     private var captionHeight: NSLayoutConstraint!
 
     override init(frame: CGRect) {
-        caption = UILabel()
-        label = UILabel()
-        textField = UITextField()
-        seatPicker = EnumPicker(frame: frame, color: Palette.gridTotal)
+        seatPicker = EnumPicker(frame: frame, color: Palette.gridTable)
         super.init(frame: frame)
                 
         addSubview(label, anchored: .all)
@@ -777,21 +840,41 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         label.layer.borderWidth = 2.0
         label.textAlignment = .center
         label.minimumScaleFactor = 0.3
-        label.backgroundColor = UIColor(Palette.gridTotal.background)
-        label.textColor = UIColor(Palette.gridTotal.text)
+        label.backgroundColor = UIColor(Palette.gridTable.background)
+        label.textColor = UIColor(Palette.gridTable.text)
 
         addSubview(textField, constant: 4, anchored: .all)
         textField.textAlignment = .center
-        textField.autocapitalizationType = .none
+        textField.autocapitalizationType = .words
+        textField.autocapitalizationType = UITextAutocapitalizationType.none
         textField.autocorrectionType = .no
         textField.font = cellFont
-        
         textField.addTarget(self, action: #selector(ScorecardInputTableCollectionCell.textFieldChanged), for: .editingChanged)
         textField.addTarget(self, action: #selector(ScorecardInputTableCollectionCell.textFieldEndEdit), for: .editingDidEnd)
         textField.addTarget(self, action: #selector(ScorecardInputTableCollectionCell.textFieldBeginEdit), for: .editingDidBegin)
-        textField.backgroundColor = UIColor(Palette.gridTotal.background)
-        textField.textColor = UIColor(Palette.gridTotal.text)
+        textField.backgroundColor = UIColor(Palette.gridTable.background)
+        textField.textColor = UIColor(Palette.gridTable.text)
 
+        addSubview(textView, constant: 4, anchored: .leading, .bottom)
+        Constraint.anchor(view: self, control: textView, constant: 20, attributes: .top)
+        textView.textAlignment = .left
+        textView.autocapitalizationType = .none
+        textView.autocorrectionType = .no
+        textView.font = cellFont
+        textView.delegate = self
+        textView.backgroundColor = UIColor(Palette.gridTable.background)
+        textView.textColor = UIColor(Palette.gridTable.text)
+        
+        addSubview(textViewClear, constant: 4, anchored: .trailing, .top, .bottom)
+        Constraint.setWidth(control: textViewClear, width: 34)
+        Constraint.anchor(view: self, control: textView, to: textViewClear, constant: 8, toAttribute: .leading, attributes: .trailing)
+        textViewClear.image = UIImage(systemName: "x.circle.fill")?.asTemplate
+        textViewClear.contentMode = .scaleAspectFit
+        textViewClear.tintColor = UIColor(Palette.clearText)
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputBoardCollectionCell.textViewClearPressed))
+        textViewClear.addGestureRecognizer(tapGesture)
+        textViewClear.isUserInteractionEnabled = true
+        
         addSubview(seatPicker, constant: 4, anchored: .all)
         seatPicker.delegate = self
         
@@ -800,7 +883,7 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         caption.font = titleCaptionFont
         caption.minimumScaleFactor = 0.3
         caption.backgroundColor = UIColor.clear
-        caption.textColor = UIColor(Palette.gridBody.text)
+        caption.textColor = UIColor(Palette.gridBoard.text)
         captionHeight = Constraint.setHeight(control: caption, height: 0)
     }
     
@@ -823,8 +906,9 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         textField.isHidden = true
         seatPicker.isHidden = true
         textField.text = ""
-        textField.clearButtonMode = .never
         textField.clearsOnBeginEditing = false
+        textView.isHidden = true
+        textViewClear.isHidden = true
         label.text = ""
         label.textAlignment = .center
         textField.textAlignment = .center
@@ -843,7 +927,7 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
             label.text = "Round \(table.table)"
         case .sitting:
             seatPicker.isHidden = false
-            seatPicker.set(table.sitting, color: Palette.gridTotal, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
+            seatPicker.set(table.sitting, color: Palette.gridTable, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
         case .tableScore:
             textField.isHidden = false
             textField.clearsOnBeginEditing = true
@@ -917,6 +1001,47 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
             }
             if undoText != "" {
                 textFieldChanged(textField)
+            }
+        }
+    }
+    
+    internal func textViewDidChange(_ textView: UITextView) {
+        let text = textView.text ?? ""
+        if let table = table {
+            var undoText: String?
+            switch self.column.type {
+            case .versus:
+                undoText = table.versus
+            default:
+                break
+            }
+            undoManager?.registerUndo(withTarget: textView) { (textView) in
+                textView.text = undoText
+                self.textViewDidChange(textView)
+            }
+            switch column.type {
+            case .versus:
+                table.versus = text
+                textViewClear.isHidden = (text == "")
+            default:
+                break
+            }
+            changeDelegate?.scorecardChanged(type: .board, itemNumber: tableNumber, column: column)
+        }
+    }
+    
+    @objc internal func textViewClearPressed(_ textViewClear: UIView) {
+        if let table = table {
+            var text: String?
+            switch self.column.type {
+            case .versus:
+                text = table.versus
+            default:
+                break
+            }
+            if text != "" {
+                textView.text = ""
+                textViewDidChange(textView)
             }
         }
     }

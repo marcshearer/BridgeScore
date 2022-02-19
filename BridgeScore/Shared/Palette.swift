@@ -20,9 +20,9 @@ class Palette {
     @BackgroundColor(.inset) static var inset
     @BackgroundColor(.header) static var header
     @BackgroundColor(.subHeader) static var subHeader
-    @BackgroundColor(.gridHeader) static var gridHeader
-    @BackgroundColor(.gridBody) static var gridBody
-    @BackgroundColor(.gridTotal) static var gridTotal
+    @BackgroundColor(.gridTitle) static var gridTitle
+    @BackgroundColor(.gridBoard) static var gridBoard
+    @BackgroundColor(.gridTable) static var gridTable
     @BackgroundColor(.divider) static var divider
     @BackgroundColor(.separator) static var separator
     @BackgroundColor(.listButton) static var listButton
@@ -38,6 +38,7 @@ class Palette {
     @SpecificColor(.bannerBackButton) static var bannerBackButton
     @SpecificColor(.maskBackground) static var maskBackground
     @SpecificColor(.gridLine) static var gridLine
+    @SpecificColor(.clearText) static var clearText
         
     class func colorDetail(color: Color) -> (red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat) {
         var red: CGFloat = 0
