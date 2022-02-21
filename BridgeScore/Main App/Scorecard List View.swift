@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ScorecardListView: View {
-    @StateObject private var scorecard = ScorecardViewModel()
+    @StateObject private var selected = ScorecardViewModel()
     @ObservedObject private var data = MasterData.shared
     @State private var title = "Scorecards"
     @State private var layout = LayoutViewModel()
@@ -49,9 +49,9 @@ struct ScorecardListView: View {
                         ForEach(data.scorecards) { (scorecard) in
                             ScorecardSummaryView(scorecard: scorecard)
                                 .onTapGesture {
-                                        // Copy this entry to current scorecard
-                                    self.scorecard.copy(from: scorecard)
-                                    Scorecard.current.load(scorecard: scorecard)
+                                    // Copy this entry to current scorecard
+                                    self.selected.copy(from: scorecard)
+                                    Scorecard.current.load(scorecard: self.selected)
                                     self.linkToEdit = true
                                 }
                         }
@@ -61,19 +61,23 @@ struct ScorecardListView: View {
             }
             .onAppear {
                 if UserDefault.currentUnsaved.bool {
+                    // Unsaved version - restore it and link to it
+                    let scorecard = ScorecardViewModel()
                     scorecard.restoreCurrent()
+                    self.selected.copy(from: scorecard)
+                    Scorecard.current.load(scorecard: scorecard)
                     linkToEdit = true
                 }
             }
             NavigationLink(destination: LayoutSetupView(), isActive: $linkToLayouts) {EmptyView()}
             NavigationLink(destination: PlayerSetupView(), isActive: $linkToPlayers) {EmptyView()}
             NavigationLink(destination: LocationSetupView(), isActive: $linkToLocations) {EmptyView()}
-            NavigationLink(destination: ScorecardDetailView(scorecard: scorecard), isActive: $linkToEdit) {EmptyView()}
+            NavigationLink(destination: ScorecardDetailView(scorecard: selected), isActive: $linkToEdit) {EmptyView()}
         }
         .sheet(isPresented: $linkToNew, onDismiss: {
             if layoutSelected {
-                self.scorecard.reset(from: layout)
-                Scorecard.current.load(scorecard: scorecard)
+                self.selected.reset(from: layout)
+                Scorecard.current.load(scorecard: selected)
                 self.linkToEdit = true
             }
         }) {

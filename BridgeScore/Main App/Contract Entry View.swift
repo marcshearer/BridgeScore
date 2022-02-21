@@ -6,17 +6,30 @@
 //
 
 import UIKit
+import SwiftUI
 
 fileprivate enum ContractCollection: Int {
     case level = 1
     case suit = 2
     case double = 3
+    
+    var buttonWidth: CGFloat {
+        switch self {
+        case .level:
+            return 60
+        case .suit:
+            return 60
+        case .double:
+            return passoutButtonWidth
+        }
+    }
 }
 
 fileprivate let buttonHeight: CGFloat = 40
-fileprivate let buttonWidth: CGFloat = 150
-fileprivate let buttonSpaceX: CGFloat = 20
-fileprivate let buttonSpaceY: CGFloat = 10
+fileprivate let actionButtonWidth: CGFloat = 120
+fileprivate let passoutButtonWidth: CGFloat = 115
+fileprivate let buttonSpaceX: CGFloat = 10
+fileprivate let buttonSpaceY: CGFloat = 20
 
 class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
        
@@ -29,8 +42,7 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
     private var passOutLabel = UILabel()
     private var cancelButton = UILabel()
     private var selectButton = UILabel()
-    private var editContract = Contract()
-    private var inputContract: Contract!
+    private var contract = Contract()
     private var completion: ((Contract)->())?
 
     required init?(coder: NSCoder) {
@@ -51,17 +63,16 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         selectButton.roundCorners(cornerRadius: 10)
     }
     
+    // MARK: - CollectionView Delegates ================================================================ -
+    
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if let collection = ContractCollection(rawValue: collectionView.tag) {
             switch collection {
             case .level:
-                print("numberOfItems \(collectionView.tag) \(ContractLevel.validCases.count)")
                 return ContractLevel.validCases.count
             case .suit:
-                print("numberOfItems \(collectionView.tag) \(ContractSuit.validCases.count)")
                 return ContractSuit.validCases.count
             case .double:
-                print("numberOfItems \(collectionView.tag) \(ContractDouble.allCases.count)")
                 return ContractDouble.allCases.count
             }
         } else {
@@ -70,7 +81,11 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: buttonWidth, height: buttonHeight)
+        if let collection = ContractCollection(rawValue: collectionView.tag) {
+            return CGSize(width: collection.buttonWidth + buttonSpaceX, height: buttonHeight)
+        } else {
+            fatalError()
+        }
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
@@ -78,23 +93,22 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        print("cellForItemAt \(collectionView.tag) \(indexPath)")
         if let collection = ContractCollection(rawValue: collectionView.tag) {
             switch collection {
             case .level:
                 let level = ContractLevel.validCases[indexPath.row]
                 let cell = ContractEntryCollectionCell<ContractLevel>.dequeue(collectionView, for: indexPath)
-                cell.set(value: level, selected: (level == editContract.level), tapAction: levelTapped)
+                cell.set(value: level, selected: (level == contract.level), tapAction: levelTapped)
                 return cell
             case .suit:
                 let suit = ContractSuit.validCases[indexPath.row]
                 let cell = ContractEntryCollectionCell<ContractSuit>.dequeue(collectionView, for: indexPath)
-                cell.set(value: suit, selected: (suit == editContract.suit), disabled: !editContract.level.hasSuit, tapAction: suitTapped)
+                cell.set(value: suit, selected: (suit == contract.suit), disabled: !contract.level.hasSuit, tapAction: suitTapped)
                 return cell
             case .double:
                 let double = ContractDouble.allCases[indexPath.row]
                 let cell = ContractEntryCollectionCell<ContractDouble>.dequeue(collectionView, for: indexPath)
-                cell.set(value: double, selected: (double == editContract.double), disabled: !editContract.suit.hasDouble, tapAction: doubleTapped)
+                cell.set(value: double, selected: (double == contract.double), disabled: !contract.suit.hasDouble, tapAction: doubleTapped)
                 return cell
             }
         } else {
@@ -102,13 +116,15 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         }
     }
     
+    // MARK: - Tap handlers ============================================================================ -
+    
     @objc private func passoutTapped(_ sender: UILabel) {
         levelTapped(level: .passout)
     }
     
     private func levelTapped(level: ContractLevel) {
-        if level != editContract.level {
-            editContract.level = level
+        if level != contract.level {
+            contract.level = level
             levelCollectionView.reloadData()
             suitCollectionView.reloadData()
             doubleCollectionView.reloadData()
@@ -117,8 +133,8 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
     }
     
     private func suitTapped(suit: ContractSuit) {
-        if suit != editContract.suit {
-            editContract.suit = suit
+        if suit != contract.suit {
+            contract.suit = suit
             suitCollectionView.reloadData()
             doubleCollectionView.reloadData()
             updateButtons()
@@ -127,32 +143,44 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
     }
     
     private func doubleTapped(double: ContractDouble) {
-        if double != editContract.double {
-            editContract.double = double
+        if double != contract.double {
+            contract.double = double
             doubleCollectionView.reloadData()
             updateButtons()
         }
     }
     
+    // MARK: - Utility Routines ======================================================================== -
+    
     private func updateButtons() {
-        let selectEnabled = (editContract.level == .passout || editContract.suit != .blank)
+        let selectEnabled = (contract.level == .passout || contract.suit != .blank)
         selectButton.isUserInteractionEnabled = selectEnabled
 
-        let contractText = editContract.string
+        let contractText = contract.string
         selectButton.text = (!selectEnabled ? "Select" : "\(contractText)")
         
-        let selectColor = (selectEnabled ? Palette.enabledButton : Palette.disabledButton)
+        let selectColor = (selectEnabled ? Palette.contractUnselected : Palette.contractDisabled)
         selectButton.backgroundColor = UIColor(selectColor.background)
-        selectButton.textColor = UIColor(selectColor.contrastText).withAlphaComponent(selectEnabled ? 1 : 0.5)
+        selectButton.textColor = UIColor(selectColor.text).withAlphaComponent(selectEnabled ? 1 : 0.3)
         
-        let passoutColor = (editContract.level == .passout ? Palette.contractSelected : Palette.contractUnselected)
+        let passoutColor = (contract.level == .passout ? Palette.contractSelected : Palette.contractUnselected)
         passOutLabel.backgroundColor = UIColor(passoutColor.background)
         passOutLabel.textColor = UIColor(passoutColor.text)
     }
     
+    @objc private func cancelPressed(_ sender: UILabel) {
+        hide()
+    }
+    
+    @objc private func selectPressed(_ sender: UILabel) {
+        self.completion?(Contract(copying: contract))
+        hide()
+    }
+    
+    // MARK: - Show / Hide ============================================================================ -
+    
     public func show(from sourceView: UIView, contract: Contract, hideBackground: Bool = true, completion: @escaping (Contract)->()) {
-        self.inputContract = contract
-        self.editContract.copy(from: contract)
+        self.contract = Contract(copying: contract)
         self.completion = completion
         self.frame = sourceView.frame
         backgroundView.frame = sourceView.frame
@@ -173,14 +201,7 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         removeFromSuperview()
     }
     
-    @objc private func cancelPressed(_ sender: UILabel) {
-        hide()
-    }
-    
-    @objc private func selectPressed(_ sender: UILabel) {
-        self.completion?(editContract)
-        hide()
-    }
+  // MARK: - View Setup ======================================================================== -
     
     private func loadContractEntryView() {
         
@@ -198,8 +219,8 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         
         // Content
         backgroundView.addSubview(contentView, anchored: .centerX, .centerY)
-        Constraint.setWidth(control: contentView, width: 600)
-        Constraint.setHeight(control: contentView, height: 550)
+        Constraint.setWidth(control: contentView, width: 650)
+        Constraint.setHeight(control: contentView, height: 350)
         contentView.backgroundColor = UIColor(Palette.alternate.background)
         contentView.addShadow()
         contentView.layer.cornerRadius = 20
@@ -219,9 +240,9 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         // Pass Out
         contentView.addSubview(passOutLabel)
         Constraint.anchor(view: contentView, control: passOutLabel, to: title, constant: 20, toAttribute: .bottom, attributes: .top)
-        Constraint.anchor(view: contentView, control: passOutLabel, attributes: .centerX)
+        Constraint.anchor(view: contentView, control: passOutLabel, constant: 20, attributes: .leading)
         Constraint.setHeight(control: passOutLabel, height: buttonHeight)
-        Constraint.setWidth(control: passOutLabel, width: (3 * buttonWidth) + (2 * buttonSpaceX))
+        Constraint.setWidth(control: passOutLabel, width: passoutButtonWidth)
         let passoutGesture = UITapGestureRecognizer(target: self, action: #selector(ContractEntryView.passoutTapped(_:)))
         passOutLabel.addGestureRecognizer(passoutGesture)
         passOutLabel.isUserInteractionEnabled = true
@@ -230,26 +251,26 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         passOutLabel.text = "Pass Out"
 
         // Level numbers
-        loadCollection(collectionView: levelCollectionView, anchor: .leading, elements: ContractLevel.validCases.count, tag: ContractCollection.level.rawValue, type: ContractLevel.blank)
+        loadCollection(collectionView: levelCollectionView, anchor: .trailing, yOffset: 0, buttonWidth: ContractCollection.level.buttonWidth, elements: ContractLevel.validCases.count, tag: ContractCollection.level.rawValue, type: ContractLevel.blank)
 
         // Suits
-        loadCollection(collectionView: suitCollectionView, anchor: .centerX, elements: ContractSuit.validCases.count, tag: ContractCollection.suit.rawValue, type: ContractSuit.blank)
+        loadCollection(collectionView: suitCollectionView, anchor: .leading, yOffset: (buttonHeight + buttonSpaceY), buttonWidth: ContractCollection.suit.buttonWidth, elements: ContractSuit.validCases.count, tag: ContractCollection.suit.rawValue, type: ContractSuit.blank)
 
         // Doubles
-        loadCollection(collectionView: doubleCollectionView, anchor: .trailing, elements: ContractDouble.allCases.count, tag: ContractCollection.double.rawValue, type: ContractDouble.undoubled)
+        loadCollection(collectionView: doubleCollectionView, anchor: .leading, yOffset: 2 * (buttonHeight + buttonSpaceY), buttonWidth: ContractCollection.double.buttonWidth, elements: ContractDouble.allCases.count, tag: ContractCollection.double.rawValue, type: ContractDouble.undoubled)
 
         // Cancel button
-        loadActionButton(button: cancelButton, offset: -((buttonWidth / 2) + buttonSpaceX), text: "Cancel", action: cancelSelector)
+        loadActionButton(button: cancelButton, xOffset: -((actionButtonWidth / 2) + buttonSpaceX), text: "Cancel", action: cancelSelector)
         
         // Select button
-        loadActionButton(button: selectButton, offset: ((buttonWidth / 2) + buttonSpaceX), text: "Select", action: #selector(ContractEntryView.selectPressed(_:)))
+        loadActionButton(button: selectButton, xOffset: ((actionButtonWidth / 2) + buttonSpaceX), text: "Select", action: #selector(ContractEntryView.selectPressed(_:)))
     }
     
-    func loadActionButton(button: UILabel, offset: CGFloat, text: String, action: Selector) {
+    func loadActionButton(button: UILabel, xOffset: CGFloat, text: String, action: Selector) {
         contentView.addSubview(button, constant: 20, anchored: .bottom)
-        Constraint.anchor(view: contentView, control: button, constant: offset, attributes: .centerX)
+        Constraint.anchor(view: contentView, control: button, constant: xOffset, attributes: .centerX)
         Constraint.setHeight(control: button, height: buttonHeight)
-        Constraint.setWidth(control: button, width: buttonWidth)
+        Constraint.setWidth(control: button, width: actionButtonWidth)
         button.backgroundColor = UIColor(Palette.enabledButton.background)
         button.textColor = UIColor(Palette.enabledButton.text)
         button.font = titleFont
@@ -260,12 +281,17 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         button.isUserInteractionEnabled = true
     }
     
-    func loadCollection<EnumType>(collectionView: UICollectionView, anchor: ConstraintAnchor, elements: Int, tag: Int, type: EnumType) where EnumType: ContractEnumType {
+    func loadCollection<EnumType>(collectionView: UICollectionView, anchor: ConstraintAnchor, yOffset: CGFloat, buttonWidth: CGFloat, elements: Int, tag: Int, type: EnumType) where EnumType: ContractEnumType {
         contentView.addSubview(collectionView)
-        Constraint.anchor(view: contentView, control: collectionView, to: passOutLabel, constant: buttonSpaceY, toAttribute: .bottom, attributes: .top)
-        Constraint.anchor(view: contentView, control: collectionView, to: passOutLabel, attributes: anchor)
-        Constraint.setHeight(control: collectionView, height: CGFloat(elements) * (buttonHeight + buttonSpaceY))
-        Constraint.setWidth(control: collectionView, width: buttonWidth)
+        Constraint.anchor(view: contentView, control: collectionView, to: passOutLabel, constant: yOffset, attributes: .top)
+        if anchor == .trailing {
+            Constraint.anchor(view: contentView, control: collectionView, to: passOutLabel, constant: buttonSpaceX, toAttribute: .trailing, attributes: .leading)
+        } else {
+            Constraint.anchor(view: contentView, control: collectionView, to: passOutLabel, attributes: anchor)
+        }
+            
+        Constraint.setHeight(control: collectionView, height: buttonHeight)
+        Constraint.setWidth(control: collectionView, width: (CGFloat(elements) * (buttonWidth + buttonSpaceX)))
         collectionView.tag = tag
         collectionView.dataSource = self
         collectionView.delegate = self
@@ -286,8 +312,8 @@ fileprivate class ContractEntryCollectionCell<EnumType>: UICollectionViewCell wh
     override init(frame: CGRect) {
         super.init(frame: frame)
                 
-        addSubview(label, anchored: .leading, .trailing, .bottom)
-        Constraint.setHeight(control: label, height: buttonHeight)
+        addSubview(label, anchored: .leading, .top, .bottom)
+        Constraint.setWidth(control: label, width: frame.width - buttonSpaceX)
         label.textAlignment = .center
         label.minimumScaleFactor = 0.3
         label.backgroundColor = UIColor(Palette.tile.background)

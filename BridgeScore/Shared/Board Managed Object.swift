@@ -27,7 +27,6 @@ public class BoardMO: NSManagedObject, ManagedObject, Identifiable {
     
     convenience init() {
         self.init(context: CoreData.context)
-        self.scorecardId = scorecardId
     }
     
     public var board: Int {

@@ -32,6 +32,22 @@ extension UIView {
         Constraint.anchor(view: self, control: parent, constant: constant, attributes: attributes)
     }
     
+    func addSubview(_ parent: UIView, leading: CGFloat? = nil, trailing: CGFloat? = nil, top: CGFloat? = nil, bottom: CGFloat? = nil) {
+        self.addSubview(parent)
+        if let leading = leading {
+            Constraint.anchor(view: self, control: parent, constant: leading, attributes: .leading)
+        }
+        if let trailing = trailing {
+            Constraint.anchor(view: self, control: parent, constant: trailing, attributes: .trailing)
+        }
+        if let top = top {
+            Constraint.anchor(view: self, control: parent, constant: top, attributes: .top)
+        }
+        if let bottom = bottom {
+            Constraint.anchor(view: self, control: parent, constant: bottom, attributes: .bottom)
+        }
+    }
+    
     public func addShadow(shadowSize: CGSize = CGSize(width: 4.0, height: 4.0), shadowColor: UIColor? = nil, shadowOpacity: CGFloat = 0.2, shadowRadius: CGFloat? = nil) {
         
         let shadowColor = shadowColor ?? UIColor.black

@@ -214,16 +214,25 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         } else {
             MasterData.shared.save(scorecard: self)
         }
+        if Scorecard.current.match(scorecard: self) {
+            Scorecard.current.saveAll(scorecard: self)
+        }
         UserDefault.currentUnsaved.set(false)
     }
     
     public func insert() {
         MasterData.shared.insert(scorecard: self)
+        if Scorecard.current.match(scorecard: self) {
+            Scorecard.current.saveAll(scorecard: self)
+        }
         UserDefault.currentUnsaved.set(false)
     }
     
     public func remove() {
         MasterData.shared.remove(scorecard: self)
+        if Scorecard.current.match(scorecard: self) {
+            Scorecard.current.removeAll(scorecard: self)
+        }
         UserDefault.currentUnsaved.set(false)
     }
     

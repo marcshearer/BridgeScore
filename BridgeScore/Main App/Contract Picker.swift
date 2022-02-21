@@ -81,19 +81,19 @@ class ContractPicker: UIView, ScrollPickerDelegate {
         }
     }
     
-    public func set(_ contract: Contract, color: PaletteColor? = nil, font: UIFont? = nil, force: Bool = false) {
+    public func set(_ contract: Contract, color: PaletteColor? = nil, font: UIFont? = nil, clearBackground: Bool = true, force: Bool = false) {
         if let color = color {
             self.color = color
         }
         if let font = font {
             self.font = font
         }
-        set(level: contract.level, reflect: true)
-        set(suit: contract.suit, reflect: true)
-        set(double: contract.double, reflect: true)
+        set(level: contract.level, clearBackground: clearBackground, reflect: true)
+        set(suit: contract.suit, clearBackground: clearBackground, reflect: true)
+        set(double: contract.double, clearBackground: clearBackground, reflect: true)
     }
     
-    @discardableResult private func set(level newValue: ContractLevel, reflect: Bool = false, force: Bool = false) -> Bool {
+    @discardableResult private func set(level newValue: ContractLevel, clearBackground: Bool = true, reflect: Bool = false, force: Bool = false) -> Bool {
         var changed = false
         if newValue != contract.level || force {
             if !newValue.hasSuit && (contract.suit != .blank || force) {
@@ -103,7 +103,7 @@ class ContractPicker: UIView, ScrollPickerDelegate {
             if reflect {
                 suitPicker.isUserInteractionEnabled = newValue.hasSuit
                 if let index = self.levelList.firstIndex(where: {$0 == contract.level}) {
-                    self.levelPicker.set(index, color: color, titleFont: font)
+                    self.levelPicker.set(index, color: color, titleFont: font, clearBackground: clearBackground)
                 }
             }
             changed = true
@@ -111,7 +111,7 @@ class ContractPicker: UIView, ScrollPickerDelegate {
         return changed
     }
     
-    @discardableResult private func set(suit newValue: ContractSuit, reflect: Bool = false, force: Bool = false)  -> Bool {
+    @discardableResult private func set(suit newValue: ContractSuit, clearBackground: Bool = true, reflect: Bool = false, force: Bool = false)  -> Bool {
         var changed = false
         if newValue != contract.suit || force {
             if !newValue.hasDouble && (contract.double != .undoubled || force) {
@@ -121,7 +121,7 @@ class ContractPicker: UIView, ScrollPickerDelegate {
             if reflect {
                 doublePicker.isUserInteractionEnabled = newValue.hasDouble
                 if let index = self.suitList.firstIndex(where: {$0 == contract.suit}) {
-                    self.suitPicker.set(index, color: color, titleFont: font)
+                    self.suitPicker.set(index, color: color, titleFont: font, clearBackground: clearBackground)
                 }
             }
             changed = true
@@ -129,13 +129,13 @@ class ContractPicker: UIView, ScrollPickerDelegate {
         return changed
     }
     
-    @discardableResult private func set(double newValue: ContractDouble, reflect: Bool = false, force: Bool = false)  -> Bool {
+    @discardableResult private func set(double newValue: ContractDouble, clearBackground: Bool = true, reflect: Bool = false, force: Bool = false)  -> Bool {
         var changed = false
         if newValue != contract.double || force {
             contract.double = newValue
             if reflect {
                 if let index = self.doubleList.firstIndex(where: {$0 == contract.double}) {
-                    self.doublePicker.set(index, color: color, titleFont: titleFont)
+                    self.doublePicker.set(index, color: color, titleFont: titleFont, clearBackground: clearBackground)
                 }
             }
             changed = true

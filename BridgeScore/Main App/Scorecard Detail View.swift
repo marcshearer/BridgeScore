@@ -21,8 +21,12 @@ struct ScorecardDetailView: View {
             VStack(spacing: 0) {
                 
                 let bannerOptions = [
-                    BannerOption(image: AnyView(Image(systemName: "rectangle.split.3x3")), likeBack: true, action: {linkAction({ linkToInput = true })}),
-                    BannerOption(image: AnyView(Image(systemName: "square.and.pencil").rotationEffect(Angle.init(degrees: 90))), likeBack: true, action: {linkAction({ linkToCanvas = true })})]
+                    BannerOption(image: AnyView(Image(systemName: "rectangle.split.3x3")), likeBack: true, action: {linkAction({
+                        Scorecard.current.addNew()
+                        linkToInput = true })}),
+                    BannerOption(image: AnyView(Image(systemName: "square.and.pencil").rotationEffect(Angle.init(degrees: 90))), likeBack: true, action: {linkAction({
+                        linkToCanvas = true
+                    })})]
                 Banner(title: $scorecard.editTitle, back: true, backAction: backAction, optionMode: .buttons, options: bannerOptions)
                 
                 ScrollView(showsIndicators: false) {
@@ -78,6 +82,7 @@ struct ScorecardDetailView: View {
                 master.copy(from: scorecard)
                 master.insert()
             }
+            Scorecard.current.clear()
             return true
         }
     }

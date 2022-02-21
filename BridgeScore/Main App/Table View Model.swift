@@ -74,6 +74,7 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
             mo.scorecardId = scorecard.scorecardId
             mo.table = table
             mo.sitting = sitting
+            mo.score = score
             mo.versus = versus
         } else {
             fatalError("No managed object")

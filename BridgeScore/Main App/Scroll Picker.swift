@@ -27,6 +27,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
     private var collectionView: UICollectionView!
     private var collectionViewLayout: UICollectionViewLayout!
     private var color: PaletteColor?
+    private var clearBackground = true
     private var list: [ScrollPickerEntry]
     private var titleFont: UIFont
     private var captionFont: UIFont
@@ -53,33 +54,53 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.bounces = false
         collectionView.alwaysBounceVertical = false
+        collectionView.backgroundColor = UIColor.clear
         ScrollPickerCell.register(collectionView)
         self.addSubview(collectionView, anchored: .all)
     }
     
-    public func set(_ selected: Int, list: [String], isEnabled: Bool = true, color: PaletteColor? = nil, titleFont: UIFont?, captionFont: UIFont? = nil) {
-        set(selected, list: list.map{ScrollPickerEntry(title: $0, caption: nil)}, isEnabled: isEnabled, color: color, titleFont: titleFont, captionFont: captionFont)
+    public func set(_ selected: Int, list: [String], isEnabled: Bool = true, color: PaletteColor? = nil, titleFont: UIFont?, captionFont: UIFont? = nil, clearBackground: Bool = true) {
+        set(selected, list: list.map{ScrollPickerEntry(title: $0, caption: nil)}, isEnabled: isEnabled, color: color, titleFont: titleFont, captionFont: captionFont, clearBackground: clearBackground)
     }
     
-    public func set(_ selected: Int, list: [ScrollPickerEntry]! = nil, isEnabled: Bool = true, color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil) {
+    public func set(_ selected: Int, list: [ScrollPickerEntry]! = nil, isEnabled: Bool = true, color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil, clearBackground: Bool = true) {
+        var reload = false
+        
+        if self.clearBackground != clearBackground {
+            self.clearBackground = clearBackground
+            reload = true
+        }
+        
         if let color = color {
-            self.color = color
+            if color != self.color {
+                self.color = color
+                reload = true
+            }
         }
         if let titleFont = titleFont {
-            self.titleFont = titleFont
+            if titleFont != self.titleFont {
+                self.titleFont = titleFont
+                reload = true
+            }
         }
         if let captionFont = captionFont {
-            self.captionFont = captionFont
+            if captionFont != self.captionFont {
+                self.captionFont = captionFont
+                reload = true
+            }
         }
 
         if let list = list {
             if list != self.list {
                 self.list = list
-                collectionView.reloadData()
+                reload = true
             }
         }
         self.isUserInteractionEnabled = isEnabled
         self.selected = selected
+        if reload {
+            collectionView.reloadData()
+        }
 
         Utility.executeAfter(delay: 0.1) {
             self.collectionView.scrollToItem(at: IndexPath(item: selected, section: 0), at: .centeredVertically, animated: false)
@@ -101,7 +122,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = ScrollPickerCell.dequeue(collectionView, for: indexPath)
         let item = list[indexPath.item]
-        cell.set(titleText: item.title, captionText: item.caption ?? "", color: color, titleFont: titleFont, captionFont: captionFont)
+        cell.set(titleText: item.title, captionText: item.caption ?? "", color: color, titleFont: titleFont, captionFont: captionFont, clearBackground: clearBackground)
         return cell
     }
     
@@ -124,17 +145,16 @@ class ScrollPickerCell: UICollectionViewCell {
     override init(frame: CGRect) {
         super.init(frame: frame)
         title = UILabel(frame: frame)
-        title.font = cellFont
-        title.textAlignment = .center
+        title.font = pickerTitleFont
         title.minimumScaleFactor = 0.3
-        self.addSubview(title, anchored: .all)
+        title.textAlignment = .center
+        self.addSubview(title, leading: 0, trailing: 0, top: frame.height / 10)
         caption = UILabel(frame: frame)
-        caption.font = cellFont
+        caption.font = pickerCaptionFont
         caption.textAlignment = .center
-        caption.minimumScaleFactor = 0.3
-        self.addSubview(caption, anchored: .leading, .trailing)
+        self.addSubview(caption, leading: 0, trailing: 0, bottom: frame.height / 10)
         captionHeightConstraint = Constraint.setHeight(control: caption, height: 0)
-        Constraint.anchor(view: self, control: caption, constant: frame.height / 10, attributes: .bottom)
+        Constraint.anchor(view: self, control: caption, to: title, constant: frame.height / 10, toAttribute: .bottom, attributes: .top)
     }
 
     required init?(coder: NSCoder) {
@@ -150,16 +170,17 @@ class ScrollPickerCell: UICollectionViewCell {
         return cell
     }
     
-    public func set(titleText: String, captionText: String? = nil, color: PaletteColor? = nil, titleFont: UIFont?, captionFont: UIFont? = nil) {
+    public func set(titleText: String, captionText: String? = nil, color: PaletteColor? = nil, titleFont: UIFont?, captionFont: UIFont? = nil, clearBackground: Bool = true) {
         title.text = titleText
         if let titleFont = titleFont {
             title.font = titleFont
         }
-        title.backgroundColor = UIColor(color?.background ?? Color.clear)
+        self.backgroundColor = (clearBackground ? UIColor.clear : UIColor(color?.background ?? Color.clear))
+        title.backgroundColor = UIColor.clear
         title.textColor = UIColor(color?.text ?? Palette.background.text)
         if let captionText = captionText {
             caption.text = captionText
-            captionHeightConstraint.constant = self.frame.height / 4
+            captionHeightConstraint.constant = self.frame.height / 5
             if let captionFont = captionFont {
                 caption.font = captionFont
             }

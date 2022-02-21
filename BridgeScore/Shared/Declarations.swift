@@ -39,7 +39,7 @@ var cellFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 16.0)
 var boardFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 20.0))
 var boardTitleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 20.0), weight: .bold)
 var pickerTitleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 24.0))
-var pickerCaptionFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 10.0 : 8.0))
+var pickerCaptionFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 12.0 : 8.0))
 var windowTitleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 20.0))
 
 // Backups
@@ -141,7 +141,7 @@ enum ColumnType: Codable {
     }
 }
 
-enum ColumnSize: Codable {
+enum ColumnSize: Codable, Equatable {
     case fixed(CGFloat)
     case flexible
 }
@@ -303,7 +303,12 @@ public class Contract: Equatable {
             }
         } else {
             self.suit = .blank
+            self.double = .undoubled
         }
+    }
+    
+    init(copying contract: Contract) {
+        self.copy(from: contract)
     }
     
     static public func ==(lhs: Contract, rhs: Contract) -> Bool {

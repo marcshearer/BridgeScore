@@ -9,6 +9,8 @@ To Do
 Sort out dark mode
 New layout doesn't have partner (or location?) unless you change it
 Maybe remove file sharing in Info.plist once can backup from Mac
+Should add scores rather than averaging them for some match types
+Need more match types - e.g. for Swiss Pairs in VPs
 
 Enhancements
 ============

@@ -78,7 +78,7 @@ extension MasterData {
     /// Methods for layouts
     
     public func insert(layout: LayoutViewModel) {
-        assert(layout.layoutMO == nil, "Cannot insert a layout which already has a managed object")
+        assert(layout.isNew, "Cannot insert a layout which already has a managed object")
         assert(self.layout(id: layout.layoutId) == nil, "Layout already exists and cannot be created")
         assert(self.layout(id: layout.layoutId)?.desc == nil, "Layout must have a non-blank description")
         CoreData.update {
@@ -90,7 +90,7 @@ extension MasterData {
     }
     
     public func remove(layout: LayoutViewModel) {
-        assert(layout.layoutMO != nil, "Cannot remove a layout which doesn't already have a managed object")
+        assert(!layout.isNew, "Cannot remove a layout which doesn't already have a managed object")
         assert(self.layout(id: layout.layoutId) != nil, "Layout does not exist and cannot be deleted")
         CoreData.update {
             CoreData.context.delete(layout.layoutMO!)
@@ -101,7 +101,7 @@ extension MasterData {
     }
     
     public func save(layout: LayoutViewModel) {
-        assert(layout.layoutMO != nil, "Cannot save a layout which doesn't already have managed objects")
+        assert(!layout.isNew, "Cannot save a layout which doesn't already have managed objects")
         assert(self.layout(id: layout.layoutId) != nil, "Layout does not exist and cannot be updated")
         if layout.changed {
             CoreData.update {
@@ -139,7 +139,7 @@ extension MasterData {
     /// Methods for scorecards
     
     public func insert(scorecard: ScorecardViewModel) {
-        assert(scorecard.scorecardMO == nil, "Cannot insert a scorecard which already has a managed object")
+        assert(scorecard.isNew, "Cannot insert a scorecard which already has a managed object")
         assert(self.scorecard(id: scorecard.scorecardId) == nil, "Scorecard already exists and cannot be created")
         assert(self.scorecard(id: scorecard.scorecardId)?.desc == nil, "Scorecard must have a non-blank description")
         CoreData.update {
@@ -151,7 +151,7 @@ extension MasterData {
     }
     
     public func remove(scorecard: ScorecardViewModel) {
-        assert(scorecard.scorecardMO != nil, "Cannot remove a scorecard which doesn't already have a managed object")
+        assert(!scorecard.isNew, "Cannot remove a scorecard which doesn't already have a managed object")
         assert(self.scorecard(id: scorecard.scorecardId) != nil, "Scorecard does not exist and cannot be deleted")
         CoreData.update {
             CoreData.context.delete(scorecard.scorecardMO!)
@@ -162,7 +162,7 @@ extension MasterData {
     }
     
     public func save(scorecard: ScorecardViewModel) {
-        assert(scorecard.scorecardMO != nil, "Cannot save a scorecard which doesn't already have managed objects")
+        assert(!scorecard.isNew, "Cannot save a scorecard which doesn't already have managed objects")
         assert(self.scorecard(id: scorecard.scorecardId) != nil, "Scorecard does not exist and cannot be updated")
         if scorecard.changed {
             CoreData.update {
@@ -184,7 +184,7 @@ extension MasterData {
     /// Methods for players
     
     public func insert(player: PlayerViewModel) {
-        assert(player.playerMO == nil, "Cannot insert a player which already has a managed object")
+        assert(player.isNew, "Cannot insert a player which already has a managed object")
         assert(self.player(id: player.playerId) == nil, "Player already exists and cannot be created")
         assert(self.player(id: player.playerId)?.name == nil, "Player must have a non-blank name")
         CoreData.update {
@@ -196,7 +196,7 @@ extension MasterData {
     }
     
     public func remove(player: PlayerViewModel) {
-        assert(player.playerMO != nil, "Cannot remove a player which doesn't already have a managed object")
+        assert(!player.isNew, "Cannot remove a player which doesn't already have a managed object")
         assert(self.player(id: player.playerId) != nil, "Player does not exist and cannot be deleted")
         CoreData.update {
             CoreData.context.delete(player.playerMO!)
@@ -207,7 +207,7 @@ extension MasterData {
     }
     
     public func save(player: PlayerViewModel) {
-        assert(player.playerMO != nil, "Cannot save a player which doesn't already have managed objects")
+        assert(!player.isNew, "Cannot save a player which doesn't already have managed objects")
         assert(self.player(id: player.playerId) != nil, "Player does not exist and cannot be updated")
         if player.changed {
             CoreData.update {
@@ -245,7 +245,7 @@ extension MasterData {
     /// Methods for locations
     
     public func insert(location: LocationViewModel) {
-        assert(location.locationMO == nil, "Cannot insert a location which already has a managed object")
+        assert(location.isNew, "Cannot insert a location which already has a managed object")
         assert(self.location(id: location.locationId) == nil, "Location already exists and cannot be created")
         assert(self.location(id: location.locationId)?.name == nil, "Location must have a non-blank name")
         CoreData.update {
@@ -257,7 +257,7 @@ extension MasterData {
     }
     
     public func remove(location: LocationViewModel) {
-        assert(location.locationMO != nil, "Cannot remove a location which doesn't already have a managed object")
+        assert(!location.isNew, "Cannot remove a location which doesn't already have a managed object")
         assert(self.location(id: location.locationId) != nil, "Location does not exist and cannot be deleted")
         CoreData.update {
             CoreData.context.delete(location.locationMO!)
@@ -268,7 +268,7 @@ extension MasterData {
     }
     
     public func save(location: LocationViewModel) {
-        assert(location.locationMO != nil, "Cannot save a location which doesn't already have managed objects")
+        assert(!location.isNew, "Cannot save a location which doesn't already have managed objects")
         assert(self.location(id: location.locationId) != nil, "Location does not exist and cannot be updated")
         if location.changed {
             CoreData.update {

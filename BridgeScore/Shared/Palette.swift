@@ -106,13 +106,17 @@ class Palette {
     }
 }
 
-class PaletteColor {
+class PaletteColor: Equatable {
     let background: Color
     let text: Color
     let contrastText: Color
     let strongText: Color
     let faintText: Color
     let themeText: Color
+    
+    static func == (lhs: PaletteColor, rhs: PaletteColor) -> Bool {
+        return (lhs.background == rhs.background && lhs.text == rhs.text && lhs.contrastText == rhs.contrastText && lhs.strongText == rhs.strongText && lhs.faintText == rhs.faintText && lhs.themeText == rhs.themeText)
+    }
     
     init(_ colorName: ThemeBackgroundColorName) {
         self.background = Color(MyColor(dynamicProvider: { (_) in Themes.currentTheme.background(colorName)}))
