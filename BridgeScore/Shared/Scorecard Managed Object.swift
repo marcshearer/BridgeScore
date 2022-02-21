@@ -17,10 +17,10 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
     public var id: UUID { self.scorecardId }
     @NSManaged public var scorecardId: UUID
     @NSManaged public var date: Date
-    @NSManaged public var locationId: UUID?
+    @NSManaged public var locationId: UUID!
     @NSManaged public var desc: String
     @NSManaged public var comment: String
-    @NSManaged public var partnerId: UUID?
+    @NSManaged public var partnerId: UUID!
     @NSManaged public var boards16: Int16
     @NSManaged public var boardsTable16: Int16
     @NSManaged public var type16: Int16

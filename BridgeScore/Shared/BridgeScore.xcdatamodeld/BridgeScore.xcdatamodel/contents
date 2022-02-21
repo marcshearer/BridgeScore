@@ -2,11 +2,11 @@
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="19574" systemVersion="21C52" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="Board" representedClassName="BoardMO" syncable="YES">
         <attribute name="board16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="comment" optional="YES" attributeType="String"/>
-        <attribute name="contract" optional="YES" attributeType="String"/>
-        <attribute name="declarer16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="comment" attributeType="String"/>
+        <attribute name="contract" attributeType="String"/>
+        <attribute name="declarer16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="made16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="responsible16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="responsible16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="score" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="scorecardId" attributeType="UUID" usesScalarValueType="NO"/>
     </entity>
@@ -14,49 +14,49 @@
         <attribute name="boards16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="boardsTable16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="desc" attributeType="String"/>
-        <attribute name="layoutId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="locationId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="partnerId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="scorecardDesc" optional="YES" attributeType="String"/>
-        <attribute name="sequence16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="layoutId" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="locationId" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="partnerId" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="scorecardDesc" attributeType="String"/>
+        <attribute name="sequence16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="tableTotal" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="type16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
     <entity name="Location" representedClassName="LocationMO" syncable="YES">
         <attribute name="locationId" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" attributeType="String"/>
-        <attribute name="retired" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
-        <attribute name="sequence16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="retired" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="sequence16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
     <entity name="Player" representedClassName="PlayerMO" syncable="YES">
         <attribute name="name" attributeType="String"/>
         <attribute name="playerId" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="retired" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
-        <attribute name="sequence16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="retired" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="sequence16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
     <entity name="Scorecard" representedClassName="ScorecardMO" syncable="YES">
         <attribute name="boards16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="boardsTable16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="comment" optional="YES" attributeType="String"/>
+        <attribute name="comment" attributeType="String"/>
         <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
-        <attribute name="desc" optional="YES" attributeType="String"/>
+        <attribute name="desc" attributeType="String"/>
         <attribute name="drawingData" optional="YES" attributeType="Binary"/>
         <attribute name="drawingWidthFloat" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
-        <attribute name="entry16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="entry16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="locationId" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="partnerId" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="position16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="position16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="scorecardId" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="tableTotal" attributeType="Boolean" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="totalScore" attributeType="String"/>
         <attribute name="type16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
     <entity name="Table" representedClassName="Table" syncable="YES" codeGenerationType="class">
-        <attribute name="score" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
-        <attribute name="scorecardId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="sitting16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="table16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="versus" optional="YES" attributeType="String"/>
+        <attribute name="score" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="scorecardId" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="sitting16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="table16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="versus" attributeType="String"/>
     </entity>
     <elements>
         <element name="Board" positionX="-9" positionY="144" width="128" height="149"/>

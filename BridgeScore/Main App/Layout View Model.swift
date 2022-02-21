@@ -14,8 +14,8 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
     // Properties in core data model
     @Published private(set) var layoutId: UUID
     @Published public var sequence: Int
-    @Published public var location: LocationViewModel?
-    @Published public var partner: PlayerViewModel?
+    @Published public var location: LocationViewModel!
+    @Published public var partner: PlayerViewModel!
     @Published public var desc: String
     @Published public var scorecardDesc: String = ""
     @Published public var boards: Int = 0
@@ -40,8 +40,8 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
         var result = false
         if let mo = self.layoutMO {
             if self.layoutId != mo.layoutId ||
-                self.location?.locationId != mo.locationId ||
-                self.partner?.playerId != mo.partnerId ||
+                self.location.locationId != mo.locationId ||
+                self.partner.playerId != mo.partnerId ||
                 self.desc != mo.desc ||
                 self.scorecardDesc != mo.scorecardDesc ||
                 self.sequence != mo.sequence ||
@@ -133,8 +133,8 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
     
     public func updateMO() {
         self.layoutMO!.layoutId = self.layoutId
-        self.layoutMO!.locationId = self.location?.locationId
-        self.layoutMO!.partnerId = self.partner?.playerId
+        self.layoutMO!.locationId = self.location.locationId
+        self.layoutMO!.partnerId = self.partner.playerId
         self.layoutMO!.desc = self.desc
         self.layoutMO!.scorecardDesc = self.scorecardDesc
         self.layoutMO!.boards = self.boards

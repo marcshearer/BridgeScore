@@ -28,23 +28,27 @@ class ContractPicker: UIView, ScrollPickerDelegate {
     
     init(frame: CGRect, contract: Contract = Contract(), color: PaletteColor? = nil, font: UIFont? = nil) {
         self.contract = contract
-        levelPicker = ScrollPicker(frame: frame, list: levelList.map{$0.string}, color: color, titleFont: font)
+        levelPicker = ScrollPicker(frame: frame, list: levelList.map{$0.short}, color: color, titleFont: font)
         levelPicker.tag = ContractElement.level.rawValue
-        suitPicker = ScrollPicker(frame: frame, list: suitList.map{$0.string}, color: color, titleFont: font)
+        suitPicker = ScrollPicker(frame: frame, list: suitList.map{$0.short}, color: color, titleFont: font)
         suitPicker.tag = ContractElement.suit.rawValue
-        doublePicker = ScrollPicker(frame: frame, list: doubleList.map{$0.string}, color: color, titleFont: font)
+        doublePicker = ScrollPicker(frame: frame, list: doubleList.map{$0.short}, color: color, titleFont: font)
         doublePicker.tag = ContractElement.double.rawValue
         super.init(frame: frame)
         levelPicker.delegate = self
         suitPicker.delegate = self
         doublePicker.delegate = self
-        self.addSubview(levelPicker, anchored: .leading, .top, .bottom)
-        self.addSubview(suitPicker, anchored: .top, .bottom)
-        self.addSubview(doublePicker, anchored: .trailing, .top, .bottom)
-        Constraint.setWidth(control: suitPicker, width: 50)
-        Constraint.setWidth(control: doublePicker, width: 30, priority: .defaultLow)
-        Constraint.anchor(view: self, control: levelPicker, to: suitPicker, toAttribute: .leading, attributes: .trailing)
-        Constraint.anchor(view: self, control: suitPicker, to: doublePicker, toAttribute: .leading, attributes: .trailing)
+        let container = UIView()
+        self.addSubview(container, anchored: .centerX, .top, .bottom)
+        Constraint.setWidth(control: container, width: 90)
+        container.addSubview(levelPicker, anchored: .leading, .top, .bottom)
+        container.addSubview(suitPicker, anchored: .top, .bottom)
+        container.addSubview(doublePicker, anchored: .trailing, .top, .bottom)
+        Constraint.setWidth(control: levelPicker, width: 20)
+        Constraint.setWidth(control: suitPicker, width: 40)
+        Constraint.setWidth(control: doublePicker, width: 30)
+        Constraint.anchor(view: container, control: levelPicker, to: suitPicker, toAttribute: .leading, attributes: .trailing)
+        Constraint.anchor(view: container, control: suitPicker, to: doublePicker, toAttribute: .leading, attributes: .trailing)
         set(level: contract.level, reflect: true, force: true)
     }
     

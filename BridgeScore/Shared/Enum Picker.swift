@@ -33,9 +33,9 @@ class EnumPicker<EnumType> : UIView, ScrollPickerDelegate where EnumType : EnumP
         addSubview(scrollPicker, anchored: .all)
     }
     
-    public func set(_ selected: EnumType, color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil) {
+    public func set(_ selected: EnumType, isEnabled: Bool = true, color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil) {
         if let index = list.firstIndex(where: {$0 == selected}) {
-            scrollPicker.set(index, list: entryList, color: color, titleFont: titleFont, captionFont: captionFont)
+            scrollPicker.set(index, list: entryList, isEnabled: isEnabled, color: color, titleFont: titleFont, captionFont: captionFont)
         }
     }
     

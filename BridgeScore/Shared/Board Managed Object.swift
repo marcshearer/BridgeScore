@@ -20,7 +20,8 @@ public class BoardMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var contractDouble16: Int16
     @NSManaged public var declarer16: Int16
     @NSManaged public var made16: Int16
-    @NSManaged public var score: Float
+    @NSManaged public var scoreValue: Float
+    @NSManaged public var scoreEntered: Bool
     @NSManaged public var comment: String
     @NSManaged public var responsible16: Int16
     
@@ -39,14 +40,27 @@ public class BoardMO: NSManagedObject, ManagedObject, Identifiable {
         set { self.made16 = Int16(newValue)}
     }
     
-    public var declarer: Participant {
-        get { Participant(rawValue: Int(declarer16)) ?? .scorer }
+    public var declarer: Seat {
+        get { Seat(rawValue: Int(declarer16)) ?? .unknown }
         set { self.declarer16 = Int16(newValue.rawValue) }
     }
     
     public var responsible: Participant {
         get { Participant(rawValue: Int(responsible16)) ?? .unknown }
         set { self.responsible16 = Int16(newValue.rawValue) }
+    }
+    
+    public var score: Float? {
+        get { scoreEntered ? self.scoreValue : nil}
+        set {
+            if let newValue = newValue {
+                self.scoreValue = newValue
+                self.scoreEntered = true
+            } else {
+                self.scoreValue = 0
+                self.scoreEntered = false
+            }
+        }
     }
 
     public var contractLevel: ContractLevel {

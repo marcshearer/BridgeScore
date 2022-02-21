@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B20B38F227C153280001B45E /* Contract Entry View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20B38F127C153280001B45E /* Contract Entry View.swift */; };
 		B21CC0BC279FDD3A001AECC1 /* Scorecard Detail View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */; };
 		B21CC0BE27A01293001AECC1 /* Date Picker Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21CC0BD27A01292001AECC1 /* Date Picker Input.swift */; };
 		B21CC0C027A02A2A001AECC1 /* Stepper Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21CC0BF27A02A2A001AECC1 /* Stepper Input.swift */; };
@@ -84,6 +85,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		B20B38F127C153280001B45E /* Contract Entry View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contract Entry View.swift"; sourceTree = "<group>"; };
 		B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Detail View.swift"; sourceTree = "<group>"; };
 		B21CC0BD27A01292001AECC1 /* Date Picker Input.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date Picker Input.swift"; sourceTree = "<group>"; };
 		B21CC0BF27A02A2A001AECC1 /* Stepper Input.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Stepper Input.swift"; sourceTree = "<group>"; };
@@ -367,6 +369,7 @@
 				B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */,
 				B2276D5727A5A2C90025DA80 /* Scorecard Canvas View.swift */,
 				B2C4338B27B6646700796F24 /* Scorecard Input View.swift */,
+				B20B38F127C153280001B45E /* Contract Entry View.swift */,
 				B2633A0D27AC3A460081B258 /* Layout List View.swift */,
 			);
 			name = "Main Views";
@@ -541,6 +544,7 @@
 				B26BCE6B2799AED700B73501 /* Input Title.swift in Sources */,
 				B2C4338E27B7B56200796F24 /* Custom Collection View Flow.swift in Sources */,
 				B23ADBF227B25356001B6B38 /* List Tile View.swift in Sources */,
+				B20B38F227C153280001B45E /* Contract Entry View.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -57,11 +57,11 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
         self.addSubview(collectionView, anchored: .all)
     }
     
-    public func set(_ selected: Int, list: [String], color: PaletteColor? = nil, titleFont: UIFont?, captionFont: UIFont? = nil) {
-        set(selected, list: list.map{ScrollPickerEntry(title: $0, caption: nil)}, color: color, titleFont: titleFont, captionFont: captionFont)
+    public func set(_ selected: Int, list: [String], isEnabled: Bool = true, color: PaletteColor? = nil, titleFont: UIFont?, captionFont: UIFont? = nil) {
+        set(selected, list: list.map{ScrollPickerEntry(title: $0, caption: nil)}, isEnabled: isEnabled, color: color, titleFont: titleFont, captionFont: captionFont)
     }
     
-    public func set(_ selected: Int, list: [ScrollPickerEntry]! = nil, color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil) {
+    public func set(_ selected: Int, list: [ScrollPickerEntry]! = nil, isEnabled: Bool = true, color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil) {
         if let color = color {
             self.color = color
         }
@@ -78,6 +78,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
                 collectionView.reloadData()
             }
         }
+        self.isUserInteractionEnabled = isEnabled
         self.selected = selected
 
         Utility.executeAfter(delay: 0.1) {

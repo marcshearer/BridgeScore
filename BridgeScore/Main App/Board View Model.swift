@@ -15,9 +15,9 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
     @Published private(set) var scorecard: ScorecardViewModel
     @Published public var board: Int
     @Published public var contract = Contract()
-    @Published public var declarer: Participant = .unknown
+    @Published public var declarer: Seat = .unknown
     @Published public var made: Int = 0
-    @Published public var score: Float = 0
+    @Published public var score: Float?
     @Published public var comment: String = ""
     @Published public var responsible: Participant = .unknown
     

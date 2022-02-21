@@ -22,7 +22,11 @@ class Palette {
     @BackgroundColor(.subHeader) static var subHeader
     @BackgroundColor(.gridTitle) static var gridTitle
     @BackgroundColor(.gridBoard) static var gridBoard
+    @BackgroundColor(.gridBoardDisabled) static var gridBoardDisabled
     @BackgroundColor(.gridTable) static var gridTable
+    @BackgroundColor(.contractSelected) static var contractSelected
+    @BackgroundColor(.contractUnselected) static var contractUnselected
+    @BackgroundColor(.contractDisabled) static var contractDisabled
     @BackgroundColor(.divider) static var divider
     @BackgroundColor(.separator) static var separator
     @BackgroundColor(.listButton) static var listButton

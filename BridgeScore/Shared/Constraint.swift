@@ -15,6 +15,8 @@ enum ConstraintAnchor {
     case top
     case bottom
     case all
+    case centerX
+    case centerY
     
     var constraints: [NSLayoutConstraint.Attribute] {
         switch self {
@@ -28,6 +30,10 @@ enum ConstraintAnchor {
             return [.bottom]
         case .all:
             return [.leading, .trailing, .top, .bottom]
+        case .centerX:
+            return [.centerX]
+        case .centerY:
+            return [.centerY]
         }
     }
 }

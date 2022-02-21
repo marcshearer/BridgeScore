@@ -37,8 +37,10 @@ var titleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 16.0 : 12.0
 var titleCaptionFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 16.0 : 12.0))
 var cellFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 16.0))
 var boardFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 20.0))
+var boardTitleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 20.0), weight: .bold)
 var pickerTitleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 24.0))
 var pickerCaptionFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 10.0 : 8.0))
+var windowTitleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 20.0))
 
 // Backups
 let backupDirectoryDateFormat = "yyyy-MM-dd-HH-mm-ss-SSS"
@@ -150,7 +152,13 @@ enum ContractElement: Int {
     case double = 2
 }
 
-public enum ContractLevel: Int, CaseIterable {
+protocol ContractEnumType : CaseIterable, Equatable {
+    var string: String {get}
+    var short: String {get}
+    var rawValue: Int {get}
+}
+
+public enum ContractLevel: Int, ContractEnumType {
     case blank = 0
     case passout = -1
     case one = 1
@@ -166,14 +174,26 @@ public enum ContractLevel: Int, CaseIterable {
         case .blank:
             return ""
         case .passout:
-            return "P"
+            return "Pass Out"
         default:
             return "\(self.rawValue)"
         }
     }
     
-    var hasSuit: Bool {
+    var short: String {
+        return string.left(1)
+    }
+    
+    var valid: Bool {
         return self != .blank && self != .passout
+    }
+    
+    static var validCases: [ContractLevel] {
+        return ContractLevel.allCases.filter({$0.valid})
+    }
+    
+    var hasSuit: Bool {
+        return valid
     }
     
     var hasDouble: Bool {
@@ -181,49 +201,65 @@ public enum ContractLevel: Int, CaseIterable {
     }
 }
 
-public enum ContractSuit: Int, CaseIterable {
+public enum ContractSuit: Int, ContractEnumType {
     case blank = 0
-    case club = 1
-    case diamond = 2
-    case heart = 3
-    case spade = 4
-    case noTrump = 5
+    case clubs = 1
+    case diamonds = 2
+    case hearts = 3
+    case spades = 4
+    case noTrumps = 5
     
     var string: String {
         switch self {
         case .blank:
             return ""
-        case .club:
-            return "C"
-        case .diamond:
-            return "D"
-        case .heart:
-            return "H"
-        case .spade:
-            return "S"
-        case .noTrump:
+        case .clubs:
+            return "♣️"
+        case .diamonds:
+            return "♦️"
+        case .hearts:
+            return "♥️"
+        case .spades:
+            return "♠️"
+        case .noTrumps:
             return "NT"
         }
     }
     
-    var hasDouble: Bool {
+    var short: String {
+        return string
+    }
+    
+    var valid: Bool {
         return self != .blank
+    }
+    
+    static var validCases: [ContractSuit] {
+        return ContractSuit.allCases.filter({$0.valid})
+    }
+    
+    var hasDouble: Bool {
+        return self.valid
     }
 }
 
-public enum ContractDouble: Int, CaseIterable {
+public enum ContractDouble: Int, ContractEnumType {
     case undoubled = 0
     case doubled = 1
     case redoubled = 2
-    
+
     var string: String {
+        return "\(self)".capitalized
+    }
+    
+    var short: String {
         switch self {
         case .undoubled:
             return ""
         case .doubled:
-            return "*"
+            return "✱"
         case .redoubled:
-            return "**"
+            return "✱✱"
         }
     }
 }
@@ -245,14 +281,39 @@ public class Contract: Equatable {
     }
     public var double: ContractDouble = .undoubled
     
+    public var string: String {
+        switch level {
+        case .blank:
+            return ""
+        case .passout:
+            return "Pass Out"
+        default:
+            return "\(level.short) \(suit.short) \(double.short)"
+        }
+    }
+    
     init(level: ContractLevel = .blank, suit: ContractSuit = .blank, double: ContractDouble = .undoubled) {
         self.level = level
-        self.suit = suit
-        self.double = double
+        if level.hasSuit {
+            self.suit = suit
+            if suit.hasDouble {
+                self.double = double
+            } else {
+                self.double = .undoubled
+            }
+        } else {
+            self.suit = .blank
+        }
     }
     
     static public func ==(lhs: Contract, rhs: Contract) -> Bool {
         return lhs.level == rhs.level && lhs.suit == rhs.suit && lhs.double == rhs.double
+    }
+    
+    func copy(from: Contract) {
+        self.level = from.level
+        self.suit = from.suit
+        self.double = from.double
     }
 }
 
