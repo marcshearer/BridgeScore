@@ -15,4 +15,3 @@ Enhancements
 Filter list of scorecards
 Share scorecards via iCloud?
 Stats?
-Text Inputs on scorecard canvas?

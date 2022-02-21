@@ -188,6 +188,7 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         suitCollectionView = UICollectionView(frame: frame, collectionViewLayout: UICollectionViewFlowLayout())
         doubleCollectionView = UICollectionView(frame: frame, collectionViewLayout: UICollectionViewFlowLayout())
 
+        // Background
         addSubview(backgroundView)
         backgroundView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
         let cancelSelector = #selector(ContractEntryView.cancelPressed(_:))
@@ -195,6 +196,7 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         backgroundView.addGestureRecognizer(tapGesture)
         backgroundView.isUserInteractionEnabled = true
         
+        // Content
         backgroundView.addSubview(contentView, anchored: .centerX, .centerY)
         Constraint.setWidth(control: contentView, width: 600)
         Constraint.setHeight(control: contentView, height: 550)
@@ -204,7 +206,8 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         let nullGesture = UITapGestureRecognizer(target: self, action: nil)
         contentView.addGestureRecognizer(nullGesture)
         contentView.isUserInteractionEnabled = true
-                        
+                  
+        // Title
         contentView.addSubview(title, anchored: .leading, .trailing, .top)
         Constraint.setHeight(control: title, height: 50)
         title.backgroundColor = UIColor(Palette.banner.background)
@@ -213,6 +216,7 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         title.textAlignment = .center
         title.text = "Select Contract"
         
+        // Pass Out
         contentView.addSubview(passOutLabel)
         Constraint.anchor(view: contentView, control: passOutLabel, to: title, constant: 20, toAttribute: .bottom, attributes: .top)
         Constraint.anchor(view: contentView, control: passOutLabel, attributes: .centerX)
@@ -225,14 +229,19 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         passOutLabel.textAlignment = .center
         passOutLabel.text = "Pass Out"
 
+        // Level numbers
         loadCollection(collectionView: levelCollectionView, anchor: .leading, elements: ContractLevel.validCases.count, tag: ContractCollection.level.rawValue, type: ContractLevel.blank)
 
+        // Suits
         loadCollection(collectionView: suitCollectionView, anchor: .centerX, elements: ContractSuit.validCases.count, tag: ContractCollection.suit.rawValue, type: ContractSuit.blank)
 
+        // Doubles
         loadCollection(collectionView: doubleCollectionView, anchor: .trailing, elements: ContractDouble.allCases.count, tag: ContractCollection.double.rawValue, type: ContractDouble.undoubled)
 
+        // Cancel button
         loadActionButton(button: cancelButton, offset: -((buttonWidth / 2) + buttonSpaceX), text: "Cancel", action: cancelSelector)
         
+        // Select button
         loadActionButton(button: selectButton, offset: ((buttonWidth / 2) + buttonSpaceX), text: "Select", action: #selector(ContractEntryView.selectPressed(_:)))
     }
     
