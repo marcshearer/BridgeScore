@@ -7,7 +7,6 @@
 
 import UIKit
 import SwiftUI
-import Combine
 
 fileprivate enum ContractCollection: Int {
     case level = 1
@@ -45,7 +44,8 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
     private var selectButton = UILabel()
     private var contract = Contract()
     private var completion: ((Contract)->())?
-
+    
+    
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         loadContractEntryView()
@@ -54,6 +54,7 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
     override init(frame: CGRect) {
         super.init(frame:frame)
         loadContractEntryView()
+        
     }
     
     override func layoutSubviews() {

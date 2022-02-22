@@ -7,6 +7,7 @@
 
 import UIKit
 import SwiftUI
+import Combine
 
 struct ScorecardColumn: Codable, Equatable {
     var type: ColumnType
@@ -165,6 +166,9 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     private var contractEntryView: ContractEntryView
     public var delegate: ScorecardInputUIViewDelegate?
     private var tableRowHeight: CGFloat
+    private var subscription: AnyCancellable?
+    private var lastKeyboardScrollOffset: CGFloat = 0
+    private var bottomConstraint: NSLayoutConstraint!
     
     var boardColumns = [
         ScorecardColumn(type: .board, heading: "Board", size: .fixed(70)),
@@ -191,7 +195,8 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         super.init(frame: frame)
                     
         // Add subviews
-        self.addSubview(self.mainTableView, anchored: .all)
+        self.addSubview(self.mainTableView, anchored: .leading, .trailing, .top)
+        bottomConstraint = Constraint.anchor(view: self, control: mainTableView, attributes: .bottom).first!
                                 
         // Setup main table view
         self.mainTableView.delegate = self
@@ -202,6 +207,9 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         ScorecardInputTableTableCell.register(mainTableView)
         ScorecardInputBoardTitleTableCell.register(mainTableView)
         ScorecardInputBoardTableCell.register(mainTableView)
+        subscription = Publishers.keyboardHeight.sink { (keyboardHeight) in
+            self.keyboardMoved(keyboardHeight)
+        }
     }
     
     required init?(coder: NSCoder) {
@@ -447,6 +455,28 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     }
     
     // MARK: - Utility Routines ======================================================================== -
+    
+    func keyboardMoved(_ keyboardHeight: CGFloat) {
+        let focusedTextInputBottom = (UIResponder.currentFirstResponder?.globalFrame?.maxY ?? 0)
+        let adjustOffset = max(0, focusedTextInputBottom - keyboardHeight) + safeAreaInsets.bottom
+        
+        UIView.animate(withDuration: 0.1) { [self] in
+            let current = self.mainTableView.contentOffset
+            if keyboardHeight == 0 {
+                self.bottomConstraint.constant = 0
+                self.mainTableView.setContentOffset(CGPoint(x: 0, y: self.lastKeyboardScrollOffset), animated: false)
+                self.lastKeyboardScrollOffset = 0
+            } else {
+                let newOffset = current.y + adjustOffset
+                let maxOffset = self.mainTableView.contentSize.height - mainTableView.frame.height
+                let scrollOffset = min(newOffset, maxOffset)
+                let bottomOffset = newOffset - scrollOffset
+                self.lastKeyboardScrollOffset = self.mainTableView.contentOffset.y
+                self.bottomConstraint.constant = -bottomOffset
+                self.mainTableView.setContentOffset(current.offsetBy(dy: adjustOffset), animated: false)
+            }
+        }
+    }
     
     func setupSizes(columns: inout [ScorecardColumn]) {
         var fixedWidth: CGFloat = 0
