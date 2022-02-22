@@ -27,7 +27,7 @@ fileprivate enum ContractCollection: Int {
 
 fileprivate let buttonHeight: CGFloat = 40
 fileprivate let actionButtonWidth: CGFloat = 120
-fileprivate let passoutButtonWidth: CGFloat = 115
+fileprivate let passoutButtonWidth: CGFloat = 320 / 3
 fileprivate let buttonSpaceX: CGFloat = 10
 fileprivate let buttonSpaceY: CGFloat = 20
 

@@ -63,19 +63,60 @@ public enum UIMode {
 }
 
 // Application specific types
+public enum AggregateType {
+    case average
+    case total
+    case manual
+}
+
 public enum Type: Int, CaseIterable {
     case percent = 0
-    case vp = 1
-    case imp = 2
-    
+    case vpPercent = 3
+    case vpXImp = 4
+    case xImp = 2
+    case team = 1
+
     public var string: String {
         switch self {
         case .percent:
             return "Match Points Pairs (%)"
-        case .imp:
-            return "IMP Pairs"
-        case .vp:
-            return "Victory Point Teams"
+        case .vpPercent:
+            return "Match Points Pairs as VPs"
+        case .xImp:
+            return "Cross-IMP Pairs"
+        case .vpXImp:
+            return "Cross-IMP Pairs as VPs"
+        case .team:
+            return "Teams (VPs)"
+        }
+    }
+    
+    public var boardPlaces: Int {
+        switch self {
+        case .percent, .xImp:
+            return 1
+        default:
+            return 0
+        }
+    }
+
+    public var tablePlaces: Int {
+        switch self {
+        case .percent, .xImp:
+            return 1
+        default:
+            return 0
+        }
+    }
+    
+    public var tableAggregate: AggregateType {
+        switch self {
+        case .percent:
+            return .average
+        case .xImp:
+            return .total
+        default:
+            return .manual
         }
     }
 }
@@ -106,11 +147,19 @@ public enum Seat: Int, EnumPickerType {
     case unknown = 0
     case north = 1
     case east = 2
-    case south = 4
-    case west = 5
+    case south = 3
+    case west = 4
     
     public var string: String {
         return "\(self)".capitalized
+    }
+    
+    static public var validCases: [Seat] {
+        return Seat.allCases.filter{$0 != .unknown}
+    }
+    
+    public var partner: Seat {
+        return (self == .unknown ? .unknown : Seat(rawValue: ((self.rawValue + 1) % 4) + 1)!)
     }
     
     public var short: String {

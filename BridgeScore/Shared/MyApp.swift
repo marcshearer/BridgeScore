@@ -64,7 +64,7 @@ enum UserDefault: String, CaseIterable {
         case .currentComment:
             return ""
         case .currentType:
-            return Type.imp.rawValue
+            return Type.percent.rawValue
         case .currentBoards:
             return 1
         case .currentBoardsTable:

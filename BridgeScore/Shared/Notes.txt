@@ -1,7 +1,7 @@
 Note
 ====
 
-If fails to install it's normally because info.plist isn't where it expects it to be
+If fails to install app on device from  it's normally because info.plist isn't where it expects it to be
 
 Bugs
 ====
@@ -11,10 +11,8 @@ Keyboard pops up when click on contract
 To Do
 =====
 
-Better representation of declarer - E.g. N/Self
 Crash recovery
 Scroll seems too easy on contracts - make them sideways or remove them?
-Keyboard slide up as in edit
 Sort out dark mode
 Maybe remove file sharing in Info.plist once can backup from Mac
 Should add scores rather than averaging them for some match types

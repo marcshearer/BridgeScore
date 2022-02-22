@@ -55,7 +55,7 @@ class DefaultData {
         layout4.sequence = 0
         layout4.boards = 24
         layout4.boardsTable = 12
-        layout4.type = .imp
+        layout4.type = .xImp
         layout4.tableTotal = true
         layout4.sequence = 3
         

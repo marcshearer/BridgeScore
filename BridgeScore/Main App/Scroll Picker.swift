@@ -148,13 +148,13 @@ class ScrollPickerCell: UICollectionViewCell {
         title.font = pickerTitleFont
         title.minimumScaleFactor = 0.3
         title.textAlignment = .center
-        self.addSubview(title, leading: 0, trailing: 0, top: frame.height / 10)
+        self.addSubview(title, leading: 0, trailing: 0, top: frame.height * 0.10)
         caption = UILabel(frame: frame)
         caption.font = pickerCaptionFont
         caption.textAlignment = .center
-        self.addSubview(caption, leading: 0, trailing: 0, bottom: frame.height / 10)
+        self.addSubview(caption, leading: 0, trailing: 0, bottom: frame.height * 0.10)
         captionHeightConstraint = Constraint.setHeight(control: caption, height: 0)
-        Constraint.anchor(view: self, control: caption, to: title, constant: frame.height / 10, toAttribute: .bottom, attributes: .top)
+        Constraint.anchor(view: self, control: caption, to: title, constant: frame.height * 0.075, toAttribute: .bottom, attributes: .top)
     }
 
     required init?(coder: NSCoder) {
@@ -180,7 +180,7 @@ class ScrollPickerCell: UICollectionViewCell {
         title.textColor = UIColor(color?.text ?? Palette.background.text)
         if let captionText = captionText {
             caption.text = captionText
-            captionHeightConstraint.constant = self.frame.height / 5
+            captionHeightConstraint.constant = self.frame.height / 4
             if let captionFont = captionFont {
                 caption.font = captionFont
             }

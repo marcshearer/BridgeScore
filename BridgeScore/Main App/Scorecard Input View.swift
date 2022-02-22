@@ -648,47 +648,19 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     private var textView = UITextView()
     private var textViewClear = UIImageView()
     private var participantPicker: EnumPicker<Participant>!
-    private var seatPicker: EnumPicker<Seat>!
+    private var seatPicker: ScrollPicker!
     private var madePicker: ScrollPicker!
     fileprivate var contractPicker: ContractPicker
+    private var table: TableViewModel!
     private var board: BoardViewModel!
     fileprivate var boardNumber: Int!
     private var column: ScorecardColumn!
     private var scorecardDelegate: ScorecardDelegate?
     private static let identifier = "Board CollectionCell"
-
-    private var madeList: (list: [String], min: Int, max: Int) {
-        var list: [String] = []
-        var min = 0
-        var max = 0
-        if board.contract.suit != .blank {
-            let tricks = board.contract.level.rawValue
-            min = -(6 + tricks)
-            max = 7 - tricks
-            for i in (-6-tricks)...(7-tricks) {
-                var value = ""
-                switch true {
-                case i < 0:
-                    value = "\(i)"
-                case i == 0:
-                    value = "="
-                case i > 0:
-                    value = "+\(i)"
-                default:
-                    break
-                }
-                list.append(value)
-            }
-        }
-        if list.count == 0 {
-            list.append("")
-        }
-        return (list, min, max)
-    }
     
     override init(frame: CGRect) {
         participantPicker = EnumPicker(frame: frame)
-        seatPicker = EnumPicker(frame: frame)
+        seatPicker = ScrollPicker(frame: frame)
         contractPicker = ContractPicker(frame: frame)
         madePicker = ScrollPicker(frame: frame)
         super.init(frame: frame)
@@ -795,6 +767,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     func set(from scorecardDelegate: ScorecardDelegate, table: TableViewModel, board: BoardViewModel, boardNumber: Int, column: ScorecardColumn) {
         self.scorecardDelegate = scorecardDelegate
         self.board = board
+        self.table = table
         self.boardNumber = boardNumber
         self.column = column
         
@@ -810,7 +783,8 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             seatPicker.isHidden = false
             let isEnabled = (table.sitting != .unknown)
             color = (isEnabled ? Palette.gridBoard : Palette.gridBoardDisabled)
-            seatPicker.set(board.declarer, isEnabled: isEnabled, color: color, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
+            let selected = board.declarer.rawValue
+            seatPicker.set(selected, list: declarerList, isEnabled: isEnabled, color: color, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
         case .made:
             madePicker.isHidden = false
             let (list, min, max) = madeList
@@ -839,6 +813,56 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         }
         label.backgroundColor = UIColor(color.background)
     }
+    
+    private var madeList: (list: [String], min: Int, max: Int) {
+        var list: [String] = []
+        var min = 0
+        var max = 0
+        if board.contract.suit != .blank {
+            let tricks = board.contract.level.rawValue
+            min = -(6 + tricks)
+            max = 7 - tricks
+            for i in (-6-tricks)...(7-tricks) {
+                var value = ""
+                switch true {
+                case i < 0:
+                    value = "\(i)"
+                case i == 0:
+                    value = "="
+                case i > 0:
+                    value = "+\(i)"
+                default:
+                    break
+                }
+                list.append(value)
+            }
+        }
+        if list.count == 0 {
+            list.append("")
+        }
+        return (list, min, max)
+    }
+    
+    private var declarerList: [ScrollPickerEntry] {
+        var list: [ScrollPickerEntry] = []
+        for seat in Seat.allCases {
+            var caption: String
+            switch seat {
+            case .unknown:
+                caption = seat.string
+            case table.sitting:
+                caption = "Self"
+            case table.sitting.partner:
+                caption = "Partner"
+            default:
+                caption = "Opponent"
+            }
+            list.append(ScrollPickerEntry(title: seat.short, caption: caption))
+        }
+        return list
+    }
+    
+    // MARK: - Control change handlers ===================================================================== -
         
     @objc private func textFieldChanged(_ textField: UITextField) {
         let text = textField.text ?? ""
@@ -973,7 +997,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             switch self.column.type {
             case .declarer:
                 if value as? Seat != board.declarer {
-                    undoValue =  board.declarer
+                    undoValue = board.declarer.rawValue
                 }
             case .responsible:
                 if value as? Participant != board.responsible {
@@ -986,7 +1010,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
                 switch self.column.type {
                 case .declarer:
                     undoManager?.registerUndo(withTarget: seatPicker) { (seatPicker) in
-                        self.seatPicker.set(undoValue as! Seat)
+                        self.seatPicker.set(undoValue as! Int)
                         self.enumPickerDidChange(to: undoValue)
                     }
                 case .responsible:
@@ -1201,6 +1225,8 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         }
         label.backgroundColor = UIColor(color.background)
     }
+    
+    // MARK: - Control change handlers ===================================================================== -
     
     @objc private func textFieldChanged(_ textField: UITextField) {
         let text = textField.text ?? ""
