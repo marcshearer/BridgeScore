@@ -18,6 +18,7 @@ struct ScorecardListView: View {
     @State private var linkToLayouts = false
     @State private var linkToPlayers = false
     @State private var linkToLocations = false
+    @State private var highlighted = false
     
     var body: some View {
         let menuOptions = [BannerOption(text: "Standard layouts", action: { linkToLayouts = true }),
@@ -47,7 +48,7 @@ struct ScorecardListView: View {
                 ScrollView {
                     LazyVStack {
                         ForEach(data.scorecards) { (scorecard) in
-                            ScorecardSummaryView(scorecard: scorecard)
+                            ScorecardSummaryView(scorecard: scorecard, highlighted: highlighted)
                                 .onTapGesture {
                                     // Copy this entry to current scorecard
                                     self.selected.copy(from: scorecard)
@@ -88,9 +89,11 @@ struct ScorecardListView: View {
 
 struct ScorecardSummaryView: View {
     @ObservedObject var scorecard: ScorecardViewModel
+    @State var highlighted: Bool
     
     var body: some View {
-        ListTileView {
+        let color = (highlighted ? Palette.highlightTile : Palette.tile)
+        ListTileView(color: color) {
             GeometryReader { geometry in
                 HStack {
                     VStack {
@@ -115,7 +118,7 @@ struct ScorecardSummaryView: View {
                             Spacer()
                         }
                         .minimumScaleFactor(0.7)
-                        .foregroundColor(Palette.tile.text)
+                        .foregroundColor(color.text)
                         .font(.title)
                         Spacer()
                         HStack {
@@ -135,7 +138,7 @@ struct ScorecardSummaryView: View {
                             }
                             .frame(width: geometry.size.width * 0.37)
                         }
-                        .foregroundColor(Palette.tile.contrastText)
+                        .foregroundColor(color.contrastText)
                         .font(.callout)
                         .minimumScaleFactor(0.5)
                         Spacer().frame(height: 8)
@@ -143,7 +146,11 @@ struct ScorecardSummaryView: View {
                     VStack {
                         Spacer()
                         Button {
-                            MessageBox.shared.show("This will delete the scorecard permanently.\nAre you sure you want to do this?", cancelText: "Cancel", okText: "Confirm", okAction: {
+                            highlighted = true
+                            MessageBox.shared.show("This will delete the scorecard permanently.\nAre you sure you want to do this?", cancelText: "Cancel", okText: "Confirm", cancelAction: {
+                                highlighted = false
+                            }, okAction: {
+                                highlighted = false
                                 scorecard.remove()
                             })
                         } label: {

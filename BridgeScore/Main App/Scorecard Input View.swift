@@ -290,7 +290,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                     }
                 }
             }
-            let newScore = (count == 0 ? 0 : total / Float(count))
+            let newScore = Utility.round(count == 0 ? 0 : total / Float(count), places: 1)
             if newScore != table.score {
                 table.score = newScore
                 updateTableCell(section: section, columnType: .tableScore)

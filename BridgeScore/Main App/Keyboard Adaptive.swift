@@ -34,17 +34,17 @@ struct KeyboardAdaptive: ViewModifier {
     func body(content: Content) -> some View {
         GeometryReader { (geometry) in
             content
-                .onReceive(Publishers.keyboardHeight) { (keyboardHeight) in
-                    if keyboardHeight == 0 {
-                        offset = 0
-                    } else {
-                        let keyboardTop = geometry.frame(in: .global).height - keyboardHeight
-                        let focusedTextInputBottom = (UIResponder.currentFirstResponder?.globalFrame?.maxY ?? 0) + offset
-                        bottomPadding = max(0, focusedTextInputBottom - keyboardTop - geometry.safeAreaInsets.bottom)
-                        offset = bottomPadding
-                    }
+            .onReceive(Publishers.keyboardHeight) { (keyboardHeight) in
+                if keyboardHeight == 0 {
+                    offset = 0
+                } else {
+                    let keyboardTop = geometry.frame(in: .global).height - keyboardHeight
+                    let focusedTextInputBottom = (UIResponder.currentFirstResponder?.globalFrame?.maxY ?? 0) + offset
+                    bottomPadding = max(0, focusedTextInputBottom - keyboardTop - geometry.safeAreaInsets.bottom)
+                    offset = bottomPadding
                 }
-                .offset(y: -offset)
+            }
+            .offset(y: -offset)
         }
     }
 }

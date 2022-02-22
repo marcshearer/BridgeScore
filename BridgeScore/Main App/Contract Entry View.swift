@@ -7,6 +7,7 @@
 
 import UIKit
 import SwiftUI
+import Combine
 
 fileprivate enum ContractCollection: Int {
     case level = 1
@@ -254,10 +255,10 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         loadCollection(collectionView: levelCollectionView, anchor: .trailing, yOffset: 0, buttonWidth: ContractCollection.level.buttonWidth, elements: ContractLevel.validCases.count, tag: ContractCollection.level.rawValue, type: ContractLevel.blank)
 
         // Suits
-        loadCollection(collectionView: suitCollectionView, anchor: .leading, yOffset: (buttonHeight + buttonSpaceY), buttonWidth: ContractCollection.suit.buttonWidth, elements: ContractSuit.validCases.count, tag: ContractCollection.suit.rawValue, type: ContractSuit.blank)
+        loadCollection(collectionView: suitCollectionView, anchor: .trailing, yOffset: (buttonHeight + buttonSpaceY), buttonWidth: ContractCollection.suit.buttonWidth, elements: ContractSuit.validCases.count, tag: ContractCollection.suit.rawValue, type: ContractSuit.blank)
 
         // Doubles
-        loadCollection(collectionView: doubleCollectionView, anchor: .leading, yOffset: 2 * (buttonHeight + buttonSpaceY), buttonWidth: ContractCollection.double.buttonWidth, elements: ContractDouble.allCases.count, tag: ContractCollection.double.rawValue, type: ContractDouble.undoubled)
+        loadCollection(collectionView: doubleCollectionView, anchor: .trailing, yOffset: 2 * (buttonHeight + buttonSpaceY), buttonWidth: ContractCollection.double.buttonWidth, elements: ContractDouble.allCases.count, tag: ContractCollection.double.rawValue, type: ContractDouble.undoubled)
 
         // Cancel button
         loadActionButton(button: cancelButton, xOffset: -((actionButtonWidth / 2) + buttonSpaceX), text: "Cancel", action: cancelSelector)

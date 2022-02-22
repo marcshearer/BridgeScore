@@ -3,14 +3,24 @@ Note
 
 If fails to install it's normally because info.plist isn't where it expects it to be
 
+Bugs
+====
+New layout doesn't have partner (or location?) unless you change it
+Keyboard pops up when click on contract
+
 To Do
 =====
 
+Better representation of declarer - E.g. N/Self
+Crash recovery
+Scroll seems too easy on contracts - make them sideways or remove them?
+Keyboard slide up as in edit
 Sort out dark mode
-New layout doesn't have partner (or location?) unless you change it
 Maybe remove file sharing in Info.plist once can backup from Mac
 Should add scores rather than averaging them for some match types
 Need more match types - e.g. for Swiss Pairs in VPs
+Total for the whole match
+Lock entered scorecards
 
 Enhancements
 ============
