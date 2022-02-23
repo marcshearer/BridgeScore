@@ -298,10 +298,31 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                     }
                 }
             }
-            let newScore = Utility.round(count == 0 ? 0 : total / Float(count), places: 1)
-            if newScore != table.score {
-                table.score = newScore
-                updateTableCell(section: section, columnType: .tableScore)
+            var newScore: Float?
+            let type = scorecard.type
+            let boards = scorecard.boardsTable
+            let places = type.tablePlaces
+            switch type.tableAggregate {
+            case .average:
+                newScore = Utility.round(count == 0 ? 0 : total / Float(count), places: places)
+            case .total:
+                newScore = Utility.round(total, places: type.tablePlaces)
+            case .continuousVp:
+                newScore = BridgeImps(Int(Utility.round(total))).vp(boards: boards, places: places)
+            case .discreteVp:
+                newScore = Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: boards))
+            case .percentVp:
+                if let vps = BridgeMatchPoints(total).vp(boards: boards) {
+                    newScore = Float(vps)
+                }
+            default:
+                break
+            }
+            if let newScore = newScore {
+                if newScore != table.score {
+                    table.score = newScore
+                    updateTableCell(section: section, columnType: .tableScore)
+                }
             }
         }
     }
@@ -784,6 +805,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             let isEnabled = (table.sitting != .unknown)
             color = (isEnabled ? Palette.gridBoard : Palette.gridBoardDisabled)
             let selected = board.declarer.rawValue
+            print("setting \(boardNumber) \(selected)")
             seatPicker.set(selected, list: declarerList, isEnabled: isEnabled, color: color, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
         case .made:
             madePicker.isHidden = false
@@ -844,6 +866,20 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     }
     
     private var declarerList: [ScrollPickerEntry] {
+        return Seat.allCases.map{ScrollPickerEntry(title: $0.short, caption: { (seat) in
+            switch seat {
+                case .unknown:
+                    return seat.string
+                case table.sitting:
+                    return "Self"
+                case table.sitting.partner:
+                    return "Partner"
+                default:
+                    return "Opponent"
+                }
+        }($0))}
+    }
+        /*
         var list: [ScrollPickerEntry] = []
         for seat in Seat.allCases {
             var caption: String
@@ -860,7 +896,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             list.append(ScrollPickerEntry(title: seat.short, caption: caption))
         }
         return list
-    }
+    }*/
     
     // MARK: - Control change handlers ===================================================================== -
         
@@ -1056,25 +1092,27 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     
     internal func scrollPickerDidChange(to value: Int) {
         if let board = board {
+            var picker: ScrollPicker!
             var undoValue: Int?
             switch column.type {
+            case .declarer:
+                undoValue = Seat.allCases.firstIndex(where: {$0 == board.declarer})
+                picker = seatPicker
             case .made:
                 undoValue = board.made + (6 + board.contract.level.rawValue)
+                picker = madePicker
             default:
                 break
             }
             if let undoValue = undoValue {
                 if undoValue != value {
-                    switch column.type {
-                    case .made:
-                        undoManager?.registerUndo(withTarget: madePicker) { (madePicker) in
-                            madePicker.set(undoValue)
-                            self.scrollPickerDidChange(to: undoValue)
-                        }
-                    default:
-                        break
+                    undoManager?.registerUndo(withTarget: picker) { (picker) in
+                        picker.set(undoValue)
+                        self.scrollPickerDidChange(to: undoValue)
                     }
                     switch column.type {
+                    case .declarer:
+                        board.declarer = Seat.allCases[value]
                     case .made:
                         board.made =  value - (6 + board.contract.level.rawValue)
                     default:

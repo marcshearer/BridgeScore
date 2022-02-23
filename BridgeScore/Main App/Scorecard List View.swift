@@ -61,7 +61,6 @@ struct ScorecardListView: View {
                 Spacer()
             }
             .onAppear {
-                BridgeImps.test()
                 if UserDefault.currentUnsaved.bool {
                     // Unsaved version - restore it and link to it
                     let scorecard = ScorecardViewModel()

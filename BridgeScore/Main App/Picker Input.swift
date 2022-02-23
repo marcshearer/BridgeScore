@@ -16,7 +16,7 @@ struct PickerInput : View {
     var leadingSpace: CGFloat = 32
     var width: CGFloat?
     var height: CGFloat = 40
-    var pickerWidth: CGFloat = 200
+    var pickerWidth: CGFloat = 300
     var onChange: ((Int)->())?
         
     var body: some View {

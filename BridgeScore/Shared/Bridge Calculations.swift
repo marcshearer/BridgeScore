@@ -19,7 +19,7 @@ class BridgeImps {
         self.imps = imps
     }
     
-    init(vp: Float, boards: Int, maxVp: Int = 20) {
+    private init(vp: Float, boards: Int, maxVp: Int = 20) {
         self.imps = impFromVp(vp: vp, boards: boards, maxVp: maxVp)
     }
     
@@ -30,7 +30,7 @@ class BridgeImps {
         return Int(imps)
     }
     
-    public func pureVp(boards: Int, maxVp: Int = 20, places: Int) -> Float {
+    private func pureVp(boards: Int, maxVp: Int = 20, places: Int) -> Float {
         
         let blitz = 15 * sqrt(Float(boards))
         let vp = min(Float(maxVp), (Float(maxVp) / 2) * (1 + ((1 - powf(r, Float(imps) / blitz))/(1 - r))))
@@ -41,12 +41,14 @@ class BridgeImps {
      
         // Calculate vps for all imps up to value given and 1 more
         var vp: [Float] = []
-        for value in 0...imps+1 {
+        let positive = abs(imps)
+        
+        for value in 0...positive+1 {
             vp.append(BridgeImps(value).pureVp(boards: boards, maxVp: maxVp, places: places))
         }
         
-            // Now check for concavity
-        if imps >= 2 {
+        // Now check for concavity
+        if positive >= 2 {
             var index: Int?
             repeat {
                 let adjust = 1 / powf(Float(10), Float(places))
@@ -59,12 +61,14 @@ class BridgeImps {
             } while index != nil
         }
         
-        return vp[imps]
+        return (imps < 0 ? Float(maxVp) - vp[positive] : vp[positive])
     }
     
     public func discreteVp(boards: Int, maxVp: Int = 20) -> Int {
-        var bounds: [Int] = []
         let midVp = maxVp / 2
+        let positive = abs(imps)
+        
+        var bounds: [Int] = []
         for index in midVp...(maxVp - 1) {
             bounds.append(BridgeImps(vp: Float(index) + 0.5, boards: boards, maxVp: maxVp).imps)
         }
@@ -79,15 +83,11 @@ class BridgeImps {
                 index = secondDiff.firstIndex(where: {$0 <= -tolerance})
             }
             if let index = index {
-                print("DIFF \(index) \(imps!)")
                 bounds[index - 1] -= 1
             }
         } while index != nil
         bounds.remove(at: 0)
-        for index in 0...midVp {
-            print("\(midVp + index) - \(midVp - index)  \(index == 0 ? 0 : bounds[index - 1] + 1) \(index == midVp ? "+" :  "- \(bounds[index])")")
-        }
-        return midVp + (bounds.firstIndex(where: {imps <= $0}) ?? midVp)
+        return midVp + (bounds.firstIndex(where: {positive <= $0}) ?? midVp) * (imps < 0 ? -1 : 1)
     }
         
     public func round(_ value: Float, places: Int = 0) -> Float {
@@ -104,4 +104,33 @@ class BridgeImps {
         }
         return result
     }
+}
+
+class BridgeMatchPoints {
+    private(set) var percent: Float
+       
+    init(_ percent: Float) {
+        self.percent = percent
+    }
+    
+    public func vp(boards: Int) -> Int? {
+        var vp: Int?
+        let positive = (percent > 50 ? percent : 100 - percent)
+        if let element = mpsToVps.first(where: {$0.from <= boards && $0.to >= boards}) {
+            let increment = element.cutoffs.firstIndex(where: {$0 > positive}) ?? 10
+            vp = 10 + increment * (percent < 50 ? 20 - increment : increment)
+        }
+        return vp
+    }
+    
+    let mpsToVps: [(from: Int, to: Int, cutoffs: [Float])] =
+        [(2,  4,  [ 50.92, 52.80, 54.71, 56.70, 58.80, 61.08, 63.63, 66.61, 70.36, 75.95 ]),
+         (5,  6,  [ 50.78, 52.39, 54.02, 55.72, 57.51, 59.45, 61.62, 64.17, 67.37, 72.13 ]),
+         (7,  9,  [ 50.65, 51.98, 53.33, 54.74, 56.23, 57.83, 59.64, 61.75, 64.40, 68.35 ]),
+         (10, 13, [ 50.54, 51.65, 52.78, 53.95, 55.19, 56.53, 58.04, 59.80, 62.01, 65.30 ]),
+         (14, 19, [ 50.45, 51.38, 52.32, 53.30, 54.34, 55.45, 56.71, 58.18, 60.03, 62.78 ]),
+         (20, 27, [ 50.38, 51.16, 51.94, 52.77, 53.63, 54.57, 55.62, 56.85, 58.40, 60.71 ]),
+         (28, 39, [ 50.32, 50.97, 51.63, 52.32, 53.04, 53.83, 54.71, 55.74, 57.04, 58.97 ]),
+         (40, 55, [ 50.27, 50.81, 51.37, 51.95, 52.56, 53.21, 53.95, 54.82, 55.91, 57.53 ])]
+     
 }

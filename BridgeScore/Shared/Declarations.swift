@@ -66,6 +66,9 @@ public enum UIMode {
 public enum AggregateType {
     case average
     case total
+    case continuousVp
+    case discreteVp
+    case percentVp
     case manual
 }
 
@@ -74,27 +77,30 @@ public enum Type: Int, CaseIterable {
     case vpPercent = 3
     case vpXImp = 4
     case xImp = 2
-    case team = 1
+    case vpMatchTeam = 1
+    case vpTableTeam = 5
 
     public var string: String {
         switch self {
         case .percent:
-            return "Match Points Pairs (%)"
+            return "Pairs Match Points"
         case .vpPercent:
-            return "Match Points Pairs as VPs"
+            return "Pairs Match Points as VPs"
         case .xImp:
-            return "Cross-IMP Pairs"
+            return "Pairs Cross-IMPs"
         case .vpXImp:
-            return "Cross-IMP Pairs as VPs"
-        case .team:
-            return "Teams (VPs)"
+            return "Pairs Cross-IMPs as VPs"
+        case .vpMatchTeam:
+            return "Teams Match VPs"
+        case .vpTableTeam:
+            return "Teams Table VPs"
         }
     }
     
     public var boardPlaces: Int {
         switch self {
-        case .percent, .xImp:
-            return 1
+        case .percent, .xImp, .vpPercent, .vpXImp:
+            return 2
         default:
             return 0
         }
@@ -109,14 +115,36 @@ public enum Type: Int, CaseIterable {
         }
     }
     
+    public var matchPlaces: Int {
+        switch self {
+        case .percent, .xImp:
+            return 2
+        default:
+            return 0
+        }
+    }
+    
     public var tableAggregate: AggregateType {
         switch self {
         case .percent:
             return .average
-        case .xImp:
+        case .xImp, .vpMatchTeam:
             return .total
-        default:
-            return .manual
+        case .vpXImp, .vpTableTeam:
+            return .continuousVp
+        case .vpPercent:
+            return .percentVp
+        }
+    }
+    
+    public var matchAggregate: AggregateType {
+        switch self {
+        case .percent:
+            return .average
+        case .xImp, .vpXImp, .vpTableTeam, .vpPercent:
+            return .total
+        case  .vpMatchTeam:
+            return .continuousVp
         }
     }
 }
@@ -128,10 +156,14 @@ public enum Participant: Int, EnumPickerType {
     case opponent = 3
     
     public var string: String {
-        if self == .scorer {
+        switch self {
+        case .unknown:
+            return ""
+        case .scorer:
             return "Self"
+        default:
+            return "\(self)".capitalized
         }
-        return "\(self)".capitalized
     }
     
     public var short: String {
