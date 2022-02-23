@@ -6,19 +6,17 @@ If fails to install app on device from  it's normally because info.plist isn't w
 Bugs
 ====
 New layout doesn't have partner (or location?) unless you change it
-Keyboard pops up when click on contract
+Screen jumps if tap elsewhere immediately after writing in text edit
 
 To Do
 =====
 
-Crash recovery
-Scroll seems too easy on contracts - make them sideways or remove them?
+Remove old canvas entry
 Sort out dark mode
 Maybe remove file sharing in Info.plist once can backup from Mac
 Should add scores rather than averaging them for some match types
 Need more match types - e.g. for Swiss Pairs in VPs
 Total for the whole match
-Lock entered scorecards
 
 Enhancements
 ============

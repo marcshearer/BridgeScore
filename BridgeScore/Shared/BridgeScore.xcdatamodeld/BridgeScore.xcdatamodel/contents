@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="19574" systemVersion="21C52" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="19574" systemVersion="21D62" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="Board" representedClassName="BoardMO" syncable="YES">
         <attribute name="board16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="comment" attributeType="String"/>
@@ -55,8 +55,9 @@
         <attribute name="type16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
     <entity name="Table" representedClassName="TableMO" syncable="YES">
-        <attribute name="score" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="scorecardId" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="scoreEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="scoreValue" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="sitting16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="table16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="versus" attributeType="String"/>
@@ -67,6 +68,6 @@
         <element name="Location" positionX="27" positionY="189" width="128" height="89"/>
         <element name="Player" positionX="9" positionY="171" width="128" height="89"/>
         <element name="Scorecard" positionX="-18" positionY="81" width="128" height="254"/>
-        <element name="Table" positionX="-9" positionY="153" width="128" height="104"/>
+        <element name="Table" positionX="-9" positionY="153" width="128" height="119"/>
     </elements>
 </model>

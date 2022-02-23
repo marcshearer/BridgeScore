@@ -15,7 +15,8 @@ public class TableMO: NSManagedObject, ManagedObject, Identifiable {
     public var id: (UUID, Int) { (self.scorecardId, self.table) }
     @NSManaged public var scorecardId: UUID
     @NSManaged public var table16: Int16
-    @NSManaged public var score: Float
+    @NSManaged public var scoreValue: Float
+    @NSManaged public var scoreEntered: Bool
     @NSManaged public var versus: String
     @NSManaged public var sitting16: Int16
     
@@ -31,5 +32,18 @@ public class TableMO: NSManagedObject, ManagedObject, Identifiable {
     public var sitting: Seat {
         get { Seat(rawValue: Int(sitting16)) ?? .unknown }
         set { self.sitting16 = Int16(newValue.rawValue) }
+    }
+    
+    public var score: Float? {
+        get { scoreEntered ? self.scoreValue : nil}
+        set {
+            if let newValue = newValue {
+                self.scoreValue = newValue
+                self.scoreEntered = true
+            } else {
+                self.scoreValue = 0
+                self.scoreEntered = false
+            }
+        }
     }
 }

@@ -15,7 +15,7 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
     @Published private(set) var scorecard: ScorecardViewModel
     @Published public var table: Int
     @Published public var sitting: Seat = .unknown
-    @Published public var score: Float = 0
+    @Published public var score: Float?
     @Published public var versus: String = ""
     
     // Linked managed objects - should only be referenced in this and the Data classes

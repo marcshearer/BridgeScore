@@ -7,6 +7,11 @@
 
 import Foundation
 
+enum ScorecardEntity {
+    case table
+    case board
+}
+
 class Scorecard {
     
     public static let current = Scorecard()
@@ -14,6 +19,10 @@ class Scorecard {
     @Published private(set) var scorecard: ScorecardViewModel?
     @Published private(set) var boards: [Int:BoardViewModel] = [:]   // Board number
     @Published private(set) var tables: [Int:TableViewModel] = [:]   // Table number
+    
+    public var isSensitive: Bool {
+        return boards.compactMap{$0.value}.firstIndex(where: {$0.comment != "" || $0.responsible != .unknown }) != nil
+    }
 
     public func load(scorecard: ScorecardViewModel) {
         let scorecardFilter = NSPredicate(format: "scorecardId = %@", scorecard.scorecardId as NSUUID)
@@ -34,15 +43,44 @@ class Scorecard {
             tables[tableMO.table] = TableViewModel(scorecard: scorecard, tableMO: tableMO)
         }
         
-        addNew()
-        
         self.scorecard = scorecard
+        
+        addNew()
     }
     
     public func clear() {
         boards = [:]
         tables = [:]
         scorecard = nil
+    }
+    
+    
+    private var lastEntity: ScorecardEntity?
+    private var lastItemNumber: Int?
+    
+    public func interimSave(entity: ScorecardEntity? = nil, itemNumber: Int? = nil) {
+        if entity == nil || entity != lastEntity || itemNumber != lastItemNumber {
+            if let lastItemNumber = lastItemNumber {
+                switch lastEntity {
+                case .table:
+                    if let table = tables[lastItemNumber] {
+                        if table.isNew || table.changed {
+                            save(table: table)
+                        }
+                    }
+                case .board:
+                    if let board = boards[lastItemNumber] {
+                        if board.isNew || board.changed {
+                            save(board: board)
+                        }
+                    }
+                default:
+                    break
+                }
+            }
+            lastEntity = entity
+            lastItemNumber = itemNumber
+        }
     }
     
     public func saveAll(scorecard: ScorecardViewModel) {
@@ -53,7 +91,7 @@ class Scorecard {
             if boardNumber < 1 || boardNumber > scorecard.boards {
                 // Remove any boards no longer in bounds
                 remove(board: board)
-            } else {
+            } else if board.changed {
                 // Save any existing boards
                 save(board: board)
             }
@@ -63,7 +101,7 @@ class Scorecard {
             if tableNumber < 1 || tableNumber > scorecard.tables {
                 // Remove any tables no longer in bounds
                 remove(table: table)
-            } else {
+            } else if table.changed {
                 // Save any existing tables
                 save(table: table)
             }

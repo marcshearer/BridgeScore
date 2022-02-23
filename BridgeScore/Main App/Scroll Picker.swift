@@ -44,7 +44,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
         self.titleFont = titleFont ?? pickerTitleFont
         self.captionFont = captionFont ?? pickerCaptionFont
         super.init(frame: frame)
-        let layout = CustomCollectionViewLayout(direction: .vertical)
+        let layout = CustomCollectionViewLayout(direction: .horizontal)
         layout.delegate = self
         collectionView = UICollectionView(frame: self.frame, collectionViewLayout: layout)
         collectionView.dataSource = self
@@ -103,7 +103,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
         }
 
         Utility.executeAfter(delay: 0.1) {
-            self.collectionView.scrollToItem(at: IndexPath(item: selected, section: 0), at: .centeredVertically, animated: false)
+            self.collectionView.scrollToItem(at: IndexPath(item: selected, section: 0), at: .centeredHorizontally, animated: false)
         }
     }
     
@@ -128,7 +128,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
     
     internal func changed(_ collectionView: UICollectionView?, itemAtCenter: Int, forceScroll: Bool, animation: ViewAnimation) {
         Utility.mainThread {
-            self.selected = itemAtCenter
+            self.selected = max(0, min(self.list.count - 1, itemAtCenter))
             self.delegate?.scrollPickerDidChange?(to: self.selected!)
             self.delegate?.scrollPickerDidChange?(self, to: self.selected!)
             collectionView?.reloadData()

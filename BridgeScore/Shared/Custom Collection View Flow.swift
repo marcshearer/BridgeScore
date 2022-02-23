@@ -95,8 +95,9 @@ class CustomCollectionViewLayout: UICollectionViewFlowLayout {
         let minPos: CGFloat = (direction == .horizontal ? rect.minX : rect.minY)
         let maxPos: CGFloat = (direction == .horizontal ? rect.maxX : rect.maxY)
         
-        let minItem = max(0, Utility.round(Double(minPos / self.cellSize)))
-        let maxItem = min(Utility.round(Double(maxPos / self.cellSize)), max(0,items - 1))
+        let cellSize = max(1, self.cellSize)
+        let minItem = max(0, Utility.round(Double(minPos / cellSize)))
+        let maxItem = min(Utility.round(Double(maxPos / cellSize)), max(0, items - 1))
         if minItem < items {
             
             for item in minItem...maxItem {
@@ -160,8 +161,9 @@ class CustomCollectionViewLayout: UICollectionViewFlowLayout {
         let size = (direction == .horizontal ? collectionViewWidth : collectionViewHeight)
         let proposedOffset = (direction == .horizontal ? proposedContentOffset.x : proposedContentOffset.y)
         
+        let items = collectionView?.numberOfItems(inSection: 0) ?? 0
         let proposedCenter = proposedOffset + (size / 2.0)
-        let itemAtCenter = Int(proposedCenter / self.cellSize)
+        let itemAtCenter = max(0, min(items - 1, Int(proposedCenter / self.cellSize)))
         if let collectionView = collectionView {
             self.delegate?.changed(collectionView, itemAtCenter: itemAtCenter, forceScroll: false)
         }

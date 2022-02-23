@@ -21,12 +21,8 @@ struct ScorecardDetailView: View {
             VStack(spacing: 0) {
                 
                 let bannerOptions = [
-                    BannerOption(image: AnyView(Image(systemName: "rectangle.split.3x3")), likeBack: true, action: {linkAction({
-                        Scorecard.current.addNew()
-                        linkToInput = true })}),
-                    BannerOption(image: AnyView(Image(systemName: "square.and.pencil").rotationEffect(Angle.init(degrees: 90))), likeBack: true, action: {linkAction({
-                        linkToCanvas = true
-                    })})]
+                    BannerOption(image: AnyView(Image(systemName: "rectangle.split.3x3")), likeBack: true, action: {linkAction(toCanvas: false) }),
+                    BannerOption(image: AnyView(Image(systemName: "square.and.pencil").rotationEffect(Angle.init(degrees: 90))), likeBack: true, action: {linkAction(toCanvas: true)})]
                 Banner(title: $scorecard.editTitle, back: true, backAction: backAction, optionMode: .buttons, options: bannerOptions)
                 
                 ScrollView(showsIndicators: false) {
@@ -50,8 +46,16 @@ struct ScorecardDetailView: View {
         }
     }
     
-    func linkAction(_ link: @escaping ()->()) {
-        if scorecard == authenticatedScorecard || scorecard.noDrawing {
+    func linkAction(toCanvas: Bool) {
+        func link() {
+            if toCanvas {
+                linkToCanvas = true
+            } else {
+                linkToInput = true
+            }
+        }
+        
+        if scorecard == authenticatedScorecard || (toCanvas ? scorecard.noDrawing : !Scorecard.current.isSensitive) {
             link()
         } else {
             LocalAuthentication.authenticate(reason: "You must authenticate to access the scorecard detail") {
