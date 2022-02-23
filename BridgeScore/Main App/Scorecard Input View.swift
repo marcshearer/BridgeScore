@@ -144,8 +144,6 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
                 self.canRedo = isAvailable
             }
         }
-        
-
     }
 }
 
@@ -154,6 +152,7 @@ protocol ScorecardDelegate {
     func scorecardContractEntry(board: BoardViewModel, boardNumber: Int)
     func scorecardGetDeclarers(tableNumber: Int) -> [Seat]
     func scorecardUpdateDeclarers(tableNumber: Int, to: [Seat]?)
+    func scorecardEndEditing(_ force: Bool)
 }
 
 fileprivate let titleRowHeight: CGFloat = 40
@@ -168,6 +167,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     private var tableRowHeight: CGFloat
     private var subscription: AnyCancellable?
     private var lastKeyboardScrollOffset: CGFloat = 0
+    private var isKeyboardOffset = false
     private var bottomConstraint: NSLayoutConstraint!
     
     var boardColumns = [
@@ -340,7 +340,6 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     func scorecardContractEntry(board: BoardViewModel, boardNumber: Int) {
         let section = (boardNumber - 1) / self.scorecard.boardsTable
         let row = (boardNumber - 1) % self.scorecard.boardsTable
-        
         contractEntryView.show(from: self, contract: board.contract) { (contract) in
 
             if let tableCell = self.mainTableView.cellForRow(at: IndexPath(row: row, section: section)) as? ScorecardInputBoardTableCell {
@@ -374,6 +373,10 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 board.declarer = declarers?[index - 1] ?? .unknown
             }
         }
+    }
+    
+    func scorecardEndEditing(_ force: Bool) {
+        self.endEditing(force)
     }
     
    // MARK: - TableView Delegates ===================================================================== -
@@ -478,18 +481,18 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     // MARK: - Utility Routines ======================================================================== -
     
     func keyboardMoved(_ keyboardHeight: CGFloat) {
-        if keyboardHeight != 0 || lastKeyboardScrollOffset != 0 || bottomConstraint.constant != 0 {
-            print("scrolling \(keyboardHeight) \(lastKeyboardScrollOffset) \(bottomConstraint.constant)")
+        print("Keyboard \(keyboardHeight) \(lastKeyboardScrollOffset)")
+        if keyboardHeight != 0 || isKeyboardOffset {
             let focusedTextInputBottom = (UIResponder.currentFirstResponder?.globalFrame?.maxY ?? 0)
             let adjustOffset = max(0, focusedTextInputBottom - keyboardHeight) + safeAreaInsets.bottom
-            
-            UIView.animate(withDuration: 0.1) { [self] in
+            // UIView.animate(withDuration: 0.1) { [self] in
                 let current = self.mainTableView.contentOffset
-                if keyboardHeight == 0 {
+                if isKeyboardOffset && keyboardHeight == 0 {
                     self.bottomConstraint.constant = 0
                     self.mainTableView.setContentOffset(CGPoint(x: 0, y: self.lastKeyboardScrollOffset), animated: false)
                     self.lastKeyboardScrollOffset = 0
-                } else {
+                    self.isKeyboardOffset = false
+                } else if adjustOffset != 0 {
                     let newOffset = current.y + adjustOffset
                     let maxOffset = self.mainTableView.contentSize.height - mainTableView.frame.height
                     let scrollOffset = min(newOffset, maxOffset)
@@ -497,8 +500,9 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                     self.lastKeyboardScrollOffset = self.mainTableView.contentOffset.y
                     self.bottomConstraint.constant = -bottomOffset
                     self.mainTableView.setContentOffset(current.offsetBy(dy: adjustOffset), animated: false)
+                    self.isKeyboardOffset = true
                 }
-            }
+            // }
         }
     }
     
@@ -670,7 +674,8 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     private var label = UILabel()
     private var textField = UITextField()
     private var textView = UITextView()
-    private var textViewClear = UIImageView()
+    private var textClear = UIImageView()
+    private var textClearWidth: NSLayoutConstraint!
     private var participantPicker: EnumPicker<Participant>!
     private var seatPicker: ScrollPicker!
     private var madePicker: ScrollPicker!
@@ -688,16 +693,21 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         contractPicker = ContractPicker(frame: frame)
         madePicker = ScrollPicker(frame: frame)
         super.init(frame: frame)
-                
+        
+        self.layer.borderColor = UIColor(Palette.gridLine).cgColor
+        self.layer.borderWidth = 2.0
+        self.backgroundColor = UIColor(Palette.gridTable.background)
+        
+        let endEditingGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputBoardCollectionCell.endEditingTapped))
+        self.addGestureRecognizer(endEditingGesture)
+        
         addSubview(label, anchored: .all)
-        label.layer.borderColor = UIColor(Palette.gridLine).cgColor
-        label.layer.borderWidth = 2.0
         label.textAlignment = .center
         label.minimumScaleFactor = 0.3
-        label.backgroundColor = UIColor(Palette.gridBoard.background)
+        label.backgroundColor = UIColor.clear
         label.textColor = UIColor(Palette.gridBoard.text)
          
-        addSubview(textField, constant: 8, anchored: .all)
+        addSubview(textField, constant: 8, anchored: .leading, .top, .bottom)
         textField.textAlignment = .center
         textField.autocapitalizationType = .none
         textField.autocorrectionType = .no
@@ -719,22 +729,23 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         textView.backgroundColor = UIColor.clear
         textView.textColor = UIColor(Palette.gridBoard.text)
         
-        addSubview(textViewClear, constant: 8, anchored: .trailing, .top, .bottom)
-        Constraint.setWidth(control: textViewClear, width: 32)
-        Constraint.anchor(view: self, control: textView, to: textViewClear, constant: 8, toAttribute: .leading, attributes: .trailing)
-        textViewClear.image = UIImage(systemName: "x.circle.fill")?.asTemplate
-        textViewClear.tintColor = UIColor(Palette.clearText)
-        textViewClear.contentMode = .scaleAspectFit
+        addSubview(textClear, constant: 8, anchored: .trailing, .top, .bottom)
+        textClearWidth = Constraint.setWidth(control: textClear, width: 0)
+        Constraint.anchor(view: self, control: textField, to: textClear, constant: 8, toAttribute: .leading, attributes: .trailing)
+        Constraint.anchor(view: self, control: textView, to: textClear, constant: 8, toAttribute: .leading, attributes: .trailing)
+        textClear.image = UIImage(systemName: "x.circle.fill")?.asTemplate
+        textClear.tintColor = UIColor(Palette.clearText)
+        textClear.contentMode = .scaleAspectFit
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputBoardCollectionCell.textViewClearPressed))
-        textViewClear.addGestureRecognizer(tapGesture)
-        textViewClear.isUserInteractionEnabled = true
+        textClear.addGestureRecognizer(tapGesture)
+        textClear.isUserInteractionEnabled = true
         
         addSubview(participantPicker, leading: 8, trailing: 8, top: 28, bottom: 12)
         participantPicker.delegate = self
         
         addSubview(seatPicker, leading: 8, trailing: 8, top: 28, bottom: 12)
         seatPicker.delegate = self
-        
+
         addSubview(contractPicker, leading: 8, trailing: 8, top: 28, bottom: 12)
         contractPicker.delegate = self
         let contractTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputBoardCollectionCell.contractTapped))
@@ -770,7 +781,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         madePicker.isHidden = true
         textField.isHidden = true
         textView.isHidden = true
-        textViewClear.isHidden = true
+        textClear.isHidden = true
         textField.text = ""
         textView.text = ""
         label.backgroundColor = UIColor(Palette.gridBoard.background)
@@ -828,7 +839,8 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             textField.isHidden = false
             textField.text = board.comment
             textField.textAlignment = .left
-            textField.clearButtonMode = .always
+            textClear.isHidden = board.comment == ""
+            textClearWidth.constant = 34
         case .responsible:
             participantPicker.isHidden = false
             participantPicker.set(board.responsible, color: Palette.gridBoard, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
@@ -881,24 +893,6 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
                 }
         }($0))}
     }
-        /*
-        var list: [ScrollPickerEntry] = []
-        for seat in Seat.allCases {
-            var caption: String
-            switch seat {
-            case .unknown:
-                caption = seat.string
-            case table.sitting:
-                caption = "Self"
-            case table.sitting.partner:
-                caption = "Partner"
-            default:
-                caption = "Opponent"
-            }
-            list.append(ScrollPickerEntry(title: seat.short, caption: caption))
-        }
-        return list
-    }*/
     
     // MARK: - Control change handlers ===================================================================== -
         
@@ -925,6 +919,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
                         board.score = numericValue(text)
                     case .comment:
                         board.comment = text
+                        textClear.isHidden = (text == "")
                     default:
                         break
                     }
@@ -993,7 +988,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
                     switch column.type {
                     case .comment:
                         board.comment = text
-                        textViewClear.isHidden = (text == "")
+                        textClear.isHidden = (text == "")
                     default:
                         break
                     }
@@ -1024,7 +1019,10 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             }
             if text != "" {
                 textView.text = ""
-                textViewDidChange(textView)
+                textView.resignFirstResponder()
+                textField.text = ""
+                textField.resignFirstResponder()
+                textFieldChanged(textField)
             }
         }
     }
@@ -1089,6 +1087,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     }
     
     @objc internal func contractTapped(_ sender: UIView) {
+        scorecardDelegate?.scorecardEndEditing(true)
         scorecardDelegate?.scorecardContractEntry(board: board, boardNumber: boardNumber)
     }
     
@@ -1125,6 +1124,10 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             }
         }
     }
+    
+    @objc internal func endEditingTapped(_ sender: UIView) {
+        scorecardDelegate?.scorecardEndEditing(true)
+    }
 }
 
 // MARK: - Table Collection View Cell ================================================================ -
@@ -1134,7 +1137,8 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
     fileprivate var label = UILabel()
     fileprivate var textField = UITextField()
     fileprivate var textView = UITextView()
-    fileprivate var textViewClear = UIImageView()
+    fileprivate var textClear = UIImageView()
+    fileprivate var textClearWidth: NSLayoutConstraint!
     fileprivate var seatPicker: EnumPicker<Seat>!
     fileprivate var table: TableViewModel!
     fileprivate var tableNumber: Int!
@@ -1151,16 +1155,17 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         self.layer.borderWidth = 2.0
         self.backgroundColor = UIColor(Palette.gridTable.background)
         
+        let endEditingGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputBoardCollectionCell.endEditingTapped))
+        self.addGestureRecognizer(endEditingGesture)
+        
         addSubview(label, constant: 8, anchored: .all)
-        //label.layer.borderColor = UIColor(Palette.gridLine).cgColor
-        //label.layer.borderWidth = 2.0
         label.textAlignment = .center
         label.font = cellFont
         label.adjustsFontSizeToFitWidth = true
-        // label.backgroundColor = UIColor(Palette.gridTable.background)
+        label.backgroundColor = UIColor.clear
         label.textColor = UIColor(Palette.gridTable.text)
 
-        addSubview(textField, constant: 8, anchored: .all)
+        addSubview(textField, constant: 8, anchored: .leading, .top, .bottom)
         textField.textAlignment = .center
         textField.autocapitalizationType = .words
         textField.autocapitalizationType = UITextAutocapitalizationType.none
@@ -1182,15 +1187,16 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         textView.backgroundColor = UIColor.clear
         textView.textColor = UIColor(Palette.gridTable.text)
         
-        addSubview(textViewClear, constant: 8, anchored: .trailing, .top, .bottom)
-        Constraint.setWidth(control: textViewClear, width: 34)
-        Constraint.anchor(view: self, control: textView, to: textViewClear, constant: 8, toAttribute: .leading, attributes: .trailing)
-        textViewClear.image = UIImage(systemName: "x.circle.fill")?.asTemplate
-        textViewClear.contentMode = .scaleAspectFit
-        textViewClear.tintColor = UIColor(Palette.clearText)
+        addSubview(textClear, constant: 8, anchored: .trailing, .top, .bottom)
+        textClearWidth = Constraint.setWidth(control: textClear, width: 0)
+        Constraint.anchor(view: self, control: textField, to: textClear, constant: 8, toAttribute: .leading, attributes: .trailing)
+        Constraint.anchor(view: self, control: textView, to: textClear, constant: 8, toAttribute: .leading, attributes: .trailing)
+        textClear.image = UIImage(systemName: "x.circle.fill")?.asTemplate
+        textClear.contentMode = .scaleAspectFit
+        textClear.tintColor = UIColor(Palette.clearText)
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputBoardCollectionCell.textViewClearPressed))
-        textViewClear.addGestureRecognizer(tapGesture)
-        textViewClear.isUserInteractionEnabled = true
+        textClear.addGestureRecognizer(tapGesture)
+        textClear.isUserInteractionEnabled = true
         
         addSubview(seatPicker, leading: 8, trailing: 8, top: 20, bottom: 4)
         seatPicker.delegate = self
@@ -1225,7 +1231,8 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         textField.text = ""
         textField.clearsOnBeginEditing = false
         textView.isHidden = true
-        textViewClear.isHidden = true
+        textClear.isHidden = true
+        textClearWidth.constant = 0
         label.text = ""
         label.font = cellFont
         label.backgroundColor = UIColor(Palette.gridTable.background)
@@ -1254,7 +1261,8 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
             textField.isHidden = false
             textField.text = table.versus
             textField.textAlignment = .left
-            textField.clearButtonMode = .always
+            textClear.isHidden = table.versus == ""
+            textClearWidth.constant = 34
         default:
             label.text = ""
         }
@@ -1291,6 +1299,7 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
                         table.score = Float(text) ?? 0
                     case .versus:
                         table.versus = text
+                        textClear.isHidden = table.versus == ""
                     default:
                         break
                     }
@@ -1350,7 +1359,7 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
                     switch column.type {
                     case .versus:
                         table.versus = text
-                        textViewClear.isHidden = (text == "")
+                        textClear.isHidden = (text == "")
                     default:
                         break
                     }
@@ -1371,7 +1380,10 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
             }
             if text != "" {
                 textView.text = ""
-                textViewDidChange(textView)
+                textView.resignFirstResponder()
+                textField.text = ""
+                textField.resignFirstResponder()
+                textFieldChanged(textField)
             }
         }
     }
@@ -1412,5 +1424,9 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
                 }
             }
         }
+    }
+    
+    @objc internal func endEditingTapped(_ sender: UIView) {
+        scorecardDelegate?.scorecardEndEditing(true)
     }
 }
