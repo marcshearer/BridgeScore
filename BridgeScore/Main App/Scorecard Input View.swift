@@ -478,23 +478,26 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     // MARK: - Utility Routines ======================================================================== -
     
     func keyboardMoved(_ keyboardHeight: CGFloat) {
-        let focusedTextInputBottom = (UIResponder.currentFirstResponder?.globalFrame?.maxY ?? 0)
-        let adjustOffset = max(0, focusedTextInputBottom - keyboardHeight) + safeAreaInsets.bottom
-        
-        UIView.animate(withDuration: 0.1) { [self] in
-            let current = self.mainTableView.contentOffset
-            if keyboardHeight == 0 {
-                self.bottomConstraint.constant = 0
-                self.mainTableView.setContentOffset(CGPoint(x: 0, y: self.lastKeyboardScrollOffset), animated: false)
-                self.lastKeyboardScrollOffset = 0
-            } else {
-                let newOffset = current.y + adjustOffset
-                let maxOffset = self.mainTableView.contentSize.height - mainTableView.frame.height
-                let scrollOffset = min(newOffset, maxOffset)
-                let bottomOffset = newOffset - scrollOffset
-                self.lastKeyboardScrollOffset = self.mainTableView.contentOffset.y
-                self.bottomConstraint.constant = -bottomOffset
-                self.mainTableView.setContentOffset(current.offsetBy(dy: adjustOffset), animated: false)
+        if keyboardHeight != 0 || lastKeyboardScrollOffset != 0 || bottomConstraint.constant != 0 {
+            print("scrolling \(keyboardHeight) \(lastKeyboardScrollOffset) \(bottomConstraint.constant)")
+            let focusedTextInputBottom = (UIResponder.currentFirstResponder?.globalFrame?.maxY ?? 0)
+            let adjustOffset = max(0, focusedTextInputBottom - keyboardHeight) + safeAreaInsets.bottom
+            
+            UIView.animate(withDuration: 0.1) { [self] in
+                let current = self.mainTableView.contentOffset
+                if keyboardHeight == 0 {
+                    self.bottomConstraint.constant = 0
+                    self.mainTableView.setContentOffset(CGPoint(x: 0, y: self.lastKeyboardScrollOffset), animated: false)
+                    self.lastKeyboardScrollOffset = 0
+                } else {
+                    let newOffset = current.y + adjustOffset
+                    let maxOffset = self.mainTableView.contentSize.height - mainTableView.frame.height
+                    let scrollOffset = min(newOffset, maxOffset)
+                    let bottomOffset = newOffset - scrollOffset
+                    self.lastKeyboardScrollOffset = self.mainTableView.contentOffset.y
+                    self.bottomConstraint.constant = -bottomOffset
+                    self.mainTableView.setContentOffset(current.offsetBy(dy: adjustOffset), animated: false)
+                }
             }
         }
     }
@@ -805,7 +808,6 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             let isEnabled = (table.sitting != .unknown)
             color = (isEnabled ? Palette.gridBoard : Palette.gridBoardDisabled)
             let selected = board.declarer.rawValue
-            print("setting \(boardNumber) \(selected)")
             seatPicker.set(selected, list: declarerList, isEnabled: isEnabled, color: color, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
         case .made:
             madePicker.isHidden = false
