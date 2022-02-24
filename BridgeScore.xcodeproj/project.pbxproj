@@ -55,6 +55,7 @@
 		B26BCE72279B188600B73501 /* BridgeScore.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE70279B188600B73501 /* BridgeScore.xcdatamodeld */; };
 		B26BCE74279B236F00B73501 /* Layout Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE73279B236F00B73501 /* Layout Managed Object.swift */; };
 		B26BCE76279BEBA500B73501 /* Scorecard Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */; };
+		B28E2B1E27C6A582002A9EE2 /* Input Decimal.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28E2B1D27C6A582002A9EE2 /* Input Decimal.swift */; };
 		B28E4EE827B55F9A0059819C /* Backup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28E4EE727B55F9A0059819C /* Backup.swift */; };
 		B2A2053527AFC2E400C83C88 /* Player Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053427AFC2E400C83C88 /* Player Setup View.swift */; };
 		B2A2053727AFC41500C83C88 /* Toolbar View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053627AFC41500C83C88 /* Toolbar View.swift */; };
@@ -135,6 +136,7 @@
 		B26BCE71279B188600B73501 /* BridgeScore.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = BridgeScore.xcdatamodel; sourceTree = "<group>"; };
 		B26BCE73279B236F00B73501 /* Layout Managed Object.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Layout Managed Object.swift"; sourceTree = "<group>"; };
 		B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Managed Object.swift"; sourceTree = "<group>"; };
+		B28E2B1D27C6A582002A9EE2 /* Input Decimal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Input Decimal.swift"; sourceTree = "<group>"; };
 		B28E4EE727B55F9A0059819C /* Backup.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Backup.swift; sourceTree = "<group>"; };
 		B28E4EE927B566300059819C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B2A2053427AFC2E400C83C88 /* Player Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Player Setup View.swift"; sourceTree = "<group>"; };
@@ -318,6 +320,7 @@
 				B26BCE5C2799AED700B73501 /* Swipe Gestures.swift */,
 				B26BCE572799AED700B73501 /* Target View Modifiers.swift */,
 				B2A2053C27B13F2F00C83C88 /* Keyboard Adaptive.swift */,
+				B28E2B1D27C6A582002A9EE2 /* Input Decimal.swift */,
 			);
 			name = "Reusable SwiftUI Components";
 			sourceTree = "<group>";
@@ -518,6 +521,7 @@
 				B26BCE4F2799AD8900B73501 /* Utility Extension.swift in Sources */,
 				B26BCE522799AD8900B73501 /* Themes.swift in Sources */,
 				B2EB3D71279D717F00D64225 /* Player View Model.swift in Sources */,
+				B28E2B1E27C6A582002A9EE2 /* Input Decimal.swift in Sources */,
 				B26BCE382799AD5800B73501 /* Version.swift in Sources */,
 				B26BCE3A2799AD6D00B73501 /* Core Data.swift in Sources */,
 				B26BCE562799AE6400B73501 /* Preview Data.swift in Sources */,

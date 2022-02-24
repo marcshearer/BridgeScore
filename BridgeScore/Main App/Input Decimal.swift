@@ -1,5 +1,4 @@
-//
-//  Input Number.swift
+//  Input Decimal.swift
 //  BridgeScore
 //
 //  Created by Marc Shearer on 07/02/2022.
@@ -7,20 +6,21 @@
 
 import SwiftUI
 
-struct InputInt : View {
+struct InputDecimal : View {
     
     var title: String?
-    @Binding var field: Int
+    @Binding var field: Decimal?
     var message: Binding<String>?
     var topSpace: CGFloat = 16
     var leadingSpace: CGFloat = 32
     var height: CGFloat = 40
     var width: CGFloat?
-    var onChange: ((Int)->())?
+    var places: Int = 2
+    var onChange: ((Decimal?)->())?
     
     @State private var keyboardType: UIKeyboardType = .numberPad
     @State private var refresh = false
-    @State private var text: String = "0"
+    @State private var text: String = "0.0"
     
     var body: some View {
         
@@ -47,10 +47,10 @@ struct InputInt : View {
                         .disableAutocorrection(false)
                         .onChange(of: text) { text in  }
                         .onChange(of: text) { newValue in
-                            let filtered = newValue.filter { "0123456789".contains($0) }
+                            let filtered = newValue.filter { "0123456789-.".contains($0) }
                             if filtered != newValue {
-                                text = (filtered == "" ? "0" : filtered)
-                                field = Int(text) ?? 0
+                                text = (filtered == "" ? "0.0" : filtered)
+                                field = Decimal(string: text)
                                 onChange?(field)
                             }
                         }
@@ -69,10 +69,10 @@ struct InputInt : View {
             .font(inputFont)
         }
         .onAppear {
-            text = "\(field)"
+            text = (field == nil ? "" : "\(Utility.round(field!, places: places))")
         }
         .onChange(of: field) { (field) in
-            text = "\(field)"
+            text = (field == nil ? "" : "\(Utility.round(field!, places: places))")
         }
         .frame(height: self.height + self.topSpace + (title == nil ? 0 : 30))
         .if(width != nil) { (view) in
