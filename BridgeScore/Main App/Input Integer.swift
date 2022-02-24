@@ -45,15 +45,6 @@ struct InputInt : View {
                         .keyboardType(keyboardType)
                         .autocapitalization(.none)
                         .disableAutocorrection(false)
-                        .onChange(of: text) { text in  }
-                        .onChange(of: text) { newValue in
-                            let filtered = newValue.filter { "0123456789".contains($0) }
-                            if filtered != newValue {
-                                text = (filtered == "" ? "0" : filtered)
-                                field = Int(text) ?? 0
-                                onChange?(field)
-                            }
-                        }
                 }
                 .if(width != nil) { (view) in
                     view.frame(width: width)

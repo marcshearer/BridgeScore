@@ -68,9 +68,6 @@ class MasterData: ObservableObject {
         // Setup scorecards
         self.scorecards = []
         for scorecardMO in scorecardMOs {
-            if scorecardMO.totalScore != "" {
-                scorecardMO.score = Float(scorecardMO.totalScore)
-            }
             scorecards.append(ScorecardViewModel(scorecardMO: scorecardMO))
         }
     }

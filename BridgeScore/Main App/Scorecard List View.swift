@@ -109,10 +109,10 @@ struct ScorecardSummaryView: View {
                                 HStack {
                                     Spacer()
                                     if let score = scorecard.score {
-                                        Text("\(String(describing: score))\(scorecard.type != .percent ? "" : "%")")
+                                        Text("\(score.toString(places: scorecard.type.matchPlaces))\(scorecard.type.matchSuffix(tables: scorecard.tables))")
                                     }
                                 }
-                                .frame(width: 100)
+                                .frame(width: 150)
                                     
                                 Spacer().frame(width: 30)
                             }

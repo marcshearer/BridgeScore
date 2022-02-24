@@ -79,6 +79,7 @@ public enum Type: Int, CaseIterable {
     case xImp = 2
     case vpMatchTeam = 1
     case vpTableTeam = 5
+    case manual = 6
 
     public var string: String {
         switch self {
@@ -94,32 +95,34 @@ public enum Type: Int, CaseIterable {
             return "Teams Match VPs"
         case .vpTableTeam:
             return "Teams Table VPs"
+        case .manual:
+            return "Manually entered"
         }
     }
     
     public var boardPlaces: Int {
         switch self {
-        case .percent, .xImp, .vpPercent, .vpXImp:
+        case .percent, .xImp, .vpPercent, .vpXImp, .manual:
             return 2
-        default:
+        case .vpMatchTeam, .vpTableTeam:
             return 0
         }
     }
 
     public var tablePlaces: Int {
         switch self {
-        case .percent, .xImp:
-            return 1
-        default:
+        case .percent, .xImp, .vpXImp, .vpTableTeam, .manual:
+            return 2
+        case .vpMatchTeam, .vpPercent:
             return 0
         }
     }
     
     public var matchPlaces: Int {
         switch self {
-        case .percent, .xImp:
+        case .percent, .xImp, .vpXImp, .vpMatchTeam, .vpTableTeam, .manual:
             return 2
-        default:
+        case .vpPercent:
             return 0
         }
     }
@@ -134,6 +137,8 @@ public enum Type: Int, CaseIterable {
             return .continuousVp
         case .vpPercent:
             return .percentVp
+        case .manual:
+            return .manual
         }
     }
     
@@ -145,6 +150,21 @@ public enum Type: Int, CaseIterable {
             return .total
         case  .vpMatchTeam:
             return .continuousVp
+        case .manual:
+            return .manual
+        }
+    }
+    
+    public func matchSuffix(tables: Int) -> String {
+        switch self {
+        case .percent:
+            return "%"
+        case .xImp, .manual:
+            return ""
+        case .vpXImp, .vpTableTeam, .vpPercent:
+            return " / \(tables * 20)"
+        case .vpMatchTeam:
+            return " / 20"
         }
     }
 }

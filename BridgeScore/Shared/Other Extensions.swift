@@ -330,6 +330,17 @@ extension NSMutableAttributedString {
     }
 }
 
+extension Float {
+    func toString(places: Int) -> String{
+        let rounded = Utility.round(self, places: places)
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = places
+        let number = NSNumber(value: rounded)
+        return formatter.string(from: number)!
+    }
+}
+
 extension View {
     /// Applies the given transform if the given condition evaluates to `true`.
     /// - Parameters:
