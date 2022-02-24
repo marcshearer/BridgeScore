@@ -658,6 +658,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     private var textView = UITextView()
     private var textClear = UIImageView()
     private var textClearWidth: NSLayoutConstraint!
+    private var textClearPadding: [NSLayoutConstraint]!
     private var participantPicker: EnumPicker<Participant>!
     private var seatPicker: ScrollPicker!
     private var madePicker: ScrollPicker!
@@ -679,10 +680,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         self.layer.borderColor = UIColor(Palette.gridLine).cgColor
         self.layer.borderWidth = 2.0
         self.backgroundColor = UIColor(Palette.gridTable.background)
-        let width = self.frame.width
-        let seatPadding = max(0, (width - 60) / 2)
-        let madePadding = max(0, (width - 45) / 2)
-        
+                
         let endEditingGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputBoardCollectionCell.endEditingTapped))
         self.addGestureRecognizer(endEditingGesture)
         
@@ -716,8 +714,8 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         
         addSubview(textClear, constant: 8, anchored: .trailing, .top, .bottom)
         textClearWidth = Constraint.setWidth(control: textClear, width: 0)
-        Constraint.anchor(view: self, control: textField, to: textClear, constant: 8, toAttribute: .leading, attributes: .trailing)
-        Constraint.anchor(view: self, control: textView, to: textClear, constant: 8, toAttribute: .leading, attributes: .trailing)
+        textClearPadding = Constraint.anchor(view: self, control: textField, to: textClear, constant: 8, toAttribute: .leading, attributes: .trailing)
+        textClearPadding.append(contentsOf: Constraint.anchor(view: self, control: textView, to: textClear, constant: 8, toAttribute: .leading, attributes: .trailing))
         textClear.image = UIImage(systemName: "x.circle.fill")?.asTemplate
         textClear.tintColor = UIColor(Palette.clearText)
         textClear.contentMode = .scaleAspectFit
@@ -725,10 +723,14 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         textClear.addGestureRecognizer(tapGesture)
         textClear.isUserInteractionEnabled = true
         
-        addSubview(participantPicker, leading: seatPadding, trailing: seatPadding, top: 28, bottom: 12)
+        addSubview(participantPicker, top: 28, bottom: 12)
+        Constraint.setWidth(control: participantPicker, width: 60)
+        Constraint.anchor(view: self, control: participantPicker, attributes: .centerX)
         participantPicker.delegate = self
         
-        addSubview(seatPicker, leading: seatPadding, trailing: seatPadding, top: 28, bottom: 12)
+        addSubview(seatPicker, top: 28, bottom: 12)
+        Constraint.setWidth(control: seatPicker, width: 60)
+        Constraint.anchor(view: self, control: seatPicker, attributes: .centerX)
         seatPicker.delegate = self
 
         addSubview(contractPicker, leading: 8, trailing: 8, top: 28, bottom: 12)
@@ -736,7 +738,9 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         let contractTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputBoardCollectionCell.contractTapped))
         contractPicker.addGestureRecognizer(contractTapGesture)
         
-        addSubview(madePicker, leading: madePadding, trailing: madePadding, top: 28, bottom: 12)
+        addSubview(madePicker, top: 28, bottom: 12)
+        Constraint.setWidth(control: madePicker, width: 60)
+        Constraint.anchor(view: self, control: madePicker, attributes: .centerX)
         madePicker.delegate = self
     }
     
@@ -767,6 +771,8 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         textField.isHidden = true
         textView.isHidden = true
         textClear.isHidden = true
+        textClearWidth.constant = 0
+        textClearPadding.forEach { (constraint) in constraint.constant = 0 }
         textField.text = ""
         textView.text = ""
         label.backgroundColor = UIColor(Palette.gridBoard.background)
@@ -826,9 +832,11 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             textField.textAlignment = .left
             textClear.isHidden = board.comment == ""
             textClearWidth.constant = 34
+            textClearPadding.forEach { (constraint) in constraint.constant = 8 }
         case .responsible:
             participantPicker.isHidden = false
             participantPicker.set(board.responsible, color: Palette.gridBoard, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
+
         default:
             label.text = ""
         }
@@ -1128,6 +1136,7 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
     fileprivate var textView = UITextView()
     fileprivate var textClear = UIImageView()
     fileprivate var textClearWidth: NSLayoutConstraint!
+    fileprivate var textClearPadding: [NSLayoutConstraint]!
     fileprivate var seatPicker: EnumPicker<Seat>!
     fileprivate var table: TableViewModel!
     fileprivate var tableNumber: Int!
@@ -1143,8 +1152,6 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         self.layer.borderColor = UIColor(Palette.gridLine).cgColor
         self.layer.borderWidth = 2.0
         self.backgroundColor = UIColor(Palette.gridTable.background)
-        let width = self.frame.width
-        let seatPadding = max(0, (width - 60) / 2)
         
         let endEditingGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputBoardCollectionCell.endEditingTapped))
         self.addGestureRecognizer(endEditingGesture)
@@ -1180,8 +1187,8 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         
         addSubview(textClear, constant: 8, anchored: .trailing, .top, .bottom)
         textClearWidth = Constraint.setWidth(control: textClear, width: 0)
-        Constraint.anchor(view: self, control: textField, to: textClear, constant: 8, toAttribute: .leading, attributes: .trailing)
-        Constraint.anchor(view: self, control: textView, to: textClear, constant: 8, toAttribute: .leading, attributes: .trailing)
+        textClearPadding = Constraint.anchor(view: self, control: textField, to: textClear, constant: 8, toAttribute: .leading, attributes: .trailing)
+        textClearPadding.append(contentsOf: Constraint.anchor(view: self, control: textView, to: textClear, constant: 8, toAttribute: .leading, attributes: .trailing))
         textClear.image = UIImage(systemName: "x.circle.fill")?.asTemplate
         textClear.contentMode = .scaleAspectFit
         textClear.tintColor = UIColor(Palette.clearText)
@@ -1189,7 +1196,9 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         textClear.addGestureRecognizer(tapGesture)
         textClear.isUserInteractionEnabled = true
         
-        addSubview(seatPicker, leading: seatPadding, trailing: seatPadding, top: 20, bottom: 4)
+        addSubview(seatPicker, top: 20, bottom: 4)
+        Constraint.setWidth(control: seatPicker, width: 60)
+        Constraint.anchor(view: self, control: seatPicker, attributes: .centerX)
         seatPicker.delegate = self
         
         addSubview(caption, anchored: .leading, .trailing, .top)
@@ -1224,6 +1233,7 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         textView.isHidden = true
         textClear.isHidden = true
         textClearWidth.constant = 0
+        textClearPadding.forEach { (constraint) in constraint.constant = 0 }
         label.text = ""
         label.font = cellFont
         label.backgroundColor = UIColor(Palette.gridTable.background)
@@ -1253,6 +1263,7 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
             textField.textAlignment = .left
             textClear.isHidden = table.versus == ""
             textClearWidth.constant = 34
+            textClearPadding.forEach { (constraint) in constraint.constant = 8 }
         default:
             label.text = ""
         }
