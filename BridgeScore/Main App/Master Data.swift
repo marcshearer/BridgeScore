@@ -69,7 +69,7 @@ class MasterData: ObservableObject {
         self.scorecards = []
         for scorecardMO in scorecardMOs {
             if scorecardMO.totalScore != "" {
-                scorecardMO.score = Decimal(string: scorecardMO.totalScore)
+                scorecardMO.score = Float(scorecardMO.totalScore)
             }
             scorecards.append(ScorecardViewModel(scorecardMO: scorecardMO))
         }

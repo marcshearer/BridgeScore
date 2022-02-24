@@ -25,7 +25,7 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var boardsTable16: Int16
     @NSManaged public var type16: Int16
     @NSManaged public var tableTotal: Bool
-    @NSManaged public var scoreValue: Decimal
+    @NSManaged public var scoreValue: Float
     @NSManaged public var scoreEntered: Bool
     @NSManaged public var totalScore: String
     @NSManaged public var position16: Int16
@@ -63,7 +63,7 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
         set { self.type16 = Int16(newValue.rawValue) }
     }
     
-    public var score: Decimal? {
+    public var score: Float? {
         get { scoreEntered ? self.scoreValue : nil}
         set {
             if let newValue = newValue {

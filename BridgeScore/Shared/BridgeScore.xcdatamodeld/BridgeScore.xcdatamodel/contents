@@ -11,7 +11,7 @@
         <attribute name="responsible16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="scorecardId" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="scoreEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
-        <attribute name="scoreValue" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="scoreValue" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
     </entity>
     <entity name="Layout" representedClassName="LayoutMO" syncable="YES">
         <attribute name="boards16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
@@ -51,7 +51,7 @@
         <attribute name="position16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="scorecardId" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="scoreEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
-        <attribute name="scoreValue" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="scoreValue" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="tableTotal" attributeType="Boolean" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="totalScore" optional="YES" attributeType="String"/>
         <attribute name="type16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
@@ -59,7 +59,7 @@
     <entity name="Table" representedClassName="TableMO" syncable="YES">
         <attribute name="scorecardId" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="scoreEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
-        <attribute name="scoreValue" attributeType="Decimal" defaultValueString="0.0"/>
+        <attribute name="scoreValue" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="sitting16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="table16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="versus" attributeType="String"/>

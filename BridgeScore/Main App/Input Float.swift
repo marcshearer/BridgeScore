@@ -1,4 +1,4 @@
-//  Input Decimal.swift
+//  Input Float.swift
 //  BridgeScore
 //
 //  Created by Marc Shearer on 07/02/2022.
@@ -6,17 +6,17 @@
 
 import SwiftUI
 
-struct InputDecimal : View {
+struct InputFloat : View {
     
     var title: String?
-    @Binding var field: Decimal?
+    @Binding var field: Float?
     var message: Binding<String>?
     var topSpace: CGFloat = 16
     var leadingSpace: CGFloat = 32
     var height: CGFloat = 40
     var width: CGFloat?
     var places: Int = 2
-    var onChange: ((Decimal?)->())?
+    var onChange: ((Float?)->())?
     
     @State private var keyboardType: UIKeyboardType = .numberPad
     @State private var refresh = false
@@ -50,7 +50,7 @@ struct InputDecimal : View {
                             let filtered = newValue.filter { "0123456789-.".contains($0) }
                             if filtered != newValue {
                                 text = (filtered == "" ? "0.0" : filtered)
-                                field = Decimal(string: text)
+                                field = Float(text)
                                 onChange?(field)
                             }
                         }

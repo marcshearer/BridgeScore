@@ -134,7 +134,7 @@ struct ScorecardDetailsView: View {
                     Input(title: "Comments", field: $scorecard.comment, height: 100)
                     
                     HStack {
-                        InputDecimal(title: "Score", field: $scorecard.score, width: 100, places: scorecard.type.matchPlaces)
+                        InputFloat(title: "Score", field: $scorecard.score, width: 100, places: scorecard.type.matchPlaces)
                         Spacer()
                     }
                     

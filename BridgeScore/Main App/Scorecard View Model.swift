@@ -24,7 +24,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     @Published public var boardsTable: Int = 0
     @Published public var type: Type = .percent
     @Published public var tableTotal: Bool = false
-    @Published public var score: Decimal?
+    @Published public var score: Float?
     @Published public var position: Int = 0
     @Published public var entry: Int = 0
     @Published public var drawingWidth: CGFloat = 0.0
@@ -296,7 +296,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.type = UserDefault.currentType.type
         self.tableTotal = UserDefault.currentTableTotal.bool
         let score = UserDefault.currentScore.string
-        self.score = score == "" ? nil : Decimal(string: score)
+        self.score = score == "" ? nil : Float(score)
         self.position = UserDefault.currentPosition.int
         self.entry = UserDefault.currentEntry.int
         self.drawing = (try? PKDrawing(data: UserDefault.currentDrawing.data)) ?? PKDrawing()
