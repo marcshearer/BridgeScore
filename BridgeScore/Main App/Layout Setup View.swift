@@ -56,6 +56,8 @@ struct LayoutSetupView: View {
     func addLayout() {
         save(layout: selected)
         selected.copy(from: LayoutViewModel())
+        selected.location = MasterData.shared.locations.first!
+        selected.partner = MasterData.shared.players.first!
         selected.sequence = MasterData.shared.layouts.last!.sequence + 1
     }
     

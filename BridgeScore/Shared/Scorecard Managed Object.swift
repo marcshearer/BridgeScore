@@ -25,6 +25,8 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var boardsTable16: Int16
     @NSManaged public var type16: Int16
     @NSManaged public var tableTotal: Bool
+    @NSManaged public var scoreValue: Decimal
+    @NSManaged public var scoreEntered: Bool
     @NSManaged public var totalScore: String
     @NSManaged public var position16: Int16
     @NSManaged public var entry16: Int16
@@ -59,6 +61,19 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
     public var type: Type {
         get { Type(rawValue: Int(type16)) ?? .percent }
         set { self.type16 = Int16(newValue.rawValue) }
+    }
+    
+    public var score: Decimal? {
+        get { scoreEntered ? self.scoreValue : nil}
+        set {
+            if let newValue = newValue {
+                self.scoreValue = newValue
+                self.scoreEntered = true
+            } else {
+                self.scoreValue = 0
+                self.scoreEntered = false
+            }
+        }
     }
     
     public var drawingWidth: CGFloat {

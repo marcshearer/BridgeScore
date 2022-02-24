@@ -31,8 +31,13 @@ struct ScorecardDetailView: View {
                 }
             }
             .keyboardAdaptive
-            .onChange(of: linkToCanvas) { (linkToScorecard) in
-                if linkToScorecard {
+            .onChange(of: linkToCanvas) { (linkToCanvas) in
+                if linkToCanvas {
+                    scorecard.backupCurrent()
+                }
+            }
+            .onChange(of: linkToInput) { (linkToInput) in
+                if linkToInput {
                     scorecard.backupCurrent()
                 }
             }
@@ -129,7 +134,7 @@ struct ScorecardDetailsView: View {
                     Input(title: "Comments", field: $scorecard.comment, height: 100)
                     
                     HStack {
-                        Input(title: "Score", field: $scorecard.totalScore, width: 100, keyboardType: .numberPad, clearText: false)
+                        InputDecimal(title: "Score", field: $scorecard.score, width: 100, places: scorecard.type.matchPlaces)
                         Spacer()
                     }
                     

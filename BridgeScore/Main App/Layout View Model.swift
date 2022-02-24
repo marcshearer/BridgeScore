@@ -59,6 +59,8 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
         self.layoutId = UUID()
         self.sequence = Int.max
         self.desc = ""
+        self.boardsTable = 3
+        self.boards = 24
         self.setupMappings()
     }
     

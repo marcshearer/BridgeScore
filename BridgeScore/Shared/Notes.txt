@@ -5,7 +5,6 @@ If fails to install app on device from  it's normally because info.plist isn't w
 
 Bugs
 ====
-New layout doesn't have partner (or location?) unless you change it
 Screen jumps if tap elsewhere immediately after writing in text edit
 
 To Do

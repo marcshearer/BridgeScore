@@ -24,7 +24,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     @Published public var boardsTable: Int = 0
     @Published public var type: Type = .percent
     @Published public var tableTotal: Bool = false
-    @Published public var totalScore: String = ""
+    @Published public var score: Decimal?
     @Published public var position: Int = 0
     @Published public var entry: Int = 0
     @Published public var drawingWidth: CGFloat = 0.0
@@ -57,7 +57,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
                 self.boardsTable != mo.boardsTable ||
                 self.type != mo.type ||
                 self.tableTotal != mo.tableTotal ||
-                self.totalScore != mo.totalScore ||
+                self.score != mo.score ||
                 self.position != mo.position ||
                 self.entry != mo.entry ||
                 self.drawing != mo.drawing ||
@@ -131,7 +131,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.tableTotal = layout.tableTotal
         self.date = Date()
         self.comment = ""
-        self.totalScore = ""
+        self.score = nil
         self.position = 0
         self.entry = 0
         self.drawing = PKDrawing()
@@ -150,7 +150,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.boardsTable = from.boardsTable
         self.type = from.type
         self.tableTotal = from.tableTotal
-        self.totalScore = from.totalScore
+        self.score = from.score
         self.position = from.position
         self.entry = from.entry
         self.drawing = from.drawing
@@ -174,7 +174,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             self.boardsTable = mo.boardsTable
             self.type = mo.type
             self.tableTotal = mo.tableTotal
-            self.totalScore = mo.totalScore
+            self.score = mo.score
             self.position = mo.position
             self.entry = mo.entry
             self.drawing = mo.drawing
@@ -194,7 +194,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             mo.boardsTable = self.boardsTable
             mo.type = self.type
             mo.tableTotal = self.tableTotal
-            mo.totalScore = self.totalScore
+            mo.score = self.score
             mo.position = self.position
             mo.entry = self.entry
             mo.drawing = self.drawing
@@ -265,7 +265,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         UserDefault.currentBoardsTable.set(self.boardsTable)
         UserDefault.currentType.set(self.type)
         UserDefault.currentTableTotal.set(self.tableTotal)
-        UserDefault.currentTotalScore.set(self.totalScore)
+        UserDefault.currentScore.set(self.score == nil ? "" : "\(self.score!)")
         UserDefault.currentPosition.set(self.position)
         UserDefault.currentEntry.set(self.entry)
         backupCurrentDrawing()
@@ -295,7 +295,8 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.boardsTable = UserDefault.currentBoardsTable.int
         self.type = UserDefault.currentType.type
         self.tableTotal = UserDefault.currentTableTotal.bool
-        self.totalScore = UserDefault.currentTotalScore.string
+        let score = UserDefault.currentScore.string
+        self.score = score == "" ? nil : Decimal(string: score)
         self.position = UserDefault.currentPosition.int
         self.entry = UserDefault.currentEntry.int
         self.drawing = (try? PKDrawing(data: UserDefault.currentDrawing.data)) ?? PKDrawing()

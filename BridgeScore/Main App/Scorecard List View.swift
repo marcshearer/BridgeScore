@@ -107,9 +107,10 @@ struct ScorecardSummaryView: View {
                                         .frame(width: 100)
                                 }
                                 HStack {
-                                    let score = scorecard.totalScore
                                     Spacer()
-                                    Text("\(score)\(scorecard.type != .percent || score == "" || score.rtrim().right(1) == "%" ? "" : "%")")
+                                    if let score = scorecard.score {
+                                        Text("\(String(describing: score))\(scorecard.type != .percent ? "" : "%")")
+                                    }
                                 }
                                 .frame(width: 100)
                                     

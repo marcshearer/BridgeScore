@@ -11,7 +11,7 @@
         <attribute name="responsible16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="scorecardId" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="scoreEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
-        <attribute name="scoreValue" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="scoreValue" optional="YES" attributeType="Decimal" defaultValueString="0.0"/>
     </entity>
     <entity name="Layout" representedClassName="LayoutMO" syncable="YES">
         <attribute name="boards16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
@@ -50,14 +50,16 @@
         <attribute name="partnerId" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="position16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="scorecardId" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="scoreEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="scoreValue" attributeType="Decimal" defaultValueString="0.0"/>
         <attribute name="tableTotal" attributeType="Boolean" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="totalScore" attributeType="String"/>
+        <attribute name="totalScore" optional="YES" attributeType="String"/>
         <attribute name="type16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
     <entity name="Table" representedClassName="TableMO" syncable="YES">
         <attribute name="scorecardId" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="scoreEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
-        <attribute name="scoreValue" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="scoreValue" attributeType="Decimal" defaultValueString="0.0"/>
         <attribute name="sitting16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="table16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="versus" attributeType="String"/>
@@ -67,7 +69,7 @@
         <element name="Layout" positionX="-45" positionY="0" width="128" height="179"/>
         <element name="Location" positionX="27" positionY="189" width="128" height="89"/>
         <element name="Player" positionX="9" positionY="171" width="128" height="89"/>
-        <element name="Scorecard" positionX="-18" positionY="81" width="128" height="254"/>
+        <element name="Scorecard" positionX="-18" positionY="81" width="128" height="284"/>
         <element name="Table" positionX="-9" positionY="153" width="128" height="119"/>
     </elements>
 </model>
