@@ -186,6 +186,17 @@ public enum Participant: Int, EnumPickerType {
         }
     }
     
+    public var full: String {
+        switch self {
+        case .unknown:
+            return "None"
+        case .scorer:
+            return "Self"
+        default:
+            return "\(self)".capitalized
+        }
+    }
+    
     public var short: String {
         if self == .unknown {
             return ""

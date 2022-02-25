@@ -116,6 +116,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        print("frame size: \(frame.size.height)")
         return frame.size
     }
     
@@ -141,6 +142,11 @@ class ScrollPickerCell: UICollectionViewCell {
     private var caption: UILabel!
     private static let identifier = "ScrollPickerCell"
     private var captionHeightConstraint: NSLayoutConstraint!
+    private var tapAction: ((Int)->())?
+    private var tapGesture: UITapGestureRecognizer!
+    private var topPaddingHeight: NSLayoutConstraint!
+    private var bottomPaddingHeight: NSLayoutConstraint!
+    private var centerPaddingHeight: NSLayoutConstraint!
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -148,13 +154,19 @@ class ScrollPickerCell: UICollectionViewCell {
         title.font = pickerTitleFont
         title.minimumScaleFactor = 0.3
         title.textAlignment = .center
-        self.addSubview(title, leading: 0, trailing: 0, top: frame.height * 0.10)
+        self.addSubview(title, leading: 0, trailing: 0)
+        topPaddingHeight = Constraint.anchor(view: self, control: title, constant: 0, attributes: .top).first!
+        
         caption = UILabel(frame: frame)
         caption.font = pickerCaptionFont
         caption.textAlignment = .center
-        self.addSubview(caption, leading: 0, trailing: 0, bottom: frame.height * 0.10)
+        self.addSubview(caption, leading: 0, trailing: 0)
+        bottomPaddingHeight = Constraint.anchor(view: self, control: caption, constant: 0, attributes: .bottom).first!
+        centerPaddingHeight = Constraint.anchor(view: self, control: caption, to: title, constant: 0, toAttribute: .bottom, attributes: .top).first!
         captionHeightConstraint = Constraint.setHeight(control: caption, height: 0)
-        Constraint.anchor(view: self, control: caption, to: title, constant: frame.height * 0.075, toAttribute: .bottom, attributes: .top)
+        
+        tapGesture = UITapGestureRecognizer(target: self, action: #selector(ScrollPickerCell.tapped(_:)))
+        self.addGestureRecognizer(tapGesture)
     }
 
     required init?(coder: NSCoder) {
@@ -170,20 +182,49 @@ class ScrollPickerCell: UICollectionViewCell {
         return cell
     }
     
-    public func set(titleText: String, captionText: String? = nil, color: PaletteColor? = nil, titleFont: UIFont?, captionFont: UIFont? = nil, clearBackground: Bool = true) {
+    internal override func prepareForReuse() {
+        self.backgroundColor = UIColor.clear
+        self.isUserInteractionEnabled = false
+        title.text = ""
+        title.font = pickerTitleFont
+        title.minimumScaleFactor = 0.3
+        title.textAlignment = .center
+        title.backgroundColor = UIColor.clear
+        caption.text = ""
+        caption.font = pickerCaptionFont
+        caption.textAlignment = .center
+        captionHeightConstraint.constant = 0
+        tapAction = nil
+    }
+    
+    public func set(titleText: String, captionText: String? = nil, tag: Int = 0, color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil, clearBackground: Bool = true, topPadding: CGFloat = 0, bottomPadding: CGFloat = 0, borderWidth: CGFloat = 0, tapAction: ((Int)->())? = nil) {
+        self.backgroundColor = (clearBackground ? UIColor.clear : UIColor(color?.background ?? Color.clear))
+        self.tag = tag
+        self.tapAction = tapAction
+        self.isUserInteractionEnabled = (tapAction != nil)
+        self.layer.borderWidth = borderWidth
+        self.layer.borderColor = UIColor(Palette.gridLine).cgColor
+        
+        let height = frame.height - topPadding - bottomPadding
+        self.topPaddingHeight.constant = (height * 0.10) + topPadding
+        self.centerPaddingHeight.constant = height * 0.075
+        self.bottomPaddingHeight.constant = -((height * 0.10) + bottomPadding)
+        
         title.text = titleText
         if let titleFont = titleFont {
             title.font = titleFont
         }
-        self.backgroundColor = (clearBackground ? UIColor.clear : UIColor(color?.background ?? Color.clear))
-        title.backgroundColor = UIColor.clear
         title.textColor = UIColor(color?.text ?? Palette.background.text)
         if let captionText = captionText {
             caption.text = captionText
-            captionHeightConstraint.constant = self.frame.height / 4
+            captionHeightConstraint.constant = height / 4
             if let captionFont = captionFont {
                 caption.font = captionFont
             }
         }
+    }
+    
+    @objc private func tapped(_ sender: UIView) {
+        tapAction?(tag)
     }
 }

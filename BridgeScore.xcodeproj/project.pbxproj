@@ -139,7 +139,7 @@
 		B26BCE73279B236F00B73501 /* Layout Managed Object.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Layout Managed Object.swift"; sourceTree = "<group>"; };
 		B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Managed Object.swift"; sourceTree = "<group>"; };
 		B26C555627C7EA9200015D0A /* Table with Collection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Table with Collection.swift"; sourceTree = "<group>"; };
-		B26C555827C8BCBC00015D0A /* Scroll Picker Popup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scroll Picker Popup View.swift"; sourceTree = "<group>"; };
+		B26C555827C8BCBC00015D0A /* Scroll Picker Popup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Scroll Picker Popup View.swift"; path = "../Main App/Scroll Picker Popup View.swift"; sourceTree = "<group>"; };
 		B28E2B1D27C6A582002A9EE2 /* Input Float.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Input Float.swift"; sourceTree = "<group>"; };
 		B28E4EE727B55F9A0059819C /* Backup.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Backup.swift; sourceTree = "<group>"; };
 		B28E4EE927B566300059819C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -381,7 +381,6 @@
 				B2276D5727A5A2C90025DA80 /* Scorecard Canvas View.swift */,
 				B2C4338B27B6646700796F24 /* Scorecard Input View.swift */,
 				B20B38F127C153280001B45E /* Contract Entry View.swift */,
-				B26C555827C8BCBC00015D0A /* Scroll Picker Popup View.swift */,
 			);
 			name = "Main Views";
 			sourceTree = "<group>";
@@ -400,6 +399,7 @@
 			isa = PBXGroup;
 			children = (
 				B2CC509827BE21060050F22C /* Scroll Picker.swift */,
+				B26C555827C8BCBC00015D0A /* Scroll Picker Popup View.swift */,
 				B2CC509D27BE22210050F22C /* Enum Picker.swift */,
 				B26C555627C7EA9200015D0A /* Table with Collection.swift */,
 			);

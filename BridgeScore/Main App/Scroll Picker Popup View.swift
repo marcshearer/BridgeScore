@@ -13,11 +13,14 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
     private var contentView = UIView()
     private var valuesCollectionView: UICollectionView!
     private var selected: Int!
-    private var values: [String]!
+    private var values: [ScrollPickerEntry]!
     private var maxValues = 5
     private var buttonSize: CGSize!
     private var completion: ((Int?)->())?
     private var focusWidthConstraint: NSLayoutConstraint!
+    private var topPadding: CGFloat = 0
+    private var bottomPadding: CGFloat = 0
+    private var extra: Int { Int(maxValues / 2) }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
@@ -38,6 +41,7 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        print("buttonSize \(buttonSize.height)")
         return buttonSize
     }
     
@@ -46,23 +50,26 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = ScrollPickerPopupCollectionCell.dequeue(collectionView, for: indexPath)
+        let cell = ScrollPickerCell.dequeue(collectionView, for: indexPath)
         let item = indexPath.item
         var text = ""
+        var caption: String?
+        var clearBackground = true
         var tag = -1
         var tapAction: ((Int)->())?
-        let extra = Int(maxValues / 2)
         if item >= extra && item - extra <= values.count - 1 {
-            text = values[item - extra]
+            clearBackground = false
+            text = values[item - extra].title
+            caption = values[item - extra].caption
             tag = item - extra
             tapAction = valueTapped
         }
-        cell.set(text: text, tag: tag, selected: (tag == selected), tapAction: tapAction)
+        cell.set(titleText: text, captionText: caption, tag: tag, color: Palette.alternate, clearBackground: clearBackground, topPadding: topPadding, bottomPadding: bottomPadding, borderWidth: (tapAction == nil ? 0 : 0.5), tapAction: tapAction)
         return cell
     }
     
     func changed(_ collectionView: UICollectionView?, itemAtCenter: Int, forceScroll: Bool, animation: ViewAnimation) {
-        selected = itemAtCenter
+        selected = itemAtCenter - extra
         collectionView?.reloadData()
     }
     
@@ -74,21 +81,24 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
     }
     
     @objc private func cancelPressed(_ sender: Any) {
+        completion?(selected)
         hide()
     }
     // MARK: - Show / Hide ============================================================================ -
     
-    public func show(from sourceView: UIView, values: [String], maxValues: Int = 5, selected: Int, frame: CGRect, hideBackground: Bool = true, completion: @escaping (Int?)->()) {
+    public func show(from sourceView: UIView, values: [ScrollPickerEntry], maxValues: Int = 5, selected: Int, frame: CGRect, hideBackground: Bool = true, topPadding: CGFloat = 0, bottomPadding: CGFloat = 0, completion: @escaping (Int?)->()) {
         self.values = values
         self.maxValues = maxValues
         self.selected = selected
         self.buttonSize = frame.size
+        self.topPadding = topPadding
+        self.bottomPadding = bottomPadding
         self.completion = completion
         self.frame = sourceView.frame
         backgroundView.frame = sourceView.frame
-        let valuesVisible = min(maxValues, values.count)
-        contentView.frame = CGRect(x: frame.minX - (CGFloat(Int(valuesVisible / 2)) * buttonSize.width), y: frame.minY, width: buttonSize.width * CGFloat(valuesVisible), height: buttonSize.height)
-        focusWidthConstraint.constant = buttonSize.width
+        let valuesVisible = maxValues
+        contentView.frame = CGRect(x: frame.minX - (CGFloat(Int(valuesVisible / 2)) * buttonSize.width), y: frame.minY - 5, width: buttonSize.width * CGFloat(valuesVisible), height: buttonSize.height + 10)
+        focusWidthConstraint.constant = buttonSize.width + 10
         setNeedsLayout()
         layoutIfNeeded()
         layoutSubviews()
@@ -97,7 +107,7 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         backgroundView.isHidden = !hideBackground
         contentView.isHidden = false
         valuesCollectionView.reloadData()
-        valuesCollectionView.scrollToItem(at: IndexPath(item: selected + 2, section: 0), at: .centeredHorizontally, animated: false)
+        valuesCollectionView.scrollToItem(at: IndexPath(item: selected + Int(maxValues / 2), section: 0), at: .centeredHorizontally, animated: false)
     }
     
     public func hide() {
@@ -122,7 +132,7 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         
         // Content
         backgroundView.addSubview(contentView)
-        contentView.backgroundColor = UIColor(Palette.alternate.background)
+        contentView.backgroundColor = UIColor.clear
         contentView.addShadow()
         let nullGesture = UITapGestureRecognizer(target: self, action: nil)
         contentView.addGestureRecognizer(nullGesture)
@@ -138,68 +148,11 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
     }
     
     func loadCollection(collectionView: UICollectionView) {
-        contentView.addSubview(collectionView, anchored: .all)
+        contentView.addSubview(collectionView, leading: 0, trailing: 0, top: 5, bottom: 5)
         collectionView.dataSource = self
         collectionView.delegate = self
         collectionView.backgroundColor = UIColor.clear
         collectionView.showsHorizontalScrollIndicator = false
-        ScrollPickerPopupCollectionCell.register(collectionView)
-    }
-}
-
-// MARK: - Cell classes ================================================================ -
-
-
-fileprivate class ScrollPickerPopupCollectionCell: UICollectionViewCell {
-    private var label = UILabel()
-    private var tapAction: ((Int)->())?
-    private static let scrollPickerPopupCellIdentifier = "Value Collection Cell"
-
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-                        
-        self.layer.borderColor = UIColor(Palette.gridLine).cgColor
-
-        addSubview(label, anchored: .all)
-        label.textAlignment = .center
-        label.minimumScaleFactor = 0.3
-        label.backgroundColor = UIColor(Palette.alternate.background)
-        label.textColor = UIColor(Palette.alternate.text)
-        label.font = pickerTitleFont
-        
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(ScrollPickerPopupCollectionCell.tapped(_:)))
-        label.addGestureRecognizer(tapGesture)
-        label.isUserInteractionEnabled = true
-        tapGesture.isEnabled = true
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    public class func register(_ collectionView: UICollectionView) {
-        collectionView.register(ScrollPickerPopupCollectionCell.self, forCellWithReuseIdentifier: scrollPickerPopupCellIdentifier)
-    }
-
-    public class func dequeue(_ collectionView: UICollectionView, for indexPath: IndexPath) -> ScrollPickerPopupCollectionCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: scrollPickerPopupCellIdentifier, for: indexPath) as! ScrollPickerPopupCollectionCell
-        cell.prepareForReuse()
-        return cell
-    }
-    
-    override func prepareForReuse() {
-        self.layer.borderWidth = 0
-
-    }
-    
-    func set(text: String, tag: Int, selected: Bool, tapAction: ((Int)->())?) {
-        self.tag = tag
-        label.text = text
-        self.tapAction = tapAction
-        self.layer.borderWidth = (tapAction == nil ? 0 : 2)
-    }
-    
-    @objc func tapped(_ sender: UILabel) {
-        tapAction?(self.tag)
+        ScrollPickerCell.register(collectionView)
     }
 }
