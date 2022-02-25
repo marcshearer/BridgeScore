@@ -10,10 +10,8 @@ Screen jumps if tap elsewhere immediately after writing in text edit
 To Do
 =====
 
-Add declarer to contract popup if have specified seat
+Add Made popup
 Implement clear sheet
-Recalculate totals on load / change of method
-Remove old canvas entry
 Sort out dark mode
 Maybe remove file sharing in Info.plist once can backup from Mac
 

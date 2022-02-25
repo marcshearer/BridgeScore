@@ -32,6 +32,7 @@ enum RowType: Int {
 
 struct ScorecardInputView: View {
     @Environment(\.undoManager) private var undoManager
+    @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
 
     @ObservedObject var scorecard: ScorecardViewModel
     @State var undoPressed: Bool = false
@@ -50,12 +51,17 @@ struct ScorecardInputView: View {
                 // Banner
                 Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .buttons, options: [
                         BannerOption(image: AnyView(Image(systemName: "arrow.uturn.backward")), likeBack: true, isEnabled: $canUndo, action: { undoDrawing() }),
-                        BannerOption(image: AnyView(Image(systemName: "arrow.uturn.forward")), likeBack: true, isEnabled: $canRedo, action: { redoDrawing() }),
-                        BannerOption(image: AnyView(Image(systemName: "trash.fill")), likeBack: true, action: { clearScorecard() })])
-
+                        BannerOption(image: AnyView(Image(systemName: "arrow.uturn.forward")), likeBack: true, isEnabled: $canRedo, action: { redoDrawing() })])
                 GeometryReader { geometry in
                     ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), undoPressed: $undoPressed, redoPressed: $redoPressed, canUndo: $canUndo, canRedo: $canRedo)
                     .ignoresSafeArea(edges: .all)
+                }
+            }
+            .onSwipe { (direction) in
+                if direction == .right {
+                    if backAction() {
+                        presentationMode.wrappedValue.dismiss()
+                    }
                 }
             }
             .onChange(of: undoPressed) { newValue in undoPressed = false }
@@ -66,12 +72,6 @@ struct ScorecardInputView: View {
     func backAction() -> Bool {
         Scorecard.current.interimSave()
         return true
-    }
-    
-    func clearScorecard() {
-        MessageBox.shared.show("This will clear the contents of the drawing.\nAre you sure you want to do this?", cancelText: "Cancel", okText: "Clear", okAction: {
-            // TODO
-        })
     }
     
     func undoDrawing() {
@@ -151,7 +151,8 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
 
 protocol ScorecardDelegate {
     func scorecardChanged(type: RowType, itemNumber: Int, column: ScorecardColumn?)
-    func scorecardContractEntry(board: BoardViewModel, boardNumber: Int)
+    func scorecardContractEntry(board: BoardViewModel, table: TableViewModel)
+    func scorecardScrollPickerPopup(board: BoardViewModel, table: TableViewModel, column: ColumnType, values: [String], selected: Int, frame: CGRect, in container: UIView, completion: @escaping (Int)->())
     func scorecardGetDeclarers(tableNumber: Int) -> [Seat]
     func scorecardUpdateDeclarers(tableNumber: Int, to: [Seat]?)
     func scorecardEndEditing(_ force: Bool)
@@ -173,6 +174,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     private var titleView: UIView!
     private var mainTableView = UITableView(frame: CGRect(), style: .plain)
     private var contractEntryView: ContractEntryView
+    private var scrollPickerPopupView: ScrollPickerPopupView
     public var delegate: ScorecardInputUIViewDelegate?
     private var subscription: AnyCancellable?
     private var lastKeyboardScrollOffset: CGFloat = 0
@@ -199,6 +201,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     init(frame: CGRect, scorecard: ScorecardViewModel) {
         self.scorecard = scorecard
         self.contractEntryView = ContractEntryView(frame: CGRect())
+        self.scrollPickerPopupView = ScrollPickerPopupView(frame: CGRect())
 
         super.init(frame: frame)
                     
@@ -322,20 +325,41 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         }
     }
     
-    func scorecardContractEntry(board: BoardViewModel, boardNumber: Int) {
-        let section = (boardNumber - 1) / self.scorecard.boardsTable
-        let row = (boardNumber - 1) % self.scorecard.boardsTable
-        contractEntryView.show(from: self, contract: board.contract) { (contract) in
+    func scorecardContractEntry(board: BoardViewModel, table: TableViewModel) {
+        let section = (board.board - 1) / self.scorecard.boardsTable
+        let row = (board.board - 1) % self.scorecard.boardsTable
+        let showDeclarer = (table.sitting != .unknown)
+        contractEntryView.show(from: self, contract: board.contract, declarer: (showDeclarer ? board.declarer : nil)) { (contract, declarer) in
 
             if let tableCell = self.mainTableView.cellForRow(at: IndexPath(row: row, section: section)) as? ScorecardInputBoardTableCell {
-                if let item = self.boardColumns.firstIndex(where: {$0.type == .contract}) {
-                    if let cell = tableCell.collectionView.cellForItem(at: IndexPath(item: item, section: 0)) as? ScorecardInputBoardCollectionCell {
-                        if contract != board.contract {
+                if contract != board.contract {
+                    // Update contract
+                    if let item = self.boardColumns.firstIndex(where: {$0.type == .contract}) {
+                        if let cell = tableCell.collectionView.cellForItem(at: IndexPath(item: item, section: 0)) as? ScorecardInputBoardCollectionCell {
                             cell.contractPicker.set(contract)
                             cell.contractPickerDidChange(to: contract)
                         }
                     }
                 }
+                if showDeclarer && declarer != board.declarer {
+                    // Update declarer
+                    if let item = self.boardColumns.firstIndex(where: {$0.type == .declarer}) {
+                        if let cell = tableCell.collectionView.cellForItem(at: IndexPath(item: item, section: 0)) as? ScorecardInputBoardCollectionCell {
+                            if let index = Seat.allCases.firstIndex(where: {$0 == declarer}) {
+                                cell.seatPicker.set(index)
+                                cell.enumPickerDidChange(to: declarer as Any)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    func scorecardScrollPickerPopup(board: BoardViewModel, table: TableViewModel, column: ColumnType, values: [String], selected: Int, frame: CGRect, in container: UIView, completion: @escaping (Int)->()) {
+        scrollPickerPopupView.show(from: self, values: values, maxValues: 7, selected: selected, frame: container.convert(frame, to: self)) { (selected) in
+            if let selected = selected {
+                completion(selected)
             }
         }
     }
@@ -607,7 +631,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     private var textClearWidth: NSLayoutConstraint!
     private var textClearPadding: [NSLayoutConstraint]!
     private var participantPicker: EnumPicker<Participant>!
-    private var seatPicker: ScrollPicker!
+    fileprivate var seatPicker: ScrollPicker!
     private var madePicker: ScrollPicker!
     fileprivate var contractPicker: ContractPicker
     private var table: TableViewModel!
@@ -679,6 +703,8 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         Constraint.setWidth(control: seatPicker, width: 60)
         Constraint.anchor(view: self, control: seatPicker, attributes: .centerX)
         seatPicker.delegate = self
+        let declarerTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputBoardCollectionCell.declarerTapped))
+        seatPicker.addGestureRecognizer(declarerTapGesture)
 
         addSubview(contractPicker, leading: 8, trailing: 8, top: 28, bottom: 12)
         contractPicker.delegate = self
@@ -689,6 +715,8 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         Constraint.setWidth(control: madePicker, width: 60)
         Constraint.anchor(view: self, control: madePicker, attributes: .centerX)
         madePicker.delegate = self
+        let madeTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputBoardCollectionCell.madeTapped))
+        madePicker.addGestureRecognizer(madeTapGesture)
     }
     
     required init?(coder: NSCoder) {
@@ -1031,7 +1059,25 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     @objc internal func contractTapped(_ sender: UIView) {
         scorecardDelegate?.scorecardEndEditing(true)
         scorecardDelegate?.scorecardChanged(type: .board, itemNumber: boardNumber)
-        scorecardDelegate?.scorecardContractEntry(board: board, boardNumber: boardNumber)
+        scorecardDelegate?.scorecardContractEntry(board: board, table: table)
+    }
+    
+    @objc internal func declarerTapped(_ sender: UIView) {
+        scorecardDelegate?.scorecardEndEditing(true)
+        scorecardDelegate?.scorecardChanged(type: .board, itemNumber: boardNumber)
+        if table.sitting != .unknown {
+            scorecardDelegate?.scorecardContractEntry(board: board, table: table)
+        }
+    }
+    
+    @objc internal func madeTapped(_ sender: UIView) {
+        scorecardDelegate?.scorecardEndEditing(true)
+        scorecardDelegate?.scorecardChanged(type: .board, itemNumber: boardNumber)
+        let (madeList, _, _) = madeList
+        scorecardDelegate?.scorecardScrollPickerPopup(board: board, table: table, column: .made, values: madeList, selected: board.made + (6 + board.contract.level.rawValue), frame: self.frame, in: self.superview!) { (selected) in
+            self.madePicker.set(selected)
+            self.scrollPickerDidChange(to: selected)
+        }
     }
     
     internal func scrollPickerDidChange(to value: Int) {

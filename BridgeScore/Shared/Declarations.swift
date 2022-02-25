@@ -195,7 +195,7 @@ public enum Participant: Int, EnumPickerType {
     }
 }
 
-public enum Seat: Int, EnumPickerType {
+public enum Seat: Int, EnumPickerType, ContractEnumType {
     case unknown = 0
     case north = 1
     case east = 2

@@ -51,7 +51,7 @@ class CustomCollectionViewLayout: UICollectionViewFlowLayout {
         }
     }
     
-    init(fixedFactors: Bool = true, alphaFactor: CGFloat = 1.0,scaleFactor: CGFloat = 0.98, direction: UICollectionView.ScrollDirection = .horizontal) {
+    init(fixedFactors: Bool = true, alphaFactor: CGFloat = 1.0, scaleFactor: CGFloat = 0.98, direction: UICollectionView.ScrollDirection = .horizontal) {
         self.fixedFactors = fixedFactors
         self.alphaFactor = alphaFactor
         self.scaleFactor = scaleFactor

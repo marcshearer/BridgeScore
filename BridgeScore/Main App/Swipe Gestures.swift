@@ -15,9 +15,8 @@ enum SwipeGestureDirection {
 }
 
 struct SwipeGesture : ViewModifier {
-    var requiredDirection: SwipeGestureDirection
     var minimumDistance: CGFloat = 30
-    var action: ()->()
+    var action: (SwipeGestureDirection)->()
         
     func body(content: Content) -> some View { content
         .gesture(DragGesture(minimumDistance: minimumDistance, coordinateSpace: .global)
@@ -33,15 +32,15 @@ struct SwipeGesture : ViewModifier {
                     // Vertical swipe
                     swipeDirection = (vertical < 0 ? .up : .down)
                 }
-                if swipeDirection == requiredDirection {
-                    action()
+                if let swipeDirection = swipeDirection {
+                    action(swipeDirection)
                 }
             })
     }
 }
 
 extension View {
-    func onSwipe(_ requiredDirection: SwipeGestureDirection, minimumDistance: CGFloat = 30, action: @escaping ()->()) -> some View {
-        self.modifier(SwipeGesture(requiredDirection: requiredDirection, minimumDistance: minimumDistance, action: action))
+    func onSwipe(minimumDistance: CGFloat = 30, action: @escaping (SwipeGestureDirection)->()) -> some View {
+        self.modifier(SwipeGesture(minimumDistance: minimumDistance, action: action))
     }
 }

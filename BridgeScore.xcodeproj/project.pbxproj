@@ -56,6 +56,7 @@
 		B26BCE74279B236F00B73501 /* Layout Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE73279B236F00B73501 /* Layout Managed Object.swift */; };
 		B26BCE76279BEBA500B73501 /* Scorecard Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */; };
 		B26C555727C7EA9200015D0A /* Table with Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26C555627C7EA9200015D0A /* Table with Collection.swift */; };
+		B26C555927C8BCBC00015D0A /* Scroll Picker Popup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26C555827C8BCBC00015D0A /* Scroll Picker Popup View.swift */; };
 		B28E2B1E27C6A582002A9EE2 /* Input Float.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28E2B1D27C6A582002A9EE2 /* Input Float.swift */; };
 		B28E4EE827B55F9A0059819C /* Backup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28E4EE727B55F9A0059819C /* Backup.swift */; };
 		B2A2053527AFC2E400C83C88 /* Player Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053427AFC2E400C83C88 /* Player Setup View.swift */; };
@@ -138,6 +139,7 @@
 		B26BCE73279B236F00B73501 /* Layout Managed Object.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Layout Managed Object.swift"; sourceTree = "<group>"; };
 		B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Managed Object.swift"; sourceTree = "<group>"; };
 		B26C555627C7EA9200015D0A /* Table with Collection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Table with Collection.swift"; sourceTree = "<group>"; };
+		B26C555827C8BCBC00015D0A /* Scroll Picker Popup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scroll Picker Popup View.swift"; sourceTree = "<group>"; };
 		B28E2B1D27C6A582002A9EE2 /* Input Float.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Input Float.swift"; sourceTree = "<group>"; };
 		B28E4EE727B55F9A0059819C /* Backup.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Backup.swift; sourceTree = "<group>"; };
 		B28E4EE927B566300059819C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -374,11 +376,12 @@
 			isa = PBXGroup;
 			children = (
 				B26BCE6E279AEB6C00B73501 /* Scorecard List View.swift */,
+				B2633A0D27AC3A460081B258 /* Layout List View.swift */,
 				B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */,
 				B2276D5727A5A2C90025DA80 /* Scorecard Canvas View.swift */,
 				B2C4338B27B6646700796F24 /* Scorecard Input View.swift */,
 				B20B38F127C153280001B45E /* Contract Entry View.swift */,
-				B2633A0D27AC3A460081B258 /* Layout List View.swift */,
+				B26C555827C8BCBC00015D0A /* Scroll Picker Popup View.swift */,
 			);
 			name = "Main Views";
 			sourceTree = "<group>";
@@ -550,6 +553,7 @@
 				B2CC509927BE21060050F22C /* Scroll Picker.swift in Sources */,
 				B2EB3D7B279DCBCB00D64225 /* Default Data.swift in Sources */,
 				B26BCE302799AB6700B73501 /* MyApp.swift in Sources */,
+				B26C555927C8BCBC00015D0A /* Scroll Picker Popup View.swift in Sources */,
 				B26BCE362799AD1700B73501 /* Config.swift in Sources */,
 				B2AF750F27AD384900233693 /* Layout Setup View.swift in Sources */,
 				B28E4EE827B55F9A0059819C /* Backup.swift in Sources */,

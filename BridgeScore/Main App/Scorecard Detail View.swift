@@ -22,7 +22,10 @@ struct ScorecardDetailView: View {
                 
                 let bannerOptions = [
                     BannerOption(image: AnyView(Image(systemName: "rectangle.split.3x3")), likeBack: true, action: {linkAction(toCanvas: false) }),
-                    BannerOption(image: AnyView(Image(systemName: "square.and.pencil").rotationEffect(Angle.init(degrees: 90))), likeBack: true, action: {linkAction(toCanvas: true)})]
+/*                  BannerOption(image: AnyView(Image(systemName: "square.and.pencil")
+                        .rotationEffect(Angle.init(degrees: 90))), likeBack: true, action: {linkAction(toCanvas: true)}) */
+                ]
+                
                 Banner(title: $scorecard.editTitle, back: true, backAction: backAction, optionMode: .buttons, options: bannerOptions)
                 
                 ScrollView(showsIndicators: false) {
@@ -31,6 +34,15 @@ struct ScorecardDetailView: View {
                 }
             }
             .keyboardAdaptive
+            .onSwipe { (direction) in
+                if direction == .left {
+                    linkAction(toCanvas: false)
+                } else if direction == .right {
+                    if backAction() {
+                        presentationMode.wrappedValue.dismiss()
+                    }
+                }
+            }
             .onChange(of: linkToCanvas) { (linkToCanvas) in
                 if linkToCanvas {
                     scorecard.backupCurrent()

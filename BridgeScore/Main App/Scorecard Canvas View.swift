@@ -372,7 +372,7 @@ class ScorecardCanvasUIView : UIView, UITableViewDataSource, UITableViewDelegate
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ScorecardUIViewCollectionViewCell", for: indexPath) as! ScorecardCanvasUIViewCollectionViewCell
         let column = columns[indexPath.item]
         let row = rows[collectionView.tag]
-        cell.set(view: collectionView, row: row, column: column)
+        cell.set(view: collectionView, scorecard: scorecard, row: row, column: column)
         return cell
     }
     
@@ -494,7 +494,7 @@ class ScorecardCanvasUIViewCollectionViewCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func set(view: UICollectionView, row: CanvasRow, column: CanvasColumn) {
+    func set(view: UICollectionView, scorecard: ScorecardViewModel, row: CanvasRow, column: CanvasColumn) {
         var color: PaletteColor
         self.view = view
         self.row = row
@@ -508,7 +508,8 @@ class ScorecardCanvasUIViewCollectionViewCell: UICollectionViewCell {
         case .body:
             if column.type == .board {
                 self.label.font = boardFont
-                self.label.text = "\(row.board?.board ?? 0)"
+                let boardNumber = row.board?.board ?? 0
+                self.label.text = "\(scorecard.resetNumbers ? ((boardNumber - 1) % scorecard.boardsTable) + 1 : boardNumber)"
             } else {
                 self.label.font = cellFont
             }

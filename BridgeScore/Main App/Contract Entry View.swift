@@ -6,12 +6,12 @@
 //
 
 import UIKit
-import SwiftUI
 
 fileprivate enum ContractCollection: Int {
     case level = 1
     case suit = 2
     case double = 3
+    case declarer = 4
     
     var buttonWidth: CGFloat {
         switch self {
@@ -21,6 +21,8 @@ fileprivate enum ContractCollection: Int {
             return 60
         case .double:
             return passoutButtonWidth
+        case .declarer:
+            return 80
         }
     }
 }
@@ -39,12 +41,15 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
     private var levelCollectionView: UICollectionView!
     private var suitCollectionView: UICollectionView!
     private var doubleCollectionView: UICollectionView!
+    private var declarerCollectionView: UICollectionView!
     private var passOutLabel = UILabel()
+    private var declarerLabel = UILabel()
     private var cancelButton = UILabel()
     private var selectButton = UILabel()
     private var contract = Contract()
-    private var completion: ((Contract)->())?
-    
+    private var declarer: Seat?
+    private var completion: ((Contract, Seat?)->())?
+    private var heightConstraint: NSLayoutConstraint!
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
@@ -76,6 +81,8 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
                 return ContractSuit.validCases.count
             case .double:
                 return ContractDouble.allCases.count
+            case .declarer:
+                return Seat.allCases.count
             }
         } else {
             fatalError()
@@ -111,6 +118,11 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
                 let double = ContractDouble.allCases[indexPath.row]
                 let cell = ContractEntryCollectionCell<ContractDouble>.dequeue(collectionView, for: indexPath)
                 cell.set(value: double, selected: (double == contract.double), disabled: !contract.suit.hasDouble, tapAction: doubleTapped)
+                return cell
+            case .declarer:
+                let declarer = Seat.allCases[indexPath.row]
+                let cell = ContractEntryCollectionCell<Seat>.dequeue(collectionView, for: indexPath)
+                cell.set(value: declarer, selected: (declarer == self.declarer), disabled: false, tapAction: declarerTapped)
                 return cell
             }
         } else {
@@ -152,15 +164,20 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         }
     }
     
+    private func declarerTapped(declarer: Seat) {
+        if declarer != self.declarer {
+            self.declarer = declarer
+            declarerCollectionView.reloadData()
+            updateButtons()
+        }
+    }
+    
     // MARK: - Utility Routines ======================================================================== -
     
     private func updateButtons() {
         let selectEnabled = (contract.level == .passout || contract.suit != .blank)
         selectButton.isUserInteractionEnabled = selectEnabled
 
-        let contractText = contract.string
-        selectButton.text = (!selectEnabled ? "Select" : "\(contractText)")
-        
         let selectColor = (selectEnabled ? Palette.contractUnselected : Palette.contractDisabled)
         selectButton.backgroundColor = UIColor(selectColor.background)
         selectButton.textColor = UIColor(selectColor.text).withAlphaComponent(selectEnabled ? 1 : 0.3)
@@ -175,17 +192,21 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
     }
     
     @objc private func selectPressed(_ sender: UILabel) {
-        self.completion?(Contract(copying: contract))
+        self.completion?(Contract(copying: contract), declarer)
         hide()
     }
     
     // MARK: - Show / Hide ============================================================================ -
     
-    public func show(from sourceView: UIView, contract: Contract, hideBackground: Bool = true, completion: @escaping (Contract)->()) {
+    public func show(from sourceView: UIView, contract: Contract, declarer: Seat?, hideBackground: Bool = true, completion: @escaping (Contract, Seat?)->()) {
         self.contract = Contract(copying: contract)
+        self.declarer = declarer
         self.completion = completion
         self.frame = sourceView.frame
         backgroundView.frame = sourceView.frame
+        heightConstraint.constant = (declarer == nil ? 350 : 450)
+        declarerLabel.isHidden = (declarer == nil)
+        declarerCollectionView.isHidden = (declarer == nil)
         setNeedsLayout()
         layoutIfNeeded()
         layoutSubviews()
@@ -196,6 +217,7 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         levelCollectionView.reloadData()
         suitCollectionView.reloadData()
         doubleCollectionView.reloadData()
+        declarerCollectionView.reloadData()
         updateButtons()
     }
     
@@ -210,6 +232,7 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         levelCollectionView = UICollectionView(frame: frame, collectionViewLayout: UICollectionViewFlowLayout())
         suitCollectionView = UICollectionView(frame: frame, collectionViewLayout: UICollectionViewFlowLayout())
         doubleCollectionView = UICollectionView(frame: frame, collectionViewLayout: UICollectionViewFlowLayout())
+        declarerCollectionView = UICollectionView(frame: frame, collectionViewLayout: UICollectionViewFlowLayout())
 
         // Background
         addSubview(backgroundView)
@@ -222,7 +245,7 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         // Content
         backgroundView.addSubview(contentView, anchored: .centerX, .centerY)
         Constraint.setWidth(control: contentView, width: 650)
-        Constraint.setHeight(control: contentView, height: 350)
+        heightConstraint = Constraint.setHeight(control: contentView, height: 350)
         contentView.backgroundColor = UIColor(Palette.alternate.background)
         contentView.addShadow()
         contentView.layer.cornerRadius = 20
@@ -261,11 +284,24 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         // Doubles
         loadCollection(collectionView: doubleCollectionView, anchor: .trailing, yOffset: 2 * (buttonHeight + buttonSpaceY), buttonWidth: ContractCollection.double.buttonWidth, elements: ContractDouble.allCases.count, tag: ContractCollection.double.rawValue, type: ContractDouble.undoubled)
 
+        // Declarer
+        let declarerOffset = 3.5 * (buttonHeight + buttonSpaceY)
+        contentView.addSubview(declarerLabel)
+        Constraint.anchor(view: self.contentView, control: declarerLabel, to: passOutLabel, attributes: .leading)
+        Constraint.anchor(view: self.contentView, control: declarerLabel, to: passOutLabel, constant: declarerOffset, attributes: .top)
+        Constraint.setHeight(control: declarerLabel, height: buttonHeight)
+        Constraint.setWidth(control: declarerLabel, width: passoutButtonWidth)
+        declarerLabel.font = titleFont
+        declarerLabel.textAlignment = .left
+        declarerLabel.textColor = UIColor(Palette.alternate.text)
+        declarerLabel.text = "Declarer"
+        loadCollection(collectionView: declarerCollectionView, anchor: .trailing, yOffset: declarerOffset, buttonWidth: ContractCollection.declarer.buttonWidth, elements: Seat.allCases.count, tag: ContractCollection.declarer.rawValue, type: Seat.unknown)
+    
         // Cancel button
         loadActionButton(button: cancelButton, xOffset: -((actionButtonWidth / 2) + buttonSpaceX), text: "Cancel", action: cancelSelector)
         
         // Select button
-        loadActionButton(button: selectButton, xOffset: ((actionButtonWidth / 2) + buttonSpaceX), text: "Select", action: #selector(ContractEntryView.selectPressed(_:)))
+        loadActionButton(button: selectButton, xOffset: ((actionButtonWidth / 2) + buttonSpaceX), text: "Confirm", action: #selector(ContractEntryView.selectPressed(_:)))
     }
     
     func loadActionButton(button: UILabel, xOffset: CGFloat, text: String, action: Selector) {
@@ -304,7 +340,7 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
 
 // MARK: - Cell classes ================================================================ -
 
-fileprivate let contractEntryCellIdentifier = "Board CollectionCell"
+fileprivate let contractEntryCellIdentifier = "Board Collection Cell"
 
 fileprivate class ContractEntryCollectionCell<EnumType>: UICollectionViewCell where EnumType: ContractEnumType {
     private var label = UILabel()
