@@ -165,14 +165,15 @@ extension ScorecardDelegate {
 
 fileprivate let titleRowHeight: CGFloat = 40
 fileprivate let boardRowHeight: CGFloat = 90
+fileprivate let tableRowHeight: CGFloat = 80
 
 class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, UITableViewDelegate, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
         
     private var scorecard: ScorecardViewModel
-    private var mainTableView = UITableView()
+    private var titleView: UIView!
+    private var mainTableView = UITableView(frame: CGRect(), style: .plain)
     private var contractEntryView: ContractEntryView
     public var delegate: ScorecardInputUIViewDelegate?
-    private var tableRowHeight: CGFloat
     private var subscription: AnyCancellable?
     private var lastKeyboardScrollOffset: CGFloat = 0
     private var isKeyboardOffset = false
@@ -197,13 +198,17 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     
     init(frame: CGRect, scorecard: ScorecardViewModel) {
         self.scorecard = scorecard
-        self.tableRowHeight = (scorecard.tableTotal ? 80 : 2)
         self.contractEntryView = ContractEntryView(frame: CGRect())
 
         super.init(frame: frame)
                     
         // Add subviews
-        self.addSubview(self.mainTableView, anchored: .leading, .trailing, .top)
+        titleView = ScorecardInputTableTitleView(self, frame: CGRect(origin: .zero, size: CGSize(width: frame.width, height: titleRowHeight)), tag: RowType.boardTitle.tagOffset)
+        self.addSubview(titleView, anchored: .leading, .trailing, .top)
+        Constraint.setHeight(control: titleView, height: titleRowHeight)
+        
+        self.addSubview(self.mainTableView, anchored: .leading, .trailing)
+        Constraint.anchor(view: self, control: titleView, to: mainTableView, toAttribute: .top, attributes: .bottom)
         bottomConstraint = Constraint.anchor(view: self, control: mainTableView, attributes: .bottom).first!
                                 
         // Setup main table view
@@ -212,9 +217,9 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         self.mainTableView.tag = RowType.board.rawValue
         self.mainTableView.sectionHeaderTopPadding = 0
         self.mainTableView.bounces = false
-        ScorecardInputTableTableCell.register(mainTableView)
-        ScorecardInputBoardTitleTableCell.register(mainTableView)
+        ScorecardInputTableSectionHeaderView.register(mainTableView)
         ScorecardInputBoardTableCell.register(mainTableView)
+        
         subscription = Publishers.keyboardHeight.sink { (keyboardHeight) in
             self.keyboardMoved(keyboardHeight)
         }
@@ -298,11 +303,11 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     }
     
     private func updateScore(section: Int){
-        if Scorecard.updateTableScore(tableNumber: section + 1) {
+        if Scorecard.updateTableScore(scorecard: scorecard, tableNumber: section + 1) {
             updateTableCell(section: section, columnType: .tableScore)
             Scorecard.current.interimSave(entity: .table, itemNumber: section + 1)
         }
-        if Scorecard.updateTotalScore() {
+        if Scorecard.updateTotalScore(scorecard: scorecard) {
             if let score = Scorecard.current.scorecard?.score {
                 scorecard.score = score
             }
@@ -310,11 +315,9 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     }
     
     private func updateTableCell(section: Int, columnType: ColumnType) {
-        if let headerView = mainTableView.headerView(forSection: section) as? ScorecardInputTableHeaderView {
-            if let headerCell = headerView.headerCell {
-                if let columnNumber = tableColumns.firstIndex(where: {$0.type == columnType}) {
-                    headerCell.collectionView.reloadItems(at: [IndexPath(item: columnNumber, section: 0)])
-                }
+        if let headerView = mainTableView.headerView(forSection: section) as? ScorecardInputTableSectionHeaderView {
+            if let columnNumber = tableColumns.firstIndex(where: {$0.type == columnType}) {
+                headerView.collectionView.reloadItems(at: [IndexPath(item: columnNumber, section: 0)])
             }
         }
     }
@@ -372,11 +375,11 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     }
     
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        return tableRowHeight + titleRowHeight
+        return tableRowHeight
     }
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        let view = ScorecardInputTableHeaderView(tableView, from: self, section: section)
+        let view = ScorecardInputTableSectionHeaderView.dequeue(self, tableView: tableView, tag: RowType.table.tagOffset + section + 1)
         return view
     }
     
@@ -437,7 +440,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                     let tableNumber = ((boardNumber - 1) / scorecard.boardsTable) + 1
                     if let table = Scorecard.current.tables[tableNumber] {
                         let column = boardColumns[indexPath.item]
-                        cell.set(from: self, table: table, board: board, boardNumber: boardNumber, column: column)
+                        cell.set(from: self, scorecard: scorecard, table: table, board: board, boardNumber: boardNumber, column: column)
                     }
                 }
                 return cell
@@ -451,7 +454,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 let tableNumber = collectionView.tag % tagMultiplier
                 if let table = Scorecard.current.tables[tableNumber] {
                     let column = tableColumns[indexPath.item]
-                    cell.set(from: self, table: table, tableNumber: tableNumber, column: column)
+                    cell.set(from: self, scorecard: scorecard, table: table, tableNumber: tableNumber, column: column)
                 }
                 return cell
             }
@@ -523,64 +526,36 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     }
 }
 
-// MARK: - Table Header Cell ================================================================ -
+// MARK: - Table View Title Header ============================================================ -
 
-fileprivate class ScorecardInputTableHeaderView: UITableViewHeaderFooterView {
-    fileprivate var headerCell: ScorecardInputTableTableCell!
-    fileprivate var titleCell: ScorecardInputBoardTitleTableCell!
-    
-    init(_ tableView: UITableView, from parent: ScorecardInputUIView, section: Int) {
-        super.init(reuseIdentifier: "Table Header")
-        headerCell = ScorecardInputTableTableCell.dequeue(parent, tableView: tableView, tag: RowType.table.tagOffset + section + 1)
-        titleCell = ScorecardInputBoardTitleTableCell.dequeue(parent, tableView: tableView, tag: RowType.boardTitle.tagOffset + section + 1)
-        self.addSubview(headerCell, anchored: .leading, .trailing, .top)
-        self.addSubview(titleCell, anchored: .leading, .trailing, .bottom)
-        Constraint.setHeight(control: titleCell, height: titleRowHeight)
-        Constraint.anchor(view: self, control: headerCell, to: titleCell, toAttribute: .top, attributes: .bottom)
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-}
-
-// MARK: - Base Table View Cell ================================================================ -
-
-fileprivate class ScorecardInputBaseTableCell: UITableViewCell {
+fileprivate class ScorecardInputTableTitleView: UIView {
     fileprivate var collectionView: UICollectionView!
     private var layout: UICollectionViewFlowLayout!
-           
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
+    
+    init<D: UICollectionViewDataSource & UICollectionViewDelegate>
+    (_ dataSourceDelegate: D, frame: CGRect, tag: Int) {
+        super.init(frame: frame)
         self.layout = UICollectionViewFlowLayout()
         self.collectionView = UICollectionView(frame: self.frame, collectionViewLayout: layout)
-        self.contentView.addSubview(collectionView, anchored: .all)
-        self.contentView.bringSubviewToFront(self.collectionView)
+        self.addSubview(collectionView, anchored: .all)
+        self.bringSubviewToFront(self.collectionView)
+        ScorecardInputBoardCollectionCell.register(collectionView)
+        TableViewCellWithCollectionView.setCollectionViewDataSourceDelegate(dataSourceDelegate, collectionView: collectionView, tag: tag)
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
-    fileprivate func setCollectionViewDataSourceDelegate
-    <D: UICollectionViewDataSource & UICollectionViewDelegate>
-    (_ dataSourceDelegate: D, tag: Int) {
-        
-        collectionView.delegate = dataSourceDelegate
-        collectionView.dataSource = dataSourceDelegate
-        collectionView.tag = tag
-        collectionView.reloadData()
-    }
 }
 
-// MARK: - Board Title Table View Cell ================================================================ -
+// MARK: - Table View Section Header ============================================================ -
 
-fileprivate class ScorecardInputBoardTitleTableCell: ScorecardInputBaseTableCell {
-    private static let identifier = "Board Title TableCell"
+fileprivate class ScorecardInputTableSectionHeaderView: TableViewSectionHeaderWithCollectionView {
+    private static var identifier = "Table Section Header"
     
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
-        ScorecardInputBoardCollectionCell.register(self.collectionView)
+    override init(reuseIdentifier: String?) {
+        super.init(reuseIdentifier: reuseIdentifier)
+        ScorecardInputTableCollectionCell.register(self.collectionView)
     }
     
     required init?(coder: NSCoder) {
@@ -588,20 +563,17 @@ fileprivate class ScorecardInputBoardTitleTableCell: ScorecardInputBaseTableCell
     }
     
     public class func register(_ tableView: UITableView, forTitle: Bool = false) {
-        tableView.register(ScorecardInputBoardTitleTableCell.self, forCellReuseIdentifier: identifier)
-   }
+        tableView.register(ScorecardInputTableSectionHeaderView.self, forHeaderFooterViewReuseIdentifier: identifier)
+    }
     
-    public class func dequeue<D: UICollectionViewDataSource & UICollectionViewDelegate>(_ dataSourceDelegate : D, tableView: UITableView, tag: Int) -> ScorecardInputBoardTitleTableCell {
-        var cell: ScorecardInputBoardTitleTableCell
-        cell = tableView.dequeueReusableCell(withIdentifier: identifier) as! ScorecardInputBoardTitleTableCell
-        cell.setCollectionViewDataSourceDelegate(dataSourceDelegate, tag: tag)
-        return cell
+    public class func dequeue<D: UICollectionViewDataSource & UICollectionViewDelegate>(_ dataSourceDelegate : D, tableView: UITableView, tag: Int) -> ScorecardInputTableSectionHeaderView {
+        return TableViewSectionHeaderWithCollectionView.dequeue(dataSourceDelegate, tableView: tableView, withIdentifier: ScorecardInputTableSectionHeaderView.identifier, tag: tag) as! ScorecardInputTableSectionHeaderView
     }
 }
 
 // MARK: - Board Table View Cell ================================================================ -
 
-fileprivate class ScorecardInputBoardTableCell: ScorecardInputBaseTableCell {
+fileprivate class ScorecardInputBoardTableCell: TableViewCellWithCollectionView {
     private static let cellIdentifier = "Board TableCell"
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -620,31 +592,6 @@ fileprivate class ScorecardInputBoardTableCell: ScorecardInputBaseTableCell {
     public class func dequeue<D: UICollectionViewDataSource & UICollectionViewDelegate>(_ dataSourceDelegate : D, tableView: UITableView, for indexPath: IndexPath, tag: Int) -> ScorecardInputBoardTableCell {
         var cell: ScorecardInputBoardTableCell
         cell = tableView.dequeueReusableCell(withIdentifier: cellIdentifier, for: indexPath) as! ScorecardInputBoardTableCell
-        cell.setCollectionViewDataSourceDelegate(dataSourceDelegate, tag: tag)
-        return cell
-    }
-}
-
-// MARK: - Table Table View Cell ================================================================ -
-
-fileprivate class ScorecardInputTableTableCell: ScorecardInputBaseTableCell {
-    private static let identifier = "Table TableCell"
-    
-    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
-        super.init(style: style, reuseIdentifier: reuseIdentifier)
-        ScorecardInputTableCollectionCell.register(self.collectionView)
-    }
-    
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
-    public class func register(_ tableView: UITableView) {
-        tableView.register(ScorecardInputTableTableCell.self, forCellReuseIdentifier: identifier)
-    }
-    
-    public class func dequeue<D: UICollectionViewDataSource & UICollectionViewDelegate>(_ dataSourceDelegate : D, tableView: UITableView, tag: Int) -> ScorecardInputTableTableCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: identifier) as! ScorecardInputTableTableCell
         cell.setCollectionViewDataSourceDelegate(dataSourceDelegate, tag: tag)
         return cell
     }
@@ -790,7 +737,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         label.text = column.heading
     }
     
-    func set(from scorecardDelegate: ScorecardDelegate, table: TableViewModel, board: BoardViewModel, boardNumber: Int, column: ScorecardColumn) {
+    func set(from scorecardDelegate: ScorecardDelegate, scorecard: ScorecardViewModel, table: TableViewModel, board: BoardViewModel, boardNumber: Int, column: ScorecardColumn) {
         self.scorecardDelegate = scorecardDelegate
         self.board = board
         self.table = table
@@ -801,7 +748,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         switch column.type {
         case .board:
             label.font = boardFont
-            label.text = "\(board.board)"
+            label.text = "\(scorecard.resetNumbers ? ((board.board - 1) % scorecard.boardsTable) + 1 : board.board)"
         case .contract:
             contractPicker.isHidden = false
             contractPicker.set(board.contract, color: Palette.gridBoard, font: pickerTitleFont, force: true)
@@ -1242,7 +1189,7 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         captionHeight.constant = 0
     }
     
-    func set(from scorecardDelegate: ScorecardDelegate, table: TableViewModel, tableNumber: Int, column: ScorecardColumn) {        self.scorecardDelegate = scorecardDelegate
+    func set(from scorecardDelegate: ScorecardDelegate, scorecard: ScorecardViewModel, table: TableViewModel, tableNumber: Int, column: ScorecardColumn) {        self.scorecardDelegate = scorecardDelegate
         self.table = table
         self.tableNumber = tableNumber
         self.column = column
@@ -1256,7 +1203,13 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
             seatPicker.isHidden = false
             seatPicker.set(table.sitting, color: Palette.gridTable, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
         case .tableScore:
-            label.text = table.score == nil ? "" : "\(table.score!)"
+            if scorecard.type.tableAggregate == .manual {
+                textField.isHidden = false
+                textField.clearsOnBeginEditing = true
+                textField.text = table.score == nil ? "" : "\(table.score!)"
+            } else {
+                label.text = table.score == nil ? "" : "\(table.score!)"
+            }
         case .versus:
             textField.isHidden = false
             textField.text = table.versus

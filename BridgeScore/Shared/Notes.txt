@@ -10,12 +10,12 @@ Screen jumps if tap elsewhere immediately after writing in text edit
 To Do
 =====
 
+Add declarer to contract popup if have specified seat
+Implement clear sheet
+Recalculate totals on load / change of method
 Remove old canvas entry
 Sort out dark mode
 Maybe remove file sharing in Info.plist once can backup from Mac
-Should add scores rather than averaging them for some match types
-Need more match types - e.g. for Swiss Pairs in VPs
-Total for the whole match
 
 Enhancements
 ============

@@ -135,6 +135,7 @@ struct ScorecardDetailsView: View {
                     
                     HStack {
                         InputFloat(title: "Score", field: $scorecard.score, width: 100, places: scorecard.type.matchPlaces)
+                            .disabled(scorecard.type.matchAggregate != .manual)
                         Spacer()
                     }
                     
@@ -159,7 +160,10 @@ struct ScorecardDetailsView: View {
                     
                     PickerInput(title: "Scoring Method", field: $typeIndex, values: {types.map{$0.string}})
                     { index in
-                        scorecard.type = types[index]
+                        if scorecard.type != types[index] {
+                            scorecard.type = types[index]
+                            updateScores()
+                        }
                     }
                     
                     StepperInput(title: "Boards / Tables", field: $scorecard.boardsTable, label: { value in "\(value) boards per round" }, minValue: $minValue, labelWidth: 300) { (newValue) in
@@ -169,7 +173,7 @@ struct ScorecardDetailsView: View {
                     
                     StepperInput(field: $scorecard.boards, label: boardsLabel, minValue: $scorecard.boardsTable, increment: $scorecard.boardsTable, topSpace: 0, labelWidth: 300)
                     
-                    InputToggle(title: "Options", text: "Show table totals", field: $scorecard.tableTotal)
+                    InputToggle(title: "Options", text: "Board numbers per table", field: $scorecard.resetNumbers)
                     
                     Spacer().frame(height: 16)
                     
@@ -182,6 +186,7 @@ struct ScorecardDetailsView: View {
             locationIndex = locations.firstIndex(where: {$0 == scorecard.location}) ?? 0
             playerIndex = players.firstIndex(where: {$0 == scorecard.partner}) ?? 0
             typeIndex = types.firstIndex(where: {$0 == scorecard.type}) ?? 0
+            updateScores()
         }
     }
     
@@ -196,5 +201,15 @@ struct ScorecardDetailsView: View {
     
     func plural(_ text: String, _ value: Int) -> String {
         return (value <= 1 ? text : text + "s")
+    }
+    
+    func updateScores() {
+        
+        for tableNumber in 1...scorecard.tables {
+            if Scorecard.updateTableScore(scorecard: scorecard, tableNumber: tableNumber) {
+                Scorecard.current.tables[tableNumber]?.save()
+            }
+        }
+        Scorecard.updateTotalScore(scorecard: scorecard)
     }
 }

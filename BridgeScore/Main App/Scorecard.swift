@@ -217,62 +217,16 @@ class Scorecard {
         }
     }
     
-    @discardableResult static func updateTableScore(tableNumber: Int) -> Bool {
+    @discardableResult static func updateTableScore(scorecard: ScorecardViewModel, tableNumber: Int) -> Bool {
         var changed = false
-        if let scorecard = Scorecard.current.scorecard {
-            let boards = scorecard.boardsTable
-            var total: Float = 0
-            var count: Int = 0
-            if let table = Scorecard.current.tables[tableNumber] {
-                for index in 1...boards {
-                    let boardNumber = ((tableNumber - 1) * boards) + index
-                    if let board = Scorecard.current.boards[boardNumber] {
-                        if let score = board.score {
-                            count += 1
-                            total += score
-                        }
-                    }
-                }
-                var newScore: Float?
-                let type = scorecard.type
-                let boards = scorecard.boardsTable
-                let places = type.tablePlaces
-                let average = Utility.round(count == 0 ? 0 : total / Float(count), places: places)
-                switch type.tableAggregate {
-                case .average:
-                    newScore = average
-                case .total:
-                    newScore = Utility.round(total, places: places)
-                case .continuousVp:
-                    newScore = BridgeImps(Int(Utility.round(total))).vp(boards: boards, places: places)
-                case .discreteVp:
-                    newScore = Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: boards))
-                case .percentVp:
-                    if let vps = BridgeMatchPoints(average).vp(boards: boards) {
-                        newScore = Float(vps)
-                    }
-                default:
-                    break
-                }
-                if let newScore = newScore {
-                    if newScore != table.score {
-                        table.score = newScore
-                        changed = true
-                    }
-                }
-            }
-        }
-        return changed
-    }
-    
-    @discardableResult static func updateTotalScore() -> Bool {
-        var changed = false
-        if let scorecard = Scorecard.current.scorecard {
-            var total: Float = 0
-            var count: Int = 0
-            for tableNumber in 1...scorecard.tables {
-                if let table = Scorecard.current.tables[tableNumber] {
-                    if let score = table.score {
+        let boards = scorecard.boardsTable
+        var total: Float = 0
+        var count: Int = 0
+        if let table = Scorecard.current.tables[tableNumber] {
+            for index in 1...boards {
+                let boardNumber = ((tableNumber - 1) * boards) + index
+                if let board = Scorecard.current.boards[boardNumber] {
+                    if let score = board.score {
                         count += 1
                         total += score
                     }
@@ -280,10 +234,10 @@ class Scorecard {
             }
             var newScore: Float?
             let type = scorecard.type
-            let boards = scorecard.boards
-            let places = type.matchPlaces
+            let boards = scorecard.boardsTable
+            let places = type.tablePlaces
             let average = Utility.round(count == 0 ? 0 : total / Float(count), places: places)
-            switch type.matchAggregate {
+            switch type.tableAggregate {
             case .average:
                 newScore = average
             case .total:
@@ -299,10 +253,52 @@ class Scorecard {
             default:
                 break
             }
-            if newScore != scorecard.score {
-                scorecard.score = newScore
-                changed = true
+            if let newScore = newScore {
+                if newScore != table.score {
+                    table.score = newScore
+                    changed = true
+                }
             }
+        }
+        return changed
+    }
+    
+    @discardableResult static func updateTotalScore(scorecard: ScorecardViewModel) -> Bool {
+        var changed = false
+        var total: Float = 0
+        var count: Int = 0
+        for tableNumber in 1...scorecard.tables {
+            if let table = Scorecard.current.tables[tableNumber] {
+                if let score = table.score {
+                    count += 1
+                    total += score
+                }
+            }
+        }
+        var newScore: Float?
+        let type = scorecard.type
+        let boards = scorecard.boards
+        let places = type.matchPlaces
+        let average = Utility.round(count == 0 ? 0 : total / Float(count), places: places)
+        switch type.matchAggregate {
+        case .average:
+            newScore = average
+        case .total:
+            newScore = Utility.round(total, places: places)
+        case .continuousVp:
+            newScore = BridgeImps(Int(Utility.round(total))).vp(boards: boards, places: places)
+        case .discreteVp:
+            newScore = Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: boards))
+        case .percentVp:
+            if let vps = BridgeMatchPoints(average).vp(boards: boards) {
+                newScore = Float(vps)
+            }
+        default:
+            break
+        }
+        if newScore != scorecard.score {
+            scorecard.score = newScore
+            changed = true
         }
         return changed
     }

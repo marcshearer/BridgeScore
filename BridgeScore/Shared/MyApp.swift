@@ -26,7 +26,7 @@ enum UserDefault: String, CaseIterable {
     case currentType
     case currentBoards
     case currentBoardsTable
-    case currentTableTotal
+    case currentresetNumbers
     case currentScore
     case currentPosition
     case currentEntry
@@ -69,7 +69,7 @@ enum UserDefault: String, CaseIterable {
             return 1
         case .currentBoardsTable:
             return 1
-        case .currentTableTotal:
+        case .currentresetNumbers:
             return false
         case .currentScore:
             return ""

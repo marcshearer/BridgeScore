@@ -177,7 +177,7 @@ struct LayoutDetailView : View {
                             
                             StepperInput(field: $selected.boards, label: boardsLabel, minValue: $selected.boardsTable, increment: $selected.boardsTable, topSpace: 0)
                             
-                            InputToggle(title: "Options", text: "Show table totals", field: $selected.tableTotal)
+                            InputToggle(title: "Options", text: "Board numbers per table", field: $selected.resetNumbers)
                             
                             Spacer().frame(height: 16)
                             

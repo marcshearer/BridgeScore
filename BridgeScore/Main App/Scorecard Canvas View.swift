@@ -162,13 +162,12 @@ class ScorecardCanvasUIView : UIView, UITableViewDataSource, UITableViewDelegate
     var rows: [CanvasRow] = []
     let headingHeight: CGFloat = 40
     let rowHeight: CGFloat = 90
-    var totalHeight: CGFloat
+    var totalHeight: CGFloat = 80
     private var canvasWidth: CGFloat?
     
     init(frame: CGRect, scorecard: ScorecardViewModel, canvasView: PKCanvasView) {
         self.scorecard = scorecard
         self.canvasView = canvasView
-        self.totalHeight = (scorecard.tableTotal ? 80 : 2)
         
         super.init(frame: frame)
         

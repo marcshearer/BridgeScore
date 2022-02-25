@@ -20,7 +20,7 @@ class DefaultData {
         layout1.boards = 24
         layout1.boardsTable = 3
         layout1.type = .percent
-        layout1.tableTotal = true
+        layout1.resetNumbers = false
         layout1.sequence = 0
         
         let layout2 = LayoutViewModel()
@@ -32,7 +32,7 @@ class DefaultData {
         layout2.boards = 24
         layout2.boardsTable = 3
         layout2.type = .percent
-        layout2.tableTotal = true
+        layout2.resetNumbers = false
         layout2.sequence = 1
         
         let layout3 = LayoutViewModel()
@@ -44,7 +44,7 @@ class DefaultData {
         layout3.boards = 24
         layout3.boardsTable = 3
         layout3.type = .percent
-        layout3.tableTotal = true
+        layout3.resetNumbers = false
         layout3.sequence = 2
         
         let layout4 = LayoutViewModel()
@@ -56,7 +56,7 @@ class DefaultData {
         layout4.boards = 24
         layout4.boardsTable = 12
         layout4.type = .xImp
-        layout4.tableTotal = true
+        layout4.resetNumbers = true
         layout4.sequence = 3
         
         let layout5 = LayoutViewModel()
@@ -68,7 +68,7 @@ class DefaultData {
         layout5.boards = 25
         layout5.boardsTable = 5
         layout5.type = .percent
-        layout5.tableTotal = true
+        layout5.resetNumbers = false
         layout5.sequence = 4
         
         let layout6 = LayoutViewModel()
@@ -80,7 +80,7 @@ class DefaultData {
         layout6.boards = 12
         layout6.boardsTable = 2
         layout6.type = .percent
-        layout6.tableTotal = true
+        layout6.resetNumbers = false
         layout6.sequence = 5
         
         let layout7 = LayoutViewModel()
@@ -92,7 +92,7 @@ class DefaultData {
         layout7.boards = 18
         layout7.boardsTable = 3
         layout7.type = .percent
-        layout7.tableTotal = true
+        layout7.resetNumbers = false
         layout7.sequence = 6
 
         return [layout1, layout2, layout3, layout4, layout5, layout6, layout7]

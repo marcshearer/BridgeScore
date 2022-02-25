@@ -95,11 +95,7 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
     
     public func save() {
         if Scorecard.current.match(scorecard: self.scorecard) {
-            if self.boardMO == nil {
-                Scorecard.current.insert(board: self)
-            } else {
-                Scorecard.current.save(board: self)
-            }
+            Scorecard.current.save(board: self)
         }
     }
     

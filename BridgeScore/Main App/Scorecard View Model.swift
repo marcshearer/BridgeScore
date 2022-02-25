@@ -23,7 +23,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     @Published public var boards: Int = 0
     @Published public var boardsTable: Int = 0
     @Published public var type: Type = .percent
-    @Published public var tableTotal: Bool = false
+    @Published public var resetNumbers: Bool = false
     @Published public var score: Float?
     @Published public var position: Int = 0
     @Published public var entry: Int = 0
@@ -56,7 +56,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
                 self.boards != mo.boards ||
                 self.boardsTable != mo.boardsTable ||
                 self.type != mo.type ||
-                self.tableTotal != mo.tableTotal ||
+                self.resetNumbers != mo.resetNumbers ||
                 self.score != mo.score ||
                 self.position != mo.position ||
                 self.entry != mo.entry ||
@@ -128,7 +128,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.boards = layout.boards
         self.boardsTable = layout.boardsTable
         self.type = layout.type
-        self.tableTotal = layout.tableTotal
+        self.resetNumbers = layout.resetNumbers
         self.date = Date()
         self.comment = ""
         self.score = nil
@@ -149,7 +149,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.boards = from.boards
         self.boardsTable = from.boardsTable
         self.type = from.type
-        self.tableTotal = from.tableTotal
+        self.resetNumbers = from.resetNumbers
         self.score = from.score
         self.position = from.position
         self.entry = from.entry
@@ -173,7 +173,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             self.boards = mo.boards
             self.boardsTable = mo.boardsTable
             self.type = mo.type
-            self.tableTotal = mo.tableTotal
+            self.resetNumbers = mo.resetNumbers
             self.score = mo.score
             self.position = mo.position
             self.entry = mo.entry
@@ -193,7 +193,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             mo.boards = self.boards
             mo.boardsTable = self.boardsTable
             mo.type = self.type
-            mo.tableTotal = self.tableTotal
+            mo.resetNumbers = self.resetNumbers
             mo.score = self.score
             mo.position = self.position
             mo.entry = self.entry
@@ -264,7 +264,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         UserDefault.currentBoards.set(self.boards)
         UserDefault.currentBoardsTable.set(self.boardsTable)
         UserDefault.currentType.set(self.type)
-        UserDefault.currentTableTotal.set(self.tableTotal)
+        UserDefault.currentresetNumbers.set(self.resetNumbers)
         UserDefault.currentScore.set(self.score == nil ? "" : "\(self.score!)")
         UserDefault.currentPosition.set(self.position)
         UserDefault.currentEntry.set(self.entry)
@@ -294,7 +294,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.boards = UserDefault.currentBoards.int
         self.boardsTable = UserDefault.currentBoardsTable.int
         self.type = UserDefault.currentType.type
-        self.tableTotal = UserDefault.currentTableTotal.bool
+        self.resetNumbers = UserDefault.currentresetNumbers.bool
         let score = UserDefault.currentScore.string
         self.score = score == "" ? nil : Float(score)
         self.position = UserDefault.currentPosition.int

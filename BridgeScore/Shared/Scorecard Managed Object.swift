@@ -24,7 +24,7 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var boards16: Int16
     @NSManaged public var boardsTable16: Int16
     @NSManaged public var type16: Int16
-    @NSManaged public var tableTotal: Bool
+    @NSManaged public var resetNumbers: Bool
     @NSManaged public var scoreValue: Float
     @NSManaged public var scoreEntered: Bool
     @NSManaged public var totalScore: String

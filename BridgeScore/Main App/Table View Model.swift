@@ -83,11 +83,7 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
     
     public func save() {
         if Scorecard.current.match(scorecard: self.scorecard) {
-            if self.tableMO == nil {
-                Scorecard.current.insert(table: self)
-            } else {
-                Scorecard.current.save(table: self)
-            }
+            Scorecard.current.save(table: self)
         }
     }
     
