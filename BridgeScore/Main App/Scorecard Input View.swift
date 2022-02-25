@@ -1006,10 +1006,6 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         if let board = board {
             var undoValue: Any?
             switch self.column.type {
-            case .declarer:
-                if value as? Seat != board.declarer {
-                    undoValue = board.declarer.rawValue
-                }
             case .responsible:
                 if value as? Participant != board.responsible {
                     undoValue = board.responsible
@@ -1019,11 +1015,6 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             }
             if let undoValue = undoValue {
                 switch self.column.type {
-                case .declarer:
-                    undoManager?.registerUndo(withTarget: seatPicker) { (seatPicker) in
-                        self.seatPicker.set(undoValue as! Int)
-                        self.enumPickerDidChange(to: undoValue)
-                    }
                 case .responsible:
                     undoManager?.registerUndo(withTarget: participantPicker) { (participantPicker) in
                         self.participantPicker.set(undoValue as! Participant)
@@ -1033,8 +1024,6 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
                     break
                 }
                 switch column.type {
-                case .declarer:
-                    board.declarer = value as! Seat
                 case .responsible:
                     board.responsible = value as! Participant
                 default:
@@ -1071,7 +1060,9 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         scorecardDelegate?.scorecardEndEditing(true)
         scorecardDelegate?.scorecardChanged(type: .board, itemNumber: boardNumber)
         if table.sitting != .unknown {
-            scorecardDelegate?.scorecardScrollPickerPopup(values: Seat.allCases.map{ScrollPickerEntry(title: $0.short, caption: $0.string)}, maxValues: 9, selected: board.declarer.rawValue, frame: CGRect(x: self.frame.minX + self.seatPicker.frame.minX, y: self.frame.minY, width: self.seatPicker.frame.width, height: self.frame.height), in: self.superview!, topPadding: 20, bottomPadding: 4) { (selected) in
+            let width: CGFloat = 70
+            let space = (frame.width - width) / 2
+            scorecardDelegate?.scorecardScrollPickerPopup(values: declarerList, maxValues: 9, selected: board.declarer.rawValue, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 20, bottomPadding: 4) { (selected) in
                 self.seatPicker.set(selected)
                 self.scrollPickerDidChange(to: selected)
             }
@@ -1082,7 +1073,9 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         scorecardDelegate?.scorecardEndEditing(true)
         scorecardDelegate?.scorecardChanged(type: .board, itemNumber: boardNumber)
         let (madeList, _, _) = madeList
-        scorecardDelegate?.scorecardScrollPickerPopup(values: madeList, maxValues: 7, selected: board.made + (6 + board.contract.level.rawValue), frame: self.frame, in: self.superview!, topPadding: 0, bottomPadding: 0) { (selected) in
+        let width: CGFloat = 70
+        let space = (frame.width - width) / 2
+        scorecardDelegate?.scorecardScrollPickerPopup(values: madeList, maxValues: 9, selected: board.made + (6 + board.contract.level.rawValue), frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 0, bottomPadding: 0) { (selected) in
             self.madePicker.set(selected)
             self.scrollPickerDidChange(to: selected)
         }
@@ -1091,7 +1084,9 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     @objc internal func responsibleTapped(_ sender: UIView) {
         scorecardDelegate?.scorecardEndEditing(true)
         scorecardDelegate?.scorecardChanged(type: .board, itemNumber: boardNumber)
-        scorecardDelegate?.scorecardScrollPickerPopup(values: Participant.allCases.map{ScrollPickerEntry(title: $0.short, caption: $0.full)}, maxValues: 7, selected: board.responsible.rawValue, frame: self.frame, in: self.superview!, topPadding: 28, bottomPadding: 12) { (selected) in
+        let width: CGFloat = 70
+        let space = (frame.width - width) / 2
+        scorecardDelegate?.scorecardScrollPickerPopup(values: Participant.allCases.map{ScrollPickerEntry(title: $0.short, caption: $0.full)}, maxValues: 7, selected: board.responsible.rawValue, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 28, bottomPadding: 12) { (selected) in
             if let participant = Participant(rawValue: selected) {
                 self.participantPicker.set(participant)
                 self.enumPickerDidChange(to: participant)
@@ -1450,7 +1445,9 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
     @objc internal func sittingTapped(_ sender: UIView) {
         scorecardDelegate?.scorecardEndEditing(true)
         scorecardDelegate?.scorecardChanged(type: .table, itemNumber: tableNumber)
-        scorecardDelegate?.scorecardScrollPickerPopup(values: Seat.allCases.map{ScrollPickerEntry(title: $0.short, caption: $0.string)}, maxValues: 9, selected: table.sitting.rawValue, frame: CGRect(x: self.frame.minX + self.seatPicker.frame.minX, y: self.frame.minY, width: self.seatPicker.frame.width, height: self.frame.height), in: self.superview!, topPadding: 20, bottomPadding: 4) { (selected) in
+        let width: CGFloat = 70
+        let space = (frame.width - width) / 2
+        scorecardDelegate?.scorecardScrollPickerPopup(values: Seat.allCases.map{ScrollPickerEntry(title: $0.short, caption: $0.string)}, maxValues: 9, selected: table.sitting.rawValue, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 20, bottomPadding: 4) { (selected) in
             if let seat = Seat(rawValue: selected) {
                 self.seatPicker.set(seat)
                 self.enumPickerDidChange(to: seat)
