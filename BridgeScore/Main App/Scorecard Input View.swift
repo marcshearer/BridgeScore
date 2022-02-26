@@ -493,7 +493,6 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     // MARK: - Utility Routines ======================================================================== -
     
     func keyboardMoved(_ keyboardHeight: CGFloat) {
-        print("Keyboard \(keyboardHeight) \(lastKeyboardScrollOffset)")
         if keyboardHeight != 0 || isKeyboardOffset {
             let focusedTextInputBottom = (UIResponder.currentFirstResponder?.globalFrame?.maxY ?? 0)
             let adjustOffset = max(0, focusedTextInputBottom - keyboardHeight) + safeAreaInsets.bottom
@@ -870,6 +869,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     // MARK: - Control change handlers ===================================================================== -
         
     @objc private func textFieldChanged(_ textField: UITextField) {
+        print("text \(textField.text!)")
         let text = textField.text ?? ""
         if let board = board {
             var undoText: String?
@@ -925,6 +925,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
                               .replacingOccurrences(of: "L", with: "1")
                               .replacingOccurrences(of: "Z", with: "2")
                               .replacingOccurrences(of: "S", with: "5")
+                              .replacingOccurrences(of: "_", with: "-")
         return Float(numericText)
     }
     

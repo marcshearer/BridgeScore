@@ -116,7 +116,6 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        print("frame size: \(frame.size.height)")
         return frame.size
     }
     

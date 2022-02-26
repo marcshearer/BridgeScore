@@ -36,12 +36,10 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
     // MARK: - CollectionView Delegates ================================================================ -
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        print(values.count + Int(maxValues / 2) * 2)
         return values.count + Int(maxValues / 2) * 2
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        print("buttonSize \(buttonSize.height)")
         return buttonSize
     }
     
@@ -105,12 +103,13 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         sourceView.addSubview(self)
         sourceView.bringSubviewToFront(self)
         backgroundView.isHidden = !hideBackground
-        contentView.isHidden = false
         valuesCollectionView.reloadData()
         valuesCollectionView.scrollToItem(at: IndexPath(item: selected + Int(maxValues / 2), section: 0), at: .centeredHorizontally, animated: false)
+        self.contentView.isHidden = false
     }
     
     public func hide() {
+        self.contentView.isHidden = true
         removeFromSuperview()
     }
     
@@ -145,6 +144,7 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         focusWindow.layer.borderWidth = 5
         contentView.addSubview(focusWindow, anchored: .centerX, .top, .bottom)
         focusWidthConstraint = Constraint.setWidth(control: focusWindow, width: 100)
+        contentView.isHidden = true
     }
     
     func loadCollection(collectionView: UICollectionView) {
