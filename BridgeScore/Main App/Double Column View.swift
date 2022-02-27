@@ -8,11 +8,12 @@
 import SwiftUI
 
 struct DoubleColumnView <LeftContent, RightContent> : View where LeftContent : View, RightContent : View {
+    var leftWidth: CGFloat = 300
     var leftView: LeftContent
     var rightView: RightContent
-    var leftWidth: CGFloat = 300
     
-    init(@ViewBuilder leftView: ()->LeftContent, @ViewBuilder rightView: ()->RightContent) {
+    init(leftWidth: CGFloat = 300, @ViewBuilder leftView: ()->LeftContent, @ViewBuilder rightView: ()->RightContent) {
+        self.leftWidth = leftWidth
         self.leftView = leftView()
         self.rightView = rightView()
     }

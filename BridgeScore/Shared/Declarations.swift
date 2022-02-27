@@ -20,6 +20,7 @@ let inputTopHeight: CGFloat = (MyApp.format == .tablet ? 20.0 : 10.0)
 let inputDefaultHeight: CGFloat = 30.0
 let inputToggleDefaultHeight: CGFloat = (MyApp.format == .tablet ? 30.0 : 16.0)
 let bannerHeight: CGFloat = (MyApp.format == .tablet ? 80.0 : 50.0)
+let alternateBannerHeight: CGFloat = (MyApp.format == .tablet ? 50.0 : 40.0)
 let minimumBannerHeight: CGFloat = 40.0
 let bannerBottom: CGFloat = (MyApp.format == .tablet ? 30.0 : 10.0)
 let slideInMenuRowHeight: CGFloat = (MyApp.target == .iOS ? 50 : 35)
@@ -165,6 +166,20 @@ public enum Type: Int, CaseIterable {
             return " / \(tables * 20)"
         case .vpMatchTeam:
             return " / 20"
+        }
+    }
+}
+
+public enum ResetBoardNumber: Int, CaseIterable {
+    case continuous = 0
+    case perTable = 1
+    
+    public var string: String {
+        switch self {
+        case .continuous:
+            return "Continuous for match"
+        case .perTable:
+            return "Restart for each table"
         }
     }
 }

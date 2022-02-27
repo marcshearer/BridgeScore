@@ -30,14 +30,16 @@ struct Input : View {
     var title: String?
     @Binding var field: String
     var message: Binding<String>?
-    var topSpace: CGFloat = 16
-    var leadingSpace: CGFloat = 32
-    var height: CGFloat = 40
+    var topSpace: CGFloat = 5
+    var leadingSpace: CGFloat = 0
+    var height: CGFloat = 45
     var width: CGFloat?
     var keyboardType: KeyboardType = .default
     var autoCapitalize: CapitalizationType = .sentences
     var autoCorrect: Bool = true
     var clearText: Bool = true
+    var inlineTitle: Bool = true
+    var inlineTitleWidth: CGFloat = 150
     var onChange: ((String)->())?
     @State private var refresh = false
     
@@ -45,34 +47,52 @@ struct Input : View {
         
         VStack(spacing: 0) {
             
-                // Just to trigger view refresh
+            // Just to trigger view refresh
             if refresh { EmptyView() }
             
-            if title != nil {
+            if title != nil && !inlineTitle {
                 HStack {
                     InputTitle(title: title, message: message, topSpace: topSpace, width: (width == nil ? nil : width! + leadingSpace + 16 + (clearText ? 20 : 0)))
                     Spacer().frame(width: clearText ? 20 : 0)
                 }
                 Spacer().frame(height: 8)
+            } else {
+                Spacer().frame(height: topSpace)
             }
             HStack {
                 Spacer().frame(width: leadingSpace)
-                TextEditor(text: $field)
-                    .background(Palette.input.background)
-                    .lineLimit(1)
-                    .padding(.all, 1)
-                    .keyboardType(self.keyboardType)
-                    .autocapitalization(autoCapitalize)
-                    .disableAutocorrection(!autoCorrect)
-                    .cornerRadius(12)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .if(width != nil) { (view) in
-                        view.frame(width: width)
+                if title != nil && inlineTitle {
+                    HStack {
+                        Spacer().frame(width: 8)
+                        VStack(spacing: 0) {
+                            Spacer()
+                                .frame(height: 9)
+                            Text(title!)
+                            Spacer()
+                        }
+                        Spacer()
                     }
-                    .onChange(of: field) { field in
-                        onChange?(field)
-                    }
-                
+                    .frame(width: inlineTitleWidth)
+                }
+                Spacer().frame(width: 10)
+                HStack {
+                    Spacer().frame(width: 4)
+                    TextEditor(text: $field)
+                        .lineLimit(1)
+                        .padding(.all, 1)
+                        .keyboardType(self.keyboardType)
+                        .autocapitalization(autoCapitalize)
+                        .disableAutocorrection(!autoCorrect)
+                        .onChange(of: field) { field in
+                            onChange?(field)
+                        }
+                }
+                .if(width != nil) { (view) in
+                    view.frame(width: width)
+                }
+                .background(Palette.input.background)
+                .cornerRadius(12)
+
                 if width == nil {
                     Spacer()
                 }
@@ -89,12 +109,12 @@ struct Input : View {
                     }.frame(width: 20)
                 }
                 
-                Spacer().frame(width: 8)
+                Spacer().frame(width: 16)
             }
             
             .font(inputFont)
         }
-        .frame(height: self.height + self.topSpace + (title == nil ? 0 : 30))
+        .frame(height: self.height + self.topSpace + (title == nil || inlineTitle ? 0 : 30))
         .if(width != nil) { (view) in
             view.frame(width: width! + leadingSpace + 16 + (clearText ? 20 : 0))
         }

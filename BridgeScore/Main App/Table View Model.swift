@@ -103,6 +103,12 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
         return self.tableMO == nil
     }
     
+    public var hasData: Bool {
+        return self.sitting != .unknown ||
+        (self.score != nil && self.scorecard.type.tableAggregate == .manual) ||
+        self.versus != ""
+    }
+    
     public var description: String {
         return "Scorecard: \(scorecard.desc), Match: \(table) Table: \(table)"
     }

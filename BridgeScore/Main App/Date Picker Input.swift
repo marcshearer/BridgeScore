@@ -14,19 +14,32 @@ struct DatePickerInput : View {
     var message: Binding<String>?
     var from: Date?
     var to: Date?
-    var topSpace: CGFloat = 16
-    var height: CGFloat = 40
+    var topSpace: CGFloat = 5
+    var height: CGFloat = 45
+    var inlineTitle: Bool = true
+    var inlineTitleWidth: CGFloat = 150
     var onChange: ((String)->())?
 
     var body: some View {
         
         VStack(spacing: 0) {
-            if title != nil {
+            if title != nil && !inlineTitle {
                 InputTitle(title: title, message: message, topSpace: topSpace)
                 Spacer().frame(height: 8)
+            } else {
+                Spacer().frame(height: topSpace)
             }
             HStack {
-                Spacer().frame(width: 32)
+                if inlineTitle && title != nil {
+                    HStack {
+                        Spacer().frame(width: 8)
+                        Text(title!)
+                        Spacer()
+                    }
+                    .frame(width: inlineTitleWidth)
+                } else {
+                    Spacer().frame(width: 32)
+                }
                 if from == nil && to == nil {
                     DatePicker("", selection: $field, displayedComponents: .date)
                 } else if from == nil {
@@ -42,6 +55,6 @@ struct DatePickerInput : View {
             .font(inputFont)
             .labelsHidden()
         }
-        .frame(height: self.height + self.topSpace + (title == nil ? 0 : 30))
+        .frame(height: self.height + self.topSpace + (title == nil || inlineTitle ? 0 : 30))
     }
 }

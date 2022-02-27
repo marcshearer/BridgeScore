@@ -229,7 +229,9 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     }
     
     public func remove() {
-        MasterData.shared.remove(scorecard: self)
+        if !self.isNew {
+            MasterData.shared.remove(scorecard: self)
+        }
         if Scorecard.current.match(scorecard: self) {
             Scorecard.current.removeAll(scorecard: self)
         }

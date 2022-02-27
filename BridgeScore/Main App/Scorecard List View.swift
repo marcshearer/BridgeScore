@@ -19,7 +19,7 @@ struct ScorecardListView: View {
     @State private var linkToPlayers = false
     @State private var linkToLocations = false
     @State private var highlighted = false
-    
+
     var body: some View {
         let menuOptions = [BannerOption(text: "Standard layouts", action: { linkToLayouts = true }),
                            BannerOption(text: "Players",  action: { linkToPlayers = true }),
@@ -53,7 +53,7 @@ struct ScorecardListView: View {
                                     // Copy this entry to current scorecard
                                     self.selected.copy(from: scorecard)
                                     Scorecard.current.load(scorecard: self.selected)
-                                    self.linkToEdit = true
+                                    self.linkAction()
                                 }
                         }
                     }
@@ -79,10 +79,22 @@ struct ScorecardListView: View {
             if layoutSelected {
                 self.selected.reset(from: layout)
                 Scorecard.current.load(scorecard: selected)
-                self.linkToEdit = true
+                linkToEdit = true
             }
         }) {
             LayoutListView(selected: $layoutSelected, layout: $layout)
+        }
+    }
+    
+    func linkAction() {
+        if !Scorecard.current.isSensitive {
+            linkToEdit = true
+        } else {
+            LocalAuthentication.authenticate(reason: "You must authenticate to access the scorecard detail") {
+                linkToEdit = true
+            } failure: {
+                Scorecard.current.clear()
+            }
         }
     }
 }

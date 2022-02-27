@@ -9,13 +9,13 @@ import SwiftUI
 
 struct LayoutSetupView: View {
     @StateObject var selected = LayoutViewModel()
-    @State private var title = "Layouts"
+    @State private var title = "Standard Layouts"
         
     var body: some View {
         StandardView() {
             VStack(spacing: 0) {
                 Banner(title: $title, bottomSpace: false, back: true, backEnabled: { return selected.canSave })
-                DoubleColumnView {
+                DoubleColumnView(leftWidth: 350) {
                     LayoutSelectionView(selected: selected, changeSelected: changeSelection, removeSelected: removeSelection, addLayout: addLayout)
                 } rightView: {
                     LayoutDetailView(selected: selected)
@@ -134,52 +134,67 @@ struct LayoutDetailView : View {
     let types = Type.allCases
     @State private var typeIndex: Int = 0
     
+    @State private var resetBoardNumberIndex: Int = 0
+    
     @State private var players = MasterData.shared.players
     @State private var playerIndex: Int = 0
     
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             HStack {
-                VStack {
-                    InsetView {
-                        VStack {
+                VStack(spacing: 0) {
+                    InsetView(title: "Main Details") {
+                        VStack(spacing: 0) {
                             
-                            Input(title: "Description", field: $selected.desc, message: $selected.descMessage)
+                            Input(title: "Description", field: $selected.desc, message: $selected.descMessage, inlineTitleWidth: 200)
                             
-                            PickerInput(title: "Location", field: $locationIndex, values: {locations.filter{!$0.retired || $0 == selected.location}.map{$0.name}})
+                            Separator()
+                            
+                            PickerInput(title: "Location", field: $locationIndex, values: {locations.filter{!$0.retired || $0 == selected.location}.map{$0.name}}, inlineTitleWidth: 200)
                             { index in
                                 selected.location = locations[index]
                             }
                             
-                            PickerInput(title: "Partner", field: $playerIndex, values: {players.filter{!$0.retired || $0 == selected.partner}.map{$0.name}})
+                            Separator()
+                            
+                            PickerInput(title: "Partner", field: $playerIndex, values: {players.filter{!$0.retired || $0 == selected.partner}.map{$0.name}}, inlineTitleWidth: 200)
                             { index in
                                 selected.partner = players[index]
                             }
                             
-                            Input(title: "Default scorecard description", field: $selected.scorecardDesc)
+                            Separator()
                             
-                            Spacer().frame(height: 16)
+                            Input(title: "Default description", field: $selected.scorecardDesc, inlineTitleWidth: 200)
+                            
                         }
                     }
                     
-                    InsetView {
-                        VStack {
+                    InsetView(title: "Options") {
+                        VStack(spacing: 0) {
                             
-                            PickerInput(title: "Scoring Method", field: $typeIndex, values: {types.map{$0.string}})
+                            PickerInput(title: "Scoring Method", field: $typeIndex, values: {types.map{$0.string}}, inlineTitleWidth: 200)
                             { index in
                                 selected.type = types[index]
                             }
                             
-                            StepperInput(title: "Boards / Tables", field: $selected.boardsTable, label: { value in "\(value) boards per round" }, minValue: $minValue) { (newValue) in
+                            Separator()
+                            
+                            StepperInput(title: "Boards", field: $selected.boardsTable, label: { value in "\(value) boards per round" }, minValue: $minValue, inlineTitleWidth: 200) { (newValue) in
                                 selected.boards = max(selected.boards, newValue)
                                 selected.boards = max(newValue, ((selected.boards / newValue) * newValue))
                             }
+
+                            Separator()
                             
-                            StepperInput(field: $selected.boards, label: boardsLabel, minValue: $selected.boardsTable, increment: $selected.boardsTable, topSpace: 0)
+                            StepperInput(title: "Tables", field: $selected.boards, label: boardsLabel, minValue: $selected.boardsTable, increment: $selected.boardsTable, inlineTitleWidth: 200)
                             
-                            InputToggle(title: "Options", text: "Board numbers per table", field: $selected.resetNumbers)
+                            Separator()
                             
-                            Spacer().frame(height: 16)
+                            PickerInput(title: "Board Numbers", field: $resetBoardNumberIndex, values: { ResetBoardNumber.allCases.map{$0.string}}, inlineTitleWidth: 200)
+                            { (index) in
+                                selected.resetNumbers = (index == ResetBoardNumber.perTable.rawValue)
+                            }
+                            
                             
                         }
                     }
@@ -190,11 +205,13 @@ struct LayoutDetailView : View {
                     locationIndex = locations.firstIndex(where: {$0 == selected.location}) ?? 0
                     playerIndex = players.firstIndex(where: {$0 == selected.partner}) ?? 0
                     typeIndex = types.firstIndex(where: {$0 == selected.type}) ?? 0
+                    resetBoardNumberIndex = (selected.resetNumbers ? ResetBoardNumber.perTable : ResetBoardNumber.continuous).rawValue
+                    
                 }
             }
             Spacer()
         }
-        .background(Palette.background.background)
+        .background(Palette.alternate.background)
     }
     
     func boardsLabel(boards: Int) -> String {

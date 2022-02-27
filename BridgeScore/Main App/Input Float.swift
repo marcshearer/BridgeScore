@@ -11,11 +11,13 @@ struct InputFloat : View {
     var title: String?
     @Binding var field: Float?
     var message: Binding<String>?
-    var topSpace: CGFloat = 16
-    var leadingSpace: CGFloat = 32
-    var height: CGFloat = 40
+    var topSpace: CGFloat = 5
+    var leadingSpace: CGFloat = 0
+    var height: CGFloat = 45
     var width: CGFloat?
     var places: Int = 2
+    var inlineTitle: Bool = true
+    var inlineTitleWidth: CGFloat = 150
     var onChange: ((Float?)->())?
     
     @State private var keyboardType: UIKeyboardType = .numberPad
@@ -29,16 +31,28 @@ struct InputFloat : View {
             // Just to trigger view refresh
             if refresh { EmptyView() }
             
-            if title != nil {
+            if title != nil && !inlineTitle {
                 HStack {
                     InputTitle(title: title, message: message, topSpace: topSpace, width: (width == nil ? nil : width! + leadingSpace + 16))
                 }
                 Spacer().frame(height: 8)
+            } else {
+                Spacer().frame(height: topSpace)
             }
             HStack {
                 Spacer().frame(width: leadingSpace)
+                if title != nil && inlineTitle {
+                    HStack {
+                        Spacer().frame(width: 6)
+                        Text(title!)
+                        Spacer()
+                    }
+                    .frame(width: inlineTitleWidth)
+                }
+
                 HStack {
                     Spacer().frame(width: 8)
+                    
                     TextField("", text: $text, onEditingChanged: {(editing) in
                         text = Float(text)?.toString(places: places) ?? ""
                         field = Float(text)
@@ -82,9 +96,9 @@ struct InputFloat : View {
                 text = (field == nil ? "" : field!.toString(places: places))
             }
         }
-        .frame(height: self.height + self.topSpace + (title == nil ? 0 : 30))
+        .frame(height: self.height + ((self.inlineTitle ? 0 : self.topSpace) + (title == nil || inlineTitle ? 0 : 30)))
         .if(width != nil) { (view) in
-            view.frame(width: width! + leadingSpace + 16)
+            view.frame(width: width! + leadingSpace + (inlineTitle ? inlineTitleWidth : 0) + 16)
         }
     }
 }

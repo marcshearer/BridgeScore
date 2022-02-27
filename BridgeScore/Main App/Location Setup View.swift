@@ -134,16 +134,19 @@ struct LocationDetailView : View {
     @ObservedObject var selected: LocationViewModel
     
     var body: some View {
-        VStack {
+        VStack(spacing: 0) {
             HStack {
-                VStack {
+                VStack(spacing: 0) {
                     
-                    InsetView {
-                        VStack {
+                    InsetView(title: "Location Details") {
+                        VStack(spacing: 0) {
                             
                             Input(title: "Name", field: $selected.name, message: $selected.nameMessage)
                             
                             if selected.retired {
+                                
+                                Separator()
+                                
                                 InputTitle(title: "This location has been marked as retired", topSpace: 50)
                                 Spacer().frame(height: 16)
                                 
@@ -173,17 +176,14 @@ struct LocationDetailView : View {
                                     }
                                     Spacer()
                                 }
+                                Spacer().frame(height: 40)
                             }
-                            
-                            Spacer().frame(height: 16)
                         }
                     }
-                    
-                    Spacer()
                 }
             }
             Spacer()
         }
-        .background(Palette.background.background)
+        .background(Palette.alternate.background)
     }
 }

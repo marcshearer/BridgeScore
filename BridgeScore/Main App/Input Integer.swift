@@ -12,10 +12,12 @@ struct InputInt : View {
     var title: String?
     @Binding var field: Int
     var message: Binding<String>?
-    var topSpace: CGFloat = 16
-    var leadingSpace: CGFloat = 32
-    var height: CGFloat = 40
+    var topSpace: CGFloat = 5
+    var leadingSpace: CGFloat = 0
+    var height: CGFloat = 44
     var width: CGFloat?
+    var inlineTitle: Bool = true
+    var inlineTitleWidth: CGFloat = 150
     var onChange: ((Int)->())?
     
     @State private var keyboardType: UIKeyboardType = .numberPad
@@ -29,14 +31,26 @@ struct InputInt : View {
             // Just to trigger view refresh
             if refresh { EmptyView() }
             
-            if title != nil {
+            if title != nil && !inlineTitle {
                 HStack {
                     InputTitle(title: title, message: message, topSpace: topSpace, width: (width == nil ? nil : width! + leadingSpace + 16))
                 }
                 Spacer().frame(height: 8)
+            } else {
+                Spacer().frame(height: topSpace)
             }
+            
             HStack {
                 Spacer().frame(width: leadingSpace)
+                if title != nil && inlineTitle {
+                    HStack {
+                        Spacer().frame(width: 6)
+                        Text(title!)
+                        Spacer()
+                    }
+                    .frame(width: inlineTitleWidth)
+                }
+                
                 HStack {
                     Spacer().frame(width: 8)
                     TextField("", value: $field, format: .number)
@@ -65,9 +79,9 @@ struct InputInt : View {
         .onChange(of: field) { (field) in
             text = "\(field)"
         }
-        .frame(height: self.height + self.topSpace + (title == nil ? 0 : 30))
+        .frame(height: self.height + ((self.inlineTitle ? 0 : self.topSpace) + (title == nil || inlineTitle ? 0 : 30)))
         .if(width != nil) { (view) in
-            view.frame(width: width! + leadingSpace + 16)
+            view.frame(width: width! + leadingSpace + (inlineTitle ? inlineTitleWidth : 0) + 16)
         }
     }
 }

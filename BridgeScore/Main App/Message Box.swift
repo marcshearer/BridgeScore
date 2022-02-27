@@ -13,6 +13,7 @@ class MessageBox : ObservableObject {
     
     @Published fileprivate var text: String?
     fileprivate var okText: String?
+    fileprivate var okDestructive: Bool = false
     fileprivate var cancelText: String?
     fileprivate var showIcon: Bool = false
     fileprivate var showVersion = false
@@ -21,14 +22,19 @@ class MessageBox : ObservableObject {
 
     public var isShown: Bool { MessageBox.shared.text != nil }
     
-    public func show(_ text: String, cancelText: String? = nil, okText: String? = "Close", showIcon: Bool = false, showVersion: Bool = false, cancelAction: (()->())? = nil, okAction: (()->())? = nil) {
-        MessageBox.shared.text = text
-        MessageBox.shared.okText = okText
-        MessageBox.shared.cancelText = cancelText
-        MessageBox.shared.showIcon = showIcon
-        MessageBox.shared.showVersion = showVersion
-        MessageBox.shared.okAction = okAction
-        MessageBox.shared.cancelAction = cancelAction
+    public func show(_ text: String, if showMessage: Bool = true,  cancelText: String? = nil, okText: String? = "Close", okDestructive: Bool = true, showIcon: Bool = false, showVersion: Bool = false, cancelAction: (()->())? = nil, okAction: (()->())? = nil) {
+        if showMessage {
+            MessageBox.shared.text = text
+            MessageBox.shared.okText = okText
+            MessageBox.shared.okDestructive = okDestructive
+            MessageBox.shared.cancelText = cancelText
+            MessageBox.shared.showIcon = showIcon
+            MessageBox.shared.showVersion = showVersion
+            MessageBox.shared.okAction = okAction
+            MessageBox.shared.cancelAction = cancelAction
+        } else {
+            okAction?()
+        }
     }
     
     public func hide() {
@@ -82,14 +88,14 @@ struct MessageBoxView: View {
                     HStack {
                         if let okText = values.okText {
                             Button {
-                                values.okAction?()
                                 $values.text.wrappedValue = nil
+                                values.okAction?()
                             } label: {
                                 Text(okText)
-                                    .foregroundColor(Palette.highlightButton.text)
+                                    .foregroundColor(values.okDestructive ? Palette.destructiveButton.text : Palette.highlightButton.text)
                                     .font(.callout).minimumScaleFactor(0.5)
                                     .frame(width: 100, height: 30)
-                                    .background(Palette.highlightButton.background)
+                                    .background(values.okDestructive ? Palette.destructiveButton.background : Palette.highlightButton.background)
                                     .cornerRadius(15)
                             }
                         }
@@ -99,8 +105,8 @@ struct MessageBoxView: View {
                                 Spacer().frame(width: 30)
                             }
                             Button {
-                                values.cancelAction?()
                                 $values.text.wrappedValue = nil
+                                values.cancelAction?()
                             } label: {
                                 Text(cancelText)
                                     .foregroundColor(Palette.highlightButton.text)

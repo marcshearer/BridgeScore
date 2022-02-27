@@ -115,6 +115,15 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
         return self.boardMO == nil
     }
     
+    public var hasData: Bool {
+        return self.contract.level != .blank ||
+        self.declarer != .unknown ||
+        self.made != 0 ||
+        self.score != nil ||
+        self.comment != "" ||
+        self.responsible != .unknown
+    }
+    
     public var description: String {
         return "Scorecard: \(scorecard.desc), Board: \(board)"
     }

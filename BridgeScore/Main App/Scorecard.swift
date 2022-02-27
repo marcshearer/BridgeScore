@@ -23,6 +23,10 @@ class Scorecard {
     public var isSensitive: Bool {
         return boards.compactMap{$0.value}.firstIndex(where: {$0.comment != "" || $0.responsible != .unknown }) != nil
     }
+    
+    public var hasData: Bool {
+        return (boards.compactMap{$0.value}.firstIndex(where: {$0.hasData}) != nil) || (tables.compactMap{$0.value}.firstIndex(where: {$0.hasData}) != nil)
+    }
 
     public func load(scorecard: ScorecardViewModel) {
         let scorecardFilter = NSPredicate(format: "scorecardId = %@", scorecard.scorecardId as NSUUID)
@@ -113,11 +117,15 @@ class Scorecard {
         assert(self.scorecard == scorecard, "Not the current scorecard")
         
         for (_, board) in boards {
-            remove(board: board)
+            if !board.isNew {
+                remove(board: board)
+            }
         }
         
         for (_, table) in tables {
-            remove(table: table)
+            if !table.isNew {
+                remove(table: table)
+            }
         }
         
         clear()
@@ -215,6 +223,16 @@ class Scorecard {
                 table.updateMO()
             })
         }
+    }
+    
+    static public func updateScores(scorecard: ScorecardViewModel) {
+        
+        for tableNumber in 1...scorecard.tables {
+            if Scorecard.updateTableScore(scorecard: scorecard, tableNumber: tableNumber) {
+                Scorecard.current.tables[tableNumber]?.save()
+            }
+        }
+        Scorecard.updateTotalScore(scorecard: scorecard)
     }
     
     @discardableResult static func updateTableScore(scorecard: ScorecardViewModel, tableNumber: Int) -> Bool {

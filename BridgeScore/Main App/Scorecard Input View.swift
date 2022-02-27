@@ -41,6 +41,7 @@ struct ScorecardInputView: View {
     @State var canRedo: Bool = false
     @State var linkToDetails: Bool = false
     @State var refresh = false
+    @State var deleted = false
     
     var body: some View {
         StandardView {
@@ -59,26 +60,34 @@ struct ScorecardInputView: View {
                     .ignoresSafeArea(edges: .all)
                 }
             }
-            .onSwipe { (direction) in
-                if direction == .right {
-                    if backAction() {
-                        presentationMode.wrappedValue.dismiss()
-                    }
-                }
-            }
             .onChange(of: undoPressed) { newValue in undoPressed = false }
             .onChange(of: redoPressed) { newValue in redoPressed = false }
             .onChange(of: refresh) { newValue in refresh = false }
         }
         .sheet(isPresented: $linkToDetails, onDismiss: {
-            refresh = true
+            if deleted {
+                presentationMode.wrappedValue.dismiss()
+            } else {
+                refresh = true
+            }
         }) {
-            ScorecardDetailView(scorecard: scorecard, title: "Details")
+            ScorecardDetailView(scorecard: scorecard, deleted: $deleted, title: "Details")
+        }
+        .onAppear {
+            Scorecard.updateScores(scorecard: scorecard)
         }
     }
     
     func backAction() -> Bool {
         Scorecard.current.interimSave()
+        if let master = MasterData.shared.scorecard(id: scorecard.scorecardId) {
+            master.copy(from: scorecard)
+            master.save()
+        } else {
+            let master = ScorecardViewModel()
+            master.copy(from: scorecard)
+            master.insert()
+        }
         return true
     }
     

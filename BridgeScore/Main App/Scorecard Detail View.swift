@@ -11,85 +11,54 @@ struct ScorecardDetailView: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
 
     @ObservedObject var scorecard: ScorecardViewModel
+    @Binding var deleted: Bool
     @State var title = "New Scorecard"
-    @State private var linkToCanvas = false
-    @State private var linkToInput = false
-    @State private var authenticatedScorecard: ScorecardViewModel?
     
     var body: some View {
         StandardView {
             VStack(spacing: 0) {
                 
-                Banner(title: $title, alternateColors: true, back: true, backText: "Done", backAction: backAction)
+                Banner(title: $title, alternateStyle: true, back: true, backText: "Done", backAction: backAction)
                 
                 ScrollView(showsIndicators: false) {
                     
                     ScorecardDetailsView(scorecard: scorecard)
                 }
+                .background(Palette.alternate.background)
             }
             .keyboardAdaptive
             .onSwipe { (direction) in
-                if direction == .left {
-                    linkAction(toCanvas: false)
-                } else if direction == .right {
+                if direction != .left {
                     if backAction() {
                         presentationMode.wrappedValue.dismiss()
                     }
-                }
-            }
-            .onChange(of: linkToCanvas) { (linkToCanvas) in
-                if linkToCanvas {
-                    scorecard.backupCurrent()
-                }
-            }
-            .onChange(of: linkToInput) { (linkToInput) in
-                if linkToInput {
-                    scorecard.backupCurrent()
                 }
             }
         }
         .interactiveDismissDisabled()
     }
     
-    func linkAction(toCanvas: Bool) {
-        func link() {
-            if toCanvas {
-                linkToCanvas = true
-            } else {
-                linkToInput = true
-            }
-        }
-        
-        if scorecard == authenticatedScorecard || (toCanvas ? scorecard.noDrawing : !Scorecard.current.isSensitive) {
-            link()
-        } else {
-            LocalAuthentication.authenticate(reason: "You must authenticate to access the scorecard detail") {
-                authenticatedScorecard = scorecard
-                link()
-            } failure: {
-                authenticatedScorecard = nil
-            }
-        }
-    }
-    
     func backAction() -> Bool {
         if scorecard.saveMessage != "" {
             MessageBox.shared.show(scorecard.saveMessage, cancelText: "Re-edit", okText: "Delete", okAction: {
-                if !scorecard.isNew {
+                MessageBox.shared.show("This will delete the scorecard permanently.\nAre you sure you want to do this?", if: Scorecard.current.hasData, cancelText: "Re-edit", okText: "Delete", okDestructive: true, okAction: {
                     scorecard.remove()
-                }
-                UserDefault.currentUnsaved.set(false)
-                presentationMode.wrappedValue.dismiss()
+                    UserDefault.currentUnsaved.set(false)
+                    deleted = true
+                    presentationMode.wrappedValue.dismiss()
+                })
             })
             return false
         } else {
             if let master = MasterData.shared.scorecard(id: scorecard.scorecardId) {
                 master.copy(from: scorecard)
                 master.save()
+                scorecard.copy(from: master)
             } else {
                 let master = ScorecardViewModel()
                 master.copy(from: scorecard)
                 master.insert()
+                scorecard.copy(from: master)
             }
             return true
         }
@@ -106,73 +75,101 @@ struct ScorecardDetailsView: View {
     let types = Type.allCases
     @State private var typeIndex: Int = 0
     
+    @State private var resetBoardNumberIndex: Int = 0
+
     let players = MasterData.shared.players
     @State private var playerIndex: Int = 0
+    @State private var datePicker: Bool = false
     
     var body: some View {
         
-        VStack {
+        VStack(spacing: 0) {
             
-            InsetView {
-                VStack {
+            InsetView(title: "Main Details") {
+                VStack(spacing: 0) {
+                    
+                    Input(title: "Description", field: $scorecard.desc, message: $scorecard.descMessage)
+                                        
+                    Separator()
                     
                     PickerInput(title: "Location", field: $locationIndex, values: {locations.filter{!$0.retired || $0 == scorecard.location}.map{$0.name}})
                     { index in
                         scorecard.location = locations[index]
                     }
                     
+                    Separator()
+                    
                     PickerInput(title: "Partner", field: $playerIndex, values: {players.filter{!$0.retired || $0 == scorecard.partner}.map{$0.name}})
                     { index in
                         scorecard.partner = players[index]
                     }
                     
-                    DatePickerInput(title: "Date", field: $scorecard.date, to: Date())
+                    Separator()
                     
-                    Input(title: "Description", field: $scorecard.desc, message: $scorecard.descMessage)
+                    // DatePickerInput(title: "Date", field: $scorecard.date, to: Date())
                     
-                    Input(title: "Comments", field: $scorecard.comment, height: 100)
-                    
+                    Button(action: {
+                        datePicker = true
+                    }) {
+                        Text(Utility.dateString(scorecard.date, format: "EEEE dd MMMM yyyy"))
+                    }
+                    if datePicker {
+                        DatePicker("", selection: $scorecard.date, displayedComponents: .date)
+                                            .datePickerStyle(GraphicalDatePickerStyle())
+                    }
+                }
+            }
+                 
+            InsetView(title: "Results") {
+                VStack(spacing: 0) {
                     HStack {
                         InputFloat(title: "Score", field: $scorecard.score, width: 100, places: scorecard.type.matchPlaces)
                             .disabled(scorecard.type.matchAggregate != .manual)
                         Spacer()
                     }
                     
-                    InputTitle(title: " Position")
+                    Separator()
+                    
                     HStack {
                         
-                        InputInt(field: $scorecard.position, topSpace: 0, width: 60)
+                        InputInt(title: "Position", field: $scorecard.position, width: 40)
                         
                         Text(" of ")
                         
-                        InputInt(field: $scorecard.entry, topSpace: 0, leadingSpace: 0, width: 60)
+                        InputInt(field: $scorecard.entry, topSpace: 0, leadingSpace: 0, width: 40, inlineTitle: false)
                         
                         Spacer()
                     }
                     
-                    Spacer().frame(height: 16)
+                    Separator()
+                
+                    Input(title: "Comments", field: $scorecard.comment)
                 }
             }
             
-            InsetView {
-                VStack {
+            InsetView(title: "Options") {
+                VStack(spacing: 0) {
                     
-                    PickerInput(title: "Scoring Method", field: $typeIndex, values: {types.map{$0.string}})
-                    { index in
+                    PickerInput(title: "Scoring", field: $typeIndex, values: {types.map{$0.string}})
+                    { (index) in
                         if scorecard.type != types[index] {
                             scorecard.type = types[index]
-                            updateScores()
+                            Scorecard.updateScores(scorecard: scorecard)
                         }
                     }
                     
-                    StepperInput(title: "Boards / Tables", field: $scorecard.boardsTable, label: { value in "\(value) boards per round" }, minValue: $minValue, labelWidth: 300) { (newValue) in
+                    StepperInput(title: "Boards", field: $scorecard.boardsTable, label: { value in "\(value) boards per round" }, minValue: $minValue) { (newValue) in
                         scorecard.boards = max(scorecard.boards, newValue)
                         scorecard.boards = max(newValue, ((scorecard.boards / newValue) * newValue))
                     }
                     
-                    StepperInput(field: $scorecard.boards, label: boardsLabel, minValue: $scorecard.boardsTable, increment: $scorecard.boardsTable, topSpace: 0, labelWidth: 300)
+                    StepperInput(title: "Tables", field: $scorecard.boards, label: boardsLabel, minValue: $scorecard.boardsTable, increment: $scorecard.boardsTable)
                     
-                    InputToggle(title: "Options", text: "Board numbers per table", field: $scorecard.resetNumbers)
+                    
+                    PickerInput(title: "Board Numbers", field: $resetBoardNumberIndex, values: { ResetBoardNumber.allCases.map{$0.string}})
+                    { (index) in
+                        scorecard.resetNumbers = (index == ResetBoardNumber.perTable.rawValue)
+                    }
                     
                     Spacer().frame(height: 16)
                     
@@ -186,7 +183,7 @@ struct ScorecardDetailsView: View {
             locationIndex = locations.firstIndex(where: {$0 == scorecard.location}) ?? 0
             playerIndex = players.firstIndex(where: {$0 == scorecard.partner}) ?? 0
             typeIndex = types.firstIndex(where: {$0 == scorecard.type}) ?? 0
-            updateScores()
+            resetBoardNumberIndex = (scorecard.resetNumbers ? ResetBoardNumber.perTable : ResetBoardNumber.continuous).rawValue
         }
     }
     
@@ -201,15 +198,5 @@ struct ScorecardDetailsView: View {
     
     func plural(_ text: String, _ value: Int) -> String {
         return (value <= 1 ? text : text + "s")
-    }
-    
-    func updateScores() {
-        
-        for tableNumber in 1...scorecard.tables {
-            if Scorecard.updateTableScore(scorecard: scorecard, tableNumber: tableNumber) {
-                Scorecard.current.tables[tableNumber]?.save()
-            }
-        }
-        Scorecard.updateTotalScore(scorecard: scorecard)
     }
 }

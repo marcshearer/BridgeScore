@@ -18,11 +18,13 @@ struct StepperInput: View {
     var maxValue: Binding<Int>? = nil
     var increment: Binding<Int>? = nil
     var message: Binding<String>?
-    var topSpace: CGFloat = 16
-    var leadingSpace: CGFloat = 32
-    var height: CGFloat = 40
+    var topSpace: CGFloat = 5
+    var leadingSpace: CGFloat = 0
+    var height: CGFloat = 45
     var width: CGFloat?
-    var labelWidth: CGFloat = 300
+    var labelWidth: CGFloat?
+    var inlineTitle: Bool = true
+    var inlineTitleWidth: CGFloat = 150
     var onChange: ((Int)->())? = nil
 
     @State private var refresh = false
@@ -34,7 +36,7 @@ struct StepperInput: View {
             // Just to refresh view
             if refresh { EmptyView() }
             
-            if title != nil {
+            if title != nil && !inlineTitle {
                 InputTitle(title: title, message: message, topSpace: topSpace, width: (width == nil ? nil : width! + leadingSpace + 16))
                 Spacer().frame(height: 8)
             } else {
@@ -43,6 +45,16 @@ struct StepperInput: View {
             HStack {
                 HStack {
                     Spacer().frame(width: leadingSpace)
+                    if inlineTitle {
+                        HStack {
+                            Spacer().frame(width: 8)
+                            Text(title ?? "")
+                            Spacer()
+                        }
+                        .frame(width: inlineTitleWidth)
+                        Spacer().frame(width: 12)
+                    }
+                    Spacer().frame(width: 8)
                     Stepper {
                         if let label = label {
                             Text(label(field))
@@ -54,7 +66,10 @@ struct StepperInput: View {
                     } onDecrement: {
                         change(direction: -1)
                     }
-                    .frame(width: labelWidth + 100)
+                    .if(labelWidth != nil) { (view) in
+                        view.frame(width: labelWidth! + 100)
+                    }
+                    Spacer().frame(width: 8)
                 }
                 .font(inputFont)
                 if width == nil {
@@ -62,7 +77,7 @@ struct StepperInput: View {
                 }
             }
         }
-        .frame(height: self.height + self.topSpace + (title == nil ? 0 : 30))
+        .frame(height: self.height + self.topSpace + (title == nil || inlineTitle ? 0 : 30))
         .onAppear {
             self.change()
         }

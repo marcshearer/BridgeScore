@@ -386,8 +386,8 @@
 			children = (
 				B26BCE6E279AEB6C00B73501 /* Scorecard List View.swift */,
 				B2633A0D27AC3A460081B258 /* Layout List View.swift */,
-				B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */,
 				B2C4338B27B6646700796F24 /* Scorecard Input View.swift */,
+				B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */,
 				B20B38F127C153280001B45E /* Contract Entry View.swift */,
 			);
 			name = "Main Views";

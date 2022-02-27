@@ -9,15 +9,19 @@ import SwiftUI
 
 struct Separator : View {
     
-    @State var padding = true
+    @State var padding = false
     
     var body : some View {
         HStack(spacing: 0) {
-            Spacer().frame(width: 16)
+            if padding {
+                Spacer().frame(width: 16)
+            }
             Rectangle()
                 .frame(height: 0.5)
                 .foregroundColor(Palette.separator.background)
-            Spacer().rightSpacer
+            if padding {
+                Spacer().rightSpacer
+            }
         }
     }
 }

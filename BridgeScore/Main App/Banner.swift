@@ -33,7 +33,7 @@ struct Banner: View {
     @Environment(\.presentationMode) private var presentationMode: Binding<PresentationMode>
 
     @Binding var title: String
-    var alternateColors: Bool = false
+    var alternateStyle: Bool = false
     var bottomSpace: Bool = true
     var back: Bool = true
     var backEnabled: (()->(Bool))?
@@ -89,15 +89,15 @@ struct Banner: View {
                 
                     Spacer().frame(width: 20)
                 }
-                Spacer().frame(height: bannerBottom)
+                Spacer().frame(height: (alternateStyle ? 0 : bannerBottom))
             }
         }
         .onAppear {
-            bannerColor = (alternateColors ? Palette.alternateBanner : Palette.banner)
-            buttonColor = (alternateColors ? Palette.alternateBannerButton : Palette.bannerButton)
-            backButtonColor = (alternateColors ? Palette.alternateBannerBackButton : Palette.bannerBackButton)
+            bannerColor = (alternateStyle ? Palette.alternateBanner : Palette.banner)
+            buttonColor = (alternateStyle ? Palette.alternateBannerButton : Palette.bannerButton)
+            backButtonColor = (alternateStyle ? Palette.alternateBannerBackButton : Palette.bannerBackButton)
         }
-        .frame(height: bannerHeight)
+        .frame(height: (alternateStyle ? alternateBannerHeight : bannerHeight))
         .background(bannerColor.background)
     }
         
@@ -115,7 +115,7 @@ struct Banner: View {
                     HStack {
                         if let backText = backText {
                             Text(backText)
-                                .font(.title2).bold()
+                                .font((alternateStyle ? .title3 :.title2)).bold()
                         } else {
                             backImage
                                 .font(.largeTitle)
@@ -133,7 +133,7 @@ struct Banner: View {
     
     var titleText: some View {
         Text(title)
-            .font(.largeTitle).bold()
+            .font((alternateStyle ? .title : .largeTitle)).bold()
             .foregroundColor(bannerColor.text)
             .minimumScaleFactor(0.8)
     }

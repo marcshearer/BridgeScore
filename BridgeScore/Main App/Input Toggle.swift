@@ -16,26 +16,39 @@ struct InputToggle : View {
     var message: Binding<String>?
     var messageOffset: CGFloat = 0.0
     var topSpace: CGFloat = 16
-    var leadingSpace: CGFloat = 32
+    var leadingSpace: CGFloat = 0
     var height: CGFloat = 30
     var width: CGFloat?
-    var labelWidth: CGFloat = 300
+    var labelWidth: CGFloat?
+    var inlineTitle: Bool = true
+    var inlineTitleWidth: CGFloat = 150
     var onChange: ((Bool)->())?
     
     var body: some View {
         VStack(spacing: 0) {
-            if title != nil {
+            if title != nil && !inlineTitle {
                 InputTitle(title: title, message: message, topSpace: topSpace, width: (width == nil ? nil : width! + leadingSpace + 16))
                 Spacer().frame(height: 8)
             }
             
             HStack {
                 Spacer().frame(width: leadingSpace)
+                if inlineTitle {
+                    HStack {
+                        Spacer().frame(width: 8)
+                        Text(title ?? "")
+                        Spacer()
+                    }
+                    .frame(width: inlineTitleWidth)
+                    Spacer().frame(width: 12)
+                }
                 Toggle(isOn: $field) {
                     Text(text ?? "")
                         .font(inputFont)
                 }
-                .frame(width: labelWidth + 55)
+                .if(labelWidth != nil) { (view) in
+                    view.frame(width: labelWidth! + 55)
+                }
                 .onChange(of: field) { (value) in
                     onChange?(value)
                 }

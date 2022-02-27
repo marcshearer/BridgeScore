@@ -379,7 +379,7 @@ class Themes {
                 .disabledButton              : ThemeColor(#colorLiteral(red: 0.6666069031, green: 0.6667050123, blue: 0.6665856242, alpha: 1), nil, .midBackground),
                 .enabledButton               : ThemeColor(#colorLiteral(red: 0.5560679436, green: 0.5578243136, blue: 0.5773752928, alpha: 1), nil, .midBackground),
                 .highlightButton             : ThemeColor(#colorLiteral(red: 0.0166248735, green: 0.4766505957, blue: 0.9990670085, alpha: 1), nil, .darkBackground),
-                .input                       : ThemeColor(#colorLiteral(red: 0.9411764706, green: 0.9411764706, blue: 0.9411764706, alpha: 1), #colorLiteral(red: 0.4756349325, green: 0.4756467342, blue: 0.4756404161, alpha: 1), .lightBackground, .darkBackground),
+                .input                       : ThemeColor(#colorLiteral(red: 1, green: 0.9999999404, blue: 1, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1), .lightBackground, .lightBackground),
                 .filter                      : ThemeColor(#colorLiteral(red: 0.862745098, green: 0.862745098, blue: 0.862745098, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1), .lightBackground, .darkBackground),
             ],
             text: [
