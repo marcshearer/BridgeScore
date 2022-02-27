@@ -33,10 +33,11 @@ struct Banner: View {
     @Environment(\.presentationMode) private var presentationMode: Binding<PresentationMode>
 
     @Binding var title: String
-    var color: PaletteColor = Palette.banner
+    var alternateColors: Bool = false
     var bottomSpace: Bool = true
     var back: Bool = true
     var backEnabled: (()->(Bool))?
+    var backText: String? = nil
     var backImage: AnyView? = AnyView(Image(systemName: "chevron.left"))
     var backAction: (()->(Bool))?
     var leftTitle: Bool?
@@ -44,10 +45,15 @@ struct Banner: View {
     var menuImage: AnyView? = nil
     var menuTitle: String = appName
     var options: [BannerOption]? = nil
+    public static let crossImage = AnyView(Image(systemName: "xmark"))
+    
+    @State private var bannerColor: PaletteColor = Palette.banner
+    @State private var buttonColor: PaletteColor = Palette.bannerButton
+    @State private var backButtonColor: Color = Palette.bannerBackButton
     
     var body: some View {
-        ZStack {
-            Palette.banner.background
+        return ZStack {
+            bannerColor.background
                 .ignoresSafeArea(edges: .all)
             VStack {
                 Spacer()
@@ -86,8 +92,13 @@ struct Banner: View {
                 Spacer().frame(height: bannerBottom)
             }
         }
+        .onAppear {
+            bannerColor = (alternateColors ? Palette.alternateBanner : Palette.banner)
+            buttonColor = (alternateColors ? Palette.alternateBannerButton : Palette.bannerButton)
+            backButtonColor = (alternateColors ? Palette.alternateBannerBackButton : Palette.bannerBackButton)
+        }
         .frame(height: bannerHeight)
-        .background(Palette.banner.background)
+        .background(bannerColor.background)
     }
         
     var backButton: some View {
@@ -102,11 +113,16 @@ struct Banner: View {
                     }
                 }, label: {
                     HStack {
-                        backImage
-                            .font(.largeTitle)
-                            .foregroundColor(Palette.bannerBackButton.opacity(enabled ? 1.0 : 0.5))
+                        if let backText = backText {
+                            Text(backText)
+                                .font(.title2).bold()
+                        } else {
+                            backImage
+                                .font(.largeTitle)
+                        }
                         
                     }
+                    .foregroundColor(backButtonColor.opacity(enabled ? 1.0 : 0.5))
                 })
                 .disabled(!(enabled))
             } else {
@@ -118,7 +134,7 @@ struct Banner: View {
     var titleText: some View {
         Text(title)
             .font(.largeTitle).bold()
-            .foregroundColor(Palette.banner.text)
+            .foregroundColor(bannerColor.text)
             .minimumScaleFactor(0.8)
     }
     
@@ -126,9 +142,9 @@ struct Banner: View {
         HStack {
             switch optionMode {
             case .menu:
-                Banner_Menu(image: menuImage, title: menuTitle, options: options!)
+                Banner_Menu(image: menuImage, title: menuTitle, options: options!, bannerColor: bannerColor)
             case .buttons:
-                Banner_Buttons(options: options!)
+                Banner_Buttons(options: options!, bannerColor: bannerColor, buttonColor: buttonColor, backButtonColor: backButtonColor)
             default:
                 EmptyView()
             }
@@ -140,6 +156,7 @@ struct Banner_Menu : View {
     var image: AnyView?
     var title: String
     var options: [BannerOption]
+    var bannerColor: PaletteColor
     let menuStyle = DefaultMenuStyle()
 
     var body: some View {
@@ -151,7 +168,7 @@ struct Banner_Menu : View {
                     }
                 }
             } label: {
-                image ?? AnyView(Image(systemName: "gearshape").foregroundColor(Palette.banner.text).font(.largeTitle))
+                image ?? AnyView(Image(systemName: "gearshape").foregroundColor(bannerColor.text).font(.largeTitle))
             }
     
     }
@@ -159,13 +176,16 @@ struct Banner_Menu : View {
 
 struct Banner_Buttons : View {
     var options: [BannerOption]
+    var bannerColor: PaletteColor
+    var buttonColor: PaletteColor
+    var backButtonColor: Color
     
     var body: some View {
         HStack {
             ForEach(0..<(options.count)) { (index) in
                 let option = options[index]
-                let backgroundColor = (option.likeBack ? Palette.banner.background : Palette.bannerButton.background)
-                let foregroundColor = (option.isEnabled ? (option.likeBack ? Palette.bannerBackButton : Palette.bannerButton.text) : Palette.bannerButton.faintText)
+                let backgroundColor = (option.likeBack ? bannerColor.background : buttonColor.background)
+                let foregroundColor = (option.isEnabled ? (option.likeBack ? backButtonColor : buttonColor.text) : buttonColor.faintText)
                 HStack {
                     Button {
                         option.action()

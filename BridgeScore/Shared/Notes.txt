@@ -6,12 +6,12 @@ If fails to install app on device from  it's normally because info.plist isn't w
 Bugs
 ====
 Screen jumps if tap elsewhere immediately after writing in text edit
+Need to handle errors in detail properly
+Authenticate when open scorecard
 
 To Do
 =====
 
-Add Made popup
-Implement clear sheet
 Sort out dark mode
 Maybe remove file sharing in Info.plist once can backup from Mac
 

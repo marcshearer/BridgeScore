@@ -183,6 +183,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		B240141627CB4FF900C3117F /* Obsolete Views */ = {
+			isa = PBXGroup;
+			children = (
+				B2276D5727A5A2C90025DA80 /* Scorecard Canvas View.swift */,
+			);
+			name = "Obsolete Views";
+			sourceTree = "<group>";
+		};
 		B26BCDED2799A1AC00B73501 = {
 			isa = PBXGroup;
 			children = (
@@ -227,6 +235,7 @@
 				B2EB3D7C279F0E6000D64225 /* Shared Views */,
 				B26BCE232799AA6300B73501 /* Utilities */,
 				B26BCE222799AA5800B73501 /* Reusable SwiftUI Components */,
+				B240141627CB4FF900C3117F /* Obsolete Views */,
 				B26BCDFF2799A1AE00B73501 /* Preview Content */,
 			);
 			path = "Main App";
@@ -378,7 +387,6 @@
 				B26BCE6E279AEB6C00B73501 /* Scorecard List View.swift */,
 				B2633A0D27AC3A460081B258 /* Layout List View.swift */,
 				B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */,
-				B2276D5727A5A2C90025DA80 /* Scorecard Canvas View.swift */,
 				B2C4338B27B6646700796F24 /* Scorecard Input View.swift */,
 				B20B38F127C153280001B45E /* Contract Entry View.swift */,
 			);

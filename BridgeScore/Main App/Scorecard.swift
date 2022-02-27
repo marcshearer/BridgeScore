@@ -236,10 +236,10 @@ class Scorecard {
             let type = scorecard.type
             let boards = scorecard.boardsTable
             let places = type.tablePlaces
-            let average = Utility.round(count == 0 ? 0 : total / Float(count), places: places)
+            let average = Utility.round(count == 0 ? 0 : total / Float(count), places: type.boardPlaces)
             switch type.tableAggregate {
             case .average:
-                newScore = average
+                newScore = Utility.round(average, places: places)
             case .total:
                 newScore = Utility.round(total, places: places)
             case .continuousVp:

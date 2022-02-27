@@ -66,6 +66,10 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         return cell
     }
     
+    func cancelTap(_: Int) {
+        cancelPressed(self)
+    }
+    
     func changed(_ collectionView: UICollectionView?, itemAtCenter: Int, forceScroll: Bool, animation: ViewAnimation) {
         selected = itemAtCenter - extra
         collectionView?.reloadData()
@@ -133,9 +137,6 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         backgroundView.addSubview(contentView)
         contentView.backgroundColor = UIColor.clear
         contentView.addShadow()
-        let nullGesture = UITapGestureRecognizer(target: self, action: nil)
-        contentView.addGestureRecognizer(nullGesture)
-        contentView.isUserInteractionEnabled = true
                         
         loadCollection(collectionView: valuesCollectionView)
         

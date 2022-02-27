@@ -39,6 +39,7 @@ struct ScorecardInputView: View {
     @State var redoPressed: Bool = false
     @State var canUndo: Bool = false
     @State var canRedo: Bool = false
+    @State var linkToDetails: Bool = false
     @State var refresh = false
     
     var body: some View {
@@ -51,9 +52,10 @@ struct ScorecardInputView: View {
                 // Banner
                 Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .buttons, options: [
                         BannerOption(image: AnyView(Image(systemName: "arrow.uturn.backward")), likeBack: true, isEnabled: $canUndo, action: { undoDrawing() }),
-                        BannerOption(image: AnyView(Image(systemName: "arrow.uturn.forward")), likeBack: true, isEnabled: $canRedo, action: { redoDrawing() })])
+                        BannerOption(image: AnyView(Image(systemName: "arrow.uturn.forward")), likeBack: true, isEnabled: $canRedo, action: { redoDrawing() }),
+                        BannerOption(image: AnyView(Image(systemName: "note.text")), likeBack: true, action: { linkToDetails = true })])
                 GeometryReader { geometry in
-                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), undoPressed: $undoPressed, redoPressed: $redoPressed, canUndo: $canUndo, canRedo: $canRedo)
+                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), undoPressed: $undoPressed, redoPressed: $redoPressed, canUndo: $canUndo, canRedo: $canRedo, refresh: $refresh)
                     .ignoresSafeArea(edges: .all)
                 }
             }
@@ -66,6 +68,12 @@ struct ScorecardInputView: View {
             }
             .onChange(of: undoPressed) { newValue in undoPressed = false }
             .onChange(of: redoPressed) { newValue in redoPressed = false }
+            .onChange(of: refresh) { newValue in refresh = false }
+        }
+        .sheet(isPresented: $linkToDetails, onDismiss: {
+            refresh = true
+        }) {
+            ScorecardDetailView(scorecard: scorecard, title: "Details")
         }
     }
     
@@ -97,6 +105,7 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
     @Binding var redoPressed: Bool
     @Binding var canUndo: Bool
     @Binding var canRedo: Bool
+    @Binding var refresh: Bool
 
     func makeUIView(context: Context) -> ScorecardInputUIView {
         
@@ -115,10 +124,14 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
         if redoPressed {
             uiView.redo()
         }
+        
+        if refresh {
+            uiView.refresh()
+        }
     }
     
     func makeCoordinator() -> Coordinator {
-        Coordinator($undoPressed, $redoPressed, $canUndo, $canRedo)
+        Coordinator($undoPressed, $redoPressed, $canUndo, $canRedo, $refresh)
     }
     
     class Coordinator: NSObject, ScorecardInputUIViewDelegate {
@@ -127,10 +140,12 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
         @Binding var redoPressed: Bool
         @Binding var canUndo: Bool
         @Binding var canRedo: Bool
+        @Binding var refresh: Bool
         
-        init(_ undoPressed: Binding<Bool>, _ redoPressed: Binding<Bool>, _ canUndo: Binding<Bool>, _ canRedo: Binding<Bool>) {
+        init(_ undoPressed: Binding<Bool>, _ redoPressed: Binding<Bool>, _ canUndo: Binding<Bool>, _ canRedo: Binding<Bool>, _ refresh: Binding<Bool>) {
             _undoPressed = undoPressed
             _redoPressed = redoPressed
+            _refresh = refresh
             _canUndo = canUndo
             _canRedo = canRedo
         }
@@ -183,6 +198,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     private var lastKeyboardScrollOffset: CGFloat = 0
     private var isKeyboardOffset = false
     private var bottomConstraint: NSLayoutConstraint!
+    private var forceReload = true
     
     var boardColumns = [
         ScorecardColumn(type: .board, heading: "Board", size: .fixed(70)),
@@ -241,8 +257,9 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         let oldTableColumns = tableColumns
         setupSizes(columns: &boardColumns)
         setupSizes(columns: &tableColumns)
-        if boardColumns != oldBoardColumns || tableColumns != oldTableColumns {
+        if boardColumns != oldBoardColumns || tableColumns != oldTableColumns || forceReload {
             mainTableView.reloadData()
+            forceReload = false
         }
     }
 
@@ -252,6 +269,11 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     
     public func redo() {
         undoManager?.redo()
+    }
+    
+    public func refresh() {
+        forceReload = true
+        setNeedsLayout()
     }
     
     // MARK: - Scorecard delegates
@@ -350,7 +372,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                         if let cell = tableCell.collectionView.cellForItem(at: IndexPath(item: item, section: 0)) as? ScorecardInputBoardCollectionCell {
                             if let index = Seat.allCases.firstIndex(where: {$0 == declarer}) {
                                 cell.seatPicker.set(index)
-                                cell.enumPickerDidChange(to: declarer as Any)
+                                cell.scrollPickerDidChange(to: index)
                             }
                         }
                     }
@@ -625,7 +647,7 @@ fileprivate class ScorecardInputBoardTableCell: TableViewCellWithCollectionView 
 
 // MARK: - Board Collection View Cell ================================================================ -
 
-fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDelegate, EnumPickerDelegate, ContractPickerDelegate, UITextViewDelegate {
+fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDelegate, EnumPickerDelegate, ContractPickerDelegate, UITextViewDelegate, UITextFieldDelegate {
     private var label = UILabel()
     private var textField = UITextField()
     private var textView = UITextView()
@@ -668,13 +690,13 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         textField.autocapitalizationType = .none
         textField.autocorrectionType = .no
         textField.font = cellFont
+        textField.delegate = self
         textField.addTarget(self, action: #selector(ScorecardInputBoardCollectionCell.textFieldChanged), for: .editingChanged)
-        textField.addTarget(self, action: #selector(ScorecardInputBoardCollectionCell.textFieldEndEdit), for: .editingDidEnd)
-        textField.addTarget(self, action: #selector(ScorecardInputBoardCollectionCell.textFieldBeginEdit), for: .editingDidBegin)
         textField.backgroundColor = UIColor.clear
         textField.borderStyle = .none
         textField.textColor = UIColor(Palette.gridBoard.text)
         textField.adjustsFontSizeToFitWidth = true
+        textField.returnKeyType = .done
                
         addSubview(textView, constant: 8, anchored: .leading, .top, .bottom)
         textView.textAlignment = .left
@@ -803,6 +825,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             madePicker.set(board.made - min, list: list, isEnabled: isEnabled, color: color, titleFont: pickerTitleFont)
         case .score:
             textField.isHidden = false
+            textField.keyboardType = .numberPad
             textField.clearsOnBeginEditing = true
             textField.text = board.score == nil ? "" : "\(board.score!)"
         case .comment:
@@ -902,7 +925,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         }
     }
     
-    @objc private func textFieldEndEdit(_ textField: UITextField) {
+    internal func textFieldDidEndEditing(_ textField: UITextField) {
         let text = textField.text ?? ""
         switch column.type {
         case .score:
@@ -929,7 +952,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         return Float(numericText)
     }
     
-    @objc private func textFieldBeginEdit(_ textField: UITextField) {
+    internal func textFieldDidBeginEditing(_ textField: UITextField) {
         // Record automatic clear on entry in undo
         var undoText = ""
         if let board = board {
@@ -943,6 +966,11 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
                 textFieldChanged(textField)
             }
         }
+    }
+    
+    internal func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
     }
     
     internal func textViewDidChange(_ textView: UITextView) {
@@ -1137,7 +1165,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
 
 // MARK: - Table Collection View Cell ================================================================ -
 
-fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumPickerDelegate, UITextViewDelegate {
+fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumPickerDelegate, UITextViewDelegate, UITextFieldDelegate {
     fileprivate var caption = UILabel()
     fileprivate var label = UILabel()
     fileprivate var textField = UITextField()
@@ -1173,15 +1201,16 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
 
         addSubview(textField, constant: 8, anchored: .leading, .top, .bottom)
         textField.textAlignment = .center
-        textField.autocapitalizationType = .words
-        textField.autocapitalizationType = UITextAutocapitalizationType.none
+        textField.autocapitalizationType = .none
         textField.autocorrectionType = .no
         textField.font = cellFont
+        textField.delegate = self
         textField.addTarget(self, action: #selector(ScorecardInputTableCollectionCell.textFieldChanged), for: .editingChanged)
-        textField.addTarget(self, action: #selector(ScorecardInputTableCollectionCell.textFieldEndEdit), for: .editingDidEnd)
-        textField.addTarget(self, action: #selector(ScorecardInputTableCollectionCell.textFieldBeginEdit), for: .editingDidBegin)
         textField.backgroundColor = UIColor.clear
+        textField.borderStyle = .none
         textField.textColor = UIColor(Palette.gridTable.text)
+        textField.adjustsFontSizeToFitWidth = true
+        textField.returnKeyType = .done
 
         addSubview(textView, constant: 8, anchored: .leading, .bottom)
         Constraint.anchor(view: self, control: textView, constant: 20, attributes: .top)
@@ -1326,7 +1355,7 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         }
     }
     
-    @objc private func textFieldEndEdit(_ textField: UITextField) {
+    internal func textFieldDidEndEditing(_ textField: UITextField) {
         let text = textField.text ?? ""
         switch column.type {
         case .tableScore:
@@ -1341,7 +1370,7 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         }
     }
     
-    @objc private func textFieldBeginEdit(_ textField: UITextField) {
+    internal func textFieldDidBeginEditing(_ textField: UITextField) {
         // Record automatic clear on entry in undo
         var undoText = ""
         if let table = table {
@@ -1355,6 +1384,11 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
                 textFieldChanged(textField)
             }
         }
+    }
+    
+    internal func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
     }
     
     internal func textViewDidChange(_ textView: UITextView) {

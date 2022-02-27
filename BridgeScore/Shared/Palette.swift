@@ -12,6 +12,8 @@ class Palette {
     
     @BackgroundColor(.banner) static var banner
     @BackgroundColor(.bannerButton) static var bannerButton
+    @BackgroundColor(.alternateBanner) static var alternateBanner
+    @BackgroundColor(.alternateBannerButton) static var alternateBannerButton
     @BackgroundColor(.destructiveButton) static var destructiveButton
     @BackgroundColor(.background) static var background
     @BackgroundColor(.alternate) static var alternate
@@ -41,6 +43,7 @@ class Palette {
     
     // Specific colors
     @SpecificColor(.bannerBackButton) static var bannerBackButton
+    @SpecificColor(.alternateBannerBackButton) static var alternateBannerBackButton
     @SpecificColor(.maskBackground) static var maskBackground
     @SpecificColor(.gridLine) static var gridLine
     @SpecificColor(.clearText) static var clearText

@@ -118,7 +118,8 @@ class BridgeMatchPoints {
         let positive = (percent > 50 ? percent : 100 - percent)
         if let element = mpsToVps.first(where: {$0.from <= boards && $0.to >= boards}) {
             let increment = element.cutoffs.firstIndex(where: {$0 > positive}) ?? 10
-            vp = 10 + increment * (percent < 50 ? 20 - increment : increment)
+            print("percent \(percent) increment \(increment)")
+            vp = 10 + increment * (percent < 50 ? -1 : 1)
         }
         return vp
     }

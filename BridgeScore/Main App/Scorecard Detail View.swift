@@ -11,7 +11,7 @@ struct ScorecardDetailView: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
 
     @ObservedObject var scorecard: ScorecardViewModel
-    @State private var title = "New Scorecard"
+    @State var title = "New Scorecard"
     @State private var linkToCanvas = false
     @State private var linkToInput = false
     @State private var authenticatedScorecard: ScorecardViewModel?
@@ -20,13 +20,7 @@ struct ScorecardDetailView: View {
         StandardView {
             VStack(spacing: 0) {
                 
-                let bannerOptions = [
-                    BannerOption(image: AnyView(Image(systemName: "rectangle.split.3x3")), likeBack: true, action: {linkAction(toCanvas: false) }),
-/*                  BannerOption(image: AnyView(Image(systemName: "square.and.pencil")
-                        .rotationEffect(Angle.init(degrees: 90))), likeBack: true, action: {linkAction(toCanvas: true)}) */
-                ]
-                
-                Banner(title: $scorecard.editTitle, back: true, backAction: backAction, optionMode: .buttons, options: bannerOptions)
+                Banner(title: $title, alternateColors: true, back: true, backText: "Done", backAction: backAction)
                 
                 ScrollView(showsIndicators: false) {
                     
@@ -53,14 +47,8 @@ struct ScorecardDetailView: View {
                     scorecard.backupCurrent()
                 }
             }
-            .onAppear {
-                if !scorecard.isNew {
-                    title = scorecard.desc
-                }
-            }
-            NavigationLink(destination: ScorecardInputView(scorecard: scorecard), isActive: $linkToInput) {EmptyView()}
-            NavigationLink(destination: ScorecardCanvasView(scorecard: scorecard), isActive: $linkToCanvas) {EmptyView()}
         }
+        .interactiveDismissDisabled()
     }
     
     func linkAction(toCanvas: Bool) {
@@ -103,7 +91,6 @@ struct ScorecardDetailView: View {
                 master.copy(from: scorecard)
                 master.insert()
             }
-            Scorecard.current.clear()
             return true
         }
     }
@@ -194,6 +181,7 @@ struct ScorecardDetailsView: View {
             
             Spacer()
         }
+        .background(Palette.alternate.background)
         .onAppear {
             locationIndex = locations.firstIndex(where: {$0 == scorecard.location}) ?? 0
             playerIndex = players.firstIndex(where: {$0 == scorecard.partner}) ?? 0
