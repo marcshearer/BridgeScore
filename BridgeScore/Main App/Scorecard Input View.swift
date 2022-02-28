@@ -364,7 +364,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         let section = (board.board - 1) / self.scorecard.boardsTable
         let row = (board.board - 1) % self.scorecard.boardsTable
         let showDeclarer = (table.sitting != .unknown)
-        contractEntryView.show(from: self, contract: board.contract, declarer: (showDeclarer ? board.declarer : nil)) { (contract, declarer) in
+        contractEntryView.show(from: self, contract: board.contract, sitting: table.sitting, declarer: board.declarer) { (contract, declarer) in
 
             if let tableCell = self.mainTableView.cellForRow(at: IndexPath(row: row, section: section)) as? ScorecardInputBoardTableCell {
                 if contract != board.contract {
@@ -885,24 +885,12 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     }
     
     private var declarerList: [ScrollPickerEntry] {
-        return Seat.allCases.map{ScrollPickerEntry(title: $0.short, caption: { (seat) in
-            switch seat {
-                case .unknown:
-                    return seat.string
-                case table.sitting:
-                    return "Self"
-                case table.sitting.partner:
-                    return "Partner"
-                default:
-                    return "Opponent"
-                }
-        }($0))}
+        return Scorecard.declarerList(sitting: table.sitting)
     }
-    
+        
     // MARK: - Control change handlers ===================================================================== -
         
     @objc private func textFieldChanged(_ textField: UITextField) {
-        print("text \(textField.text!)")
         let text = textField.text ?? ""
         if let board = board {
             var undoText: String?

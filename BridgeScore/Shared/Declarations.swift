@@ -240,6 +240,14 @@ public enum Seat: Int, EnumPickerType, ContractEnumType {
         return (self == .unknown ? .unknown : Seat(rawValue: ((self.rawValue + 1) % 4) + 1)!)
     }
     
+    public var leftOpponent : Seat {
+        (self == .unknown ? .unknown : Seat(rawValue: ((self.rawValue) % 4) + 1)!)
+    }
+
+    public var rightOpponent : Seat {
+        (self == .unknown ? .unknown : Seat(rawValue: ((self.rawValue + 2) % 4) + 1)!)
+    }
+
     public var short: String {
         if self == .unknown {
             return ""

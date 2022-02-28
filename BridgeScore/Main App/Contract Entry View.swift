@@ -50,6 +50,7 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
     private var declarer: Seat?
     private var completion: ((Contract, Seat?)->())?
     private var heightConstraint: NSLayoutConstraint!
+    private var declarerList: [ScrollPickerEntry]!
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
@@ -82,7 +83,7 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
             case .double:
                 return ContractDouble.allCases.count
             case .declarer:
-                return Seat.allCases.count
+                return declarerList.count
             }
         } else {
             fatalError()
@@ -91,7 +92,8 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         if let collection = ContractCollection(rawValue: collectionView.tag) {
-            return CGSize(width: collection.buttonWidth + buttonSpaceX, height: buttonHeight)
+            let width = collection.buttonWidth + buttonSpaceX
+            return CGSize(width: width, height: (collection == .declarer ? collection.buttonWidth : buttonHeight))
         } else {
             fatalError()
         }
@@ -121,8 +123,14 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
                 return cell
             case .declarer:
                 let declarer = Seat.allCases[indexPath.row]
-                let cell = ContractEntryCollectionCell<Seat>.dequeue(collectionView, for: indexPath)
-                cell.set(value: declarer, selected: (declarer == self.declarer), disabled: false, tapAction: declarerTapped)
+                let cell = ScrollPickerCell.dequeue(collectionView, for: indexPath)
+                let disabled = !contract.suit.hasDouble && contract.level != .passout
+                let selected = (declarer == self.declarer)
+                let color = (disabled ? Palette.contractDisabled : (selected ? Palette.contractSelected : Palette.contractUnselected))
+                let entry = declarerList[indexPath.item]
+                cell.set(titleText: entry.title, captionText: entry.caption, tag: indexPath.item, color: color, clearBackground: false, trailingSpace: buttonSpaceX, cornerRadius: 10, tapAction: { (value) in
+                    self.declarerTapped(declarer: Seat(rawValue: value)!)
+                })
                 return cell
             }
         } else {
@@ -142,6 +150,7 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
             levelCollectionView.reloadData()
             suitCollectionView.reloadData()
             doubleCollectionView.reloadData()
+            declarerCollectionView.reloadData()
             updateButtons()
         }
     }
@@ -151,6 +160,7 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
             contract.suit = suit
             suitCollectionView.reloadData()
             doubleCollectionView.reloadData()
+            declarerCollectionView.reloadData()
             updateButtons()
         }
 
@@ -198,15 +208,16 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
     
     // MARK: - Show / Hide ============================================================================ -
     
-    public func show(from sourceView: UIView, contract: Contract, declarer: Seat?, hideBackground: Bool = true, completion: @escaping (Contract, Seat?)->()) {
+    public func show(from sourceView: UIView, contract: Contract, sitting: Seat, declarer: Seat, hideBackground: Bool = true, completion: @escaping (Contract, Seat?)->()) {
         self.contract = Contract(copying: contract)
         self.declarer = declarer
         self.completion = completion
         self.frame = sourceView.frame
         backgroundView.frame = sourceView.frame
-        heightConstraint.constant = (declarer == nil ? 350 : 450)
-        declarerLabel.isHidden = (declarer == nil)
-        declarerCollectionView.isHidden = (declarer == nil)
+        heightConstraint.constant = (sitting == .unknown ? 350 : 450)
+        declarerLabel.isHidden = (sitting == .unknown)
+        declarerCollectionView.isHidden = (sitting == .unknown)
+        declarerList = Scorecard.declarerList(sitting: sitting)
         setNeedsLayout()
         layoutIfNeeded()
         layoutSubviews()
@@ -276,13 +287,13 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         passOutLabel.text = "Pass Out"
 
         // Level numbers
-        loadCollection(collectionView: levelCollectionView, anchor: .trailing, yOffset: 0, buttonWidth: ContractCollection.level.buttonWidth, elements: ContractLevel.validCases.count, tag: ContractCollection.level.rawValue, type: ContractLevel.blank)
+        loadCollection(collectionView: levelCollectionView, anchor: .trailing, yOffset: 0, buttonWidth: ContractCollection.level.buttonWidth, elements: ContractLevel.validCases.count, tag: ContractCollection.level.rawValue, collection: .level, type: ContractLevel.blank)
 
         // Suits
-        loadCollection(collectionView: suitCollectionView, anchor: .trailing, yOffset: (buttonHeight + buttonSpaceY), buttonWidth: ContractCollection.suit.buttonWidth, elements: ContractSuit.validCases.count, tag: ContractCollection.suit.rawValue, type: ContractSuit.blank)
+        loadCollection(collectionView: suitCollectionView, anchor: .trailing, yOffset: (buttonHeight + buttonSpaceY), buttonWidth: ContractCollection.suit.buttonWidth, elements: ContractSuit.validCases.count, tag: ContractCollection.suit.rawValue, collection: .suit, type: ContractSuit.blank)
 
         // Doubles
-        loadCollection(collectionView: doubleCollectionView, anchor: .trailing, yOffset: 2 * (buttonHeight + buttonSpaceY), buttonWidth: ContractCollection.double.buttonWidth, elements: ContractDouble.allCases.count, tag: ContractCollection.double.rawValue, type: ContractDouble.undoubled)
+        loadCollection(collectionView: doubleCollectionView, anchor: .trailing, yOffset: 2 * (buttonHeight + buttonSpaceY), buttonWidth: ContractCollection.double.buttonWidth, elements: ContractDouble.allCases.count, tag: ContractCollection.double.rawValue, collection: .double, type: ContractDouble.undoubled)
 
         // Declarer
         let declarerOffset = 3.5 * (buttonHeight + buttonSpaceY)
@@ -293,9 +304,9 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         Constraint.setWidth(control: declarerLabel, width: passoutButtonWidth)
         declarerLabel.font = titleFont
         declarerLabel.textAlignment = .left
-        declarerLabel.textColor = UIColor(Palette.alternate.text)
+        declarerLabel.textColor = UIColor(Palette.alternate.contrastText)
         declarerLabel.text = "Declarer"
-        loadCollection(collectionView: declarerCollectionView, anchor: .trailing, yOffset: declarerOffset, buttonWidth: ContractCollection.declarer.buttonWidth, elements: Seat.allCases.count, tag: ContractCollection.declarer.rawValue, type: Seat.unknown)
+        loadCollection(collectionView: declarerCollectionView, anchor: .trailing, yOffset: declarerOffset, buttonWidth: ContractCollection.declarer.buttonWidth, elements: Seat.allCases.count, tag: ContractCollection.declarer.rawValue, collection: .declarer, type: Seat.unknown)
     
         // Cancel button
         loadActionButton(button: cancelButton, xOffset: -((actionButtonWidth / 2) + buttonSpaceX), text: "Cancel", action: cancelSelector)
@@ -319,7 +330,7 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         button.isUserInteractionEnabled = true
     }
     
-    func loadCollection<EnumType>(collectionView: UICollectionView, anchor: ConstraintAnchor, yOffset: CGFloat, buttonWidth: CGFloat, elements: Int, tag: Int, type: EnumType) where EnumType: ContractEnumType {
+    private func loadCollection<EnumType>(collectionView: UICollectionView, anchor: ConstraintAnchor, yOffset: CGFloat, buttonWidth: CGFloat, elements: Int, tag: Int, collection: ContractCollection, type: EnumType) where EnumType: ContractEnumType {
         contentView.addSubview(collectionView)
         Constraint.anchor(view: contentView, control: collectionView, to: passOutLabel, constant: yOffset, attributes: .top)
         if anchor == .trailing {
@@ -328,13 +339,17 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
             Constraint.anchor(view: contentView, control: collectionView, to: passOutLabel, attributes: anchor)
         }
             
-        Constraint.setHeight(control: collectionView, height: buttonHeight)
         Constraint.setWidth(control: collectionView, width: (CGFloat(elements) * (buttonWidth + buttonSpaceX)))
+        Constraint.setHeight(control: collectionView, height: (collection == .declarer ? buttonWidth : buttonHeight))
         collectionView.tag = tag
         collectionView.dataSource = self
         collectionView.delegate = self
         collectionView.backgroundColor = UIColor.clear
-        ContractEntryCollectionCell.register(collectionView, type: type)
+        if collection == .declarer {
+            ScrollPickerCell.register(collectionView)
+        } else {
+            ContractEntryCollectionCell.register(collectionView, type: type)
+        }
     }
 }
 

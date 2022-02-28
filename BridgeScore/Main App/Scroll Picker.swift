@@ -137,6 +137,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
 }
 
 class ScrollPickerCell: UICollectionViewCell {
+    private var background: UIView!
     private var title: UILabel!
     private var caption: UILabel!
     private static let identifier = "ScrollPickerCell"
@@ -146,26 +147,33 @@ class ScrollPickerCell: UICollectionViewCell {
     private var topPaddingHeight: NSLayoutConstraint!
     private var bottomPaddingHeight: NSLayoutConstraint!
     private var centerPaddingHeight: NSLayoutConstraint!
+    private var trailingSpace: NSLayoutConstraint!
+    private var cornerRadius: CGFloat?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
+        
+        background = UIView(frame: frame)
+        self.addSubview(background, anchored: .leading, .top, .bottom)
+        trailingSpace = Constraint.anchor(view: self, control: background, attributes: .trailing).first!
+        
         title = UILabel(frame: frame)
         title.font = pickerTitleFont
         title.minimumScaleFactor = 0.3
         title.textAlignment = .center
-        self.addSubview(title, leading: 0, trailing: 0)
+        background.addSubview(title, leading: 0, trailing: 0)
         topPaddingHeight = Constraint.anchor(view: self, control: title, constant: 0, attributes: .top).first!
         
         caption = UILabel(frame: frame)
         caption.font = pickerCaptionFont
         caption.textAlignment = .center
-        self.addSubview(caption, leading: 0, trailing: 0)
+        background.addSubview(caption, leading: 0, trailing: 0)
         bottomPaddingHeight = Constraint.anchor(view: self, control: caption, constant: 0, attributes: .bottom).first!
         centerPaddingHeight = Constraint.anchor(view: self, control: caption, to: title, constant: 0, toAttribute: .bottom, attributes: .top).first!
         captionHeightConstraint = Constraint.setHeight(control: caption, height: 0)
         
         tapGesture = UITapGestureRecognizer(target: self, action: #selector(ScrollPickerCell.tapped(_:)))
-        self.addGestureRecognizer(tapGesture)
+        background.addGestureRecognizer(tapGesture)
     }
 
     required init?(coder: NSCoder) {
@@ -181,8 +189,15 @@ class ScrollPickerCell: UICollectionViewCell {
         return cell
     }
     
+    override func layoutSubviews() {
+        if let cornerRadius = cornerRadius {
+            background.roundCorners(cornerRadius: cornerRadius)
+        }
+    }
+    
     internal override func prepareForReuse() {
         self.backgroundColor = UIColor.clear
+        background.backgroundColor = UIColor.clear
         self.isUserInteractionEnabled = false
         title.text = ""
         title.font = pickerTitleFont
@@ -196,18 +211,21 @@ class ScrollPickerCell: UICollectionViewCell {
         tapAction = nil
     }
     
-    public func set(titleText: String, captionText: String? = nil, tag: Int = 0, color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil, clearBackground: Bool = true, topPadding: CGFloat = 0, bottomPadding: CGFloat = 0, borderWidth: CGFloat = 0, tapAction: ((Int)->())? = nil) {
-        self.backgroundColor = (clearBackground ? UIColor.clear : UIColor(color?.background ?? Color.clear))
+    public func set(titleText: String, captionText: String? = nil, tag: Int = 0, color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil, clearBackground: Bool = true, topPadding: CGFloat = 0, bottomPadding: CGFloat = 0, trailingSpace: CGFloat = 0, borderWidth: CGFloat = 0, cornerRadius: CGFloat? = nil, tapAction: ((Int)->())? = nil) {
+        
+        background.backgroundColor = (clearBackground ? UIColor.clear : UIColor(color?.background ?? Color.clear))
         self.tag = tag
         self.tapAction = tapAction
         self.isUserInteractionEnabled = (tapAction != nil)
         self.layer.borderWidth = borderWidth
         self.layer.borderColor = UIColor(Palette.gridLine).cgColor
+        self.cornerRadius = cornerRadius
         
         let height = frame.height - topPadding - bottomPadding
         self.topPaddingHeight.constant = (height * 0.10) + topPadding
         self.centerPaddingHeight.constant = height * 0.075
         self.bottomPaddingHeight.constant = -((height * 0.10) + bottomPadding)
+        self.trailingSpace.constant = -trailingSpace
         
         title.text = titleText
         if let titleFont = titleFont {

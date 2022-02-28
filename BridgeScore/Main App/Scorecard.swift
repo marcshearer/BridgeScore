@@ -327,4 +327,23 @@ class Scorecard {
         }
         return changed
     }
+    
+    public static func declarerList(sitting: Seat) -> [ScrollPickerEntry] {
+        return Seat.allCases.map{ScrollPickerEntry(title: $0.short, caption: { (seat) in
+            switch seat {
+                case .unknown:
+                    return seat.string
+                case sitting:
+                    return "Self"
+                case sitting.partner:
+                    return "Partner"
+                case sitting.leftOpponent:
+                    return "Left Opp"
+                case sitting.rightOpponent:
+                    return "Right Opp"
+                default:
+                    return "Unknown"
+                }
+        }($0))}
+    }
 }
