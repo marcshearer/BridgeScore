@@ -46,4 +46,9 @@ public class TableMO: NSManagedObject, ManagedObject, Identifiable {
             }
         }
     }
+    
+    public override var description: String {
+        "Table: \(self.table) of Scorecard: \(MasterData.shared.scorecard(id: self.scorecardId)?.desc ?? "")"
+    }
+    public override var debugDescription: String { self.description }
 }

@@ -49,4 +49,9 @@ public class LayoutMO: NSManagedObject, ManagedObject, Identifiable {
         get { Type(rawValue: Int(type16)) ?? .percent }
         set { self.type16 = Int16(newValue.rawValue) }
     }
+    
+    public override var description: String {
+        "Layout: \(self.desc)"
+    }
+    public override var debugDescription: String { self.description }
 }

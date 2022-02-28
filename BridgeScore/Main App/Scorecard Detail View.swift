@@ -114,7 +114,7 @@ struct ScorecardDetailsView: View {
             InsetView(title: "Results") {
                 VStack(spacing: 0) {
                     HStack {
-                        InputFloat(title: "Score", field: $scorecard.score, width: 100, places: scorecard.type.matchPlaces)
+                        InputFloat(title: scorecard.type.matchScoreType.string, field: $scorecard.score, width: 100, places: scorecard.type.matchPlaces)
                             .disabled(scorecard.type.matchAggregate != .manual)
                         Spacer()
                     }

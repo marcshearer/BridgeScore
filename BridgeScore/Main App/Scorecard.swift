@@ -255,7 +255,7 @@ class Scorecard {
             let type = scorecard.type
             let boards = scorecard.boardsTable
             let places = type.tablePlaces
-            if count == 0 {
+            if count == 0 && type.tableAggregate != .manual {
                 newScore = nil
             } else {
                 let average = Utility.round(total / Float(count), places: type.boardPlaces)
@@ -300,7 +300,7 @@ class Scorecard {
         let type = scorecard.type
         let boards = scorecard.boards
         let places = type.matchPlaces
-        if count == 0 {
+        if count == 0 && type.matchAggregate != .manual {
             newScore = nil
         } else {
             let average = Utility.round(total / Float(count), places: places)

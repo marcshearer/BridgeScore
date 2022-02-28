@@ -28,4 +28,9 @@ public class LocationMO: NSManagedObject, ManagedObject, Identifiable {
         set { self.sequence16 = Int16(newValue)}
     }
     
+    public override var description: String {
+        "Location: \(self.name)"
+    }
+    public override var debugDescription: String { self.description }
+
 }

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ScorecardListView: View {
     @StateObject private var selected = ScorecardViewModel()
+    @StateObject private var filterValues = ScorecardFilterValues()
     @ObservedObject private var data = MasterData.shared
     @State private var title = "Scorecards"
     @State private var layout = LayoutViewModel()
@@ -19,8 +20,12 @@ struct ScorecardListView: View {
     @State private var linkToPlayers = false
     @State private var linkToLocations = false
     @State private var highlighted = false
+    @State private var startAt: UUID?
+    @State private var closeFilter = false
 
     var body: some View {
+        let scorecards = MasterData.shared.scorecards.filter({self.filter($0)})
+        
         let menuOptions = [BannerOption(text: "Standard layouts", action: { linkToLayouts = true }),
                            BannerOption(text: "Players",  action: { linkToPlayers = true }),
                            BannerOption(text: "Locations", action: { linkToLocations = true }),
@@ -46,21 +51,45 @@ struct ScorecardListView: View {
                 }
                 
                 ScrollView {
-                    LazyVStack {
-                        ForEach(data.scorecards) { (scorecard) in
-                            ScorecardSummaryView(scorecard: scorecard, highlighted: highlighted)
-                                .onTapGesture {
-                                    // Copy this entry to current scorecard
-                                    self.selected.copy(from: scorecard)
-                                    Scorecard.current.load(scorecard: self.selected)
-                                    self.linkAction()
+                    Spacer().frame(height: 8)
+                    ScorecardFilterView(values: filterValues, closeFilter: $closeFilter)
+                    ScrollViewReader { scrollViewProxy in
+                        LazyVStack {
+                            ForEach(scorecards) { (scorecard) in
+                                ScorecardSummaryView(scorecard: scorecard, highlighted: highlighted)
+                                    .id(scorecard.scorecardId)
+                                    .onTapGesture {
+                                            // Copy this entry to current scorecard
+                                        self.selected.copy(from: scorecard)
+                                        Scorecard.current.load(scorecard: self.selected)
+                                        self.linkAction()
+                                    }
+                            }
+                        }
+                        .onChange(of: self.startAt) { (newValue) in
+                            if let newValue = newValue {
+                                scrollViewProxy.scrollTo(newValue, anchor: .top)
+                                startAt = nil
+                            }
+                        }
+                        .onChange(of: self.closeFilter) { (newValue) in
+                            if newValue {
+                                if let scorecard = data.scorecards.first {
+                                    self.startAt = scorecard.scorecardId
                                 }
+                                closeFilter = false
+                            }
                         }
                     }
                 }
                 Spacer()
             }
             .onAppear {
+                Utility.mainThread {
+                    if let scorecard = scorecards.first {
+                        self.startAt = scorecard.scorecardId
+                    }
+                }
                 if UserDefault.currentUnsaved.bool {
                     // Unsaved version - restore it and link to it
                     let scorecard = ScorecardViewModel()
@@ -86,7 +115,7 @@ struct ScorecardListView: View {
         }
     }
     
-    func linkAction() {
+    private func linkAction() {
         if !Scorecard.current.isSensitive {
             linkToEdit = true
         } else {
@@ -96,6 +125,60 @@ struct ScorecardListView: View {
                 Scorecard.current.clear()
             }
         }
+    }
+    
+    private func filter(_ scorecard: ScorecardViewModel) -> Bool {
+        var include = true
+        if filterValues.searchText != "" {
+            include = self.wordSearch(for: filterValues.searchText, in: scorecard.desc + " " + scorecard.comment)
+        }
+        
+        if let partner = filterValues.partner {
+            if partner != scorecard.partner {
+                include = false
+            }
+        }
+
+        if let location = filterValues.location {
+            if location != scorecard.location {
+                include = false
+            }
+        }
+
+        if let dateFrom = filterValues.dateFrom {
+            if dateFrom > scorecard.date {
+                include = false
+            }
+        }
+
+        if let dateTo = filterValues.dateTo {
+            if dateTo > scorecard.date {
+                include = false
+            }
+        }
+        
+        return include
+    }
+    
+    private func wordSearch(for searchWords: String, in target: String) -> Bool {
+        var result = true
+        let searchList = searchWords.uppercased().components(separatedBy: " ")
+        let targetList = target.uppercased().components(separatedBy: " ")
+        
+        for searchWord in searchList {
+            var found = false
+            for targetWord in targetList {
+                if targetWord.starts(with: searchWord) {
+                    found = true
+                }
+            }
+            if !found {
+                result = false
+            }
+        }
+        
+        return result
+        
     }
 }
 
@@ -131,7 +214,7 @@ struct ScorecardSummaryView: View {
                             Spacer()
                         }
                         .minimumScaleFactor(0.7)
-                        .foregroundColor(color.text)
+                        .foregroundColor(color.contrastText)
                         .font(.title)
                         Spacer()
                         HStack {
@@ -151,7 +234,7 @@ struct ScorecardSummaryView: View {
                             }
                             .frame(width: geometry.size.width * 0.37)
                         }
-                        .foregroundColor(color.contrastText)
+                        .foregroundColor(color.text)
                         .font(.callout)
                         .minimumScaleFactor(0.5)
                         Spacer().frame(height: 8)
@@ -168,6 +251,7 @@ struct ScorecardSummaryView: View {
                             })
                         } label: {
                             Image(systemName: "trash.circle.fill").font(.largeTitle)
+                                .foregroundColor(color.contrastText)
                         }
                         Spacer()
                     }

@@ -85,4 +85,9 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
         get { (try? PKDrawing(data: self.drawingData)) ?? PKDrawing() }
         set { self.drawingData = newValue.dataRepresentation() }
     }
+    
+    public override var description: String {
+        "Scorecard: \(self.desc)"
+    }
+    public override var debugDescription: String { self.description }
 }

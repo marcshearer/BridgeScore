@@ -71,6 +71,42 @@ public enum AggregateType {
     case discreteVp
     case percentVp
     case manual
+    
+    public func scoreType(subsidiaryScoreType: ScoreType) -> ScoreType {
+        switch self {
+        case .average:
+            return subsidiaryScoreType
+        case .total:
+            return subsidiaryScoreType
+        case .continuousVp, .discreteVp, .percentVp:
+            return .vp
+        case .manual:
+            return .manual
+        }
+    }
+}
+
+public enum ScoreType {
+    case percent
+    case imp
+    case xImp
+    case vp
+    case manual
+    
+    public var string: String {
+        switch self {
+        case .percent:
+            return "Score %"
+        case .xImp:
+            return "X Imps"
+        case .imp:
+            return "Imps"
+        case .vp:
+            return "VPs"
+        case .manual:
+            return "Score"
+        }
+    }
 }
 
 public enum Type: Int, CaseIterable {
@@ -99,6 +135,27 @@ public enum Type: Int, CaseIterable {
         case .manual:
             return "Manually entered"
         }
+    }
+    
+    public var boardScoreType: ScoreType {
+        switch self {
+        case .percent, .vpPercent:
+            return .percent
+        case .xImp, .vpXImp:
+            return .xImp
+        case .vpMatchTeam, .vpTableTeam:
+            return .imp
+        case .manual:
+            return .manual
+        }
+    }
+    
+    public var tableScoreType: ScoreType {
+        return tableAggregate.scoreType(subsidiaryScoreType: boardScoreType)
+    }
+    
+    public var matchScoreType: ScoreType {
+        return matchAggregate.scoreType(subsidiaryScoreType: tableScoreType)
     }
     
     public var boardPlaces: Int {
@@ -254,7 +311,49 @@ public enum Seat: Int, EnumPickerType, ContractEnumType {
         }
         return string.left(1)
     }
+}
 
+public enum Vulnerability: Int {
+    case none = 0
+    case ns = 1
+    case ew = 2
+    case both = 3
+
+    init(board: Int) {
+        self = Vulnerability(rawValue: ((board - 1) + ((board - 1) / 4)) % 4)!
+    }
+    
+    public var string: String {
+        switch self {
+        case .none:
+            return "None"
+        case .ns:
+            return "NS"
+        case .ew:
+            return "EW"
+        case .both:
+            return "All"
+        }
+    }
+    
+    public func isVulnerable(seat: Seat) -> Bool {
+        switch seat {
+        case .north, .south:
+            return nsVulnerable
+        case .east, .west:
+            return ewVulnerable
+        default:
+            return false
+        }
+    }
+    
+    public var nsVulnerable: Bool {
+        self == .ns || self == .both
+    }
+
+    public var ewVulnerable: Bool {
+        self == .ew || self == .both
+    }
 }
 
 // Scorecard view types
@@ -267,9 +366,12 @@ enum ColumnType: Codable {
     case contract
     case declarer
     case made
+    case points
     case score
     case comment
     case responsible
+    case vulnerable
+    case dealer
     
     var string: String {
         return "\(self)"
@@ -376,6 +478,37 @@ public enum ContractSuit: Int, ContractEnumType {
     var hasDouble: Bool {
         return self.valid
     }
+    
+    var firstTrick: Int {
+        switch self {
+        case .noTrumps:
+            return 40
+        case .spades, .hearts:
+            return 30
+        case .clubs, .diamonds:
+            return 20
+        default:
+            return 0
+        }
+    }
+
+    var subsequentTricks: Int {
+        switch self {
+        case .noTrumps:
+            return 30
+        default:
+            return firstTrick
+        }
+    }
+    
+    func trickPoints(tricks: Int) -> Int {
+        return (tricks < 0 ? 0 : (firstTrick + (tricks >= 1 ? (tricks - 1) * subsequentTricks : 0)))
+    }
+    
+    func overTrickPoints(tricks: Int) -> Int {
+        return (tricks < 0 ? 0 : tricks * subsequentTricks)
+    }
+    
 }
 
 public enum ContractDouble: Int, ContractEnumType {
@@ -395,6 +528,17 @@ public enum ContractDouble: Int, ContractEnumType {
             return "✱"
         case .redoubled:
             return "✱✱"
+        }
+    }
+    
+    var multiplier: Int {
+        switch self {
+        case .undoubled:
+            return 1
+        case .doubled:
+            return 2
+        case .redoubled:
+            return 4
         }
     }
 }

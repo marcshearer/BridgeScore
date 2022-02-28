@@ -10,6 +10,7 @@ import SwiftUI
 
 class Palette {
     
+    @BackgroundColor(.clear) static var clear
     @BackgroundColor(.banner) static var banner
     @BackgroundColor(.bannerButton) static var bannerButton
     @BackgroundColor(.alternateBanner) static var alternateBanner

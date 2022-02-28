@@ -124,6 +124,82 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
         self.responsible != .unknown
     }
     
+    public var dealer: Seat {
+        Seat(rawValue: ((board - 1) % 4) + 1) ?? .unknown
+    }
+    
+    public var vulnerability: Vulnerability {
+        Vulnerability(board: board)
+    }
+    
+    public func points(seat: Seat) -> Int {
+        var points = 0
+        let multiplier = (seat == declarer || seat == declarer.partner ? 1 : -1)
+
+        if contract.level != .passout {
+            
+            let level = contract.level
+            let suit = contract.suit
+            let double = contract.double
+            var gameMade = false
+            let vulnerable = vulnerability.isVulnerable(seat: declarer)
+            let tricks = level.rawValue + made
+            
+            if made >= 0 {
+                
+                // Add in base points for making contract
+                let madePoints = suit.trickPoints(tricks: level.rawValue) * double.multiplier
+                gameMade = (madePoints >= 100)
+                points += madePoints
+                
+                // Add in any overtricks
+                if made >= 1 {
+                    if double == .undoubled {
+                        points += suit.overTrickPoints(tricks: made)
+                    } else {
+                        points += made * (100 * (vulnerable ? 2 : 1)) * (double.multiplier / 2)
+                    }
+                }
+                
+                // Add in the insult
+                if double != .undoubled {
+                    points += 50 * (double.multiplier / 2)
+                }
+                
+                // Add in any game bonus or part score bonus
+                if gameMade {
+                    points += (vulnerable ? 500 : 300)
+                } else {
+                    points += 50
+                }
+                
+                // Add in any slam bonus
+                if tricks == 13 {
+                    points += (vulnerable ? 1500 : 1000)
+                } else if tricks == 12 {
+                    points += (vulnerable ? 750 : 500)
+                }
+            } else {
+                
+                // Subtract points for undertricks
+                if double == .undoubled {
+                    points = (vulnerable ? 100 : 50) * made
+                } else {
+                    // Subtract first trick
+                    points -= (vulnerable ? 200 : 100) * (double.multiplier / 2)
+                    
+                    // Subtract second and third undertricks
+                    points += (vulnerable ? 300 : 200) * (double.multiplier / 2) * min(0, max(-2, made + 1))
+                    
+                    // Subtract all other undertricks
+                    points += 300 * (double.multiplier / 2) * min(0, made + 3)
+                }
+            }
+        }
+        
+        return points * multiplier
+    }
+    
     public var description: String {
         return "Scorecard: \(scorecard.desc), Board: \(board)"
     }

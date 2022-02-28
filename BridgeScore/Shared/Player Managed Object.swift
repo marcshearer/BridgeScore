@@ -28,4 +28,8 @@ public class PlayerMO: NSManagedObject, ManagedObject, Identifiable {
         set { self.sequence16 = Int16(newValue)}
     }
     
+    public override var description: String {
+        "Player: \(self.name)"
+    }
+    public override var debugDescription: String { self.description }
 }

@@ -27,7 +27,7 @@ struct InsetView <Content>: View where Content: View {
                 VStack {
                     HStack {
                         Spacer().frame(width: 40)
-                        Text(title.uppercased()).foregroundColor(Palette.background.faintText)
+                        Text(title.uppercased()).foregroundColor(Palette.alternate.faintText)
                         Spacer()
                     }
                     Spacer().frame(height: 4)

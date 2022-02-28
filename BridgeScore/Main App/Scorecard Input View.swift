@@ -42,6 +42,7 @@ struct ScorecardInputView: View {
     @State var linkToDetails: Bool = false
     @State var refreshTableTotals = false
     @State var deleted = false
+    @State var detailView = false
     
     var body: some View {
         StandardView {
@@ -51,12 +52,15 @@ struct ScorecardInputView: View {
                 if refreshTableTotals { EmptyView() }
     
                 // Banner
-                Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .buttons, options: [
-                        BannerOption(image: AnyView(Image(systemName: "arrow.uturn.backward")), likeBack: true, isEnabled: $canUndo, action: { undoDrawing() }),
-                        BannerOption(image: AnyView(Image(systemName: "arrow.uturn.forward")), likeBack: true, isEnabled: $canRedo, action: { redoDrawing() }),
-                        BannerOption(image: AnyView(Image(systemName: "note.text")), likeBack: true, action: { linkToDetails = true })])
+                let bannerOptions = [
+                    BannerOption(image: AnyView(Image(systemName: "arrow.uturn.backward")), likeBack: true, isEnabled: $canUndo, action: { undoDrawing() }),
+                    BannerOption(image: AnyView(Image(systemName: "arrow.uturn.forward")), likeBack: true, isEnabled: $canRedo, action: { redoDrawing() }),
+                    BannerOption(image: AnyView(Image(systemName: "\(detailView ? "minus" : "plus").magnifyingglass")), likeBack: true, action: { toggleView() }),
+                    BannerOption(image: AnyView(Image(systemName: "note.text")), likeBack: true, action: { linkToDetails = true })]
+                
+                Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .buttons, options: bannerOptions)
                 GeometryReader { geometry in
-                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), undoPressed: $undoPressed, redoPressed: $redoPressed, canUndo: $canUndo, canRedo: $canRedo, refreshTableTotals: $refreshTableTotals)
+                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), undoPressed: $undoPressed, redoPressed: $redoPressed, canUndo: $canUndo, canRedo: $canRedo, refreshTableTotals: $refreshTableTotals, detailView: $detailView)
                     .ignoresSafeArea(edges: .all)
                 }
             }
@@ -100,6 +104,10 @@ struct ScorecardInputView: View {
         self.redoPressed = true
         self.canRedo = false
     }
+    
+    func toggleView() {
+        detailView.toggle()
+    }
 }
 
 protocol ScorecardInputUIViewDelegate {
@@ -115,6 +123,7 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
     @Binding var canUndo: Bool
     @Binding var canRedo: Bool
     @Binding var refreshTableTotals: Bool
+    @Binding var detailView: Bool
 
     func makeUIView(context: Context) -> ScorecardInputUIView {
         
@@ -137,10 +146,12 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
         if refreshTableTotals {
             uiView.refreshTableTotals()
         }
+        
+        uiView.switchView(detailView: detailView)
     }
     
     func makeCoordinator() -> Coordinator {
-        Coordinator($undoPressed, $redoPressed, $canUndo, $canRedo, $refreshTableTotals)
+        Coordinator($undoPressed, $redoPressed, $canUndo, $canRedo, $refreshTableTotals, $detailView)
     }
     
     class Coordinator: NSObject, ScorecardInputUIViewDelegate {
@@ -150,13 +161,15 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
         @Binding var canUndo: Bool
         @Binding var canRedo: Bool
         @Binding var refreshTableTotals: Bool
+        @Binding var detailView: Bool
         
-        init(_ undoPressed: Binding<Bool>, _ redoPressed: Binding<Bool>, _ canUndo: Binding<Bool>, _ canRedo: Binding<Bool>, _ refreshTableTotals: Binding<Bool>) {
+        init(_ undoPressed: Binding<Bool>, _ redoPressed: Binding<Bool>, _ canUndo: Binding<Bool>, _ canRedo: Binding<Bool>, _ refreshTableTotals: Binding<Bool>, _ detailView: Binding<Bool>) {
             _undoPressed = undoPressed
             _redoPressed = redoPressed
             _refreshTableTotals = refreshTableTotals
             _canUndo = canUndo
             _canRedo = canRedo
+            _detailView = detailView
         }
   
         func undo(isAvailable: Bool) {
@@ -198,7 +211,7 @@ fileprivate let tableRowHeight: CGFloat = 80
 class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, UITableViewDelegate, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
         
     private var scorecard: ScorecardViewModel
-    private var titleView: UIView!
+    private var titleView: ScorecardInputTableTitleView!
     private var mainTableView = UITableView(frame: CGRect(), style: .plain)
     private var contractEntryView: ContractEntryView
     private var scrollPickerPopupView: ScrollPickerPopupView
@@ -208,23 +221,10 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     private var isKeyboardOffset = false
     private var bottomConstraint: NSLayoutConstraint!
     private var forceReload = true
+    private var detailView = true
     
-    var boardColumns = [
-        ScorecardColumn(type: .board, heading: "Board", size: .fixed(70)),
-        ScorecardColumn(type: .contract, heading: "Contract", size: .fixed(95)),
-        ScorecardColumn(type: .declarer, heading: "By", size: .fixed(70)),
-        ScorecardColumn(type: .made, heading: "Made", size: .fixed(60)),
-        ScorecardColumn(type: .score, heading: "Score", size: .fixed(80)),
-        ScorecardColumn(type: .responsible, heading: "Resp", size: .fixed(65)),
-        ScorecardColumn(type: .comment, heading: "Comment", size: .flexible)
-    ]
-    
-    var tableColumns = [
-        ScorecardColumn(type: .table, heading: "", size: .fixed(165)),
-        ScorecardColumn(type: .sitting, heading: "Sitting", size: .fixed(130)),
-        ScorecardColumn(type: .tableScore, heading: "Score", size: .fixed(145)),
-        ScorecardColumn(type: .versus, heading: "Versus", size: .flexible)
-    ]
+    var boardColumns: [ScorecardColumn] = []
+    var tableColumns: [ScorecardColumn] = []
     
     init(frame: CGRect, scorecard: ScorecardViewModel) {
         self.scorecard = scorecard
@@ -232,6 +232,9 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         self.scrollPickerPopupView = ScrollPickerPopupView(frame: CGRect())
 
         super.init(frame: frame)
+        
+        // Set up view
+        switchView(detailView: true, force: true)
                     
         // Add subviews
         titleView = ScorecardInputTableTitleView(self, frame: CGRect(origin: .zero, size: CGSize(width: frame.width, height: titleRowHeight)), tag: RowType.boardTitle.tagOffset)
@@ -268,6 +271,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         setupSizes(columns: &tableColumns)
         if boardColumns != oldBoardColumns || tableColumns != oldTableColumns || forceReload {
             mainTableView.reloadData()
+            titleView.collectionView.reloadData()
             forceReload = false
         }
     }
@@ -286,6 +290,51 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         }
     }
     
+    public func switchView(detailView: Bool, force: Bool = false) {
+        if self.detailView != detailView || force {
+            if detailView {
+                boardColumns = [
+                    ScorecardColumn(type: .board, heading: "Board", size: .fixed(70)),
+                    ScorecardColumn(type: .vulnerable, heading: "Vul", size: .fixed(60)),
+                    ScorecardColumn(type: .dealer, heading: "Dealer", size: .fixed(50)),
+                    ScorecardColumn(type: .contract, heading: "Contract", size: .fixed(95)),
+                    ScorecardColumn(type: .declarer, heading: "By", size: .fixed(70)),
+                    ScorecardColumn(type: .made, heading: "Made", size: .fixed(60)),
+                    ScorecardColumn(type: .points, heading: "Points", size: .fixed(80)),
+                    ScorecardColumn(type: .score, heading: "Score", size: .fixed(80)),
+                    ScorecardColumn(type: .comment, heading: "Comment", size: .flexible)
+                ]
+                
+                tableColumns = [
+                    ScorecardColumn(type: .table, heading: "", size: .fixed(180)),
+                    ScorecardColumn(type: .sitting, heading: "Sitting", size: .fixed(165)),
+                    ScorecardColumn(type: .tableScore, heading: "Score", size: .fixed(220)),
+                    ScorecardColumn(type: .versus, heading: "Versus", size: .flexible)
+                ]
+            } else {
+                boardColumns = [
+                    ScorecardColumn(type: .board, heading: "Board", size: .fixed(70)),
+                    ScorecardColumn(type: .contract, heading: "Contract", size: .fixed(95)),
+                    ScorecardColumn(type: .declarer, heading: "By", size: .fixed(70)),
+                    ScorecardColumn(type: .made, heading: "Made", size: .fixed(60)),
+                    ScorecardColumn(type: .score, heading: "Score", size: .fixed(80)),
+                    ScorecardColumn(type: .responsible, heading: "Resp", size: .fixed(65)),
+                    ScorecardColumn(type: .comment, heading: "Comment", size: .flexible)
+                ]
+                
+                tableColumns = [
+                    ScorecardColumn(type: .table, heading: "", size: .fixed(165)),
+                    ScorecardColumn(type: .sitting, heading: "Sitting", size: .fixed(130)),
+                    ScorecardColumn(type: .tableScore, heading: "Score", size: .fixed(145)),
+                    ScorecardColumn(type: .versus, heading: "Versus", size: .flexible)
+                ]
+            }
+            self.detailView = detailView
+            forceReload = true
+            self.setNeedsLayout()
+        }
+    }
+    
     // MARK: - Scorecard delegates
     
     internal func scorecardChanged(type: RowType, itemNumber: Int, column: ScorecardColumn?) {
@@ -298,11 +347,13 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 let section = itemNumber - 1
                 switch column.type {
                 case .sitting:
-                        // Sitting changed - update declarer
+                        // Sitting changed - update declarer and points etc
                     let boards = scorecard.boardsTable
                     for index in 1...boards {
                         let row = index - 1
                         self.updateBoardCell(section: section, row: row, columnType: .declarer)
+                        self.updateBoardCell(section: section, row: row, columnType: .points)
+                        self.updateBoardCell(section: section, row: row, columnType: .dealer)
                     }
                 default:
                     break
@@ -316,8 +367,11 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 let row = (itemNumber - 1) % scorecard.boardsTable
                 switch column.type {
                 case .contract:
-                        // Contract changed - update made picker
+                        // Contract changed - update made and points
                     self.updateBoardCell(section: section, row: row, columnType: .made)
+                    self.updateBoardCell(section: section, row: row, columnType: .points)
+                case .made, .declarer:
+                    self.updateBoardCell(section: section, row: row, columnType: .points)
                 case .score:
                         // Score changed - update table score
                     self.updateScore(section: section)
@@ -506,7 +560,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
             case .boardTitle:
                 let cell = ScorecardInputBoardCollectionCell.dequeue(collectionView, for: indexPath)
                 let column = boardColumns[indexPath.item]
-                cell.setTitle(column: column)
+                cell.setTitle(column: column, scorecard: scorecard)
                 return cell
             case .table:
                 let cell = ScorecardInputTableCollectionCell.dequeue(collectionView, for: indexPath)
@@ -674,6 +728,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     private var column: ScorecardColumn!
     private var scorecardDelegate: ScorecardDelegate?
     private static let identifier = "Board CollectionCell"
+    private var scorecard: ScorecardViewModel!
     
     override init(frame: CGRect) {
         participantPicker = EnumPicker(frame: frame)
@@ -786,22 +841,30 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         textClearPadding.forEach { (constraint) in constraint.constant = 0 }
         textField.text = ""
         textView.text = ""
+        textView.font = cellFont
         label.backgroundColor = UIColor(Palette.gridBoard.background)
         label.text = ""
+        label.font = cellFont
         label.textAlignment = .center
         textField.textAlignment = .center
         textField.clearsOnBeginEditing = false
         textField.clearButtonMode = .never
+        textField.font = cellFont
     }
     
-    func setTitle(column: ScorecardColumn) {
+    func setTitle(column: ScorecardColumn, scorecard: ScorecardViewModel) {
         self.board = nil
         self.column = column
         label.font = titleFont
-        label.text = column.heading
+        if column.type == .score {
+            label.text = scorecard.type.boardScoreType.string
+        } else {
+            label.text = column.heading
+        }
     }
     
     func set(from scorecardDelegate: ScorecardDelegate, scorecard: ScorecardViewModel, table: TableViewModel, board: BoardViewModel, boardNumber: Int, column: ScorecardColumn) {
+        self.scorecard = scorecard
         self.scorecardDelegate = scorecardDelegate
         self.board = board
         self.table = table
@@ -813,6 +876,13 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         case .board:
             label.font = boardFont
             label.text = "\(scorecard.resetNumbers ? ((board.board - 1) % scorecard.boardsTable) + 1 : board.board)"
+        case .vulnerable:
+            label.isHidden = false
+            label.text = board.vulnerability.string
+        case .dealer:
+            seatPicker.isHidden = false
+            let selected = board.dealer.rawValue
+            seatPicker.set(selected, list: declarerList, isEnabled: false, color: Palette.gridBoardDisabled, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
         case .contract:
             contractPicker.isHidden = false
             contractPicker.set(board.contract, color: Palette.gridBoard, font: pickerTitleFont, force: true)
@@ -837,7 +907,15 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             textField.isHidden = false
             textField.keyboardType = .numberPad
             textField.clearsOnBeginEditing = true
-            textField.text = board.score == nil ? "" : "\(board.score!)"
+            textField.text = board.score == nil ? "" : "\(board.score!.toString(places: scorecard.type.boardPlaces))"
+        case .points:
+            label.isHidden = false
+            if board.declarer == .unknown {
+                label.text = ""
+            } else {
+                let points = board.points(seat: table.sitting)
+                label.text = "\(points > 0 ? "+" : "")\(points)"
+            }
         case .comment:
             textField.isHidden = false
             textField.text = board.comment
@@ -928,7 +1006,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         switch column.type {
         case .score:
             let score = numericValue(text)
-            let newText = (score == nil ? "" : "\(score!)")
+            let newText = (score == nil ? "" : "\(score!.toString(places: scorecard.type.boardPlaces))")
             if newText != textField.text {
                 textField.text = newText
                 textFieldChanged(textField)
@@ -1178,6 +1256,7 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
     private var scorecardDelegate: ScorecardDelegate?
     private static let identifier = "Table CollectionCell"
     private var captionHeight: NSLayoutConstraint!
+    private var scorecard: ScorecardViewModel!
 
     override init(frame: CGRect) {
         seatPicker = EnumPicker(frame: frame, color: Palette.gridTable)
@@ -1279,7 +1358,9 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         captionHeight.constant = 0
     }
     
-    func set(from scorecardDelegate: ScorecardDelegate, scorecard: ScorecardViewModel, table: TableViewModel, tableNumber: Int, column: ScorecardColumn) {        self.scorecardDelegate = scorecardDelegate
+    func set(from scorecardDelegate: ScorecardDelegate, scorecard: ScorecardViewModel, table: TableViewModel, tableNumber: Int, column: ScorecardColumn) {
+        self.scorecard = scorecard
+        self.scorecardDelegate = scorecardDelegate
         self.table = table
         self.tableNumber = tableNumber
         self.column = column
@@ -1296,9 +1377,9 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
             if scorecard.type.tableAggregate == .manual {
                 textField.isHidden = false
                 textField.clearsOnBeginEditing = true
-                textField.text = table.score == nil ? "" : "\(table.score!)"
+                textField.text = table.score == nil ? "" : "\(table.score!.toString(places: scorecard.type.tablePlaces))"
             } else {
-                label.text = table.score == nil ? "" : "\(table.score!)"
+                label.text = table.score == nil ? "" : "\(table.score!.toString(places: scorecard.type.tablePlaces))"
             }
         case .versus:
             textField.isHidden = false
@@ -1313,7 +1394,11 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         if column.heading != "" {
             caption.isHidden = false
             captionHeight.constant = 24
-            caption.text = column.heading
+            if column.type == .tableScore {
+                caption.text = scorecard.type.tableScoreType.string
+            } else {
+                caption.text = column.heading
+            }
         }
         label.backgroundColor = UIColor(color.background)
     }
@@ -1358,7 +1443,7 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         switch column.type {
         case .tableScore:
             let score = Float(text)
-            let newText = (score == nil ? "" : "\(score!)")
+            let newText = (score == nil ? "" : "\(score!.toString(places: scorecard.type.tablePlaces))")
             if newText != textField.text {
                 textField.text = newText
                 textFieldChanged(textField)

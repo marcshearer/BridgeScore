@@ -30,10 +30,11 @@ struct Input : View {
     var title: String?
     @Binding var field: String
     var message: Binding<String>?
-    var topSpace: CGFloat = 5
+    var topSpace: CGFloat = 0
     var leadingSpace: CGFloat = 0
     var height: CGFloat = 45
     var width: CGFloat?
+    var color: PaletteColor = Palette.input
     var keyboardType: KeyboardType = .default
     var autoCapitalize: CapitalizationType = .sentences
     var autoCorrect: Bool = true
@@ -83,6 +84,7 @@ struct Input : View {
                         .keyboardType(self.keyboardType)
                         .autocapitalization(autoCapitalize)
                         .disableAutocorrection(!autoCorrect)
+                        .foregroundColor(color.text)
                         .onChange(of: field) { field in
                             onChange?(field)
                         }
@@ -90,7 +92,7 @@ struct Input : View {
                 .if(width != nil) { (view) in
                     view.frame(width: width)
                 }
-                .background(Palette.input.background)
+                .background(color.background)
                 .cornerRadius(12)
 
                 if width == nil {
@@ -99,11 +101,11 @@ struct Input : View {
                 
                 if clearText {
                     VStack {
-                        Spacer().frame(height: 8)
+                        Spacer()
                         Button {
                             field = ""
                         } label: {
-                            Image(systemName: "xmark.circle").font(inputTitleFont).foregroundColor(Palette.input.themeText)
+                            Image(systemName: "x.circle.fill").font(inputTitleFont).foregroundColor(Palette.clearText)
                         }
                         Spacer()
                     }.frame(width: 20)

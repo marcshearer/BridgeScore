@@ -137,9 +137,9 @@ extension CGPoint {
 
 #if canImport(UIKit)
 extension UIImage {
-    convenience init(color: UIColor, size: CGSize) {
+    convenience init(pickerColor: UIColor, size: CGSize) {
         UIGraphicsBeginImageContextWithOptions(size, false, 1)
-        color.set()
+        pickerColor.set()
         let ctx = UIGraphicsGetCurrentContext()!
         ctx.fill(CGRect(origin: .zero, size: size))
         let image = UIGraphicsGetImageFromCurrentImageContext()!
@@ -192,11 +192,11 @@ extension Array {
 #if canImport(UIKit)
 extension NSAttributedString {
     
-    convenience init(_ string: String, color: UIColor? = nil, font: UIFont? = nil) {
+    convenience init(_ string: String, pickerColor: UIColor? = nil, font: UIFont? = nil) {
         var attributes: [NSAttributedString.Key : Any] = [:]
         
-        if let color = color {
-            attributes[NSAttributedString.Key.foregroundColor] = color
+        if let pickerColor = pickerColor {
+            attributes[NSAttributedString.Key.foregroundColor] = pickerColor
         }
         if let font = font {
             attributes[NSAttributedString.Key.font] = font
@@ -242,13 +242,13 @@ extension NSAttributedString {
         self.init(attributedString: NSAttributedString.replace(in: string, tokens: tokens, with: attributes))
     }
     
-    convenience init(imageName: String, color: UIColor? = nil) {
+    convenience init(imageName: String, pickerColor: UIColor? = nil) {
         let image = UIImage(prefixed: imageName)!
         let imageAttachment = NSTextAttachment()
-        imageAttachment.image = (color == nil ? image : image.asTemplate)
+        imageAttachment.image = (pickerColor == nil ? image : image.asTemplate)
         let imageString = NSMutableAttributedString(attachment: imageAttachment)
-        if let color = color {
-            imageString.addAttribute(NSAttributedString.Key.foregroundColor, value: color, range: NSRange(0...imageString.length - 1))
+        if let pickerColor = pickerColor {
+            imageString.addAttribute(NSAttributedString.Key.foregroundColor, value: pickerColor, range: NSRange(0...imageString.length - 1))
         }
         self.init(attributedString: imageString)
     }
