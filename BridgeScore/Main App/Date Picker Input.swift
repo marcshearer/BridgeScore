@@ -14,11 +14,13 @@ struct DatePickerInput : View {
     var message: Binding<String>?
     var from: Date?
     var to: Date?
+    var color: PaletteColor = Palette.datePicker
     var topSpace: CGFloat = 5
     var height: CGFloat = 45
     var inlineTitle: Bool = true
     var inlineTitleWidth: CGFloat = 150
     var onChange: ((String)->())?
+    @State private var datePicker = false
 
     var body: some View {
         
@@ -40,21 +42,46 @@ struct DatePickerInput : View {
                 } else {
                     Spacer().frame(width: 32)
                 }
-                if from == nil && to == nil {
-                    DatePicker("", selection: $field, displayedComponents: .date)
-                } else if from == nil {
-                    DatePicker("", selection: $field, in: ...to!, displayedComponents: .date)
-                } else if to == nil {
-                    DatePicker("", selection: $field, in: from!..., displayedComponents: .date)
-                } else {
-                    DatePicker("", selection: $field, in: from!...to!, displayedComponents: .date)
-                }
+                
+                Spacer().frame(width: 16)
+                Button(action: {
+                    datePicker = true
+                }) {
+                    Text(Utility.dateString(field, format: "EEEE dd MMMM yyyy"))
+                }.id(1)
                 
                 Spacer()
+            }
+            .popover(isPresented: $datePicker, attachmentAnchor: .rect(.bounds)) {
+                ZStack {
+                    Rectangle()
+                        .frame(width: 280)
+                        .background(.clear)
+                    datePickerRange
+                }
             }
             .font(inputFont)
             .labelsHidden()
         }
         .frame(height: self.height + self.topSpace + (title == nil || inlineTitle ? 0 : 30))
+    }
+    
+    private var datePickerRange: some View {
+        var picker: AnyView
+            if from == nil && to == nil {
+                picker = AnyView(DatePicker("",  selection: $field, displayedComponents: .date))
+            } else if from == nil {
+                picker = AnyView(DatePicker("", selection: $field, in: ...to!, displayedComponents: .date))
+            } else if to == nil {
+                picker = AnyView(DatePicker("", selection: $field, in: from!..., displayedComponents: .date))
+            } else {
+                picker = AnyView(DatePicker("", selection: $field, in: from!...to!, displayedComponents: .date))
+            }
+        return picker.datePickerStyle(GraphicalDatePickerStyle())
+            .background(color.background)
+            .foregroundColor(color.text)
+            .onChange(of: $field.wrappedValue) { (_) in
+                datePicker = false
+            }
     }
 }

@@ -106,17 +106,8 @@ struct ScorecardDetailsView: View {
                     
                     Separator()
                     
-                    // DatePickerInput(title: "Date", field: $scorecard.date, to: Date())
+                    DatePickerInput(title: "Date", field: $scorecard.date, to: Date())
                     
-                    Button(action: {
-                        datePicker = true
-                    }) {
-                        Text(Utility.dateString(scorecard.date, format: "EEEE dd MMMM yyyy"))
-                    }
-                    if datePicker {
-                        DatePicker("", selection: $scorecard.date, displayedComponents: .date)
-                                            .datePickerStyle(GraphicalDatePickerStyle())
-                    }
                 }
             }
                  

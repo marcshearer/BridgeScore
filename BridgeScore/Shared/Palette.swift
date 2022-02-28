@@ -40,6 +40,7 @@ class Palette {
     @BackgroundColor(.highlightButton) static var highlightButton
     @BackgroundColor(.input) static var input
     @BackgroundColor(.filter) static var filter
+    @BackgroundColor(.datePicker) static var datePicker
     
     // Specific colors
     @SpecificColor(.bannerBackButton) static var bannerBackButton

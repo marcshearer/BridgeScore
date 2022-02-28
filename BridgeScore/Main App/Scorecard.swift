@@ -250,32 +250,35 @@ class Scorecard {
                     }
                 }
             }
+            
             var newScore: Float?
             let type = scorecard.type
             let boards = scorecard.boardsTable
             let places = type.tablePlaces
-            let average = Utility.round(count == 0 ? 0 : total / Float(count), places: type.boardPlaces)
-            switch type.tableAggregate {
-            case .average:
-                newScore = Utility.round(average, places: places)
-            case .total:
-                newScore = Utility.round(total, places: places)
-            case .continuousVp:
-                newScore = BridgeImps(Int(Utility.round(total))).vp(boards: boards, places: places)
-            case .discreteVp:
-                newScore = Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: boards))
-            case .percentVp:
-                if let vps = BridgeMatchPoints(average).vp(boards: boards) {
-                    newScore = Float(vps)
+            if count == 0 {
+                newScore = nil
+            } else {
+                let average = Utility.round(total / Float(count), places: type.boardPlaces)
+                switch type.tableAggregate {
+                case .average:
+                    newScore = Utility.round(average, places: places)
+                case .total:
+                    newScore = Utility.round(total, places: places)
+                case .continuousVp:
+                    newScore = BridgeImps(Int(Utility.round(total))).vp(boards: boards, places: places)
+                case .discreteVp:
+                    newScore = Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: boards))
+                case .percentVp:
+                    if let vps = BridgeMatchPoints(average).vp(boards: boards) {
+                        newScore = Float(vps)
+                    }
+                default:
+                    break
                 }
-            default:
-                break
             }
-            if let newScore = newScore {
-                if newScore != table.score {
-                    table.score = newScore
-                    changed = true
-                }
+            if newScore != table.score {
+                table.score = newScore
+                changed = true
             }
         }
         return changed
@@ -297,22 +300,26 @@ class Scorecard {
         let type = scorecard.type
         let boards = scorecard.boards
         let places = type.matchPlaces
-        let average = Utility.round(count == 0 ? 0 : total / Float(count), places: places)
-        switch type.matchAggregate {
-        case .average:
-            newScore = average
-        case .total:
-            newScore = Utility.round(total, places: places)
-        case .continuousVp:
-            newScore = BridgeImps(Int(Utility.round(total))).vp(boards: boards, places: places)
-        case .discreteVp:
-            newScore = Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: boards))
-        case .percentVp:
-            if let vps = BridgeMatchPoints(average).vp(boards: boards) {
-                newScore = Float(vps)
+        if count == 0 {
+            newScore = nil
+        } else {
+            let average = Utility.round(total / Float(count), places: places)
+            switch type.matchAggregate {
+            case .average:
+                newScore = average
+            case .total:
+                newScore = Utility.round(total, places: places)
+            case .continuousVp:
+                newScore = BridgeImps(Int(Utility.round(total))).vp(boards: boards, places: places)
+            case .discreteVp:
+                newScore = Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: boards))
+            case .percentVp:
+                if let vps = BridgeMatchPoints(average).vp(boards: boards) {
+                    newScore = Float(vps)
+                }
+            default:
+                break
             }
-        default:
-            break
         }
         if newScore != scorecard.score {
             scorecard.score = newScore

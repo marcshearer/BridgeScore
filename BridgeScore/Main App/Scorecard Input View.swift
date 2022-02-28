@@ -40,7 +40,7 @@ struct ScorecardInputView: View {
     @State var canUndo: Bool = false
     @State var canRedo: Bool = false
     @State var linkToDetails: Bool = false
-    @State var refresh = false
+    @State var refreshTableTotals = false
     @State var deleted = false
     
     var body: some View {
@@ -48,7 +48,7 @@ struct ScorecardInputView: View {
             VStack(spacing: 0) {
                 
                 // Just to trigger view refresh
-                if refresh { EmptyView() }
+                if refreshTableTotals { EmptyView() }
     
                 // Banner
                 Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .buttons, options: [
@@ -56,19 +56,19 @@ struct ScorecardInputView: View {
                         BannerOption(image: AnyView(Image(systemName: "arrow.uturn.forward")), likeBack: true, isEnabled: $canRedo, action: { redoDrawing() }),
                         BannerOption(image: AnyView(Image(systemName: "note.text")), likeBack: true, action: { linkToDetails = true })])
                 GeometryReader { geometry in
-                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), undoPressed: $undoPressed, redoPressed: $redoPressed, canUndo: $canUndo, canRedo: $canRedo, refresh: $refresh)
+                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), undoPressed: $undoPressed, redoPressed: $redoPressed, canUndo: $canUndo, canRedo: $canRedo, refreshTableTotals: $refreshTableTotals)
                     .ignoresSafeArea(edges: .all)
                 }
             }
             .onChange(of: undoPressed) { newValue in undoPressed = false }
             .onChange(of: redoPressed) { newValue in redoPressed = false }
-            .onChange(of: refresh) { newValue in refresh = false }
+            .onChange(of: refreshTableTotals) { newValue in refreshTableTotals = false }
         }
         .sheet(isPresented: $linkToDetails, onDismiss: {
             if deleted {
                 presentationMode.wrappedValue.dismiss()
             } else {
-                refresh = true
+                refreshTableTotals = true
             }
         }) {
             ScorecardDetailView(scorecard: scorecard, deleted: $deleted, title: "Details")
@@ -114,7 +114,7 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
     @Binding var redoPressed: Bool
     @Binding var canUndo: Bool
     @Binding var canRedo: Bool
-    @Binding var refresh: Bool
+    @Binding var refreshTableTotals: Bool
 
     func makeUIView(context: Context) -> ScorecardInputUIView {
         
@@ -134,13 +134,13 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
             uiView.redo()
         }
         
-        if refresh {
-            uiView.refresh()
+        if refreshTableTotals {
+            uiView.refreshTableTotals()
         }
     }
     
     func makeCoordinator() -> Coordinator {
-        Coordinator($undoPressed, $redoPressed, $canUndo, $canRedo, $refresh)
+        Coordinator($undoPressed, $redoPressed, $canUndo, $canRedo, $refreshTableTotals)
     }
     
     class Coordinator: NSObject, ScorecardInputUIViewDelegate {
@@ -149,12 +149,12 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
         @Binding var redoPressed: Bool
         @Binding var canUndo: Bool
         @Binding var canRedo: Bool
-        @Binding var refresh: Bool
+        @Binding var refreshTableTotals: Bool
         
-        init(_ undoPressed: Binding<Bool>, _ redoPressed: Binding<Bool>, _ canUndo: Binding<Bool>, _ canRedo: Binding<Bool>, _ refresh: Binding<Bool>) {
+        init(_ undoPressed: Binding<Bool>, _ redoPressed: Binding<Bool>, _ canUndo: Binding<Bool>, _ canRedo: Binding<Bool>, _ refreshTableTotals: Binding<Bool>) {
             _undoPressed = undoPressed
             _redoPressed = redoPressed
-            _refresh = refresh
+            _refreshTableTotals = refreshTableTotals
             _canUndo = canUndo
             _canRedo = canRedo
         }
@@ -280,9 +280,10 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         undoManager?.redo()
     }
     
-    public func refresh() {
-        forceReload = true
-        setNeedsLayout()
+    public func refreshTableTotals() {
+        for table in 1...scorecard.tables {
+            updateTableCell(section: table - 1, columnType: .tableScore)
+        }
     }
     
     // MARK: - Scorecard delegates
