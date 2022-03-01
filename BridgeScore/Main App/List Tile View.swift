@@ -20,7 +20,7 @@ struct ListTileView <Content> : View where Content : View {
 
     var body: some View {
         VStack {
-            Spacer().frame(height: 6)
+            Spacer().frame(height: 4)
             HStack {
                 Spacer().frame(width: 16)
                 HStack {
@@ -33,7 +33,7 @@ struct ListTileView <Content> : View where Content : View {
                 .cornerRadius(16)
             Spacer().frame(width: 16)
             }
-            Spacer().frame(height: 6)
+            Spacer().frame(height: 8)
         }
         .foregroundColor(color.text)
         .font(font)

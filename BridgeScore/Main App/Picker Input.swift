@@ -46,26 +46,29 @@ struct PickerInput : View {
                 }
                 Spacer().frame(width: 6)
                 
-                HStack {
-                    if placeholder != "" {
-                        Spacer()
-                    }
-                    Spacer().frame(width: 2)
-                    PopupMenu(field: $field, values: values, title: popupTitle ?? title, onChange: onChange) {
-                        HStack {
-                            Text(field < values.count && field >= 0 ? values[field] : placeholder)
-                                .foregroundColor(placeholder == "" ? color.themeText : color.text)
-                                .font(inputFont)
+                GeometryReader { (geometry) in
+                    HStack {
+                        if placeholder != "" {
                             Spacer()
-                        }.frame(minWidth: maxLabelWidth).frame(maxHeight: height)
-                    }
-                    if placeholder == "" {
-                        Spacer().layoutPriority(.greatestFiniteMagnitude)
-                        Image(systemName: "chevron.right")
-                            .foregroundColor(color.themeText)
-                        Spacer().frame(width: 16)
-                    } else {
-                        Spacer().layoutPriority(.greatestFiniteMagnitude)
+                        }
+                        Spacer().frame(width: 2)
+                        PopupMenu(field: $field, values: values, title: popupTitle ?? title, top: geometry.frame(in: .global).minY - (slideInMenuRowHeight * 1.4), onChange: onChange) {
+                            HStack {
+                                Text(field < values.count && field >= 0 ? values[field] : placeholder)
+                                    .foregroundColor(placeholder == "" ? color.themeText : color.text)
+                                    .font(inputFont)
+                                Spacer()
+                            }.frame(minWidth: maxLabelWidth).frame(maxHeight: height)
+                        }
+                        .debugPrint(geometry.frame(in: .global))
+                        if placeholder == "" {
+                            Spacer().layoutPriority(.greatestFiniteMagnitude)
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(color.themeText)
+                            Spacer().frame(width: 16)
+                        } else {
+                            Spacer().layoutPriority(.greatestFiniteMagnitude)
+                        }
                     }
                 }
                 

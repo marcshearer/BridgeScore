@@ -24,12 +24,13 @@ struct DoubleColumnView <LeftContent, RightContent> : View where LeftContent : V
                 Spacer()
             }
             .frame(width: leftWidth)
-            Divider()
+            Rectangle()
+                .frame(width: 2)
+                .foregroundColor(Palette.gridLine)
             VStack {
                 rightView
                 Spacer()
             }
-            Spacer()
         }
     }
 }

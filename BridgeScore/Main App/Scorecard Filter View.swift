@@ -49,8 +49,8 @@ struct ScorecardFilterView: View {
         
         HStack {
             
-            Spacer().frame(width: 16)
-            GeometryReader { (geometry) in
+                Spacer().frame(width: 16)
+                GeometryReader { (geometry) in
                 ZStack {
                     Palette.filter.background
                         .ignoresSafeArea(edges: .all)
@@ -154,7 +154,7 @@ struct ScorecardFilterView: View {
                     }
                 }
             }
-            .frame(height: 134)
+            .frame(height: 130)
             Spacer().rightSpacer
         }
         .onAppear {

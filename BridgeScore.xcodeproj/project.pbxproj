@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B204175827CE58CD00A3EFA8 /* Debug Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B204175727CE58CD00A3EFA8 /* Debug Utilities.swift */; };
 		B20B38F227C153280001B45E /* Contract Entry View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20B38F127C153280001B45E /* Contract Entry View.swift */; };
 		B21CC0BC279FDD3A001AECC1 /* Scorecard Detail View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */; };
 		B21CC0BE27A01293001AECC1 /* Date Picker Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21CC0BD27A01292001AECC1 /* Date Picker Input.swift */; };
@@ -91,6 +92,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		B204175727CE58CD00A3EFA8 /* Debug Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Debug Utilities.swift"; sourceTree = "<group>"; };
 		B20B38F127C153280001B45E /* Contract Entry View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contract Entry View.swift"; sourceTree = "<group>"; };
 		B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Detail View.swift"; sourceTree = "<group>"; };
 		B21CC0BD27A01292001AECC1 /* Date Picker Input.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date Picker Input.swift"; sourceTree = "<group>"; };
@@ -346,6 +348,7 @@
 		B26BCE232799AA6300B73501 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				B204175727CE58CD00A3EFA8 /* Debug Utilities.swift */,
 			);
 			name = Utilities;
 			sourceTree = "<group>";
@@ -563,6 +566,7 @@
 				B26BCE642799AED700B73501 /* Message Box.swift in Sources */,
 				B26BCE652799AED700B73501 /* Picker Input.swift in Sources */,
 				B2CC50A027BE22900050F22C /* Contract Picker.swift in Sources */,
+				B204175827CE58CD00A3EFA8 /* Debug Utilities.swift in Sources */,
 				B2C4338C27B6646700796F24 /* Scorecard Input View.swift in Sources */,
 				B26BCE4E2799AD8900B73501 /* Link Presentation.swift in Sources */,
 				B26BCE74279B236F00B73501 /* Layout Managed Object.swift in Sources */,

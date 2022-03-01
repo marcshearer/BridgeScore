@@ -22,6 +22,7 @@ class SlideInMenu : ObservableObject {
     
     public func show(title: String? = nil, options: [String], animation: ViewAnimation = .slideLeft, top: CGFloat? = nil, width: CGFloat? = nil, completion: ((String?)->())? = nil) {
         withAnimation(.none) {
+            print(top!)
             SlideInMenu.shared.title = title
             SlideInMenu.shared.options = options
             SlideInMenu.shared.top = top ?? bannerHeight + 10
@@ -40,7 +41,7 @@ struct SlideInMenuView : View {
     @State private var offset: CGFloat = 320
     
     @State private var animate = false
-        
+    
     var body: some View {
         GeometryReader { (fullGeometry) in
             GeometryReader { (geometry) in
@@ -50,14 +51,21 @@ struct SlideInMenuView : View {
                         .onTapGesture {
                             values.shown = false
                         }
-                        .frame(width: geometry.size.width, height: geometry.size.height)
+                        .frame(width: fullGeometry.size.width, height: fullGeometry.size.height + fullGeometry.safeAreaInsets.top + fullGeometry.safeAreaInsets.bottom)
+                        .ignoresSafeArea()
                     VStack(spacing: 0) {
-                        Spacer().frame(height: values.top + fullGeometry.safeAreaInsets.top)
+                        let proposedTop = values.top
+                        let contentHeight = (CGFloat(values.options.count) + 2.4) * slideInMenuRowHeight
+                        let top = min(proposedTop,
+                                      max(bannerHeight + 8,
+                                          geometry.size.height - contentHeight))
+                        
+                        Spacer().frame(height: top)
                         HStack {
                             Spacer()
                             VStack(spacing: 0) {
                                 if let title = values.title {
-                                    VStack {
+                                    VStack(spacing: 0) {
                                         Spacer()
                                         HStack {
                                             Spacer().frame(width: 20)
@@ -96,13 +104,13 @@ struct SlideInMenuView : View {
                                             .background(Palette.background.background)
                                             .frame(height: slideInMenuRowHeight)
                                         }
-                                        .listRowInsets(EdgeInsets())
+                                        //.listRowInsets(EdgeInsets())
                                         .listStyle(PlainListStyle())
                                     }
                                 }
                                 .background(Palette.background.background)
                                 .environment(\.defaultMinListRowHeight, slideInMenuRowHeight)
-                                .frame(height: max(0, min(CGFloat(values.options.count) * slideInMenuRowHeight, fullGeometry.size.height - values.top - (3.0 * slideInMenuRowHeight))))
+                                .frame(height: max(0, min(CGFloat(values.options.count) * slideInMenuRowHeight, geometry.size.height - top - (2.4 * slideInMenuRowHeight))))
                                 .layoutPriority(.greatestFiniteMagnitude)
                                 
                                 VStack(spacing: 0) {
@@ -110,8 +118,8 @@ struct SlideInMenuView : View {
                                     HStack {
                                         Spacer().frame(width: 20)
                                         Text("Cancel")
-                                        .foregroundColor(Palette.background.text)
-                                        .font(Font.title2.bold())
+                                            .foregroundColor(Palette.background.text)
+                                            .font(Font.title2.bold())
                                         Spacer()
                                     }
                                     Spacer()
@@ -128,12 +136,11 @@ struct SlideInMenuView : View {
                             Spacer().frame(width: 20)
                         }
                         Spacer()
-
+                        
                     }
                     .offset(x: offset)
                 }
             }
-            .ignoresSafeArea()
             .if(offset != 0 && values.animation == .fade) { (view) in
                 view.hidden()
             }

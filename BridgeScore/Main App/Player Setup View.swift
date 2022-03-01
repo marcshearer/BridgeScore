@@ -89,7 +89,7 @@ struct PlayerSelectionView : View {
     var body: some View {
         let disabled = !selected.canSave
         
-        VStack {
+        VStack(spacing: 0) {
             HStack {
                 List {
                     ForEach(MasterData.shared.players) { player in

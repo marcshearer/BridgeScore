@@ -10,6 +10,7 @@ To Do
 =====
 Sort out dark mode
 Maybe remove file sharing in Info.plist once can backup from Mac
+Force player and/or location to be input when layout created
 
 Enhancements
 ============

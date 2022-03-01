@@ -42,6 +42,7 @@ struct StandardView <Content> : View where Content : View {
                 Spacer().frame(height: geometry.safeAreaInsets.top)
                 self.content
             }
+            .ignoresSafeArea()
             SlideInMenuView()
             if messageBox.isShown {
                 Palette.maskBackground
@@ -61,7 +62,6 @@ struct StandardView <Content> : View where Content : View {
                 }
             }
         }
-        .ignoresSafeArea()
         .animation(animate || messageBox.isShown ? .easeInOut(duration: 1.0) : .none, value: messageBox.isShown)
         .noNavigationBar
         }

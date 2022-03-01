@@ -38,7 +38,7 @@ struct ScorecardListView: View {
             
             VStack {
                 Banner(title: $title, back: false, optionMode: .menu, menuTitle: "Setup", options: menuOptions)
-                Spacer().frame(height: 12)
+                Spacer().frame(height: 8)
                 
                 ListTileView(color: Palette.contrastTile) {
                     HStack {
@@ -192,7 +192,7 @@ struct ScorecardSummaryView: View {
             GeometryReader { geometry in
                 HStack {
                     VStack {
-                        Spacer().frame(height: 10)
+                        Spacer().frame(height: 4)
                         HStack {
                             HStack {
                                 Text(scorecard.desc)
@@ -237,7 +237,7 @@ struct ScorecardSummaryView: View {
                         .foregroundColor(color.text)
                         .font(.callout)
                         .minimumScaleFactor(0.5)
-                        Spacer().frame(height: 8)
+                        Spacer().frame(height: 12)
                     }
                     VStack {
                         Spacer()

@@ -17,7 +17,7 @@ struct ToolbarView : View {
         ZStack {
             Rectangle()
                 .fill(Palette.alternate.background)
-                .frame(height: 50)
+                .ignoresSafeArea()
             HStack {
                 Spacer().frame(width: 20)
                 Button {
@@ -41,5 +41,6 @@ struct ToolbarView : View {
             .font(.title)
             .foregroundColor(Palette.alternate.text)
         }
+        .frame(height: 50)
     }
 }
