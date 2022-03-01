@@ -58,6 +58,7 @@
 		B26BCE76279BEBA500B73501 /* Scorecard Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */; };
 		B26C555727C7EA9200015D0A /* Table with Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26C555627C7EA9200015D0A /* Table with Collection.swift */; };
 		B26C555927C8BCBC00015D0A /* Scroll Picker Popup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26C555827C8BCBC00015D0A /* Scroll Picker Popup View.swift */; };
+		B27CFA4E27CDFE8400B976E0 /* Popup Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = B27CFA4D27CDFE8400B976E0 /* Popup Menu.swift */; };
 		B28E2B1E27C6A582002A9EE2 /* Input Float.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28E2B1D27C6A582002A9EE2 /* Input Float.swift */; };
 		B28E4EE827B55F9A0059819C /* Backup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28E4EE727B55F9A0059819C /* Backup.swift */; };
 		B2A2053527AFC2E400C83C88 /* Player Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053427AFC2E400C83C88 /* Player Setup View.swift */; };
@@ -142,6 +143,7 @@
 		B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Managed Object.swift"; sourceTree = "<group>"; };
 		B26C555627C7EA9200015D0A /* Table with Collection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Table with Collection.swift"; sourceTree = "<group>"; };
 		B26C555827C8BCBC00015D0A /* Scroll Picker Popup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Scroll Picker Popup View.swift"; path = "../Main App/Scroll Picker Popup View.swift"; sourceTree = "<group>"; };
+		B27CFA4D27CDFE8400B976E0 /* Popup Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Popup Menu.swift"; sourceTree = "<group>"; };
 		B28E2B1D27C6A582002A9EE2 /* Input Float.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Input Float.swift"; sourceTree = "<group>"; };
 		B28E4EE727B55F9A0059819C /* Backup.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Backup.swift; sourceTree = "<group>"; };
 		B28E4EE927B566300059819C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -336,6 +338,7 @@
 				B26BCE5C2799AED700B73501 /* Swipe Gestures.swift */,
 				B26BCE572799AED700B73501 /* Target View Modifiers.swift */,
 				B2A2053C27B13F2F00C83C88 /* Keyboard Adaptive.swift */,
+				B27CFA4D27CDFE8400B976E0 /* Popup Menu.swift */,
 			);
 			name = "Reusable SwiftUI Components";
 			sourceTree = "<group>";
@@ -512,6 +515,7 @@
 				B2EB3D73279D734700D64225 /* Location View Model.swift in Sources */,
 				B2BBC8BA27BBF6BC00D51A26 /* Table View Model.swift in Sources */,
 				B2EB3D75279D73E100D64225 /* Board View Model.swift in Sources */,
+				B27CFA4E27CDFE8400B976E0 /* Popup Menu.swift in Sources */,
 				B2276D5A27A692A40025DA80 /* Constraint.swift in Sources */,
 				B2A2053B27B108C700C83C88 /* Input Integer.swift in Sources */,
 				B2BE9BD027A15B6B002A6F8F /* Inset View.swift in Sources */,

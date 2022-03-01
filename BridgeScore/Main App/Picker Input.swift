@@ -17,6 +17,7 @@ struct PickerInput : View {
     var leadingSpace: CGFloat = 0
     var width: CGFloat?
     var height: CGFloat = 45
+    var maxLabelWidth: CGFloat = 200
     var color: PaletteColor = Palette.clear
     var cornerRadius: CGFloat = 0
     var inlineTitle: Bool = true
@@ -44,31 +45,35 @@ struct PickerInput : View {
                 }
                 Spacer().frame(width: 6)
                 
-                Menu {
-                    ForEach(values, id: \.self) { (value) in
-                        if let index = values.firstIndex(where: {$0 == value}) {
-                            Button(values[index]) {
-                                field = index
-                                onChange?(field)
+                HStack {
+                    if placeholder != "" {
+                        Spacer()
+                    }
+                    Spacer().frame(width: 2)
+                    Menu {
+                        ForEach(values, id: \.self) { (value) in
+                            if let index = values.firstIndex(where: {$0 == value}) {
+                                Button(values[index]) {
+                                    field = index
+                                    onChange?(field)
+                                }
                             }
                         }
+                    } label: {
+                        HStack {
+                            Text(field < values.count && field >= 0 ? values[field] : placeholder)
+                                .foregroundColor(placeholder == "" ? color.themeText : color.text)
+                                .font(inputFont)
+                            Spacer()
+                        }.frame(minWidth: maxLabelWidth).frame(maxHeight: height)
                     }
-                } label: {
-                    HStack {
-                        if placeholder != "" {
-                            Spacer()
-                        }
-                        Text(field < values.count && field >= 0 ? values[field] : placeholder)
-                            .foregroundColor(placeholder == "" ? color.faintText : color.text)
-                            .font(inputFont)
-                        if placeholder == "" {
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(color.themeText)
-                            Spacer().frame(width: 16)
-                        } else {
-                            Spacer()
-                        }
+                    if placeholder == "" {
+                        Spacer().layoutPriority(.greatestFiniteMagnitude)
+                        Image(systemName: "chevron.right")
+                            .foregroundColor(color.themeText)
+                        Spacer().frame(width: 16)
+                    } else {
+                        Spacer().layoutPriority(.greatestFiniteMagnitude)
                     }
                 }
                 
