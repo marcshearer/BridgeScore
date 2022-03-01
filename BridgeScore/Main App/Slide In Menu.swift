@@ -22,7 +22,6 @@ class SlideInMenu : ObservableObject {
     
     public func show(title: String? = nil, options: [String], animation: ViewAnimation = .slideLeft, top: CGFloat? = nil, width: CGFloat? = nil, completion: ((String?)->())? = nil) {
         withAnimation(.none) {
-            print(top!)
             SlideInMenu.shared.title = title
             SlideInMenu.shared.options = options
             SlideInMenu.shared.top = top ?? bannerHeight + 10

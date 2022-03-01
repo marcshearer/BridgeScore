@@ -60,7 +60,6 @@ struct PickerInput : View {
                                 Spacer()
                             }.frame(minWidth: maxLabelWidth).frame(maxHeight: height)
                         }
-                        .debugPrint(geometry.frame(in: .global))
                         if placeholder == "" {
                             Spacer().layoutPriority(.greatestFiniteMagnitude)
                             Image(systemName: "chevron.right")

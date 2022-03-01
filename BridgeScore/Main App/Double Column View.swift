@@ -24,9 +24,8 @@ struct DoubleColumnView <LeftContent, RightContent> : View where LeftContent : V
                 Spacer()
             }
             .frame(width: leftWidth)
-            Rectangle()
-                .frame(width: 2)
-                .foregroundColor(Palette.gridLine)
+            Separator(direction: .vertical, thickness: 2.0)
+                .foregroundColor(Palette.banner.background)
             VStack {
                 rightView
                 Spacer()
