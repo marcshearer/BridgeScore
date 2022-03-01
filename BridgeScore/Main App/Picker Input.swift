@@ -12,6 +12,7 @@ struct PickerInput : View {
     var title: String? = nil
     @Binding var field: Int
     var values: ()->[String]
+    var popupTitle: String? = nil
     var placeholder: String = ""
     var topSpace: CGFloat = 0
     var leadingSpace: CGFloat = 0
@@ -50,7 +51,7 @@ struct PickerInput : View {
                         Spacer()
                     }
                     Spacer().frame(width: 2)
-                    PopupMenu(field: $field, values: values, onChange: onChange) {
+                    PopupMenu(field: $field, values: values, title: popupTitle ?? title, onChange: onChange) {
                         HStack {
                             Text(field < values.count && field >= 0 ? values[field] : placeholder)
                                 .foregroundColor(placeholder == "" ? color.themeText : color.text)

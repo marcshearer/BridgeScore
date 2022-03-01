@@ -12,7 +12,7 @@ class SlideInMenu : ObservableObject {
     
     public static let shared = SlideInMenu()
     
-    @Published public var title: String = ""
+    @Published public var title: String? = nil
     @Published public var options: [String] = []
     @Published public var top: CGFloat = 0
     @Published public var width: CGFloat = 0
@@ -20,7 +20,7 @@ class SlideInMenu : ObservableObject {
     @Published public var completion: ((String?)->())?
     @Published public var shown: Bool = false
     
-    public func show(title: String, options: [String], animation: ViewAnimation = .slideLeft, top: CGFloat? = nil, width: CGFloat? = nil, completion: ((String?)->())? = nil) {
+    public func show(title: String? = nil, options: [String], animation: ViewAnimation = .slideLeft, top: CGFloat? = nil, width: CGFloat? = nil, completion: ((String?)->())? = nil) {
         withAnimation(.none) {
             SlideInMenu.shared.title = title
             SlideInMenu.shared.options = options
@@ -56,12 +56,12 @@ struct SlideInMenuView : View {
                         HStack {
                             Spacer()
                             VStack(spacing: 0) {
-                                if values.title != "" {
+                                if let title = values.title {
                                     VStack {
                                         Spacer()
                                         HStack {
-                                            Spacer()
-                                            Text(values.title)
+                                            Spacer().frame(width: 20)
+                                            Text(title)
                                                 .font(.title)
                                                 .foregroundColor(Palette.header.text)
                                             Spacer()
@@ -144,6 +144,9 @@ struct SlideInMenuView : View {
                 })
             }
             .animation($animate.wrappedValue || values.shown ? .easeInOut : .none, value: offset)
+            .onAppear {
+                SlideInMenu.shared.width = 300
+            }
         }
     }
 }
