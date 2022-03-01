@@ -356,6 +356,26 @@ public enum Vulnerability: Int {
     }
 }
 
+public enum Values {
+    case nonVulnerable
+    case vulnerable
+    
+    init(_ vulnerable: Bool) {
+        self = (vulnerable ? .vulnerable : .nonVulnerable)
+    }
+    
+    public var gamePoints: Int { 100 }
+    public var gameBonus: Int { self == .nonVulnerable ? 300 : 500 }
+    public var doubledOvertrick: Int { self == .nonVulnerable ? 100 : 200}
+    public var insult: Int { 50 }
+    public var partScoreBonus: Int { 50 }
+    public var smallSlamBonus: Int { self == .nonVulnerable ? 500 : 750 }
+    public var grandSlamBonus: Int { self == .nonVulnerable ? 1000 : 1500 }
+    public var firstUndertrick: Int { self == .nonVulnerable ? 50 : 100 }
+    public var nextTwoDoubledUndertricks: Int { self == .nonVulnerable ? 200 : 300 }
+    public var subsequentDoubledUndertricks: Int { 300 }
+}
+
 // Scorecard view types
 enum ColumnType: Codable {
     case table

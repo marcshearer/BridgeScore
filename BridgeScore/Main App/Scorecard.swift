@@ -346,4 +346,71 @@ class Scorecard {
                 }
         }($0))}
     }
+    
+    public static func points(contract: Contract, vulnerability: Vulnerability, declarer: Seat, made: Int, seat: Seat) -> Int {
+        var points = 0
+        let multiplier = (seat == declarer || seat == declarer.partner ? 1 : -1)
+
+        if contract.level != .passout {
+            
+            let level = contract.level
+            let suit = contract.suit
+            let double = contract.double
+            var gameMade = false
+            let values = Values(vulnerability.isVulnerable(seat: declarer))
+            
+            if made >= 0 {
+                
+                // Add in base points for making contract
+                let madePoints = suit.trickPoints(tricks: level.rawValue) * double.multiplier
+                gameMade = (madePoints >= values.gamePoints)
+                points += madePoints
+                
+                // Add in any overtricks
+                if made >= 1 {
+                    if double == .undoubled {
+                        points += suit.overTrickPoints(tricks: made)
+                    } else {
+                        points += made * (values.doubledOvertrick) * (double.multiplier / 2)
+                    }
+                }
+                
+                // Add in the insult
+                if double != .undoubled {
+                    points += values.insult * (double.multiplier / 2)
+                }
+                
+                // Add in any game bonus or part score bonus
+                if gameMade {
+                    points += (values.gameBonus)
+                } else {
+                    points += values.partScoreBonus
+                }
+                
+                // Add in any slam bonus
+                if level.rawValue == 7 {
+                    points += values.grandSlamBonus
+                } else if level.rawValue == 6 {
+                    points += values.smallSlamBonus
+                }
+            } else {
+                
+                // Subtract points for undertricks
+                if double == .undoubled {
+                    points = values.firstUndertrick * made
+                } else {
+                    // Subtract first trick
+                    points -= values.firstUndertrick * double.multiplier
+                    
+                    // Subtract second and third undertricks
+                    points += values.nextTwoDoubledUndertricks * (double.multiplier / 2) * min(0, max(-2, made + 1))
+                    
+                    // Subtract all other undertricks
+                    points += values.subsequentDoubledUndertricks * (double.multiplier / 2) * min(0, made + 3)
+                }
+            }
+        }
+        
+        return points * multiplier
+    }
 }
