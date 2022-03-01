@@ -24,35 +24,12 @@ struct PopupMenu<Label>: View where Label : View {
     public var body: some View {
         label
             .onTapGesture {
-                showPopup = true
-            }
-            .popover(isPresented: $showPopup, attachmentAnchor: .point(.trailing), arrowEdge: .trailing) {
-                VStack {
-                    ForEach(values, id: \.self) { (value) in
-                        if let index = values.firstIndex(where: {$0 == value}) {
-                            Button {
-                                field = index
-                                onChange?(field)
-                                showPopup = false
-                            } label: {
-                                VStack {
-                                    Spacer().frame(height: 10)
-                                    HStack {
-                                        Spacer().frame(width: 20)
-                                        Text(value)
-                                        Spacer().frame(width: 20)
-                                        Spacer()
-                                    }
-                                    Spacer().frame(height: 10)
-                                    if value != values.last! {
-                                        Separator(padding: true)
-                                    }
-                                }
-                            }
-                        }
+                SlideInMenu.shared.show(title: "Choose one", options: values, top: 100, width: 400, completion: { (selected) in
+                    if let index = values.firstIndex(where: {$0 == selected}) {
+                        field = index
+                        onChange?(field)
                     }
-                    
-                }
+                })
             }
     }
     

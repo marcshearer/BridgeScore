@@ -50,16 +50,7 @@ struct PickerInput : View {
                         Spacer()
                     }
                     Spacer().frame(width: 2)
-                    Menu {
-                        ForEach(values, id: \.self) { (value) in
-                            if let index = values.firstIndex(where: {$0 == value}) {
-                                Button(values[index]) {
-                                    field = index
-                                    onChange?(field)
-                                }
-                            }
-                        }
-                    } label: {
+                    PopupMenu(field: $field, values: values, onChange: onChange) {
                         HStack {
                             Text(field < values.count && field >= 0 ? values[field] : placeholder)
                                 .foregroundColor(placeholder == "" ? color.themeText : color.text)

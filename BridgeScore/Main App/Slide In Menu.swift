@@ -16,15 +16,17 @@ class SlideInMenu : ObservableObject {
     @Published public var options: [String] = []
     @Published public var top: CGFloat = 0
     @Published public var width: CGFloat = 0
+    @Published public var animation: ViewAnimation = .slideLeft
     @Published public var completion: ((String?)->())?
     @Published public var shown: Bool = false
     
-    public func show(title: String, options: [String], top: CGFloat? = nil, width: CGFloat? = nil, completion: ((String?)->())? = nil) {
+    public func show(title: String, options: [String], animation: ViewAnimation = .slideLeft, top: CGFloat? = nil, width: CGFloat? = nil, completion: ((String?)->())? = nil) {
         withAnimation(.none) {
             SlideInMenu.shared.title = title
             SlideInMenu.shared.options = options
             SlideInMenu.shared.top = top ?? bannerHeight + 10
             SlideInMenu.shared.width = width ?? 300
+            SlideInMenu.shared.animation = animation
             SlideInMenu.shared.completion = completion
             Utility.mainThread {
                 SlideInMenu.shared.shown = true
@@ -69,9 +71,10 @@ struct SlideInMenuView : View {
                                     .frame(height: slideInMenuRowHeight * 1.4)
                                     .background(Palette.header.background)
                                 }
+                                
                                 let options = $values.options.wrappedValue
-                                HStack {
-                                    VStack {
+                                ScrollView {
+                                    VStack(spacing: 0) {
                                         ForEach(options, id: \.self) { (option) in
                                             VStack(spacing: 0) {
                                                 Spacer()
@@ -99,6 +102,9 @@ struct SlideInMenuView : View {
                                 }
                                 .background(Palette.background.background)
                                 .environment(\.defaultMinListRowHeight, slideInMenuRowHeight)
+                                .frame(height: max(0, min(CGFloat(values.options.count) * slideInMenuRowHeight, fullGeometry.size.height - values.top - (3.0 * slideInMenuRowHeight))))
+                                .layoutPriority(.greatestFiniteMagnitude)
+                                
                                 VStack(spacing: 0) {
                                     Spacer()
                                     HStack {
@@ -128,10 +134,15 @@ struct SlideInMenuView : View {
                 }
             }
             .ignoresSafeArea()
-            .onChange(of: values.shown, perform: { value in
-                offset = values.shown ? 0 : values.width + 20
-                $animate.wrappedValue = true
-            })
+            .if(offset != 0 && values.animation == .fade) { (view) in
+                view.hidden()
+            }
+            .if(values.animation == .slideLeft) { (view) in
+                view.onChange(of: values.shown, perform: { value in
+                    offset = values.shown ? 0 : values.width + 20
+                    $animate.wrappedValue = true
+                })
+            }
             .animation($animate.wrappedValue || values.shown ? .easeInOut : .none, value: offset)
         }
     }
