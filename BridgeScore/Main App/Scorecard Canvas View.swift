@@ -54,7 +54,7 @@ struct ScorecardCanvasView: View {
     @State var decodePressed: Bool = false
     
     var body: some View {
-        StandardView {
+        StandardView("Canvas") {
             VStack(spacing: 0) {
                 
                 // Just to trigger view refresh

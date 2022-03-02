@@ -8,14 +8,18 @@
 import UIKit
 import SwiftUI
 
-@objc protocol ScrollPickerDelegate {
-    @objc optional func scrollPickerDidChange(to: Int)
-    @objc optional func scrollPickerDidChange(_ scrollPicker: ScrollPicker, to: Int)
+protocol ScrollPickerDelegate {
+    func scrollPickerDidChange(_ scrollPicker: ScrollPicker?, to: Int?)
 }
 
 struct ScrollPickerEntry: Equatable {
     var title: String
     var caption: String?
+    
+    init(title: String = "", caption: String? = nil) {
+        self.title = title
+        self.caption = caption
+    }
     
     public static func ==(lhs: ScrollPickerEntry, rhs: ScrollPickerEntry) -> Bool {
         return (lhs.title == rhs.title && lhs.caption == rhs.caption)
@@ -29,17 +33,20 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
     private var color: PaletteColor?
     private var clearBackground = true
     private var list: [ScrollPickerEntry]
+    private var defaultEntry: ScrollPickerEntry?
+    private var defaultValue: Int?
     private var titleFont: UIFont
     private var captionFont: UIFont
     private(set) var selected: Int?
     public var delegate: ScrollPickerDelegate?
     
-    convenience init(frame: CGRect, list: [String], color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil) {
-        self.init(frame: frame, list: list.map{ScrollPickerEntry(title: $0, caption: nil)}, color: color, titleFont: titleFont, captionFont: captionFont)
+    convenience init(frame: CGRect, list: [String], defaultEntry: String? = nil, color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil) {
+        self.init(frame: frame, list: list.map{ScrollPickerEntry(title: $0)}, defaultEntry: defaultEntry == nil ? nil : ScrollPickerEntry(title: defaultEntry!), color: color, titleFont: titleFont, captionFont: captionFont)
     }
     
-    init(frame: CGRect, list: [ScrollPickerEntry] = [], color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil) {
+    init(frame: CGRect, list: [ScrollPickerEntry] = [], defaultEntry: ScrollPickerEntry? = nil, color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil) {
         self.list = list
+        self.defaultEntry = defaultEntry
         self.color = color
         self.titleFont = titleFont ?? pickerTitleFont
         self.captionFont = captionFont ?? pickerCaptionFont
@@ -59,12 +66,16 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
         self.addSubview(collectionView, anchored: .all)
     }
     
-    public func set(_ selected: Int, list: [String], isEnabled: Bool = true, color: PaletteColor? = nil, titleFont: UIFont?, captionFont: UIFont? = nil, clearBackground: Bool = true) {
-        set(selected, list: list.map{ScrollPickerEntry(title: $0, caption: nil)}, isEnabled: isEnabled, color: color, titleFont: titleFont, captionFont: captionFont, clearBackground: clearBackground)
+    public func set(_ selected: Int?, list: [String], defaultEntry: String? = nil, defaultValue: Int? = nil, isEnabled: Bool = true, color: PaletteColor? = nil, titleFont: UIFont?, captionFont: UIFont? = nil, clearBackground: Bool = true) {
+        set(selected, list: list.map{ScrollPickerEntry(title: $0)}, defaultEntry: defaultEntry == nil ? nil : ScrollPickerEntry(title: defaultEntry!), defaultValue: defaultValue, isEnabled: isEnabled, color: color, titleFont: titleFont, captionFont: captionFont, clearBackground: clearBackground)
     }
     
-    public func set(_ selected: Int, list: [ScrollPickerEntry]! = nil, isEnabled: Bool = true, color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil, clearBackground: Bool = true) {
-        var reload = false
+    public func set(_ selected: Int?, list: [ScrollPickerEntry]! = nil, defaultEntry: ScrollPickerEntry? = nil, defaultValue: Int? = nil, isEnabled: Bool = true, color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil, clearBackground: Bool = true, reload: Bool = false) {
+        var reload = reload
+        
+        if let defaultEntry = defaultEntry {
+            self.defaultEntry = defaultEntry
+        }
         
         if self.clearBackground != clearBackground {
             self.clearBackground = clearBackground
@@ -98,12 +109,15 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
         }
         self.isUserInteractionEnabled = isEnabled
         self.selected = selected
+        if let defaultValue = defaultValue {
+            self.defaultValue = defaultValue
+        }
         if reload {
             collectionView.reloadData()
         }
 
         Utility.executeAfter(delay: 0.1) {
-            self.collectionView.scrollToItem(at: IndexPath(item: selected, section: 0), at: .centeredHorizontally, animated: false)
+            self.collectionView.scrollToItem(at: IndexPath(item: self.selected ?? self.defaultValue ?? 0, section: 0), at: .centeredHorizontally, animated: false)
         }
     }
     
@@ -121,7 +135,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = ScrollPickerCell.dequeue(collectionView, for: indexPath)
-        let item = list[indexPath.item]
+        let item = (selected == nil && indexPath.item == (defaultValue ?? 0) && defaultEntry != nil ? defaultEntry! : list[indexPath.item])
         cell.set(titleText: item.title, captionText: item.caption ?? "", color: color, titleFont: titleFont, captionFont: captionFont, clearBackground: clearBackground)
         return cell
     }
@@ -129,8 +143,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
     internal func changed(_ collectionView: UICollectionView?, itemAtCenter: Int, forceScroll: Bool, animation: ViewAnimation) {
         Utility.mainThread {
             self.selected = max(0, min(self.list.count - 1, itemAtCenter))
-            self.delegate?.scrollPickerDidChange?(to: self.selected!)
-            self.delegate?.scrollPickerDidChange?(self, to: self.selected!)
+            self.delegate?.scrollPickerDidChange(self, to: self.selected!)
             collectionView?.reloadData()
         }
     }

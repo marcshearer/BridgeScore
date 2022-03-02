@@ -16,7 +16,7 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
     @Published public var board: Int
     @Published public var contract = Contract()
     @Published public var declarer: Seat = .unknown
-    @Published public var made: Int = 0
+    @Published public var made: Int? = nil
     @Published public var score: Float?
     @Published public var comment: String = ""
     @Published public var responsible: Participant = .unknown
@@ -132,8 +132,8 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
         Vulnerability(board: board)
     }
     
-    public func points(seat: Seat) -> Int {
-        return Scorecard.points(contract: contract, vulnerability: vulnerability, declarer: declarer, made: made, seat: seat)
+    public func points(seat: Seat) -> Int? {
+        return (made == nil ? nil : Scorecard.points(contract: contract, vulnerability: vulnerability, declarer: declarer, made: made!, seat: seat))
     }
     
     public var description: String {

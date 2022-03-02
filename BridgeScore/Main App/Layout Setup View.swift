@@ -12,7 +12,7 @@ struct LayoutSetupView: View {
     @State private var title = "Standard Layouts"
         
     var body: some View {
-        StandardView() {
+        StandardView("Layout") {
             VStack(spacing: 0) {
                 Banner(title: $title, bottomSpace: false, back: true, backEnabled: { return selected.canSave })
                 DoubleColumnView(leftWidth: 350) {

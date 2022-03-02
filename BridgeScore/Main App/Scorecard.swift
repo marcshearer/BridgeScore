@@ -338,9 +338,9 @@ class Scorecard {
                 case sitting.partner:
                     return "Partner"
                 case sitting.leftOpponent:
-                    return "Left Opp"
+                    return "Left"
                 case sitting.rightOpponent:
-                    return "Right Opp"
+                    return "Right"
                 default:
                     return "Unknown"
                 }

@@ -18,7 +18,7 @@ struct LayoutListView: View {
     var body: some View {
         let layouts = data.layouts
         
-        StandardView {
+        StandardView("Layout List") {
             VStack(spacing: 0) {
             
                 Banner(title: $title, back: true, backAction: { self.selected = false ; return true }, optionMode: .none)

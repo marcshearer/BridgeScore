@@ -45,7 +45,7 @@ struct ScorecardInputView: View {
     @State var detailView = false
     
     var body: some View {
-        StandardView {
+        StandardView("Input", slideIn: false) {
             VStack(spacing: 0) {
                 
                 // Just to trigger view refresh
@@ -189,7 +189,7 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
 protocol ScorecardDelegate {
     func scorecardChanged(type: RowType, itemNumber: Int, column: ScorecardColumn?)
     func scorecardContractEntry(board: BoardViewModel, table: TableViewModel)
-    func scorecardScrollPickerPopup(values: [ScrollPickerEntry], maxValues: Int, selected: Int, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Int)->())
+    func scorecardScrollPickerPopup(values: [ScrollPickerEntry], maxValues: Int, selected: Int?, defaultValue: Int?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Int?)->())
     func scorecardGetDeclarers(tableNumber: Int) -> [Seat]
     func scorecardUpdateDeclarers(tableNumber: Int, to: [Seat]?)
     func scorecardEndEditing(_ force: Bool)
@@ -199,8 +199,8 @@ extension ScorecardDelegate {
     func scorecardChanged(type: RowType, itemNumber: Int) {
         scorecardChanged(type: type, itemNumber: itemNumber, column: nil)
     }
-    func scorecardScrollPickerPopup(values: [String], maxValues: Int, selected: Int, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Int)->()) {
-        scorecardScrollPickerPopup(values: values.map{ScrollPickerEntry(title: $0, caption: nil)}, maxValues: maxValues, selected: selected, frame: frame, in: container, topPadding: topPadding, bottomPadding: bottomPadding, completion: completion)
+    func scorecardScrollPickerPopup(values: [String], maxValues: Int, selected: Int?, defaultValue: Int?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Int?)->()) {
+        scorecardScrollPickerPopup(values: values.map{ScrollPickerEntry(title: $0, caption: nil)}, maxValues: maxValues, selected: selected, defaultValue: defaultValue, frame: frame, in: container, topPadding: topPadding, bottomPadding: bottomPadding, completion: completion)
     }
 }
 
@@ -295,7 +295,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
             if detailView {
                 boardColumns = [
                     ScorecardColumn(type: .board, heading: "Board", size: .fixed(70)),
-                    ScorecardColumn(type: .vulnerable, heading: "Vul", size: .fixed(60)),
+                    ScorecardColumn(type: .vulnerable, heading: "Vul", size: .fixed(30)),
                     ScorecardColumn(type: .dealer, heading: "Dealer", size: .fixed(50)),
                     ScorecardColumn(type: .contract, heading: "Contract", size: .fixed(95)),
                     ScorecardColumn(type: .declarer, heading: "By", size: .fixed(70)),
@@ -306,7 +306,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 ]
                 
                 tableColumns = [
-                    ScorecardColumn(type: .table, heading: "", size: .fixed(180)),
+                    ScorecardColumn(type: .table, heading: "", size: .fixed(150)),
                     ScorecardColumn(type: .sitting, heading: "Sitting", size: .fixed(165)),
                     ScorecardColumn(type: .tableScore, heading: "Score", size: .fixed(220)),
                     ScorecardColumn(type: .versus, heading: "Versus", size: .flexible)
@@ -445,11 +445,9 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         }
     }
     
-    func scorecardScrollPickerPopup(values: [ScrollPickerEntry], maxValues: Int, selected: Int, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Int)->()) {
-        scrollPickerPopupView.show(from: self, values: values, maxValues: maxValues, selected: selected, frame: container.convert(frame, to: self), topPadding: topPadding, bottomPadding: bottomPadding) { (selected) in
-            if let selected = selected {
-                completion(selected)
-            }
+    func scorecardScrollPickerPopup(values: [ScrollPickerEntry], maxValues: Int, selected: Int?, defaultValue: Int?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Int?)->()) {
+        scrollPickerPopupView.show(from: self, values: values, maxValues: maxValues, selected: selected, defaultValue: defaultValue, frame: container.convert(frame, to: self), topPadding: topPadding, bottomPadding: bottomPadding) { (selected) in
+            completion(selected)
         }
     }
     
@@ -783,26 +781,26 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         textClear.addGestureRecognizer(tapGesture)
         textClear.isUserInteractionEnabled = true
         
-        addSubview(seatPicker, top: 28, bottom: 12)
+        addSubview(seatPicker, top: 16, bottom: 0)
         Constraint.setWidth(control: seatPicker, width: 60)
         Constraint.anchor(view: self, control: seatPicker, attributes: .centerX)
         seatPicker.delegate = self
         let declarerTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputBoardCollectionCell.declarerTapped))
         seatPicker.addGestureRecognizer(declarerTapGesture)
 
-        addSubview(contractPicker, leading: 8, trailing: 8, top: 28, bottom: 12)
+        addSubview(contractPicker, leading: 8, trailing: 8, top: 28, bottom: 0)
         contractPicker.delegate = self
         let contractTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputBoardCollectionCell.contractTapped))
         contractPicker.addGestureRecognizer(contractTapGesture)
         
-        addSubview(madePicker, top: 28, bottom: 12)
+        addSubview(madePicker, top: 16, bottom: 0)
         Constraint.setWidth(control: madePicker, width: 60)
         Constraint.anchor(view: self, control: madePicker, attributes: .centerX)
         madePicker.delegate = self
         let madeTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputBoardCollectionCell.madeTapped))
         madePicker.addGestureRecognizer(madeTapGesture)
         
-        addSubview(participantPicker, top: 28, bottom: 12)
+        addSubview(participantPicker, top: 16, bottom: 0)
         Constraint.setWidth(control: participantPicker, width: 60)
         Constraint.anchor(view: self, control: participantPicker, attributes: .centerX)
         participantPicker.delegate = self
@@ -878,6 +876,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             label.text = "\(scorecard.resetNumbers ? ((board.board - 1) % scorecard.boardsTable) + 1 : board.board)"
         case .vulnerable:
             label.isHidden = false
+            label.font = titleFont
             label.text = board.vulnerability.string
         case .dealer:
             seatPicker.isHidden = false
@@ -894,15 +893,18 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             seatPicker.set(selected, list: declarerList, isEnabled: isEnabled, color: color, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
         case .made:
             madePicker.isHidden = false
-            let (list, min, max) = madeList
-            if board.made < min {
-                board.made = min
-            } else if board.made > max {
-                board.made = max
+            let (list, minValue, maxValue) = madeList
+            if let made = board.made {
+                if made < minValue {
+                    board.made = minValue
+                } else if made > maxValue {
+                    board.made = maxValue
+                }
             }
+            let makingValue = (6 + board.contract.level.rawValue)
             let isEnabled = board.contract.suit.valid
             color = (isEnabled ? Palette.gridBoard : Palette.gridBoardDisabled)
-            madePicker.set(board.made - min, list: list, isEnabled: isEnabled, color: color, titleFont: pickerTitleFont)
+            madePicker.set(board.made == nil ? nil : board.made! - minValue, list: list, defaultEntry: ScrollPickerEntry(caption: "Unknown"), defaultValue: min(list.count - 1, makingValue), isEnabled: isEnabled, color: color, titleFont: pickerTitleFont)
         case .score:
             textField.isHidden = false
             textField.keyboardType = .numberPad
@@ -914,7 +916,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
                 label.text = ""
             } else {
                 let points = board.points(seat: table.sitting)
-                label.text = "\(points > 0 ? "+" : "")\(points)"
+                label.text = (points == nil ? "" : "\(points! > 0 ? "+" : "")\(points!)")
             }
         case .comment:
             textField.isHidden = false
@@ -933,33 +935,34 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         label.backgroundColor = UIColor(color.background)
     }
     
-    private var madeList: (list: [String], min: Int, max: Int) {
-        var list: [String] = []
-        var min = 0
-        var max = 0
+    private var madeList: (list: [ScrollPickerEntry], minValue: Int, maxValue: Int) {
+        var list: [ScrollPickerEntry] = []
+        var minValue = 0
+        var maxValue = 0
         if board.contract.suit != .blank {
             let tricks = board.contract.level.rawValue
-            min = -(6 + tricks)
-            max = 7 - tricks
-            for i in (-6-tricks)...(7-tricks) {
+            minValue = -(6 + tricks)
+            maxValue = 7 - tricks
+            for made in 0...13 {
+                let plusMinus = made - 6 - tricks
                 var value = ""
                 switch true {
-                case i < 0:
-                    value = "\(i)"
-                case i == 0:
+                case plusMinus < 0:
+                    value = "\(plusMinus)"
+                case plusMinus == 0:
                     value = "="
-                case i > 0:
-                    value = "+\(i)"
+                case plusMinus > 0:
+                    value = "+\(plusMinus)"
                 default:
                     break
                 }
-                list.append(value)
+                list.append(ScrollPickerEntry(title: value, caption: "Made \(made)"))
             }
         }
         if list.count == 0 {
-            list.append("")
+            list.append(ScrollPickerEntry())
         }
-        return (list, min, max)
+        return (list, minValue, maxValue)
     }
     
     private var declarerList: [ScrollPickerEntry] {
@@ -1167,7 +1170,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         if table.sitting != .unknown {
             let width: CGFloat = 70
             let space = (frame.width - width) / 2
-            scorecardDelegate?.scorecardScrollPickerPopup(values: declarerList, maxValues: 9, selected: board.declarer.rawValue, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 20, bottomPadding: 4) { (selected) in
+            scorecardDelegate?.scorecardScrollPickerPopup(values: declarerList, maxValues: 9, selected: board.declarer.rawValue, defaultValue: nil, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 20, bottomPadding: 4) { (selected) in
                 self.seatPicker.set(selected)
                 self.scrollPickerDidChange(to: selected)
             }
@@ -1180,8 +1183,10 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         let (madeList, _, _) = madeList
         let width: CGFloat = 70
         let space = (frame.width - width) / 2
-        scorecardDelegate?.scorecardScrollPickerPopup(values: madeList, maxValues: 9, selected: board.made + (6 + board.contract.level.rawValue), frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 0, bottomPadding: 0) { (selected) in
-            self.madePicker.set(selected)
+        let makingValue = (6 + board.contract.level.rawValue)
+        let selected = board.made == nil ? nil : board.made! + makingValue
+        scorecardDelegate?.scorecardScrollPickerPopup(values: madeList, maxValues: 9, selected: selected, defaultValue: makingValue, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 16, bottomPadding: 0) { (selected) in
+            self.madePicker.set(selected, reload: self.board.made == nil || selected == nil)
             self.scrollPickerDidChange(to: selected)
         }
     }
@@ -1191,29 +1196,30 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         scorecardDelegate?.scorecardChanged(type: .board, itemNumber: boardNumber)
         let width: CGFloat = 70
         let space = (frame.width - width) / 2
-        scorecardDelegate?.scorecardScrollPickerPopup(values: Participant.allCases.map{ScrollPickerEntry(title: $0.short, caption: $0.full)}, maxValues: 7, selected: board.responsible.rawValue, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 28, bottomPadding: 12) { (selected) in
-            if let participant = Participant(rawValue: selected) {
+        scorecardDelegate?.scorecardScrollPickerPopup(values: Participant.allCases.map{ScrollPickerEntry(title: $0.short, caption: $0.full)}, maxValues: 7, selected: board.responsible.rawValue, defaultValue: nil, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 16, bottomPadding: 0) { (selected) in
+            if let participant = Participant(rawValue: selected!) {
                 self.participantPicker.set(participant)
                 self.enumPickerDidChange(to: participant)
             }
         }
     }
     
-    internal func scrollPickerDidChange(to value: Int) {
+    @nonobjc internal func scrollPickerDidChange(_: ScrollPicker? = nil, to value: Int?) {
         if let board = board {
             var picker: ScrollPicker!
             var undoValue: Int?
+            var found = true
             switch column.type {
             case .declarer:
                 undoValue = Seat.allCases.firstIndex(where: {$0 == board.declarer})
                 picker = seatPicker
             case .made:
-                undoValue = board.made + (6 + board.contract.level.rawValue)
+                undoValue = board.made == nil ? nil : board.made! + (6 + board.contract.level.rawValue)
                 picker = madePicker
             default:
-                break
+                found = false
             }
-            if let undoValue = undoValue {
+            if found {
                 if undoValue != value {
                     undoManager?.registerUndo(withTarget: picker) { (picker) in
                         picker.set(undoValue)
@@ -1221,9 +1227,9 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
                     }
                     switch column.type {
                     case .declarer:
-                        board.declarer = Seat.allCases[value]
+                        board.declarer = Seat.allCases[value!]
                     case .made:
-                        board.made =  value - (6 + board.contract.level.rawValue)
+                        board.made =  (value == nil ? nil : value! - (6 + board.contract.level.rawValue))
                     default:
                         break
                     }
@@ -1565,8 +1571,8 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         scorecardDelegate?.scorecardChanged(type: .table, itemNumber: tableNumber)
         let width: CGFloat = 70
         let space = (frame.width - width) / 2
-        scorecardDelegate?.scorecardScrollPickerPopup(values: Seat.allCases.map{ScrollPickerEntry(title: $0.short, caption: $0.string)}, maxValues: 9, selected: table.sitting.rawValue, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 20, bottomPadding: 4) { (selected) in
-            if let seat = Seat(rawValue: selected) {
+        scorecardDelegate?.scorecardScrollPickerPopup(values: Seat.allCases.map{ScrollPickerEntry(title: $0.short, caption: $0.string)}, maxValues: 9, selected: table.sitting.rawValue, defaultValue: nil, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 20, bottomPadding: 4) { (selected) in
+            if let seat = Seat(rawValue: selected!) {
                 self.seatPicker.set(seat)
                 self.enumPickerDidChange(to: seat)
             }

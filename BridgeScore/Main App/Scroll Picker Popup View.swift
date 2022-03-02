@@ -11,16 +11,22 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
        
     private var backgroundView = UIView()
     private var contentView = UIView()
+    private var clearLabel = UILabel()
     private var valuesCollectionView: UICollectionView!
-    private var selected: Int!
+    private var selected: Int?
+    private var defaultValue: Int?
     private var values: [ScrollPickerEntry]!
     private var maxValues = 5
     private var buttonSize: CGSize!
     private var completion: ((Int?)->())?
     private var focusWidthConstraint: NSLayoutConstraint!
+    private var clearLabelWidthConstraint: NSLayoutConstraint!
     private var topPadding: CGFloat = 0
     private var bottomPadding: CGFloat = 0
     private var extra: Int { Int(maxValues / 2) }
+    private let focusThickness: CGFloat = 5
+    private let clearHeight: CGFloat = 30
+    private let clearPadding: CGFloat = 5
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
@@ -30,7 +36,11 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
     override init(frame: CGRect) {
         super.init(frame:frame)
         loadScrollPickerPopupView()
-        
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        clearLabel.roundCorners(cornerRadius: clearHeight / 2)
     }
        
     // MARK: - CollectionView Delegates ================================================================ -
@@ -86,12 +96,19 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         completion?(selected)
         hide()
     }
+    
+    @objc private func clearTapped(_ sender: Any) {
+        completion?(nil)
+        hide()
+    }
+    
     // MARK: - Show / Hide ============================================================================ -
     
-    public func show(from sourceView: UIView, values: [ScrollPickerEntry], maxValues: Int = 5, selected: Int, frame: CGRect, hideBackground: Bool = true, topPadding: CGFloat = 0, bottomPadding: CGFloat = 0, completion: @escaping (Int?)->()) {
+    public func show(from sourceView: UIView, values: [ScrollPickerEntry], maxValues: Int = 5, selected: Int?, defaultValue: Int?, frame: CGRect, hideBackground: Bool = true, topPadding: CGFloat = 0, bottomPadding: CGFloat = 0, completion: @escaping (Int?)->()) {
         self.values = values
         self.maxValues = maxValues
         self.selected = selected
+        self.defaultValue = defaultValue
         self.buttonSize = frame.size
         self.topPadding = topPadding
         self.bottomPadding = bottomPadding
@@ -99,8 +116,10 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         self.frame = sourceView.frame
         backgroundView.frame = sourceView.frame
         let valuesVisible = maxValues
-        contentView.frame = CGRect(x: frame.minX - (CGFloat(Int(valuesVisible / 2)) * buttonSize.width), y: frame.minY - 5, width: buttonSize.width * CGFloat(valuesVisible), height: buttonSize.height + 10)
-        focusWidthConstraint.constant = buttonSize.width + 10
+        contentView.frame = CGRect(x: frame.minX - (CGFloat(Int(valuesVisible / 2)) * buttonSize.width), y: frame.minY - focusThickness, width: buttonSize.width * CGFloat(valuesVisible), height: buttonSize.height + (2 * focusThickness) + clearHeight + clearPadding)
+        focusWidthConstraint.constant = buttonSize.width + (2 * focusThickness)
+        clearLabelWidthConstraint.constant = buttonSize.width
+        clearLabel.isHidden = (self.defaultValue == nil)
         setNeedsLayout()
         layoutIfNeeded()
         layoutSubviews()
@@ -108,7 +127,9 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         sourceView.bringSubviewToFront(self)
         backgroundView.isHidden = !hideBackground
         valuesCollectionView.reloadData()
-        valuesCollectionView.scrollToItem(at: IndexPath(item: selected + Int(maxValues / 2), section: 0), at: .centeredHorizontally, animated: false)
+        if let selected = self.selected ?? defaultValue {
+            valuesCollectionView.scrollToItem(at: IndexPath(item: selected + Int(maxValues / 2), section: 0), at: .centeredHorizontally, animated: false)
+        }
         self.contentView.isHidden = false
     }
     
@@ -142,14 +163,29 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         
         let focusWindow = UILabel()
         focusWindow.layer.borderColor = Palette.alternate.contrastText.cgColor
-        focusWindow.layer.borderWidth = 5
-        contentView.addSubview(focusWindow, anchored: .centerX, .top, .bottom)
-        focusWidthConstraint = Constraint.setWidth(control: focusWindow, width: 100)
+        focusWindow.layer.borderWidth = focusThickness
+        contentView.addSubview(focusWindow, anchored: .centerX, .top)
+        Constraint.anchor(view: contentView, control: focusWindow, constant: clearHeight + clearPadding, attributes: .bottom)
+        focusWidthConstraint = Constraint.setWidth(control: focusWindow, width: 0)
+        
+        contentView.addSubview(clearLabel, anchored: .bottom, .centerX)
+        Constraint.setHeight(control: clearLabel, height: clearHeight)
+        clearLabelWidthConstraint = Constraint.setWidth(control: clearLabel, width: 0)
+        clearLabel.text = "Clear"
+        clearLabel.backgroundColor = UIColor(Palette.alternate.background)
+        clearLabel.textColor = UIColor(Palette.alternate.themeText)
+        clearLabel.font = titleFont
+        clearLabel.textAlignment = .center
+        let clearTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScrollPickerPopupView.clearTapped(_:)))
+        clearLabel.addGestureRecognizer(clearTapGesture)
+        clearLabel.isUserInteractionEnabled = true
+        
         contentView.isHidden = true
     }
     
     func loadCollection(collectionView: UICollectionView) {
-        contentView.addSubview(collectionView, leading: 0, trailing: 0, top: 5, bottom: 5)
+        contentView.addSubview(collectionView, leading: 0, trailing: 0, top: focusThickness)
+        Constraint.anchor(view: contentView, control: collectionView, constant: focusThickness + clearHeight + clearPadding, attributes: .bottom)
         collectionView.dataSource = self
         collectionView.delegate = self
         collectionView.backgroundColor = UIColor.clear

@@ -9,12 +9,16 @@ import SwiftUI
 
 struct StandardView <Content> : View where Content : View {
     @ObservedObject private var messageBox = MessageBox.shared
+    var slideIn: Bool
     var navigation: Bool
     var animate = false
     var content: Content
+    var info: String
     var backgroundColor: PaletteColor
 
-    init(navigation: Bool = false, animate: Bool = false, backgroundColor: PaletteColor = Palette.background, @ViewBuilder content: ()->Content) {
+    init(_ info: String, slideIn: Bool = true, navigation: Bool = false, animate: Bool = false, backgroundColor: PaletteColor = Palette.background, @ViewBuilder content: ()->Content) {
+        self.info = info
+        self.slideIn = slideIn
         self.navigation = navigation
         self.animate = animate
         self.backgroundColor = backgroundColor
@@ -43,7 +47,9 @@ struct StandardView <Content> : View where Content : View {
                 self.content
             }
             .ignoresSafeArea()
-            SlideInMenuView()
+            if slideIn {
+                SlideInMenuView()
+            }
             if messageBox.isShown {
                 Palette.maskBackground
                     .ignoresSafeArea(edges: .all)

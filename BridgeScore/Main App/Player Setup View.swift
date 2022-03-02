@@ -12,7 +12,7 @@ struct PlayerSetupView: View {
     @StateObject var selected = PlayerViewModel()
     
     var body: some View {
-        StandardView() {
+        StandardView("Player") {
             VStack(spacing: 0) {
                 Banner(title: $title, bottomSpace: false, back: true, backEnabled: { return selected.canSave })
                 DoubleColumnView {

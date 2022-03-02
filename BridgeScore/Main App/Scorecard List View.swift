@@ -34,7 +34,7 @@ struct ScorecardListView: View {
                               Backup.shared.restore(dateString: "2022-02-10-15-10-42-407") }),*/
                            BannerOption(text: "About \(appName)", action: { MessageBox.shared.show("A Bridge scoring app from\nShearer Online Ltd", showIcon: true, showVersion: true) })]
         
-        StandardView(navigation: true) {
+        StandardView("Scorecard List", navigation: true) {
             
             VStack {
                 Banner(title: $title, back: false, optionMode: .menu, menuTitle: "Setup", options: menuOptions)

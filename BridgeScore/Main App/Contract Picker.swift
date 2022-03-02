@@ -56,26 +56,28 @@ class ContractPicker: UIView, ScrollPickerDelegate {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func scrollPickerDidChange(_ scrollPicker: ScrollPicker, to index: Int) {
-        if let element = ContractElement(rawValue: scrollPicker.tag) {
-            switch element {
-            case .level:
-                let newValue = levelList[index]
-                if newValue != contract.level {
-                    delegate?.contractPickerDidChange(to: Contract(level: newValue, suit: contract.suit, double: contract.double))
-                    set(level: newValue, reflect: true)
-                }
-            case .suit:
-                let newValue = suitList[index]
-                if newValue != contract.suit {
-                    delegate?.contractPickerDidChange(to: Contract(level: contract.level, suit: newValue, double: contract.double))
-                    set(suit: newValue, reflect: true)
-                }
-            case .double:
-                let newValue = doubleList[index]
-                if newValue != contract.double {
-                    delegate?.contractPickerDidChange(to: Contract(level: contract.level, suit: contract.suit, double: newValue))
-                    set(double: newValue, reflect: true)
+    func scrollPickerDidChange(_ scrollPicker: ScrollPicker?, to index: Int?) {
+        if let scrollPicker = scrollPicker {
+            if let element = ContractElement(rawValue: scrollPicker.tag) {
+                switch element {
+                case .level:
+                    let newValue = levelList[index!]
+                    if newValue != contract.level {
+                        delegate?.contractPickerDidChange(to: Contract(level: newValue, suit: contract.suit, double: contract.double))
+                        set(level: newValue, reflect: true)
+                    }
+                case .suit:
+                    let newValue = suitList[index!]
+                    if newValue != contract.suit {
+                        delegate?.contractPickerDidChange(to: Contract(level: contract.level, suit: newValue, double: contract.double))
+                        set(suit: newValue, reflect: true)
+                    }
+                case .double:
+                    let newValue = doubleList[index!]
+                    if newValue != contract.double {
+                        delegate?.contractPickerDidChange(to: Contract(level: contract.level, suit: contract.suit, double: newValue))
+                        set(double: newValue, reflect: true)
+                    }
                 }
             }
         }

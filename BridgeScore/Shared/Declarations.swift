@@ -326,7 +326,7 @@ public enum Vulnerability: Int {
     public var string: String {
         switch self {
         case .none:
-            return "None"
+            return "-"
         case .ns:
             return "NS"
         case .ew:

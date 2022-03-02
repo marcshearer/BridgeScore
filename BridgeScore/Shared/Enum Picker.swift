@@ -43,7 +43,7 @@ class EnumPicker<EnumType> : UIView, ScrollPickerDelegate where EnumType : EnumP
         fatalError("init(coder:) has not been implemented")
     }
     
-    func scrollPickerDidChange(to value: Int) {
-        delegate?.enumPickerDidChange(to: list[value])
+    func scrollPickerDidChange(_ :ScrollPicker?,to value: Int?) {
+        delegate?.enumPickerDidChange(to: list[value!])
     }
 }

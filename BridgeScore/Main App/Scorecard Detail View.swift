@@ -15,7 +15,7 @@ struct ScorecardDetailView: View {
     @State var title = "New Scorecard"
     
     var body: some View {
-        StandardView {
+        StandardView("Detail") {
             VStack(spacing: 0) {
                 
                 Banner(title: $title, alternateStyle: true, back: true, backText: "Done", backAction: backAction)

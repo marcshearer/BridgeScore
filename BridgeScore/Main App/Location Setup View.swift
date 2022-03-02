@@ -12,7 +12,7 @@ struct LocationSetupView: View {
     @StateObject var selected = LocationViewModel()
     
     var body: some View {
-        StandardView() {
+        StandardView("Location") {
             VStack(spacing: 0) {
                 Banner(title: $title, bottomSpace: false, back: true, backEnabled: { return selected.canSave })
                 DoubleColumnView {
