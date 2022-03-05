@@ -179,10 +179,10 @@ struct LayoutDetailView : View {
                             
                             Separator()
                             
-                            StepperInput(title: "Boards", field: $selected.boardsTable, label: { value in "\(value) boards per round" }, minValue: $minValue, inlineTitleWidth: 200) { (newValue) in
-                                selected.boards = max(selected.boards, newValue)
-                                selected.boards = max(newValue, ((selected.boards / newValue) * newValue))
-                            }
+                            StepperInputAdditional(title: "Boards", field: $selected.boardsTable, label: { value in "\(value) boards per round" }, minValue: $minValue, inlineTitleWidth: 200, additionalBinding: $selected.boardsTable, onChange: { (newValue) in
+                                    selected.boards = max(selected.boards, newValue)
+                                    selected.boards = max(newValue, ((selected.boards / newValue) * newValue))
+                                 })
 
                             Separator()
                             

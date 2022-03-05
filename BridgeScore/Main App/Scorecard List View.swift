@@ -146,13 +146,13 @@ struct ScorecardListView: View {
         }
 
         if let dateFrom = filterValues.dateFrom {
-            if dateFrom > scorecard.date {
+            if scorecard.date < Date.startOfDay(from: dateFrom)! {
                 include = false
             }
         }
 
         if let dateTo = filterValues.dateTo {
-            if dateTo > scorecard.date {
+            if scorecard.date > Date.endOfDay(from: dateTo)! {
                 include = false
             }
         }

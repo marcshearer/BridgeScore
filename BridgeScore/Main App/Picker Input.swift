@@ -10,7 +10,7 @@ import SwiftUI
 struct PickerInput : View {
     
     var title: String? = nil
-    @Binding var field: Int
+    var field: Binding<Int>
     var values: ()->[String]
     var popupTitle: String? = nil
     var placeholder: String = ""
@@ -19,8 +19,10 @@ struct PickerInput : View {
     var width: CGFloat?
     var height: CGFloat = 45
     var maxLabelWidth: CGFloat = 200
+    var centered: Bool = false
     var color: PaletteColor = Palette.clear
     var cornerRadius: CGFloat = 0
+    var animation: ViewAnimation = .slideLeft
     var inlineTitle: Bool = true
     var inlineTitleWidth: CGFloat = 150
     var onChange: ((Int)->())?
@@ -44,33 +46,42 @@ struct PickerInput : View {
                     .frame(width: inlineTitleWidth)
                     Spacer().frame(width: 12)
                 }
-                Spacer().frame(width: 6)
+                if !centered {
+                    Spacer().frame(width: 6)
+                }
                 
                 GeometryReader { (geometry) in
                     HStack {
-                        if placeholder != "" {
-                            Spacer()
-                        }
-                        Spacer().frame(width: 2)
-                        PopupMenu(field: $field, values: values, title: popupTitle ?? title, top: geometry.frame(in: .global).minY - (slideInMenuRowHeight * 1.4), onChange: onChange) {
-                            HStack {
-                                Text(field < values.count && field >= 0 ? values[field] : placeholder)
-                                    .foregroundColor(placeholder == "" ? color.themeText : color.text)
-                                    .font(inputFont)
-                                Spacer()
-                            }.frame(minWidth: maxLabelWidth).frame(maxHeight: height)
-                        }
-                        if placeholder == "" {
-                            Spacer().layoutPriority(.greatestFiniteMagnitude)
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(color.themeText)
-                            Spacer().frame(width: 16)
-                        } else {
-                            Spacer().layoutPriority(.greatestFiniteMagnitude)
+                        UndoWrapper(field) { (field) in
+                            let top = geometry.frame(in: .global).minY - (slideInMenuRowHeight * 1.4)
+                            let left = geometry.frame(in: .global).maxX + 30
+                            
+                            PopupMenu(field: field, values: values, title: popupTitle ?? title, animation: animation, top: top, left: left, width: 400, onChange: onChange) {
+                                
+                                HStack {
+                                    if centered {
+                                        Spacer()
+                                    } else {
+                                        Spacer().frame(width: 2)
+                                    }
+                                    Text(field.wrappedValue < values.count && field.wrappedValue >= 0 ? values[field.wrappedValue] : placeholder)
+                                        .foregroundColor(placeholder == "" ? color.themeText : color.text)
+                                        .font(inputFont)
+                                        .frame(maxHeight: height)
+                                    if !centered {
+                                        Spacer()
+                                        Image(systemName: "chevron.right")
+                                            .foregroundColor(color.themeText)
+                                        Spacer().frame(width: 16)
+                                    } else {
+                                        Spacer()
+                                    }
+                                }
+                                .background(color.background)
+                            }
                         }
                     }
                 }
-                
             }
         }
         .if(width != nil) { (view) in

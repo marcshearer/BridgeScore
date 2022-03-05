@@ -10,7 +10,7 @@ import SwiftUI
 struct InputInt : View {
     
     var title: String?
-    @Binding var field: Int
+    var field: Binding<Int>
     var message: Binding<String>?
     var topSpace: CGFloat = 5
     var leadingSpace: CGFloat = 0
@@ -53,12 +53,14 @@ struct InputInt : View {
                 
                 HStack {
                     Spacer().frame(width: 8)
-                    TextField("", value: $field, format: .number)
-                        .lineLimit(1)
-                        .padding(.all, 1)
-                        .keyboardType(keyboardType)
-                        .autocapitalization(.none)
-                        .disableAutocorrection(false)
+                    UndoWrapper(field) { field in
+                        TextField("", value: field, format: .number)
+                            .lineLimit(1)
+                            .padding(.all, 1)
+                            .keyboardType(keyboardType)
+                            .autocapitalization(.none)
+                            .disableAutocorrection(false)
+                    }
                 }
                 .if(width != nil) { (view) in
                     view.frame(width: width)
@@ -74,9 +76,9 @@ struct InputInt : View {
             .font(inputFont)
         }
         .onAppear {
-            text = "\(field)"
+            text = "\(field.wrappedValue)"
         }
-        .onChange(of: field) { (field) in
+        .onChange(of: field.wrappedValue) { (field) in
             text = "\(field)"
         }
         .frame(height: self.height + ((self.inlineTitle ? 0 : self.topSpace) + (title == nil || inlineTitle ? 0 : 30)))

@@ -15,16 +15,18 @@ class SlideInMenu : ObservableObject {
     @Published public var title: String? = nil
     @Published public var options: [String] = []
     @Published public var top: CGFloat = 0
+    @Published public var left: CGFloat? = nil
     @Published public var width: CGFloat = 0
     @Published public var animation: ViewAnimation = .slideLeft
     @Published public var completion: ((String?)->())?
     @Published public var shown: Bool = false
     
-    public func show(title: String? = nil, options: [String], animation: ViewAnimation = .slideLeft, top: CGFloat? = nil, width: CGFloat? = nil, completion: ((String?)->())? = nil) {
+    public func show(title: String? = nil, options: [String], animation: ViewAnimation = .slideLeft, top: CGFloat? = nil, left: CGFloat? = nil, width: CGFloat? = nil, completion: ((String?)->())? = nil) {
         withAnimation(.none) {
             SlideInMenu.shared.title = title
             SlideInMenu.shared.options = options
             SlideInMenu.shared.top = top ?? bannerHeight + 10
+            SlideInMenu.shared.left = left
             SlideInMenu.shared.width = width ?? 300
             SlideInMenu.shared.animation = animation
             SlideInMenu.shared.completion = completion
@@ -38,8 +40,6 @@ class SlideInMenu : ObservableObject {
 struct SlideInMenuView : View {
     @ObservedObject var values = SlideInMenu.shared
     @State private var offset: CGFloat = 320
-    
-    @State private var animate = false
     
     var body: some View {
         GeometryReader { (fullGeometry) in
@@ -103,7 +103,7 @@ struct SlideInMenuView : View {
                                             .background(Palette.background.background)
                                             .frame(height: slideInMenuRowHeight)
                                         }
-                                        //.listRowInsets(EdgeInsets())
+                                            //.listRowInsets(EdgeInsets())
                                         .listStyle(PlainListStyle())
                                     }
                                 }
@@ -139,19 +139,17 @@ struct SlideInMenuView : View {
                     }
                     .offset(x: offset)
                 }
-            }
-            .if(offset != 0 && values.animation == .fade) { (view) in
-                view.hidden()
-            }
-            .if(values.animation == .slideLeft) { (view) in
-                view.onChange(of: values.shown, perform: { value in
-                    offset = values.shown ? 0 : values.width + 20
-                    $animate.wrappedValue = true
+                
+                .if(offset != 0 && values.animation == .fade) { (view) in
+                    view.hidden()
+                }
+                .onChange(of: values.shown, perform: { value in
+                    offset = (values.shown ? (values.left == nil ? 0 : min(0, (values.left! + values.width - geometry.size.width))) : values.width + 20)
                 })
-            }
-            .animation($animate.wrappedValue || values.shown ? .easeInOut : .none, value: offset)
-            .onAppear {
-                SlideInMenu.shared.width = 300
+                .animation(values.animation == .none ? .none : .easeInOut, value: offset)
+                .onAppear {
+                    SlideInMenu.shared.width = 300
+                }
             }
         }
     }

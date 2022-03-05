@@ -341,6 +341,12 @@ extension Float {
     }
 }
 
+extension Decimal {
+    func toString(places: Int) -> String{
+        return "\(self)"
+    }
+}
+
 extension View {
     /// Applies the given transform if the given condition evaluates to `true`.
     /// - Parameters:

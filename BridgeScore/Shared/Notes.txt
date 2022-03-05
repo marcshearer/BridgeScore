@@ -5,6 +5,7 @@ If fails to install app on device from  it's normally because info.plist isn't w
 
 Bugs
 ====
+Capitalise first character of versus and comment
 
 To Do
 =====
@@ -12,8 +13,23 @@ Sort out dark mode
 Maybe remove file sharing in Info.plist once can backup from Mac
 Force player and/or location to be input when layout created
 Add undo to detail
+Move date picker to a slide in?
 
 Enhancements
 ============
 Share scorecards via iCloud?
 Stats?
+
+If undo repeatedly too quickly crashes
+Other inputs (stepper etc) given Undo wrappers
+Add undo buttons in layout setup etc
+Date picker doesn't disappear if already selected date click
+Total score not updated immediately if change method
+Dependent steppers for boards / tables don't undo correctly
+    You could argue the same about score and the method being undone to manual
+Change position to diamond with self at bottom in contract view
+Split out passout from other bids and immediately close if selected
+Change colour of buttons on contract view
+Make bid buttons bigger on contract view
+Allow entry of contract in any sequence
+Change colours on front screen

@@ -28,7 +28,7 @@ struct Input : View {
 #endif
     
     var title: String?
-    @Binding var field: String
+    var field: Binding<String>
     var message: Binding<String>?
     var topSpace: CGFloat = 0
     var leadingSpace: CGFloat = 0
@@ -78,16 +78,18 @@ struct Input : View {
                 Spacer().frame(width: 10)
                 HStack {
                     Spacer().frame(width: 4)
-                    TextEditor(text: $field)
-                        .lineLimit(1)
-                        .padding(.all, 1)
-                        .keyboardType(self.keyboardType)
-                        .autocapitalization(autoCapitalize)
-                        .disableAutocorrection(!autoCorrect)
-                        .foregroundColor(color.text)
-                        .onChange(of: field) { field in
-                            onChange?(field)
-                        }
+                    UndoWrapper(field) { field in
+                        TextEditor(text: field)
+                            .lineLimit(1)
+                            .padding(.all, 1)
+                            .keyboardType(self.keyboardType)
+                            .autocapitalization(autoCapitalize)
+                            .disableAutocorrection(!autoCorrect)
+                            .foregroundColor(color.text)
+                            .onChange(of: field.wrappedValue) { field in
+                                onChange?(field)
+                            }
+                    }
                 }
                 .if(width != nil) { (view) in
                     view.frame(width: width)
@@ -103,7 +105,7 @@ struct Input : View {
                     VStack {
                         Spacer()
                         Button {
-                            field = ""
+                            field.wrappedValue = ""
                         } label: {
                             Image(systemName: "x.circle.fill").font(inputTitleFont).foregroundColor(Palette.clearText)
                         }

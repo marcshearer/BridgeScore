@@ -198,7 +198,13 @@ class Utility {
         large.round()
         return large / scale
     }
-
+    
+    class func round(_ value: Decimal, places: Int = 0) -> Decimal {
+        var value = value
+        var rounded: Decimal = 0
+        NSDecimalRound(&rounded, &value, places, .bankers)
+        return rounded
+    }
 
     // MARK: - Array helper functions ==================================================================== -
     

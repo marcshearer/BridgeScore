@@ -22,7 +22,15 @@ struct InputFloat : View {
     
     @State private var keyboardType: UIKeyboardType = .numberPad
     @State private var refresh = false
-    @State private var text: String = ""
+    @State private var wrappedText = ""
+    var text: Binding<String> {
+        Binding {
+            wrappedText
+        } set: { (newValue) in
+            wrappedText = newValue
+        }
+    }
+    
     
     var body: some View {
         
@@ -53,32 +61,32 @@ struct InputFloat : View {
                 HStack {
                     Spacer().frame(width: 8)
                     
-                    TextField("", text: $text, onEditingChanged: {(editing) in
-                        text = Float(text)?.toString(places: places) ?? ""
-                        field = Float(text)
-                    })
-                    .onSubmit {
-                        text = Float(text)?.toString(places: places) ?? ""
-                        field = Float(text)
+                    UndoWrapper(text) { text in
+                        TextField("", text: text, onEditingChanged: {(editing) in
+                            text.wrappedValue = Float(text.wrappedValue)?.toString(places: places) ?? ""
+                            field = Float(text.wrappedValue)
+                        })
+                            .onSubmit {
+                                text.wrappedValue = Float(text.wrappedValue)?.toString(places: places) ?? ""
+                                field = Float(text.wrappedValue)
+                            }
+                            .onChange(of: text.wrappedValue) { newValue in
+                                let filtered = newValue.filter { "0123456789 -,.".contains($0) }
+                                let oldField = field
+                                if filtered != newValue {
+                                    text.wrappedValue = filtered
+                                }
+                                field = Float(text.wrappedValue)
+                                if oldField != field {
+                                    onChange?(field)
+                                }
+                            }
+                            .lineLimit(1)
+                            .padding(.all, 1)
+                            .keyboardType(keyboardType)
+                            .autocapitalization(.none)
+                            .disableAutocorrection(false)
                     }
-                    .onChange(of: text) { newValue in
-                        let filtered = newValue.filter { "0123456789-.".contains($0) }
-                        let oldField = field
-                        if filtered != newValue {
-                            text = filtered
-                            field = Float(text)
-                        } else {
-                            field = Float(text)
-                        }
-                        if oldField != field {
-                            onChange?(field)
-                        }
-                    }
-                    .lineLimit(1)
-                    .padding(.all, 1)
-                    .keyboardType(keyboardType)
-                    .autocapitalization(.none)
-                    .disableAutocorrection(false)
                 }
                 .if(width != nil) { (view) in
                     view.frame(width: width)
@@ -93,7 +101,7 @@ struct InputFloat : View {
             }
             .font(inputFont)
             .onAppear {
-                text = (field == nil ? "" : field!.toString(places: places))
+                text.wrappedValue = (field == nil ? "" : field!.toString(places: places))
             }
         }
         .frame(height: self.height + ((self.inlineTitle ? 0 : self.topSpace) + (title == nil || inlineTitle ? 0 : 30)))

@@ -251,7 +251,7 @@ class Scorecard {
                 }
             }
             
-            var newScore: Float?
+            var newScore = table.score
             let type = scorecard.type
             let boards = scorecard.boardsTable
             let places = type.tablePlaces
@@ -296,7 +296,7 @@ class Scorecard {
                 }
             }
         }
-        var newScore: Float?
+        var newScore = scorecard.score
         let type = scorecard.type
         let boards = scorecard.boards
         let places = type.matchPlaces

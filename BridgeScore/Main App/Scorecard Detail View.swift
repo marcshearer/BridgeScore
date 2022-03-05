@@ -9,16 +9,25 @@ import SwiftUI
 
 struct ScorecardDetailView: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
+    @Environment(\.undoManager) var undoManager
 
     @ObservedObject var scorecard: ScorecardViewModel
     @Binding var deleted: Bool
     @State var title = "New Scorecard"
-    
+    @State private var canUndo = false
+    @State private var canRedo = false
+    private let undoManagerObserver = NotificationCenter.default.publisher(for: .NSUndoManagerDidOpenUndoGroup)
+    private let undoObserver = NotificationCenter.default.publisher(for: .NSUndoManagerDidRedoChange)
+    private let redoObserver = NotificationCenter.default.publisher(for: .NSUndoManagerDidUndoChange)
+
     var body: some View {
         StandardView("Detail") {
             VStack(spacing: 0) {
                 
-                Banner(title: $title, alternateStyle: true, back: true, backText: "Done", backAction: backAction)
+                let bannerOptions = [
+                    BannerOption(image: AnyView(Image(systemName: "arrow.uturn.backward")), likeBack: true, isEnabled: $canUndo, action: { undoPressed() }),
+                    BannerOption(image: AnyView(Image(systemName: "arrow.uturn.forward")), likeBack: true, isEnabled: $canRedo, action: { redoPressed() })]
+                Banner(title: $title, alternateStyle: true, back: true, backText: "Done", backAction: backAction, optionMode: .buttons, options: bannerOptions)
                 
                 ScrollView(showsIndicators: false) {
                     
@@ -34,8 +43,34 @@ struct ScorecardDetailView: View {
                     }
                 }
             }
+            .onReceive(undoManagerObserver) { _ in
+                canUndo = self.undoManager?.canUndo ?? false
+                canRedo = self.undoManager?.canRedo ?? false
+            }
+            .onReceive(undoObserver) { _ in
+                canUndo = self.undoManager?.canUndo ?? false
+                canRedo = self.undoManager?.canRedo ?? false
+            }
+            .onReceive(redoObserver) { _ in
+                canUndo = self.undoManager?.canUndo ?? false
+                canRedo = self.undoManager?.canRedo ?? false
+            }
         }
         .interactiveDismissDisabled()
+    }
+    
+    func undoPressed() {
+        if undoManager?.canUndo ?? false {
+            undoManager?.undo()
+        }
+        canRedo = true
+    }
+    
+    func redoPressed() {
+        if undoManager?.canRedo ?? false {
+            undoManager?.redo()
+        }
+        canUndo = true
     }
     
     func backAction() -> Bool {
@@ -107,6 +142,7 @@ struct ScorecardDetailsView: View {
                     Separator()
                     
                     DatePickerInput(title: "Date", field: $scorecard.date, to: Date())
+                        .debugPrint(scorecard.date.toFullString())
                     
                 }
             }
@@ -149,10 +185,9 @@ struct ScorecardDetailsView: View {
                         }
                     }
                     
-                    StepperInput(title: "Boards", field: $scorecard.boardsTable, label: { value in "\(value) boards per round" }, minValue: $minValue) { (newValue) in
-                        scorecard.boards = max(scorecard.boards, newValue)
-                        scorecard.boards = max(newValue, ((scorecard.boards / newValue) * newValue))
-                    }
+                    StepperInputAdditional(title: "Boards", field: $scorecard.boardsTable, label: { value in "\(value) boards per round" }, minValue: $minValue, additionalBinding: $scorecard.boards, onChange: { (newValue) in
+                            setBoards(boardsTable: newValue)
+                        })
                     
                     StepperInput(title: "Tables", field: $scorecard.boards, label: boardsLabel, minValue: $scorecard.boardsTable, increment: $scorecard.boardsTable)
                     
@@ -178,6 +213,11 @@ struct ScorecardDetailsView: View {
         }
     }
     
+    func setBoards(boardsTable: Int) {
+        scorecard.boards = max(scorecard.boards, boardsTable)
+        scorecard.boards = max(boardsTable, ((scorecard.boards / boardsTable) * boardsTable))
+    }
+    
     func boardsTableLabel(boardsTable: Int) -> String {
         return "\(boardsTable) \(plural("board", boardsTable)) per table"
     }
@@ -191,3 +231,4 @@ struct ScorecardDetailsView: View {
         return (value <= 1 ? text : text + "s")
     }
 }
+

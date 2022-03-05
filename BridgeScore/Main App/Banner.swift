@@ -144,7 +144,7 @@ struct Banner: View {
             case .menu:
                 Banner_Menu(image: menuImage, title: menuTitle, options: options!, bannerColor: bannerColor)
             case .buttons:
-                Banner_Buttons(options: options!, bannerColor: bannerColor, buttonColor: buttonColor, backButtonColor: backButtonColor)
+                Banner_Buttons(options: options!, alternateStyle: alternateStyle, bannerColor: bannerColor, buttonColor: buttonColor, backButtonColor: backButtonColor)
             default:
                 EmptyView()
             }
@@ -176,6 +176,7 @@ struct Banner_Menu : View {
 
 struct Banner_Buttons : View {
     var options: [BannerOption]
+    var alternateStyle: Bool
     var bannerColor: PaletteColor
     var buttonColor: PaletteColor
     var backButtonColor: Color
@@ -217,7 +218,7 @@ struct Banner_Buttons : View {
                         }
                     }
                     .disabled(!option.isEnabled)
-                    .font(option.likeBack ? .largeTitle : .title)
+                    .font(alternateStyle ? .title3 : (option.likeBack ? .largeTitle : .title))
                     .background(backgroundColor)
                     .cornerRadius(option.likeBack ? 0 : 10.0)
                     if index != options.count - 1 {

@@ -39,7 +39,7 @@ struct ScorecardInputView: View {
     @State var redoPressed: Bool = false
     @State var canUndo: Bool = false
     @State var canRedo: Bool = false
-    @State var linkToDetails: Bool = false
+    @State var inputDetail: Bool = false
     @State var refreshTableTotals = false
     @State var deleted = false
     @State var detailView = false
@@ -53,14 +53,14 @@ struct ScorecardInputView: View {
     
                 // Banner
                 let bannerOptions = [
-                    BannerOption(image: AnyView(Image(systemName: "arrow.uturn.backward")), likeBack: true, isEnabled: $canUndo, action: { undoDrawing() }),
-                    BannerOption(image: AnyView(Image(systemName: "arrow.uturn.forward")), likeBack: true, isEnabled: $canRedo, action: { redoDrawing() }),
+                    BannerOption(image: AnyView(Image(systemName: "arrow.uturn.backward")), likeBack: true, isEnabled: $canUndo, action: { undoScorecard() }),
+                    BannerOption(image: AnyView(Image(systemName: "arrow.uturn.forward")), likeBack: true, isEnabled: $canRedo, action: { redoScorecard() }),
                     BannerOption(image: AnyView(Image(systemName: "\(detailView ? "minus" : "plus").magnifyingglass")), likeBack: true, action: { toggleView() }),
-                    BannerOption(image: AnyView(Image(systemName: "note.text")), likeBack: true, action: { linkToDetails = true })]
+                    BannerOption(image: AnyView(Image(systemName: "note.text")), likeBack: true, action: { inputDetail = true })]
                 
                 Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .buttons, options: bannerOptions)
                 GeometryReader { geometry in
-                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), undoPressed: $undoPressed, redoPressed: $redoPressed, canUndo: $canUndo, canRedo: $canRedo, refreshTableTotals: $refreshTableTotals, detailView: $detailView)
+                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), undoPressed: $undoPressed, redoPressed: $redoPressed, canUndo: $canUndo, canRedo: $canRedo, refreshTableTotals: $refreshTableTotals, detailView: $detailView, inputDetail: $inputDetail)
                     .ignoresSafeArea(edges: .all)
                 }
             }
@@ -68,7 +68,7 @@ struct ScorecardInputView: View {
             .onChange(of: redoPressed) { newValue in redoPressed = false }
             .onChange(of: refreshTableTotals) { newValue in refreshTableTotals = false }
         }
-        .sheet(isPresented: $linkToDetails, onDismiss: {
+        .sheet(isPresented: $inputDetail, onDismiss: {
             if deleted {
                 presentationMode.wrappedValue.dismiss()
             } else {
@@ -95,12 +95,12 @@ struct ScorecardInputView: View {
         return true
     }
     
-    func undoDrawing() {
+    func undoScorecard() {
         self.undoPressed = true
         self.canUndo = false
     }
     
-    func redoDrawing() {
+    func redoScorecard() {
         self.redoPressed = true
         self.canRedo = false
     }
@@ -124,16 +124,19 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
     @Binding var canRedo: Bool
     @Binding var refreshTableTotals: Bool
     @Binding var detailView: Bool
+    @Binding var inputDetail: Bool
 
     func makeUIView(context: Context) -> ScorecardInputUIView {
         
-        let view = ScorecardInputUIView(frame: frame, scorecard: scorecard)
+        let view = ScorecardInputUIView(frame: frame, scorecard: scorecard, inputDetail: inputDetail)
         view.delegate = context.coordinator
         
         return view
     }
 
     func updateUIView(_ uiView: ScorecardInputUIView, context: Context) {
+        
+        uiView.inputDetail = inputDetail
         
         if undoPressed {
             uiView.undo()
@@ -222,12 +225,14 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     private var bottomConstraint: NSLayoutConstraint!
     private var forceReload = true
     private var detailView = true
+    public var inputDetail: Bool
     
     var boardColumns: [ScorecardColumn] = []
     var tableColumns: [ScorecardColumn] = []
     
-    init(frame: CGRect, scorecard: ScorecardViewModel) {
+    init(frame: CGRect, scorecard: ScorecardViewModel, inputDetail: Bool) {
         self.scorecard = scorecard
+        self.inputDetail = inputDetail
         self.contractEntryView = ContractEntryView(frame: CGRect())
         self.scrollPickerPopupView = ScrollPickerPopupView(frame: CGRect())
 
@@ -577,7 +582,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     // MARK: - Utility Routines ======================================================================== -
     
     func keyboardMoved(_ keyboardHeight: CGFloat) {
-        if keyboardHeight != 0 || isKeyboardOffset {
+        if !inputDetail && (keyboardHeight != 0 || isKeyboardOffset) {
             let focusedTextInputBottom = (UIResponder.currentFirstResponder?.globalFrame?.maxY ?? 0)
             let adjustOffset = max(0, focusedTextInputBottom - keyboardHeight) + safeAreaInsets.bottom
             // UIView.animate(withDuration: 0.1) { [self] in

@@ -10,9 +10,8 @@ import SwiftUI
 import Combine
 
 struct StepperInput: View {
-    
     var title: String?
-    @Binding var field: Int
+    var field: Binding<Int>
     var label: ((Int)->String)?
     var minValue: Binding<Int>? = nil
     var maxValue: Binding<Int>? = nil
@@ -25,6 +24,31 @@ struct StepperInput: View {
     var labelWidth: CGFloat?
     var inlineTitle: Bool = true
     var inlineTitleWidth: CGFloat = 150
+    var onChange: ((Int)->())? = nil
+    
+    var body: some View {
+            StepperInputAdditional<Int>(title: title, field: field, label: label, minValue: minValue, maxValue: maxValue, increment: increment, message: message, topSpace: topSpace, leadingSpace: leadingSpace, height: height, width: width, labelWidth: labelWidth, inlineTitle: inlineTitle, inlineTitleWidth: inlineTitleWidth, setAdditional: { (_, _) in}, onChange: onChange)
+    }
+}
+
+struct StepperInputAdditional<Additional>: View where Additional: Equatable {
+    
+    var title: String?
+    var field: Binding<Int>
+    var label: ((Int)->String)?
+    var minValue: Binding<Int>? = nil
+    var maxValue: Binding<Int>? = nil
+    var increment: Binding<Int>? = nil
+    var message: Binding<String>?
+    var topSpace: CGFloat = 5
+    var leadingSpace: CGFloat = 0
+    var height: CGFloat = 45
+    var width: CGFloat?
+    var labelWidth: CGFloat?
+    var inlineTitle: Bool = true
+    var inlineTitleWidth: CGFloat = 150
+    var additionalBinding: Binding<Additional>? = nil
+    var setAdditional: ((Binding<Additional>?, Additional)->())? = nil
     var onChange: ((Int)->())? = nil
 
     @State private var refresh = false
@@ -55,19 +79,21 @@ struct StepperInput: View {
                         Spacer().frame(width: 12)
                     }
                     Spacer().frame(width: 8)
-                    Stepper {
-                        if let label = label {
-                            Text(label(field))
-                        } else {
-                            Text(String(field))
+                    UndoWrapperAdditional(field, additionalBinding: additionalBinding, setAdditional: setAdditional) { (field) in
+                        Stepper {
+                            if let label = label {
+                                Text(label(field.wrappedValue))
+                            } else {
+                                Text(String(field.wrappedValue))
+                            }
+                        } onIncrement: {
+                            change(field, direction: +1)
+                        } onDecrement: {
+                            change(field, direction: -1)
                         }
-                    } onIncrement: {
-                        change(direction: 1)
-                    } onDecrement: {
-                        change(direction: -1)
-                    }
-                    .if(labelWidth != nil) { (view) in
-                        view.frame(width: labelWidth! + 100)
+                        .if(labelWidth != nil) { (view) in
+                            view.frame(width: labelWidth! + 100)
+                        }
                     }
                     Spacer().frame(width: 8)
                 }
@@ -79,17 +105,17 @@ struct StepperInput: View {
         }
         .frame(height: self.height + self.topSpace + (title == nil || inlineTitle ? 0 : 30))
         .onAppear {
-            self.change()
+            self.change(field)
         }
     }
     
-    func change(direction: Int = 0) {
+    func change(_ field: Binding<Int>, direction: Int = 0) {
         let increment = (self.increment?.wrappedValue ?? 1) * direction
         let minValue = self.minValue?.wrappedValue ?? 0
         let maxValue = self.maxValue?.wrappedValue ?? Int.max
         
-        field = max(min(field + increment, maxValue), minValue)
-        onChange?(field)
+        field.wrappedValue = max(min(field.wrappedValue + increment, maxValue), minValue)
+        onChange?(field.wrappedValue)
         refresh.toggle()
     }
 }
