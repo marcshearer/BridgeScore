@@ -42,15 +42,7 @@ struct ScorecardDetailView: View {
                     }
                 }
             }
-            .onReceive(undoManagerObserver) { _ in
-                canUndo = MyApp.undoManager.canUndo
-                canRedo = MyApp.undoManager.canRedo
-            }
-            .onReceive(undoObserver) { _ in
-                canUndo = MyApp.undoManager.canUndo
-                canRedo = MyApp.undoManager.canRedo
-            }
-            .onReceive(redoObserver) { _ in
+            .onReceive(UndoNotification.shared.undoRegistered) {
                 canUndo = MyApp.undoManager.canUndo
                 canRedo = MyApp.undoManager.canRedo
             }

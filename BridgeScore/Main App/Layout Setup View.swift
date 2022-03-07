@@ -18,8 +18,8 @@ struct LayoutSetupView: View {
         StandardView("Layout") {
             VStack(spacing: 0) {
                 let bannerOptions = [
-                    BannerOption(image: AnyView(Image(systemName: "arrow.uturn.backward").font(.title)), likeBack: true, isEnabled: $canUndo, action: { undoPressed() }),
-                    BannerOption(image: AnyView(Image(systemName: "arrow.uturn.forward").font(.title)), likeBack: true, isEnabled: $canRedo, action: { redoPressed() })]
+                    BannerOption(image: AnyView(Image(systemName: "arrow.uturn.backward").font(.title)), likeBack: true, isEnabled: $canUndo, action: { UndoManager.undoPressed() }),
+                    BannerOption(image: AnyView(Image(systemName: "arrow.uturn.forward").font(.title)), likeBack: true, isEnabled: $canRedo, action: { UndoManager.redoPressed() })]
                 Banner(title: $title, bottomSpace: false, back: true, backEnabled: { return selected.canSave }, optionMode: .buttons, options: bannerOptions)
                 DoubleColumnView(leftWidth: 350) {
                     LayoutSelectionView(selected: selected, changeSelected: changeSelection, removeSelected: removeSelection, addLayout: addLayout)
@@ -27,10 +27,7 @@ struct LayoutSetupView: View {
                     LayoutDetailView(selected: selected)
                 }
             }
-            .onReceive(UndoNotification.shared.undoRegistered) {
-                canUndo = MyApp.undoManager.canUndo
-                canRedo = MyApp.undoManager.canRedo
-            }
+            .undoManager(canUndo: $canUndo, canRedo: $canRedo)
         }
         .keyboardAdaptive
         .onAppear {
@@ -40,22 +37,6 @@ struct LayoutSetupView: View {
             save(layout: selected)
         }
     }
-    
-    func undoPressed() {
-        if MyApp.undoManager.canUndo {
-            MyApp.undoManager.undo()
-        }
-        canRedo = true
-    }
-    
-    func redoPressed() {
-        if MyApp.undoManager.canRedo  {
-            MyApp.undoManager.redo()
-        }
-        canUndo = true
-    }
-    
- 
     
     func changeSelection(newLayout: LayoutViewModel) {
         save(layout: selected)

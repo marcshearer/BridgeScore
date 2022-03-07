@@ -94,6 +94,20 @@ class UndoHandler<Value, Additional>: ObservableObject where Value: Equatable, A
     }
 }
 
+extension UndoManager {
+    class func undoPressed() {
+        if MyApp.undoManager.canUndo {
+            MyApp.undoManager.undo()
+        }
+    }
+    
+    class func redoPressed() {
+        if MyApp.undoManager.canRedo  {
+            MyApp.undoManager.redo()
+        }
+    }
+}
+
 class UndoNotification {
     public static var shared = UndoNotification()
     
@@ -103,5 +117,22 @@ class UndoNotification {
         Utility.executeAfter(delay: 0.1) {
             UndoNotification.shared.undoRegistered.send()
         }
+    }
+}
+
+struct UndoManagerModifier : ViewModifier {
+    @Binding var canUndo: Bool
+    @Binding var canRedo: Bool
+    func body(content: Content) -> some View {
+        content.onReceive(UndoNotification.shared.undoRegistered) {
+            canUndo = MyApp.undoManager.canUndo
+            canRedo = MyApp.undoManager.canRedo
+        }
+    }
+}
+
+extension View {
+    func undoManager(canUndo: Binding<Bool>, canRedo: Binding<Bool>) -> some View {
+        self.modifier(UndoManagerModifier(canUndo: canUndo, canRedo: canRedo))
     }
 }
