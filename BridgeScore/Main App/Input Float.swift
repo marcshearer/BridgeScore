@@ -20,7 +20,7 @@ struct InputFloat : View {
     var inlineTitleWidth: CGFloat = 150
     var onChange: ((Float?)->())?
     
-    @State private var keyboardType: UIKeyboardType = .numberPad
+    @State private var keyboardType: UIKeyboardType = .numbersAndPunctuation
     @State private var refresh = false
     @State private var wrappedText = ""
     var text: Binding<String> {
@@ -100,6 +100,12 @@ struct InputFloat : View {
                 }
             }
             .font(inputFont)
+            .onChange(of: field) { (field) in
+                let newValue = (field == nil ? "" : field!.toString(places: places))
+                if newValue != wrappedText {
+                    wrappedText = newValue
+                }
+            }
             .onAppear {
                 text.wrappedValue = (field == nil ? "" : field!.toString(places: places))
             }
