@@ -225,14 +225,19 @@ class Scorecard {
         }
     }
     
-    static public func updateScores(scorecard: ScorecardViewModel) {
+    @discardableResult static public func updateScores(scorecard: ScorecardViewModel) -> Bool {
+        var changed = false
         
         for tableNumber in 1...scorecard.tables {
             if Scorecard.updateTableScore(scorecard: scorecard, tableNumber: tableNumber) {
+                changed = true
                 Scorecard.current.tables[tableNumber]?.save()
             }
         }
-        Scorecard.updateTotalScore(scorecard: scorecard)
+        if Scorecard.updateTotalScore(scorecard: scorecard) {
+            changed = true
+        }
+        return changed
     }
     
     @discardableResult static func updateTableScore(scorecard: ScorecardViewModel, tableNumber: Int) -> Bool {
