@@ -165,6 +165,7 @@ class MyApp {
     static let expectedDatabase: Database = .production
     
     public static var database: Database = .unknown
+    public static var undoManager = UndoManager()
     
     #if targetEnvironment(macCatalyst)
     public static let target: Target = .macOS

@@ -31,7 +31,6 @@ enum RowType: Int {
 }
 
 struct ScorecardInputView: View {
-    @Environment(\.undoManager) private var undoManager
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
 
     @ObservedObject var scorecard: ScorecardViewModel

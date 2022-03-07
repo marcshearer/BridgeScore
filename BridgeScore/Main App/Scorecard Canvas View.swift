@@ -45,7 +45,6 @@ struct CanvasColumn: Codable {
 }
 
 struct ScorecardCanvasView: View {
-    @Environment(\.undoManager) private var undoManager
 
     @ObservedObject var scorecard: ScorecardViewModel
     @State var refresh = false
@@ -88,7 +87,7 @@ struct ScorecardCanvasView: View {
     }
     
     func undoDrawing() {
-        undoManager?.undo()
+        MyApp.undoManager.undo()
     }
     
     func decodeDrawing() {

@@ -9,7 +9,6 @@ import SwiftUI
 
 struct ScorecardDetailView: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
-    @Environment(\.undoManager) var undoManager
 
     @ObservedObject var scorecard: ScorecardViewModel
     @Binding var deleted: Bool
@@ -44,32 +43,31 @@ struct ScorecardDetailView: View {
                 }
             }
             .onReceive(undoManagerObserver) { _ in
-                print("change \(undoManager!.canUndo)")
-                canUndo = self.undoManager?.canUndo ?? false
-                canRedo = self.undoManager?.canRedo ?? false
+                canUndo = MyApp.undoManager.canUndo
+                canRedo = MyApp.undoManager.canRedo
             }
             .onReceive(undoObserver) { _ in
-                canUndo = self.undoManager?.canUndo ?? false
-                canRedo = self.undoManager?.canRedo ?? false
+                canUndo = MyApp.undoManager.canUndo
+                canRedo = MyApp.undoManager.canRedo
             }
             .onReceive(redoObserver) { _ in
-                canUndo = self.undoManager?.canUndo ?? false
-                canRedo = self.undoManager?.canRedo ?? false
+                canUndo = MyApp.undoManager.canUndo
+                canRedo = MyApp.undoManager.canRedo
             }
         }
         .interactiveDismissDisabled()
     }
     
     func undoPressed() {
-        if undoManager?.canUndo ?? false {
-            undoManager?.undo()
+        if MyApp.undoManager.canUndo  {
+            MyApp.undoManager.undo()
         }
         canRedo = true
     }
     
     func redoPressed() {
-        if undoManager?.canRedo ?? false {
-            undoManager?.redo()
+        if MyApp.undoManager.canRedo {
+            MyApp.undoManager.redo()
         }
         canUndo = true
     }

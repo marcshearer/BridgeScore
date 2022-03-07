@@ -5,21 +5,31 @@
 //  Created by Marc Shearer on 04/02/2022.
 //
 
+import Foundation
 import SwiftUI
 
 struct LayoutSetupView: View {
     @StateObject var selected = LayoutViewModel()
     @State private var title = "Standard Layouts"
-        
+    @State private var canUndo = false
+    @State private var canRedo = false
+    
     var body: some View {
         StandardView("Layout") {
             VStack(spacing: 0) {
-                Banner(title: $title, bottomSpace: false, back: true, backEnabled: { return selected.canSave })
+                let bannerOptions = [
+                    BannerOption(image: AnyView(Image(systemName: "arrow.uturn.backward").font(.title)), likeBack: true, isEnabled: $canUndo, action: { undoPressed() }),
+                    BannerOption(image: AnyView(Image(systemName: "arrow.uturn.forward").font(.title)), likeBack: true, isEnabled: $canRedo, action: { redoPressed() })]
+                Banner(title: $title, bottomSpace: false, back: true, backEnabled: { return selected.canSave }, optionMode: .buttons, options: bannerOptions)
                 DoubleColumnView(leftWidth: 350) {
                     LayoutSelectionView(selected: selected, changeSelected: changeSelection, removeSelected: removeSelection, addLayout: addLayout)
                 } rightView: {
                     LayoutDetailView(selected: selected)
                 }
+            }
+            .onReceive(UndoNotification.shared.undoRegistered) {
+                canUndo = MyApp.undoManager.canUndo
+                canRedo = MyApp.undoManager.canRedo
             }
         }
         .keyboardAdaptive
@@ -30,6 +40,22 @@ struct LayoutSetupView: View {
             save(layout: selected)
         }
     }
+    
+    func undoPressed() {
+        if MyApp.undoManager.canUndo {
+            MyApp.undoManager.undo()
+        }
+        canRedo = true
+    }
+    
+    func redoPressed() {
+        if MyApp.undoManager.canRedo  {
+            MyApp.undoManager.redo()
+        }
+        canUndo = true
+    }
+    
+ 
     
     func changeSelection(newLayout: LayoutViewModel) {
         save(layout: selected)
@@ -75,6 +101,7 @@ struct LayoutSetupView: View {
 
 struct LayoutSelectionView : View {
     @ObservedObject var selected: LayoutViewModel
+    
     @State var changeSelected: (LayoutViewModel)->()
     @State var removeSelected: (LayoutViewModel)->()
     @State var addLayout: ()->()
@@ -125,7 +152,6 @@ struct LayoutSelectionView : View {
 
 struct LayoutDetailView : View {
     @ObservedObject var selected: LayoutViewModel
-    
     @State var minValue = 1
     
     var locations = MasterData.shared.locations
@@ -136,7 +162,7 @@ struct LayoutDetailView : View {
     
     @State private var resetBoardNumberIndex: Int = 0
     
-    @State private var players = MasterData.shared.players
+    let players = MasterData.shared.players
     @State private var playerIndex: Int = 0
     
     var body: some View {
