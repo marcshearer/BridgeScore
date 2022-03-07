@@ -585,24 +585,22 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         if !inputDetail && (keyboardHeight != 0 || isKeyboardOffset) {
             let focusedTextInputBottom = (UIResponder.currentFirstResponder?.globalFrame?.maxY ?? 0)
             let adjustOffset = max(0, focusedTextInputBottom - keyboardHeight) + safeAreaInsets.bottom
-            // UIView.animate(withDuration: 0.1) { [self] in
-                let current = self.mainTableView.contentOffset
-                if isKeyboardOffset && keyboardHeight == 0 {
-                    self.bottomConstraint.constant = 0
-                    self.mainTableView.setContentOffset(CGPoint(x: 0, y: self.lastKeyboardScrollOffset), animated: false)
-                    self.lastKeyboardScrollOffset = 0
-                    self.isKeyboardOffset = false
-                } else if adjustOffset != 0 && !isKeyboardOffset {
-                    let newOffset = current.y + adjustOffset
-                    let maxOffset = self.mainTableView.contentSize.height - mainTableView.frame.height
-                    let scrollOffset = min(newOffset, maxOffset)
-                    let bottomOffset = newOffset - scrollOffset
-                    self.lastKeyboardScrollOffset = self.mainTableView.contentOffset.y
-                    self.bottomConstraint.constant = -bottomOffset
-                    self.mainTableView.setContentOffset(current.offsetBy(dy: adjustOffset), animated: false)
-                    self.isKeyboardOffset = true
-                }
-            // }
+            let current = self.mainTableView.contentOffset
+            if isKeyboardOffset && keyboardHeight == 0 {
+                self.bottomConstraint.constant = 0
+                self.mainTableView.setContentOffset(CGPoint(x: 0, y: self.lastKeyboardScrollOffset), animated: false)
+                self.lastKeyboardScrollOffset = 0
+                self.isKeyboardOffset = false
+            } else if adjustOffset != 0 && !isKeyboardOffset {
+                let newOffset = current.y + adjustOffset
+                let maxOffset = self.mainTableView.contentSize.height - mainTableView.frame.height
+                let scrollOffset = min(newOffset, maxOffset)
+                let bottomOffset = newOffset - scrollOffset
+                self.lastKeyboardScrollOffset = self.mainTableView.contentOffset.y
+                self.bottomConstraint.constant = -bottomOffset
+                self.mainTableView.setContentOffset(current.offsetBy(dy: adjustOffset), animated: false)
+                self.isKeyboardOffset = true
+            }
         }
     }
     
@@ -638,6 +636,17 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
             remainingWidth -= columns[index].width!
         }
         columns[columns.count - 1].width = remainingWidth
+    }
+    
+    public static func numericValue(_ text: String) -> Float? {
+        let numericText = text.uppercased()
+                              .replacingOccurrences(of: "O", with: "0")
+                              .replacingOccurrences(of: "I", with: "1")
+                              .replacingOccurrences(of: "L", with: "1")
+                              .replacingOccurrences(of: "Z", with: "2")
+                              .replacingOccurrences(of: "S", with: "5")
+                              .replacingOccurrences(of: "_", with: "-")
+        return Float(numericText)
     }
 }
 
@@ -853,6 +862,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         textField.clearsOnBeginEditing = false
         textField.clearButtonMode = .never
         textField.font = cellFont
+        textField.keyboardType = .default
     }
     
     func setTitle(column: ScorecardColumn, scorecard: ScorecardViewModel) {
@@ -912,7 +922,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             madePicker.set(board.made == nil ? nil : board.made! - minValue, list: list, defaultEntry: ScrollPickerEntry(caption: "Unknown"), defaultValue: min(list.count - 1, makingValue), isEnabled: isEnabled, color: color, titleFont: pickerTitleFont)
         case .score:
             textField.isHidden = false
-            textField.keyboardType = .numberPad
+            textField.keyboardType = .numbersAndPunctuation
             textField.clearsOnBeginEditing = true
             textField.text = board.score == nil ? "" : "\(board.score!.toString(places: scorecard.type.boardPlaces))"
         case .points:
@@ -996,7 +1006,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
                     }
                     switch column.type {
                     case .score:
-                        board.score = numericValue(text)
+                        board.score = ScorecardInputUIView.numericValue(text)
                     case .comment:
                         board.comment = text
                         textClear.isHidden = (text == "")
@@ -1013,7 +1023,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         let text = textField.text ?? ""
         switch column.type {
         case .score:
-            let score = numericValue(text)
+            let score = ScorecardInputUIView.numericValue(text)
             let newText = (score == nil ? "" : "\(score!.toString(places: scorecard.type.boardPlaces))")
             if newText != textField.text {
                 textField.text = newText
@@ -1023,17 +1033,6 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         default:
             break
         }
-    }
-    
-    private func numericValue(_ text: String) -> Float? {
-        let numericText = text.uppercased()
-                              .replacingOccurrences(of: "O", with: "0")
-                              .replacingOccurrences(of: "I", with: "1")
-                              .replacingOccurrences(of: "L", with: "1")
-                              .replacingOccurrences(of: "Z", with: "2")
-                              .replacingOccurrences(of: "S", with: "5")
-                              .replacingOccurrences(of: "_", with: "-")
-        return Float(numericText)
     }
     
     internal func textFieldDidBeginEditing(_ textField: UITextField) {
@@ -1366,6 +1365,7 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         label.backgroundColor = UIColor(Palette.gridTable.background)
         label.textAlignment = .center
         textField.textAlignment = .center
+        textField.keyboardType = .default
         captionHeight.constant = 0
     }
     
@@ -1387,6 +1387,7 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         case .tableScore:
             if scorecard.type.tableAggregate == .manual {
                 textField.isHidden = false
+                textField.keyboardType = .numbersAndPunctuation
                 textField.clearsOnBeginEditing = true
                 textField.text = table.score == nil ? "" : "\(table.score!.toString(places: scorecard.type.tablePlaces))"
             } else {
@@ -1436,7 +1437,7 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
                     }
                     switch column.type {
                     case .tableScore:
-                        table.score = Float(text) ?? 0
+                        table.score = ScorecardInputUIView.numericValue(text)
                     case .versus:
                         table.versus = text
                         textClear.isHidden = table.versus == ""
@@ -1453,7 +1454,7 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         let text = textField.text ?? ""
         switch column.type {
         case .tableScore:
-            let score = Float(text)
+            let score = ScorecardInputUIView.numericValue(text)
             let newText = (score == nil ? "" : "\(score!.toString(places: scorecard.type.tablePlaces))")
             if newText != textField.text {
                 textField.text = newText
