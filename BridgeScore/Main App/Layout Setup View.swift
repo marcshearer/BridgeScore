@@ -17,10 +17,8 @@ struct LayoutSetupView: View {
     var body: some View {
         StandardView("Layout") {
             VStack(spacing: 0) {
-                let bannerOptions = [
-                    BannerOption(image: AnyView(Image(systemName: "arrow.uturn.backward").font(.title)), likeBack: true, isEnabled: $canUndo, action: { UndoManager.undoPressed() }),
-                    BannerOption(image: AnyView(Image(systemName: "arrow.uturn.forward").font(.title)), likeBack: true, isEnabled: $canRedo, action: { UndoManager.redoPressed() })]
-                Banner(title: $title, bottomSpace: false, back: true, backEnabled: { return selected.canSave }, optionMode: .buttons, options: bannerOptions)
+                
+                Banner(title: $title, bottomSpace: false, back: true, backEnabled: { return selected.canSave }, optionMode: .buttons, options: UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo))
                 DoubleColumnView(leftWidth: 350) {
                     LayoutSelectionView(selected: selected, changeSelected: changeSelection, removeSelected: removeSelection, addLayout: addLayout)
                 } rightView: {
@@ -41,6 +39,7 @@ struct LayoutSetupView: View {
     func changeSelection(newLayout: LayoutViewModel) {
         save(layout: selected)
         selected.copy(from: newLayout)
+        UndoManager.clearActions()
     }
     
     func removeSelection(removeLayout: LayoutViewModel) {

@@ -23,10 +23,7 @@ struct ScorecardDetailView: View {
         StandardView("Detail") {
             VStack(spacing: 0) {
                 
-                let bannerOptions = [
-                    BannerOption(image: AnyView(Image(systemName: "arrow.uturn.backward")), likeBack: true, isEnabled: $canUndo, action: { undoPressed() }),
-                    BannerOption(image: AnyView(Image(systemName: "arrow.uturn.forward")), likeBack: true, isEnabled: $canRedo, action: { redoPressed() })]
-                Banner(title: $title, alternateStyle: true, back: true, backText: "Done", backAction: backAction, optionMode: .buttons, options: bannerOptions)
+                Banner(title: $title, alternateStyle: true, back: true, backText: "Done", backAction: backAction, optionMode: .buttons, options: UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo))
                 
                 ScrollView(showsIndicators: false) {
                     
@@ -34,6 +31,7 @@ struct ScorecardDetailView: View {
                 }
                 .background(Palette.alternate.background)
             }
+            .undoManager(canUndo: $canUndo, canRedo: $canRedo)
             .keyboardAdaptive
             .onSwipe { (direction) in
                 if direction != .left {
@@ -42,26 +40,8 @@ struct ScorecardDetailView: View {
                     }
                 }
             }
-            .onReceive(UndoNotification.shared.undoRegistered) {
-                canUndo = MyApp.undoManager.canUndo
-                canRedo = MyApp.undoManager.canRedo
-            }
         }
         .interactiveDismissDisabled()
-    }
-    
-    func undoPressed() {
-        if MyApp.undoManager.canUndo  {
-            MyApp.undoManager.undo()
-        }
-        canRedo = true
-    }
-    
-    func redoPressed() {
-        if MyApp.undoManager.canRedo {
-            MyApp.undoManager.redo()
-        }
-        canUndo = true
     }
     
     func backAction() -> Bool {

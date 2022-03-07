@@ -10,17 +10,20 @@ import SwiftUI
 struct PlayerSetupView: View {
     @State private var title = "Players"
     @StateObject var selected = PlayerViewModel()
-    
+    @State private var canUndo = false
+    @State private var canRedo = false
+
     var body: some View {
         StandardView("Player") {
             VStack(spacing: 0) {
-                Banner(title: $title, bottomSpace: false, back: true, backEnabled: { return selected.canSave })
+                Banner(title: $title, bottomSpace: false, back: true, backEnabled: { return selected.canSave }, optionMode: .buttons, options: UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo))
                 DoubleColumnView {
                     PlayerSelectionView(selected: selected, changeSelected: changeSelection, removeSelected: removeSelection, addPlayer: addPlayer)
                 } rightView: {
                     PlayerDetailView(selected: selected)
                 }
             }
+            .undoManager(canUndo: $canUndo, canRedo: $canRedo)
         }
         .onAppear {
             selected.copy(from: MasterData.shared.players.first!)
@@ -33,6 +36,7 @@ struct PlayerSetupView: View {
     func changeSelection(newPlayer: PlayerViewModel) {
         save(player: selected)
         selected.copy(from: newPlayer)
+        UndoManager.clearActions()
     }
     
     func removeSelection(removePlayer: PlayerViewModel) {

@@ -10,17 +10,20 @@ import SwiftUI
 struct LocationSetupView: View {
     @State private var title = "Locations"
     @StateObject var selected = LocationViewModel()
-    
+    @State private var canUndo = false
+    @State private var canRedo = false
+
     var body: some View {
         StandardView("Location") {
             VStack(spacing: 0) {
-                Banner(title: $title, bottomSpace: false, back: true, backEnabled: { return selected.canSave })
+                Banner(title: $title, bottomSpace: false, back: true, backEnabled: { return selected.canSave }, optionMode: .buttons, options: UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo))
                 DoubleColumnView {
                     LocationSelectionView(selected: selected, changeSelected: changeSelection, removeSelected: removeSelection, addLocation: addLocation)
                 } rightView: {
                     LocationDetailView(selected: selected)
                 }
             }
+            .undoManager(canUndo: $canUndo, canRedo: $canRedo)
         }
         .onAppear {
             selected.copy(from: MasterData.shared.locations.first!)
@@ -33,6 +36,7 @@ struct LocationSetupView: View {
     func changeSelection(newLocation: LocationViewModel) {
         save(location: selected)
         selected.copy(from: newLocation)
+        UndoManager.clearActions()
     }
     
     func removeSelection(removeLocation: LocationViewModel) {

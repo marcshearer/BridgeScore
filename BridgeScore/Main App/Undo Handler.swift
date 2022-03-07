@@ -106,16 +106,27 @@ extension UndoManager {
             MyApp.undoManager.redo()
         }
     }
+    
+    class func undoBannerOptions(canUndo: Binding<Bool>, canRedo: Binding<Bool>) -> [BannerOption] {
+        return [
+            BannerOption(image: AnyView(Image(systemName: "arrow.uturn.backward").font(.title)), likeBack: true, isEnabled: canUndo, action: { UndoManager.undoPressed() }),
+            BannerOption(image: AnyView(Image(systemName: "arrow.uturn.forward").font(.title)), likeBack: true, isEnabled: canRedo, action: { UndoManager.redoPressed() })]
+    }
+    
+    class func clearActions() {
+        MyApp.undoManager.removeAllActions()
+        UndoNotification.shared.publish()
+    }
 }
 
 class UndoNotification {
     public static var shared = UndoNotification()
     
-    public var undoRegistered = PassthroughSubject<(), Never>()
+    public var undoChanged = PassthroughSubject<(), Never>()
     
     func publish() {
         Utility.executeAfter(delay: 0.1) {
-            UndoNotification.shared.undoRegistered.send()
+            UndoNotification.shared.undoChanged.send()
         }
     }
 }
@@ -124,7 +135,7 @@ struct UndoManagerModifier : ViewModifier {
     @Binding var canUndo: Bool
     @Binding var canRedo: Bool
     func body(content: Content) -> some View {
-        content.onReceive(UndoNotification.shared.undoRegistered) {
+        content.onReceive(UndoNotification.shared.undoChanged) {
             canUndo = MyApp.undoManager.canUndo
             canRedo = MyApp.undoManager.canRedo
         }
