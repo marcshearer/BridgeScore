@@ -44,6 +44,7 @@ struct ScorecardDetailView: View {
                 }
             }
             .onReceive(undoManagerObserver) { _ in
+                print("change \(undoManager!.canUndo)")
                 canUndo = self.undoManager?.canUndo ?? false
                 canRedo = self.undoManager?.canRedo ?? false
             }
@@ -119,7 +120,7 @@ struct ScorecardDetailsView: View {
     var body: some View {
         
         VStack(spacing: 0) {
-            
+                    
             InsetView(title: "Main Details") {
                 VStack(spacing: 0) {
                     
@@ -142,8 +143,6 @@ struct ScorecardDetailsView: View {
                     Separator()
                     
                     DatePickerInput(title: "Date", field: $scorecard.date, to: Date())
-                        .debugPrint(scorecard.date.toFullString())
-                    
                 }
             }
                  
@@ -177,13 +176,13 @@ struct ScorecardDetailsView: View {
             InsetView(title: "Options") {
                 VStack(spacing: 0) {
                     
-                    PickerInput(title: "Scoring", field: $typeIndex, values: {types.map{$0.string}})
+                    PickerInputAdditional(title: "Scoring", field: $typeIndex, values: {types.map{$0.string}}, additionalBinding: $scorecard.score, onChange:
                     { (index) in
                         if scorecard.type != types[index] {
                             scorecard.type = types[index]
                             Scorecard.updateScores(scorecard: scorecard)
                         }
-                    }
+                    })
                     
                     StepperInputAdditional(title: "Boards", field: $scorecard.boardsTable, label: { value in "\(value) boards per round" }, minValue: $minValue, additionalBinding: $scorecard.boards, onChange: { (newValue) in
                             setBoards(boardsTable: newValue)
