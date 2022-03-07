@@ -20,16 +20,12 @@ Enhancements
 Share scorecards via iCloud?
 Stats?
 
-If undo repeatedly too quickly crashes
-Other inputs (stepper etc) given Undo wrappers
 Add undo buttons in layout setup etc
 Date picker doesn't disappear if already selected date click
-Total score not updated immediately if change method
-Dependent steppers for boards / tables don't undo correctly
-    You could argue the same about score and the method being undone to manual
 Change position to diamond with self at bottom in contract view
 Split out passout from other bids and immediately close if selected
 Change colour of buttons on contract view
 Make bid buttons bigger on contract view
 Allow entry of contract in any sequence
 Change colours on front screen
+Capitalization of comments and versus esp first character

@@ -8,6 +8,30 @@
 import SwiftUI
 
 struct PickerInput : View {
+    var title: String? = nil
+    var field: Binding<Int>
+    var values: ()->[String]
+    var popupTitle: String? = nil
+    var placeholder: String = ""
+    var topSpace: CGFloat = 0
+    var leadingSpace: CGFloat = 0
+    var width: CGFloat?
+    var height: CGFloat = 45
+    var maxLabelWidth: CGFloat = 200
+    var centered: Bool = false
+    var color: PaletteColor = Palette.clear
+    var cornerRadius: CGFloat = 0
+    var animation: ViewAnimation = .slideLeft
+    var inlineTitle: Bool = true
+    var inlineTitleWidth: CGFloat = 150
+    var onChange: ((Int)->())?
+    
+    var body: some View {
+        PickerInputAdditional<Int>(title: title, field: field, values: values, popupTitle: popupTitle, placeholder: placeholder, topSpace: topSpace, leadingSpace: leadingSpace, width: width, height: height, maxLabelWidth: maxLabelWidth, centered: centered, color: color, cornerRadius: cornerRadius, animation: animation, inlineTitle: inlineTitle, inlineTitleWidth: inlineTitleWidth, setAdditional: { (_, _) in}, onChange: onChange)
+    }
+}
+
+struct PickerInputAdditional<Additional>: View where Additional: Equatable  {
     
     var title: String? = nil
     var field: Binding<Int>
@@ -25,6 +49,8 @@ struct PickerInput : View {
     var animation: ViewAnimation = .slideLeft
     var inlineTitle: Bool = true
     var inlineTitleWidth: CGFloat = 150
+    var additionalBinding: Binding<Additional>? = nil
+    var setAdditional: ((Binding<Additional>?, Additional)->())? = nil
     var onChange: ((Int)->())?
         
     var body: some View {
@@ -52,7 +78,7 @@ struct PickerInput : View {
                 
                 GeometryReader { (geometry) in
                     HStack {
-                        UndoWrapper(field) { (field) in
+                        UndoWrapperAdditional(field, additionalBinding: additionalBinding, setAdditional: setAdditional) { (field) in
                             let top = geometry.frame(in: .global).minY - (slideInMenuRowHeight * 1.4)
                             let left = geometry.frame(in: .global).maxX + 30
                             
