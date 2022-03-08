@@ -117,6 +117,12 @@ extension UndoManager {
         MyApp.undoManager.removeAllActions()
         UndoNotification.shared.publish()
     }
+    
+    // For use in UIKit
+    static public func registerUndo<TargetType>(withTarget target: TargetType, handler: @escaping (TargetType) -> Void) where TargetType : AnyObject {
+        MyApp.undoManager.registerUndo(withTarget: target, handler: handler)
+        UndoNotification.shared.publish()
+    }
 }
 
 class UndoNotification {

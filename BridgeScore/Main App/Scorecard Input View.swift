@@ -34,14 +34,12 @@ struct ScorecardInputView: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
 
     @ObservedObject var scorecard: ScorecardViewModel
-    @State var undoPressed: Bool = false
-    @State var redoPressed: Bool = false
-    @State var canUndo: Bool = false
-    @State var canRedo: Bool = false
-    @State var inputDetail: Bool = false
-    @State var refreshTableTotals = false
-    @State var deleted = false
-    @State var detailView = false
+    @State private var canUndo: Bool = false
+    @State private var canRedo: Bool = false
+    @State private var inputDetail: Bool = false
+    @State private var refreshTableTotals = false
+    @State private var deleted = false
+    @State private var detailView = false
     
     var body: some View {
         StandardView("Input", slideIn: false) {
@@ -51,21 +49,17 @@ struct ScorecardInputView: View {
                 if refreshTableTotals { EmptyView() }
     
                 // Banner
-                let bannerOptions = [
-                    BannerOption(image: AnyView(Image(systemName: "arrow.uturn.backward")), likeBack: true, isEnabled: $canUndo, action: { undoScorecard() }),
-                    BannerOption(image: AnyView(Image(systemName: "arrow.uturn.forward")), likeBack: true, isEnabled: $canRedo, action: { redoScorecard() }),
+                let bannerOptions = UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo) + [
                     BannerOption(image: AnyView(Image(systemName: "\(detailView ? "minus" : "plus").magnifyingglass")), likeBack: true, action: { toggleView() }),
                     BannerOption(image: AnyView(Image(systemName: "note.text")), likeBack: true, action: { inputDetail = true })]
                 
                 Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .buttons, options: bannerOptions)
                 GeometryReader { geometry in
-                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), undoPressed: $undoPressed, redoPressed: $redoPressed, canUndo: $canUndo, canRedo: $canRedo, refreshTableTotals: $refreshTableTotals, detailView: $detailView, inputDetail: $inputDetail)
+                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), refreshTableTotals: $refreshTableTotals, detailView: $detailView, inputDetail: $inputDetail)
                     .ignoresSafeArea(edges: .all)
                 }
             }
-            .onChange(of: undoPressed) { newValue in undoPressed = false }
-            .onChange(of: redoPressed) { newValue in redoPressed = false }
-            .onChange(of: refreshTableTotals) { newValue in refreshTableTotals = false }
+            .undoManager(canUndo: $canUndo, canRedo: $canRedo)
         }
         .sheet(isPresented: $inputDetail, onDismiss: {
             if deleted {
@@ -94,33 +88,14 @@ struct ScorecardInputView: View {
         return true
     }
     
-    func undoScorecard() {
-        self.undoPressed = true
-        self.canUndo = false
-    }
-    
-    func redoScorecard() {
-        self.redoPressed = true
-        self.canRedo = false
-    }
-    
     func toggleView() {
         detailView.toggle()
     }
 }
 
-protocol ScorecardInputUIViewDelegate {
-    func undo(isAvailable: Bool)
-    func redo(isAvailable: Bool)
-}
-
 struct ScorecardInputUIViewWrapper: UIViewRepresentable {
     @ObservedObject var  scorecard: ScorecardViewModel
     @State var frame: CGRect
-    @Binding var undoPressed: Bool
-    @Binding var redoPressed: Bool
-    @Binding var canUndo: Bool
-    @Binding var canRedo: Bool
     @Binding var refreshTableTotals: Bool
     @Binding var detailView: Bool
     @Binding var inputDetail: Bool
@@ -128,22 +103,13 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
     func makeUIView(context: Context) -> ScorecardInputUIView {
         
         let view = ScorecardInputUIView(frame: frame, scorecard: scorecard, inputDetail: inputDetail)
-        view.delegate = context.coordinator
-        
+       
         return view
     }
 
     func updateUIView(_ uiView: ScorecardInputUIView, context: Context) {
         
         uiView.inputDetail = inputDetail
-        
-        if undoPressed {
-            uiView.undo()
-        }
-        
-        if redoPressed {
-            uiView.redo()
-        }
         
         if refreshTableTotals {
             uiView.refreshTableTotals()
@@ -153,37 +119,17 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
     }
     
     func makeCoordinator() -> Coordinator {
-        Coordinator($undoPressed, $redoPressed, $canUndo, $canRedo, $refreshTableTotals, $detailView)
+        Coordinator($refreshTableTotals, $detailView)
     }
     
-    class Coordinator: NSObject, ScorecardInputUIViewDelegate {
+    class Coordinator: NSObject {
         
-        @Binding var undoPressed: Bool
-        @Binding var redoPressed: Bool
-        @Binding var canUndo: Bool
-        @Binding var canRedo: Bool
         @Binding var refreshTableTotals: Bool
         @Binding var detailView: Bool
         
-        init(_ undoPressed: Binding<Bool>, _ redoPressed: Binding<Bool>, _ canUndo: Binding<Bool>, _ canRedo: Binding<Bool>, _ refreshTableTotals: Binding<Bool>, _ detailView: Binding<Bool>) {
-            _undoPressed = undoPressed
-            _redoPressed = redoPressed
+        init(_ refreshTableTotals: Binding<Bool>, _ detailView: Binding<Bool>) {
             _refreshTableTotals = refreshTableTotals
-            _canUndo = canUndo
-            _canRedo = canRedo
             _detailView = detailView
-        }
-  
-        func undo(isAvailable: Bool) {
-            Utility.executeAfter(delay: 0.1) {
-                self.canUndo = isAvailable
-            }
-        }
-        
-        func redo(isAvailable: Bool) {
-            Utility.executeAfter(delay: 0.1) {
-                self.canRedo = isAvailable
-            }
         }
     }
 }
@@ -217,7 +163,6 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     private var mainTableView = UITableView(frame: CGRect(), style: .plain)
     private var contractEntryView: ContractEntryView
     private var scrollPickerPopupView: ScrollPickerPopupView
-    public var delegate: ScorecardInputUIViewDelegate?
     private var subscription: AnyCancellable?
     private var lastKeyboardScrollOffset: CGFloat = 0
     private var isKeyboardOffset = false
@@ -280,14 +225,6 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         }
     }
 
-    public func undo() {
-        undoManager?.undo()
-    }
-    
-    public func redo() {
-        undoManager?.redo()
-    }
-    
     public func refreshTableTotals() {
         for table in 1...scorecard.tables {
             updateTableCell(section: table - 1, columnType: .tableScore)
@@ -342,9 +279,6 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     // MARK: - Scorecard delegates
     
     internal func scorecardChanged(type: RowType, itemNumber: Int, column: ScorecardColumn?) {
-        delegate?.undo(isAvailable: undoManager?.canUndo ?? false)
-        delegate?.redo(isAvailable: undoManager?.canRedo ?? false)
-        
         switch type {
         case .table:
             if let column = column {
@@ -999,7 +933,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             }
             if let undoText = undoText {
                 if text != undoText {
-                    undoManager?.registerUndo(withTarget: textField) { (textField) in
+                    UndoManager.registerUndo(withTarget: textField) { (textField) in
                         textField.text = undoText
                         self.textFieldChanged(textField)
                     }
@@ -1067,7 +1001,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             }
             if let undoText = undoText {
                 if text != undoText {
-                    undoManager?.registerUndo(withTarget: textView) { (textView) in
+                    UndoManager.registerUndo(withTarget: textView) { (textView) in
                         textView.text = undoText
                         self.textViewDidChange(textView)
                     }
@@ -1127,7 +1061,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             if let undoValue = undoValue {
                 switch self.column.type {
                 case .responsible:
-                    undoManager?.registerUndo(withTarget: participantPicker) { (participantPicker) in
+                    UndoManager.registerUndo(withTarget: participantPicker) { (participantPicker) in
                         self.participantPicker.set(undoValue as! Participant)
                         self.enumPickerDidChange(to: undoValue)
                     }
@@ -1150,7 +1084,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             let undoValue = board.contract
             if value != undoValue {
                 let undoMade = board.made
-                undoManager?.registerUndo(withTarget: contractPicker) { (contractPicker) in
+                UndoManager.registerUndo(withTarget: contractPicker) { (contractPicker) in
                     contractPicker.set(undoValue)
                     board.made = undoMade
                     self.contractPickerDidChange(to: undoValue)
@@ -1224,7 +1158,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             }
             if found {
                 if undoValue != value {
-                    undoManager?.registerUndo(withTarget: picker) { (picker) in
+                    UndoManager.registerUndo(withTarget: picker) { (picker) in
                         picker.set(undoValue)
                         self.scrollPickerDidChange(to: undoValue)
                     }
@@ -1430,7 +1364,7 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
             }
             if let undoText = undoText {
                 if undoText != text {
-                    undoManager?.registerUndo(withTarget: textField) { (textField) in
+                    UndoManager.registerUndo(withTarget: textField) { (textField) in
                         textField.text = undoText
                         self.textFieldChanged(textField)
                     }
@@ -1497,7 +1431,7 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
             }
             if let undoText = undoText {
                 if undoText != text {
-                    undoManager?.registerUndo(withTarget: textView) { (textView) in
+                    UndoManager.registerUndo(withTarget: textView) { (textView) in
                         textView.text = undoText
                         self.textViewDidChange(textView)
                     }
@@ -1546,7 +1480,7 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
             }
             if let undoValue = undoValue {
                 if undoValue != value {
-                    undoManager?.registerUndo(withTarget: seatPicker) { (seatPicker) in
+                    UndoManager.registerUndo(withTarget: seatPicker) { (seatPicker) in
                         switch self.column.type {
                         case .sitting:
                             self.scorecardDelegate?.scorecardUpdateDeclarers(tableNumber: self.tableNumber, to: undoDeclarers)
