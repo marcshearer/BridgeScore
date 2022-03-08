@@ -28,4 +28,3 @@ Make bid buttons bigger on contract view
 Allow entry of contract in any sequence
 Change colours on front screen
 Capitalization of comments and versus esp first character
-Look at undo in input grid - make consistent with other options?
