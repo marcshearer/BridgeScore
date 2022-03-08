@@ -363,6 +363,8 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                     // Update contract
                     if let item = self.boardColumns.firstIndex(where: {$0.type == .contract}) {
                         if let cell = tableCell.collectionView.cellForItem(at: IndexPath(item: item, section: 0)) as? ScorecardInputBoardCollectionCell {
+                            cell.label.text = contract.string
+                            // Note the picker is no longer used for display, but is used to trigger undo
                             cell.contractPicker.set(contract)
                             cell.contractPickerDidChange(to: contract)
                         }
@@ -657,7 +659,7 @@ fileprivate class ScorecardInputBoardTableCell: TableViewCellWithCollectionView 
 // MARK: - Board Collection View Cell ================================================================ -
 
 fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDelegate, EnumPickerDelegate, ContractPickerDelegate, UITextViewDelegate, UITextFieldDelegate {
-    private var label = UILabel()
+    fileprivate var label = UILabel()
     private var textField = UITextField()
     private var textView = UITextView()
     private var textClear = UIImageView()
@@ -694,6 +696,8 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         label.minimumScaleFactor = 0.3
         label.backgroundColor = UIColor.clear
         label.textColor = UIColor(Palette.gridBoard.text)
+        let labelTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputBoardCollectionCell.labelTapped(_:)))
+        label.addGestureRecognizer(labelTapGesture)
          
         addSubview(textField, constant: 8, anchored: .leading, .top, .bottom)
         textField.textAlignment = .center
@@ -724,8 +728,8 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         textClear.image = UIImage(systemName: "x.circle.fill")?.asTemplate
         textClear.tintColor = UIColor(Palette.clearText)
         textClear.contentMode = .scaleAspectFit
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputBoardCollectionCell.textViewClearPressed))
-        textClear.addGestureRecognizer(tapGesture)
+        let textClearTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputBoardCollectionCell.textViewClearPressed))
+        textClear.addGestureRecognizer(textClearTapGesture)
         textClear.isUserInteractionEnabled = true
         
         addSubview(seatPicker, top: 16, bottom: 0)
@@ -791,6 +795,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         label.text = ""
         label.font = cellFont
         label.textAlignment = .center
+        label.isUserInteractionEnabled = false
         textField.textAlignment = .center
         textField.clearsOnBeginEditing = false
         textField.clearButtonMode = .never
@@ -831,8 +836,14 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             let selected = board.dealer.rawValue
             seatPicker.set(selected, list: declarerList, isEnabled: false, color: Palette.gridBoardDisabled, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
         case .contract:
+            label.isHidden = false
+            label.text = board.contract.string
+            label.tag = ColumnType.contract.rawValue
+            label.isUserInteractionEnabled = true
+            /* Reinstate for carousel type changes
             contractPicker.isHidden = false
             contractPicker.set(board.contract, color: Palette.gridBoard, font: pickerTitleFont, force: true)
+             */
         case .declarer:
             seatPicker.isHidden = false
             let isEnabled = (table.sitting != .unknown)
@@ -1086,11 +1097,23 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
                 let undoMade = board.made
                 UndoManager.registerUndo(withTarget: contractPicker) { (contractPicker) in
                     contractPicker.set(undoValue)
+                    self.label.text = undoValue.string
                     board.made = undoMade
                     self.contractPickerDidChange(to: undoValue)
                 }
                 board.contract = value
                 scorecardDelegate?.scorecardChanged(type: .board, itemNumber: boardNumber, column: column)
+            }
+        }
+    }
+
+    @objc internal func labelTapped(_ sender: UITapGestureRecognizer) {
+        if let column = ColumnType(rawValue: sender.view?.tag ?? -1) {
+            switch column {
+            case .contract:
+                contractTapped(self)
+            default:
+                break
             }
         }
     }

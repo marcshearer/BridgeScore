@@ -6,9 +6,14 @@ If fails to install app on device from  it's normally because info.plist isn't w
 Bugs
 ====
 Capitalise first character of versus and comment
+Date picker doesn't disappear if already selected date click
+Capitalization of comments and versus esp first character
 
 To Do
 =====
+Change declarer popup to cross shape
+Change borders in grid to proper lines
+Change colours on front screen
 Sort out dark mode
 Maybe remove file sharing in Info.plist once can backup from Mac
 Force player and/or location to be input when layout created
@@ -20,11 +25,3 @@ Enhancements
 Share scorecards via iCloud?
 Stats?
 
-Date picker doesn't disappear if already selected date click
-Change position to diamond with self at bottom in contract view
-Split out passout from other bids and immediately close if selected
-Change colour of buttons on contract view
-Make bid buttons bigger on contract view
-Allow entry of contract in any sequence
-Change colours on front screen
-Capitalization of comments and versus esp first character

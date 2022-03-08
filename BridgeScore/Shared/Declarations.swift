@@ -397,21 +397,21 @@ public enum Values {
 }
 
 // Scorecard view types
-enum ColumnType: Codable {
-    case table
-    case sitting
-    case tableScore
-    case versus
-    case board
-    case contract
-    case declarer
-    case made
-    case points
-    case score
-    case comment
-    case responsible
-    case vulnerable
-    case dealer
+enum ColumnType: Int, Codable {
+    case table = 0
+    case sitting = 1
+    case tableScore = 2
+    case versus = 3
+    case board = 4
+    case contract = 5
+    case declarer = 6
+    case made = 7
+    case points = 8
+    case score = 9
+    case comment = 10
+    case responsible = 11
+    case vulnerable = 12
+    case dealer = 13
     
     var string: String {
         return "\(self)"

@@ -116,7 +116,7 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
             case .double:
                 return ContractDouble.allCases.count
             case .declarer:
-                return declarerList.count
+                return declarerList?.count ?? 0
             }
         } else {
             fatalError()
