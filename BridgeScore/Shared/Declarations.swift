@@ -42,6 +42,7 @@ var boardTitleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 :
 var pickerTitleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 24.0))
 var pickerCaptionFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 12.0 : 8.0))
 var windowTitleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 20.0))
+var smallCellFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 22.0 : 14.0))
 
 // Backups
 let backupDirectoryDateFormat = "yyyy-MM-dd-HH-mm-ss-SSS"
@@ -289,6 +290,10 @@ public enum Seat: Int, EnumPickerType, ContractEnumType {
         return "\(self)".capitalized
     }
     
+    public var button: String {
+        return string
+    }
+    
     static public var validCases: [Seat] {
         return Seat.allCases.filter{$0 != .unknown}
     }
@@ -310,6 +315,21 @@ public enum Seat: Int, EnumPickerType, ContractEnumType {
             return ""
         }
         return string.left(1)
+    }
+    
+    public func player(sitting: Seat) -> String {
+        switch self {
+        case sitting:
+            return "Self"
+        case sitting.partner:
+            return "Partner"
+        case sitting.leftOpponent:
+            return "Left"
+        case sitting.rightOpponent:
+            return "Right"
+        default:
+            return self.string
+        }
     }
 }
 
@@ -412,6 +432,7 @@ enum ContractElement: Int {
 protocol ContractEnumType : CaseIterable, Equatable {
     var string: String {get}
     var short: String {get}
+    var button: String {get}
     var rawValue: Int {get}
 }
 
@@ -439,6 +460,10 @@ public enum ContractLevel: Int, ContractEnumType {
     
     var short: String {
         return string.left(1)
+    }
+    
+    var button: String {
+        return string
     }
     
     var valid: Bool {
@@ -484,6 +509,10 @@ public enum ContractSuit: Int, ContractEnumType {
     }
     
     var short: String {
+        return string
+    }
+    
+    var button: String {
         return string
     }
     
@@ -548,6 +577,17 @@ public enum ContractDouble: Int, ContractEnumType {
             return "✱"
         case .redoubled:
             return "✱✱"
+        }
+    }
+    
+    var button: String {
+        switch self {
+        case .undoubled:
+            return "-"
+        case .doubled:
+            return "X"
+        case .redoubled:
+            return "XX"
         }
     }
     

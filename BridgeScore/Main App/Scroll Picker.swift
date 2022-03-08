@@ -161,15 +161,17 @@ class ScrollPickerCell: UICollectionViewCell {
     private var bottomPaddingHeight: NSLayoutConstraint!
     private var centerPaddingHeight: NSLayoutConstraint!
     private var trailingSpace: NSLayoutConstraint!
+    private var leadingSpace: NSLayoutConstraint!
     private var cornerRadius: CGFloat?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
         
         background = UIView(frame: frame)
-        self.addSubview(background, anchored: .leading, .top, .bottom)
+        self.addSubview(background, anchored: .top, .bottom)
+        leadingSpace = Constraint.anchor(view: self, control: background, attributes: .leading).first!
         trailingSpace = Constraint.anchor(view: self, control: background, attributes: .trailing).first!
-        
+
         title = UILabel(frame: frame)
         title.font = pickerTitleFont
         title.minimumScaleFactor = 0.3
@@ -224,7 +226,7 @@ class ScrollPickerCell: UICollectionViewCell {
         tapAction = nil
     }
     
-    public func set(titleText: String, captionText: String? = nil, tag: Int = 0, color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil, clearBackground: Bool = true, topPadding: CGFloat = 0, bottomPadding: CGFloat = 0, trailingSpace: CGFloat = 0, borderWidth: CGFloat = 0, cornerRadius: CGFloat? = nil, tapAction: ((Int)->())? = nil) {
+    public func set(titleText: String, captionText: String? = nil, tag: Int = 0, color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil, clearBackground: Bool = true, topPadding: CGFloat = 0, bottomPadding: CGFloat = 0, leadingSpace: CGFloat = 0, trailingSpace: CGFloat = 0, borderWidth: CGFloat = 0, cornerRadius: CGFloat? = nil, tapAction: ((Int)->())? = nil) {
         
         background.backgroundColor = (clearBackground ? UIColor.clear : UIColor(color?.background ?? Color.clear))
         self.tag = tag
@@ -238,6 +240,7 @@ class ScrollPickerCell: UICollectionViewCell {
         self.topPaddingHeight.constant = (height * 0.10) + topPadding
         self.centerPaddingHeight.constant = height * 0.075
         self.bottomPaddingHeight.constant = -((height * 0.10) + bottomPadding)
+        self.leadingSpace.constant = leadingSpace
         self.trailingSpace.constant = -trailingSpace
         
         title.text = titleText
@@ -251,6 +254,7 @@ class ScrollPickerCell: UICollectionViewCell {
             if let captionFont = captionFont {
                 caption.font = captionFont
             }
+            caption.textColor = UIColor(color?.text ?? Palette.background.text)
         }
     }
     

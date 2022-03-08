@@ -32,6 +32,11 @@ extension UIView {
         Constraint.anchor(view: self, control: parent, constant: constant, attributes: attributes)
     }
     
+    func addSubview(_ parent: UIView, constant: CGFloat = 0, anchored attributes: [ConstraintAnchor]) {
+        self.addSubview(parent)
+        Constraint.anchor(view: self, control: parent, constant: constant, attributes: attributes)
+    }
+    
     func addSubview(_ parent: UIView, leading: CGFloat? = nil, trailing: CGFloat? = nil, top: CGFloat? = nil, bottom: CGFloat? = nil) {
         self.addSubview(parent)
         if let leading = leading {
@@ -63,6 +68,11 @@ extension UIView {
         self.clipsToBounds = false
     }
     
+    public func roundCorners(cornerRadius: CGFloat) {
+        self.layer.cornerRadius = cornerRadius
+        self.clipsToBounds = true
+    }
+    
     public func roundCorners(cornerRadius: CGFloat, topRounded:Bool = true, bottomRounded: Bool = true) {
         if topRounded || bottomRounded {
             var corners: UIRectCorner = []
@@ -80,14 +90,13 @@ extension UIView {
     }
     
     public func roundCorners(cornerRadius: CGFloat, corners: UIRectCorner) {
+        self.layer.mask = nil
         if !corners.isEmpty {
-            let layerMask = UIBezierPath(roundedRect: self.bounds, byRoundingCorners: corners, cornerRadii: CGSize(width: cornerRadius, height: cornerRadius))
+            let layerMask = UIBezierPath(roundedRect: self.frame, byRoundingCorners: corners, cornerRadii: CGSize(width: cornerRadius, height: cornerRadius))
             let layer = CAShapeLayer()
             layer.frame = self.bounds
             layer.path = layerMask.cgPath
             self.layer.mask = layer
-        } else {
-            self.layer.mask = nil
         }
     }
     

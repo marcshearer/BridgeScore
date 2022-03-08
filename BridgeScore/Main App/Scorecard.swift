@@ -334,22 +334,12 @@ class Scorecard {
     }
     
     public static func declarerList(sitting: Seat) -> [ScrollPickerEntry] {
-        return Seat.allCases.map{ScrollPickerEntry(title: $0.short, caption: { (seat) in
-            switch seat {
-                case .unknown:
-                    return seat.string
-                case sitting:
-                    return "Self"
-                case sitting.partner:
-                    return "Partner"
-                case sitting.leftOpponent:
-                    return "Left"
-                case sitting.rightOpponent:
-                    return "Right"
-                default:
-                    return "Unknown"
-                }
-        }($0))}
+        return Seat.allCases.map{ScrollPickerEntry(title: $0.short, caption: $0.player(sitting: sitting))}
+    }
+    
+    public static func orderedDeclarerList(sitting: Seat) -> [(Seat, ScrollPickerEntry)] {
+        let orderedList: [Seat] = [sitting.partner, sitting.leftOpponent, .unknown, sitting.rightOpponent, sitting.self]
+        return orderedList.map{($0, ScrollPickerEntry(title: $0.short, caption: $0.player(sitting: sitting)))}
     }
     
     public static func points(contract: Contract, vulnerability: Vulnerability, declarer: Seat, made: Int, seat: Seat) -> Int {
