@@ -20,7 +20,6 @@ Enhancements
 Share scorecards via iCloud?
 Stats?
 
-Add undo buttons in layout setup etc
 Date picker doesn't disappear if already selected date click
 Change position to diamond with self at bottom in contract view
 Split out passout from other bids and immediately close if selected
@@ -29,3 +28,4 @@ Make bid buttons bigger on contract view
 Allow entry of contract in any sequence
 Change colours on front screen
 Capitalization of comments and versus esp first character
+Look at undo in input grid - make consistent with other options?
