@@ -17,7 +17,6 @@ Change colours on front screen
 Sort out dark mode
 Maybe remove file sharing in Info.plist once can backup from Mac
 Force player and/or location to be input when layout created
-Add undo to detail
 Move date picker to a slide in?
 
 Enhancements

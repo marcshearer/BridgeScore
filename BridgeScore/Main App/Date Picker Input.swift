@@ -49,15 +49,6 @@ struct OptionalDatePickerInput : View {
     
     var title: String?
     var field: Binding<Date?>
-    @State private var nonNullDate = Date()
-    private var nonNull: Binding<Date> {
-        Binding {
-            nonNullDate }
-        set: { newValue in
-            nonNullDate = newValue
-            field.wrappedValue = newValue
-         }
-    }
     var message: Binding<String>?
     var placeholder: String = ""
     var clearText: String? = nil
@@ -97,14 +88,11 @@ struct OptionalDatePickerInput : View {
         self.inlineTitle = inlineTitle
         self.inlineTitleWidth = inlineTitleWidth
         self.onChange = onChange
-        if let value = field.wrappedValue {
-            self.nonNullDate = value
-        }
     }
     
     var body: some View {
         
-        UndoWrapper(nonNull) { nonNull in
+        UndoWrapper(field) { field in
             VStack(spacing: 0) {
                 if title != nil && !inlineTitle {
                     InputTitle(title: title, message: message, topSpace: topSpace)
@@ -130,7 +118,7 @@ struct OptionalDatePickerInput : View {
                         Spacer().frame(width: 16)
                     }
                     Spacer().frame(width: 4)
-                    Text(field.wrappedValue == nil ? placeholder : Utility.dateString(nonNull.wrappedValue, format: "EEEE dd MMMM yyyy"))
+                    Text(field.wrappedValue == nil ? placeholder : Utility.dateString(field.wrappedValue!, format: "EEEE dd MMMM yyyy"))
                         .foregroundColor(color.textColor(textType))
                     
                     Spacer()
@@ -138,30 +126,19 @@ struct OptionalDatePickerInput : View {
                 .popover(isPresented: $datePicker, attachmentAnchor: .rect(.bounds)) {
                     ZStack {
                         Rectangle()
-                            .frame(width: 280)
+                            .frame(width: 280, height: 300)
                             .background(.clear)
                         VStack(spacing: 0) {
                             HStack {
-                                if from == nil && to == nil {
-                                    DatePicker("",  selection: nonNull, displayedComponents: .date)
-                                        .datePickerStyle(GraphicalDatePickerStyle())
-                                } else if from == nil {
-                                    DatePicker("", selection: nonNull, in: ...to!, displayedComponents: .date)
-                                        .datePickerStyle(GraphicalDatePickerStyle())
-                                } else if to == nil {
-                                    DatePicker("", selection: nonNull, in: from!..., displayedComponents: .date)
-                                        .datePickerStyle(GraphicalDatePickerStyle())
-                                } else {
-                                    DatePicker("", selection: nonNull, in: from!...to!, displayedComponents: .date)
-                                        .datePickerStyle(GraphicalDatePickerStyle())
+                                GeometryReader { (geometry) in
+                                    DatePickerWrapper(frame: geometry.frame(in: .local), selection: field, from: from, to: to) { (selected) in
+                                        datePicker = false
+                                        onChange?(selected)
+                                    }
                                 }
                             }
                             .background(pickerColor.background)
                             .foregroundColor(pickerColor.text)
-                            .onChange(of: nonNull.wrappedValue) { (_) in
-                                datePicker = false
-                                onChange?(field.wrappedValue)
-                            }
                             if let clearText = clearText {
                                 Button {
                                     field.wrappedValue = nil
@@ -197,34 +174,79 @@ struct OptionalDatePickerInput : View {
             .onTapGesture {
                 datePicker = true
             }
-            .onAppear{
-                if let value = field.wrappedValue {
-                    self.nonNull.wrappedValue = value
-                }
-            }
         }
-    }
-    
-    private var datePickerRange: some View {
-        var picker: AnyView
-            if from == nil && to == nil {
-                picker = AnyView(DatePicker("",  selection: nonNull, displayedComponents: .date))
-            } else if from == nil {
-                picker = AnyView(DatePicker("", selection: nonNull, in: ...to!, displayedComponents: .date))
-            } else if to == nil {
-                picker = AnyView(DatePicker("", selection: nonNull, in: from!..., displayedComponents: .date))
-            } else {
-                picker = AnyView(DatePicker("", selection: nonNull, in: from!...to!, displayedComponents: .date))
-            }
-        return picker
-            .datePickerStyle(GraphicalDatePickerStyle())
-            .background(pickerColor.background)
-            .foregroundColor(pickerColor.text)
-            .onChange(of: nonNull.wrappedValue) { (_) in
-                datePicker = false
-                onChange?(field.wrappedValue)
-            }
     }
 }
 
+struct DatePickerWrapper: UIViewRepresentable {
+    var frame: CGRect
+    var selection: Binding<Date?>
+    var from: Date? = nil
+    var to: Date? = nil
+    var completion: ((Date)->())?
+    
+    func makeUIView(context: Context) -> DatePickerUIView {
+        
+        let view = DatePickerUIView(frame: frame, selection: selection, from: from, to: to, completion: completion)
+       
+        return view
+    }
 
+    func updateUIView(_ uiView: DatePickerUIView, context: Context) {
+        
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
+    
+    class Coordinator: NSObject {
+        
+        override init() {
+            
+        }
+    }
+}
+
+class DatePickerUIView: UIView {
+    private var picker: UIDatePicker!
+    private var selection: Binding<Date?>
+    private var completion: ((Date)->())?
+    
+    init(frame: CGRect, selection: Binding<Date?>, from: Date? = nil, to: Date? = nil, completion: ((Date)->())?) {
+        self.selection = selection
+        self.completion = completion
+        super.init(frame: frame)
+        picker = UIDatePicker(frame: CGRect())
+        if let date = selection.wrappedValue {
+            picker.date = date
+        } else {
+            selection.wrappedValue = picker.date
+        }
+        picker.datePickerMode = .date
+        if let from = from {
+            picker.minimumDate = from
+        }
+        if let to = to {
+            picker.maximumDate = to
+        }
+        picker.preferredDatePickerStyle = .inline
+        self.addSubview(picker, anchored: .all)
+        picker.addTarget(self, action: #selector(DatePickerUIView.valueChanged(_:)), for: .valueChanged)
+        picker.addTarget(self, action: #selector(DatePickerUIView.touchEvents(_:)), for: .primaryActionTriggered)
+        
+    }
+    
+    @objc func valueChanged(_ sender: UIView) {
+        selection.wrappedValue = picker.date
+        completion?(picker.date)
+    }
+
+    @objc func touchEvents(_ sender: UIView) {
+
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}

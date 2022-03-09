@@ -36,8 +36,6 @@ struct ScorecardFilterView: View {
     @Binding var closeFilter: Bool
     @State private var partnerIndex = -1
     @State private var locationIndex = -1
-    @State private var fromDateClearText: String? = nil
-    @State private var toDateClearText: String? = nil
     let players = MasterData.shared.players.filter{!$0.retired}
     let locations = MasterData.shared.locations.filter{!$0.retired}
     
@@ -94,23 +92,11 @@ struct ScorecardFilterView: View {
                             
                             Spacer().frame(width: 15)
                             
-                            OptionalDatePickerInput(field: $values.dateFrom, placeholder: "Date from", clearText: fromDateClearText, to: values.dateTo, color: (values.dateFrom != nil ? Palette.highlightButton : Palette.enabledButton), textType: .normal, cornerRadius: 20, width: buttonWidth, height: 40, centered: true) { (date) in
-                                if date == nil {
-                                    fromDateClearText = nil
-                                } else {
-                                    fromDateClearText = "Clear Date From"
-                                }
-                            }
+                            OptionalDatePickerInput(field: $values.dateFrom, placeholder: "Date from", clearText: "Clear date from", to: values.dateTo, color: (values.dateFrom != nil ? Palette.highlightButton : Palette.enabledButton), textType: .normal, cornerRadius: 20, width: buttonWidth, height: 40, centered: true)
                             
                             Spacer().frame(width: 20)
                             
-                            OptionalDatePickerInput(field: $values.dateTo, placeholder: "Date to", clearText: toDateClearText, from: values.dateFrom, color: (values.dateTo != nil ? Palette.highlightButton : Palette.enabledButton), textType: .normal, cornerRadius: 20, width: buttonWidth, height: 40, centered: true) { (date) in
-                                if date == nil {
-                                    toDateClearText = nil
-                                } else {
-                                    toDateClearText = "Clear Date To"
-                                }
-                            }
+                            OptionalDatePickerInput(field: $values.dateTo, placeholder: "Date to", clearText: "Clear date to", from: values.dateFrom, color: (values.dateTo != nil ? Palette.highlightButton : Palette.enabledButton), textType: .normal, cornerRadius: 20, width: buttonWidth, height: 40, centered: true)
                             
                             Spacer()
                         }
