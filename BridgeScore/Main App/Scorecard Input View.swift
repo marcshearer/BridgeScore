@@ -138,6 +138,7 @@ protocol ScorecardDelegate {
     func scorecardChanged(type: RowType, itemNumber: Int, column: ScorecardColumn?)
     func scorecardContractEntry(board: BoardViewModel, table: TableViewModel)
     func scorecardScrollPickerPopup(values: [ScrollPickerEntry], maxValues: Int, selected: Int?, defaultValue: Int?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Int?)->())
+    func scorecardSeatPickerPopup(values: [(Seat, ScrollPickerEntry)], selected: Seat?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Seat?)->())
     func scorecardGetDeclarers(tableNumber: Int) -> [Seat]
     func scorecardUpdateDeclarers(tableNumber: Int, to: [Seat]?)
     func scorecardEndEditing(_ force: Bool)
@@ -157,12 +158,13 @@ fileprivate let boardRowHeight: CGFloat = 90
 fileprivate let tableRowHeight: CGFloat = 80
 
 class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, UITableViewDelegate, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
-        
+    
     private var scorecard: ScorecardViewModel
     private var titleView: ScorecardInputTableTitleView!
     private var mainTableView = UITableView(frame: CGRect(), style: .plain)
     private var contractEntryView: ContractEntryView
     private var scrollPickerPopupView: ScrollPickerPopupView
+    private var seatPickerPopupView: SeatPickerPopupView
     private var subscription: AnyCancellable?
     private var lastKeyboardScrollOffset: CGFloat = 0
     private var isKeyboardOffset = false
@@ -179,6 +181,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         self.inputDetail = inputDetail
         self.contractEntryView = ContractEntryView(frame: CGRect())
         self.scrollPickerPopupView = ScrollPickerPopupView(frame: CGRect())
+        self.seatPickerPopupView = SeatPickerPopupView(frame: CGRect())
 
         super.init(frame: frame)
         
@@ -391,6 +394,21 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         }
     }
     
+    func scorecardSeatPickerPopup(values: [(Seat, ScrollPickerEntry)], selected: Seat?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Seat?)->()) {
+        var frame = container.convert(frame, to: self)
+        let freeSpace = self.mainTableView.frame.maxY - frame.maxY
+        let offset = mainTableView.contentOffset
+        if freeSpace < frame.height {
+            // Need to scroll down a row
+            let adjustY = frame.height - freeSpace
+            mainTableView.contentOffset = offset.offsetBy(dy: adjustY)
+            frame = frame.offsetBy(dy: -adjustY)
+        }
+        seatPickerPopupView.show(from: self, values: values, selected: selected, frame: frame, topPadding: topPadding, bottomPadding: bottomPadding) { (selected) in
+            self.mainTableView.contentOffset = offset
+            completion(selected)
+        }
+    }
     func scorecardGetDeclarers(tableNumber: Int) -> [Seat] {
         var declarers: [Seat] = []
         let boards = scorecard.boardsTable
@@ -784,6 +802,13 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         contractPicker.isHidden = true
         madePicker.isHidden = true
         textField.isHidden = true
+        textField.textAlignment = .center
+        textField.clearsOnBeginEditing = false
+        textField.clearButtonMode = .never
+        textField.font = cellFont
+        textField.keyboardType = .default
+        textField.autocapitalizationType = .none
+        textField.autocorrectionType = .no
         textView.isHidden = true
         textClear.isHidden = true
         textClearWidth.constant = 0
@@ -796,11 +821,6 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         label.font = cellFont
         label.textAlignment = .center
         label.isUserInteractionEnabled = false
-        textField.textAlignment = .center
-        textField.clearsOnBeginEditing = false
-        textField.clearButtonMode = .never
-        textField.font = cellFont
-        textField.keyboardType = .default
     }
     
     func setTitle(column: ScorecardColumn, scorecard: ScorecardViewModel) {
@@ -881,6 +901,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             textField.isHidden = false
             textField.text = board.comment
             textField.textAlignment = .left
+            textField.autocapitalizationType = .sentences
             textClear.isHidden = board.comment == ""
             textClearWidth.constant = 34
             textClearPadding.forEach { (constraint) in constraint.constant = 8 }
@@ -926,6 +947,10 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     
     private var declarerList: [ScrollPickerEntry] {
         return Scorecard.declarerList(sitting: table.sitting)
+    }
+    
+    private var orderedDeclarerList: [(Seat, ScrollPickerEntry)] {
+        return Scorecard.orderedDeclarerList(sitting: table.sitting)
     }
         
     // MARK: - Control change handlers ===================================================================== -
@@ -1128,11 +1153,9 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         scorecardDelegate?.scorecardEndEditing(true)
         scorecardDelegate?.scorecardChanged(type: .board, itemNumber: boardNumber)
         if table.sitting != .unknown {
-            let width: CGFloat = 70
-            let space = (frame.width - width) / 2
-            scorecardDelegate?.scorecardScrollPickerPopup(values: declarerList, maxValues: 9, selected: board.declarer.rawValue, defaultValue: nil, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 20, bottomPadding: 4) { (selected) in
-                self.seatPicker.set(selected)
-                self.scrollPickerDidChange(to: selected)
+            scorecardDelegate?.scorecardSeatPickerPopup(values: orderedDeclarerList, selected: board.declarer, frame: self.frame, in: self.superview!, topPadding: 20, bottomPadding: 4) { (selected) in
+                self.seatPicker.set(selected?.rawValue)
+                self.scrollPickerDidChange(to: selected?.rawValue)
             }
         }
     }
@@ -1312,6 +1335,10 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         seatPicker.isHidden = true
         textField.text = ""
         textField.clearsOnBeginEditing = false
+        textField.autocapitalizationType = .none
+        textField.autocorrectionType = .no
+        textField.textAlignment = .center
+        textField.keyboardType = .default
         textView.isHidden = true
         textClear.isHidden = true
         textClearWidth.constant = 0
@@ -1320,8 +1347,6 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
         label.font = cellFont
         label.backgroundColor = UIColor(Palette.gridTable.background)
         label.textAlignment = .center
-        textField.textAlignment = .center
-        textField.keyboardType = .default
         captionHeight.constant = 0
     }
     
@@ -1353,6 +1378,7 @@ fileprivate class ScorecardInputTableCollectionCell: UICollectionViewCell, EnumP
             textField.isHidden = false
             textField.text = table.versus
             textField.textAlignment = .left
+            textField.autocapitalizationType = .words
             textClear.isHidden = table.versus == ""
             textClearWidth.constant = 34
             textClearPadding.forEach { (constraint) in constraint.constant = 8 }

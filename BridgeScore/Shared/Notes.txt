@@ -5,13 +5,9 @@ If fails to install app on device from  it's normally because info.plist isn't w
 
 Bugs
 ====
-Capitalise first character of versus and comment
-Date picker doesn't disappear if already selected date click
-Capitalization of comments and versus esp first character
 
 To Do
 =====
-Change declarer popup to cross shape
 Change borders in grid to proper lines
 Change colours on front screen
 Sort out dark mode
@@ -23,4 +19,3 @@ Enhancements
 ============
 Share scorecards via iCloud?
 Stats?
-

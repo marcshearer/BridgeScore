@@ -232,8 +232,8 @@ class ScrollPickerCell: UICollectionViewCell {
         self.tag = tag
         self.tapAction = tapAction
         self.isUserInteractionEnabled = (tapAction != nil)
-        self.layer.borderWidth = borderWidth
-        self.layer.borderColor = UIColor(Palette.gridLine).cgColor
+        background.layer.borderWidth = borderWidth
+        background.layer.borderColor = UIColor(Palette.gridLine).cgColor
         self.cornerRadius = cornerRadius
         
         let height = frame.height - topPadding - bottomPadding
