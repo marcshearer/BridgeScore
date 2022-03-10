@@ -51,7 +51,7 @@ struct ScorecardInputView: View {
                 // Banner
                 let bannerOptions = UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo) + [
                     BannerOption(image: AnyView(Image(systemName: "\(detailView ? "minus" : "plus").magnifyingglass")), likeBack: true, action: { toggleView() }),
-                    BannerOption(image: AnyView(Image(systemName: "note.text")), likeBack: true, action: { inputDetail = true })]
+                    BannerOption(image: AnyView(Image(systemName: "note.text")), likeBack: true, action: {             UndoManager.clearActions() ; inputDetail = true })]
                 
                 Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .buttons, options: bannerOptions)
                 GeometryReader { geometry in
@@ -62,6 +62,7 @@ struct ScorecardInputView: View {
             .undoManager(canUndo: $canUndo, canRedo: $canRedo)
         }
         .sheet(isPresented: $inputDetail, onDismiss: {
+            UndoManager.clearActions()
             if deleted {
                 presentationMode.wrappedValue.dismiss()
             } else {
@@ -103,6 +104,7 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
     func makeUIView(context: Context) -> ScorecardInputUIView {
         
         let view = ScorecardInputUIView(frame: frame, scorecard: scorecard, inputDetail: inputDetail)
+        UndoManager.clearActions()
        
         return view
     }
