@@ -7,7 +7,7 @@
 
 import UIKit
 
-class SeatPickerPopupView: UIView, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
+class DeclarerPickerPopupView: UIView, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
        
     private var backgroundView = UIView()
     private var contentView = UIView()
@@ -118,7 +118,7 @@ class SeatPickerPopupView: UIView, UICollectionViewDataSource, UICollectionViewD
         // Background
         addSubview(backgroundView)
         backgroundView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
-        let cancelSelector = #selector(SeatPickerPopupView.cancelTapped(_:))
+        let cancelSelector = #selector(DeclarerPickerPopupView.cancelTapped(_:))
         let tapGesture = UITapGestureRecognizer(target: self, action: cancelSelector)
         backgroundView.addGestureRecognizer(tapGesture)
         backgroundView.isUserInteractionEnabled = true

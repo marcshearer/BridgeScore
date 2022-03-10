@@ -5,6 +5,7 @@ If fails to install app on device from  it's normally because info.plist isn't w
 
 Bugs
 ====
+Headers for rounds 1 and 2 got confused
 
 To Do
 =====
