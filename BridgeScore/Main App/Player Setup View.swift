@@ -112,6 +112,7 @@ struct PlayerSelectionView : View {
                         }
                         .background(Rectangle().fill(color.background))
                         .foregroundColor((player.retired ? color.faintText : color.text).opacity(disabled ? 0.3 : 1.0))
+                        .cornerRadius(10)
                         .onDrag({player.itemProvider})
                         .onTapGesture {
                             changeSelected(player)
@@ -122,7 +123,7 @@ struct PlayerSelectionView : View {
                         selected.sequence = MasterData.shared.player(id: selected.playerId)?.sequence ?? selected.sequence
                     }
                 }
-                .listStyle(.plain)
+                .listStyle(.inset)
                 Spacer()
             }
             .disabled(disabled)

@@ -112,6 +112,7 @@ struct LocationSelectionView : View {
                         }
                         .background(Rectangle().fill(color.background))
                         .foregroundColor((location.retired ? color.faintText : color.text).opacity(disabled ? 0.3 : 1.0))
+                        .cornerRadius(10)
                         .onDrag({location.itemProvider})
                         .onTapGesture {
                             changeSelected(location)
@@ -122,7 +123,7 @@ struct LocationSelectionView : View {
                         selected.sequence = MasterData.shared.location(id: selected.locationId)?.sequence ?? selected.sequence
                     }
                 }
-                .listStyle(.plain)
+                .listStyle(.inset)
                 Spacer()
             }
             .disabled(disabled)

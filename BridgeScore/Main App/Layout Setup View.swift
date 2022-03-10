@@ -89,7 +89,7 @@ struct LayoutSelectionView : View {
     var body: some View {
         let disabled = !selected.canSave
         
-        VStack {
+        VStack(spacing: 0) {
             HStack {
                 List {
                     ForEach(MasterData.shared.layouts) { layout in
@@ -108,6 +108,7 @@ struct LayoutSelectionView : View {
                         }
                         .background(Rectangle().fill(color.background))
                         .foregroundColor(color.text.opacity(disabled ? 0.3 : 1.0))
+                        .cornerRadius(10)
                         .onDrag({layout.itemProvider})
                         .onTapGesture {
                             changeSelected(layout)
@@ -118,7 +119,7 @@ struct LayoutSelectionView : View {
                         selected.sequence = MasterData.shared.layout(id: selected.layoutId)?.sequence ?? selected.sequence
                     }
                 }
-                .listStyle(.plain)
+                .listStyle(.inset)
                 Spacer()
             }
             .disabled(disabled)

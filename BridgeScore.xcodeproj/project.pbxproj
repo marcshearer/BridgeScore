@@ -196,6 +196,7 @@
 		B240141627CB4FF900C3117F /* Obsolete Views */ = {
 			isa = PBXGroup;
 			children = (
+				B2CC509F27BE22900050F22C /* Contract Picker.swift */,
 				B2276D5727A5A2C90025DA80 /* Scorecard Canvas View.swift */,
 			);
 			name = "Obsolete Views";
@@ -431,7 +432,6 @@
 		B2EB3D7C279F0E6000D64225 /* Shared Views */ = {
 			isa = PBXGroup;
 			children = (
-				B2CC509F27BE22900050F22C /* Contract Picker.swift */,
 				B213998B27D8AA830098E4A4 /* Seat Picker Popup View.swift */,
 			);
 			name = "Shared Views";

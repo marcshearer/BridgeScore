@@ -35,13 +35,15 @@ struct InsetView <Content>: View where Content: View {
             }
             HStack {
                 Spacer().frame(width: 16)
-                HStack {
-                    Spacer().frame(width: 16)
-                    content
-                    //Spacer()
+                VStack(spacing: 0) {
+                    Spacer().frame(height: 8)
+                    HStack {
+                        Spacer().frame(width: 16)
+                        content
+                    }
                 }
                 .background(color.background)
-                .cornerRadius(16)
+                .cornerRadius(10)
                 Spacer().frame(width: 16)
             }
         }
