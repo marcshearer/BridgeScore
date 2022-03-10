@@ -687,8 +687,10 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     fileprivate var declarerPicker: ScrollPicker!
     fileprivate var seatPicker: EnumPicker<Seat>!
     private var madePicker: ScrollPicker!
-    private var leftLine: UIView!
-    private var topLine: UIView!
+    private var leadingGridLine = UIView()
+    private var trailingGridLine = UIView()
+    private var topGridLine = UIView()
+    private var bottomGridLine = UIView()
     private var table: TableViewModel!
     private var board: BoardViewModel!
     fileprivate var itemNumber: Int!
@@ -705,8 +707,6 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         madePicker = ScrollPicker(frame: frame)
         super.init(frame: frame)
         
-        self.layer.borderColor = UIColor(Palette.gridLine).cgColor
-        self.layer.borderWidth = 2.0
         self.backgroundColor = UIColor(Palette.gridTable.background)
                 
         let endEditingGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputBoardCollectionCell.endEditingTapped))
@@ -777,6 +777,23 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         participantPicker.delegate = self
         let responsibleTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputBoardCollectionCell.responsibleTapped))
         participantPicker.addGestureRecognizer(responsibleTapGesture)
+        
+        addGridLine(line: leadingGridLine, side: .leading)
+        addGridLine(line: trailingGridLine, side: .trailing)
+        addGridLine(line: topGridLine, side: .top)
+        addGridLine(line: bottomGridLine, side: .bottom)
+    }
+    
+    private func addGridLine(line: UIView, side: ConstraintAnchor) {
+        let size: CGFloat = 2
+        let anchors: [ConstraintAnchor] = [.leading, .trailing, .top, .bottom].filter{$0 != side}
+        addSubview(line, anchored: anchors)
+        if side == .leading || side == .trailing {
+            Constraint.setWidth(control: line, width: size)
+        } else {
+            Constraint.setHeight(control: line, height: size)
+        }
+        line.backgroundColor = UIColor(Palette.gridLine)
     }
     
     required init?(coder: NSCoder) {

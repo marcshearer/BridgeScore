@@ -9,7 +9,6 @@ Headers for rounds 1 and 2 got confused
 
 To Do
 =====
-Change borders in grid to proper lines
 Change colours on front screen
 Sort out dark mode
 Maybe remove file sharing in Info.plist once can backup from Mac
