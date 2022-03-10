@@ -32,7 +32,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
     private var collectionViewLayout: UICollectionViewLayout!
     private var color: PaletteColor?
     private var clearBackground = true
-    private var list: [ScrollPickerEntry]
+    public var list: [ScrollPickerEntry]
     private var defaultEntry: ScrollPickerEntry?
     private var defaultValue: Int?
     private var titleFont: UIFont

@@ -136,6 +136,7 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
 
 protocol ScorecardDelegate {
     func scorecardChanged(type: RowType, itemNumber: Int, column: ScorecardColumn?)
+    func scorecardCell(rowType: RowType, itemNumber: Int, columnType: ColumnType) -> ScorecardInputBoardCollectionCell?
     func scorecardContractEntry(board: BoardViewModel, table: TableViewModel)
     func scorecardScrollPickerPopup(values: [ScrollPickerEntry], maxValues: Int, selected: Int?, defaultValue: Int?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Int?)->())
     func scorecardDeclarerPickerPopup(values: [(Seat, ScrollPickerEntry)], selected: Seat?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Seat?)->())
@@ -283,25 +284,6 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     
     internal func scorecardChanged(type: RowType, itemNumber: Int, column: ScorecardColumn?) {
         switch type {
-        case .table:
-            if let column = column {
-                let section = itemNumber - 1
-                switch column.type {
-                case .sitting:
-                        // Sitting changed - update declarer and points etc
-                    let boards = scorecard.boardsTable
-                    for index in 1...boards {
-                        let row = index - 1
-                        self.updateBoardCell(section: section, row: row, columnType: .declarer)
-                        self.updateBoardCell(section: section, row: row, columnType: .points)
-                        self.updateBoardCell(section: section, row: row, columnType: .dealer)
-                    }
-                default:
-                    break
-                }
-            }
-            Scorecard.current.interimSave(entity: .table, itemNumber: itemNumber)
-            
         case .board:
             if let column = column {
                 let section = (itemNumber - 1) / scorecard.boardsTable
@@ -322,10 +304,59 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 }
             }
             Scorecard.current.interimSave(entity: .board, itemNumber: itemNumber)
+
+        case .table:
+            if let column = column {
+                let section = itemNumber - 1
+                switch column.type {
+                case .sitting:
+                        // Sitting changed - update declarer and points etc
+                    let boards = scorecard.boardsTable
+                    for index in 1...boards {
+                        let row = index - 1
+                        self.updateBoardCell(section: section, row: row, columnType: .declarer)
+                        self.updateBoardCell(section: section, row: row, columnType: .points)
+                        self.updateBoardCell(section: section, row: row, columnType: .dealer)
+                    }
+                default:
+                    break
+                }
+            }
+            Scorecard.current.interimSave(entity: .table, itemNumber: itemNumber)
             
         default:
             break
         }
+    }
+    
+    internal func scorecardCell(rowType: RowType, itemNumber: Int, columnType: ColumnType) -> ScorecardInputBoardCollectionCell? {
+        // Note this MUST be called from all undo registry closures as cell might have been re-used
+        // by the time the undo triggers. Undo code must not reference self
+        var cell: ScorecardInputBoardCollectionCell?
+        switch rowType {
+        case .board:
+            if let columnNumber = boardColumns.firstIndex(where: {$0.type == columnType}) {
+                let section = (itemNumber - 1) / scorecard.boardsTable
+                let row = (itemNumber - 1) % scorecard.boardsTable
+                if let tableRow = mainTableView.cellForRow(at: IndexPath(row: row, section: section)) as? ScorecardInputBoardTableCell {
+                    cell = tableRow.collectionView.cellForItem(at: IndexPath(item: columnNumber, section: 0)) as?
+                    ScorecardInputBoardCollectionCell
+                }
+            }
+            
+        case .table:
+            if let columnNumber = tableColumns.firstIndex(where: {$0.type == columnType}) {
+                let section = (itemNumber - 1)
+                if let tableRow = mainTableView.headerView(forSection: section) as? ScorecardInputTableSectionHeaderView {
+                    cell = tableRow.collectionView.cellForItem(at: IndexPath(item: columnNumber, section: 0)) as?
+                    ScorecardInputBoardCollectionCell
+                }
+            }
+            
+        default:
+            break
+        }
+        return cell
     }
     
     private func updateBoardCell(section: Int, row: Int, columnType: ColumnType) {
@@ -359,27 +390,15 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     func scorecardContractEntry(board: BoardViewModel, table: TableViewModel) {
         let section = (board.board - 1) / self.scorecard.boardsTable
         let row = (board.board - 1) % self.scorecard.boardsTable
-        let showDeclarer = (table.sitting != .unknown)
         contractEntryView.show(from: self, contract: board.contract, sitting: table.sitting, declarer: board.declarer) { (contract, declarer) in
 
             if let tableCell = self.mainTableView.cellForRow(at: IndexPath(row: row, section: section)) as? ScorecardInputBoardTableCell {
-                if contract != board.contract {
-                    // Update contract
+                if contract != board.contract || declarer != board.declarer {
+                    // Update contract and/or declarer
                     if let item = self.boardColumns.firstIndex(where: {$0.type == .contract}) {
                         if let cell = tableCell.collectionView.cellForItem(at: IndexPath(item: item, section: 0)) as? ScorecardInputBoardCollectionCell {
                             cell.label.text = contract.string
-                            cell.contractDidChange(to: contract)
-                        }
-                    }
-                }
-                if showDeclarer && declarer != board.declarer {
-                    // Update declarer
-                    if let item = self.boardColumns.firstIndex(where: {$0.type == .declarer}) {
-                        if let cell = tableCell.collectionView.cellForItem(at: IndexPath(item: item, section: 0)) as? ScorecardInputBoardCollectionCell {
-                            if let index = Seat.allCases.firstIndex(where: {$0 == declarer}) {
-                                cell.declarerPicker.set(index)
-                                cell.scrollPickerDidChange(to: index)
-                            }
+                            cell.contractDidChange(to: contract, declarer: declarer)
                         }
                     }
                 }
@@ -408,6 +427,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
             completion(selected)
         }
     }
+    
     func scorecardGetDeclarers(tableNumber: Int) -> [Seat] {
         var declarers: [Seat] = []
         let boards = scorecard.boardsTable
@@ -431,6 +451,19 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     func scorecardEndEditing(_ force: Bool) {
         self.endEditing(force)
     }
+    
+    var scorecardMainTableView: UITableView {
+        self.mainTableView
+    }
+    
+    var scorecardBoardColumns: [ScorecardColumn] {
+        boardColumns
+    }
+    
+    var scorecardTableColumns: [ScorecardColumn] {
+        tableColumns
+    }
+
     
    // MARK: - TableView Delegates ===================================================================== -
     
@@ -649,7 +682,7 @@ fileprivate class ScorecardInputTableSectionHeaderView: TableViewSectionHeaderWi
 
 // MARK: - Board Table View Cell ================================================================ -
 
-fileprivate class ScorecardInputBoardTableCell: TableViewCellWithCollectionView {
+class ScorecardInputBoardTableCell: TableViewCellWithCollectionView {
     private static let cellIdentifier = "Board TableCell"
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -675,7 +708,7 @@ fileprivate class ScorecardInputBoardTableCell: TableViewCellWithCollectionView 
 
 // MARK: - Board Collection View Cell ================================================================ -
 
-fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDelegate, EnumPickerDelegate, UITextViewDelegate, UITextFieldDelegate {
+class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDelegate, EnumPickerDelegate, UITextViewDelegate, UITextFieldDelegate {
     fileprivate var label = UILabel()
     fileprivate var caption = UILabel()
     private var textField = UITextField()
@@ -903,7 +936,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         case .declarer:
             declarerPicker.isHidden = false
             let selected = board.declarer.rawValue
-            declarerPicker.set(selected, list: declarerList, isEnabled: isEnabled, color: color, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
+            declarerPicker.set(selected, list: declarerList.map{$0.entry}, isEnabled: isEnabled, color: color, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
         case .made:
             madePicker.isHidden = false
             let (list, minValue, maxValue) = madeList
@@ -996,11 +1029,11 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         return (list, minValue, maxValue)
     }
     
-    private var declarerList: [ScrollPickerEntry] {
+    public var declarerList: [(seat: Seat, entry: ScrollPickerEntry)] {
         return Scorecard.declarerList(sitting: table.sitting)
     }
     
-    private var orderedDeclarerList: [(seat: Seat, entry: ScrollPickerEntry)] {
+    public var orderedDeclarerList: [(seat: Seat, entry: ScrollPickerEntry)] {
         return Scorecard.orderedDeclarerList(sitting: table.sitting)
     }
         
@@ -1009,7 +1042,10 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     @objc private func textFieldChanged(_ textField: UITextField) {
         let text = textField.text ?? ""
         var undoText: String?
-        switch self.column.type {
+        let rowType = rowType!
+        let columnType = column.type
+        let itemNumber = itemNumber!
+        switch columnType {
         case .comment:
             undoText = board.comment
         case .versus:
@@ -1023,11 +1059,13 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         }
         if let undoText = undoText {
             if text != undoText {
-                UndoManager.registerUndo(withTarget: textField) { (textField) in
-                    textField.text = undoText
-                    self.textFieldChanged(textField)
+                UndoManager.registerUndo(withTarget: self) { (_) in
+                    if let cell = self.scorecardDelegate?.scorecardCell(rowType: rowType, itemNumber: itemNumber, columnType: columnType) {
+                        cell.textField.text = undoText
+                        cell.textFieldChanged(cell.textField)
+                    }
                 }
-                switch column.type {
+                switch columnType {
                 case .comment:
                     board.comment = text
                     textClear.isHidden = (text == "")
@@ -1091,7 +1129,10 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     internal func textViewDidChange(_ textView: UITextView) {
         let text = textView.text ?? ""
         var undoText: String?
-        switch self.column.type {
+        let rowType = rowType!
+        let columnType = column.type
+        let itemNumber = itemNumber!
+        switch columnType {
         case .comment:
             undoText = board.comment
         case .versus:
@@ -1101,9 +1142,11 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         }
         if let undoText = undoText {
             if text != undoText {
-                UndoManager.registerUndo(withTarget: textView) { (textView) in
-                    textView.text = undoText
-                    self.textViewDidChange(textView)
+                UndoManager.registerUndo(withTarget: self) { (_) in
+                    if let cell = self.scorecardDelegate?.scorecardCell(rowType: rowType, itemNumber: itemNumber, columnType: columnType) {
+                        cell.textView.text = undoText
+                        cell.textViewDidChange(cell.textView)
+                    }
                 }
                 switch column.type {
                 case .comment:
@@ -1150,7 +1193,10 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
     
     internal func enumPickerDidChange(to value: Any) {
         var undoValue: Any?
-        switch self.column.type {
+        let rowType = rowType!
+        let columnType = column.type
+        let itemNumber = itemNumber!
+        switch columnType {
         case .responsible:
             if value as? Participant != board.responsible {
                 undoValue = board.responsible
@@ -1163,21 +1209,21 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
             break
         }
         if let undoValue = undoValue {
-            switch self.column.type {
-            case .responsible:
-                UndoManager.registerUndo(withTarget: participantPicker) { (participantPicker) in
-                    self.participantPicker.set(undoValue as! Participant)
-                    self.enumPickerDidChange(to: undoValue)
+            UndoManager.registerUndo(withTarget: participantPicker) { (participantPicker) in
+                if let cell = self.scorecardDelegate?.scorecardCell(rowType: rowType, itemNumber: itemNumber, columnType: columnType) {
+                    switch columnType {
+                    case .responsible:
+                        cell.participantPicker.set(undoValue as! Participant)
+                        cell.enumPickerDidChange(to: undoValue)
+                    case .sitting:
+                        cell.seatPicker.set(undoValue as! Seat)
+                        cell.enumPickerDidChange(to: undoValue)
+                    default:
+                        break
+                    }
                 }
-            case .sitting:
-                UndoManager.registerUndo(withTarget: seatPicker) { (seatPicker) in
-                    self.seatPicker.set(undoValue as! Seat)
-                    self.enumPickerDidChange(to: undoValue)
-                }
-            default:
-                break
             }
-            switch column.type {
+            switch columnType {
             case .responsible:
                 board.responsible = value as! Participant
             case .sitting:
@@ -1189,19 +1235,28 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         }
     }
     
-    internal func contractDidChange(to value: Contract) {
+    internal func contractDidChange(to value: Contract, made: Int? = nil, declarer: Seat? = nil) {
         if let board = board {
             let undoValue = board.contract
-            if value != undoValue {
-                let undoMade = board.made
-                let undoDeclarer = board.declarer
+            let made = made ?? board.made
+            let declarer = declarer ?? board.declarer
+            let undoMade = board.made
+            let undoDeclarer = board.declarer
+            let rowType = rowType!
+            let columnType = column.type
+            let itemNumber = itemNumber!
+            if value != undoValue || made != undoMade || declarer != undoDeclarer {
                 UndoManager.registerUndo(withTarget: label) { (label) in
-                    label.text = undoValue.string
-                    board.made = undoMade
-                    board.declarer = undoDeclarer
-                    self.contractDidChange(to: undoValue)
+                    if let cell = self.scorecardDelegate?.scorecardCell(rowType: rowType, itemNumber: itemNumber, columnType: columnType) {
+                        cell.label.text = undoValue.string
+                        cell.board.made = made
+                        cell.board.declarer = declarer
+                        cell.contractDidChange(to: undoValue, made: undoMade, declarer: undoDeclarer)
+                    }
                 }
                 board.contract = value
+                board.made = made
+                board.declarer = declarer
                 scorecardDelegate?.scorecardChanged(type: rowType, itemNumber: itemNumber, column: column)
             }
         }
@@ -1229,8 +1284,10 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         scorecardDelegate?.scorecardChanged(type: rowType, itemNumber: itemNumber)
         if table.sitting != .unknown {
             scorecardDelegate?.scorecardDeclarerPickerPopup(values: orderedDeclarerList, selected: board.declarer, frame: self.frame, in: self.superview!, topPadding: 20, bottomPadding: 4) { (selected) in
-                self.declarerPicker.set(selected?.rawValue)
-                self.scrollPickerDidChange(to: selected?.rawValue)
+                if let index = self.declarerList.firstIndex(where: {$0.seat == selected}) {
+                    self.declarerPicker.set(index)
+                    self.scrollPickerDidChange(to: index)
+                }
             }
         }
     }
@@ -1258,7 +1315,7 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         let selected = board.made == nil ? nil : board.made! + makingValue
         scorecardDelegate?.scorecardScrollPickerPopup(values: madeList, maxValues: 9, selected: selected, defaultValue: makingValue, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 16, bottomPadding: 0) { (selected) in
             self.madePicker.set(selected, reload: self.board.made == nil || selected == nil)
-            self.scrollPickerDidChange(to: selected)
+            self.scrollPickerDidChange(self.madePicker, to: selected)
         }
     }
     
@@ -1275,29 +1332,40 @@ fileprivate class ScorecardInputBoardCollectionCell: UICollectionViewCell, Scrol
         }
     }
     
-    @nonobjc internal func scrollPickerDidChange(_: ScrollPicker? = nil, to value: Int?) {
-        var picker: ScrollPicker!
+    @nonobjc internal func scrollPickerDidChange(_ picker: ScrollPicker? = nil, to value: Int?) {
         var undoValue: Int?
         var found = true
-        switch column.type {
+        let rowType = rowType!
+        let columnType = column.type
+        let itemNumber = itemNumber!
+        switch columnType {
         case .declarer:
-            undoValue = Seat.allCases.firstIndex(where: {$0 == board.declarer})
-            picker = declarerPicker
+            undoValue = declarerList.firstIndex(where: {$0.seat == board.declarer})!
         case .made:
             undoValue = board.made == nil ? nil : board.made! + (6 + board.contract.level.rawValue)
-            picker = madePicker
         default:
             found = false
         }
         if found {
             if undoValue != value {
-                UndoManager.registerUndo(withTarget: picker) { (picker) in
-                    picker.set(undoValue)
-                    self.scrollPickerDidChange(to: undoValue)
+                UndoManager.registerUndo(withTarget: self) { (_) in
+                    if let cell = self.scorecardDelegate?.scorecardCell(rowType: rowType, itemNumber: itemNumber, columnType: columnType) {
+                        var picker: ScrollPicker?
+                        switch columnType {
+                        case .declarer:
+                            picker = cell.declarerPicker
+                        case .made:
+                            picker = cell.madePicker
+                        default:
+                            break
+                        }
+                        picker?.set(undoValue)
+                        cell.scrollPickerDidChange(picker, to: undoValue)
+                    }
                 }
-                switch column.type {
+                switch columnType {
                 case .declarer:
-                    board.declarer = Seat.allCases[value!]
+                    board.declarer = declarerList[value!].seat
                 case .made:
                     board.made =  (value == nil ? nil : value! - (6 + board.contract.level.rawValue))
                 default:

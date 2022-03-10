@@ -9,11 +9,8 @@ Headers for rounds 1 and 2 got confused
 
 To Do
 =====
-Change colours on front screen
 Sort out dark mode
 Maybe remove file sharing in Info.plist once can backup from Mac
-Force player and/or location to be input when layout created
-Move date picker to a slide in?
 
 Enhancements
 ============

@@ -333,8 +333,8 @@ class Scorecard {
         return changed
     }
     
-    public static func declarerList(sitting: Seat) -> [ScrollPickerEntry] {
-        return Seat.allCases.map{ScrollPickerEntry(title: $0.short, caption: $0.player(sitting: sitting))}
+    public static func declarerList(sitting: Seat) -> [(Seat, ScrollPickerEntry)] {
+        return Seat.allCases.map{($0, ScrollPickerEntry(title: $0.short, caption: $0.player(sitting: sitting)))}
     }
     
     public static func orderedDeclarerList(sitting: Seat) -> [(Seat, ScrollPickerEntry)] {

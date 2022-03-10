@@ -26,7 +26,7 @@ struct ScorecardListView: View {
     var body: some View {
         let scorecards = MasterData.shared.scorecards.filter({self.filter($0)})
         
-        let menuOptions = [BannerOption(text: "Standard layouts", action: { linkToLayouts = true }),
+        let menuOptions = [BannerOption(text: "Templates", action: { linkToLayouts = true }),
                            BannerOption(text: "Players",  action: { linkToPlayers = true }),
                            BannerOption(text: "Locations", action: { linkToLocations = true }),
                            BannerOption(text: "Backup", action: { Backup.shared.backup() }),

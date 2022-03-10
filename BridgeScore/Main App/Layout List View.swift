@@ -11,7 +11,7 @@ struct LayoutListView: View {
     @Environment(\.dismiss) var dismiss
     @Binding var selected: Bool
     @Binding var layout: LayoutViewModel
-    @State private var title = "Select Layout"
+    @State private var title = "Select Template"
     @State private var linkToEdit = false
     @ObservedObject private var data = MasterData.shared
  

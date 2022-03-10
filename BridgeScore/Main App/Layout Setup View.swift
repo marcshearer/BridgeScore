@@ -10,7 +10,7 @@ import SwiftUI
 
 struct LayoutSetupView: View {
     @StateObject var selected = LayoutViewModel()
-    @State private var title = "Standard Layouts"
+    @State private var title = "Templates"
     @State private var canUndo = false
     @State private var canRedo = false
     
