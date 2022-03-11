@@ -112,7 +112,7 @@ struct InputFloat : View {
         }
         .frame(height: self.height + ((self.inlineTitle ? 0 : self.topSpace) + (title == nil || inlineTitle ? 0 : 30)))
         .if(width != nil) { (view) in
-            view.frame(width: width! + leadingSpace + (inlineTitle ? inlineTitleWidth : 0) + 16)
+            view.frame(width: width! + leadingSpace + (inlineTitle && title != nil ? inlineTitleWidth : 0) + 16)
         }
     }
 }

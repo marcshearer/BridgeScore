@@ -25,6 +25,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     @Published public var type: Type = .percent
     @Published public var resetNumbers: Bool = false
     @Published public var score: Float?
+    @Published public var maxScore: Float?
     @Published public var position: Int = 0
     @Published public var entry: Int = 0
     @Published public var drawingWidth: CGFloat = 0.0
@@ -58,6 +59,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
                 self.type != mo.type ||
                 self.resetNumbers != mo.resetNumbers ||
                 self.score != mo.score ||
+                self.maxScore != mo.maxScore ||
                 self.position != mo.position ||
                 self.entry != mo.entry ||
                 self.drawing != mo.drawing ||
@@ -132,6 +134,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.date = Date()
         self.comment = ""
         self.score = nil
+        self.maxScore = nil
         self.position = 0
         self.entry = 0
         self.drawing = PKDrawing()
@@ -151,6 +154,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.type = from.type
         self.resetNumbers = from.resetNumbers
         self.score = from.score
+        self.maxScore = from.maxScore
         self.position = from.position
         self.entry = from.entry
         self.drawing = from.drawing
@@ -175,6 +179,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             self.type = mo.type
             self.resetNumbers = mo.resetNumbers
             self.score = mo.score
+            self.maxScore = mo.maxScore
             self.position = mo.position
             self.entry = mo.entry
             self.drawing = mo.drawing
@@ -195,6 +200,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             mo.type = self.type
             mo.resetNumbers = self.resetNumbers
             mo.score = self.score
+            mo.maxScore = self.maxScore
             mo.position = self.position
             mo.entry = self.entry
             mo.drawing = self.drawing
@@ -268,6 +274,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         UserDefault.currentType.set(self.type)
         UserDefault.currentresetNumbers.set(self.resetNumbers)
         UserDefault.currentScore.set(self.score == nil ? "" : "\(self.score!)")
+        UserDefault.currentMaxScore.set(self.maxScore == nil ? "" : "\(self.maxScore!)")
         UserDefault.currentPosition.set(self.position)
         UserDefault.currentEntry.set(self.entry)
         backupCurrentDrawing()
@@ -299,6 +306,8 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.resetNumbers = UserDefault.currentresetNumbers.bool
         let score = UserDefault.currentScore.string
         self.score = score == "" ? nil : Float(score)
+        let maxScore = UserDefault.currentMaxScore.string
+        self.maxScore = maxScore == "" ? nil : Float(maxScore)
         self.position = UserDefault.currentPosition.int
         self.entry = UserDefault.currentEntry.int
         self.drawing = (try? PKDrawing(data: UserDefault.currentDrawing.data)) ?? PKDrawing()

@@ -27,7 +27,8 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var resetNumbers: Bool
     @NSManaged public var scoreValue: Float
     @NSManaged public var scoreEntered: Bool
-    @NSManaged public var totalScore: String
+    @NSManaged public var maxScoreValue: Float
+    @NSManaged public var maxScoreEntered: Bool
     @NSManaged public var position16: Int16
     @NSManaged public var entry16: Int16
     @NSManaged public var drawingData: Data
@@ -72,6 +73,19 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
             } else {
                 self.scoreValue = 0
                 self.scoreEntered = false
+            }
+        }
+    }
+    
+    public var maxScore: Float? {
+        get { maxScoreEntered ? self.maxScoreValue : nil}
+        set {
+            if let newValue = newValue {
+                self.maxScoreValue = newValue
+                self.maxScoreEntered = true
+            } else {
+                self.maxScoreValue = 0
+                self.maxScoreEntered = false
             }
         }
     }

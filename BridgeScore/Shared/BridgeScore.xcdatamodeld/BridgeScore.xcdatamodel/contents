@@ -48,13 +48,14 @@
         <attribute name="drawingWidthFloat" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="entry16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="locationId" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="maxScoreEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="maxScoreValue" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="partnerId" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="position16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="resetNumbers" attributeType="Boolean" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="scorecardId" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="scoreEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="scoreValue" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
-        <attribute name="totalScore" optional="YES" attributeType="String"/>
         <attribute name="type16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
     <entity name="Table" representedClassName="TableMO" syncable="YES">
@@ -70,7 +71,7 @@
         <element name="Layout" positionX="-45" positionY="0" width="128" height="179"/>
         <element name="Location" positionX="27" positionY="189" width="128" height="89"/>
         <element name="Player" positionX="9" positionY="171" width="128" height="89"/>
-        <element name="Scorecard" positionX="-18" positionY="81" width="128" height="284"/>
+        <element name="Scorecard" positionX="-18" positionY="81" width="128" height="299"/>
         <element name="Table" positionX="-9" positionY="153" width="128" height="119"/>
     </elements>
 </model>

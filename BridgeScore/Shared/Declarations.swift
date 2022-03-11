@@ -216,16 +216,41 @@ public enum Type: Int, CaseIterable {
         }
     }
     
-    public func matchSuffix(tables: Int) -> String {
+    public func matchSuffix(scorecard: ScorecardViewModel) -> String {
         switch self {
         case .percent:
             return "%"
-        case .xImp, .manual:
-            return ""
+        case .xImp:
+            return "IMPs"
+        case .vpXImp, .vpTableTeam, .vpPercent, .vpMatchTeam:
+            if let maxScore = maxScore(tables: scorecard.tables) {
+                return " / \(maxScore.toString(places: matchPlaces))"
+            } else {
+                return ""
+            }
+        default:
+            if let maxScore = scorecard.maxScore {
+                if maxScore == 100 {
+                    return "%"
+                } else {
+                    return " / \(maxScore.toString(places: matchPlaces))"
+                }
+            } else {
+                return ""
+            }
+        }
+    }
+    
+    public func maxScore(tables: Int) -> Float? {
+        switch self {
+        case .percent:
+            return 100
         case .vpXImp, .vpTableTeam, .vpPercent:
-            return " / \(tables * 20)"
+            return Float(tables * 20)
         case .vpMatchTeam:
-            return " / 20"
+            return 20
+        default:
+            return nil
         }
     }
 }

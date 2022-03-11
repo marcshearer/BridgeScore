@@ -11,6 +11,7 @@ To Do
 =====
 Sort out dark mode
 Maybe remove file sharing in Info.plist once can backup from Mac
+Remove default value for maxScore in MasterData
 
 Enhancements
 ============

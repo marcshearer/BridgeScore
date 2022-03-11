@@ -68,6 +68,17 @@ class MasterData: ObservableObject {
         // Setup scorecards
         self.scorecards = []
         for scorecardMO in scorecardMOs {
+            if scorecardMO.score != nil && scorecardMO.maxScore == nil {
+                // Default it to 100
+                // TODO Need to remove
+                CoreData.update {
+                    if scorecardMO.score! <= 20 {
+                        scorecardMO.maxScore = 20
+                    } else {
+                        scorecardMO.maxScore = scorecardMO.type.maxScore(tables: Int(scorecardMO.boards / scorecardMO.boardsTable)) ?? 100
+                    }
+                }
+            }
             scorecards.append(ScorecardViewModel(scorecardMO: scorecardMO))
         }
     }

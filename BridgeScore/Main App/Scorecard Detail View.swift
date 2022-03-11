@@ -123,8 +123,16 @@ struct ScorecardDetailsView: View {
             InsetView(title: "Results") {
                 VStack(spacing: 0) {
                     HStack {
-                        InputFloat(title: scorecard.type.matchScoreType.string, field: $scorecard.score, width: 100, places: scorecard.type.matchPlaces)
+                        InputFloat(title: scorecard.type.matchScoreType.string, field: $scorecard.score, width: 60, places: scorecard.type.matchPlaces)
                             .disabled(scorecard.type.matchAggregate != .manual)
+                        
+                        if scorecard.type.matchAggregate == .manual {
+                            Text(" / ")
+                            InputFloat(field: $scorecard.maxScore, width: 60, places: scorecard.type.matchPlaces)
+                        } else {
+                            Text(scorecard.type.matchSuffix(scorecard: scorecard))
+                        }
+                        
                         Spacer()
                     }
                     
