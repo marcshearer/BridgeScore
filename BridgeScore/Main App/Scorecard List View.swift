@@ -57,7 +57,7 @@ struct ScorecardListView: View {
                 }
                 
                 ScrollView {
-                    Spacer().frame(height: 8)
+                    Spacer().frame(height: 4)
                     ScorecardFilterView(filterValues: filterValues, closeFilter: $closeFilter)
                     ScrollViewReader { scrollViewProxy in
                         LazyVStack {
@@ -148,7 +148,8 @@ struct ScorecardSummaryView: View {
                         Spacer().frame(height: 4)
                         HStack {
                             HStack {
-                                Text(scorecard.desc)
+                                let text = scorecard.desc + (scorecard.comment == "" ? "" : " (\(scorecard.comment))")
+                                Text(text)
                                 Spacer()
                                 if scorecard.position != 0 && scorecard.entry != 0 {
                                     Text("\(scorecard.position) / \(scorecard.entry)")
@@ -157,7 +158,7 @@ struct ScorecardSummaryView: View {
                                 HStack {
                                     Spacer()
                                     if let score = scorecard.score {
-                                        Text("\(score.toString(places: scorecard.type.matchPlaces))\(scorecard.type.matchSuffix(tables: scorecard.tables))")
+                                        Text("\(score.toString(places: scorecard.type.matchPlaces))\(scorecard.type.matchSuffix(scorecard: scorecard))")
                                     }
                                 }
                                 .frame(width: 150)

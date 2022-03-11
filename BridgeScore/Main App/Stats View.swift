@@ -51,7 +51,7 @@ struct StatsFilterView: View {
                     }
                     Spacer().frame(height: 20)
                     
-                    PickerInput(field: $partnerIndex, values: {["No partner filter"] + players.map{$0.name}}, popupTitle: "Partners", placeholder: "Partner", height: 40, centered: true, color: (partnerIndex != nil ? Palette.filterUsed : Palette.filterUnused), font: searchFont, cornerRadius: 20, animation: .none) { (index) in
+                    PickerInput(field: $partnerIndex, values: {["No partner filter"] + players.map{$0.name}}, popupTitle: "Partners", placeholder: "Partner", height: 40, centered: true, color: (partnerIndex != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
                         if index ?? 0 != 0 {
                             filterValues.partner = players[index! - 1]
                         } else {
@@ -62,7 +62,7 @@ struct StatsFilterView: View {
                     
                     Spacer().frame(height: 15)
                     
-                    PickerInput(field: $locationIndex, values: {["No location filter"] + locations.map{$0.name}}, popupTitle: "Locations", placeholder: "Location", height: 40, centered: true, color: (locationIndex != nil ? Palette.filterUsed : Palette.filterUnused), font: searchFont, cornerRadius: 20, animation: .none) { (index) in
+                    PickerInput(field: $locationIndex, values: {["No location filter"] + locations.map{$0.name}}, popupTitle: "Locations", placeholder: "Location", height: 40, centered: true, color: (locationIndex != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
                         if index ?? 0 != 0 {
                             filterValues.location = locations[index! - 1]
                         } else {
@@ -162,6 +162,7 @@ class StatsUIView: UIView, GraphDetailDelegate {
     
     public func set(filterValues: ScorecardFilterValues) {
         self.filterValues = filterValues
+        statsDetailView.hide()
         setNeedsLayout()
     }
     
@@ -188,12 +189,12 @@ class StatsUIView: UIView, GraphDetailDelegate {
         var total: Float = 0
         values = []
         for scorecard in MasterData.shared.scorecards.reversed() {
-            if let score = scorecard.score {
+            if let score = scorecard.score, let maxScore = scorecard.maxScore {
                 if filterValues.filter(scorecard) {
                     count += 1
-                    let score = (score <= 20 ? score * 5 : score)
-                    total += score
-                    values.append(CGFloat(score))
+                    let percentage = (score / maxScore) * 100
+                    total += percentage
+                    values.append(CGFloat(percentage))
                     drillRef.append(scorecard.scorecardId.uuidString)
                     xAxisLabels.append(Utility.dateString(scorecard.date))
                 }
@@ -261,6 +262,7 @@ fileprivate enum Row: Int, CaseIterable {
     case score = 4
     case position = 5
     case scoring = 6
+    case comment = 7
     
     var label: String {
         return "\(self)".capitalized
@@ -277,11 +279,13 @@ fileprivate enum Row: Int, CaseIterable {
         case .date:
             return scorecard.date.toString(format: dateFormat, localized: true)
         case .score:
-            return scorecard.score == nil ? "" : "\(scorecard.score!)"
+            return scorecard.score == nil ? "" : "\(scorecard.score!.toString(places: scorecard.type.matchPlaces))\(scorecard.type.matchSuffix(scorecard:scorecard))"
         case .position:
             return "\(scorecard.position) of \(scorecard.entry)"
         case .scoring:
             return scorecard.type.string
+        case .comment:
+            return scorecard.comment
         }
     }
 }
