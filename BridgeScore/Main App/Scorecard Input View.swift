@@ -121,18 +121,10 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
     }
     
     func makeCoordinator() -> Coordinator {
-        Coordinator($refreshTableTotals, $detailView)
+        Coordinator()
     }
     
     class Coordinator: NSObject {
-        
-        @Binding var refreshTableTotals: Bool
-        @Binding var detailView: Bool
-        
-        init(_ refreshTableTotals: Binding<Bool>, _ detailView: Binding<Bool>) {
-            _refreshTableTotals = refreshTableTotals
-            _detailView = detailView
-        }
     }
 }
 

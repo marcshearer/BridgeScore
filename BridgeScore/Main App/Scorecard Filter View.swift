@@ -12,13 +12,15 @@ class ScorecardFilterValues: ObservableObject {
     @Published public var location: LocationViewModel?
     @Published public var dateFrom: Date?
     @Published public var dateTo: Date?
+    @Published public var types: [Type]?
     @Published public var searchText: String
     
-    init(partner: PlayerViewModel? = nil, location: LocationViewModel? = nil, dateFrom: Date? = nil, dateTo: Date? = nil, searchText: String = "") {
+    init(partner: PlayerViewModel? = nil, location: LocationViewModel? = nil, dateFrom: Date? = nil, dateTo: Date? = nil, types: [Type]? = nil, searchText: String = "") {
         self.partner = partner
         self.location = location
         self.dateFrom = dateFrom
         self.dateTo = dateTo
+        self.types = types
         self.searchText = searchText
     }
     
@@ -29,13 +31,69 @@ class ScorecardFilterValues: ObservableObject {
         self.dateTo = nil
         self.searchText = ""
     }
+    
+    public func filter(_ scorecard: ScorecardViewModel) -> Bool {
+        var include = true
+        if searchText != "" {
+            include = self.wordSearch(for: searchText, in: scorecard.desc + " " + scorecard.comment)
+        }
+        
+        if let partner = partner {
+            if partner != scorecard.partner {
+                include = false
+            }
+        }
+
+        if let location = location {
+            if location != scorecard.location {
+                include = false
+            }
+        }
+
+        if let dateFrom = dateFrom {
+            if scorecard.date < Date.startOfDay(from: dateFrom)! {
+                include = false
+            }
+        }
+
+        if let dateTo = dateTo {
+            if scorecard.date > Date.endOfDay(from: dateTo)! {
+                include = false
+            }
+        }
+        
+        return include
+    }
+    
+    private func wordSearch(for searchWords: String, in target: String) -> Bool {
+        var result = true
+        let searchList = searchWords.uppercased().components(separatedBy: " ")
+        let targetList = target.uppercased().components(separatedBy: " ")
+        
+        for searchWord in searchList {
+            var found = false
+            for targetWord in targetList {
+                if targetWord.starts(with: searchWord) {
+                    found = true
+                }
+            }
+            if !found {
+                result = false
+            }
+        }
+        
+        return result
+        
+    }
 }
 
 struct ScorecardFilterView: View {
-    @ObservedObject var values: ScorecardFilterValues
+    @ObservedObject var filterValues: ScorecardFilterValues
     @Binding var closeFilter: Bool
-    @State private var partnerIndex = -1
-    @State private var locationIndex = -1
+    @State private var partnerIndex: Int?
+    @State private var locationIndex: Int?
+    @State private var fromDateClearText: String? = nil
+    @State private var toDateClearText: String? = nil
     let players = MasterData.shared.players.filter{!$0.retired}
     let locations = MasterData.shared.locations.filter{!$0.retired}
     
@@ -46,7 +104,7 @@ struct ScorecardFilterView: View {
                 Spacer().frame(width: 16)
                 GeometryReader { (geometry) in
                 ZStack {
-                    Palette.filter.background
+                    Palette.filterTile.background
                         .ignoresSafeArea(edges: .all)
                         .cornerRadius(10)
                     VStack(spacing: 0) {
@@ -60,11 +118,11 @@ struct ScorecardFilterView: View {
                             }
                             Spacer()
                             Button {
-                                values.clear()
+                                filterValues.clear()
                                 reset()
                                 closeFilter = true
                             } label: {
-                                Image(systemName: "xmark").foregroundColor(Palette.filter.text)
+                                Image(systemName: "xmark").foregroundColor(Palette.filterTile.text)
                             }
                             Spacer().frame(width: 8)
                         }
@@ -72,31 +130,45 @@ struct ScorecardFilterView: View {
                         HStack {
                             let buttonWidth: CGFloat = (geometry.size.width - 24 - (3 * 15)) / 4
                             Spacer().frame(width: 16)
-                            PickerInput(field: $partnerIndex, values: {["No partner filter"] + players.map{$0.name}}, popupTitle: "Partners", placeholder: "Partner", width: buttonWidth, height: 40, centered: true, color: (partnerIndex > 0 ? Palette.highlightButton : Palette.enabledButton), cornerRadius: 20, animation: .none) { (index) in
-                                if index == 0 {
-                                    values.partner = nil
+                            PickerInput(field: $partnerIndex, values: {["No partner filter"] + players.map{$0.name}}, popupTitle: "Partners", placeholder: "Partner", width: buttonWidth, height: 40, centered: true, color: (partnerIndex != nil ? Palette.filterUsed : Palette.filterUnused), cornerRadius: 20, animation: .none) { (index) in
+                                if index ?? 0 != 0 {
+                                    filterValues.partner = players[index! - 1]
                                 } else {
-                                    values.partner = players[index - 1]
+                                    partnerIndex = nil
+                                    filterValues.partner = nil
                                 }
                             }
                             
                             Spacer().frame(width: 15)
                             
-                            PickerInput(field: $locationIndex, values: {["No location filter"] + locations.map{$0.name}}, popupTitle: "Locations", placeholder: "Location", width: buttonWidth, height: 40, centered: true, color: (locationIndex > 0 ? Palette.highlightButton : Palette.enabledButton), cornerRadius: 20, animation: .none) { (index) in
-                                if index == 0 {
-                                    values.location = nil
+                            PickerInput(field: $locationIndex, values: {["No location filter"] + locations.map{$0.name}}, popupTitle: "Locations", placeholder: "Location", width: buttonWidth, height: 40, centered: true, color: (locationIndex != nil ? Palette.filterUsed : Palette.filterUnused), cornerRadius: 20, animation: .none) { (index) in
+                                if index ?? 0 != 0 {
+                                    filterValues.location = locations[index! - 1]
                                 } else {
-                                    values.location = locations[index - 1]
+                                    locationIndex = nil
+                                    filterValues.location = nil
                                 }
                             }
                             
                             Spacer().frame(width: 15)
                             
-                            OptionalDatePickerInput(field: $values.dateFrom, placeholder: "Date from", clearText: "Clear date from", to: values.dateTo, color: (values.dateFrom != nil ? Palette.highlightButton : Palette.enabledButton), textType: .normal, cornerRadius: 20, width: buttonWidth, height: 40, centered: true)
+                            OptionalDatePickerInput(field: $filterValues.dateFrom, placeholder: "Date from", clearText: fromDateClearText, to: filterValues.dateTo, color: (filterValues.dateFrom != nil ? Palette.filterUsed : Palette.filterUnused), textType: .normal, cornerRadius: 20, width: buttonWidth, height: 40, centered: true) { (date) in
+                                if date == nil {
+                                    fromDateClearText = nil
+                                } else {
+                                    fromDateClearText = "Clear Date From"
+                                }
+                            }
                             
                             Spacer().frame(width: 20)
                             
-                            OptionalDatePickerInput(field: $values.dateTo, placeholder: "Date to", clearText: "Clear date to", from: values.dateFrom, color: (values.dateTo != nil ? Palette.highlightButton : Palette.enabledButton), textType: .normal, cornerRadius: 20, width: buttonWidth, height: 40, centered: true)
+                            OptionalDatePickerInput(field: $filterValues.dateTo, placeholder: "Date to", clearText: toDateClearText, from: filterValues.dateFrom, color: (filterValues.dateTo != nil ? Palette.filterUsed : Palette.filterUnused), textType: .normal, cornerRadius: 20, width: buttonWidth, height: 40, centered: true) { (date) in
+                                if date == nil {
+                                    toDateClearText = nil
+                                } else {
+                                    toDateClearText = "Clear Date To"
+                                }
+                            }
                             
                             Spacer()
                         }
@@ -107,7 +179,7 @@ struct ScorecardFilterView: View {
                                 Rectangle()
                                     .foregroundColor(Palette.input.background)
                                     .cornerRadius(20)
-                                if values.searchText.isEmpty {
+                                if filterValues.searchText.isEmpty {
                                     HStack {
                                         Spacer().frame(width: 20)
                                         Text("Search words")
@@ -116,7 +188,7 @@ struct ScorecardFilterView: View {
                                     }
                                 }
                                 HStack {
-                                    Input(field: $values.searchText, height: 20, color: Palette.clear, clearText: true)
+                                    Input(field: $filterValues.searchText, height: 20, color: Palette.clear, clearText: true)
                                         .foregroundColor(Palette.input.text)
                                 }
                             }
@@ -130,16 +202,18 @@ struct ScorecardFilterView: View {
             Spacer().rightSpacer
         }
         .onAppear {
-            partnerIndex = (players.firstIndex(where: {$0 == values.partner})  ?? -1) + 1
-            locationIndex = (locations.firstIndex(where: {$0 == values.location})  ?? -1) + 1
+            partnerIndex = filterValues.partner == nil ? nil : (players.firstIndex(where: {$0 == filterValues.partner})  ?? -1) + 1
+            locationIndex = filterValues.location == nil ? nil : (locations.firstIndex(where: {$0 == filterValues.location})  ?? -1) + 1
         }
     }
     
     private func reset() {
-        values.partner = nil
-        values.location = nil
-        values.dateFrom = nil
-        values.dateTo = nil
+        filterValues.partner = nil
+        filterValues.location = nil
+        filterValues.dateFrom = nil
+        filterValues.dateTo = nil
+        filterValues.types = nil
+        filterValues.searchText = ""
     }
 }
 

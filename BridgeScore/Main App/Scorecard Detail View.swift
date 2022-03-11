@@ -76,15 +76,15 @@ struct ScorecardDetailsView: View {
     @State var minValue = 1
 
     var locations = MasterData.shared.locations
-    @State private var locationIndex: Int = 0
+    @State private var locationIndex: Int?
     
     let types = Type.allCases
-    @State private var typeIndex: Int = 0
+    @State private var typeIndex: Int?
     
-    @State private var resetBoardNumberIndex: Int = 0
+    @State private var resetBoardNumberIndex: Int?
 
     let players = MasterData.shared.players
-    @State private var playerIndex: Int = 0
+    @State private var playerIndex: Int?
     @State private var datePicker: Bool = false
     
     var body: some View {
@@ -98,16 +98,20 @@ struct ScorecardDetailsView: View {
                                         
                     Separator()
                     
-                    PickerInput(title: "Location", field: $locationIndex, values: {locations.filter{!$0.retired || $0 == scorecard.location}.map{$0.name}})
+                    PickerInput(title: "Location", field: $locationIndex, values: {locations.filter{!$0.retired || $0 == scorecard.location}.map{$0.name}}, selectedColor: Palette.filterUsed)
                     { index in
-                        scorecard.location = locations[index]
+                        if let index = index {
+                            scorecard.location = locations[index]
+                        }
                     }
                     
                     Separator()
                     
-                    PickerInput(title: "Partner", field: $playerIndex, values: {players.filter{!$0.retired || $0 == scorecard.partner}.map{$0.name}})
+                    PickerInput(title: "Partner", field: $playerIndex, values: {players.filter{!$0.retired || $0 == scorecard.partner}.map{$0.name}}, selectedColor: Palette.filterUsed)
                     { index in
-                        scorecard.partner = players[index]
+                        if let index = index {
+                            scorecard.partner = players[index]
+                        }
                     }
                     
                     Separator()
@@ -146,11 +150,13 @@ struct ScorecardDetailsView: View {
             InsetView(title: "Options") {
                 VStack(spacing: 0) {
                     
-                    PickerInputAdditional(title: "Scoring", field: $typeIndex, values: {types.map{$0.string}}, additionalBinding: $scorecard.score, onChange:
+                    PickerInputAdditional(title: "Scoring", field: $typeIndex, values: {types.map{$0.string}}, selectedColor: Palette.filterUsed, additionalBinding: $scorecard.score, onChange:
                     { (index) in
-                        if scorecard.type != types[index] {
-                            scorecard.type = types[index]
-                            Scorecard.updateScores(scorecard: scorecard)
+                        if let index = index {
+                            if scorecard.type != types[index] {
+                                scorecard.type = types[index]
+                                Scorecard.updateScores(scorecard: scorecard)
+                            }
                         }
                     })
                     
@@ -161,7 +167,7 @@ struct ScorecardDetailsView: View {
                     StepperInput(title: "Tables", field: $scorecard.boards, label: boardsLabel, minValue: $scorecard.boardsTable, increment: $scorecard.boardsTable)
                     
                     
-                    PickerInput(title: "Board Numbers", field: $resetBoardNumberIndex, values: { ResetBoardNumber.allCases.map{$0.string}})
+                    PickerInput(title: "Board Numbers", field: $resetBoardNumberIndex, values: { ResetBoardNumber.allCases.map{$0.string}}, selectedColor: Palette.filterUsed)
                     { (index) in
                         scorecard.resetNumbers = (index == ResetBoardNumber.perTable.rawValue)
                     }

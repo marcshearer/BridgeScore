@@ -1,7 +1,7 @@
 Note
 ====
 
-If fails to install app on device from  it's normally because info.plist isn't where it expects it to be
+If fails to install app on device it's normally because info.plist isn't where it expects it to be
 
 Bugs
 ====

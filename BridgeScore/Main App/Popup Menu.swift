@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct PopupMenu<Label>: View where Label : View {
-    var field: Binding<Int>
+    var field: Binding<Int?>
     let label: Label
     let values: [String]
     var top: CGFloat?
@@ -16,10 +16,11 @@ struct PopupMenu<Label>: View where Label : View {
     var width: CGFloat?
     var animation: ViewAnimation
     var title: String?
-    let onChange: ((Int)->())?
+    var selectedColor: PaletteColor?
+    let onChange: ((Int?)->())?
     @State private var showPopup = false
     
-    init(field: Binding<Int>, values: [String], title: String? = nil, animation: ViewAnimation = .slideLeft, top: CGFloat? = nil, left: CGFloat? = nil, width: CGFloat, onChange: ((Int)->())? = nil, @ViewBuilder label: ()->Label) {
+    init(field: Binding<Int?>, values: [String], title: String? = nil, animation: ViewAnimation = .slideLeft, top: CGFloat? = nil, left: CGFloat? = nil, width: CGFloat, selectedColor: PaletteColor? = nil, onChange: ((Int?)->())? = nil, @ViewBuilder label: ()->Label) {
         self.field = field
         self.values = values
         self.title = title
@@ -27,6 +28,7 @@ struct PopupMenu<Label>: View where Label : View {
         self.left = left
         self.animation = animation
         self.width = width
+        self.selectedColor = selectedColor
         self.onChange = onChange
         self.label = label()
     }
@@ -34,7 +36,7 @@ struct PopupMenu<Label>: View where Label : View {
     public var body: some View {
         label
             .onTapGesture {
-                SlideInMenu.shared.show(title: title, options: values, animation: animation, top: top, left: left, width: width, completion: { (selected) in
+                SlideInMenu.shared.show(title: title, options: values, selected: field.wrappedValue, animation: animation, top: top, left: left, width: width, selectedColor: selectedColor, completion: { (selected) in
                     if let index = values.firstIndex(where: {$0 == selected}) {
                         field.wrappedValue = index
                         onChange?(field.wrappedValue)

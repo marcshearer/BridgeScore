@@ -13,33 +13,42 @@ import AppKit
 import CloudKit
 
 class Backup {
+    private var thisBackupUrl: URL!
+    private var backupsUrl: URL!
+    private var assetsBackupUrl: URL!
+    private var databaseBackupsUrl: URL!
     
     public static let shared = Backup()
     
+    init() {
+        (backupsUrl, assetsBackupUrl) = self.getDirectories()
+        databaseBackupsUrl = backupsUrl.appendingPathComponent(UserDefault.database.string)
+    }
+    
     public func backup() {
-         let fileManager = FileManager()
-        let (backupsUrl, assetsBackupUrl) = self.getDirectories()
-        let databaseBackupsUrl = backupsUrl.appendingPathComponent(UserDefault.database.string)
+        let fileManager = FileManager()
         let dateString = Utility.dateString(Date(), format: backupDirectoryDateFormat, localized: false)
-        let thisBackupUrl = databaseBackupsUrl.appendingPathComponent(dateString)
+        thisBackupUrl = databaseBackupsUrl.appendingPathComponent(dateString)
         _ = (try! fileManager.createDirectory(at: thisBackupUrl, withIntermediateDirectories: true))
         _ = (try! fileManager.createDirectory(at: assetsBackupUrl, withIntermediateDirectories: true))
 
-        Backup.shared.backup(entity: ScorecardMO.entity(), groupName: "data", elementName: "Scorecard", directory: thisBackupUrl, assetsDirectory: assetsBackupUrl)
-        Backup.shared.backup(entity: LayoutMO.entity(), groupName: "data", elementName: "Layout", directory: thisBackupUrl, assetsDirectory: assetsBackupUrl)
-        Backup.shared.backup(entity: PlayerMO.entity(), groupName: "data", elementName: "Player", directory: thisBackupUrl, assetsDirectory: assetsBackupUrl)
-        Backup.shared.backup(entity: LocationMO.entity(), groupName: "data", elementName: "Location", directory: thisBackupUrl, assetsDirectory: assetsBackupUrl)
+        Backup.shared.backup(ScorecardMO.entity())
+        Backup.shared.backup(BoardMO.entity())
+        Backup.shared.backup(TableMO.entity())
+        Backup.shared.backup(LayoutMO.entity())
+        Backup.shared.backup(PlayerMO.entity())
+        Backup.shared.backup(LocationMO.entity())
     }
     
     public func restore(dateString: String) {
-        let (backupsUrl, assetsBackupUrl) = self.getDirectories()
-        let databaseBackupsUrl = backupsUrl.appendingPathComponent(UserDefault.database.string)
         let thisBackupUrl = databaseBackupsUrl.appendingPathComponent(dateString)
         
-        Backup.shared.restore(directory: thisBackupUrl, assetsDirectory: assetsBackupUrl, entity: ScorecardMO.entity(), groupName: "data", elementName: "Scorecard")
-        Backup.shared.restore(directory: thisBackupUrl, assetsDirectory: assetsBackupUrl, entity: LayoutMO.entity(), groupName: "data", elementName: "Layout")
-        Backup.shared.restore(directory: thisBackupUrl, assetsDirectory: assetsBackupUrl, entity: PlayerMO.entity(), groupName: "data", elementName: "Player")
-        Backup.shared.restore(directory: thisBackupUrl, assetsDirectory: assetsBackupUrl, entity: LocationMO.entity(), groupName: "data", elementName: "Location")
+        Backup.shared.restore(ScorecardMO.entity(), directory: thisBackupUrl)
+        Backup.shared.restore(BoardMO.entity(), directory: thisBackupUrl)
+        Backup.shared.restore(TableMO.entity(), directory: thisBackupUrl)
+        Backup.shared.restore(LayoutMO.entity(), directory: thisBackupUrl)
+        Backup.shared.restore(PlayerMO.entity(), directory: thisBackupUrl)
+        Backup.shared.restore(TableMO.entity(), directory: thisBackupUrl)
     }
     
     private func getDirectories() -> (URL, URL) {
@@ -49,10 +58,14 @@ class Backup {
         return (backupsUrl, assetsBackupUrl)
     }
     
-    private func backup(entity: NSEntityDescription, groupName: String, elementName: String, sort: [(key: String, direction: SortDirection)] = [], directory: URL, assetsDirectory: URL) {
+    private func backup(_ entity: NSEntityDescription, sort: [(key: String, direction: SortDirection)] = [], directory: URL? = nil, assetsDirectory: URL? = nil) {
         var records = 0
+        let directory = directory ?? self.thisBackupUrl!
+        let assetsDirectory = assetsDirectory ?? self.assetsBackupUrl!
         
         let recordType = entity.name!
+        let elementName = recordType
+        let groupName = "data"
         if let fileHandle = openFile(directory: directory, recordType: recordType) {
             self.writeString(fileHandle: fileHandle, string: "{ \"\(groupName)\" : [\n")
             
@@ -74,9 +87,12 @@ class Backup {
         }
     }
     
-    private func restore(directory: URL, assetsDirectory: URL, entity: NSEntityDescription, groupName: String, elementName: String) {
+    private func restore(_ entity: NSEntityDescription, directory: URL, assetsDirectory: URL? = nil) {
         
+        let assetsDirectory = assetsDirectory ?? assetsBackupUrl!
         let recordType = entity.name!
+        let elementName = recordType
+        let groupName = "data"
         self.initialise(recordType: recordType)
         let fileURL = directory.appendingPathComponent("\(recordType).json")
         let fileContents = try! Data(contentsOf: fileURL, options: [])

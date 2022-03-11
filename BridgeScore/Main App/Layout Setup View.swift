@@ -136,15 +136,15 @@ struct LayoutDetailView : View {
     @State var minValue = 1
     
     var locations = MasterData.shared.locations
-    @State private var locationIndex: Int = 0
+    @State private var locationIndex: Int?
     
     let types = Type.allCases
-    @State private var typeIndex: Int = 0
+    @State private var typeIndex: Int?
     
-    @State private var resetBoardNumberIndex: Int = 0
+    @State private var resetBoardNumberIndex: Int? = 0
     
     let players = MasterData.shared.players
-    @State private var playerIndex: Int = 0
+    @State private var playerIndex: Int?
     
     var body: some View {
         VStack(spacing: 0) {
@@ -157,16 +157,20 @@ struct LayoutDetailView : View {
                             
                             Separator()
                             
-                            PickerInput(title: "Location", field: $locationIndex, values: {locations.filter{!$0.retired || $0 == selected.location}.map{$0.name}}, inlineTitleWidth: 200)
+                            PickerInput(title: "Location", field: $locationIndex, values: {locations.filter{!$0.retired || $0 == selected.location}.map{$0.name}}, selectedColor: Palette.filterUsed, inlineTitleWidth: 200)
                             { index in
-                                selected.location = locations[index]
+                                if let index = index {
+                                    selected.location = locations[index]
+                                }
                             }
                             
                             Separator()
                             
-                            PickerInput(title: "Partner", field: $playerIndex, values: {players.filter{!$0.retired || $0 == selected.partner}.map{$0.name}}, inlineTitleWidth: 200)
+                            PickerInput(title: "Partner", field: $playerIndex, values: {players.filter{!$0.retired || $0 == selected.partner}.map{$0.name}}, selectedColor: Palette.filterUsed, inlineTitleWidth: 200)
                             { index in
-                                selected.partner = players[index]
+                                if let index = index {
+                                    selected.partner = players[index]
+                                }
                             }
                             
                             Separator()
@@ -179,9 +183,11 @@ struct LayoutDetailView : View {
                     InsetView(title: "Options") {
                         VStack(spacing: 0) {
                             
-                            PickerInput(title: "Scoring Method", field: $typeIndex, values: {types.map{$0.string}}, inlineTitleWidth: 200)
+                            PickerInput(title: "Scoring Method", field: $typeIndex, values: {types.map{$0.string}}, selectedColor: Palette.filterUsed, inlineTitleWidth: 200)
                             { index in
-                                selected.type = types[index]
+                                if let index = index {
+                                    selected.type = types[index]
+                                }
                             }
                             
                             Separator()
@@ -197,9 +203,11 @@ struct LayoutDetailView : View {
                             
                             Separator()
                             
-                            PickerInput(title: "Board Numbers", field: $resetBoardNumberIndex, values: { ResetBoardNumber.allCases.map{$0.string}}, inlineTitleWidth: 200)
+                            PickerInput(title: "Board Numbers", field: $resetBoardNumberIndex, values: { ResetBoardNumber.allCases.map{$0.string}}, selectedColor: Palette.filterUsed, inlineTitleWidth: 200)
                             { (index) in
-                                selected.resetNumbers = (index == ResetBoardNumber.perTable.rawValue)
+                                if let index = index {
+                                    selected.resetNumbers = (index == ResetBoardNumber.perTable.rawValue)
+                                }
                             }
                             
                             
@@ -209,16 +217,23 @@ struct LayoutDetailView : View {
                     Spacer()
                 }
                 .onChange(of: selected.layoutId) { (layoutId) in
-                    locationIndex = locations.firstIndex(where: {$0 == selected.location}) ?? 0
-                    playerIndex = players.firstIndex(where: {$0 == selected.partner}) ?? 0
-                    typeIndex = types.firstIndex(where: {$0 == selected.type}) ?? 0
-                    resetBoardNumberIndex = (selected.resetNumbers ? ResetBoardNumber.perTable : ResetBoardNumber.continuous).rawValue
-                    
+                    setIndexes()
+                }
+                .onAppear {
+                    setIndexes()
                 }
             }
             Spacer()
         }
         .background(Palette.alternate.background)
+    }
+    
+    func setIndexes() {
+        locationIndex = locations.firstIndex(where: {$0 == selected.location}) ?? 0
+        playerIndex = players.firstIndex(where: {$0 == selected.partner}) ?? 0
+        typeIndex = types.firstIndex(where: {$0 == selected.type}) ?? 0
+        resetBoardNumberIndex = (selected.resetNumbers ? ResetBoardNumber.perTable : ResetBoardNumber.continuous).rawValue
+
     }
     
     func boardsLabel(boards: Int) -> String {

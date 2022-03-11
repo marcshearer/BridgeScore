@@ -32,6 +32,7 @@ var captionFont = Font.system(size: (MyApp.format == .tablet ? 20.0 : 16.0))
 var inputTitleFont = Font.system(size: (MyApp.format == .tablet ? 20.0 : 16.0))
 var inputFont = Font.system(size: (MyApp.format == .tablet ? 16.0 : 12.0))
 var messageFont = Font.system(size: (MyApp.format == .tablet ? 16.0 : 12.0))
+var searchFont = Font.system(size: (MyApp.format == .tablet ? 20.0 : 16.0))
 
 // Fonts in scorecard
 var titleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 16.0 : 12.0), weight: .bold)
@@ -43,6 +44,7 @@ var pickerTitleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 
 var pickerCaptionFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 12.0 : 8.0))
 var windowTitleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 20.0))
 var smallCellFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 22.0 : 14.0))
+
 
 // Backups
 let backupDirectoryDateFormat = "yyyy-MM-dd-HH-mm-ss-SSS"
@@ -56,7 +58,7 @@ let tagMultiplier = 1000000
 public let appName = "Bridge Score"
 public let appImage = "bridge score"
 
-public let dateFormat = "EEEE d MMMM"
+public let dateFormat = "EEEE d MMMM yyyy"
 
 public enum UIMode {
     case uiKit

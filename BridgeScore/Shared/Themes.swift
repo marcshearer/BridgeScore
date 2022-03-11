@@ -100,7 +100,9 @@ enum ThemeBackgroundColorName: CaseIterable {
     case enabledButton
     case highlightButton
     case input
-    case filter
+    case filterTile
+    case filterUnused
+    case filterUsed
     case datePicker
 }
 
@@ -385,7 +387,9 @@ class Themes {
                 .enabledButton               : ThemeColor(#colorLiteral(red: 0.6666069031, green: 0.6667050123, blue: 0.6665856242, alpha: 1), nil, .midBackground),
                 .highlightButton             : ThemeColor(#colorLiteral(red: 0, green: 0.5690457821, blue: 0.5746168494, alpha: 1), nil, .darkBackground),
                 .input                       : ThemeColor(#colorLiteral(red: 1, green: 0.9999999404, blue: 1, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1), .lightBackground, .lightBackground),
-                .filter                      : ThemeColor(#colorLiteral(red: 0.862745098, green: 0.862745098, blue: 0.862745098, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1), .lightBackground, .darkBackground),
+                .filterTile                  : ThemeColor(#colorLiteral(red: 0.862745098, green: 0.862745098, blue: 0.862745098, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1), .lightBackground, .darkBackground),
+                .filterUnused                : ThemeColor(#colorLiteral(red: 0, green: 0.5690457821, blue: 0.5746168494, alpha: 1), #colorLiteral(red: 0.5704585314, green: 0.5704723597, blue: 0.5704649091, alpha: 1), .darkBackground, .darkBackground),
+                .filterUsed                  : ThemeColor(#colorLiteral(red: 0, green: 0.3285208941, blue: 0.5748849511, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1), .darkBackground, .darkBackground),
                 .datePicker                  : ThemeColor(#colorLiteral(red: 0.9019607843, green: 0.9019607843, blue: 1, alpha: 1), nil, .midBackground)
             ],
             text: [

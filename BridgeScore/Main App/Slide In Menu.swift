@@ -14,20 +14,24 @@ class SlideInMenu : ObservableObject {
     
     @Published public var title: String? = nil
     @Published public var options: [String] = []
+    @Published public var selected: Int?
     @Published public var top: CGFloat = 0
     @Published public var left: CGFloat? = nil
     @Published public var width: CGFloat = 0
     @Published public var animation: ViewAnimation = .slideLeft
+    @Published public var selectedColor: PaletteColor?
     @Published public var completion: ((String?)->())?
     @Published public var shown: Bool = false
     
-    public func show(title: String? = nil, options: [String], animation: ViewAnimation = .slideLeft, top: CGFloat? = nil, left: CGFloat? = nil, width: CGFloat? = nil, completion: ((String?)->())? = nil) {
+    public func show(title: String? = nil, options: [String], selected: Int? = nil, animation: ViewAnimation = .slideLeft, top: CGFloat? = nil, left: CGFloat? = nil, width: CGFloat? = nil, selectedColor: PaletteColor? = nil, completion: ((String?)->())? = nil) {
         withAnimation(.none) {
             SlideInMenu.shared.title = title
             SlideInMenu.shared.options = options
+            SlideInMenu.shared.selected = selected
             SlideInMenu.shared.top = top ?? bannerHeight + 10
             SlideInMenu.shared.left = left
             SlideInMenu.shared.width = width ?? 300
+            SlideInMenu.shared.selectedColor = selectedColor
             SlideInMenu.shared.animation = animation
             SlideInMenu.shared.completion = completion
             Utility.mainThread {
@@ -83,19 +87,20 @@ struct SlideInMenuView : View {
                                 ScrollView {
                                     VStack(spacing: 0) {
                                         ForEach(options, id: \.self) { (option) in
+                                            let color = (values.selected != nil && values.selectedColor != nil && option == values.options[values.selected!] ? values.selectedColor! :  Palette.background)
                                             VStack(spacing: 0) {
                                                 Spacer()
                                                 HStack {
                                                     Spacer().frame(width: 20)
                                                     Text(option)
                                                         .animation(.none)
-                                                        .foregroundColor(Palette.background.text)
+                                                        .foregroundColor(color.text)
                                                         .font(.title2)
                                                     Spacer()
                                                 }
                                                 Spacer()
                                             }
-                                            .background(Palette.background.background)
+                                            .background(color.background)
                                             .onTapGesture {
                                                 values.completion?(option)
                                                 values.shown = false

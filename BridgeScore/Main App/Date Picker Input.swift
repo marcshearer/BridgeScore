@@ -24,6 +24,7 @@ struct DatePickerInput : View {
     var to: Date?
     var color: PaletteColor = Palette.clear
     var textType: ThemeTextType = .theme
+    var font: Font = inputFont
     var cornerRadius: CGFloat = 0
     var pickerColor: PaletteColor = Palette.datePicker
     var topSpace: CGFloat = 0
@@ -36,7 +37,7 @@ struct DatePickerInput : View {
     @State private var datePicker = false
 
     var body: some View {
-        OptionalDatePickerInput(title: title, field: optionalField, message: message, placeholder: placeholder, from: from, to: to, color: color, textType: textType, cornerRadius: cornerRadius, pickerColor: pickerColor, topSpace: topSpace, width: width, height: height, centered: centered, inlineTitle: inlineTitle, inlineTitleWidth: inlineTitleWidth, onChange: { (optionalDate) in
+        OptionalDatePickerInput(title: title, field: optionalField, message: message, placeholder: placeholder, from: from, to: to, color: color, textType: textType, font: font, cornerRadius: cornerRadius, pickerColor: pickerColor, topSpace: topSpace, width: width, height: height, centered: centered, inlineTitle: inlineTitle, inlineTitleWidth: inlineTitleWidth, onChange: { (optionalDate) in
                             if let date = optionalDate {
                                 onChange?(date)
                             }
@@ -56,6 +57,7 @@ struct OptionalDatePickerInput : View {
     var to: Date?
     var color: PaletteColor = Palette.clear
     var textType: ThemeTextType = .theme
+    var font: Font = inputFont
     var cornerRadius: CGFloat = 0
     var pickerColor: PaletteColor = Palette.datePicker
     var topSpace: CGFloat = 0
@@ -68,7 +70,7 @@ struct OptionalDatePickerInput : View {
     @State private var datePicker = false
     @State private var picker: AnyView!
 
-    init(title: String? = nil, field: Binding<Date?>, message: Binding<String>? = nil, placeholder: String = "", clearText: String? = nil, from: Date? = nil, to: Date? = nil, color: PaletteColor = Palette.clear, textType: ThemeTextType = .theme, cornerRadius: CGFloat = 0, pickerColor: PaletteColor = Palette.datePicker, topSpace: CGFloat = 0, width: CGFloat? = nil, height: CGFloat = 45, centered: Bool = false, inlineTitle: Bool = true, inlineTitleWidth: CGFloat = 150, onChange: ((Date?)->())? = nil) {
+    init(title: String? = nil, field: Binding<Date?>, message: Binding<String>? = nil, placeholder: String = "", clearText: String? = nil, from: Date? = nil, to: Date? = nil, color: PaletteColor = Palette.clear, textType: ThemeTextType = .theme, font: Font = inputFont, cornerRadius: CGFloat = 0, pickerColor: PaletteColor = Palette.datePicker, topSpace: CGFloat = 0, width: CGFloat? = nil, height: CGFloat = 45, centered: Bool = false, inlineTitle: Bool = true, inlineTitleWidth: CGFloat = 150, onChange: ((Date?)->())? = nil) {
         
         self.title = title
         self.field = field
@@ -79,6 +81,7 @@ struct OptionalDatePickerInput : View {
         self.to = to
         self.color = color
         self.textType = textType
+        self.font = font
         self.cornerRadius = cornerRadius
         self.pickerColor = pickerColor
         self.topSpace = topSpace
@@ -118,7 +121,7 @@ struct OptionalDatePickerInput : View {
                         Spacer().frame(width: 16)
                     }
                     Spacer().frame(width: 4)
-                    Text(field.wrappedValue == nil ? placeholder : Utility.dateString(field.wrappedValue!, format: "EEEE dd MMMM yyyy"))
+                    Text(field.wrappedValue == nil ? placeholder : Utility.dateString(field.wrappedValue!, format: "EEEE d MMMM yyyy"))
                         .foregroundColor(color.textColor(textType))
                     
                     Spacer()
@@ -134,6 +137,9 @@ struct OptionalDatePickerInput : View {
                                     DatePickerWrapper(frame: geometry.frame(in: .local), selection: field, from: from, to: to) { (selected) in
                                         datePicker = false
                                         onChange?(selected)
+                                    }
+                                    .onDisappear {
+                                        
                                     }
                                 }
                             }
@@ -161,7 +167,7 @@ struct OptionalDatePickerInput : View {
                         }
                     }
                 }
-                .font(inputFont)
+                .font(font)
                 .labelsHidden()
             }
             .frame(height: self.height + self.topSpace + (title == nil || inlineTitle ? 0 : 30))
@@ -220,8 +226,6 @@ class DatePickerUIView: UIView {
         picker = UIDatePicker(frame: CGRect())
         if let date = selection.wrappedValue {
             picker.date = date
-        } else {
-            selection.wrappedValue = picker.date
         }
         picker.datePickerMode = .date
         if let from = from {
@@ -233,7 +237,6 @@ class DatePickerUIView: UIView {
         picker.preferredDatePickerStyle = .inline
         self.addSubview(picker, anchored: .all)
         picker.addTarget(self, action: #selector(DatePickerUIView.valueChanged(_:)), for: .valueChanged)
-        picker.addTarget(self, action: #selector(DatePickerUIView.touchEvents(_:)), for: .primaryActionTriggered)
         
     }
     
@@ -242,10 +245,6 @@ class DatePickerUIView: UIView {
         completion?(picker.date)
     }
 
-    @objc func touchEvents(_ sender: UIView) {
-
-    }
-    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }

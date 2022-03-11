@@ -19,22 +19,28 @@ struct ScorecardListView: View {
     @State private var linkToLayouts = false
     @State private var linkToPlayers = false
     @State private var linkToLocations = false
+    @State private var linkToStats = false
     @State private var highlighted = false
     @State private var startAt: UUID?
     @State private var closeFilter = false
 
     var body: some View {
-        let scorecards = MasterData.shared.scorecards.filter({self.filter($0)})
+        let scorecards = MasterData.shared.scorecards.filter({filterValues.filter($0)})
         
-        let menuOptions = [BannerOption(text: "Templates", action: { linkToLayouts = true }),
+        var menuOptions = [BannerOption(text: "Statistics", action: { linkToStats = true }),
+                           BannerOption(text: "Templates", action: { linkToLayouts = true }),
                            BannerOption(text: "Players",  action: { linkToPlayers = true }),
                            BannerOption(text: "Locations", action: { linkToLocations = true }),
-                           BannerOption(text: "Backup", action: { Backup.shared.backup() }),
-                           /* BannerOption(text: "Restore", action: {
-                              Backup.shared.restore(dateString: "2022-02-10-15-10-42-407") }),*/
-                           BannerOption(text: "About \(appName)", action: { MessageBox.shared.show("A Bridge scoring app from\nShearer Online Ltd", showIcon: true, showVersion: true) })]
+                           BannerOption(text: "Backup", action: { Backup.shared.backup() })]
+        if Utility.isSimulator {
+            menuOptions.append(
+                           BannerOption(text: "Restore", action: {
+                              Backup.shared.restore(dateString: "Latest") }))
+        }
+        menuOptions.append(contentsOf:
+                          [BannerOption(text: "About \(appName)", action: { MessageBox.shared.show("A Bridge scoring app from\nShearer Online Ltd", showIcon: true, showVersion: true) })])
         
-        StandardView("Scorecard List", navigation: true) {
+        return StandardView("Scorecard List", navigation: true) {
             
             VStack {
                 Banner(title: $title, back: false, optionMode: .menu, menuTitle: "Setup", options: menuOptions)
@@ -52,7 +58,7 @@ struct ScorecardListView: View {
                 
                 ScrollView {
                     Spacer().frame(height: 8)
-                    ScorecardFilterView(values: filterValues, closeFilter: $closeFilter)
+                    ScorecardFilterView(filterValues: filterValues, closeFilter: $closeFilter)
                     ScrollViewReader { scrollViewProxy in
                         LazyVStack {
                             ForEach(scorecards) { (scorecard) in
@@ -102,6 +108,7 @@ struct ScorecardListView: View {
             NavigationLink(destination: LayoutSetupView(), isActive: $linkToLayouts) {EmptyView()}
             NavigationLink(destination: PlayerSetupView(), isActive: $linkToPlayers) {EmptyView()}
             NavigationLink(destination: LocationSetupView(), isActive: $linkToLocations) {EmptyView()}
+            NavigationLink(destination: StatsView(), isActive: $linkToStats) {EmptyView()}
             NavigationLink(destination: ScorecardInputView(scorecard: selected), isActive: $linkToEdit) {EmptyView()}
         }
         .sheet(isPresented: $linkToNew, onDismiss: {
@@ -125,60 +132,6 @@ struct ScorecardListView: View {
                 Scorecard.current.clear()
             }
         }
-    }
-    
-    private func filter(_ scorecard: ScorecardViewModel) -> Bool {
-        var include = true
-        if filterValues.searchText != "" {
-            include = self.wordSearch(for: filterValues.searchText, in: scorecard.desc + " " + scorecard.comment)
-        }
-        
-        if let partner = filterValues.partner {
-            if partner != scorecard.partner {
-                include = false
-            }
-        }
-
-        if let location = filterValues.location {
-            if location != scorecard.location {
-                include = false
-            }
-        }
-
-        if let dateFrom = filterValues.dateFrom {
-            if scorecard.date < Date.startOfDay(from: dateFrom)! {
-                include = false
-            }
-        }
-
-        if let dateTo = filterValues.dateTo {
-            if scorecard.date > Date.endOfDay(from: dateTo)! {
-                include = false
-            }
-        }
-        
-        return include
-    }
-    
-    private func wordSearch(for searchWords: String, in target: String) -> Bool {
-        var result = true
-        let searchList = searchWords.uppercased().components(separatedBy: " ")
-        let targetList = target.uppercased().components(separatedBy: " ")
-        
-        for searchWord in searchList {
-            var found = false
-            for targetWord in targetList {
-                if targetWord.starts(with: searchWord) {
-                    found = true
-                }
-            }
-            if !found {
-                result = false
-            }
-        }
-        
-        return result
-        
     }
 }
 
