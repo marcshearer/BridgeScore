@@ -108,7 +108,6 @@ struct SlideInMenuView : View {
                                             .background(Palette.background.background)
                                             .frame(height: slideInMenuRowHeight)
                                         }
-                                            //.listRowInsets(EdgeInsets())
                                         .listStyle(PlainListStyle())
                                     }
                                 }

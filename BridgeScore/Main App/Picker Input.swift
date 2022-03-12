@@ -120,6 +120,5 @@ struct PickerInputAdditional<Additional>: View where Additional: Equatable  {
         .frame(height: height)
         .background(color.background)
         .cornerRadius(cornerRadius)
-        .frame(height: self.height)
     }
 }

@@ -19,6 +19,8 @@ struct StatsView: View {
                     StatsFilterView(filterValues: filterValues)
                 } rightView: {
                     StatsWrapperView(filterValues: filterValues)
+                        .ignoresSafeArea()
+                        
                 }
             }
         }
@@ -34,6 +36,7 @@ struct StatsFilterView: View {
     @ObservedObject var filterValues: ScorecardFilterValues
     @State private var partnerIndex: Int?
     @State private var locationIndex: Int?
+    @State private var typeIndex: Int?
     let players = MasterData.shared.players.filter{!$0.retired}
     let locations = MasterData.shared.locations.filter{!$0.retired}
     let types = Type.allCases
@@ -58,6 +61,7 @@ struct StatsFilterView: View {
                             partnerIndex = nil
                             filterValues.partner = nil
                         }
+                        saveDefaults()
                     }
                     
                     Spacer().frame(height: 15)
@@ -69,6 +73,7 @@ struct StatsFilterView: View {
                            locationIndex = nil
                            filterValues.location = nil
                         }
+                        saveDefaults()
                     }
                 }
                 
@@ -76,22 +81,100 @@ struct StatsFilterView: View {
                     
                     Spacer().frame(height: 15)
                     
-                    OptionalDatePickerInput(field: $filterValues.dateFrom, placeholder: "Date from", clearText: "Clear date from", to: filterValues.dateTo, color: (filterValues.dateFrom != nil ? Palette.filterUsed : Palette.filterUnused), textType: .normal, font: searchFont, cornerRadius: 20, height: 40, centered: true)
+                    OptionalDatePickerInput(field: $filterValues.dateFrom, placeholder: "Date from", clearText: "Clear date from", to: filterValues.dateTo, color: (filterValues.dateFrom != nil ? Palette.filterUsed : Palette.filterUnused), textType: .normal, font: searchFont, cornerRadius: 20, height: 40, centered: true) { (dateFrom) in
+                        saveDefaults()
+                    }
                     
                     Spacer().frame(height: 15)
                     
-                    OptionalDatePickerInput(field: $filterValues.dateTo, placeholder: "Date to", clearText: "Clear date to", from: filterValues.dateFrom, color: (filterValues.dateTo != nil ? Palette.filterUsed : Palette.filterUnused), textType: .normal, font: searchFont, cornerRadius: 20, height: 40, centered: true)
+                    OptionalDatePickerInput(field: $filterValues.dateTo, placeholder: "Date to", clearText: "Clear date to", from: filterValues.dateFrom, color: (filterValues.dateTo != nil ? Palette.filterUsed : Palette.filterUnused), textType: .normal, font: searchFont, cornerRadius: 20, height: 40, centered: true) { (dateTo) in
+                        saveDefaults()
+                    }
+                    
+                    Spacer().frame(height: 15)
+                    
+                    PickerInput(field: $typeIndex, values: {["No scoring filter"] + types.map{$0.string}}, popupTitle: "Scoring Methods", placeholder: "Scoring Method", height: 40, centered: true, color: (typeIndex != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
+                        if index ?? 0 != 0 {
+                            filterValues.type = types[index! - 1]
+                        } else {
+                           typeIndex = nil
+                           filterValues.type = nil
+                        }
+                        saveDefaults()
+                    }
                     
                     Spacer()
+                    
+                    HStack {
+                        Spacer()
+                        Text("Clear All Filters")
+                            .foregroundColor(Palette.filterUnused.text)
+                            .font(searchFont)
+                        Spacer()
+                    }
+                    .onTapGesture {
+                        reset()
+                    }
+                    .frame(height: 40)
+                    .background(Palette.filterUnused.background)
+                    .cornerRadius(20)
+                    Spacer().frame(height: 20)
                 }
             }
             Spacer().frame(width:16)
         }
         .background(Palette.tile.background)
         .onAppear {
-            partnerIndex = filterValues.partner == nil ? nil : (players.firstIndex(where: {$0 == filterValues.partner})  ?? -1) + 1
-            locationIndex = filterValues.location == nil ? nil : (locations.firstIndex(where: {$0 == filterValues.location})  ?? -1) + 1
+            loadDefaults()
+            setupIndexes()
         }
+    }
+    
+    private func loadDefaults() {
+        // Partner
+        if let partnerId = UserDefault.filterPartner.uuid {
+            if let partner = MasterData.shared.player(id: partnerId) {
+                filterValues.partner = partner
+            }
+        }
+        
+        // Location
+        if let locationId = UserDefault.filterLocation.uuid {
+            if let location = MasterData.shared.location(id: locationId) {
+                filterValues.location = location
+            }
+        }
+        
+        // Date from
+        if let dateFrom = UserDefault.filterDateFrom.date {
+            filterValues.dateFrom = dateFrom
+        }
+
+        // Date to
+        if let dateTo = UserDefault.filterDateTo.date {
+            filterValues.dateTo = dateTo
+        }
+        
+        // Scoring type
+        filterValues.type = UserDefault.filterType.type
+            
+        // Search text
+        filterValues.searchText = UserDefault.filterSearchText.string
+    }
+    
+    private func saveDefaults() {
+        UserDefault.filterPartner.set(filterValues.partner?.playerId)
+        UserDefault.filterLocation.set(filterValues.location?.locationId)
+        UserDefault.filterDateFrom.set(filterValues.dateFrom)
+        UserDefault.filterDateTo.set(filterValues.dateTo)
+        UserDefault.filterType.set(filterValues.type)
+        UserDefault.filterSearchText.set(filterValues.searchText)
+    }
+    
+    private func setupIndexes() {
+        partnerIndex = filterValues.partner == nil ? nil : (players.firstIndex(where: {$0 == filterValues.partner}) ?? -1) + 1
+        locationIndex = filterValues.location == nil ? nil : (locations.firstIndex(where: {$0 == filterValues.location}) ?? -1) + 1
+        typeIndex = filterValues.type == nil ? nil : (types.firstIndex(where: {$0 == filterValues.type}) ?? -1) + 1
     }
     
     private func reset() {
@@ -99,8 +182,10 @@ struct StatsFilterView: View {
         filterValues.location = nil
         filterValues.dateFrom = nil
         filterValues.dateTo = nil
-        filterValues.types = nil
+        filterValues.type = nil
         filterValues.searchText = ""
+        saveDefaults()
+        setupIndexes()
     }
 }
 
@@ -135,6 +220,7 @@ struct StatsWrapperView: UIViewRepresentable {
 class StatsUIView: UIView, GraphDetailDelegate {
     private var filterValues: ScorecardFilterValues
     private var graphView = GraphView()
+    private var errorLabel = UILabel()
     private var values: [CGFloat] = []
     private var drillRef: [String] = []
     private var xAxisLabels: [String] = []
@@ -154,6 +240,13 @@ class StatsUIView: UIView, GraphDetailDelegate {
         graphView.addGestureRecognizer(graphGesture)
         let detailGesture = UITapGestureRecognizer(target: self, action: #selector(StatsUIView.clearDetail(_:)))
         statsDetailView.addGestureRecognizer(detailGesture)
+        addSubview(errorLabel, anchored: .centerX, .centerY)
+        Constraint.setWidth(control: errorLabel, width: 500)
+        Constraint.setHeight(control: errorLabel, height: 50)
+        errorLabel.font = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 40.0 : 20.0))
+        errorLabel.backgroundColor = UIColor.clear
+        errorLabel.textColor = UIColor(Palette.background.faintText)
+        errorLabel.textAlignment = .center
     }
     
     required init?(coder: NSCoder) {
@@ -212,7 +305,13 @@ class StatsUIView: UIView, GraphDetailDelegate {
         // Reset
         graphView.reset()
         
-        if values.count > 1 {
+        if values.count <= 1 {
+            graphView.isHidden = true
+            errorLabel.isHidden = false
+            errorLabel.text = "Insufficient Data!"
+        } else {
+            errorLabel.isHidden = true
+            graphView.isHidden = false
             
             // Add average score line
             graphView.addDataset(values: [CGFloat(average), CGFloat(average)], weight: 3.0, color: UIColor(Palette.gridLine).withAlphaComponent(0.4))

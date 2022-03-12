@@ -12,15 +12,15 @@ class ScorecardFilterValues: ObservableObject {
     @Published public var location: LocationViewModel?
     @Published public var dateFrom: Date?
     @Published public var dateTo: Date?
-    @Published public var types: [Type]?
+    @Published public var type: Type?
     @Published public var searchText: String
     
-    init(partner: PlayerViewModel? = nil, location: LocationViewModel? = nil, dateFrom: Date? = nil, dateTo: Date? = nil, types: [Type]? = nil, searchText: String = "") {
+    init(partner: PlayerViewModel? = nil, location: LocationViewModel? = nil, dateFrom: Date? = nil, dateTo: Date? = nil, type: Type? = nil, searchText: String = "") {
         self.partner = partner
         self.location = location
         self.dateFrom = dateFrom
         self.dateTo = dateTo
-        self.types = types
+        self.type = type
         self.searchText = searchText
     }
     
@@ -58,6 +58,12 @@ class ScorecardFilterValues: ObservableObject {
 
         if let dateTo = dateTo {
             if scorecard.date > Date.endOfDay(from: dateTo)! {
+                include = false
+            }
+        }
+        
+        if let type = type {
+            if type != scorecard.type {
                 include = false
             }
         }
@@ -211,7 +217,7 @@ struct ScorecardFilterView: View {
         filterValues.location = nil
         filterValues.dateFrom = nil
         filterValues.dateTo = nil
-        filterValues.types = nil
+        filterValues.type = nil
         filterValues.searchText = ""
     }
 }

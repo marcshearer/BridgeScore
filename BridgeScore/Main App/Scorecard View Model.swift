@@ -295,14 +295,14 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         
         // Now overwrite with backed up data
         self.scorecardId = UserDefault.currentId.uuid ?? UUID()
-        self.date = UserDefault.currentDate.date
+        self.date = UserDefault.currentDate.date ?? Date()
         self.location = MasterData.shared.location(id: UserDefault.currentLocation.uuid)
         self.desc = UserDefault.currentDescription.string
         self.comment = UserDefault.currentComment.string
         self.partner = MasterData.shared.player(id: UserDefault.currentPartner.uuid)
         self.boards = UserDefault.currentBoards.int
         self.boardsTable = UserDefault.currentBoardsTable.int
-        self.type = UserDefault.currentType.type
+        self.type = UserDefault.currentType.type ?? .percent
         self.resetNumbers = UserDefault.currentresetNumbers.bool
         let score = UserDefault.currentScore.string
         self.score = score == "" ? nil : Float(score)
