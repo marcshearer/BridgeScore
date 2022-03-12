@@ -387,7 +387,7 @@ class StatsGraphUIView: UIView, GraphDetailDelegate {
 
             // Add trend line
             if last.count > 3 {
-                graphView.addDataset(values: last, weight: 4.0, color: UIColor.red, gradient: false, pointSize: 0, tag: 2, startX: lastCount - 1, curveType: .curve)
+                graphView.addDataset(values: last, weight: 3.0, color: UIColor.red, gradient: false, pointSize: 0, tag: 2, startX: lastCount - 1, curveType: .curve)
             }
             
             // Add main dataset - score per game

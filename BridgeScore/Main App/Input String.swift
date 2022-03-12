@@ -78,6 +78,8 @@ struct Input : View {
                 }
                 Spacer().frame(width: 10)
                 HStack {
+                    Spacer().frame(width: 9
+                    )
                     UndoWrapper(field) { field in
                         if multiLine {
                             TextEditor(text: field)
