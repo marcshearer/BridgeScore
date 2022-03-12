@@ -263,7 +263,7 @@ class Scorecard {
             if count == 0 && type.tableAggregate != .manual {
                 newScore = nil
             } else {
-                let average = Utility.round(total / Float(count), places: type.boardPlaces)
+                let average = (count == 0 ? 0 : Utility.round(total / Float(count), places: type.boardPlaces))
                 switch type.tableAggregate {
                 case .average:
                     newScore = Utility.round(average, places: places)
@@ -277,7 +277,7 @@ class Scorecard {
                     if let vps = BridgeMatchPoints(average).vp(boards: boards) {
                         newScore = Float(vps)
                     }
-                default:
+                case .manual:
                     break
                 }
             }
@@ -308,7 +308,7 @@ class Scorecard {
         if count == 0 && type.matchAggregate != .manual {
             newScore = nil
         } else {
-            let average = Utility.round(total / Float(count), places: places)
+            let average = (count == 0 ? 0 : Utility.round(total / Float(count), places: places))
             switch type.matchAggregate {
             case .average:
                 newScore = average
@@ -322,7 +322,7 @@ class Scorecard {
                 if let vps = BridgeMatchPoints(average).vp(boards: boards) {
                     newScore = Float(vps)
                 }
-            default:
+            case .manual:
                 break
             }
         }

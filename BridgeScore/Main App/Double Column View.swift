@@ -11,8 +11,10 @@ struct DoubleColumnView <LeftContent, RightContent> : View where LeftContent : V
     var leftWidth: CGFloat
     var leftView: LeftContent
     var rightView: RightContent
+    var separator: Bool = true
     
-    init(leftWidth: CGFloat = 350, @ViewBuilder leftView: ()->LeftContent, @ViewBuilder rightView: ()->RightContent) {
+    init(leftWidth: CGFloat = 350, separator: Bool = true, @ViewBuilder leftView: ()->LeftContent, @ViewBuilder rightView: ()->RightContent) {
+        self.separator =  separator
         self.leftWidth = leftWidth
         self.leftView = leftView()
         self.rightView = rightView()
@@ -24,8 +26,10 @@ struct DoubleColumnView <LeftContent, RightContent> : View where LeftContent : V
                 Spacer()
             }
             .frame(width: leftWidth)
-            Separator(direction: .vertical, thickness: 2.0)
-                .foregroundColor(Palette.banner.background)
+            if separator {
+                Separator(direction: .vertical, thickness: 2.0)
+                    .foregroundColor(Palette.banner.background)
+            }
             VStack {
                 rightView
                 Spacer()

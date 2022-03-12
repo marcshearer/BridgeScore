@@ -14,12 +14,17 @@ struct StatsView: View {
     var body: some View {
         StandardView("Stats", slideIn: true) {
             VStack(spacing: 0) {
-                Banner(title: Binding.constant("Statistics"), back: true, backAction: backAction)
-                DoubleColumnView(leftWidth: 350) {
+                Banner(title: Binding.constant("Statistics"), back: true, backAction: backAction, leftTitle: true)
+                DoubleColumnView(leftWidth: 350, separator: false) {
                     StatsFilterView(filterValues: filterValues)
                 } rightView: {
-                    StatsWrapperView(filterValues: filterValues)
-                        .ignoresSafeArea()
+                    VStack(spacing: 0) {
+                        Spacer().frame(height: 16)
+                        StatsWrapperView(filterValues: filterValues)
+                        Spacer().frame(height: 24)
+                    }
+                    .background(Palette.alternate.background)
+                    .ignoresSafeArea()
                         
                 }
             }
@@ -42,88 +47,118 @@ struct StatsFilterView: View {
     let types = Type.allCases
     
     var body: some View {
-        
-        HStack {
-            Spacer().frame(width: 16)
-            VStack(spacing: 0) {
+        VStack(spacing: 0) {
+            InsetView(color: Palette.tile) {
                 VStack(spacing: 0) {
-                    Spacer().frame(height: 20)
-                    HStack {
-                        Text("FILTER BY:").font(.title3).foregroundColor(Palette.tile.faintText)
+                    VStack(spacing: 0) {
+                        Spacer().frame(height: 20)
+                        HStack {
+                            Text("FILTER BY:").font(.title3).foregroundColor(Palette.tile.faintText)
+                            Spacer()
+                        }
+                        Spacer().frame(height: 20)
+                        
+                        PickerInput(field: $partnerIndex, values: {["No partner filter"] + players.map{$0.name}}, popupTitle: "Partners", placeholder: "Partner", height: 40, centered: true, color: (partnerIndex != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
+                            if index ?? 0 != 0 {
+                                filterValues.partner = players[index! - 1]
+                            } else {
+                                partnerIndex = nil
+                                filterValues.partner = nil
+                            }
+                            saveDefaults()
+                        }
+                        
+                        Spacer().frame(height: 15)
+                        
+                        PickerInput(field: $locationIndex, values: {["No location filter"] + locations.map{$0.name}}, popupTitle: "Locations", placeholder: "Location", height: 40, centered: true, color: (locationIndex != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
+                            if index ?? 0 != 0 {
+                                filterValues.location = locations[index! - 1]
+                            } else {
+                                locationIndex = nil
+                                filterValues.location = nil
+                            }
+                            saveDefaults()
+                        }
+                    }
+                    
+                    VStack(spacing: 0) {
+                        
+                        Spacer().frame(height: 15)
+                        
+                        OptionalDatePickerInput(field: $filterValues.dateFrom, placeholder: "Date from", clearText: "Clear date from", to: filterValues.dateTo, color: (filterValues.dateFrom != nil ? Palette.filterUsed : Palette.filterUnused), textType: .normal, font: searchFont, cornerRadius: 20, height: 40, centered: true) { (dateFrom) in
+                            saveDefaults()
+                        }
+                        
+                        Spacer().frame(height: 15)
+                        
+                        OptionalDatePickerInput(field: $filterValues.dateTo, placeholder: "Date to", clearText: "Clear date to", from: filterValues.dateFrom, color: (filterValues.dateTo != nil ? Palette.filterUsed : Palette.filterUnused), textType: .normal, font: searchFont, cornerRadius: 20, height: 40, centered: true) { (dateTo) in
+                            saveDefaults()
+                        }
+                        
+                        Spacer().frame(height: 15)
+                        
+                        PickerInput(field: $typeIndex, values: {["No scoring filter"] + types.map{$0.string}}, popupTitle: "Scoring Methods", placeholder: "Scoring Method", height: 40, centered: true, color: (typeIndex != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
+                            if index ?? 0 != 0 {
+                                filterValues.type = types[index! - 1]
+                            } else {
+                                typeIndex = nil
+                                filterValues.type = nil
+                            }
+                            saveDefaults()
+                        }
+                    }
+                    
+                    VStack(spacing: 0) {
+                        
+                        Spacer().frame(height: 40)
+                        
+                        HStack {
+                            ZStack {
+                                Rectangle()
+                                    .foregroundColor(Palette.input.background)
+                                    .cornerRadius(20)
+                                if filterValues.searchText.isEmpty {
+                                    HStack {
+                                        Spacer()
+                                        Text("Search words")
+                                            .foregroundColor(Palette.input.faintText)
+                                        Spacer()
+                                    }
+                                }
+                                HStack {
+                                    Input(field: $filterValues.searchText, height: 40, color: Palette.clear, clearText: (filterValues.searchText != "")) { (searchText) in
+                                        saveDefaults()
+                                    }
+                                    .foregroundColor(Palette.input.text)
+                                }
+                            }
+                            .frame(height: 40)
+                        }
+                        
                         Spacer()
-                    }
-                    Spacer().frame(height: 20)
-                    
-                    PickerInput(field: $partnerIndex, values: {["No partner filter"] + players.map{$0.name}}, popupTitle: "Partners", placeholder: "Partner", height: 40, centered: true, color: (partnerIndex != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
-                        if index ?? 0 != 0 {
-                            filterValues.partner = players[index! - 1]
-                        } else {
-                            partnerIndex = nil
-                            filterValues.partner = nil
+                        
+                        HStack {
+                            Spacer()
+                            Text("Clear All Filters")
+                                .foregroundColor(Palette.filterUnused.text)
+                                .font(searchFont)
+                            Spacer()
                         }
-                        saveDefaults()
-                    }
-                    
-                    Spacer().frame(height: 15)
-                    
-                    PickerInput(field: $locationIndex, values: {["No location filter"] + locations.map{$0.name}}, popupTitle: "Locations", placeholder: "Location", height: 40, centered: true, color: (locationIndex != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
-                        if index ?? 0 != 0 {
-                            filterValues.location = locations[index! - 1]
-                        } else {
-                           locationIndex = nil
-                           filterValues.location = nil
+                        .onTapGesture {
+                            reset()
                         }
-                        saveDefaults()
+                        .frame(height: 40)
+                        .background(Palette.filterUnused.background)
+                        .cornerRadius(20)
+                        
+                        Spacer().frame(height: 20)
                     }
                 }
-                
-                VStack(spacing: 0) {
-                    
-                    Spacer().frame(height: 15)
-                    
-                    OptionalDatePickerInput(field: $filterValues.dateFrom, placeholder: "Date from", clearText: "Clear date from", to: filterValues.dateTo, color: (filterValues.dateFrom != nil ? Palette.filterUsed : Palette.filterUnused), textType: .normal, font: searchFont, cornerRadius: 20, height: 40, centered: true) { (dateFrom) in
-                        saveDefaults()
-                    }
-                    
-                    Spacer().frame(height: 15)
-                    
-                    OptionalDatePickerInput(field: $filterValues.dateTo, placeholder: "Date to", clearText: "Clear date to", from: filterValues.dateFrom, color: (filterValues.dateTo != nil ? Palette.filterUsed : Palette.filterUnused), textType: .normal, font: searchFont, cornerRadius: 20, height: 40, centered: true) { (dateTo) in
-                        saveDefaults()
-                    }
-                    
-                    Spacer().frame(height: 15)
-                    
-                    PickerInput(field: $typeIndex, values: {["No scoring filter"] + types.map{$0.string}}, popupTitle: "Scoring Methods", placeholder: "Scoring Method", height: 40, centered: true, color: (typeIndex != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
-                        if index ?? 0 != 0 {
-                            filterValues.type = types[index! - 1]
-                        } else {
-                           typeIndex = nil
-                           filterValues.type = nil
-                        }
-                        saveDefaults()
-                    }
-                    
-                    Spacer()
-                    
-                    HStack {
-                        Spacer()
-                        Text("Clear All Filters")
-                            .foregroundColor(Palette.filterUnused.text)
-                            .font(searchFont)
-                        Spacer()
-                    }
-                    .onTapGesture {
-                        reset()
-                    }
-                    .frame(height: 40)
-                    .background(Palette.filterUnused.background)
-                    .cornerRadius(20)
-                    Spacer().frame(height: 20)
-                }
+                Spacer().frame(width: 16)
             }
-            Spacer().frame(width:16)
+            Spacer().frame(height: 8)
         }
-        .background(Palette.tile.background)
+        .background(Palette.alternate.background)
         .onAppear {
             loadDefaults()
             setupIndexes()

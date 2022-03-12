@@ -65,10 +65,6 @@ class GraphView: UIView {
     
     init() {
         super.init(frame: .zero)
-        if MyApp.format != .phone {
-            self.layer.cornerRadius = 10
-            self.layer.masksToBounds = true
-        }
     }
     
     public func reset() {

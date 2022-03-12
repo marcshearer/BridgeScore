@@ -35,7 +35,8 @@ class ScorecardFilterValues: ObservableObject {
     public func filter(_ scorecard: ScorecardViewModel) -> Bool {
         var include = true
         if searchText != "" {
-            include = self.wordSearch(for: searchText, in: scorecard.desc + " " + scorecard.comment)
+            let scorecardText = "\(scorecard.desc) \(scorecard.comment) \(scorecard.location?.name ?? "") \(scorecard.partner?.name ?? "")"
+            include = self.wordSearch(for: searchText, in: scorecardText)
         }
         
         if let partner = partner {
