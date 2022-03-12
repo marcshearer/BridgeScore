@@ -11,13 +11,10 @@ To Do
 =====
 Sort out dark mode
 Maybe remove file sharing in Info.plist once can backup from Mac
-Change manual to be a true/false in addition to scoring type
 Stats rotation not great
-Open scoresheet from graph
 Multi-select in stats
-Hide filter panel in stats
-Add trend curve to stats
 
 Enhancements
 ============
 Share scorecards via iCloud?
+Open scoresheet from graph?

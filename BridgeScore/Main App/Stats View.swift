@@ -10,22 +10,40 @@ import SwiftUI
 struct StatsView: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     @State private var filterValues = ScorecardFilterValues()
+    @State private var hideLeft = false
     
     var body: some View {
         StandardView("Stats", slideIn: true) {
             VStack(spacing: 0) {
                 Banner(title: Binding.constant("Statistics"), back: true, backAction: backAction, leftTitle: true)
-                DoubleColumnView(leftWidth: 350, separator: false) {
-                    StatsFilterView(filterValues: filterValues)
+                DoubleColumnView(leftWidth: (hideLeft ? 0 : 350), separator: false) {
+                    StatsFilterView(filterValues: filterValues, hideLeft: $hideLeft)
                 } rightView: {
-                    VStack(spacing: 0) {
-                        Spacer().frame(height: 16)
-                        StatsGraphWrapperView(filterValues: filterValues)
-                        Spacer().frame(height: 24)
+                    ZStack {
+                        VStack(spacing: 0) {
+                            Spacer().frame(height: 16)
+                            StatsGraphWrapperView(filterValues: filterValues)
+                            Spacer().frame(height: 24)
+                        }
+                        .background(Palette.alternate.background)
+                        .ignoresSafeArea()
+                        if hideLeft {
+                            VStack(spacing: 0) {
+                                Spacer().frame(height: 16)
+                                HStack {
+                                    Spacer().frame(width: 16)
+                                    Image(systemName: "arrow.right.circle.fill")
+                                        .font(.title)
+                                        .foregroundColor(Palette.filterUnused.background)
+                                        .onTapGesture {
+                                            hideLeft = false
+                                        }
+                                    Spacer()
+                                }
+                                Spacer()
+                            }
+                        }
                     }
-                    .background(Palette.alternate.background)
-                    .ignoresSafeArea()
-                        
                 }
                 .keyboardAdaptive
             }
@@ -40,6 +58,7 @@ struct StatsView: View {
 
 struct StatsFilterView: View {
     @ObservedObject var filterValues: ScorecardFilterValues
+    @Binding var hideLeft: Bool
     @State private var partnerIndex: Int?
     @State private var locationIndex: Int?
     @State private var typeIndex: Int?
@@ -52,7 +71,17 @@ struct StatsFilterView: View {
             InsetView(color: Palette.tile) {
                 VStack(spacing: 0) {
                     VStack(spacing: 0) {
-                        Spacer().frame(height: 20)
+                        Spacer().frame(height: 8)
+                        HStack {
+                            Spacer()
+                            Image(systemName: "arrow.left.circle.fill")
+                                .font(.title)
+                                .foregroundColor(Palette.filterUnused.background)
+                                .onTapGesture {
+                                    hideLeft = true
+                                }
+                        }
+                        .frame(height: 8)
                         HStack {
                             Text("FILTER BY:").font(.title3).foregroundColor(Palette.tile.faintText)
                             Spacer()
