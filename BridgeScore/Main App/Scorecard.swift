@@ -260,25 +260,25 @@ class Scorecard {
             let type = scorecard.type
             let boards = scorecard.boardsTable
             let places = type.tablePlaces
-            if count == 0 && type.tableAggregate != .manual {
-                newScore = nil
-            } else {
-                let average = (count == 0 ? 0 : Utility.round(total / Float(count), places: type.boardPlaces))
-                switch type.tableAggregate {
-                case .average:
-                    newScore = Utility.round(average, places: places)
-                case .total:
-                    newScore = Utility.round(total, places: places)
-                case .continuousVp:
-                    newScore = BridgeImps(Int(Utility.round(total))).vp(boards: boards, places: places)
-                case .discreteVp:
-                    newScore = Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: boards))
-                case .percentVp:
-                    if let vps = BridgeMatchPoints(average).vp(boards: boards) {
-                        newScore = Float(vps)
+            if !scorecard.manualTotals {
+                if count == 0 {
+                    newScore = nil
+                } else {
+                    let average = (count == 0 ? 0 : Utility.round(total / Float(count), places: type.boardPlaces))
+                    switch type.tableAggregate {
+                    case .average:
+                        newScore = Utility.round(average, places: places)
+                    case .total:
+                        newScore = Utility.round(total, places: places)
+                    case .continuousVp:
+                        newScore = BridgeImps(Int(Utility.round(total))).vp(boards: boards, places: places)
+                    case .discreteVp:
+                        newScore = Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: boards))
+                    case .percentVp:
+                        if let vps = BridgeMatchPoints(average).vp(boards: boards) {
+                            newScore = Float(vps)
+                        }
                     }
-                case .manual:
-                    break
                 }
             }
             if newScore != table.score {
@@ -305,25 +305,25 @@ class Scorecard {
         let type = scorecard.type
         let boards = scorecard.boards
         let places = type.matchPlaces
-        if count == 0 && type.matchAggregate != .manual {
-            newScore = nil
-        } else {
-            let average = (count == 0 ? 0 : Utility.round(total / Float(count), places: places))
-            switch type.matchAggregate {
-            case .average:
-                newScore = average
-            case .total:
-                newScore = Utility.round(total, places: places)
-            case .continuousVp:
-                newScore = BridgeImps(Int(Utility.round(total))).vp(boards: boards, places: places)
-            case .discreteVp:
-                newScore = Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: boards))
-            case .percentVp:
-                if let vps = BridgeMatchPoints(average).vp(boards: boards) {
-                    newScore = Float(vps)
+        if !scorecard.manualTotals {
+            if count == 0 {
+                newScore = nil
+            } else {
+                let average = (count == 0 ? 0 : Utility.round(total / Float(count), places: places))
+                switch type.matchAggregate {
+                case .average:
+                    newScore = average
+                case .total:
+                    newScore = Utility.round(total, places: places)
+                case .continuousVp:
+                    newScore = BridgeImps(Int(Utility.round(total))).vp(boards: boards, places: places)
+                case .discreteVp:
+                    newScore = Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: boards))
+                case .percentVp:
+                    if let vps = BridgeMatchPoints(average).vp(boards: boards) {
+                        newScore = Float(vps)
+                    }
                 }
-            case .manual:
-                break
             }
         }
         if newScore != scorecard.score {

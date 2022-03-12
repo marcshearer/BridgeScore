@@ -23,6 +23,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     @Published public var boards: Int = 0
     @Published public var boardsTable: Int = 0
     @Published public var type: Type = .percent
+    @Published public var manualTotals: Bool = false
     @Published public var resetNumbers: Bool = false
     @Published public var score: Float?
     @Published public var maxScore: Float?
@@ -57,6 +58,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
                 self.boards != mo.boards ||
                 self.boardsTable != mo.boardsTable ||
                 self.type != mo.type ||
+                self.manualTotals != mo.manualTotals ||
                 self.resetNumbers != mo.resetNumbers ||
                 self.score != mo.score ||
                 self.maxScore != mo.maxScore ||
@@ -130,6 +132,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.boards = layout.boards
         self.boardsTable = layout.boardsTable
         self.type = layout.type
+        self.manualTotals = layout.manualTotals
         self.resetNumbers = layout.resetNumbers
         self.date = Date()
         self.comment = ""
@@ -152,6 +155,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.boards = from.boards
         self.boardsTable = from.boardsTable
         self.type = from.type
+        self.manualTotals = from.manualTotals
         self.resetNumbers = from.resetNumbers
         self.score = from.score
         self.maxScore = from.maxScore
@@ -177,6 +181,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             self.boards = mo.boards
             self.boardsTable = mo.boardsTable
             self.type = mo.type
+            self.manualTotals = mo.manualTotals
             self.resetNumbers = mo.resetNumbers
             self.score = mo.score
             self.maxScore = mo.maxScore
@@ -198,6 +203,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             mo.boards = self.boards
             mo.boardsTable = self.boardsTable
             mo.type = self.type
+            mo.manualTotals = self.manualTotals
             mo.resetNumbers = self.resetNumbers
             mo.score = self.score
             mo.maxScore = self.maxScore
@@ -272,7 +278,8 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         UserDefault.currentBoards.set(self.boards)
         UserDefault.currentBoardsTable.set(self.boardsTable)
         UserDefault.currentType.set(self.type)
-        UserDefault.currentresetNumbers.set(self.resetNumbers)
+        UserDefault.currentManualTotals.set(self.manualTotals)
+        UserDefault.currentResetNumbers.set(self.resetNumbers)
         UserDefault.currentScore.set(self.score == nil ? "" : "\(self.score!)")
         UserDefault.currentMaxScore.set(self.maxScore == nil ? "" : "\(self.maxScore!)")
         UserDefault.currentPosition.set(self.position)
@@ -303,7 +310,8 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.boards = UserDefault.currentBoards.int
         self.boardsTable = UserDefault.currentBoardsTable.int
         self.type = UserDefault.currentType.type ?? .percent
-        self.resetNumbers = UserDefault.currentresetNumbers.bool
+        self.manualTotals = UserDefault.currentManualTotals.bool
+        self.resetNumbers = UserDefault.currentResetNumbers.bool
         let score = UserDefault.currentScore.string
         self.score = score == "" ? nil : Float(score)
         let maxScore = UserDefault.currentMaxScore.string

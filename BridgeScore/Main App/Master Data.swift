@@ -68,6 +68,20 @@ class MasterData: ObservableObject {
         // Setup scorecards
         self.scorecards = []
         for scorecardMO in scorecardMOs {
+            CoreData.update {
+            if scorecardMO.type16 == 6 {
+                scorecardMO.manualTotals = true
+                if scorecardMO.maxScore == 100 {
+                    scorecardMO.type = .percent
+                } else if scorecardMO.maxScore == 20 {
+                    scorecardMO.type = .vpMatchTeam
+                } else if scorecardMO.desc.contains("Team") {
+                    scorecardMO.type = .vpTableTeam
+                } else {
+                    scorecardMO.type = .vpPercent
+                }
+            }
+            }
             scorecards.append(ScorecardViewModel(scorecardMO: scorecardMO))
         }
     }

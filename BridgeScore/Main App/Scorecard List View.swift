@@ -158,7 +158,7 @@ struct ScorecardSummaryView: View {
                                 HStack {
                                     Spacer()
                                     if let score = scorecard.score {
-                                        Text("\(score.toString(places: scorecard.type.matchPlaces))\(scorecard.type.matchSuffix(scorecard: scorecard))")
+                                        Text("\(scorecard.type.matchPrefix(scorecard: scorecard))\(score.toString(places: scorecard.type.matchPlaces))\(scorecard.type.matchSuffix(scorecard: scorecard))")
                                     }
                                 }
                                 .frame(width: 150)

@@ -15,7 +15,7 @@ struct InputToggle : View {
     @Binding var field: Bool
     var message: Binding<String>?
     var messageOffset: CGFloat = 0.0
-    var topSpace: CGFloat = 16
+    var topSpace: CGFloat = 0
     var leadingSpace: CGFloat = 0
     var height: CGFloat = 30
     var width: CGFloat?

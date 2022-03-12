@@ -974,7 +974,7 @@ class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDeleg
             seatPicker.isHidden = false
             seatPicker.set(table.sitting, color: color, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
         case .tableScore:
-            if scorecard.type.tableAggregate == .manual {
+            if scorecard.manualTotals {
                 textField.isHidden = false
                 textField.keyboardType = .numbersAndPunctuation
                 textField.clearsOnBeginEditing = true

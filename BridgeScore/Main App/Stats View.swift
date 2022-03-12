@@ -20,13 +20,14 @@ struct StatsView: View {
                 } rightView: {
                     VStack(spacing: 0) {
                         Spacer().frame(height: 16)
-                        StatsWrapperView(filterValues: filterValues)
+                        StatsGraphWrapperView(filterValues: filterValues)
                         Spacer().frame(height: 24)
                     }
                     .background(Palette.alternate.background)
                     .ignoresSafeArea()
                         
                 }
+                .keyboardAdaptive
             }
         }
     }
@@ -224,19 +225,19 @@ struct StatsFilterView: View {
     }
 }
 
-struct StatsWrapperView: UIViewRepresentable {
+struct StatsGraphWrapperView: UIViewRepresentable {
     @ObservedObject var filterValues: ScorecardFilterValues
     @State var values: [CGFloat] = []
     @State var drillRef: [String] = []
     @State var xAxisLabels: [String] = []
     
-    func makeUIView(context: Context) -> StatsUIView {
-        let view = StatsUIView(filterValues: filterValues)
+    func makeUIView(context: Context) -> StatsGraphUIView {
+        let view = StatsGraphUIView(filterValues: filterValues)
        
         return view
     }
 
-    func updateUIView(_ uiView: StatsUIView, context: Context) {
+    func updateUIView(_ uiView: StatsGraphUIView, context: Context) {
         uiView.set(filterValues: filterValues)
     }
     
@@ -252,7 +253,7 @@ struct StatsWrapperView: UIViewRepresentable {
     }
 }
 
-class StatsUIView: UIView, GraphDetailDelegate {
+class StatsGraphUIView: UIView, GraphDetailDelegate {
     private var filterValues: ScorecardFilterValues
     private var graphView = GraphView()
     private var errorLabel = UILabel()
@@ -271,9 +272,9 @@ class StatsUIView: UIView, GraphDetailDelegate {
         self.filterValues = filterValues
         super.init(frame: CGRect.zero)
         addSubview(graphView, anchored: .all)
-        let graphGesture = UITapGestureRecognizer(target: self, action: #selector(StatsUIView.clearDetail(_:)))
+        let graphGesture = UITapGestureRecognizer(target: self, action: #selector(StatsGraphUIView.clearDetail(_:)))
         graphView.addGestureRecognizer(graphGesture)
-        let detailGesture = UITapGestureRecognizer(target: self, action: #selector(StatsUIView.clearDetail(_:)))
+        let detailGesture = UITapGestureRecognizer(target: self, action: #selector(StatsGraphUIView.clearDetail(_:)))
         statsDetailView.addGestureRecognizer(detailGesture)
         addSubview(errorLabel, anchored: .centerX, .centerY)
         Constraint.setWidth(control: errorLabel, width: 500)
@@ -328,6 +329,17 @@ class StatsUIView: UIView, GraphDetailDelegate {
                 }
             }
         }
+        // Moving averages
+        var last: [CGFloat] = []
+        var lastCount = 0
+        if values.count >= 9 {
+            lastCount = (Int(values.count / 4) * 2) + 3
+            for i in 0...(values.count - lastCount) {
+                let slice = values[i..<(i + lastCount - 1)]
+                let total = slice.reduce(0, +)
+                last.append(total / CGFloat(slice.count))
+            }
+        }
         
         let average = total / Float(count)
         
@@ -373,8 +385,14 @@ class StatsUIView: UIView, GraphDetailDelegate {
             let upperBound = CGFloat(min(105, Int((values.max()! + 10) * 5) / 5))
             graphView.addDataset(values: [upperBound, upperBound], weight: 0, color: UIColor.clear)
 
+            // Add trend line
+            if last.count > 3 {
+                graphView.addDataset(values: last, weight: 4.0, color: UIColor.red, gradient: false, pointSize: 0, tag: 2, startX: lastCount - 1, curveType: .curve)
+            }
+            
             // Add main dataset - score per game
             graphView.addDataset(values: values, weight: 3.0, color: UIColor(Palette.gridLine), gradient: false, pointSize: 12.0, tag: 1, drillRef: drillRef)
+            
             graphView.detailDelegate = self
         }
     }

@@ -38,6 +38,7 @@ struct Input : View {
     var keyboardType: KeyboardType = .default
     var autoCapitalize: CapitalizationType = .sentences
     var autoCorrect: Bool = true
+    var multiLine: Bool = false
     var clearText: Bool = true
     var inlineTitle: Bool = true
     var inlineTitleWidth: CGFloat = 150
@@ -67,7 +68,7 @@ struct Input : View {
                         Spacer().frame(width: 8)
                         VStack(spacing: 0) {
                             Spacer()
-                                .frame(height: 9)
+                                .frame(height: 13)
                             Text(title!)
                             Spacer()
                         }
@@ -77,18 +78,29 @@ struct Input : View {
                 }
                 Spacer().frame(width: 10)
                 HStack {
-                    Spacer().frame(width: 4)
                     UndoWrapper(field) { field in
-                        TextEditor(text: field)
-                            .lineLimit(1)
-                            .padding(.all, 1)
-                            .keyboardType(self.keyboardType)
-                            .autocapitalization(autoCapitalize)
-                            .disableAutocorrection(!autoCorrect)
-                            .foregroundColor(color.text)
-                            .onChange(of: field.wrappedValue) { field in
-                                onChange?(field)
-                            }
+                        if multiLine {
+                            TextEditor(text: field)
+                                .lineLimit(1)
+                                .padding(.all, 1)
+                                .keyboardType(self.keyboardType)
+                                .autocapitalization(autoCapitalize)
+                                .disableAutocorrection(!autoCorrect)
+                                .foregroundColor(color.text)
+                                .onChange(of: field.wrappedValue) { field in
+                                    onChange?(field)
+                                }
+                        } else {
+                            TextField("", text: field)
+                                .padding(.all, 1)
+                                .keyboardType(self.keyboardType)
+                                .autocapitalization(autoCapitalize)
+                                .disableAutocorrection(!autoCorrect)
+                                .foregroundColor(color.text)
+                                .onChange(of: field.wrappedValue) { field in
+                                    onChange?(field)
+                                }
+                        }
                     }
                 }
                 .if(width != nil) { (view) in

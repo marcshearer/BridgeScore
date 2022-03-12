@@ -22,6 +22,7 @@ public class LayoutMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var boards16: Int16
     @NSManaged public var boardsTable16: Int16
     @NSManaged public var type16: Int16
+    @NSManaged public var manualTotals: Bool
     @NSManaged public var resetNumbers: Bool
     
     public convenience init() {

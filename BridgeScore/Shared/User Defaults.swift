@@ -22,9 +22,10 @@ enum UserDefault: String, CaseIterable {
     case currentDescription
     case currentComment
     case currentType
+    case currentManualTotals
     case currentBoards
     case currentBoardsTable
-    case currentresetNumbers
+    case currentResetNumbers
     case currentScore
     case currentMaxScore
     case currentPosition
@@ -70,11 +71,13 @@ enum UserDefault: String, CaseIterable {
             return ""
         case .currentType:
             return Type.percent.rawValue
+        case .currentManualTotals:
+            return false
         case .currentBoards:
             return 1
         case .currentBoardsTable:
             return 1
-        case .currentresetNumbers:
+        case .currentResetNumbers:
             return false
         case .currentScore:
             return ""

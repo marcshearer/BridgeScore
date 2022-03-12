@@ -13,6 +13,11 @@ protocol GraphDetailDelegate: AnyObject {
     func graphDetail(drillRef: Any, position: CGPoint)
 }
 
+enum CurveType {
+    case line
+    case curve
+}
+
 class GraphView: UIView {
 
     private struct Dataset {
@@ -23,6 +28,8 @@ class GraphView: UIView {
         var gradient: Bool
         var pointSize: CGFloat
         var tag: Int
+        var startX: Int
+        var curveType: CurveType
         var xAxisLabels: [String]!
         var drillRef: [Any]!
     }
@@ -77,8 +84,8 @@ class GraphView: UIView {
         
     }
 
-    public func addDataset(values: [CGFloat], weight: CGFloat = 3.0, color: UIColor = UIColor.white, pointFillColor: UIColor? = nil, gradient: Bool = false, pointSize: CGFloat = 0.0, tag: Int = 0, xAxisLabels: [String]! = nil, drillRef: [Any]! = nil) {
-        self.datasets.append(Dataset(values: values, weight: weight, color: color, pointFillColor: pointFillColor, gradient: gradient, pointSize: pointSize, tag: tag, xAxisLabels: xAxisLabels, drillRef: drillRef))
+    public func addDataset(values: [CGFloat], weight: CGFloat = 3.0, color: UIColor = UIColor.white, pointFillColor: UIColor? = nil, gradient: Bool = false, pointSize: CGFloat = 0.0, tag: Int = 0, startX: Int = 0, curveType: CurveType = .line, xAxisLabels: [String]! = nil, drillRef: [Any]! = nil) {
+        self.datasets.append(Dataset(values: values, weight: weight, color: color, pointFillColor: pointFillColor, gradient: gradient, pointSize: pointSize, tag: tag, startX: startX, curveType: curveType, xAxisLabels: xAxisLabels, drillRef: drillRef))
         if xAxisLabels != nil {
             for label in xAxisLabels {
                 bottomMaxLen = max(label.count, bottomMaxLen)
@@ -140,7 +147,7 @@ class GraphView: UIView {
         // Calculate x position
         let columnXPoint = { (dataset: Dataset, column: Int) -> CGFloat in
             let xScale: CGFloat = (width - leftMargin - rightMargin - 4) /
-                CGFloat((dataset.values.count - 1))
+            CGFloat((dataset.values.count + dataset.startX - 1))
             //Calculate gap between points
             var x:CGFloat = CGFloat(column) * xScale
             x += leftMargin + 2
@@ -193,84 +200,98 @@ class GraphView: UIView {
                 context!.saveGState()
                 
                 let xScale: CGFloat = (width - leftMargin - rightMargin - 4) /
-                    CGFloat((dataset.values.count - 1))
+                CGFloat((dataset.values.count + dataset.startX - 1))
                 let graphPath = UIBezierPath()
                 graphPath.lineWidth = dataset.weight
                 
                 dataset.color.setFill()
                 dataset.color.setStroke()
-                
-                // Go to start of line
-                graphPath.move(to: CGPoint(x: columnXPoint(dataset, 0),
-                                              y: columnYPoint(dataset.values[0])))
-                
-                // Move to each point
+
                 if dataset.values.count > 1 {
-                    // Add points for each item in the graphPoints array
-                    // at the correct (x, y) for the point
-                    for i in 1...dataset.values.count-1 {
-                        let nextPoint = CGPoint(x: columnXPoint(dataset, i),
-                                                y: columnYPoint(dataset.values[i]))
-                        graphPath.addLine(to: nextPoint)
+                    
+                    var points: [Int:CGPoint] = [:]
+                    for i in 0..<dataset.values.count {
+                        points[i] = CGPoint(x: columnXPoint(dataset, dataset.startX + i),
+                                            y: columnYPoint(dataset.values[i]))
+                    }
+                    points[-1] = projection(points[1]!, points[0]!, fraction: 1)
+                    points[dataset.values.count] = projection(points[dataset.values.count - 2]!, points[dataset.values.count - 1]!, fraction: 1)
+                    
+                        // Go to start of line
+                    graphPath.move(to: points[0]!)
+                    
+                        // Move to each point
+                    
+                        // Add points for each item in the graphPoints array
+                        // at the correct (x, y) for the point
+                    for i in 1..<dataset.values.count {
+                        switch dataset.curveType {
+                        case .line:
+                            graphPath.addLine(to: points[i]!)
+                        case .curve:
+                            let controlPoint1 = projection(from: points[i-1]!, points[i-2]!, points[i]!, fraction: 0.2)
+                            let controlPoint2 = projection(from: points[i]!, points[i+1]!, points[i-1]!, fraction: 0.2)
+                            graphPath.addCurve(to: points[i]!, controlPoint1: controlPoint1, controlPoint2: controlPoint2)
+                        }
                     }
                     
                     graphPath.stroke()
-                }
-                
-                if dataset.gradient {
-                    // Add in the gradient
                     
-                    // Create gradient
-                    let clippingPath = graphPath.copy() as! UIBezierPath
-                    
-                    // Add lines to the copied path to complete the clip area
-                    clippingPath.addLine(to: CGPoint(
-                        x: columnXPoint(dataset, dataset.values.count - 1),
-                        y: height))
-                    clippingPath.addLine(to: CGPoint(
-                        x: columnXPoint(dataset, 0),
-                        y: height))
-                    clippingPath.close()
-                    
-                    //Add the clipping path to the context
-                    clippingPath.addClip()
-                    
-                    // Add the gradient
-                    let startPoint = CGPoint(x: leftMargin, y: columnYPoint(maxValue))
-                    let endPoint = CGPoint(x: leftMargin, y: columnYPoint(0))
-                    
-                    context!.drawLinearGradient(gradient!, start: startPoint, end: endPoint, options: CGGradientDrawingOptions(rawValue: 0))
-                    
-                }
-                
-                if dataset.pointSize > 0.0 {
-                    // Draw on data points
-                    for i in 0...dataset.values.count-1 {
-                        var point = CGPoint(x: columnXPoint(dataset, i), y: columnYPoint(dataset.values[i]))
-                        point.x -= dataset.pointSize/2.0
-                        point.y -= dataset.pointSize/2.0
+                    if dataset.gradient {
+                            // Add in the gradient
                         
-                        let circle = UIBezierPath(ovalIn:
-                            CGRect(origin: point,
-                                   size: CGSize(width: dataset.pointSize, height: dataset.pointSize)))
-                        circle.lineWidth = dataset.weight
-                        let pointFillColor = dataset.pointFillColor ?? self.backgroundColor
-                        pointFillColor?.setFill()
-                        circle.fill()
-                        dataset.color.setFill()
-                        circle.stroke()
+                            // Create gradient
+                        let clippingPath = graphPath.copy() as! UIBezierPath
+                        
+                            // Add lines to the copied path to complete the clip area
+                        clippingPath.addLine(to: CGPoint(
+                            x: columnXPoint(dataset, dataset.values.count - 1),
+                            y: height))
+                        clippingPath.addLine(to: CGPoint(
+                            x: columnXPoint(dataset, 0),
+                            y: height))
+                        clippingPath.close()
+                        
+                            //Add the clipping path to the context
+                        clippingPath.addClip()
+                        
+                            // Add the gradient
+                        let startPoint = CGPoint(x: leftMargin, y: columnYPoint(maxValue))
+                        let endPoint = CGPoint(x: leftMargin, y: columnYPoint(0))
+                        
+                        context!.drawLinearGradient(gradient!, start: startPoint, end: endPoint, options: CGGradientDrawingOptions(rawValue: 0))
+                        
                     }
-                }
-                if dataset.drillRef != nil && detailDelegate != nil {
-                    // Create a button at each point for detail drill
-                    for i in 0...dataset.values.count-1 {
-                        let button = UIButton(frame: CGRect(x: columnXPoint(dataset, i) - (xScale / 2),
-                                                              y: columnYPoint(dataset.values[i]) - 50,
-                                                              width: xScale,
-                                                              height: 100))
-                        button.tag = (dataset.tag * Int(1e6)) + i
-                        button.addTarget(self, action: #selector(GraphView.detailButtonPressed(_:)), for: UIControl.Event.touchUpInside)
-                        self.addSubview(button)
+                    
+                    if dataset.pointSize > 0.0 {
+                            // Draw on data points
+                        for i in 0..<dataset.values.count {
+                            var point = points[i]!
+                            point.x -= dataset.pointSize/2.0
+                            point.y -= dataset.pointSize/2.0
+                            
+                            let circle = UIBezierPath(ovalIn:
+                                                        CGRect(origin: point,
+                                                               size: CGSize(width: dataset.pointSize, height: dataset.pointSize)))
+                            circle.lineWidth = dataset.weight
+                            let pointFillColor = dataset.pointFillColor ?? self.backgroundColor
+                            pointFillColor?.setFill()
+                            circle.fill()
+                            dataset.color.setFill()
+                            circle.stroke()
+                        }
+                    }
+                    if dataset.drillRef != nil && detailDelegate != nil {
+                            // Create a button at each point for detail drill
+                        for i in 0...dataset.values.count-1 {
+                            let button = UIButton(frame: CGRect(x: columnXPoint(dataset, i) - (xScale / 2),
+                                                                y: columnYPoint(dataset.values[i]) - 50,
+                                                                width: xScale,
+                                                                height: 100))
+                            button.tag = (dataset.tag * Int(1e6)) + i
+                            button.addTarget(self, action: #selector(GraphView.detailButtonPressed(_:)), for: UIControl.Event.touchUpInside)
+                            self.addSubview(button)
+                        }
                     }
                 }
             
@@ -329,6 +350,13 @@ class GraphView: UIView {
                 self.addSubview(label)
             }
         }
+    }
+    
+    private func projection(from: CGPoint? = nil, _ point1: CGPoint, _ point2: CGPoint, fraction: CGFloat = 1) -> CGPoint {
+        let from = from ?? point1
+        let x = from.x + ((point2.x - point1.x) * fraction)
+        let y = from.y + ((point2.y - point1.y) * fraction)
+        return CGPoint(x: x, y: y)
     }
     
     @objc internal func detailButtonPressed(_ button: UIButton) {

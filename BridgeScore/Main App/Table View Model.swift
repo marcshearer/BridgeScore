@@ -105,7 +105,7 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
     
     public var hasData: Bool {
         return self.sitting != .unknown ||
-        (self.score != nil && self.scorecard.type.tableAggregate == .manual) ||
+        (self.score != nil && scorecard.manualTotals) ||
         self.versus != ""
     }
     

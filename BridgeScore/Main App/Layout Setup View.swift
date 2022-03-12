@@ -142,7 +142,8 @@ struct LayoutDetailView : View {
     @State private var typeIndex: Int?
     
     @State private var resetBoardNumberIndex: Int? = 0
-    
+    @State private var manualTotalsIndex: Int? = 0
+
     let players = MasterData.shared.players
     @State private var playerIndex: Int?
     
@@ -189,6 +190,15 @@ struct LayoutDetailView : View {
                                     selected.type = types[index]
                                 }
                             }
+
+                            Separator()
+
+                            PickerInput(title: "Total calculation", field: $manualTotalsIndex, values: { TotalCalculation.allCases.map{$0.string}}, selectedColor: Palette.filterUsed, inlineTitleWidth: 200)
+                            { (index) in
+                                if let index = index {
+                                    selected.manualTotals = (index == TotalCalculation.manual.rawValue)
+                                }
+                            }
                             
                             Separator()
                             
@@ -233,6 +243,7 @@ struct LayoutDetailView : View {
         playerIndex = players.firstIndex(where: {$0 == selected.partner}) ?? 0
         typeIndex = types.firstIndex(where: {$0 == selected.type}) ?? 0
         resetBoardNumberIndex = (selected.resetNumbers ? ResetBoardNumber.perTable : ResetBoardNumber.continuous).rawValue
+        manualTotalsIndex = (selected.manualTotals ? TotalCalculation.manual : TotalCalculation.automatic).rawValue
 
     }
     

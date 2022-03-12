@@ -20,6 +20,7 @@
         <attribute name="desc" attributeType="String"/>
         <attribute name="layoutId" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="locationId" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="manualTotals" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="partnerId" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="resetNumbers" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="scorecardDesc" attributeType="String"/>
@@ -48,6 +49,7 @@
         <attribute name="drawingWidthFloat" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="entry16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="locationId" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="manualTotals" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="maxScoreEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="maxScoreValue" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="partnerId" attributeType="UUID" usesScalarValueType="NO"/>
@@ -68,10 +70,10 @@
     </entity>
     <elements>
         <element name="Board" positionX="-9" positionY="144" width="128" height="209"/>
-        <element name="Layout" positionX="-45" positionY="0" width="128" height="179"/>
+        <element name="Layout" positionX="-45" positionY="0" width="128" height="194"/>
         <element name="Location" positionX="27" positionY="189" width="128" height="89"/>
         <element name="Player" positionX="9" positionY="171" width="128" height="89"/>
-        <element name="Scorecard" positionX="-18" positionY="81" width="128" height="299"/>
+        <element name="Scorecard" positionX="-18" positionY="81" width="128" height="314"/>
         <element name="Table" positionX="-9" positionY="153" width="128" height="119"/>
     </elements>
 </model>

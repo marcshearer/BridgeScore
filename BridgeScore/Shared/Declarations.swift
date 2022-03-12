@@ -73,7 +73,6 @@ public enum AggregateType {
     case continuousVp
     case discreteVp
     case percentVp
-    case manual
     
     public func scoreType(subsidiaryScoreType: ScoreType) -> ScoreType {
         switch self {
@@ -83,8 +82,6 @@ public enum AggregateType {
             return subsidiaryScoreType
         case .continuousVp, .discreteVp, .percentVp:
             return .vp
-        case .manual:
-            return .manual
         }
     }
 }
@@ -94,7 +91,6 @@ public enum ScoreType {
     case imp
     case xImp
     case vp
-    case manual
     
     public var string: String {
         switch self {
@@ -106,8 +102,6 @@ public enum ScoreType {
             return "Imps"
         case .vp:
             return "VPs"
-        case .manual:
-            return "Score"
         }
     }
 }
@@ -119,7 +113,6 @@ public enum Type: Int, CaseIterable {
     case xImp = 2
     case vpMatchTeam = 1
     case vpTableTeam = 5
-    case manual = 6
 
     public var string: String {
         switch self {
@@ -135,8 +128,6 @@ public enum Type: Int, CaseIterable {
             return "Teams Match VPs"
         case .vpTableTeam:
             return "Teams Table VPs"
-        case .manual:
-            return "Manually entered"
         }
     }
     
@@ -148,8 +139,6 @@ public enum Type: Int, CaseIterable {
             return .xImp
         case .vpMatchTeam, .vpTableTeam:
             return .imp
-        case .manual:
-            return .manual
         }
     }
     
@@ -163,7 +152,7 @@ public enum Type: Int, CaseIterable {
     
     public var boardPlaces: Int {
         switch self {
-        case .percent, .xImp, .vpPercent, .vpXImp, .manual:
+        case .percent, .xImp, .vpPercent, .vpXImp:
             return 2
         case .vpMatchTeam, .vpTableTeam:
             return 0
@@ -172,7 +161,7 @@ public enum Type: Int, CaseIterable {
 
     public var tablePlaces: Int {
         switch self {
-        case .percent, .xImp, .vpXImp, .vpTableTeam, .manual:
+        case .percent, .xImp, .vpXImp, .vpTableTeam:
             return 2
         case .vpMatchTeam, .vpPercent:
             return 0
@@ -181,7 +170,7 @@ public enum Type: Int, CaseIterable {
     
     public var matchPlaces: Int {
         switch self {
-        case .percent, .xImp, .vpXImp, .vpMatchTeam, .vpTableTeam, .manual:
+        case .percent, .xImp, .vpXImp, .vpMatchTeam, .vpTableTeam:
             return 2
         case .vpPercent:
             return 0
@@ -198,8 +187,6 @@ public enum Type: Int, CaseIterable {
             return .continuousVp
         case .vpPercent:
             return .percentVp
-        case .manual:
-            return .manual
         }
     }
     
@@ -211,8 +198,6 @@ public enum Type: Int, CaseIterable {
             return .total
         case  .vpMatchTeam:
             return .continuousVp
-        case .manual:
-            return .manual
         }
     }
     
@@ -221,23 +206,22 @@ public enum Type: Int, CaseIterable {
         case .percent:
             return "%"
         case .xImp:
-            return "IMPs"
+            return " IMPs"
         case .vpXImp, .vpTableTeam, .vpPercent, .vpMatchTeam:
             if let maxScore = maxScore(tables: scorecard.tables) {
                 return " / \(maxScore.toString(places: matchPlaces))"
             } else {
                 return ""
             }
+        }
+    }
+    
+    public func matchPrefix(scorecard: ScorecardViewModel) -> String {
+        switch self {
+        case .xImp:
+            return (scorecard.score ?? 0 > 0 ? "+" : "")
         default:
-            if let maxScore = scorecard.maxScore {
-                if maxScore == 100 {
-                    return "%"
-                } else {
-                    return " / \(maxScore.toString(places: matchPlaces))"
-                }
-            } else {
-                return ""
-            }
+            return ""
         }
     }
     
@@ -265,6 +249,20 @@ public enum ResetBoardNumber: Int, CaseIterable {
             return "Continuous for match"
         case .perTable:
             return "Restart for each table"
+        }
+    }
+}
+
+public enum TotalCalculation: Int, CaseIterable {
+    case automatic = 0
+    case manual = 1
+    
+    public var string: String {
+        switch self {
+        case .automatic:
+            return "Calculated automatically"
+        case .manual:
+            return "Entered manually"
         }
     }
 }

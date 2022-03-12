@@ -82,6 +82,7 @@ struct ScorecardDetailsView: View {
     @State private var typeIndex: Int?
     
     @State private var resetBoardNumberIndex: Int?
+    @State private var manualTotalsIndex: Int? = 0
 
     let players = MasterData.shared.players
     @State private var playerIndex: Int?
@@ -91,7 +92,7 @@ struct ScorecardDetailsView: View {
         
         VStack(spacing: 0) {
                     
-            InsetView(title: "Main Details") {
+            InsetView {
                 VStack(spacing: 0) {
                     
                     Input(title: "Description", field: $scorecard.desc, message: $scorecard.descMessage)
@@ -124,9 +125,9 @@ struct ScorecardDetailsView: View {
                 VStack(spacing: 0) {
                     HStack {
                         InputFloat(title: scorecard.type.matchScoreType.string, field: $scorecard.score, width: 60, places: scorecard.type.matchPlaces)
-                            .disabled(scorecard.type.matchAggregate != .manual)
+                            .disabled(!scorecard.manualTotals)
                         
-                        if scorecard.type.matchAggregate == .manual {
+                        if scorecard.manualTotals {
                             Text(" / ")
                             InputFloat(field: $scorecard.maxScore, width: 60, places: scorecard.type.matchPlaces)
                         } else {
@@ -168,12 +169,26 @@ struct ScorecardDetailsView: View {
                         }
                     })
                     
+                    Separator()
+                    
+                    PickerInput(title: "Total calculation", field: $manualTotalsIndex, values: { TotalCalculation.allCases.map{$0.string}}, selectedColor: Palette.filterUsed)
+                    { (index) in
+                        if let index = index {
+                            scorecard.manualTotals = (index == TotalCalculation.manual.rawValue)
+                        }
+                    }
+                    
+                    Separator()
+                    
                     StepperInputAdditional(title: "Boards", field: $scorecard.boardsTable, label: { value in "\(value) boards per round" }, minValue: $minValue, additionalBinding: $scorecard.boards, onChange: { (newValue) in
                             setBoards(boardsTable: newValue)
                         })
                     
+                    Separator()
+                    
                     StepperInput(title: "Tables", field: $scorecard.boards, label: boardsLabel, minValue: $scorecard.boardsTable, increment: $scorecard.boardsTable)
                     
+                    Separator()
                     
                     PickerInput(title: "Board Numbers", field: $resetBoardNumberIndex, values: { ResetBoardNumber.allCases.map{$0.string}}, selectedColor: Palette.filterUsed)
                     { (index) in
@@ -193,6 +208,7 @@ struct ScorecardDetailsView: View {
             playerIndex = players.firstIndex(where: {$0 == scorecard.partner}) ?? 0
             typeIndex = types.firstIndex(where: {$0 == scorecard.type}) ?? 0
             resetBoardNumberIndex = (scorecard.resetNumbers ? ResetBoardNumber.perTable : ResetBoardNumber.continuous).rawValue
+            manualTotalsIndex = (scorecard.manualTotals ? TotalCalculation.manual : TotalCalculation.automatic).rawValue
         }
     }
     

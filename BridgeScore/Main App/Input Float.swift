@@ -11,9 +11,9 @@ struct InputFloat : View {
     var title: String?
     @Binding var field: Float?
     var message: Binding<String>?
-    var topSpace: CGFloat = 5
+    var topSpace: CGFloat = 0
     var leadingSpace: CGFloat = 0
-    var height: CGFloat = 45
+    var height: CGFloat = 40
     var width: CGFloat?
     var places: Int = 2
     var inlineTitle: Bool = true
@@ -59,7 +59,7 @@ struct InputFloat : View {
                 }
 
                 HStack {
-                    Spacer().frame(width: 8)
+                    Spacer().frame(width: 4)
                     
                     UndoWrapper(text) { text in
                         TextField("", text: text, onEditingChanged: {(editing) in

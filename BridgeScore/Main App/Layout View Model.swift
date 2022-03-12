@@ -21,6 +21,7 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
     @Published public var boards: Int = 0
     @Published public var boardsTable: Int = 0
     @Published public var type: Type = .percent
+    @Published public var manualTotals: Bool = false
     @Published public var resetNumbers: Bool = false
     
     // Linked managed objects - should only be referenced in this and the Data classes
@@ -48,6 +49,7 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
                 self.boards != mo.boards ||
                 self.boardsTable != mo.boardsTable ||
                 self.type != mo.type ||
+                self.manualTotals != mo.manualTotals ||
                 self.resetNumbers != mo.resetNumbers {
                     result = true
             }
@@ -115,6 +117,7 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
             self.boards = mo.boards
             self.boardsTable = mo.boardsTable
             self.type = mo.type
+            self.manualTotals = mo.manualTotals
             self.resetNumbers = mo.resetNumbers
         }
     }
@@ -129,6 +132,7 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
         self.boards = from.boards
         self.boardsTable = from.boardsTable
         self.type = from.type
+        self.manualTotals = from.manualTotals
         self.resetNumbers = from.resetNumbers
         self.layoutMO = from.layoutMO
     }
@@ -142,6 +146,7 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
         self.layoutMO!.boards = self.boards
         self.layoutMO!.boardsTable = self.boardsTable
         self.layoutMO!.type = self.type
+        self.layoutMO!.manualTotals = self.manualTotals
         self.layoutMO!.resetNumbers = self.resetNumbers
         self.layoutMO!.sequence = self.sequence
     }
