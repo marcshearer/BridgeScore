@@ -330,6 +330,9 @@ class Scorecard {
             scorecard.score = newScore
             changed = true
         }
+        if !scorecard.manualTotals && count != 0 {
+            scorecard.maxScore = type.maxScore(tables: count)
+        }
         return changed
     }
     

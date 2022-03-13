@@ -65,6 +65,9 @@ struct Banner: View {
                             backButton
                             Spacer().frame(width: 12)
                             titleText
+                                .onTapGesture {
+                                    backPressed()
+                                }
                             Spacer().frame(width: 20)
                             Spacer()
                             menu
@@ -106,11 +109,7 @@ struct Banner: View {
             if back {
                 let enabled = backEnabled?() ?? true
                 Button(action: {
-                    if enabled {
-                        if backAction?() ?? true {
-                            self.presentationMode.wrappedValue.dismiss()
-                        }
-                    }
+                    backPressed()
                 }, label: {
                     HStack {
                         if let backText = backText {
@@ -127,6 +126,14 @@ struct Banner: View {
                 .disabled(!(enabled))
             } else {
                 EmptyView()
+            }
+        }
+    }
+    
+    func backPressed() {
+        if backEnabled?() ?? true {
+            if backAction?() ?? true {
+                self.presentationMode.wrappedValue.dismiss()
             }
         }
     }

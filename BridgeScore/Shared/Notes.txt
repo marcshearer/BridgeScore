@@ -5,16 +5,16 @@ If fails to install app on device it's normally because info.plist isn't where i
 
 Bugs
 ====
-Headers for rounds 1 and 2 got confused
+New games aren't immediately in stats
 
 To Do
 =====
 Sort out dark mode
 Maybe remove file sharing in Info.plist once can backup from Mac
-Stats rotation not great
 Multi-select in stats
 
 Enhancements
 ============
 Share scorecards via iCloud?
 Open scoresheet from graph?
+Phone mode?

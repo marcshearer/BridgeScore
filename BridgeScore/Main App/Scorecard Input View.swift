@@ -250,6 +250,22 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                     ScorecardColumn(type: .tableScore, heading: "Score", size: .fixed(220)),
                     ScorecardColumn(type: .versus, heading: "Versus", size: .flexible)
                 ]
+            } else if MyApp.format == .phone {
+                boardColumns = [
+                    ScorecardColumn(type: .board, heading: "Board", size: .fixed(50)),
+                    ScorecardColumn(type: .contract, heading: "Contract", size: .fixed(50)),
+                    ScorecardColumn(type: .declarer, heading: "By", size: .fixed(50)),
+                    ScorecardColumn(type: .made, heading: "Made", size: .fixed(50)),
+                    ScorecardColumn(type: .score, heading: "Score", size: .fixed(50)),
+                    ScorecardColumn(type: .comment, heading: "Comment", size: .flexible)
+                ]
+                
+                tableColumns = [
+                    ScorecardColumn(type: .table, heading: "", size: .fixed(100)),
+                    ScorecardColumn(type: .sitting, heading: "Sitting", size: .fixed(100)),
+                    ScorecardColumn(type: .tableScore, heading: "Score", size: .fixed(50)),
+                    ScorecardColumn(type: .versus, heading: "Versus", size: .flexible)
+                ]
             } else {
                 boardColumns = [
                     ScorecardColumn(type: .board, heading: "Board", size: .fixed(70)),
@@ -600,7 +616,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
             factor = UIScreen.main.bounds.width / UIScreen.main.bounds.height
         }
         
-        let availableSize = UIScreen.main.bounds.width
+        let availableSize = frame.width
         let fixedSize = fixedWidth * factor
         let flexibleSize = (availableSize - fixedSize) / CGFloat(flexible)
         

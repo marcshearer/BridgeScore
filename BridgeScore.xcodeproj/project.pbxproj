@@ -319,6 +319,7 @@
 				B26BCE3C2799AD8800B73501 /* Day Number.swift */,
 				B26BCE412799AD8900B73501 /* String Extensions.swift */,
 				B26BCE442799AD8900B73501 /* Other Extensions.swift */,
+				B2276D5927A692A40025DA80 /* Constraint.swift */,
 				B26BCE422799AD8900B73501 /* Link Presentation.swift */,
 				B23ADBF327B28D68001B6B38 /* Local Authentication.swift */,
 				B28E4EE727B55F9A0059819C /* Backup.swift */,
@@ -397,7 +398,6 @@
 			isa = PBXGroup;
 			children = (
 				B26BCE372799AD5800B73501 /* Version.swift */,
-				B2276D5927A692A40025DA80 /* Constraint.swift */,
 				B21E6F6C27C511DA00DBDCC2 /* Bridge Calculations.swift */,
 			);
 			name = Utilities;

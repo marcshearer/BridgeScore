@@ -208,7 +208,7 @@ public enum Type: Int, CaseIterable {
         case .xImp:
             return " IMPs"
         case .vpXImp, .vpTableTeam, .vpPercent, .vpMatchTeam:
-            if let maxScore = maxScore(tables: scorecard.tables) {
+            if let maxScore = scorecard.maxScore {
                 return " / \(maxScore.toString(places: matchPlaces))"
             } else {
                 return ""
