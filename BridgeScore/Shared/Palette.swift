@@ -50,6 +50,7 @@ class Palette {
     @SpecificColor(.bannerBackButton) static var bannerBackButton
     @SpecificColor(.alternateBannerBackButton) static var alternateBannerBackButton
     @SpecificColor(.maskBackground) static var maskBackground
+    @SpecificColor(.clickableBackground) static var clickableBackground
     @SpecificColor(.gridLine) static var gridLine
     @SpecificColor(.clearText) static var clearText
         

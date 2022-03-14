@@ -32,11 +32,11 @@ enum UserDefault: String, CaseIterable {
     case currentEntry
     case currentDrawing
     case currentWidth
-    case filterPartner
-    case filterLocation
+    case filterPartners
+    case filterLocations
     case filterDateFrom
     case filterDateTo
-    case filterType
+    case filterTypes
     case filterSearchText
     
     public var name: String { "\(self)" }
@@ -91,16 +91,16 @@ enum UserDefault: String, CaseIterable {
             return Data()
         case .currentWidth:
             return 0.0
-        case .filterPartner:
-            return nil
-        case .filterLocation:
-            return nil
+        case .filterPartners:
+            return []
+        case .filterLocations:
+            return []
         case .filterDateFrom:
             return nil
         case .filterDateTo:
             return nil
-        case .filterType:
-            return nil
+        case .filterTypes:
+            return []
         case .filterSearchText:
             return ""
         }
@@ -109,6 +109,8 @@ enum UserDefault: String, CaseIterable {
     public func set(_ value: Any?) {
         if value == nil {
             MyApp.defaults.set(nil, forKey: self.name)
+        } else if let array = value as? [Any] {
+            MyApp.defaults.set(array, forKey: self.name)
         } else if let uuid = value as? UUID {
             MyApp.defaults.set(uuid.uuidString, forKey: self.name)
         } else if let type = value as? Type {
@@ -138,6 +140,10 @@ enum UserDefault: String, CaseIterable {
     
     public var data: Data {
         return MyApp.defaults.data(forKey: self.name)!
+    }
+    
+    public var array: [Any] {
+        return MyApp.defaults.array(forKey: self.name)!
     }
     
     public var date: Date? {

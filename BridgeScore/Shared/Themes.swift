@@ -70,6 +70,7 @@ enum ThemeTextType: CaseIterable {
 
 enum ThemeBackgroundColorName: CaseIterable {
     case clear
+    case nearlyClear
     case banner
     case bannerButton
     case alternateBanner
@@ -116,6 +117,7 @@ enum ThemeSpecificColorName: CaseIterable {
     case bannerBackButton
     case alternateBannerBackButton
     case maskBackground
+    case clickableBackground
     case gridLine
     case clearText
 }
@@ -401,6 +403,7 @@ class Themes {
                 .bannerBackButton            : ThemeTraitColor(#colorLiteral(red: 0.9411764706, green: 0.9411764706, blue: 0.9411764706, alpha: 1), #colorLiteral(red: 0.9411764706, green: 0.9411764706, blue: 0.9411764706, alpha: 1)),
                 .alternateBannerBackButton   : ThemeTraitColor(#colorLiteral(red: 0.0166248735, green: 0.4766505957, blue: 0.9990670085, alpha: 1), #colorLiteral(red: 0.0166248735, green: 0.4766505957, blue: 0.9990670085, alpha: 1)),
                 .maskBackground              : ThemeTraitColor(#colorLiteral(red: 0, green: 0, blue: 0, alpha: 0.3003128759), #colorLiteral(red: 0.999904573, green: 1, blue: 0.9998808503, alpha: 0.2982953811)),
+                .clickableBackground         : ThemeTraitColor(#colorLiteral(red: 0, green: 0, blue: 0, alpha: 0.02357007967), #colorLiteral(red: 0.999904573, green: 1, blue: 0.9998808503, alpha: 0.02027367603)),
                 .gridLine                    : ThemeTraitColor(#colorLiteral(red: 0, green: 0.5152708056, blue: 0.7039544028, alpha: 1), #colorLiteral(red: 0, green: 0.5152708056, blue: 0.7039544028, alpha: 1)),
                 .clearText                   : ThemeTraitColor(#colorLiteral(red: 0.6666666865, green: 0.6666666865, blue: 0.6666666865, alpha: 1), #colorLiteral(red: 0.9411764706, green: 0.9411764706, blue: 0.9411764706, alpha: 1))
             ]

@@ -24,6 +24,7 @@
 		B23ADBF227B25356001B6B38 /* List Tile View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23ADBF127B25356001B6B38 /* List Tile View.swift */; };
 		B23ADBF427B28D68001B6B38 /* Local Authentication.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23ADBF327B28D68001B6B38 /* Local Authentication.swift */; };
 		B240141A27CCBF2400C3117F /* Scorecard Filter View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B240141927CCBF2400C3117F /* Scorecard Filter View.swift */; };
+		B24EAE8E27DDE95C001B3E64 /* Multi Select Picker Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24EAE8D27DDE95C001B3E64 /* Multi Select Picker Input.swift */; };
 		B25ADA5E27AEB279007062AA /* Double Column View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25ADA5D27AEB279007062AA /* Double Column View.swift */; };
 		B2633A0E27AC3A460081B258 /* Layout List View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2633A0D27AC3A460081B258 /* Layout List View.swift */; };
 		B26BCDFA2799A1AC00B73501 /* BridgeScore App.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCDF92799A1AC00B73501 /* BridgeScore App.swift */; };
@@ -114,6 +115,7 @@
 		B23ADBF127B25356001B6B38 /* List Tile View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "List Tile View.swift"; sourceTree = "<group>"; };
 		B23ADBF327B28D68001B6B38 /* Local Authentication.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Local Authentication.swift"; sourceTree = "<group>"; };
 		B240141927CCBF2400C3117F /* Scorecard Filter View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Filter View.swift"; sourceTree = "<group>"; };
+		B24EAE8D27DDE95C001B3E64 /* Multi Select Picker Input.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Multi Select Picker Input.swift"; sourceTree = "<group>"; };
 		B25ADA5D27AEB279007062AA /* Double Column View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Double Column View.swift"; sourceTree = "<group>"; };
 		B2633A0D27AC3A460081B258 /* Layout List View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Layout List View.swift"; sourceTree = "<group>"; };
 		B26BCDF62799A1AC00B73501 /* BridgeScore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BridgeScore.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -341,6 +343,7 @@
 				B28E2B1D27C6A582002A9EE2 /* Input Float.swift */,
 				B2FCC05027A05BA500A3D9F5 /* Input Toggle.swift */,
 				B26BCE5A2799AED700B73501 /* Picker Input.swift */,
+				B24EAE8D27DDE95C001B3E64 /* Multi Select Picker Input.swift */,
 				B21CC0BD27A01292001AECC1 /* Date Picker Input.swift */,
 				B21CC0BF27A02A2A001AECC1 /* Stepper Input.swift */,
 				B26BCE612799AED700B73501 /* Separator.swift */,
@@ -535,6 +538,7 @@
 				B2BBC8BA27BBF6BC00D51A26 /* Table View Model.swift in Sources */,
 				B2EB3D75279D73E100D64225 /* Board View Model.swift in Sources */,
 				B2E1B76827DC71E300204CAC /* User Defaults.swift in Sources */,
+				B24EAE8E27DDE95C001B3E64 /* Multi Select Picker Input.swift in Sources */,
 				B27CFA4E27CDFE8400B976E0 /* Popup Menu.swift in Sources */,
 				B2276D5A27A692A40025DA80 /* Constraint.swift in Sources */,
 				B2A2053B27B108C700C83C88 /* Input Integer.swift in Sources */,

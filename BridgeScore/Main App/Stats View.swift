@@ -9,7 +9,7 @@ import SwiftUI
 
 struct StatsView: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
-    @State private var filterValues = ScorecardFilterValues()
+    @StateObject var filterValues = ScorecardFilterValues()
     @State private var hideLeft = false
     
     var body: some View {
@@ -59,14 +59,16 @@ struct StatsView: View {
 struct StatsFilterView: View {
     @ObservedObject var filterValues: ScorecardFilterValues
     @Binding var hideLeft: Bool
-    @State private var partnerIndex: Int?
-    @State private var locationIndex: Int?
-    @State private var typeIndex: Int?
+    @State private var refresh = false
     let players = MasterData.shared.players.filter{!$0.retired}
     let locations = MasterData.shared.locations.filter{!$0.retired}
     let types = Type.allCases
     
     var body: some View {
+        
+        // To allow manual refresh
+        if refresh { EmptyView() }
+        
         VStack(spacing: 0) {
             InsetView(color: Palette.tile) {
                 VStack(spacing: 0) {
@@ -88,25 +90,23 @@ struct StatsFilterView: View {
                         }
                         Spacer().frame(height: 20)
                         
-                        PickerInput(field: $partnerIndex, values: {["No partner filter"] + players.map{$0.name}}, popupTitle: "Partners", placeholder: "Partner", height: 40, centered: true, color: (partnerIndex != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
-                            if index ?? 0 != 0 {
-                                filterValues.partner = players[index! - 1]
-                            } else {
-                                partnerIndex = nil
-                                filterValues.partner = nil
-                            }
+                        MultiSelectPickerInput(values: {players.map{($0.name, $0.playerId.uuidString)}}, selected: $filterValues.partners, placeholder: "Partner", multiplePlaceholder: "Multiple Partners", selectAll: "No partner filter", height: 40, centered: true, color: (filterValues.partners.firstValue(equal: true) != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
+                                filterValues.objectWillChange.send()
+                                saveDefaults()
+                        }
+                    
+                        
+                        Spacer().frame(height: 15)
+                        
+                        MultiSelectPickerInput(values: {locations.map{($0.name, $0.locationId.uuidString)}}, selected: $filterValues.locations, placeholder: "Location", multiplePlaceholder: "Multiple Locations", selectAll: "No location filter", height: 40, centered: true, color: (filterValues.locations.firstValue(equal: true) != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
+                            filterValues.objectWillChange.send()
                             saveDefaults()
                         }
                         
                         Spacer().frame(height: 15)
                         
-                        PickerInput(field: $locationIndex, values: {["No location filter"] + locations.map{$0.name}}, popupTitle: "Locations", placeholder: "Location", height: 40, centered: true, color: (locationIndex != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
-                            if index ?? 0 != 0 {
-                                filterValues.location = locations[index! - 1]
-                            } else {
-                                locationIndex = nil
-                                filterValues.location = nil
-                            }
+                        MultiSelectPickerInput(values: {types.map{($0.string, $0.rawValue)}}, selected: $filterValues.types, placeholder: "Scoring Method", multiplePlaceholder: "Multiple Types", selectAll: "No type filter", height: 40, centered: true, color: (filterValues.types.firstValue(equal: true) != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
+                            filterValues.objectWillChange.send()
                             saveDefaults()
                         }
                     }
@@ -122,18 +122,6 @@ struct StatsFilterView: View {
                         Spacer().frame(height: 15)
                         
                         OptionalDatePickerInput(field: $filterValues.dateTo, placeholder: "Date to", clearText: "Clear date to", from: filterValues.dateFrom, color: (filterValues.dateTo != nil ? Palette.filterUsed : Palette.filterUnused), textType: .normal, font: searchFont, cornerRadius: 20, height: 40, centered: true) { (dateTo) in
-                            saveDefaults()
-                        }
-                        
-                        Spacer().frame(height: 15)
-                        
-                        PickerInput(field: $typeIndex, values: {["No scoring filter"] + types.map{$0.string}}, popupTitle: "Scoring Methods", placeholder: "Scoring Method", height: 40, centered: true, color: (typeIndex != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
-                            if index ?? 0 != 0 {
-                                filterValues.type = types[index! - 1]
-                            } else {
-                                typeIndex = nil
-                                filterValues.type = nil
-                            }
                             saveDefaults()
                         }
                     }
@@ -191,25 +179,26 @@ struct StatsFilterView: View {
         .background(Palette.alternate.background)
         .onAppear {
             loadDefaults()
-            setupIndexes()
         }
     }
     
     private func loadDefaults() {
-        // Partner
-        if let partnerId = UserDefault.filterPartner.uuid {
-            if let partner = MasterData.shared.player(id: partnerId) {
-                filterValues.partner = partner
-            }
+
+        // Partners
+        if let partners = UserDefault.filterPartners.array as? [String] {
+            filterValues.partners.setArray(partners)
         }
         
-        // Location
-        if let locationId = UserDefault.filterLocation.uuid {
-            if let location = MasterData.shared.location(id: locationId) {
-                filterValues.location = location
-            }
+        // Locations
+        if let locations = UserDefault.filterLocations.array as? [String] {
+            filterValues.locations.setArray(locations)
         }
-        
+
+        // Types
+        if let types = UserDefault.filterTypes.array as? [Int] {
+            filterValues.types.setArray(types)
+        }
+            
         // Date from
         if let dateFrom = UserDefault.filterDateFrom.date {
             filterValues.dateFrom = dateFrom
@@ -219,38 +208,25 @@ struct StatsFilterView: View {
         if let dateTo = UserDefault.filterDateTo.date {
             filterValues.dateTo = dateTo
         }
-        
-        // Scoring type
-        filterValues.type = UserDefault.filterType.type
-            
+                    
         // Search text
         filterValues.searchText = UserDefault.filterSearchText.string
+         
     }
     
     private func saveDefaults() {
-        UserDefault.filterPartner.set(filterValues.partner?.playerId)
-        UserDefault.filterLocation.set(filterValues.location?.locationId)
+        UserDefault.filterPartners.set(filterValues.partners.trueValues)
+        UserDefault.filterLocations.set(filterValues.locations.trueValues)
+        UserDefault.filterTypes.set(filterValues.types.trueValues)
         UserDefault.filterDateFrom.set(filterValues.dateFrom)
         UserDefault.filterDateTo.set(filterValues.dateTo)
-        UserDefault.filterType.set(filterValues.type)
         UserDefault.filterSearchText.set(filterValues.searchText)
     }
     
-    private func setupIndexes() {
-        partnerIndex = filterValues.partner == nil ? nil : (players.firstIndex(where: {$0 == filterValues.partner}) ?? -1) + 1
-        locationIndex = filterValues.location == nil ? nil : (locations.firstIndex(where: {$0 == filterValues.location}) ?? -1) + 1
-        typeIndex = filterValues.type == nil ? nil : (types.firstIndex(where: {$0 == filterValues.type}) ?? -1) + 1
-    }
     
     private func reset() {
-        filterValues.partner = nil
-        filterValues.location = nil
-        filterValues.dateFrom = nil
-        filterValues.dateTo = nil
-        filterValues.type = nil
-        filterValues.searchText = ""
+        filterValues.clear()
         saveDefaults()
-        setupIndexes()
     }
 }
 

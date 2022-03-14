@@ -8,130 +8,202 @@
 
 import SwiftUI
 
+class Flags {
+    private var values: [AnyHashable : Bool]
+    
+    init() {
+        self.values = [:]
+    }
+    
+    public var isEmpty: Bool {
+        firstValue(equal: true) == nil
+    }
+    
+    public var hasMultiple: Bool {
+        self.values.filter({$0.value}).count > 1
+    }
+    
+    public var trueValues: [AnyHashable] {
+        values.filter{$0.value}.map{$0.key}
+    }
+    
+    public func toggle(_ id: AnyHashable) {
+        if values[id] == nil {
+            values[id] = true
+        } else {
+            values[id]!.toggle()
+        }
+    }
+    
+    public func clear(_ id: AnyHashable? = nil) {
+        if let id = id {
+            values[id] = false
+        } else {
+            values = [:]
+        }
+    }
+    
+    public func set(_ id: AnyHashable) {
+        clear()
+        values[id] = true
+    }
+    
+    public func setArray(_ ids: [AnyHashable], to: Bool = true) {
+        clear()
+        for id in ids {
+            self.values[id] = to
+        }
+    }
+    
+    public func value(_ id: AnyHashable) -> Bool {
+        if let id = id as? String {
+            return values[id] ?? false
+        } else if let id = id as? Int {
+            return values[id] ?? false
+        } else {
+            fatalError("Only support integer and string keys")
+        }
+    }
+    
+    public func firstValue(equal value: Bool) -> AnyHashable? {
+        let first = values.first(where: {$0.value == value})
+        return first?.key
+    }
+}
+
 class SlideInMenu : ObservableObject {
     
     public static let shared = SlideInMenu()
     
-    @Published public var title: String? = nil
-    @Published public var options: [String] = []
-    @Published public var selected: Int?
-    @Published public var top: CGFloat = 0
-    @Published public var left: CGFloat? = nil
-    @Published public var width: CGFloat = 0
-    @Published public var animation: ViewAnimation = .slideLeft
-    @Published public var selectedColor: PaletteColor?
-    @Published public var completion: ((String?)->())?
-    @Published public var shown: Bool = false
+    @Published private(set) var title: String? = nil
+    @Published public var options: [(text: String, id: AnyHashable)] = []
+    @Published public var field: Int?
+    @Published private(set) var selected: Flags?
+    @Published private(set) var selectAll: String?
+    @Published private(set) var top: CGFloat = 0
+    @Published private(set) var left: CGFloat? = nil
+    @Published fileprivate(set) var width: CGFloat = 0
+    @Published private(set) var animation: ViewAnimation = .slideLeft
+    @Published private(set) var selectedColor: PaletteColor?
+    @Published private(set) var hideBackground: Bool = true
+    @Published private(set) var completion: ((String?)->())?
+    @Published private(set) var shown: Bool = false
     
-    public func show(title: String? = nil, options: [String], selected: Int? = nil, animation: ViewAnimation = .slideLeft, top: CGFloat? = nil, left: CGFloat? = nil, width: CGFloat? = nil, selectedColor: PaletteColor? = nil, completion: ((String?)->())? = nil) {
+    public func show(title: String? = nil, options: [(String, AnyHashable)]? = nil, strings: [String] = [], selected: Flags? = nil, default field: Int? = nil, selectAll: String? = nil, animation: ViewAnimation = .slideLeft, top: CGFloat? = nil, left: CGFloat? = nil, width: CGFloat? = nil, selectedColor: PaletteColor? = nil, hideBackground: Bool = true, completion: ((String?)->())? = nil) {
         withAnimation(.none) {
-            SlideInMenu.shared.title = title
-            SlideInMenu.shared.options = options
-            SlideInMenu.shared.selected = selected
-            SlideInMenu.shared.top = top ?? bannerHeight + 10
-            SlideInMenu.shared.left = left
-            SlideInMenu.shared.width = width ?? 300
-            SlideInMenu.shared.selectedColor = selectedColor
-            SlideInMenu.shared.animation = animation
-            SlideInMenu.shared.completion = completion
+            self.title = title
+            self.options = options ?? strings.map{($0, $0)}
+            self.field = field
+            self.selected = selected
+            self.selectAll = selectAll
+            self.top = top ?? bannerHeight + 10
+            self.left = left
+            self.width = width ?? 300
+            self.selectedColor = selectedColor
+            self.hideBackground = hideBackground
+            self.animation = animation
+            self.completion = completion
             Utility.mainThread {
-                SlideInMenu.shared.shown = true
+                self.shown = true
             }
         }
+    }
+    
+    public func hide() {
+        width = 300
+        shown = false
+    }
+    
+    public func isSelected(_ index: Int) -> Bool {
+        var result = false
+        if let selected = selected {
+            let id = options[index].id
+            result = selected.value(id)
+        } else {
+            result = (index == field)
+        }
+        return result
     }
 }
 
 struct SlideInMenuView : View {
     @ObservedObject var values = SlideInMenu.shared
     @State private var offset: CGFloat = 320
+    @State private var refresh = false
     
     var body: some View {
+        let proposedTop = values.top
+        let contentHeight = (CGFloat(values.options.count) + (values.title == nil ? 0 : 2.4) + (values.selectAll == nil ? 0 : 1)) * slideInMenuRowHeight
+
+        if refresh { EmptyView() }
+        
         GeometryReader { (fullGeometry) in
             GeometryReader { (geometry) in
+                let top = min(proposedTop,
+                              max(bannerHeight + 8,
+                                  geometry.size.height - contentHeight))
+
                 ZStack {
                     Rectangle()
-                        .foregroundColor(values.shown ? Palette.maskBackground : Color.clear)
+                        .foregroundColor(values.shown ? (values.hideBackground ? Palette.maskBackground : Palette.clickableBackground) : Color.clear)
                         .onTapGesture {
-                            values.shown = false
+                            values.hide()
                         }
                         .frame(width: fullGeometry.size.width, height: fullGeometry.size.height + fullGeometry.safeAreaInsets.top + fullGeometry.safeAreaInsets.bottom)
                         .ignoresSafeArea()
                     VStack(spacing: 0) {
-                        let proposedTop = values.top
-                        let contentHeight = (CGFloat(values.options.count) + 2.4) * slideInMenuRowHeight
-                        let top = min(proposedTop,
-                                      max(bannerHeight + 8,
-                                          geometry.size.height - contentHeight))
                         
                         Spacer().frame(height: top)
                         HStack {
                             Spacer()
                             VStack(spacing: 0) {
                                 if let title = values.title {
-                                    VStack(spacing: 0) {
-                                        Spacer()
-                                        HStack {
-                                            Spacer().frame(width: 20)
-                                            Text(title)
-                                                .font(.title)
-                                                .foregroundColor(Palette.header.text)
-                                            Spacer()
-                                        }
-                                        Spacer()
-                                    }
-                                    .frame(height: slideInMenuRowHeight * 1.4)
-                                    .background(Palette.header.background)
+                                    tile(color: Palette.header, text: title, heightFactor: 1.4)
+                                    .font(.title)
                                 }
                                 
-                                let options = $values.options.wrappedValue
                                 ScrollView {
                                     VStack(spacing: 0) {
-                                        ForEach(options, id: \.self) { (option) in
-                                            let color = (values.selected != nil && values.selectedColor != nil && option == values.options[values.selected!] ? values.selectedColor! :  Palette.background)
-                                            VStack(spacing: 0) {
-                                                Spacer()
-                                                HStack {
-                                                    Spacer().frame(width: 20)
-                                                    Text(option)
-                                                        .animation(.none)
-                                                        .foregroundColor(color.text)
-                                                        .font(.title2)
-                                                    Spacer()
-                                                }
-                                                Spacer()
-                                            }
-                                            .background(color.background)
+                                        if let selectAll = values.selectAll {
+                                            tile(color: Palette.background, text: selectAll, bottomSeparator: true)
+                                            .font(.title2)
                                             .onTapGesture {
-                                                values.completion?(option)
-                                                values.shown = false
+                                                values.selected?.clear()
+                                                values.completion?(nil)
+                                                values.hide()
                                             }
-                                            .background(Palette.background.background)
-                                            .frame(height: slideInMenuRowHeight)
+                                        }
+                                        ForEach(values.options.indices, id: \.self) { (index) in
+                                            let option = values.options[index]
+                                            let color = (values.isSelected(index) ? values.selectedColor ?? Palette.banner : Palette.background)
+                                            tile(color: color, text: option.text)
+                                            .font(.title2)
+                                            .onTapGesture {
+                                                if values.selected != nil {
+                                                    values.selected?.toggle(option.id)
+                                                    values.completion?(option.text)
+                                                    refresh.toggle()
+                                                } else {
+                                                    values.completion?(option.text)
+                                                    values.hide()
+                                                }
+                                            }
                                         }
                                         .listStyle(PlainListStyle())
                                     }
                                 }
                                 .background(Palette.background.background)
                                 .environment(\.defaultMinListRowHeight, slideInMenuRowHeight)
-                                .frame(height: max(0, min(CGFloat(values.options.count) * slideInMenuRowHeight, geometry.size.height - top - (2.4 * slideInMenuRowHeight))))
+                                .frame(height: contentHeight)
                                 .layoutPriority(.greatestFiniteMagnitude)
                                 
-                                VStack(spacing: 0) {
-                                    Spacer()
-                                    HStack {
-                                        Spacer().frame(width: 20)
-                                        Text("Cancel")
-                                            .foregroundColor(Palette.background.text)
-                                            .font(Font.title2.bold())
-                                        Spacer()
+                                if values.title != nil {
+                                    tile(color: Palette.background, text: values.selected == nil ? "Cancel" : "Close")
+                                    .font(Font.title2.bold())
+                                    .onTapGesture {
+                                        values.hide()
                                     }
-                                    Spacer()
                                 }
-                                .background(Palette.background.background)
-                                .onTapGesture {
-                                    values.shown = false
-                                }
-                                .frame(height: slideInMenuRowHeight).layoutPriority(.greatestFiniteMagnitude)
                             }
                             .background(Palette.background.background)
                             .frame(width: values.width)
@@ -141,6 +213,7 @@ struct SlideInMenuView : View {
                         Spacer()
                         
                     }
+                    .shadow(color: Palette.maskBackground, radius: 2, x: 4, y: 4)
                     .offset(x: offset)
                 }
                 
@@ -157,4 +230,24 @@ struct SlideInMenuView : View {
             }
         }
     }
+    
+    func tile(color: PaletteColor, text: String, heightFactor: CGFloat = 1, bottomSeparator: Bool = false) -> some View {
+        VStack(spacing: 0) {
+            Spacer()
+            HStack {
+                Spacer().frame(width: 20)
+                Text(text)
+                    .foregroundColor(color.text)
+                Spacer()
+            }
+            Spacer()
+            if bottomSeparator {
+                Separator(thickness: 2)
+            }
+        }
+        .background(color.background)
+        .background(Palette.background.background)
+        .frame(height: slideInMenuRowHeight * heightFactor)
+    }
+    
 }

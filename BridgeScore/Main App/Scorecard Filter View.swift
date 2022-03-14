@@ -8,25 +8,32 @@
 import SwiftUI
 
 class ScorecardFilterValues: ObservableObject {
-    @Published public var partner: PlayerViewModel?
-    @Published public var location: LocationViewModel?
+    @Published public var partners: Flags
+    @Published public var locations: Flags
     @Published public var dateFrom: Date?
     @Published public var dateTo: Date?
-    @Published public var type: Type?
+    @Published public var types: Flags
     @Published public var searchText: String
     
-    init(partner: PlayerViewModel? = nil, location: LocationViewModel? = nil, dateFrom: Date? = nil, dateTo: Date? = nil, type: Type? = nil, searchText: String = "") {
-        self.partner = partner
-        self.location = location
-        self.dateFrom = dateFrom
-        self.dateTo = dateTo
-        self.type = type
-        self.searchText = searchText
+    init() {
+        self.partners = Flags()
+        self.locations = Flags()
+        self.types = Flags()
+        self.searchText = ""
     }
     
+    public var partner: PlayerViewModel? {
+        MasterData.shared.player(id: partners.firstValue(equal: true) as? UUID)
+    }
+    
+    public var location: LocationViewModel? {
+        MasterData.shared.location(id: locations.firstValue(equal: true) as? UUID)
+    }
+
     public func clear() {
-        self.partner = nil
-        self.location = nil
+        self.partners.clear()
+        self.locations.clear()
+        self.types.clear()
         self.dateFrom = nil
         self.dateTo = nil
         self.searchText = ""
@@ -39,18 +46,24 @@ class ScorecardFilterValues: ObservableObject {
             include = self.wordSearch(for: searchText, in: scorecardText)
         }
         
-        if let partner = partner {
-            if partner != scorecard.partner {
+        if !partners.isEmpty {
+            if !partners.value(scorecard.partner?.playerId.uuidString) {
+                include = false
+            }
+        }
+    
+        if !locations.isEmpty {
+            if !locations.value(scorecard.location?.locationId.uuidString) {
                 include = false
             }
         }
 
-        if let location = location {
-            if location != scorecard.location {
+        if !types.isEmpty {
+            if !types.value(scorecard.type.rawValue) {
                 include = false
             }
         }
-
+        
         if let dateFrom = dateFrom {
             if scorecard.date < Date.startOfDay(from: dateFrom)! {
                 include = false
@@ -59,12 +72,6 @@ class ScorecardFilterValues: ObservableObject {
 
         if let dateTo = dateTo {
             if scorecard.date > Date.endOfDay(from: dateTo)! {
-                include = false
-            }
-        }
-        
-        if let type = type {
-            if type != scorecard.type {
                 include = false
             }
         }
@@ -137,23 +144,27 @@ struct ScorecardFilterView: View {
                             let buttonWidth: CGFloat = (geometry.size.width - 24 - (3 * 15)) / 4
                             Spacer().frame(width: 16)
                             PickerInput(field: $partnerIndex, values: {["No partner filter"] + players.map{$0.name}}, popupTitle: "Partners", placeholder: "Partner", width: buttonWidth, height: 40, centered: true, color: (partnerIndex != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, cornerRadius: 20, animation: .none) { (index) in
-                                if index ?? 0 != 0 {
-                                    filterValues.partner = players[index! - 1]
+                                if index ?? 0 > 0 {
+                                    partnerIndex = index
+                                    filterValues.partners.set(players[index! - 1].playerId.uuidString)
                                 } else {
                                     partnerIndex = nil
-                                    filterValues.partner = nil
+                                    filterValues.partners.clear()
                                 }
+                                filterValues.objectWillChange.send()
                             }
                             
                             Spacer().frame(width: 15)
                             
                             PickerInput(field: $locationIndex, values: {["No location filter"] + locations.map{$0.name}}, popupTitle: "Locations", placeholder: "Location", width: buttonWidth, height: 40, centered: true, color: (locationIndex != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, cornerRadius: 20, animation: .none) { (index) in
                                 if index ?? 0 != 0 {
-                                    filterValues.location = locations[index! - 1]
+                                    locationIndex = index
+                                    filterValues.locations.set(locations[index! - 1].locationId.uuidString)
                                 } else {
                                     locationIndex = nil
-                                    filterValues.location = nil
+                                    filterValues.locations.clear()
                                 }
+                                filterValues.objectWillChange.send()
                             }
                             
                             Spacer().frame(width: 15)
@@ -214,11 +225,11 @@ struct ScorecardFilterView: View {
     }
     
     private func reset() {
-        filterValues.partner = nil
-        filterValues.location = nil
+        filterValues.partners.clear()
+        filterValues.locations.clear()
         filterValues.dateFrom = nil
         filterValues.dateTo = nil
-        filterValues.type = nil
+        filterValues.types.clear()
         filterValues.searchText = ""
     }
 }

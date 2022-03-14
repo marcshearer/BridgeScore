@@ -169,7 +169,7 @@ struct Banner_Menu : View {
     var body: some View {
         Button {
             let filteredOptions = options.filter{$0.isEnabled}
-            SlideInMenu.shared.show(title: title, options: filteredOptions.map{$0.text ?? ""}, top: bannerHeight - 20) { (option) in
+            SlideInMenu.shared.show(title: title, strings: filteredOptions.map{$0.text ?? ""}, top: bannerHeight - 20) { (option) in
                     if let selected = options.first(where: {$0.text == option}) {
                         selected.action()
                     }
