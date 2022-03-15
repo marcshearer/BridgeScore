@@ -19,7 +19,7 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
     @Published public var made: Int? = nil
     @Published public var score: Float?
     @Published public var comment: String = ""
-    @Published public var responsible: Participant = .unknown
+    @Published public var responsible: Responsible = .unknown
     
     // Linked managed objects - should only be referenced in this and the Data classes
     @Published internal var boardMO: BoardMO?

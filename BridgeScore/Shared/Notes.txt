@@ -5,7 +5,6 @@ If xcode fails to install app on device it's normally because info.plist isn't w
 
 Bugs
 ====
-Thin white lines in grid
 
 To Do
 =====

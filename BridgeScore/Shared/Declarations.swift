@@ -267,20 +267,25 @@ public enum TotalCalculation: Int, CaseIterable {
     }
 }
 
-public enum Participant: Int, EnumPickerType {
+public enum Responsible: Int, EnumPickerType {
+    case opponentMinus = -3
+    case partnerMinus = -2
+    case scorerMinus = -1
     case unknown = 0
-    case scorer = 1
-    case partner = 2
-    case opponent = 3
+    case scorerPlus = 1
+    case partnerPlus = 2
+    case opponentPlus = 3
     
     public var string: String {
         switch self {
         case .unknown:
             return ""
-        case .scorer:
+        case .scorerMinus, .scorerPlus:
             return "Self"
+        case .partnerMinus, .partnerPlus:
+            return "Partner"
         default:
-            return "\(self)".capitalized
+            return "Opponent"
         }
     }
     
@@ -288,18 +293,19 @@ public enum Participant: Int, EnumPickerType {
         switch self {
         case .unknown:
             return "None"
-        case .scorer:
-            return "Self"
         default:
-            return "\(self)".capitalized
+            return string
         }
     }
     
     public var short: String {
-        if self == .unknown {
+        switch self {
+        case .unknown:
             return ""
-        } else {
-            return string.left(1)
+        case .scorerMinus, .partnerMinus, .opponentMinus:
+            return "\(string.left(1))-"
+        case .scorerPlus, .partnerPlus, .opponentPlus:
+            return "\(string.left(1))+"
         }
     }
 }

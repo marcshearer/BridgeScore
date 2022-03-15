@@ -736,7 +736,7 @@ class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDeleg
     private var textClear = UIImageView()
     private var textClearWidth: NSLayoutConstraint!
     private var textClearPadding: [NSLayoutConstraint]!
-    private var participantPicker: EnumPicker<Participant>!
+    private var responsiblePicker: EnumPicker<Responsible>!
     fileprivate var declarerPicker: ScrollPicker!
     fileprivate var seatPicker: EnumPicker<Seat>!
     private var madePicker: ScrollPicker!
@@ -754,7 +754,7 @@ class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDeleg
     private var scorecard: ScorecardViewModel!
     
     override init(frame: CGRect) {
-        participantPicker = EnumPicker(frame: frame)
+        responsiblePicker = EnumPicker(frame: frame)
         declarerPicker = ScrollPicker(frame: frame)
         seatPicker = EnumPicker(frame: frame)
         madePicker = ScrollPicker(frame: frame)
@@ -824,12 +824,12 @@ class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDeleg
         let madeTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputBoardCollectionCell.madeTapped))
         madePicker.addGestureRecognizer(madeTapGesture)
         
-        addSubview(participantPicker, top: 16, bottom: 0)
-        Constraint.setWidth(control: participantPicker, width: 60)
-        Constraint.anchor(view: self, control: participantPicker, attributes: .centerX)
-        participantPicker.delegate = self
+        addSubview(responsiblePicker, top: 16, bottom: 0)
+        Constraint.setWidth(control: responsiblePicker, width: 60)
+        Constraint.anchor(view: self, control: responsiblePicker, attributes: .centerX)
+        responsiblePicker.delegate = self
         let responsibleTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputBoardCollectionCell.responsibleTapped))
-        participantPicker.addGestureRecognizer(responsibleTapGesture)
+        responsiblePicker.addGestureRecognizer(responsibleTapGesture)
         
         addGridLine(line: leadingGridLine, side: .leading)
         addGridLine(line: trailingGridLine, side: .trailing)
@@ -870,7 +870,7 @@ class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDeleg
         textField.isHidden = true
         declarerPicker.isHidden = true
         seatPicker.isHidden = true
-        participantPicker.isHidden = true
+        responsiblePicker.isHidden = true
         madePicker.isHidden = true
         textField.isHidden = true
         textField.textAlignment = .center
@@ -991,8 +991,8 @@ class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDeleg
             textClearWidth.constant = 34
             textClearPadding.forEach { (constraint) in constraint.constant = 8 }
         case .responsible:
-            participantPicker.isHidden = false
-            participantPicker.set(board.responsible, color: Palette.gridBoard, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
+            responsiblePicker.isHidden = false
+            responsiblePicker.set(board.responsible, color: Palette.gridBoard, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
         case .table:
             label.font = boardTitleFont
             label.text = "Round \(table.table)"
@@ -1218,7 +1218,7 @@ class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDeleg
         let itemNumber = itemNumber!
         switch columnType {
         case .responsible:
-            if value as? Participant != board.responsible {
+            if value as? Responsible != board.responsible {
                 undoValue = board.responsible
             }
         case .sitting:
@@ -1229,11 +1229,11 @@ class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDeleg
             break
         }
         if let undoValue = undoValue {
-            UndoManager.registerUndo(withTarget: participantPicker) { (participantPicker) in
+            UndoManager.registerUndo(withTarget: responsiblePicker) { (responsiblePicker) in
                 if let cell = self.scorecardDelegate?.scorecardCell(rowType: rowType, itemNumber: itemNumber, columnType: columnType) {
                     switch columnType {
                     case .responsible:
-                        cell.participantPicker.set(undoValue as! Participant)
+                        cell.responsiblePicker.set(undoValue as! Responsible)
                         cell.enumPickerDidChange(to: undoValue)
                     case .sitting:
                         cell.seatPicker.set(undoValue as! Seat)
@@ -1245,7 +1245,7 @@ class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDeleg
             }
             switch columnType {
             case .responsible:
-                board.responsible = value as! Participant
+                board.responsible = value as! Responsible
             case .sitting:
                 table.sitting = value as! Seat
             default:
@@ -1344,10 +1344,11 @@ class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDeleg
         scorecardDelegate?.scorecardChanged(type: rowType, itemNumber: itemNumber)
         let width: CGFloat = 70
         let space = (frame.width - width) / 2
-        scorecardDelegate?.scorecardScrollPickerPopup(values: Participant.allCases.map{ScrollPickerEntry(title: $0.short, caption: $0.full)}, maxValues: 7, selected: board.responsible.rawValue, defaultValue: nil, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 16, bottomPadding: 0) { (selected) in
-            if let participant = Participant(rawValue: selected!) {
-                self.participantPicker.set(participant)
-                self.enumPickerDidChange(to: participant)
+        let selected = board.responsible.rawValue + 3
+        scorecardDelegate?.scorecardScrollPickerPopup(values: Responsible.allCases.map{ScrollPickerEntry(title: $0.short, caption: $0.full)}, maxValues: 13, selected: selected, defaultValue: nil, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 16, bottomPadding: 0) { (selected) in
+            if let responsible = Responsible(rawValue: selected! - 3) {
+                self.responsiblePicker.set(responsible)
+                self.enumPickerDidChange(to: responsible)
             }
         }
     }

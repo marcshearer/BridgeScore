@@ -40,8 +40,8 @@ public class BoardMO: NSManagedObject, ManagedObject, Identifiable {
         set { self.declarer16 = Int16(newValue.rawValue) }
     }
     
-    public var responsible: Participant {
-        get { Participant(rawValue: Int(responsible16)) ?? .unknown }
+    public var responsible: Responsible {
+        get { Responsible(rawValue: Int(responsible16)) ?? .unknown }
         set { self.responsible16 = Int16(newValue.rawValue) }
     }
     
