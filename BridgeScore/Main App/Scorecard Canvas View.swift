@@ -150,13 +150,13 @@ class ScorecardCanvasUIView : UIView, UITableViewDataSource, UITableViewDelegate
     var delegate: ScorecardCanvasUIViewDelegate?
     
     var columns = [
-        CanvasColumn(type: .board, heading: "Board", size: .fixed(70)),
-        CanvasColumn(type: .contract, heading: "Contract", size: .fixed(90)),
-        CanvasColumn(type: .declarer, heading: "By", size: .fixed(60)),
-        CanvasColumn(type: .made, heading: "Made", size: .fixed(70)),
-        CanvasColumn(type: .score, heading: "Score", size: .fixed(70)),
+        CanvasColumn(type: .board, heading: "Board", size: .fixed([70])),
+        CanvasColumn(type: .contract, heading: "Contract", size: .fixed([90])),
+        CanvasColumn(type: .declarer, heading: "By", size: .fixed([60])),
+        CanvasColumn(type: .made, heading: "Made", size: .fixed([70])),
+        CanvasColumn(type: .score, heading: "Score", size: .fixed([70])),
         CanvasColumn(type: .comment, heading: "Comment", size: .flexible),
-        CanvasColumn(type: .responsible, heading: "Resp", size: .fixed(60))
+        CanvasColumn(type: .responsible, heading: "Resp", size: .fixed([60]))
     ]
     var rows: [CanvasRow] = []
     let headingHeight: CGFloat = 40
@@ -386,7 +386,7 @@ class ScorecardCanvasUIView : UIView, UITableViewDataSource, UITableViewDelegate
         for column in self.columns {
             switch column.size {
             case .fixed(let width):
-                fixedWidth += width
+                fixedWidth += width.reduce(0,+)
             case .flexible:
                 flexible += 1
             }
@@ -405,7 +405,7 @@ class ScorecardCanvasUIView : UIView, UITableViewDataSource, UITableViewDelegate
         for index in 0..<columns.count - 1 {
             switch columns[index].size {
             case .fixed(let width):
-                columns[index].width = width * factor
+                columns[index].width = width.reduce(0,+) * factor
             case .flexible:
                 columns[index].width = flexibleSize
             }

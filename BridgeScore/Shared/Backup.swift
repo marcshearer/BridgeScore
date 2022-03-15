@@ -48,7 +48,8 @@ class Backup {
         Backup.shared.restore(TableMO.entity(), directory: thisBackupUrl)
         Backup.shared.restore(LayoutMO.entity(), directory: thisBackupUrl)
         Backup.shared.restore(PlayerMO.entity(), directory: thisBackupUrl)
-        Backup.shared.restore(TableMO.entity(), directory: thisBackupUrl)
+        Backup.shared.restore(LocationMO.entity(), directory: thisBackupUrl)
+        MasterData.shared.load()
     }
     
     private func getDirectories() -> (URL, URL) {

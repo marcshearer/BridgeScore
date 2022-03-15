@@ -444,7 +444,7 @@ enum ColumnType: Int, Codable {
 }
 
 enum ColumnSize: Codable, Equatable {
-    case fixed(CGFloat)
+    case fixed([CGFloat])
     case flexible
 }
 

@@ -243,54 +243,54 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         if self.detailView != detailView || force {
             if detailView {
                 boardColumns = [
-                    ScorecardColumn(type: .board, heading: "Board", size: .fixed(70)),
-                    ScorecardColumn(type: .vulnerable, heading: "Vul", size: .fixed(30)),
-                    ScorecardColumn(type: .dealer, heading: "Dealer", size: .fixed(50)),
-                    ScorecardColumn(type: .contract, heading: "Contract", size: .fixed(95)),
-                    ScorecardColumn(type: .declarer, heading: "By", size: .fixed(70)),
-                    ScorecardColumn(type: .made, heading: "Made", size: .fixed(60)),
-                    ScorecardColumn(type: .points, heading: "Points", size: .fixed(80)),
-                    ScorecardColumn(type: .score, heading: "Score", size: .fixed(80)),
+                    ScorecardColumn(type: .board, heading: "Board", size: .fixed([70])),
+                    ScorecardColumn(type: .vulnerable, heading: "Vul", size: .fixed([30])),
+                    ScorecardColumn(type: .dealer, heading: "Dealer", size: .fixed([50])),
+                    ScorecardColumn(type: .contract, heading: "Contract", size: .fixed([95])),
+                    ScorecardColumn(type: .declarer, heading: "By", size: .fixed([70])),
+                    ScorecardColumn(type: .made, heading: "Made", size: .fixed([60])),
+                    ScorecardColumn(type: .points, heading: "Points", size: .fixed([80])),
+                    ScorecardColumn(type: .score, heading: "Score", size: .fixed([80])),
                     ScorecardColumn(type: .comment, heading: "Comment", size: .flexible)
                 ]
                 
                 tableColumns = [
-                    ScorecardColumn(type: .table, heading: "", size: .fixed(150)),
-                    ScorecardColumn(type: .sitting, heading: "Sitting", size: .fixed(165)),
-                    ScorecardColumn(type: .tableScore, heading: "Score", size: .fixed(220)),
+                    ScorecardColumn(type: .table, heading: "", size: .fixed([70, 30, 50])),
+                    ScorecardColumn(type: .sitting, heading: "Sitting", size: .fixed([95, 70])),
+                    ScorecardColumn(type: .tableScore, heading: "Score", size: .fixed([70, 60, 80])),
                     ScorecardColumn(type: .versus, heading: "Versus", size: .flexible)
                 ]
             } else if MyApp.format == .phone {
                 boardColumns = [
-                    ScorecardColumn(type: .board, heading: "Board", size: .fixed(50)),
-                    ScorecardColumn(type: .contract, heading: "Contract", size: .fixed(50)),
-                    ScorecardColumn(type: .declarer, heading: "By", size: .fixed(50)),
-                    ScorecardColumn(type: .made, heading: "Made", size: .fixed(50)),
-                    ScorecardColumn(type: .score, heading: "Score", size: .fixed(50)),
+                    ScorecardColumn(type: .board, heading: "Board", size: .fixed([50])),
+                    ScorecardColumn(type: .contract, heading: "Contract", size: .fixed([50])),
+                    ScorecardColumn(type: .declarer, heading: "By", size: .fixed([50])),
+                    ScorecardColumn(type: .made, heading: "Made", size: .fixed([50])),
+                    ScorecardColumn(type: .score, heading: "Score", size: .fixed([50])),
                     ScorecardColumn(type: .comment, heading: "Comment", size: .flexible)
                 ]
                 
                 tableColumns = [
-                    ScorecardColumn(type: .table, heading: "", size: .fixed(100)),
-                    ScorecardColumn(type: .sitting, heading: "Sitting", size: .fixed(100)),
-                    ScorecardColumn(type: .tableScore, heading: "Score", size: .fixed(50)),
+                    ScorecardColumn(type: .table, heading: "", size: .fixed([50, 50])),
+                    ScorecardColumn(type: .sitting, heading: "Sitting", size: .fixed([50, 50])),
+                    ScorecardColumn(type: .tableScore, heading: "Score", size: .fixed([50])),
                     ScorecardColumn(type: .versus, heading: "Versus", size: .flexible)
                 ]
             } else {
                 boardColumns = [
-                    ScorecardColumn(type: .board, heading: "Board", size: .fixed(70)),
-                    ScorecardColumn(type: .contract, heading: "Contract", size: .fixed(95)),
-                    ScorecardColumn(type: .declarer, heading: "By", size: .fixed(70)),
-                    ScorecardColumn(type: .made, heading: "Made", size: .fixed(60)),
-                    ScorecardColumn(type: .score, heading: "Score", size: .fixed(80)),
-                    ScorecardColumn(type: .responsible, heading: "Resp", size: .fixed(65)),
+                    ScorecardColumn(type: .board, heading: "Board", size: .fixed([70])),
+                    ScorecardColumn(type: .contract, heading: "Contract", size: .fixed([95])),
+                    ScorecardColumn(type: .declarer, heading: "By", size: .fixed([70])),
+                    ScorecardColumn(type: .made, heading: "Made", size: .fixed([60])),
+                    ScorecardColumn(type: .score, heading: "Score", size: .fixed([80])),
+                    ScorecardColumn(type: .responsible, heading: "Resp", size: .fixed([65])),
                     ScorecardColumn(type: .comment, heading: "Comment", size: .flexible)
                 ]
                 
                 tableColumns = [
-                    ScorecardColumn(type: .table, heading: "", size: .fixed(165)),
-                    ScorecardColumn(type: .sitting, heading: "Sitting", size: .fixed(130)),
-                    ScorecardColumn(type: .tableScore, heading: "Score", size: .fixed(145)),
+                    ScorecardColumn(type: .table, heading: "", size: .fixed([70, 95])),
+                    ScorecardColumn(type: .sitting, heading: "Sitting", size: .fixed([70, 60])),
+                    ScorecardColumn(type: .tableScore, heading: "Score", size: .fixed([80, 65])),
                     ScorecardColumn(type: .versus, heading: "Versus", size: .flexible)
                 ]
             }
@@ -615,7 +615,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         for column in columns {
             switch column.size {
             case .fixed(let width):
-                fixedWidth += width
+                fixedWidth += width.reduce(0,+)
             case .flexible:
                 flexible += 1
             }
@@ -634,7 +634,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         for index in 0..<columns.count - 1 {
             switch columns[index].size {
             case .fixed(let width):
-                columns[index].width = width * factor
+                columns[index].width = width.map{ceil($0 * factor)}.reduce(0,+)
             case .flexible:
                 columns[index].width = flexibleSize
             }
