@@ -253,8 +253,8 @@ class ScorecardCanvasUIView : UIView, UITableViewDataSource, UITableViewDelegate
                 UIView.animate(withDuration: 0.01) {
                     self.scrollView.setContentOffset(CGPoint(x: self.mainTableView.frame.minX, y: scrollY), animated: false)
                 } completion: { (result) in
-                    let image = canvasView.drawing.image(from: frame, scale: 1)
-                    decodeImage(image: image, completion: { text in
+                    let image = self.self.canvasView.drawing.image(from: frame, scale: 1)
+                    self.decodeImage(image: image, completion: { text in
                         if let text = text {
                             cell.label.text = "  " + text
                         }

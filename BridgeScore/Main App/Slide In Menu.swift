@@ -132,13 +132,13 @@ struct SlideInMenuView : View {
     @State private var refresh = false
     
     var body: some View {
-        let proposedTop = values.top
-        let contentHeight = (CGFloat(values.options.count) + (values.title == nil ? 0 : 2.4) + (values.selectAll == nil ? 0 : 1)) * slideInMenuRowHeight
 
         if refresh { EmptyView() }
         
         GeometryReader { (fullGeometry) in
             GeometryReader { (geometry) in
+                let contentHeight = (CGFloat(values.options.count) + (values.title == nil ? 0 : 2.4) + (values.selectAll == nil ? 0 : 1)) * slideInMenuRowHeight
+                let proposedTop = values.top
                 let top = min(proposedTop,
                               max(bannerHeight + 8,
                                   geometry.size.height - contentHeight))
@@ -194,7 +194,6 @@ struct SlideInMenuView : View {
                                 }
                                 .background(Palette.background.background)
                                 .environment(\.defaultMinListRowHeight, slideInMenuRowHeight)
-                                .frame(height: contentHeight)
                                 .layoutPriority(.greatestFiniteMagnitude)
                                 
                                 if values.title != nil {
@@ -205,6 +204,7 @@ struct SlideInMenuView : View {
                                     }
                                 }
                             }
+                            .frame(height: contentHeight)
                             .background(Palette.background.background)
                             .frame(width: values.width)
                             .cornerRadius(20)

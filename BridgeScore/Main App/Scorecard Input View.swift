@@ -39,6 +39,7 @@ struct ScorecardInputView: View {
     @State private var inputDetail: Bool = false
     @State private var refreshTableTotals = false
     @State private var deleted = false
+    @State private var tableRefresh = false
     @State private var detailView = false
     
     var body: some View {
@@ -55,7 +56,7 @@ struct ScorecardInputView: View {
                 
                 Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .buttons, options: bannerOptions)
                 GeometryReader { geometry in
-                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), refreshTableTotals: $refreshTableTotals, detailView: $detailView, inputDetail: $inputDetail)
+                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), refreshTableTotals: $refreshTableTotals, detailView: $detailView, inputDetail: $inputDetail, tableRefresh: $tableRefresh)
                     .ignoresSafeArea(edges: .all)
                 }
             }
@@ -69,7 +70,7 @@ struct ScorecardInputView: View {
                 refreshTableTotals = true
             }
         }) {
-            ScorecardDetailView(scorecard: scorecard, deleted: $deleted, title: "Details")
+            ScorecardDetailView(scorecard: scorecard, deleted: $deleted, tableRefresh: $tableRefresh, title: "Details")
         }
         .onAppear {
             Scorecard.updateScores(scorecard: scorecard)
@@ -100,6 +101,7 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
     @Binding var refreshTableTotals: Bool
     @Binding var detailView: Bool
     @Binding var inputDetail: Bool
+    @Binding var tableRefresh: Bool
 
     func makeUIView(context: Context) -> ScorecardInputUIView {
         
@@ -115,6 +117,10 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
         
         if refreshTableTotals {
             uiView.refreshTableTotals()
+        }
+        
+        if tableRefresh {
+            uiView.tableRefresh()
         }
         
         uiView.switchView(detailView: detailView)
@@ -227,6 +233,10 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         for table in 1...scorecard.tables {
             updateTableCell(section: table - 1, columnType: .tableScore)
         }
+    }
+    
+    public func tableRefresh() {
+        mainTableView.reloadData()
     }
     
     public func switchView(detailView: Bool, force: Bool = false) {

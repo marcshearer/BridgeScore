@@ -94,7 +94,12 @@ class Scorecard {
         for (boardNumber, board) in boards {
             if boardNumber < 1 || boardNumber > scorecard.boards {
                 // Remove any boards no longer in bounds
-                remove(board: board)
+                if board.isNew {
+                    // Not yet in core data - just remove from array
+                    boards[board.board] = nil
+                } else {
+                    remove(board: board)
+                }
             } else if board.changed {
                 // Save any existing boards
                 save(board: board)
@@ -104,7 +109,12 @@ class Scorecard {
         for (tableNumber, table) in tables {
             if tableNumber < 1 || tableNumber > scorecard.tables {
                 // Remove any tables no longer in bounds
-                remove(table: table)
+                if table.isNew {
+                    // Not yet in core data - just remove from array
+                    tables[table.table] = nil
+                } else {
+                    remove(table: table)
+                }
             } else if table.changed {
                 // Save any existing tables
                 save(table: table)

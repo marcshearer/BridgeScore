@@ -1,17 +1,16 @@
 Note
 ====
 
-If fails to install app on device it's normally because info.plist isn't where it expects it to be
+If xcode fails to install app on device it's normally because info.plist isn't where it expects it to be
 
 Bugs
 ====
-New games aren't immediately in stats
+Thin white lines in grid
 
 To Do
 =====
 Sort out dark mode
 Maybe remove file sharing in Info.plist once can backup from Mac
-Multi-select in stats
 
 Enhancements
 ============

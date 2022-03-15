@@ -12,6 +12,7 @@ struct ScorecardDetailView: View {
 
     @ObservedObject var scorecard: ScorecardViewModel
     @Binding var deleted: Bool
+    @Binding var tableRefresh: Bool
     @State var title = "New Scorecard"
     @State private var canUndo = false
     @State private var canRedo = false
@@ -27,7 +28,7 @@ struct ScorecardDetailView: View {
                 
                 ScrollView(showsIndicators: false) {
                     
-                    ScorecardDetailsView(scorecard: scorecard)
+                    ScorecardDetailsView(scorecard: scorecard, tableRefresh: $tableRefresh)
                 }
                 .background(Palette.alternate.background)
             }
@@ -56,6 +57,7 @@ struct ScorecardDetailView: View {
             })
             return false
         } else {
+            Scorecard.current.addNew()
             if let master = MasterData.shared.scorecard(id: scorecard.scorecardId) {
                 master.copy(from: scorecard)
                 master.save()
@@ -73,6 +75,7 @@ struct ScorecardDetailView: View {
 
 struct ScorecardDetailsView: View {
     @ObservedObject var scorecard: ScorecardViewModel
+    @Binding var tableRefresh: Bool
     @State var minValue = 1
 
     var locations = MasterData.shared.locations
@@ -182,17 +185,21 @@ struct ScorecardDetailsView: View {
                     
                     StepperInputAdditional(title: "Boards", field: $scorecard.boardsTable, label: { value in "\(value) boards per round" }, minValue: $minValue, additionalBinding: $scorecard.boards, onChange: { (newValue) in
                             setBoards(boardsTable: newValue)
+                            tableRefresh = true
                         })
                     
                     Separator()
                     
-                    StepperInput(title: "Tables", field: $scorecard.boards, label: boardsLabel, minValue: $scorecard.boardsTable, increment: $scorecard.boardsTable)
+                    StepperInput(title: "Tables", field: $scorecard.boards, label: boardsLabel, minValue: $scorecard.boardsTable, increment: $scorecard.boardsTable) { (_) in
+                        tableRefresh = true
+                    }
                     
                     Separator()
                     
                     PickerInput(title: "Board Numbers", field: $resetBoardNumberIndex, values: { ResetBoardNumber.allCases.map{$0.string}}, selectedColor: Palette.filterUsed)
                     { (index) in
                         scorecard.resetNumbers = (index == ResetBoardNumber.perTable.rawValue)
+                        tableRefresh = true
                     }
                     
                     Spacer().frame(height: 16)

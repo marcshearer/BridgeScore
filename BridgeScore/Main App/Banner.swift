@@ -190,7 +190,7 @@ struct Banner_Buttons : View {
     
     var body: some View {
         HStack {
-            ForEach(0..<(options.count)) { (index) in
+            ForEach(options.indices, id: \.self) { (index) in
                 let option = options[index]
                 let backgroundColor = (option.likeBack ? bannerColor.background : buttonColor.background)
                 let foregroundColor = (option.isEnabled ? (option.likeBack ? backButtonColor : buttonColor.text) : buttonColor.faintText)
