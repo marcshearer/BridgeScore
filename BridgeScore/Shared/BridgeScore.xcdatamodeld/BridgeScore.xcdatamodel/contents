@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="19574" systemVersion="21D62" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="20086" systemVersion="21D62" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="BBOName" representedClassName="BBONameMO" syncable="YES">
+        <attribute name="bboName" optional="YES" attributeType="String"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+    </entity>
     <entity name="Board" representedClassName="BoardMO" syncable="YES">
         <attribute name="board16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="comment" attributeType="String"/>
@@ -75,5 +79,6 @@
         <element name="Player" positionX="9" positionY="171" width="128" height="89"/>
         <element name="Scorecard" positionX="-18" positionY="81" width="128" height="314"/>
         <element name="Table" positionX="-9" positionY="153" width="128" height="119"/>
+        <element name="BBOName" positionX="-9" positionY="162" width="128" height="59"/>
     </elements>
 </model>

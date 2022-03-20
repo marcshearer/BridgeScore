@@ -114,10 +114,12 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
         }
         if reload {
             collectionView.reloadData()
+            collectionView.alpha = 0
         }
 
-        Utility.executeAfter(delay: 0.1) {
+        Utility.mainThread {
             self.collectionView.scrollToItem(at: IndexPath(item: self.selected ?? self.defaultValue ?? 0, section: 0), at: .centeredHorizontally, animated: false)
+            self.collectionView.alpha = 1
         }
     }
     

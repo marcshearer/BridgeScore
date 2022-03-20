@@ -5,6 +5,7 @@ If xcode fails to install app on device it's normally because info.plist isn't w
 
 Bugs
 ====
+Seem to lose tricks made periodically when scroll
 
 To Do
 =====

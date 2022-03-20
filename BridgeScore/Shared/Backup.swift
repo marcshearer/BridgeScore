@@ -38,6 +38,7 @@ class Backup {
         Backup.shared.backup(LayoutMO.entity())
         Backup.shared.backup(PlayerMO.entity())
         Backup.shared.backup(LocationMO.entity())
+        Backup.shared.backup(BBONameMO.entity())
     }
     
     public func restore(dateString: String) {
@@ -49,6 +50,7 @@ class Backup {
         Backup.shared.restore(LayoutMO.entity(), directory: thisBackupUrl)
         Backup.shared.restore(PlayerMO.entity(), directory: thisBackupUrl)
         Backup.shared.restore(LocationMO.entity(), directory: thisBackupUrl)
+        Backup.shared.restore(BBONameMO.entity(), directory: thisBackupUrl)
         MasterData.shared.load()
     }
     
@@ -88,7 +90,7 @@ class Backup {
         }
     }
     
-    private func restore(_ entity: NSEntityDescription, directory: URL, assetsDirectory: URL? = nil) {
+    private func restore(_ entity: NSEntityDescription, directory: URL, assetsDirectory: URL? = nil, additive: Bool = false) {
         
         let assetsDirectory = assetsDirectory ?? assetsBackupUrl!
         let recordType = entity.name!
@@ -169,7 +171,7 @@ class Backup {
                 dictionary[key] = ["uuid" : uuid.uuidString]
             } else if let data = value! as? Data {
                 dictionary[key] = ["data" : data.base64EncodedString()]
-            } else if let asset = value as? CKAsset {
+/*          } else if let asset = value as? CKAsset {
 #if canImport(AppKit)
                 if let data = try? Data.init(contentsOf: asset.fileURL!) {
                     let imageFileURL = assetsDirectory.appendingPathComponent(record.objectID.uriRepresentation().absoluteString).appendingPathExtension("jpeg")
@@ -187,6 +189,7 @@ class Backup {
                     }
                 }
 #endif
+*/
                // Failed - just insert and will probably crash
                 dictionary[key] = value!
             } else {

@@ -1112,6 +1112,11 @@ class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDeleg
             places = scorecard.type.boardPlaces
         case .tableScore:
             places = scorecard.type.tablePlaces
+        case .versus:
+            if let newText = replaceNames(text) {
+                textField.text = newText
+                textFieldChanged(textField)
+            }
         default:
             break
         }
@@ -1124,6 +1129,32 @@ class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDeleg
             }
         }
     }
+    
+    private func replaceNames(_ text: String) -> String? {
+        var changed = false
+        var newText = ""
+        let words = text.components(separatedBy: .whitespaces)
+        var containsAnd = text.contains("&") || text.lowercased().contains(" and ")
+        for word in words {
+            var person: BBONameViewModel?
+            person = MasterData.shared.bboNames.first(where: {$0.bboName == word.lowercased()})
+            if person == nil {
+                person = MasterData.shared.bboNames.first(where: {$0.bboName == word.lowercased().replacingOccurrences(of: "-", with: " ")})
+            }
+            if person != nil {
+                newText = newText + person!.name + " "
+                if !containsAnd && words.count > 1 {
+                    newText = newText + " & "
+                    containsAnd = true
+                }
+                changed = true
+            } else {
+                newText = newText + word + " "
+            }
+        }
+        return (changed ? newText : nil)
+    }
+    
     
     internal func textFieldDidBeginEditing(_ textField: UITextField) {
         // Record automatic clear on entry in undo

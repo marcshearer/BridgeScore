@@ -20,6 +20,7 @@ struct ScorecardListView: View {
     @State private var linkToPlayers = false
     @State private var linkToLocations = false
     @State private var linkToStats = false
+    @State private var linkToDownload = false
     @State private var highlighted = false
     @State private var startAt: UUID?
     @State private var closeFilter = false
@@ -31,6 +32,7 @@ struct ScorecardListView: View {
                            BannerOption(text: "Templates", action: { linkToLayouts = true }),
                            BannerOption(text: "Players",  action: { linkToPlayers = true }),
                            BannerOption(text: "Locations", action: { linkToLocations = true }),
+                           BannerOption(text: "Import BBO Names", action: { ImportBBONames.importFile() }),
                            BannerOption(text: "Backup", action: { Backup.shared.backup() })]
         if Utility.isSimulator {
             menuOptions.append(

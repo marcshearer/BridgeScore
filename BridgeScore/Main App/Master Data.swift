@@ -12,10 +12,11 @@ class MasterData: ObservableObject {
     
     public static let shared = MasterData()
     
-    @Published private(set) var layouts: [LayoutViewModel] = []                  // Layout Id
-    @Published private(set) var players: [PlayerViewModel] = []                  // Player Id
-    @Published private(set) var locations: [LocationViewModel] = []              // Location Id
-    @Published private(set) var scorecards: [ScorecardViewModel] = []            // Scorecard Id
+    @Published private(set) var layouts: [LayoutViewModel] = []
+    @Published private(set) var players: [PlayerViewModel] = []
+    @Published private(set) var locations: [LocationViewModel] = []
+    @Published private(set) var scorecards: [ScorecardViewModel] = []
+    @Published private(set) var bboNames: [BBONameViewModel] = []
    
     public func load() {
         
@@ -27,6 +28,7 @@ class MasterData: ObservableObject {
         let playerMOs = CoreData.fetch(from: PlayerMO.tableName, sort: (key: #keyPath(PlayerMO.sequence16), direction: .ascending)) as! [PlayerMO]
         let locationMOs = CoreData.fetch(from: LocationMO.tableName, sort: (key: #keyPath(LocationMO.sequence16), direction: .ascending)) as! [LocationMO]
         let scorecardMOs = CoreData.fetch(from: ScorecardMO.tableName, sort: (key: #keyPath(ScorecardMO.date), direction: .descending)) as! [ScorecardMO]
+        let bboNameMOs = CoreData.fetch(from: BBONameMO.tableName, sort: (key: #keyPath(BBONameMO.bboName), direction: .ascending)) as! [BBONameMO]
         
         // Setup players
         self.players = []
@@ -83,6 +85,12 @@ class MasterData: ObservableObject {
             }
             }
             scorecards.append(ScorecardViewModel(scorecardMO: scorecardMO))
+        }
+        
+        // Setup BBO names
+        self.bboNames = []
+        for bboNameMO in bboNameMOs {
+            bboNames.append(BBONameViewModel(bboNameMO: bboNameMO))
         }
     }
 }
@@ -312,5 +320,50 @@ extension MasterData {
     
     public func location(id locationId: UUID?) -> LocationViewModel? {
         return (locationId == nil ? nil : self.locations.first(where: {$0.locationId == locationId}))
+    }
+}
+
+extension MasterData {
+    
+    /// Methods for BBO Names
+    
+    public func insert(bboName: BBONameViewModel) {
+        assert(bboName.isNew, "Cannot insert a BBO Name which already has a managed object")
+        assert(self.bboName(id: bboName.bboName) == nil, "BBO Name already exists and cannot be created")
+        assert(self.bboName(id: bboName.bboName)?.name == nil, "BBO Name must have a non-blank name")
+        CoreData.update {
+            bboName.bboNameMO = BBONameMO()
+            bboName.updateMO()
+            let index = self.bboNames.firstIndex(where: {$0.bboName > bboName.bboName}) ?? bboNames.endIndex
+            self.bboNames.insert(bboName, at: index)
+        }
+    }
+    
+    public func remove(bboName: BBONameViewModel) {
+        assert(!bboName.isNew, "Cannot remove a BBO Name which doesn't already have a managed object")
+        assert(self.bboName(id: bboName.bboName) != nil, "BBO Name does not exist and cannot be deleted")
+        CoreData.update {
+            CoreData.context.delete(bboName.bboNameMO!)
+            if let index = self.bboNames.firstIndex(where: {$0 == bboName}) {
+                self.bboNames.remove(at: index)
+            }
+        }
+    }
+    
+    public func save(bboName: BBONameViewModel) {
+        assert(!bboName.isNew, "Cannot save a BBO Name which doesn't already have managed objects")
+        assert(self.bboName(id: bboName.bboName) != nil, "BBO Name does not exist and cannot be updated")
+        if bboName.changed {
+            CoreData.update {
+                bboName.updateMO()
+            }
+            if let index = self.bboNames.firstIndex(where: {$0 == bboName}) {
+                self.bboNames[index] = bboName
+            }
+        }
+    }
+    
+    public func bboName(id bboName: String?) -> BBONameViewModel? {
+        return (bboName == nil ? nil : self.bboNames.first(where: {$0.bboName == bboName?.lowercased()}))
     }
 }

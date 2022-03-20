@@ -72,6 +72,8 @@
 		B2A2053927B01D0000C83C88 /* Location Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053827B01D0000C83C88 /* Location Setup View.swift */; };
 		B2A2053B27B108C700C83C88 /* Input Integer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053A27B108C700C83C88 /* Input Integer.swift */; };
 		B2A2053D27B13F2F00C83C88 /* Keyboard Adaptive.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053C27B13F2F00C83C88 /* Keyboard Adaptive.swift */; };
+		B2A5A42627E2582F00754061 /* BBO Name Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A5A42527E2582F00754061 /* BBO Name Managed Object.swift */; };
+		B2A5A42827E3090300754061 /* BBO Name View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A5A42727E3090300754061 /* BBO Name View Model.swift */; };
 		B2AF750D27AD14FD00233693 /* Slide In Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AF750C27AD14FD00233693 /* Slide In Menu.swift */; };
 		B2AF750F27AD384900233693 /* Layout Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AF750E27AD384900233693 /* Layout Setup View.swift */; };
 		B2BBC8B827BBF4B100D51A26 /* Table Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2BBC8B727BBF4B100D51A26 /* Table Managed Object.swift */; };
@@ -83,6 +85,7 @@
 		B2CC509927BE21060050F22C /* Scroll Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CC509827BE21060050F22C /* Scroll Picker.swift */; };
 		B2CC509E27BE22210050F22C /* Enum Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CC509D27BE22210050F22C /* Enum Picker.swift */; };
 		B2CC50A027BE22900050F22C /* Contract Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CC509F27BE22900050F22C /* Contract Picker.swift */; };
+		B2DADE5127E7A06E009F7572 /* Import BBO Names.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2DADE5027E7A06E009F7572 /* Import BBO Names.swift */; };
 		B2E1B76827DC71E300204CAC /* User Defaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E1B76727DC71E300204CAC /* User Defaults.swift */; };
 		B2EB3D66279D54D500D64225 /* Board Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D65279D54D500D64225 /* Board Managed Object.swift */; };
 		B2EB3D68279D65CC00D64225 /* Player Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D67279D65CC00D64225 /* Player Managed Object.swift */; };
@@ -165,6 +168,9 @@
 		B2A2053827B01D0000C83C88 /* Location Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Location Setup View.swift"; sourceTree = "<group>"; };
 		B2A2053A27B108C700C83C88 /* Input Integer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Input Integer.swift"; sourceTree = "<group>"; };
 		B2A2053C27B13F2F00C83C88 /* Keyboard Adaptive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Keyboard Adaptive.swift"; sourceTree = "<group>"; };
+		B2A5A42427E2420800754061 /* BridgeScore.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BridgeScore.entitlements; sourceTree = "<group>"; };
+		B2A5A42527E2582F00754061 /* BBO Name Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BBO Name Managed Object.swift"; sourceTree = "<group>"; };
+		B2A5A42727E3090300754061 /* BBO Name View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BBO Name View Model.swift"; sourceTree = "<group>"; };
 		B2AF750C27AD14FD00233693 /* Slide In Menu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Slide In Menu.swift"; sourceTree = "<group>"; };
 		B2AF750E27AD384900233693 /* Layout Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Layout Setup View.swift"; sourceTree = "<group>"; };
 		B2BBC8B727BBF4B100D51A26 /* Table Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Table Managed Object.swift"; sourceTree = "<group>"; };
@@ -176,6 +182,7 @@
 		B2CC509827BE21060050F22C /* Scroll Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Scroll Picker.swift"; path = "../Main App/Scroll Picker.swift"; sourceTree = "<group>"; };
 		B2CC509D27BE22210050F22C /* Enum Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Enum Picker.swift"; sourceTree = "<group>"; };
 		B2CC509F27BE22900050F22C /* Contract Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contract Picker.swift"; sourceTree = "<group>"; };
+		B2DADE5027E7A06E009F7572 /* Import BBO Names.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Import BBO Names.swift"; sourceTree = "<group>"; };
 		B2E1B76727DC71E300204CAC /* User Defaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "User Defaults.swift"; sourceTree = "<group>"; };
 		B2EB3D65279D54D500D64225 /* Board Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Board Managed Object.swift"; sourceTree = "<group>"; };
 		B2EB3D67279D65CC00D64225 /* Player Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Player Managed Object.swift"; sourceTree = "<group>"; };
@@ -229,6 +236,7 @@
 		B26BCDF82799A1AC00B73501 /* BridgeScore */ = {
 			isa = PBXGroup;
 			children = (
+				B2A5A42427E2420800754061 /* BridgeScore.entitlements */,
 				B26BCE1A2799A86800B73501 /* Shared */,
 				B26BCE182799A7C200B73501 /* Main App */,
 				B26BCE192799A7DC00B73501 /* Widget App */,
@@ -303,6 +311,7 @@
 				B2BBC8B727BBF4B100D51A26 /* Table Managed Object.swift */,
 				B2EB3D67279D65CC00D64225 /* Player Managed Object.swift */,
 				B2EB3D69279D666800D64225 /* Location Managed Object.swift */,
+				B2A5A42527E2582F00754061 /* BBO Name Managed Object.swift */,
 			);
 			name = "Managed Object Models";
 			sourceTree = "<group>";
@@ -380,6 +389,7 @@
 				B2EB3D78279DB80000D64225 /* Scorecard.swift */,
 				B26BCE552799AE6400B73501 /* Preview Data.swift */,
 				B2EB3D7A279DCBCB00D64225 /* Default Data.swift */,
+				B2DADE5027E7A06E009F7572 /* Import BBO Names.swift */,
 			);
 			name = "Standard Components";
 			sourceTree = "<group>";
@@ -393,6 +403,7 @@
 				B2BBC8B927BBF6BC00D51A26 /* Table View Model.swift */,
 				B2EB3D70279D717F00D64225 /* Player View Model.swift */,
 				B2EB3D72279D734700D64225 /* Location View Model.swift */,
+				B2A5A42727E3090300754061 /* BBO Name View Model.swift */,
 			);
 			name = "View Models";
 			sourceTree = "<group>";
@@ -523,6 +534,7 @@
 				B2EB3D66279D54D500D64225 /* Board Managed Object.swift in Sources */,
 				B26BCE692799AED700B73501 /* Input String.swift in Sources */,
 				B26BCE322799ABF000B73501 /* Declarations.swift in Sources */,
+				B2DADE5127E7A06E009F7572 /* Import BBO Names.swift in Sources */,
 				B26BCE6C2799AED700B73501 /* Separator.swift in Sources */,
 				B2100D9A27DA488200CC0130 /* Stats View.swift in Sources */,
 				B2C4339027B7B59700796F24 /* Custom View Animations.swift in Sources */,
@@ -551,6 +563,7 @@
 				B2EB3D79279DB80000D64225 /* Scorecard.swift in Sources */,
 				B26BCE4D2799AD8900B73501 /* String Extensions.swift in Sources */,
 				B2A2053D27B13F2F00C83C88 /* Keyboard Adaptive.swift in Sources */,
+				B2A5A42627E2582F00754061 /* BBO Name Managed Object.swift in Sources */,
 				B26BCE482799AD8900B73501 /* Day Number.swift in Sources */,
 				B26BCE6F279AEB6C00B73501 /* Scorecard List View.swift in Sources */,
 				B26BCE4C2799AD8900B73501 /* My Image.swift in Sources */,
@@ -579,6 +592,7 @@
 				B26BCE662799AED700B73501 /* Banner.swift in Sources */,
 				B2A2053927B01D0000C83C88 /* Location Setup View.swift in Sources */,
 				B23ADBF427B28D68001B6B38 /* Local Authentication.swift in Sources */,
+				B2A5A42827E3090300754061 /* BBO Name View Model.swift in Sources */,
 				B26BCE6A2799AED700B73501 /* Standard View.swift in Sources */,
 				B2276D5827A5A2C90025DA80 /* Scorecard Canvas View.swift in Sources */,
 				B26C555727C7EA9200015D0A /* Table with Collection.swift in Sources */,
@@ -732,6 +746,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = BridgeScore/BridgeScore.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -757,9 +772,10 @@
 				PRODUCT_BUNDLE_IDENTIFIER = MarcShearer.BridgeScore;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 2;
 			};
 			name = Debug;
 		};
@@ -768,6 +784,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = BridgeScore/BridgeScore.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
@@ -793,9 +810,10 @@
 				PRODUCT_BUNDLE_IDENTIFIER = MarcShearer.BridgeScore;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SUPPORTS_MACCATALYST = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 2;
 			};
 			name = Release;
 		};
