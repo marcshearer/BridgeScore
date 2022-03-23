@@ -85,7 +85,7 @@
 		B2CC509927BE21060050F22C /* Scroll Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CC509827BE21060050F22C /* Scroll Picker.swift */; };
 		B2CC509E27BE22210050F22C /* Enum Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CC509D27BE22210050F22C /* Enum Picker.swift */; };
 		B2CC50A027BE22900050F22C /* Contract Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CC509F27BE22900050F22C /* Contract Picker.swift */; };
-		B2DADE5127E7A06E009F7572 /* Import BBO Names.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2DADE5027E7A06E009F7572 /* Import BBO Names.swift */; };
+		B2DADE5127E7A06E009F7572 /* Import BBO.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2DADE5027E7A06E009F7572 /* Import BBO.swift */; };
 		B2E1B76827DC71E300204CAC /* User Defaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E1B76727DC71E300204CAC /* User Defaults.swift */; };
 		B2EB3D66279D54D500D64225 /* Board Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D65279D54D500D64225 /* Board Managed Object.swift */; };
 		B2EB3D68279D65CC00D64225 /* Player Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D67279D65CC00D64225 /* Player Managed Object.swift */; };
@@ -182,7 +182,7 @@
 		B2CC509827BE21060050F22C /* Scroll Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Scroll Picker.swift"; path = "../Main App/Scroll Picker.swift"; sourceTree = "<group>"; };
 		B2CC509D27BE22210050F22C /* Enum Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Enum Picker.swift"; sourceTree = "<group>"; };
 		B2CC509F27BE22900050F22C /* Contract Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contract Picker.swift"; sourceTree = "<group>"; };
-		B2DADE5027E7A06E009F7572 /* Import BBO Names.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Import BBO Names.swift"; sourceTree = "<group>"; };
+		B2DADE5027E7A06E009F7572 /* Import BBO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Import BBO.swift"; sourceTree = "<group>"; };
 		B2E1B76727DC71E300204CAC /* User Defaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "User Defaults.swift"; sourceTree = "<group>"; };
 		B2EB3D65279D54D500D64225 /* Board Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Board Managed Object.swift"; sourceTree = "<group>"; };
 		B2EB3D67279D65CC00D64225 /* Player Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Player Managed Object.swift"; sourceTree = "<group>"; };
@@ -389,7 +389,7 @@
 				B2EB3D78279DB80000D64225 /* Scorecard.swift */,
 				B26BCE552799AE6400B73501 /* Preview Data.swift */,
 				B2EB3D7A279DCBCB00D64225 /* Default Data.swift */,
-				B2DADE5027E7A06E009F7572 /* Import BBO Names.swift */,
+				B2DADE5027E7A06E009F7572 /* Import BBO.swift */,
 			);
 			name = "Standard Components";
 			sourceTree = "<group>";
@@ -534,7 +534,7 @@
 				B2EB3D66279D54D500D64225 /* Board Managed Object.swift in Sources */,
 				B26BCE692799AED700B73501 /* Input String.swift in Sources */,
 				B26BCE322799ABF000B73501 /* Declarations.swift in Sources */,
-				B2DADE5127E7A06E009F7572 /* Import BBO Names.swift in Sources */,
+				B2DADE5127E7A06E009F7572 /* Import BBO.swift in Sources */,
 				B26BCE6C2799AED700B73501 /* Separator.swift in Sources */,
 				B2100D9A27DA488200CC0130 /* Stats View.swift in Sources */,
 				B2C4339027B7B59700796F24 /* Custom View Animations.swift in Sources */,

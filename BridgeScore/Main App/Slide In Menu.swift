@@ -246,7 +246,6 @@ struct SlideInMenuView : View {
             }
         }
         .background(color.background)
-        .background(Palette.background.background)
         .frame(height: slideInMenuRowHeight * heightFactor)
     }
     

@@ -78,7 +78,7 @@ struct ScorecardDetailsView: View {
     @Binding var tableRefresh: Bool
     @State var minValue = 1
 
-    var locations = MasterData.shared.locations
+    @State private var locations: [LocationViewModel] = []
     @State private var locationIndex: Int?
     
     let types = Type.allCases
@@ -87,7 +87,7 @@ struct ScorecardDetailsView: View {
     @State private var resetBoardNumberIndex: Int?
     @State private var manualTotalsIndex: Int? = 0
 
-    let players = MasterData.shared.players
+    @State private var players: [PlayerViewModel] = []
     @State private var playerIndex: Int?
     @State private var datePicker: Bool = false
     
@@ -102,7 +102,7 @@ struct ScorecardDetailsView: View {
                                         
                     Separator()
                     
-                    PickerInput(title: "Location", field: $locationIndex, values: {locations.filter{!$0.retired || $0 == scorecard.location}.map{$0.name}}, selectedColor: Palette.filterUsed)
+                    PickerInput(title: "Location", field: $locationIndex, values: {locations.map{$0.name}}, selectedColor: Palette.filterUsed)
                     { index in
                         if let index = index {
                             scorecard.location = locations[index]
@@ -111,7 +111,7 @@ struct ScorecardDetailsView: View {
                     
                     Separator()
                     
-                    PickerInput(title: "Partner", field: $playerIndex, values: {players.filter{!$0.retired || $0 == scorecard.partner}.map{$0.name}}, selectedColor: Palette.filterUsed)
+                    PickerInput(title: "Partner", field: $playerIndex, values: {players.map{$0.name}}, selectedColor: Palette.filterUsed)
                     { index in
                         if let index = index {
                             scorecard.partner = players[index]
@@ -211,6 +211,8 @@ struct ScorecardDetailsView: View {
         }
         .background(Palette.alternate.background)
         .onAppear {
+            players = MasterData.shared.players.filter({(!$0.retired || $0 == scorecard.partner!) && !$0.isSelf})
+            locations = MasterData.shared.locations.filter({!$0.retired || $0 == scorecard.location!})
             locationIndex = locations.firstIndex(where: {$0 == scorecard.location}) ?? 0
             playerIndex = players.firstIndex(where: {$0 == scorecard.partner}) ?? 0
             typeIndex = types.firstIndex(where: {$0 == scorecard.type}) ?? 0

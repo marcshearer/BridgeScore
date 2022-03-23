@@ -38,6 +38,8 @@
         <attribute name="sequence16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
     <entity name="Player" representedClassName="PlayerMO" syncable="YES">
+        <attribute name="bboName" optional="YES" attributeType="String"/>
+        <attribute name="isSelf" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="name" attributeType="String"/>
         <attribute name="playerId" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="retired" attributeType="Boolean" usesScalarValueType="YES"/>
@@ -73,12 +75,12 @@
         <attribute name="versus" attributeType="String"/>
     </entity>
     <elements>
+        <element name="BBOName" positionX="-9" positionY="162" width="128" height="59"/>
         <element name="Board" positionX="-9" positionY="144" width="128" height="209"/>
         <element name="Layout" positionX="-45" positionY="0" width="128" height="194"/>
         <element name="Location" positionX="27" positionY="189" width="128" height="89"/>
-        <element name="Player" positionX="9" positionY="171" width="128" height="89"/>
+        <element name="Player" positionX="9" positionY="171" width="128" height="119"/>
         <element name="Scorecard" positionX="-18" positionY="81" width="128" height="314"/>
         <element name="Table" positionX="-9" positionY="153" width="128" height="119"/>
-        <element name="BBOName" positionX="-9" positionY="162" width="128" height="59"/>
     </elements>
 </model>

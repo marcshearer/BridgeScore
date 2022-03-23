@@ -197,7 +197,16 @@ extension Array {
        let rightPart: Array = reversed[rotations..<length].reversed()
        self = leftPart + rightPart
     }
+ 
+    func element(_ index: Int) -> Element? {
+        var result: Element?
+        if index >= 0 && index < self.count {
+            result = self[index]
+        }
+        return result
+    }
 }
+
 #if canImport(UIKit)
 extension NSAttributedString {
     

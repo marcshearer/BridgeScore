@@ -60,7 +60,7 @@ struct StatsFilterView: View {
     @ObservedObject var filterValues: ScorecardFilterValues
     @Binding var hideLeft: Bool
     @State private var refresh = false
-    let players = MasterData.shared.players.filter{!$0.retired}
+    let players = MasterData.shared.players.filter{!$0.retired && !$0.isSelf}
     let locations = MasterData.shared.locations.filter{!$0.retired}
     let types = Type.allCases
     

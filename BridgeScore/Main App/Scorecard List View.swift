@@ -32,7 +32,7 @@ struct ScorecardListView: View {
                            BannerOption(text: "Templates", action: { linkToLayouts = true }),
                            BannerOption(text: "Players",  action: { linkToPlayers = true }),
                            BannerOption(text: "Locations", action: { linkToLocations = true }),
-                           BannerOption(text: "Import BBO Names", action: { ImportBBONames.importFile() }),
+                           BannerOption(text: "Import BBO Names", action: { ImportBBO.importNames() }),
                            BannerOption(text: "Backup", action: { Backup.shared.backup() })]
         if Utility.isSimulator {
             menuOptions.append(
@@ -45,7 +45,7 @@ struct ScorecardListView: View {
         return StandardView("Scorecard List", navigation: true) {
             
             VStack {
-                Banner(title: $title, back: false, optionMode: .menu, menuTitle: "Setup", options: menuOptions)
+                Banner(title: $title, back: false, optionMode: .menu, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: "Setup", options: menuOptions)
                 Spacer().frame(height: 8)
                 
                 ListTileView(color: Palette.contrastTile) {

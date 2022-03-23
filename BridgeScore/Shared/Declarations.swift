@@ -55,7 +55,7 @@ let tagMultiplier = 1000000
 
 // Localisable names
 
-public let appName = "Bridge Score"
+public let appName = "Bridge Scorecard"
 public let appImage = "bridge score"
 
 public let dateFormat = "EEEE d MMMM yyyy"
@@ -91,6 +91,7 @@ public enum ScoreType {
     case imp
     case xImp
     case vp
+    case unknown
     
     public var string: String {
         switch self {
@@ -102,6 +103,19 @@ public enum ScoreType {
             return "Imps"
         case .vp:
             return "VPs"
+        case .unknown:
+            return ""
+        }
+    }
+    
+    init(bboScoringType: String?) {
+        switch bboScoringType {
+        case "MATCH_POINTS":
+            self = .percent
+        case "IMPS":
+            self = .imp
+        default:
+            self = .unknown
         }
     }
 }
@@ -317,6 +331,21 @@ public enum Seat: Int, EnumPickerType, ContractEnumType {
     case south = 3
     case west = 4
     
+    init(string: String) {
+        switch string {
+        case "N":
+            self = .north
+        case "S":
+            self = .south
+        case "E":
+            self = .east
+        case "W":
+            self = .west
+        default:
+            self = .unknown
+        }
+    }
+    
     public var string: String {
         return "\(self)".capitalized
     }
@@ -521,6 +550,23 @@ public enum ContractSuit: Int, ContractEnumType {
     case hearts = 3
     case spades = 4
     case noTrumps = 5
+    
+    init(string: String) {
+        switch string.uppercased() {
+        case "C":
+            self = .clubs
+        case "D":
+            self = .diamonds
+        case "H":
+            self = .hearts
+        case "S":
+            self = .spades
+        case "N":
+            self = .noTrumps
+        default:
+            self = .blank
+        }
+    }
     
     var string: String {
         switch self {

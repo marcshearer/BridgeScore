@@ -44,6 +44,8 @@ public class LocationViewModel : ObservableObject, Identifiable, Equatable, Cust
                 self.retired != mo.retired {
                     result = true
             }
+        } else {
+            result = true
         }
         return result
     }

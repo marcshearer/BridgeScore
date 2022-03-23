@@ -82,3 +82,11 @@ extension String {
     }
     #endif
 }
+
+@propertyWrapper public final class OptionalStringBinding {
+    public var wrappedValue: Binding<String>
+    
+    public init(_ optional: String?) {
+        wrappedValue = Binding { optional ?? "" } set: { (_) in }
+    }
+}

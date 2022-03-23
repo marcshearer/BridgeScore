@@ -108,7 +108,7 @@ struct ScorecardFilterView: View {
     @State private var locationIndex: Int?
     @State private var fromDateClearText: String? = nil
     @State private var toDateClearText: String? = nil
-    let players = MasterData.shared.players.filter{!$0.retired}
+    let players = MasterData.shared.players.filter{!$0.retired && !$0.isSelf}
     let locations = MasterData.shared.locations.filter{!$0.retired}
     
     var body: some View {

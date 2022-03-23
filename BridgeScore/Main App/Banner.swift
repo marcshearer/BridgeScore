@@ -12,20 +12,23 @@ struct BannerOption {
     let text: String?
     let likeBack: Bool
     @Binding var isEnabled: Bool
+    let menu: Bool
     let action: ()->()
     
-    init(image: AnyView? = nil, text: String? = nil, likeBack: Bool = false, isEnabled: Binding<Bool>? = nil, action: @escaping ()->()) {
+    init(image: AnyView? = nil, text: String? = nil, likeBack: Bool = false, isEnabled: Binding<Bool>? = nil, menu: Bool = false, action: @escaping ()->()) {
         self.image = image
         self.text = text
         self.likeBack = likeBack
         self.action = action
         self._isEnabled = isEnabled ?? Binding.constant(true)
+        self.menu = menu
     }
 }
 
 enum BannerOptionMode {
     case menu
     case buttons
+    case both
     case none
 }
 
@@ -43,7 +46,7 @@ struct Banner: View {
     var leftTitle: Bool?
     var optionMode: BannerOptionMode = .none
     var menuImage: AnyView? = nil
-    var menuTitle: String = appName
+    var menuTitle: String?
     var options: [BannerOption]? = nil
     public static let crossImage = AnyView(Image(systemName: "xmark"))
     
@@ -147,13 +150,13 @@ struct Banner: View {
     
     var menu: some View {
         HStack {
-            switch optionMode {
-            case .menu:
-                Banner_Menu(image: menuImage, title: menuTitle, options: options!, bannerColor: bannerColor)
-            case .buttons:
-                Banner_Buttons(options: options!, alternateStyle: alternateStyle, bannerColor: bannerColor, buttonColor: buttonColor, backButtonColor: backButtonColor)
-            default:
-                EmptyView()
+            if let options = options {
+                if optionMode == .buttons || optionMode == .both {
+                    Banner_Buttons(options: options.filter{!$0.menu || optionMode == .buttons}, alternateStyle: alternateStyle, bannerColor: bannerColor, buttonColor: buttonColor, backButtonColor: backButtonColor)
+                }
+                if optionMode == .menu || optionMode == .both {
+                    Banner_Menu(image: menuImage, title: menuTitle, options: options.filter{$0.menu || optionMode == .menu}, bannerColor: bannerColor)
+                }
             }
         }
     }
@@ -161,7 +164,7 @@ struct Banner: View {
 
 struct Banner_Menu : View {
     var image: AnyView?
-    var title: String
+    var title: String?
     var options: [BannerOption]
     var bannerColor: PaletteColor
     let menuStyle = DefaultMenuStyle()
@@ -175,7 +178,7 @@ struct Banner_Menu : View {
                     }
                 }
             } label: {
-                image ?? AnyView(Image(systemName: "gearshape").foregroundColor(bannerColor.text).font(.largeTitle))
+                (image ?? AnyView(Image(systemName: "line.3.horizontal"))).foregroundColor(bannerColor.text).font(.largeTitle)
             }
     
     }

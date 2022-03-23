@@ -44,6 +44,8 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
                 self.responsible != mo.responsible {
                     result = true
             }
+        } else {
+            result = true
         }
         return result
     }

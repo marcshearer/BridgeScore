@@ -69,6 +69,8 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             {
                     result = true
             }
+        } else {
+            result = true
         }
         return result
     }

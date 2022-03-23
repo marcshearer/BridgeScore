@@ -260,6 +260,10 @@ extension MasterData {
     public func player(id playerId: UUID?) -> PlayerViewModel? {
         return (playerId == nil ? nil : self.players.first(where: {$0.playerId == playerId}))
     }
+    
+    public var scorer: PlayerViewModel? {
+        return self.players.first(where: {$0.isSelf})
+    }
 }
 
 extension MasterData {
@@ -365,5 +369,13 @@ extension MasterData {
     
     public func bboName(id bboName: String?) -> BBONameViewModel? {
         return (bboName == nil ? nil : self.bboNames.first(where: {$0.bboName == bboName?.lowercased()}))
+    }
+    
+    public func realName(bboName id: String?) -> String? {
+        if let bboNameViewModel = bboName(id: id) {
+            return bboNameViewModel.name
+        } else {
+            return id
+        }
     }
 }

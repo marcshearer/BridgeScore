@@ -53,6 +53,8 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
                 self.resetNumbers != mo.resetNumbers {
                     result = true
             }
+        } else {
+            result = true
         }
         return result
     }

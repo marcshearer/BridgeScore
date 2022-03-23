@@ -90,27 +90,31 @@ class Utility {
         return output
     }
     
-    class func dateString(_ date: Date, format: String = "dd/MM/yyyy", style: DateFormatter.Style? = nil, doesRelativeDateFormatting: Bool = false,  localized: Bool = true) -> String {
-        let formatter = DateFormatter()
-        formatter.doesRelativeDateFormatting = doesRelativeDateFormatting
-        if let style = style {
-            formatter.dateStyle = style
-            formatter.timeStyle = .none
-        } else {
-            if localized {
-                formatter.setLocalizedDateFormatFromTemplate(format)
-            } else {
-                formatter.dateFormat = format
-            }
-        }
-        var result = formatter.string(from: date)
+    class func dateString(_ date: Date?, format: String = "dd/MM/yyyy", style: DateFormatter.Style? = nil, doesRelativeDateFormatting: Bool = false,  localized: Bool = true) -> String {
+        var result = ""
         
-        // Special case for short dates
-        if style == .short && doesRelativeDateFormatting && format == "dd MMM yyyy" && result.contains("/") {
-            if date > Date.startOfDay(days: -365)! {
-                result = dateString(date, format: "EEE dd MMMM", localized: localized)
+        if let date = date {
+            let formatter = DateFormatter()
+            formatter.doesRelativeDateFormatting = doesRelativeDateFormatting
+            if let style = style {
+                formatter.dateStyle = style
+                formatter.timeStyle = .none
             } else {
-                result = dateString(date, format: "EEE dd MMM yyyy", localized: localized)
+                if localized {
+                    formatter.setLocalizedDateFormatFromTemplate(format)
+                } else {
+                    formatter.dateFormat = format
+                }
+            }
+            result = formatter.string(from: date)
+            
+            // Special case for short dates
+            if style == .short && doesRelativeDateFormatting && format == "dd MMM yyyy" && result.contains("/") {
+                if date > Date.startOfDay(days: -365)! {
+                    result = dateString(date, format: "EEE dd MMMM", localized: localized)
+                } else {
+                    result = dateString(date, format: "EEE dd MMM yyyy", localized: localized)
+                }
             }
         }
         

@@ -41,9 +41,10 @@ struct ScorecardInputView: View {
     @State private var deleted = false
     @State private var tableRefresh = false
     @State private var detailView = false
+    @State private var importScorecard = false
     
     var body: some View {
-        StandardView("Input", slideIn: false) {
+        StandardView("Input", slideIn: true) {
             VStack(spacing: 0) {
                 
                 // Just to trigger view refresh
@@ -51,10 +52,11 @@ struct ScorecardInputView: View {
     
                 // Banner
                 let bannerOptions = UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo) + [
-                    BannerOption(image: AnyView(Image(systemName: "\(detailView ? "minus" : "plus").magnifyingglass")), likeBack: true, action: { toggleView() }),
-                    BannerOption(image: AnyView(Image(systemName: "note.text")), likeBack: true, action: {             UndoManager.clearActions() ; inputDetail = true })]
+                    BannerOption(image: AnyView(Image(systemName: "note.text")), text: "Scorecard details", likeBack: true, menu: true, action: { UndoManager.clearActions() ; inputDetail = true }),
+                    BannerOption(image: AnyView(Image(systemName: "\(detailView ? "minus" : "plus").magnifyingglass")), text: (detailView ? "Simple view" : "Alternative view"), likeBack: true, menu: true, action: { toggleView() }),
+                    BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import from BBO", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importScorecard = true })]
                 
-                Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .buttons, options: bannerOptions)
+                Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .both, menuTitle: nil, options: bannerOptions)
                 GeometryReader { geometry in
                     ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), refreshTableTotals: $refreshTableTotals, detailView: $detailView, inputDetail: $inputDetail, tableRefresh: $tableRefresh)
                     .ignoresSafeArea(edges: .all)
@@ -72,22 +74,37 @@ struct ScorecardInputView: View {
         }) {
             ScorecardDetailView(scorecard: scorecard, deleted: $deleted, tableRefresh: $tableRefresh, title: "Details")
         }
+        .sheet(isPresented: $importScorecard, onDismiss: {
+            UndoManager.clearActions()
+            tableRefresh = true
+        }) {
+            ImportBBOScorecard(scorecard: scorecard) {
+                saveScorecard()
+            }
+        }
         .onAppear {
             Scorecard.updateScores(scorecard: scorecard)
         }
     }
     
     func backAction() -> Bool {
-        Scorecard.current.interimSave()
+        saveScorecard()
+        return true
+    }
+    
+    func saveScorecard() {
+        Scorecard.current.addNew()
+        Scorecard.current.saveAll(scorecard: scorecard)
         if let master = MasterData.shared.scorecard(id: scorecard.scorecardId) {
             master.copy(from: scorecard)
             master.save()
+            scorecard.copy(from: master)
         } else {
             let master = ScorecardViewModel()
             master.copy(from: scorecard)
             master.insert()
+            scorecard.copy(from: master)
         }
-        return true
     }
     
     func toggleView() {
@@ -263,7 +280,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 tableColumns = [
                     ScorecardColumn(type: .table, heading: "", size: .fixed([70, 30, 50])),
                     ScorecardColumn(type: .sitting, heading: "Sitting", size: .fixed([95, 70])),
-                    ScorecardColumn(type: .tableScore, heading: "Score", size: .fixed([70, 60, 80])),
+                    ScorecardColumn(type: .tableScore, heading: "Score", size: .fixed([60, 80, 80])),
                     ScorecardColumn(type: .versus, heading: "Versus", size: .flexible)
                 ]
             } else if MyApp.format == .phone {

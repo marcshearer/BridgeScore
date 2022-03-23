@@ -21,7 +21,7 @@ public class BBONameMO: NSManagedObject, ManagedObject, Identifiable {
     }
     
     public override var description: String {
-        "BBOName: \(self.name)"
+        "BBO Name: \(self.name)"
     }
     public override var debugDescription: String { self.description }
 }

@@ -135,7 +135,7 @@ struct LayoutDetailView : View {
     @ObservedObject var selected: LayoutViewModel
     @State var minValue = 1
     
-    var locations = MasterData.shared.locations
+    @State private var locations: [LocationViewModel] = []
     @State private var locationIndex: Int?
     
     let types = Type.allCases
@@ -144,7 +144,7 @@ struct LayoutDetailView : View {
     @State private var resetBoardNumberIndex: Int? = 0
     @State private var manualTotalsIndex: Int? = 0
 
-    let players = MasterData.shared.players
+    @State private var players: [PlayerViewModel] = []
     @State private var playerIndex: Int?
     
     var body: some View {
@@ -158,7 +158,7 @@ struct LayoutDetailView : View {
                             
                             Separator()
                             
-                            PickerInput(title: "Location", field: $locationIndex, values: {locations.filter{!$0.retired || $0 == selected.location}.map{$0.name}}, selectedColor: Palette.filterUsed, inlineTitleWidth: 200)
+                            PickerInput(title: "Location", field: $locationIndex, values: {locations.map{$0.name}}, selectedColor: Palette.filterUsed, inlineTitleWidth: 200)
                             { index in
                                 if let index = index {
                                     selected.location = locations[index]
@@ -167,7 +167,7 @@ struct LayoutDetailView : View {
                             
                             Separator()
                             
-                            PickerInput(title: "Partner", field: $playerIndex, values: {players.filter{!$0.retired || $0 == selected.partner}.map{$0.name}}, selectedColor: Palette.filterUsed, inlineTitleWidth: 200)
+                            PickerInput(title: "Partner", field: $playerIndex, values: {players.map{$0.name}}, selectedColor: Palette.filterUsed, inlineTitleWidth: 200)
                             { index in
                                 if let index = index {
                                     selected.partner = players[index]
@@ -239,6 +239,8 @@ struct LayoutDetailView : View {
     }
     
     func setIndexes() {
+        players = MasterData.shared.players.filter({(!$0.retired || $0 == selected.partner!) && !$0.isSelf})
+        locations = MasterData.shared.locations.filter({!$0.retired || $0 == selected.location!})
         locationIndex = locations.firstIndex(where: {$0 == selected.location}) ?? 0
         playerIndex = players.firstIndex(where: {$0 == selected.partner}) ?? 0
         typeIndex = types.firstIndex(where: {$0 == selected.type}) ?? 0

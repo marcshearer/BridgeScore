@@ -38,6 +38,8 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
                 self.versus != mo.versus {
                     result = true
             }
+        } else {
+            result = true
         }
         return result
     }

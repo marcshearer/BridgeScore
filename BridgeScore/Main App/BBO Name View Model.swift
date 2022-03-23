@@ -40,6 +40,8 @@ public class BBONameViewModel : ObservableObject, Identifiable, Equatable, Custo
                self.name != mo.name {
                     result = true
             }
+        } else {
+            result = true
         }
         return result
     }

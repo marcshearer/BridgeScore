@@ -15,12 +15,16 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
     @Published private(set) var playerId: UUID
     @Published public var sequence: Int
     @Published public var name: String
+    @Published public var bboName: String
+    @Published public var isSelf: Bool
     @Published public var retired: Bool
     
     // Linked managed objects - should only be referenced in this and the Data classes
     @Published internal var playerMO: PlayerMO?
     
     @Published public var nameMessage: String = ""
+    @Published public var bboNameMessage: String = ""
+    @Published public var isSelfMessage: String = ""
     @Published private(set) var saveMessage: String = ""
     @Published private(set) var canSave: Bool = false
     
@@ -41,9 +45,13 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
             if self.playerId != mo.playerId ||
                 self.sequence != mo.sequence ||
                 self.name != mo.name ||
+                self.bboName != mo.bboName ||
+                self.isSelf != mo.isSelf ||
                 self.retired != mo.retired {
                     result = true
             }
+        } else {
+            result = true
         }
         return result
     }
@@ -52,6 +60,8 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
         self.playerId = UUID()
         self.sequence = Int.max
         self.name = ""
+        self.bboName = ""
+        self.isSelf = false
         self.retired = false
         self.setupMappings()
     }
@@ -63,14 +73,43 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
     }
     
     private func setupMappings() {
+    
         $name
             .receive(on: RunLoop.main)
             .map { (name) in
-                return (name == "" ? "Player name must not be left blank. Either enter a valid name or delete this player" : (self.nameExists(name) ? "This name already exists on another player. The name must be unique" : ""))
+                return (name == "" ? "Player name must not be left blank. Either enter a valid name or delete this player" :
+                        (self.nameExists(name) ? "This name already exists on another player. The name must be unique" :
+                          ""))
+            }
+        .assign(to: \.nameMessage, on: self)
+        .store(in: &cancellableSet)
+        
+        $bboName
+            .receive(on: RunLoop.main)
+            .map { (bboName) in
+                return (self.bboNameExists(bboName) ? "This BBO name already exists on another player. The BBO name must be unique" :
+                          "")
+            }
+        .assign(to: \.bboNameMessage, on: self)
+        .store(in: &cancellableSet)
+        
+        $isSelf
+            .receive(on: RunLoop.main)
+            .map { (isSelf) in
+                return (isSelf && self.otherIsSelf ? "Another player has been defined as yourself. Only one player can be defined as yourself" :
+                          "")
+            }
+        .assign(to: \.isSelfMessage, on: self)
+        .store(in: &cancellableSet)
+        
+        Publishers.CombineLatest3($nameMessage, $bboNameMessage, $isSelfMessage)
+            .receive(on: RunLoop.main)
+            .map { (nameMessage, bboNameMessage, isSelfMessage) in
+                return (nameMessage != "" ? nameMessage : (bboNameMessage != "" ? bboNameMessage : isSelfMessage))
             }
         .assign(to: \.saveMessage, on: self)
         .store(in: &cancellableSet)
-              
+
         $saveMessage
             .receive(on: RunLoop.main)
             .map { (saveMessage) in
@@ -86,6 +125,8 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
             self.playerId = mo.playerId
             self.sequence = mo.sequence
             self.name = mo.name
+            self.bboName = mo.bboName
+            self.isSelf = mo.isSelf
             self.retired = mo.retired
         }
     }
@@ -94,19 +135,23 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
         self.playerId = from.playerId
         self.sequence = from.sequence
         self.name = from.name
+        self.bboName = from.bboName
+        self.isSelf = from.isSelf
         self.retired = from.retired
         self.playerMO = from.playerMO
     }
     
     public func updateMO() {
-        self.playerMO!.playerId = self.playerId
-        self.playerMO!.sequence = self.sequence
-        self.playerMO!.retired = self.retired
-        self.playerMO!.name = self.name
+        playerMO!.playerId = self.playerId
+        playerMO!.sequence = self.sequence
+        playerMO!.bboName = self.bboName
+        playerMO!.isSelf = self.isSelf
+        playerMO!.retired = self.retired
+        playerMO!.name = self.name
     }
     
     public func save() {
-        if self.playerMO == nil {
+        if playerMO == nil {
             MasterData.shared.insert(player: self)
         } else {
             MasterData.shared.save(player: self)
@@ -129,9 +174,17 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
         return !MasterData.shared.players.filter({$0.name == name && $0.playerId != self.playerId}).isEmpty
     }
     
-    public var description: String {
-        "Player: \(self.name)"
+    private func bboNameExists(_ bboName: String) -> Bool {
+        return bboName != "" && !MasterData.shared.players.filter({$0.bboName.lowercased() == bboName.lowercased() && $0.playerId != self.playerId}).isEmpty
     }
     
-    public var debugDescription: String { self.description }
+    public var otherIsSelf: Bool {
+        return !MasterData.shared.players.filter({$0.isSelf && $0.playerId != self.playerId}).isEmpty
+    }
+    
+    public var description: String {
+        "Player: \(name)"
+    }
+    
+    public var debugDescription: String { description }
 }

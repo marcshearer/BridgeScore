@@ -58,6 +58,14 @@ struct Input : View {
                     Spacer().frame(width: clearText ? 20 : 0)
                 }
                 Spacer().frame(height: 8)
+            } else if let message = message?.wrappedValue {
+                HStack {
+                    Spacer()
+                    Text(message)
+                        .foregroundColor(Palette.background.strongText)
+                        .font(messageFont)
+                    Spacer().frame(width: 16)
+                }
             } else {
                 Spacer().frame(height: topSpace)
             }

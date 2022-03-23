@@ -145,7 +145,17 @@ struct PlayerDetailView : View {
                     InsetView(title: "Main Details") {
                         VStack(spacing: 0) {
                             
-                            Input(title: "Name", field: $selected.name, message: $selected.nameMessage)
+                            Input(title: "Name", field: $selected.name, message: $selected.nameMessage, autoCapitalize: .words, autoCorrect: false)
+                            
+                            Separator()
+                            
+                            Input(title: "BBO name", field: $selected.bboName, message: $selected.bboNameMessage, autoCapitalize: .none, autoCorrect: false)
+                            
+                            Separator()
+                            
+                            if !selected.otherIsSelf {
+                                InputToggle(title: "Is yourself?", field: $selected.isSelf)
+                            }
                             
                             if selected.retired {
                                 
