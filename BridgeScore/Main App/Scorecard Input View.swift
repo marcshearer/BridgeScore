@@ -1136,18 +1136,20 @@ class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDeleg
     }
     
     internal func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        if range.location + range.length == textField.text?.count {
-            let result = (textField.text! as NSString).replacingCharacters(in: range, with: string)
-            if let last = result.components(separatedBy: " ").last {
-                if let autoComplete = scorecardDelegate?.autoComplete {
-                    autoComplete.delegate = self
-                    let listSize = autoComplete.set(text: last, in: textField, at: NSRange(location: result.length - last.length, length: last.length))
-                    let height = CGFloat(min(5, listSize) * 40)
-                    var point = self.superview!.convert(CGPoint(x: frame.minX, y: frame.maxY), to: autoComplete.superview!)
-                    if point.y + 200 >= UIScreen.main.bounds.height - (scorecardDelegate?.keyboardHeight ?? 0) {
-                        point = point.offsetBy(dy: -frame.height - height)
+        if column.type == .versus {
+            if range.location + range.length == textField.text?.count {
+                let result = (textField.text! as NSString).replacingCharacters(in: range, with: string)
+                if let last = result.components(separatedBy: " ").last {
+                    if let autoComplete = scorecardDelegate?.autoComplete {
+                        autoComplete.delegate = self
+                        let listSize = autoComplete.set(text: last, in: textField, at: NSRange(location: result.length - last.length, length: last.length))
+                        let height = CGFloat(min(5, listSize) * 40)
+                        var point = self.superview!.convert(CGPoint(x: frame.minX, y: frame.maxY), to: autoComplete.superview!)
+                        if point.y + 200 >= UIScreen.main.bounds.height - (scorecardDelegate?.keyboardHeight ?? 0) {
+                            point = point.offsetBy(dy: -frame.height - height)
+                        }
+                        autoComplete.frame = CGRect(x: point.x, y: point.y, width: self.frame.width, height: height)
                     }
-                    autoComplete.frame = CGRect(x: point.x, y: point.y, width: self.frame.width, height: height)
                 }
             }
         }

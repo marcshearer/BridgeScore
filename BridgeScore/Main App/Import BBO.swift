@@ -393,7 +393,7 @@ class ImportedBBOScorecard {
                     board?.declarer = myLine.declarer ?? .unknown
                     board?.made = myLine.made
                     if let nsScore = myLine.nsScore {
-                        board?.score = (nsScore == 0 ? 0 : (myLine.nsPair == myRanking.number ? nsScore : ( (scorecard.type.boardScoreType == .percent ? 100 - nsScore : -nsScore))))
+                        board?.score = (myLine.nsPair == myRanking.number ? nsScore : ( (scorecard.type.boardScoreType == .percent ? 100 - nsScore : (nsScore == 0 ? 0 : -nsScore))))
                     }
                 }
             }

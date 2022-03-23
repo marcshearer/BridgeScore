@@ -5,9 +5,8 @@ If xcode fails to install app on device it's normally because info.plist isn't w
 
 Bugs
 ====
-Seem to lose tricks made periodically when scroll
+Seem to lose tricks made periodically when scroll - think this now fixed
 Can only type in one number in score as it keeps clearing field - have to go out and in again
-Restrict autoComplete to versus field
 Double slide-in
 
 To Do
