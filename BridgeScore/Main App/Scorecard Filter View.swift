@@ -102,6 +102,7 @@ class ScorecardFilterValues: ObservableObject {
 }
 
 struct ScorecardFilterView: View {
+    var id: UUID
     @ObservedObject var filterValues: ScorecardFilterValues
     @Binding var closeFilter: Bool
     @State private var partnerIndex: Int?
@@ -143,7 +144,7 @@ struct ScorecardFilterView: View {
                         HStack {
                             let buttonWidth: CGFloat = (geometry.size.width - 24 - (3 * 15)) / 4
                             Spacer().frame(width: 16)
-                            PickerInput(field: $partnerIndex, values: {["No partner filter"] + players.map{$0.name}}, popupTitle: "Partners", placeholder: "Partner", width: buttonWidth, height: 40, centered: true, color: (partnerIndex != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, cornerRadius: 20, animation: .none) { (index) in
+                            PickerInput(id: id, field: $partnerIndex, values: {["No partner filter"] + players.map{$0.name}}, popupTitle: "Partners", placeholder: "Partner", width: buttonWidth, height: 40, centered: true, color: (partnerIndex != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, cornerRadius: 20, animation: .none) { (index) in
                                 if index ?? 0 > 0 {
                                     partnerIndex = index
                                     filterValues.partners.set(players[index! - 1].playerId.uuidString)
@@ -156,7 +157,7 @@ struct ScorecardFilterView: View {
                             
                             Spacer().frame(width: 15)
                             
-                            PickerInput(field: $locationIndex, values: {["No location filter"] + locations.map{$0.name}}, popupTitle: "Locations", placeholder: "Location", width: buttonWidth, height: 40, centered: true, color: (locationIndex != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, cornerRadius: 20, animation: .none) { (index) in
+                            PickerInput(id: id, field: $locationIndex, values: {["No location filter"] + locations.map{$0.name}}, popupTitle: "Locations", placeholder: "Location", width: buttonWidth, height: 40, centered: true, color: (locationIndex != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, cornerRadius: 20, animation: .none) { (index) in
                                 if index ?? 0 != 0 {
                                     locationIndex = index
                                     filterValues.locations.set(locations[index! - 1].locationId.uuidString)

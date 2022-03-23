@@ -33,6 +33,7 @@ enum RowType: Int {
 struct ScorecardInputView: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
 
+    private let id = scorecardInputViewId
     @ObservedObject var scorecard: ScorecardViewModel
     @State private var canUndo: Bool = false
     @State private var canRedo: Bool = false
@@ -44,7 +45,7 @@ struct ScorecardInputView: View {
     @State private var importScorecard = false
     
     var body: some View {
-        StandardView("Input", slideIn: true) {
+        StandardView("Input", slideInId: id) {
             VStack(spacing: 0) {
                 
                 // Just to trigger view refresh
@@ -56,7 +57,7 @@ struct ScorecardInputView: View {
                     BannerOption(image: AnyView(Image(systemName: "\(detailView ? "minus" : "plus").magnifyingglass")), text: (detailView ? "Simple view" : "Alternative view"), likeBack: true, menu: true, action: { toggleView() }),
                     BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import from BBO", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importScorecard = true })]
                 
-                Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .both, menuTitle: nil, options: bannerOptions)
+                Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .both, menuTitle: nil, menuId: id, options: bannerOptions)
                 GeometryReader { geometry in
                     ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), refreshTableTotals: $refreshTableTotals, detailView: $detailView, inputDetail: $inputDetail, tableRefresh: $tableRefresh)
                     .ignoresSafeArea(edges: .all)

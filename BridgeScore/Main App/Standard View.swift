@@ -9,20 +9,20 @@ import SwiftUI
 
 struct StandardView <Content> : View where Content : View {
     @ObservedObject private var messageBox = MessageBox.shared
-    var slideIn: Bool
+    var slideInId: UUID?
     var navigation: Bool
     var animate = false
-    var content: Content
+    var content: ()->Content
     var info: String
     var backgroundColor: PaletteColor
 
-    init(_ info: String, slideIn: Bool = true, navigation: Bool = false, animate: Bool = false, backgroundColor: PaletteColor = Palette.background, @ViewBuilder content: ()->Content) {
+    init(_ info: String, slideInId: UUID? = nil, navigation: Bool = false, animate: Bool = false, backgroundColor: PaletteColor = Palette.background, @ViewBuilder content: @escaping ()->Content) {
         self.info = info
-        self.slideIn = slideIn
+        self.slideInId = slideInId
         self.navigation = navigation
         self.animate = animate
         self.backgroundColor = backgroundColor
-        self.content = content()
+        self.content = content
     }
         
     var body: some View {
@@ -44,11 +44,12 @@ struct StandardView <Content> : View where Content : View {
             
             VStack {
                 Spacer().frame(height: geometry.safeAreaInsets.top)
-                self.content
+                self.content()
+                    .debugPrint("standard \(info) \(slideInId?.uuidString ?? "")")
             }
             .ignoresSafeArea()
-            if slideIn {
-                SlideInMenuView()
+            if let slideInId = slideInId {
+                SlideInMenuView(id: slideInId)
             }
             if messageBox.isShown {
                 Palette.maskBackground

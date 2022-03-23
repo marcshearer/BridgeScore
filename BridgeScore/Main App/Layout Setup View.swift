@@ -9,20 +9,22 @@ import Foundation
 import SwiftUI
 
 struct LayoutSetupView: View {
+    
+    private let id = layoutSetupViewId
     @StateObject var selected = LayoutViewModel()
     @State private var title = "Templates"
     @State private var canUndo = false
     @State private var canRedo = false
     
     var body: some View {
-        StandardView("Layout") {
+        StandardView("Layout", slideInId: id) {
             VStack(spacing: 0) {
                 
                 Banner(title: $title, bottomSpace: false, back: true, backEnabled: { return selected.canSave }, optionMode: .buttons, options: UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo))
                 DoubleColumnView(leftWidth: 350) {
                     LayoutSelectionView(selected: selected, changeSelected: changeSelection, removeSelected: removeSelection, addLayout: addLayout)
                 } rightView: {
-                    LayoutDetailView(selected: selected)
+                    LayoutDetailView(id: id, selected: selected)
                 }
             }
             .undoManager(canUndo: $canUndo, canRedo: $canRedo)
@@ -132,6 +134,7 @@ struct LayoutSelectionView : View {
 
 
 struct LayoutDetailView : View {
+    var id: UUID
     @ObservedObject var selected: LayoutViewModel
     @State var minValue = 1
     
@@ -158,7 +161,7 @@ struct LayoutDetailView : View {
                             
                             Separator()
                             
-                            PickerInput(title: "Location", field: $locationIndex, values: {locations.map{$0.name}}, selectedColor: Palette.filterUsed, inlineTitleWidth: 200)
+                            PickerInput(id: id, title: "Location", field: $locationIndex, values: {locations.map{$0.name}}, selectedColor: Palette.filterUsed, inlineTitleWidth: 200)
                             { index in
                                 if let index = index {
                                     selected.location = locations[index]
@@ -167,7 +170,7 @@ struct LayoutDetailView : View {
                             
                             Separator()
                             
-                            PickerInput(title: "Partner", field: $playerIndex, values: {players.map{$0.name}}, selectedColor: Palette.filterUsed, inlineTitleWidth: 200)
+                            PickerInput(id: id, title: "Partner", field: $playerIndex, values: {players.map{$0.name}}, selectedColor: Palette.filterUsed, inlineTitleWidth: 200)
                             { index in
                                 if let index = index {
                                     selected.partner = players[index]
@@ -184,7 +187,7 @@ struct LayoutDetailView : View {
                     InsetView(title: "Options") {
                         VStack(spacing: 0) {
                             
-                            PickerInput(title: "Scoring Method", field: $typeIndex, values: {types.map{$0.string}}, selectedColor: Palette.filterUsed, inlineTitleWidth: 200)
+                            PickerInput(id: id, title: "Scoring Method", field: $typeIndex, values: {types.map{$0.string}}, selectedColor: Palette.filterUsed, inlineTitleWidth: 200)
                             { index in
                                 if let index = index {
                                     selected.type = types[index]
@@ -193,7 +196,7 @@ struct LayoutDetailView : View {
 
                             Separator()
 
-                            PickerInput(title: "Total calculation", field: $manualTotalsIndex, values: { TotalCalculation.allCases.map{$0.string}}, selectedColor: Palette.filterUsed, inlineTitleWidth: 200)
+                            PickerInput(id: id, title: "Total calculation", field: $manualTotalsIndex, values: { TotalCalculation.allCases.map{$0.string}}, selectedColor: Palette.filterUsed, inlineTitleWidth: 200)
                             { (index) in
                                 if let index = index {
                                     selected.manualTotals = (index == TotalCalculation.manual.rawValue)
@@ -213,7 +216,7 @@ struct LayoutDetailView : View {
                             
                             Separator()
                             
-                            PickerInput(title: "Board Numbers", field: $resetBoardNumberIndex, values: { ResetBoardNumber.allCases.map{$0.string}}, selectedColor: Palette.filterUsed, inlineTitleWidth: 200)
+                            PickerInput(id: id, title: "Board Numbers", field: $resetBoardNumberIndex, values: { ResetBoardNumber.allCases.map{$0.string}}, selectedColor: Palette.filterUsed, inlineTitleWidth: 200)
                             { (index) in
                                 if let index = index {
                                     selected.resetNumbers = (index == ResetBoardNumber.perTable.rawValue)

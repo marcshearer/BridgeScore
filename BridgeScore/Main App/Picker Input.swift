@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct PickerInput : View {
+    var id: UUID
     var title: String? = nil
     var field: Binding<Int?>
     var values: ()->[String]
@@ -29,12 +30,13 @@ struct PickerInput : View {
     var onChange: ((Int?)->())?
     
     var body: some View {
-        PickerInputAdditional<Int>(title: title, field: field, values: values, popupTitle: popupTitle, placeholder: placeholder, topSpace: topSpace, leadingSpace: leadingSpace, width: width, height: height, maxLabelWidth: maxLabelWidth, centered: centered, color: color, selectedColor: selectedColor, font: font, cornerRadius: cornerRadius, animation: animation, inlineTitle: inlineTitle, inlineTitleWidth: inlineTitleWidth, setAdditional: { (_, _) in}, onChange: onChange)
+        PickerInputAdditional<Int>(id: id, title: title, field: field, values: values, popupTitle: popupTitle, placeholder: placeholder, topSpace: topSpace, leadingSpace: leadingSpace, width: width, height: height, maxLabelWidth: maxLabelWidth, centered: centered, color: color, selectedColor: selectedColor, font: font, cornerRadius: cornerRadius, animation: animation, inlineTitle: inlineTitle, inlineTitleWidth: inlineTitleWidth, setAdditional: { (_, _) in}, onChange: onChange)
     }
 }
 
 struct PickerInputAdditional<Additional>: View where Additional: Equatable  {
     
+    var id: UUID
     var title: String? = nil
     var field: Binding<Int?>
     var values: ()->[String]
@@ -86,7 +88,7 @@ struct PickerInputAdditional<Additional>: View where Additional: Equatable  {
                             let top = geometry.frame(in: .global).minY - (slideInMenuRowHeight * 1.4)
                             let left = geometry.frame(in: .global).maxX + 30
                             
-                            PopupMenu(field: field, values: values, title: popupTitle ?? title, animation: animation, top: top, left: left, width: 400, selectedColor: selectedColor ?? color, onChange: onChange) {
+                            PopupMenu(id: id, field: field, values: values, title: popupTitle ?? title, animation: animation, top: top, left: left, width: 400, selectedColor: selectedColor ?? color, onChange: onChange) {
                                 
                                 HStack {
                                     if centered {

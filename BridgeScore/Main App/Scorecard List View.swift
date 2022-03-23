@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct ScorecardListView: View {
+    private let id = scorecardListViewId
+    private let inputId = UUID()
     @StateObject private var selected = ScorecardViewModel()
     @StateObject private var filterValues = ScorecardFilterValues()
     @ObservedObject private var data = MasterData.shared
@@ -42,10 +44,10 @@ struct ScorecardListView: View {
         menuOptions.append(contentsOf:
                           [BannerOption(text: "About \(appName)", action: { MessageBox.shared.show("A Bridge scoring app from\nShearer Online Ltd", showIcon: true, showVersion: true) })])
         
-        return StandardView("Scorecard List", navigation: true) {
+        return StandardView("Scorecard List", slideInId: id, navigation: true) {
             
             VStack {
-                Banner(title: $title, back: false, optionMode: .menu, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: "Setup", options: menuOptions)
+                Banner(title: $title, back: false, optionMode: .menu, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: "Setup", menuId: id, options: menuOptions)
                 Spacer().frame(height: 8)
                 
                 ListTileView(color: Palette.contrastTile) {
@@ -60,7 +62,7 @@ struct ScorecardListView: View {
                 
                 ScrollView {
                     Spacer().frame(height: 4)
-                    ScorecardFilterView(filterValues: filterValues, closeFilter: $closeFilter)
+                    ScorecardFilterView(id: id, filterValues: filterValues, closeFilter: $closeFilter)
                     ScrollViewReader { scrollViewProxy in
                         LazyVStack {
                             ForEach(scorecards) { (scorecard) in

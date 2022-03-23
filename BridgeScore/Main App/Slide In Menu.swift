@@ -87,9 +87,9 @@ class SlideInMenu : ObservableObject {
     @Published private(set) var selectedColor: PaletteColor?
     @Published private(set) var hideBackground: Bool = true
     @Published private(set) var completion: ((String?)->())?
-    @Published private(set) var shown: Bool = false
+    @Published private(set) var shown: UUID?
     
-    public func show(title: String? = nil, options: [(String, AnyHashable)]? = nil, strings: [String] = [], selected: Flags? = nil, default field: Int? = nil, selectAll: String? = nil, animation: ViewAnimation = .slideLeft, top: CGFloat? = nil, left: CGFloat? = nil, width: CGFloat? = nil, selectedColor: PaletteColor? = nil, hideBackground: Bool = true, completion: ((String?)->())? = nil) {
+    public func show(id: UUID, title: String? = nil, options: [(String, AnyHashable)]? = nil, strings: [String] = [], selected: Flags? = nil, default field: Int? = nil, selectAll: String? = nil, animation: ViewAnimation = .slideLeft, top: CGFloat? = nil, left: CGFloat? = nil, width: CGFloat? = nil, selectedColor: PaletteColor? = nil, hideBackground: Bool = true, completion: ((String?)->())? = nil) {
         withAnimation(.none) {
             self.title = title
             self.options = options ?? strings.map{($0, $0)}
@@ -104,14 +104,14 @@ class SlideInMenu : ObservableObject {
             self.animation = animation
             self.completion = completion
             Utility.mainThread {
-                self.shown = true
+                self.shown = id
             }
         }
     }
     
     public func hide() {
         width = 300
-        shown = false
+        shown = nil
     }
     
     public func isSelected(_ index: Int) -> Bool {
@@ -127,6 +127,7 @@ class SlideInMenu : ObservableObject {
 }
 
 struct SlideInMenuView : View {
+    @State var id: UUID
     @ObservedObject var values = SlideInMenu.shared
     @State private var offset: CGFloat = 320
     @State private var refresh = false
@@ -145,7 +146,7 @@ struct SlideInMenuView : View {
 
                 ZStack {
                     Rectangle()
-                        .foregroundColor(values.shown ? (values.hideBackground ? Palette.maskBackground : Palette.clickableBackground) : Color.clear)
+                        .foregroundColor(values.shown == id ? (values.hideBackground ? Palette.maskBackground : Palette.clickableBackground) : Color.clear)
                         .onTapGesture {
                             values.hide()
                         }
@@ -221,9 +222,9 @@ struct SlideInMenuView : View {
                     view.hidden()
                 }
                 .onChange(of: values.shown, perform: { value in
-                    offset = (values.shown ? (values.left == nil ? 0 : min(0, (values.left! + values.width - geometry.size.width))) : values.width + 20)
+                    offset = (values.shown == id ? (values.left == nil ? 0 : min(0, (values.left! + values.width - geometry.size.width))) : values.width + 20)
                 })
-                .animation(values.animation == .none ? .none : .easeInOut, value: offset)
+                .animation(values.animation == .none || values.shown != id ? .none : .easeInOut, value: offset)
                 .onAppear {
                     SlideInMenu.shared.width = 300
                 }

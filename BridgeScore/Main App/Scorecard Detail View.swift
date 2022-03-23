@@ -10,6 +10,7 @@ import SwiftUI
 struct ScorecardDetailView: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
 
+    private let id = scorecardDetailViewId
     @ObservedObject var scorecard: ScorecardViewModel
     @Binding var deleted: Bool
     @Binding var tableRefresh: Bool
@@ -21,14 +22,14 @@ struct ScorecardDetailView: View {
     private let redoObserver = NotificationCenter.default.publisher(for: .NSUndoManagerDidUndoChange)
 
     var body: some View {
-        StandardView("Detail") {
+        StandardView("Detail", slideInId: id) {
             VStack(spacing: 0) {
                 
                 Banner(title: $title, alternateStyle: true, back: true, backText: "Done", backAction: backAction, optionMode: .buttons, options: UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo))
                 
                 ScrollView(showsIndicators: false) {
                     
-                    ScorecardDetailsView(scorecard: scorecard, tableRefresh: $tableRefresh)
+                    ScorecardDetailsView(id: id, scorecard: scorecard, tableRefresh: $tableRefresh)
                 }
                 .background(Palette.alternate.background)
             }
@@ -74,6 +75,7 @@ struct ScorecardDetailView: View {
 }
 
 struct ScorecardDetailsView: View {
+    var id: UUID
     @ObservedObject var scorecard: ScorecardViewModel
     @Binding var tableRefresh: Bool
     @State var minValue = 1
@@ -102,7 +104,7 @@ struct ScorecardDetailsView: View {
                                         
                     Separator()
                     
-                    PickerInput(title: "Location", field: $locationIndex, values: {locations.map{$0.name}}, selectedColor: Palette.filterUsed)
+                    PickerInput(id: id, title: "Location", field: $locationIndex, values: {locations.map{$0.name}}, selectedColor: Palette.filterUsed)
                     { index in
                         if let index = index {
                             scorecard.location = locations[index]
@@ -111,7 +113,7 @@ struct ScorecardDetailsView: View {
                     
                     Separator()
                     
-                    PickerInput(title: "Partner", field: $playerIndex, values: {players.map{$0.name}}, selectedColor: Palette.filterUsed)
+                    PickerInput(id: id, title: "Partner", field: $playerIndex, values: {players.map{$0.name}}, selectedColor: Palette.filterUsed)
                     { index in
                         if let index = index {
                             scorecard.partner = players[index]
@@ -162,7 +164,7 @@ struct ScorecardDetailsView: View {
             InsetView(title: "Options") {
                 VStack(spacing: 0) {
                     
-                    PickerInputAdditional(title: "Scoring", field: $typeIndex, values: {types.map{$0.string}}, selectedColor: Palette.filterUsed, additionalBinding: $scorecard.score, onChange:
+                    PickerInputAdditional(id: id, title: "Scoring", field: $typeIndex, values: {types.map{$0.string}}, selectedColor: Palette.filterUsed, additionalBinding: $scorecard.score, onChange:
                     { (index) in
                         if let index = index {
                             if scorecard.type != types[index] {
@@ -174,7 +176,7 @@ struct ScorecardDetailsView: View {
                     
                     Separator()
                     
-                    PickerInput(title: "Total calculation", field: $manualTotalsIndex, values: { TotalCalculation.allCases.map{$0.string}}, selectedColor: Palette.filterUsed)
+                    PickerInput(id: id, title: "Total calculation", field: $manualTotalsIndex, values: { TotalCalculation.allCases.map{$0.string}}, selectedColor: Palette.filterUsed)
                     { (index) in
                         if let index = index {
                             scorecard.manualTotals = (index == TotalCalculation.manual.rawValue)
@@ -196,7 +198,7 @@ struct ScorecardDetailsView: View {
                     
                     Separator()
                     
-                    PickerInput(title: "Board Numbers", field: $resetBoardNumberIndex, values: { ResetBoardNumber.allCases.map{$0.string}}, selectedColor: Palette.filterUsed)
+                    PickerInput(id: id, title: "Board Numbers", field: $resetBoardNumberIndex, values: { ResetBoardNumber.allCases.map{$0.string}}, selectedColor: Palette.filterUsed)
                     { (index) in
                         scorecard.resetNumbers = (index == ResetBoardNumber.perTable.rawValue)
                         tableRefresh = true

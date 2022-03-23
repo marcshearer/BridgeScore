@@ -8,6 +8,7 @@
     import SwiftUI
 
     struct MultiSelectPickerInput : View {
+        var id: UUID
         var title: String? = nil
         var values: ()->[(text: String, id: AnyHashable)]
         @Binding var selected: Flags
@@ -60,7 +61,7 @@
                             let left = (below ? geometry.frame(in: .global).minX + 20 : geometry.frame(in: .global).maxX + 30)
                             let width = (below ? width ?? geometry.size.width : 400)
                             
-                            PopupMenu(selected: selected, values: values, title: popupTitle ?? title, selectAll: selectAll, animation: animation, top: top, left: left, width: width, selectedColor: selectedColor, hideBackground: !below, onChange: onChange) {
+                            PopupMenu(id: id, selected: selected, values: values, title: popupTitle ?? title, selectAll: selectAll, animation: animation, top: top, left: left, width: width, selectedColor: selectedColor, hideBackground: !below, onChange: onChange) {
                                 
                                 HStack {
                                     if centered {

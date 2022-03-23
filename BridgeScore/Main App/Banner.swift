@@ -47,6 +47,7 @@ struct Banner: View {
     var optionMode: BannerOptionMode = .none
     var menuImage: AnyView? = nil
     var menuTitle: String?
+    var menuId: UUID? = nil
     var options: [BannerOption]? = nil
     public static let crossImage = AnyView(Image(systemName: "xmark"))
     
@@ -155,7 +156,7 @@ struct Banner: View {
                     Banner_Buttons(options: options.filter{!$0.menu || optionMode == .buttons}, alternateStyle: alternateStyle, bannerColor: bannerColor, buttonColor: buttonColor, backButtonColor: backButtonColor)
                 }
                 if optionMode == .menu || optionMode == .both {
-                    Banner_Menu(image: menuImage, title: menuTitle, options: options.filter{$0.menu || optionMode == .menu}, bannerColor: bannerColor)
+                    Banner_Menu(id: menuId!, image: menuImage, title: menuTitle, options: options.filter{$0.menu || optionMode == .menu}, bannerColor: bannerColor)
                 }
             }
         }
@@ -163,6 +164,7 @@ struct Banner: View {
 }
 
 struct Banner_Menu : View {
+    var id: UUID
     var image: AnyView?
     var title: String?
     var options: [BannerOption]
@@ -172,7 +174,7 @@ struct Banner_Menu : View {
     var body: some View {
         Button {
             let filteredOptions = options.filter{$0.isEnabled}
-            SlideInMenu.shared.show(title: title, strings: filteredOptions.map{$0.text ?? ""}, top: bannerHeight - 20) { (option) in
+            SlideInMenu.shared.show(id: id, title: title, strings: filteredOptions.map{$0.text ?? ""}, top: bannerHeight - 20) { (option) in
                     if let selected = options.first(where: {$0.text == option}) {
                         selected.action()
                     }

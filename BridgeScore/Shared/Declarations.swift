@@ -45,6 +45,12 @@ var pickerCaptionFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 12.
 var windowTitleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 20.0))
 var smallCellFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 22.0 : 14.0))
 
+// Slide in IDs
+let scorecardListViewId = UUID()
+let scorecardInputViewId = UUID()
+let scorecardDetailViewId = UUID()
+let layoutSetupViewId = UUID()
+let statsViewId = UUID()
 
 // Backups
 let backupDirectoryDateFormat = "yyyy-MM-dd-HH-mm-ss-SSS"

@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct PopupMenu<Label>: View where Label : View {
+    var id: UUID
     var field: Binding<Int?>?
     var selected: Flags?
     let label: Label
@@ -23,7 +24,8 @@ struct PopupMenu<Label>: View where Label : View {
     let onChange: ((Int?)->())?
     @State private var showPopup = false
     
-    init(field: Binding<Int?>, values: [String], title: String? = nil, animation: ViewAnimation = .slideLeft, top: CGFloat? = nil, left: CGFloat? = nil, width: CGFloat, selectedColor: PaletteColor? = nil, hideBackground: Bool = true, onChange: ((Int?)->())? = nil, @ViewBuilder label: ()->Label) {
+    init(id: UUID, field: Binding<Int?>, values: [String], title: String? = nil, animation: ViewAnimation = .slideLeft, top: CGFloat? = nil, left: CGFloat? = nil, width: CGFloat, selectedColor: PaletteColor? = nil, hideBackground: Bool = true, onChange: ((Int?)->())? = nil, @ViewBuilder label: ()->Label) {
+        self.id = id
         self.field = field
         self.values = values.map{($0, $0)}
         self.title = title
@@ -37,7 +39,8 @@ struct PopupMenu<Label>: View where Label : View {
         self.label = label()
     }
     
-    init(selected: Flags, values: [(String, AnyHashable)], title: String? = nil, selectAll: String? = nil, animation: ViewAnimation = .slideLeft, top: CGFloat? = nil, left: CGFloat? = nil, width: CGFloat, selectedColor: PaletteColor? = nil, hideBackground: Bool = true, onChange: ((Int?)->())? = nil, @ViewBuilder label: ()->Label) {
+    init(id: UUID, selected: Flags, values: [(String, AnyHashable)], title: String? = nil, selectAll: String? = nil, animation: ViewAnimation = .slideLeft, top: CGFloat? = nil, left: CGFloat? = nil, width: CGFloat, selectedColor: PaletteColor? = nil, hideBackground: Bool = true, onChange: ((Int?)->())? = nil, @ViewBuilder label: ()->Label) {
+        self.id = id
         self.selected = selected
         self.values = values
         self.title = title
@@ -55,7 +58,7 @@ struct PopupMenu<Label>: View where Label : View {
     public var body: some View {
         label
             .onTapGesture {
-                SlideInMenu.shared.show(title: title, options: values, selected: selected, default: field?.wrappedValue, selectAll: selectAll, animation: animation, top: top, left: left, width: width, selectedColor: selectedColor, hideBackground: hideBackground, completion: { (selected) in
+                SlideInMenu.shared.show(id: id, title: title, options: values, selected: selected, default: field?.wrappedValue, selectAll: selectAll, animation: animation, top: top, left: left, width: width, selectedColor: selectedColor, hideBackground: hideBackground, completion: { (selected) in
                     if let index = values.firstIndex(where: {$0.text == selected}) {
                         if self.selected != nil {
                             onChange?(index)

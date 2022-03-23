@@ -9,15 +9,17 @@ import SwiftUI
 
 struct StatsView: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
+        
     @StateObject var filterValues = ScorecardFilterValues()
     @State private var hideLeft = false
     
+    private let id = statsViewId
     var body: some View {
-        StandardView("Stats", slideIn: true) {
+        StandardView("Stats", slideInId: id) {
             VStack(spacing: 0) {
                 Banner(title: Binding.constant("Statistics"), back: true, backAction: backAction, leftTitle: true)
                 DoubleColumnView(leftWidth: (hideLeft ? 0 : 350), separator: false) {
-                    StatsFilterView(filterValues: filterValues, hideLeft: $hideLeft)
+                    StatsFilterView(id: id, filterValues: filterValues, hideLeft: $hideLeft)
                 } rightView: {
                     ZStack {
                         VStack(spacing: 0) {
@@ -57,6 +59,7 @@ struct StatsView: View {
 }
 
 struct StatsFilterView: View {
+    var id: UUID
     @ObservedObject var filterValues: ScorecardFilterValues
     @Binding var hideLeft: Bool
     @State private var refresh = false
@@ -90,7 +93,7 @@ struct StatsFilterView: View {
                         }
                         Spacer().frame(height: 20)
                         
-                        MultiSelectPickerInput(values: {players.map{($0.name, $0.playerId.uuidString)}}, selected: $filterValues.partners, placeholder: "Partner", multiplePlaceholder: "Multiple Partners", selectAll: "No partner filter", height: 40, centered: true, color: (filterValues.partners.firstValue(equal: true) != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
+                        MultiSelectPickerInput(id: id, values: {players.map{($0.name, $0.playerId.uuidString)}}, selected: $filterValues.partners, placeholder: "Partner", multiplePlaceholder: "Multiple Partners", selectAll: "No partner filter", height: 40, centered: true, color: (filterValues.partners.firstValue(equal: true) != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
                                 filterValues.objectWillChange.send()
                                 saveDefaults()
                         }
@@ -98,14 +101,14 @@ struct StatsFilterView: View {
                         
                         Spacer().frame(height: 15)
                         
-                        MultiSelectPickerInput(values: {locations.map{($0.name, $0.locationId.uuidString)}}, selected: $filterValues.locations, placeholder: "Location", multiplePlaceholder: "Multiple Locations", selectAll: "No location filter", height: 40, centered: true, color: (filterValues.locations.firstValue(equal: true) != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
+                        MultiSelectPickerInput(id: id, values: {locations.map{($0.name, $0.locationId.uuidString)}}, selected: $filterValues.locations, placeholder: "Location", multiplePlaceholder: "Multiple Locations", selectAll: "No location filter", height: 40, centered: true, color: (filterValues.locations.firstValue(equal: true) != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
                             filterValues.objectWillChange.send()
                             saveDefaults()
                         }
                         
                         Spacer().frame(height: 15)
                         
-                        MultiSelectPickerInput(values: {types.map{($0.string, $0.rawValue)}}, selected: $filterValues.types, placeholder: "Scoring Method", multiplePlaceholder: "Multiple Types", selectAll: "No type filter", height: 40, centered: true, color: (filterValues.types.firstValue(equal: true) != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
+                        MultiSelectPickerInput(id: id, values: {types.map{($0.string, $0.rawValue)}}, selected: $filterValues.types, placeholder: "Scoring Method", multiplePlaceholder: "Multiple Types", selectAll: "No type filter", height: 40, centered: true, color: (filterValues.types.firstValue(equal: true) != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
                             filterValues.objectWillChange.send()
                             saveDefaults()
                         }
