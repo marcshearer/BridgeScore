@@ -217,6 +217,7 @@ struct ImportBBOScorecard: View {
                     .onTapGesture {
                         importedBBOScorecard.importScorecard()
                         completion?()
+                        presentationMode.wrappedValue.dismiss()
                     }
                     Spacer()
                 }
@@ -521,6 +522,8 @@ class ImportedBBOScorecard {
     }
     
     private func importTable(tableNumber: Int, boardOffset: Int = 0) {
+        let scorer = MasterData.shared.scorer
+        let bboName = scorer!.bboName.lowercased()
         if let scorecard = scorecard,
             let myRanking = myRanking,
             let myNumber = myRanking.number,
@@ -548,6 +551,7 @@ class ImportedBBOScorecard {
                         }
                     }
                     table?.versus = versus
+                    table?.sitting = seat(line: myLine, ranking: myRanking, bboName: bboName) ?? .unknown
                                         
                     importBoard(myLine: myLine, boardNumber: boardNumber, myRanking: myRanking)
                     importTravellers(boardNumber: boardNumber)

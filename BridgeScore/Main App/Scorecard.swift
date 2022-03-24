@@ -22,6 +22,8 @@ class Scorecard {
     @Published private(set) var rankings: [Int:[Int:RankingViewModel]] = [:]   // Section / Pair (team) number
     @Published private(set) var travellers: [Int:[Int:[Int:TravellerViewModel]]] = [:]   // Board number / section / north pair (team number
     
+    public var imported: Bool { !rankings.isEmpty || !travellers.isEmpty } 
+    
     public var isSensitive: Bool {
         return boards.compactMap{$0.value}.firstIndex(where: {$0.comment != "" || $0.responsible != .unknown }) != nil
     }
@@ -196,12 +198,13 @@ class Scorecard {
    }
     
     public func removeRankings(table: Int? = nil) {
-        for (_, section) in rankings {
-            for (_, ranking) in section {
-                if !ranking.isNew {
-                    if table == nil || ranking.table == table {
+        for (sectionNumber, sectionRankings) in rankings {
+            for (number, ranking) in sectionRankings {
+                if table == nil || ranking.table == table {
+                    if !ranking.isNew {
                         remove(ranking: ranking)
                     }
+                    rankings[sectionNumber]![number] = nil
                 }
             }
         }
@@ -217,6 +220,7 @@ class Scorecard {
                 }
             }
         }
+        travellers[board] = [:]
     }
     
     public func addNew() {

@@ -912,6 +912,7 @@ class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDeleg
         textField.keyboardType = .default
         textField.autocapitalizationType = .none
         textField.autocorrectionType = .no
+        textField.isEnabled = true
         textView.isHidden = true
         textClear.isHidden = true
         textClearWidth.constant = 0
@@ -954,9 +955,11 @@ class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDeleg
         case .board, .table, .vulnerable, .dealer:
             isEnabled = false
         case .declarer:
-            isEnabled = (table.sitting != .unknown)
+            isEnabled = (table.sitting != .unknown && !Scorecard.current.imported)
         case .made:
-            isEnabled = board.contract.suit.valid
+            isEnabled = board.contract.suit.valid && !Scorecard.current.imported
+        case .score, .versus, .sitting, .contract:
+            isEnabled = !Scorecard.current.imported
         default:
             break
         }
@@ -1006,6 +1009,7 @@ class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDeleg
             textField.keyboardType = .numbersAndPunctuation
             textField.clearsOnBeginEditing = true
             textField.text = board.score == nil ? "" : "\(board.score!.toString(places: scorecard.type.boardPlaces))"
+            textField.isEnabled = isEnabled
         case .points:
             label.isHidden = false
             if board.declarer == .unknown {
@@ -1030,7 +1034,7 @@ class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDeleg
             label.text = "Round \(table.table)"
         case .sitting:
             seatPicker.isHidden = false
-            seatPicker.set(table.sitting, color: color, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
+            seatPicker.set(table.sitting, isEnabled: isEnabled, color: color, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
         case .tableScore:
             if scorecard.manualTotals {
                 textField.isHidden = false
@@ -1045,6 +1049,7 @@ class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDeleg
             textField.text = table.versus
             textField.textAlignment = .left
             textField.autocapitalizationType = .words
+            textField.isEnabled = isEnabled
             textClear.isHidden = table.versus == ""
             textClearWidth.constant = 34
             textClearPadding.forEach { (constraint) in constraint.constant = 8 }
@@ -1347,7 +1352,9 @@ class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDeleg
         if let column = ColumnType(rawValue: sender.view?.tag ?? -1) {
             switch column {
             case .contract:
-                contractTapped(self)
+                if !Scorecard.current.imported {
+                    contractTapped(self)
+                }
             default:
                 break
             }
@@ -1378,10 +1385,12 @@ class ScorecardInputBoardCollectionCell: UICollectionViewCell, ScrollPickerDeleg
         scorecardDelegate?.scorecardChanged(type: rowType, itemNumber: itemNumber)
         let width: CGFloat = 70
         let space = (frame.width - width) / 2
-        scorecardDelegate?.scorecardScrollPickerPopup(values: Seat.allCases.map{ScrollPickerEntry(title: $0.short, caption: $0.string)}, maxValues: 9, selected: table.sitting.rawValue, defaultValue: nil, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 20, bottomPadding: 4) { (selected) in
-            if let seat = Seat(rawValue: selected!) {
-                self.seatPicker.set(seat)
-                self.enumPickerDidChange(to: seat)
+        if !Scorecard.current.imported {
+            scorecardDelegate?.scorecardScrollPickerPopup(values: Seat.allCases.map{ScrollPickerEntry(title: $0.short, caption: $0.string)}, maxValues: 9, selected: table.sitting.rawValue, defaultValue: nil, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 20, bottomPadding: 4) { (selected) in
+                if let seat = Seat(rawValue: selected!) {
+                    self.seatPicker.set(seat)
+                    self.enumPickerDidChange(to: seat)
+                }
             }
         }
     }

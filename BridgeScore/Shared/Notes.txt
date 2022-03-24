@@ -7,7 +7,6 @@ Bugs
 ====
 Seem to lose tricks made periodically when scroll - think this now fixed
 Can only type in one number in score as it keeps clearing field - have to go out and in again
-Double slide-in
 Seem to have lost inset titles in table fields
 
 To Do
