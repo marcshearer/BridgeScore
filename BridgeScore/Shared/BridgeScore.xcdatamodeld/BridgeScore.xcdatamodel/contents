@@ -45,6 +45,15 @@
         <attribute name="retired" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="sequence16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
+    <entity name="Ranking" representedClassName="RankingMO" syncable="YES">
+        <attribute name="number16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="points" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="ranking16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="score" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="scorecardId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="section16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="table16" optional="YES" attributeType="Integer 16" defaultValueString="0.0" usesScalarValueType="YES"/>
+    </entity>
     <entity name="Scorecard" representedClassName="ScorecardMO" syncable="YES">
         <attribute name="boards16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="boardsTable16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
@@ -74,13 +83,36 @@
         <attribute name="table16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="versus" attributeType="String"/>
     </entity>
+    <entity name="Traveller" representedClassName="TravellerMO" syncable="YES">
+        <attribute name="board16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="contractDouble16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="contractLevel16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="contractSuit16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="declarer16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="eastEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="eastValue" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lead" optional="YES" attributeType="String"/>
+        <attribute name="made16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="northEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="northValue" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="nsScore" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="playData" optional="YES" attributeType="String"/>
+        <attribute name="scorecardId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="section16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="southEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="southValue" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="westEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="westValue" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
     <elements>
         <element name="BBOName" positionX="-9" positionY="162" width="128" height="59"/>
         <element name="Board" positionX="-9" positionY="144" width="128" height="209"/>
         <element name="Layout" positionX="-45" positionY="0" width="128" height="194"/>
         <element name="Location" positionX="27" positionY="189" width="128" height="89"/>
         <element name="Player" positionX="9" positionY="171" width="128" height="119"/>
+        <element name="Ranking" positionX="-9" positionY="162" width="128" height="134"/>
         <element name="Scorecard" positionX="-18" positionY="81" width="128" height="314"/>
         <element name="Table" positionX="-9" positionY="153" width="128" height="119"/>
+        <element name="Traveller" positionX="0" positionY="171" width="128" height="314"/>
     </elements>
 </model>

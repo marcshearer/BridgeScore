@@ -215,15 +215,8 @@ struct ImportBBOScorecard: View {
                     .frame(width: 120, height: 40)
                     .cornerRadius(10)
                     .onTapGesture {
-                        MessageBox.shared.show("This will overwrite the data in the current scorecard. Are you sure you want to continue", cancelText: "Cancel", okText: "Overwrite", okDestructive: true, cancelAction: {
-                            selected = nil
-                        }, okAction: {
-                            importedBBOScorecard.execute()
-                            completion?()
-                            MessageBox.shared.show("BBO Scorecard Import Complete", okAction: {
-                                presentationMode.wrappedValue.dismiss()
-                            })
-                        })
+                        importedBBOScorecard.importScorecard()
+                        completion?()
                     }
                     Spacer()
                 }
@@ -262,8 +255,8 @@ class ImportedBBOScorecard {
     private(set) var partner: PlayerViewModel?
     private(set) var myRanking: ImportedBBOScorecardRanking?
     private(set) var type: ScoreType?
-    private(set) var ranking: [ImportedBBOScorecardRanking] = []
-    private(set) var traveller: [Int:[ImportedBBOBoardTravellerLine]] = [:]
+    private(set) var rankings: [ImportedBBOScorecardRanking] = []
+    private(set) var travellers: [Int:[ImportedBBOBoardTravellerLine]] = [:]
     private(set) var warnings: [String] = []
     private(set) var error: String?
     private(set) var scorecard: ScorecardViewModel?
@@ -274,6 +267,8 @@ class ImportedBBOScorecard {
     private var rankingHeadings: [String] = []
     private var travellerHeadings: [String] = []
     
+  // MARK: - Initialise from import file ============================================================ -
+    
     init(lines: [String] = [], scorecard: ScorecardViewModel? = nil) {
         self.scorecard = scorecard
         for line in lines {
@@ -281,7 +276,7 @@ class ImportedBBOScorecard {
             if !columns.isEmpty {
                 switch phase {
                 case .heading:
-                    importHeading(columns)
+                    initHeading(columns)
                 case .rankingHeader:
                     rankingHeadings = columns
                     phase = .ranking
@@ -289,14 +284,14 @@ class ImportedBBOScorecard {
                     if columns.first!.lowercased() == "#travellerlines" {
                         phase = .travellerHeader
                     } else {
-                        importRanking(columns)
+                        initRanking(columns)
                     }
                 case .travellerHeader:
                     travellerHeadings = columns
                     phase = .traveller
                 case .traveller:
                     if columns.count > 1 {
-                        importTraveller(columns)
+                        initTraveller(columns)
                     }
                 }
             }
@@ -306,232 +301,7 @@ class ImportedBBOScorecard {
         }
     }
     
-    public func execute() {
-        // Update date
-        if let date = date {
-            scorecard?.date = date
-        }
-        
-        // Update partner
-        if let partner = partner {
-            scorecard?.partner = partner
-        }
-        
-        if !(scorecard?.resetNumbers ?? false) {
-            // Update number of boards / tables
-            if let boardCount = boardCount {
-                scorecard?.boards = boardCount
-            }
-            if let boardsTable = boardsTable {
-                scorecard?.boardsTable = boardsTable
-            }
-            Scorecard.current.addNew()
-        }
-         
-        if let myRanking = myRanking {
-            // Update position
-            if !(scorecard?.resetNumbers ?? false) {
-                if let position = myRanking.ranking {
-                    scorecard?.position = position
-                }
-            }
-            
-            // Update score
-            if !(scorecard?.resetNumbers ?? false) && !(scorecard?.manualTotals ?? false) {
-                if let score = myRanking.score {
-                    scorecard?.score = score
-                }
-            }
-        }
-
-        // Update field entry size
-        scorecard?.entry = ranking.count
-        
-        // Update boards and tables
-        if let scorecard = scorecard {
-            if Scorecard.current.match(scorecard: scorecard) {
-                if scorecard.resetNumbers {
-                    importTable(tableNumber: table, boardOffset: (table - 1) * scorecard.boardsTable)
-                } else {
-                    for tableNumber in 1...scorecard.tables {
-                        importTable(tableNumber: tableNumber)
-                    }
-                }
-            }
-            Scorecard.updateScores(scorecard: scorecard)
-            if scorecard.entry == 2 && scorecard.type.boardScoreType != .percent && scorecard.score != nil && scorecard.maxScore != nil {
-                scorecard.position = (scorecard.score! >= (scorecard.maxScore! / 2) ? 1 : 2)
-            }
-            
-            Scorecard.current.saveAll(scorecard: scorecard)
-        }
-    }
-    
-    private func importTable(tableNumber: Int, boardOffset: Int = 0) {
-        if let scorecard = scorecard, let myRanking = myRanking, let myNumber = myRanking.number {
-            
-            let scorer = MasterData.shared.scorer
-            let bboName = scorer!.bboName.lowercased()
-            let table = Scorecard.current.tables[tableNumber]
-            
-            for tableBoardNumber in 1...scorecard.boardsTable {
-                
-                let boardNumber = ((tableNumber - 1) * scorecard.boardsTable) + tableBoardNumber
-                let board = Scorecard.current.boards[boardNumber]
-                
-                if let lines = traveller[boardNumber - boardOffset], let myLine = myTravellerLine(lines: lines, myNumber: myNumber) {
-                    
-                    let otherPair = otherPair(line: myLine, myNumber: myNumber)
-                    if let otherRanking = ranking.first(where: {$0.number == otherPair}), let mySeat = seat(line: myLine, ranking: myRanking, bboName: bboName) {
-                        table?.sitting = mySeat
-                        let left = MasterData.shared.realName(bboName: otherRanking.players[mySeat.leftOpponent]) ?? "Unknown"
-                        let right = MasterData.shared.realName(bboName: otherRanking.players[mySeat.rightOpponent]) ?? "Unknown"
-                        table?.versus = "\(left) & \(right)"
-                    }
-                    
-                    board?.contract = myLine.contract ?? Contract()
-                    board?.declarer = myLine.declarer ?? .unknown
-                    board?.made = myLine.made
-                    if let nsScore = myLine.nsScore {
-                        board?.score = (myLine.nsPair == myRanking.number ? nsScore : ( (scorecard.type.boardScoreType == .percent ? 100 - nsScore : (nsScore == 0 ? 0 : -nsScore))))
-                    }
-                }
-            }
-        }
-    }
-    
-    private func validate() {
-        // Find self and partner
-        let scorer = MasterData.shared.scorer
-        let bboName = scorer?.bboName.lowercased()
-        myRanking = ranking.first(where: {$0.players.contains(where: {$0.value == bboName})})
-        if let myRanking = myRanking {
-            let seat = myRanking.players.first(where: {$0.value == bboName})?.key
-            let partnerBBOName = myRanking.players[seat!.partner]
-            partner = MasterData.shared.players.first(where: {$0.bboName.lowercased() == partnerBBOName})
-            if partner != scorecard?.partner {
-                warnings.append("Partner in imported scorecard does not match current scorecard")
-            }
-        } else {
-            warnings.append("Unable to find self in imported scorecard")
-        }
-        
-        // Check scoring type
-        if type != scorecard?.type.boardScoreType {
-            error = "Scoring type in imported scorecard must be consistent with current scorecard"
-        }
-        
-        var boards: Int
-        if scorecard?.tables == 1 || !(scorecard?.resetNumbers ?? false) {
-            boards = scorecard!.boards
-        } else {
-            boards = scorecard!.boardsTable
-        }
-        
-        // Check total number of boards
-        if boardCount != boards {
-            if scorecard?.resetNumbers ?? false {
-                error = "Number of boards must equal current scorecard boards per table on partial imports"
-            } else {
-                warnings.append("Number of boards imported does not match current scorecard")
-            }
-        }
-        
-        // Check boards per table
-        var lastVersus: Int? = nil
-        var lastBoards: Int = 0
-        var boardsTableError = false
-        if let myNumber = myRanking?.number {
-            for (_, lines) in traveller.sorted(by: {$0.key < $1.key}) {
-                if let line = myTravellerLine(lines: lines, myNumber: myNumber) {
-                    let otherPair = otherPair(line: line, myNumber: myNumber)
-                    if lastVersus != otherPair && lastVersus != nil {
-                        if lastBoards != scorecard?.boardsTable {
-                            boardsTableError = true
-                        }
-                        lastBoards = 0
-                    }
-                    lastVersus = otherPair
-                    lastBoards += 1
-                }
-            }
-        }
-        boardsTable = lastBoards
-        if boardsTableError || lastBoards != scorecard?.boardsTable {
-            warnings.append("Imported number of boards per table does not match current scorecard")
-        }
-    }
-
-    private func myTravellerLine(lines: [ImportedBBOBoardTravellerLine], myNumber: Int) -> ImportedBBOBoardTravellerLine? {
-        var result: ImportedBBOBoardTravellerLine?
-        let scorer = MasterData.shared.scorer
-        let bboName = scorer?.bboName.lowercased()
-        if let line = lines.first(where: {$0.nsPair == myNumber}) {
-            if myRanking?.players[.north] == bboName || myRanking?.players[.south] == bboName {
-                result = line
-            }
-        }
-        if result == nil {
-            if let line = lines.first(where: {$0.ewPair == myNumber}) {
-                if myRanking?.players[.east] == bboName || myRanking?.players[.west] == bboName {
-                    result = line
-                }
-            }
-        }
-        return result
-    }
-    
-    private func seat(line: ImportedBBOBoardTravellerLine, ranking: ImportedBBOScorecardRanking, bboName: String) -> Seat? {
-        var result: Seat?
-        if line.ewPair == ranking.number {
-            if ranking.players[.east] == bboName {
-                result = .east
-            } else if ranking.players[.west] == bboName {
-                result = .west
-            }
-        } else if line.nsPair == ranking.number {
-            if ranking.players[.north] == bboName {
-                result = .north
-            } else if ranking.players[.south] == bboName {
-                result = .south
-            }
-        }
-        return result
-    }
-    
-    private func otherPair(line: ImportedBBOBoardTravellerLine, myNumber: Int) -> Int {
-        return (line.nsPair == myNumber ? line.ewPair! : line.nsPair!)
-    }
-    
-    private func columns(_ line: String) -> [String] {
-        var quoted = false
-        var carried = ""
-        let columns = line.components(separatedBy: ",")
-        var result: [String] = []
-        
-            // Now merge any columns that were quoted
-        for column in columns {
-            if !quoted {
-                if column.left(1) == "\"" {
-                    carried = column.right(column.length - 1)
-                    quoted = true
-                } else {
-                    result.append(column)
-                }
-            } else {
-                if column.right(1) == "\"" {
-                    carried = carried + "," + column.left(column.length - 1)
-                    result.append(carried)
-                    quoted = false
-                } else {
-                    carried = carried + "," + column
-                }
-            }
-        }
-        return result
-    }
-    
-    private func importHeading(_ columns: [String]) {
+    private func initHeading(_ columns: [String]) {
         switch columns.first!.lowercased() {
         case "#title":
             title = columns.element(1)
@@ -555,7 +325,7 @@ class ImportedBBOScorecard {
         }
     }
     
-    private func importRanking(_ columns: [String]) {
+    private func initRanking(_ columns: [String]) {
         let importedRanking = ImportedBBOScorecardRanking()
         
         for (index, heading) in rankingHeadings.enumerated() {
@@ -600,15 +370,11 @@ class ImportedBBOScorecard {
                 break
             }
         }
-        ranking.append(importedRanking)
+        rankings.append(importedRanking)
     }
     
-    private func importTraveller(_ columns: [String]) {
+    private func initTraveller(_ columns: [String]) {
         let importedTraveller = ImportedBBOBoardTravellerLine()
-        var north: String?
-        var south: String?
-        var east: String?
-        var west: String?
 
         for (index, heading) in travellerHeadings.enumerated() {
             switch heading.lowercased() {
@@ -616,14 +382,24 @@ class ImportedBBOScorecard {
                 if let string = columns.element(index) {
                     importedTraveller.board = Int(string)
                 }
-            case "north":
-                north = columns.element(index)?.lowercased()
-            case "south":
-                south = columns.element(index)?.lowercased()
+            case "nspair":
+                if let string = columns.element(index) {
+                    importedTraveller.ranking[.north] = Int(string)
+                    importedTraveller.ranking[.south] = Int(string)
+                }
+            case "ewpair":
+                if let string = columns.element(index) {
+                    importedTraveller.ranking[.east] = Int(string)
+                    importedTraveller.ranking[.west] = Int(string)
+                }
             case "east":
-                east = columns.element(index)?.lowercased()
+                if let string = columns.element(index) {
+                    importedTraveller.ranking[.east] = Int(string)
+                }
             case "west":
-                west = columns.element(index)?.lowercased()
+                if let string = columns.element(index) {
+                    importedTraveller.ranking[.west] = Int(string)
+                }
             case "contract":
                 let contract = Contract()
                 if let string = columns.element(index) {
@@ -664,7 +440,7 @@ class ImportedBBOScorecard {
                 }
             case "section":
                 if let string = columns.element(index) {
-                    importedTraveller.section = Int(string)
+                    importedTraveller.section = Int(string) ?? 0
                 }
             case "playdata":
                 importedTraveller.playData = columns.element(index)
@@ -672,15 +448,295 @@ class ImportedBBOScorecard {
                 break
             }
         }
-        importedTraveller.nsPair = ranking.first(where: {$0.players[.north] == north && $0.players[.south] == south})?.number
-        importedTraveller.ewPair = ranking.first(where: {$0.players[.east] == east && $0.players[.west] == west})?.number
        
         if let board = importedTraveller.board {
-            if traveller[board] == nil {
-                traveller[board] = []
+            if travellers[board] == nil {
+                travellers[board] = []
             }
-            traveller[board]!.append(importedTraveller)
+            travellers[board]!.append(importedTraveller)
         }
+    }
+    
+    public func importScorecard() {
+        // Update date
+        if let date = date {
+            scorecard?.date = date
+        }
+        
+        // Update partner
+        if let partner = partner {
+            scorecard?.partner = partner
+        }
+        
+        if !(scorecard?.resetNumbers ?? false) {
+            // Update number of boards / tables
+            if let boardCount = boardCount {
+                scorecard?.boards = boardCount
+            }
+            if let boardsTable = boardsTable {
+                scorecard?.boardsTable = boardsTable
+            }
+            Scorecard.current.addNew()
+        }
+         
+        if let myRanking = myRanking {
+            // Update position
+            if !(scorecard?.resetNumbers ?? false) {
+                if let position = myRanking.ranking {
+                    scorecard?.position = position
+                }
+            }
+            
+            // Update score
+            if !(scorecard?.resetNumbers ?? false) && !(scorecard?.manualTotals ?? false) {
+                if let score = myRanking.score {
+                    scorecard?.score = score
+                }
+            }
+        }
+
+        // Update field entry size
+        scorecard?.entry = rankings.count
+        
+        // Update boards and tables
+        if let scorecard = scorecard {
+            if Scorecard.current.match(scorecard: scorecard) {
+                if scorecard.resetNumbers {
+                    importTable(tableNumber: table, boardOffset: (table - 1) * scorecard.boardsTable)
+                    importRankings(table: table)
+                } else {
+                    for tableNumber in 1...scorecard.tables {
+                        importTable(tableNumber: tableNumber)
+                    }
+                    importRankings()
+                }
+            }
+            Scorecard.updateScores(scorecard: scorecard)
+            if scorecard.entry == 2 && scorecard.type.boardScoreType != .percent && scorecard.score != nil && scorecard.maxScore != nil {
+                scorecard.position = (scorecard.score! >= (scorecard.maxScore! / 2) ? 1 : 2)
+            }
+            
+            Scorecard.current.saveAll(scorecard: scorecard)
+        }
+    }
+    
+    private func importTable(tableNumber: Int, boardOffset: Int = 0) {
+        if let scorecard = scorecard,
+            let myRanking = myRanking,
+            let myNumber = myRanking.number,
+            let mySection = myRanking.section {
+            
+            let table = Scorecard.current.tables[tableNumber]
+            
+            for tableBoardNumber in 1...scorecard.boardsTable {
+                
+                let boardNumber = ((tableNumber - 1) * scorecard.boardsTable) + tableBoardNumber
+                
+                if let lines = travellers[boardNumber - boardOffset],
+                    let myLine = myTravellerLine(lines: lines, myNumber: myNumber, mySection: mySection) {
+                    
+                    var versus = ""
+                    for seat in Seat.validCases {
+                        let otherNumber = myLine.ranking[seat] ?? myNumber
+                        if otherNumber != myNumber {
+                            if let ranking = otherRanking(number: otherNumber, section: mySection) {
+                                if versus != "" {
+                                    versus += " & "
+                                }
+                                versus += MasterData.shared.realName(bboName: ranking.players[seat]) ?? "Unknown"
+                            }
+                        }
+                    }
+                    table?.versus = versus
+                                        
+                    importBoard(myLine: myLine, boardNumber: boardNumber, myRanking: myRanking)
+                    importTravellers(boardNumber: boardNumber)
+                }
+            }
+        }
+    }
+    
+    func importBoard(myLine: ImportedBBOBoardTravellerLine, boardNumber: Int, myRanking: ImportedBBOScorecardRanking) {
+        let board = Scorecard.current.boards[boardNumber]
+        board?.contract = myLine.contract ?? Contract()
+        board?.declarer = myLine.declarer ?? .unknown
+        board?.made = myLine.made
+        if let nsScore = myLine.nsScore, let scorecard = scorecard {
+            board?.score = (myLine.ranking[.north] == myRanking.number || myLine.ranking[.south] == myRanking.number ? nsScore : ( (scorecard.type.boardScoreType == .percent ? 100 - nsScore : (nsScore == 0 ? 0 : -nsScore))))
+        }
+    }
+    
+    func importRankings(table: Int? = nil) {
+        Scorecard.current.removeRankings(table: table)
+        if let scorecard = scorecard {
+            for bboRanking in rankings {
+                
+                if let section = bboRanking.section, let number = bboRanking.number {
+                    let ranking = RankingViewModel(scorecard: scorecard, table: table ?? 0, section: section, number: number)
+                    
+                    ranking.ranking = bboRanking.ranking ?? 0
+                    ranking.score = bboRanking.score ?? 0
+                    ranking.points = bboRanking.bboPoints ?? 0
+                    
+                    Scorecard.current.insert(ranking: ranking)
+                }
+            }
+        }
+    }
+    
+    func importTravellers(boardNumber: Int) {
+        Scorecard.current.removeTravellers(board: boardNumber)
+        if let scorecard = scorecard, let bboTravellers = travellers[boardNumber] {
+            for bboTraveller in bboTravellers {
+                if let board = bboTraveller.board {
+                    
+                    let traveller = TravellerViewModel(scorecard: scorecard, board: board, section: bboTraveller.section, ranking: bboTraveller.ranking)
+                    
+                    traveller.contract = bboTraveller.contract ?? Contract()
+                    traveller.declarer = bboTraveller.declarer ?? .unknown
+                    traveller.made = bboTraveller.made ?? 0
+                    traveller.nsScore = bboTraveller.nsScore ?? 0
+                    traveller.lead = bboTraveller.lead ?? ""
+                    traveller.playData = bboTraveller.playData ?? ""
+                    
+                    Scorecard.current.insert(traveller: traveller)
+                }
+            }
+        }
+    }
+    
+  // MARK: - Validate import ======================================================================== -
+    
+    private func validate() {
+        // Find self and partner
+        let scorer = MasterData.shared.scorer
+        let bboName = scorer!.bboName.lowercased()
+        myRanking = rankings.first(where: {$0.players.contains(where: {$0.value == bboName})})
+        if let myRanking = myRanking {
+            let seat = myRanking.players.first(where: {$0.value == bboName})?.key
+            let partnerBBOName = myRanking.players[seat!.partner]
+            partner = MasterData.shared.players.first(where: {$0.bboName.lowercased() == partnerBBOName})
+            if partner != scorecard?.partner {
+                warnings.append("Partner in imported scorecard does not match current scorecard")
+            }
+        } else {
+            warnings.append("Unable to find self in imported scorecard")
+        }
+        
+        // Check scoring type
+        if type != scorecard?.type.boardScoreType {
+            error = "Scoring type in imported scorecard must be consistent with current scorecard"
+        }
+        
+        var boards: Int
+        if scorecard?.tables == 1 || !(scorecard?.resetNumbers ?? false) {
+            boards = scorecard!.boards
+        } else {
+            boards = scorecard!.boardsTable
+        }
+        
+        // Check total number of boards
+        if boardCount != boards {
+            if scorecard?.resetNumbers ?? false {
+                error = "Number of boards must equal current scorecard boards per table on partial imports"
+            } else {
+                warnings.append("Number of boards imported does not match current scorecard")
+            }
+        }
+        
+        // Check boards per table
+        var lastVersus: Int? = nil
+        var lastBoards: Int = 0
+        var boardsTableError = false
+        if let myRanking = myRanking,
+           let myNumber = myRanking.number,
+           let mySection = myRanking.section {
+            for (_, lines) in travellers.sorted(by: {$0.key < $1.key}) {
+                if let line = myTravellerLine(lines: lines, myNumber: myNumber, mySection: mySection) {
+                    if let mySeat = seat(line: line, ranking: myRanking, bboName: bboName) {
+                        let thisVersus = line.ranking[mySeat.leftOpponent]
+                        if lastVersus != thisVersus && lastVersus != nil {
+                            if lastBoards != scorecard?.boardsTable {
+                                boardsTableError = true
+                            }
+                            lastBoards = 0
+                        }
+                        lastVersus = thisVersus
+                        lastBoards += 1
+                    }
+                }
+            }
+        }
+        boardsTable = lastBoards
+        if boardsTableError || lastBoards != scorecard?.boardsTable {
+            warnings.append("Imported number of boards per table does not match current scorecard")
+        }
+    }
+
+    // MARK: - Utility routines ==================================================================== -
+    
+    private func myTravellerLine(lines: [ImportedBBOBoardTravellerLine], myNumber: Int, mySection: Int) -> ImportedBBOBoardTravellerLine? {
+        var result: ImportedBBOBoardTravellerLine?
+        let scorer = MasterData.shared.scorer
+        let bboName = scorer?.bboName.lowercased()
+        
+        for seat in Seat.validCases {
+            if let line = lines.first(where: {$0.ranking[seat] == myNumber}) {
+                if myRanking?.players[seat] == bboName{
+                    result = line
+                    break
+                }
+            }
+        }
+        
+        return result
+    }
+    
+    private func otherRanking(number: Int, section: Int) -> ImportedBBOScorecardRanking? {
+        return rankings.first(where: {$0.number == number && $0.section == section})
+    }
+    
+    private func seat(line: ImportedBBOBoardTravellerLine, ranking: ImportedBBOScorecardRanking, bboName: String) -> Seat? {
+        var result: Seat?
+        
+        for seat in Seat.validCases {
+            if line.ranking[seat] == ranking.number {
+                if ranking.players[seat] == bboName {
+                    result = seat
+                    break
+                }
+            }
+        }
+        
+        return result
+    }
+    
+    private func columns(_ line: String) -> [String] {
+        var quoted = false
+        var carried = ""
+        let columns = line.components(separatedBy: ",")
+        var result: [String] = []
+        
+            // Now merge any columns that were quoted
+        for column in columns {
+            if !quoted {
+                if column.left(1) == "\"" {
+                    carried = column.right(column.length - 1)
+                    quoted = true
+                } else {
+                    result.append(column)
+                }
+            } else {
+                if column.right(1) == "\"" {
+                    carried = carried + "," + column.left(column.length - 1)
+                    result.append(carried)
+                    quoted = false
+                } else {
+                    carried = carried + "," + column
+                }
+            }
+        }
+        return result
     }
 }
 
@@ -693,16 +749,10 @@ class ImportedBBOScorecardRanking {
     public var bboPoints: Float?
 }
 
-class ImportedBBOBoard {
-    public var board: Int?
-    public var traveller: [ImportedBBOBoardTravellerLine]?
-}
-
 class ImportedBBOBoardTravellerLine {
     public var board: Int?
-    public var nsPair: Int?
-    public var ewPair: Int?
-    public var section: Int?
+    public var ranking: [Seat: Int] = [:]
+    public var section: Int = 0
     public var contract: Contract?
     public var declarer: Seat?
     public var made: Int?

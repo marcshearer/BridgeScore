@@ -45,7 +45,7 @@ var pickerCaptionFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 12.
 var windowTitleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 20.0))
 var smallCellFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 22.0 : 14.0))
 
-// Slide in IDs
+// Slide in IDs - Need to be declared here as there seem to be multiple instances of views
 let scorecardListViewId = UUID()
 let scorecardInputViewId = UUID()
 let scorecardDetailViewId = UUID()

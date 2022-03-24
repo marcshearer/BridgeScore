@@ -19,6 +19,8 @@ class Scorecard {
     @Published private(set) var scorecard: ScorecardViewModel?
     @Published private(set) var boards: [Int:BoardViewModel] = [:]   // Board number
     @Published private(set) var tables: [Int:TableViewModel] = [:]   // Table number
+    @Published private(set) var rankings: [Int:[Int:RankingViewModel]] = [:]   // Section / Pair (team) number
+    @Published private(set) var travellers: [Int:[Int:[Int:TravellerViewModel]]] = [:]   // Board number / section / north pair (team number
     
     public var isSensitive: Bool {
         return boards.compactMap{$0.value}.firstIndex(where: {$0.comment != "" || $0.responsible != .unknown }) != nil
@@ -32,7 +34,7 @@ class Scorecard {
         let scorecardFilter = NSPredicate(format: "scorecardId = %@", scorecard.scorecardId as NSUUID)
 
         // Load boards
-        let boardMOs = CoreData.fetch(from: BoardMO.tableName, filter: scorecardFilter, sort: [ (#keyPath(BoardMO.board16), direction: .ascending)]) as! [BoardMO]
+        let boardMOs = CoreData.fetch(from: BoardMO.tableName, filter: scorecardFilter) as! [BoardMO]
         
         boards = [:]
         for boardMO in boardMOs {
@@ -40,15 +42,39 @@ class Scorecard {
         }
 
         // Load tables
-        let tableMOs = CoreData.fetch(from: TableMO.tableName, filter: scorecardFilter, sort: [ (#keyPath(TableMO.table16), direction: .ascending)]) as! [TableMO]
+        let tableMOs = CoreData.fetch(from: TableMO.tableName, filter: scorecardFilter) as! [TableMO]
         
         tables = [:]
         for tableMO in tableMOs {
             tables[tableMO.table] = TableViewModel(scorecard: scorecard, tableMO: tableMO)
         }
         
-        self.scorecard = scorecard
+        // Load rankings
+        let rankingMOs = CoreData.fetch(from: RankingMO.tableName, filter: scorecardFilter) as! [RankingMO]
+
+        rankings = [:]
+        for rankingMO in rankingMOs {
+            if rankings[rankingMO.section] == nil {
+                rankings[rankingMO.section] = [:]
+            }
+            rankings[rankingMO.section]![rankingMO.number] = RankingViewModel(scorecard: scorecard, rankingMO: rankingMO)
+        }
         
+        // Load travellers
+        let travellerMOs = CoreData.fetch(from: TravellerMO.tableName, filter: scorecardFilter) as! [TravellerMO]
+
+        travellers = [:]
+        for travellerMO in travellerMOs {
+            if travellers[travellerMO.board] == nil {
+                travellers[travellerMO.board] = [:]
+            }
+            if travellers[travellerMO.board]![travellerMO.section] == nil {
+                travellers[travellerMO.board]![travellerMO.section] = [:]
+            }
+            travellers[travellerMO.board]![travellerMO.section]![travellerMO.ranking[.north] ?? 0] = TravellerViewModel(scorecard: scorecard, travellerMO: travellerMO)
+        }
+        
+        self.scorecard = scorecard
         addNew()
     }
     
@@ -120,6 +146,34 @@ class Scorecard {
                 save(table: table)
             }
         }
+        
+        for (_, section) in rankings {
+            for (_, ranking) in section {
+                if ranking.changed {
+                    // Save any rankings
+                    save(ranking: ranking)
+                }
+            }
+        }
+        
+        for (boardNumber, board) in travellers {
+            for (_, section) in board {
+                for (_, traveller) in section {
+                    if boardNumber < 1 || boardNumber > scorecard.boards {
+                        // Remove any travellers no longer in bounds
+                        if traveller.isNew {
+                            // Not yet in core data - just remove from array
+                            travellers[traveller.board]?[traveller.section]?[traveller.ranking[.north] ?? 0] = nil
+                        } else {
+                            remove(traveller: traveller)
+                        }
+                    } else if traveller.changed {
+                        // Save any existing boards
+                        save(traveller: traveller)
+                    }
+                }
+            }
+        }
     }
     
     public func removeAll(scorecard: ScorecardViewModel) {
@@ -132,14 +186,38 @@ class Scorecard {
             }
         }
         
-        for (_, table) in tables {
-            if !table.isNew {
-                remove(table: table)
-            }
+        removeRankings()
+        
+        for (boardNumber, _) in travellers {
+            removeTravellers(board: boardNumber)
         }
         
         clear()
    }
+    
+    public func removeRankings(table: Int? = nil) {
+        for (_, section) in rankings {
+            for (_, ranking) in section {
+                if !ranking.isNew {
+                    if table == nil || ranking.table == table {
+                        remove(ranking: ranking)
+                    }
+                }
+            }
+        }
+    }
+    
+    public func removeTravellers(board: Int) {
+        if let travellers = travellers[board] {
+            for (_, section) in travellers {
+                for (_, traveller) in section {
+                    if !traveller.isNew {
+                        remove(traveller: traveller)
+                    }
+                }
+            }
+        }
+    }
     
     public func addNew() {
         if let scorecard = scorecard {
@@ -162,6 +240,8 @@ class Scorecard {
     public func match(scorecard: ScorecardViewModel) -> Bool {
         return (self.scorecard == scorecard)
     }
+    
+  // MARK: - Boards ======================================================================== -
     
     public func insert(board: BoardViewModel) {
         assert(board.scorecard == scorecard, "Board is not in current scorecard")
@@ -199,6 +279,8 @@ class Scorecard {
         }
     }
     
+    // MARK: - Boards ======================================================================== -
+
     public func insert(table: TableViewModel) {
         assert(table.scorecard == scorecard, "Table is not in current scorecard")
         assert(table.isNew, "Cannot insert a table which already has a managed object")
@@ -234,6 +316,93 @@ class Scorecard {
             })
         }
     }
+    
+    // MARK: - Rankings ======================================================================== -
+    
+    public func insert(ranking: RankingViewModel) {
+        assert(ranking.scorecard == scorecard, "Ranking is not in current scorecard")
+        assert(ranking.isNew, "Cannot insert a ranking which already has a managed object")
+        assert(rankings[ranking.section]?[ranking.ranking] == nil, "Ranking already exists and cannot be created")
+        CoreData.update(updateLogic: {
+            ranking.rankingMO = RankingMO()
+            ranking.updateMO()
+            if rankings[ranking.section] == nil {
+                rankings[ranking.section] = [:]
+            }
+            rankings[ranking.section]![ranking.ranking] = ranking
+        })
+    }
+    
+    public func remove(ranking: RankingViewModel) {
+        assert(ranking.scorecard == scorecard, "Ranking is not in current scorecard")
+        assert(!ranking.isNew, "Cannot remove a ranking which doesn't already have a managed object")
+        assert(rankings[ranking.section]?[ranking.ranking] != nil, "Ranking does not exist and cannot be deleted")
+        CoreData.update(updateLogic: {
+            CoreData.context.delete(ranking.rankingMO!)
+            rankings[ranking.section]?[ranking.ranking] = nil
+        })
+    }
+    
+    public func save(ranking: RankingViewModel) {
+        assert(ranking.scorecard == scorecard, "Ranking is not in current scorecard")
+        assert(rankings[ranking.section]?[ranking.ranking] != nil, "Ranking does not exist and cannot be updated")
+        if ranking.isNew {
+            CoreData.update(updateLogic: {
+                ranking.rankingMO = RankingMO()
+                ranking.updateMO()
+            })
+        } else if ranking.changed {
+            CoreData.update(updateLogic: {
+                ranking.updateMO()
+            })
+        }
+    }
+    
+    // MARK: - Travellers ======================================================================== -
+
+    public func insert(traveller: TravellerViewModel) {
+        assert(traveller.scorecard == scorecard, "Traveller is not in current scorecard")
+        assert(traveller.isNew, "Cannot insert a traveller which already has a managed object")
+        assert(travellers[traveller.board]?[traveller.section]?[traveller.ranking[.north] ?? 0] == nil, "Traveller already exists and cannot be created")
+        CoreData.update(updateLogic: {
+            traveller.travellerMO = TravellerMO()
+            traveller.updateMO()
+            if travellers[traveller.board] == nil {
+                travellers[traveller.board] = [:]
+            }
+            if travellers[traveller.board]![traveller.section] == nil {
+                travellers[traveller.board]![traveller.section] = [:]
+            }
+            travellers[traveller.board]![traveller.section]![traveller.ranking[.north] ?? 0] = traveller
+        })
+    }
+    
+    public func remove(traveller: TravellerViewModel) {
+        assert(traveller.scorecard == scorecard, "Traveller is not in current scorecard")
+        assert(!traveller.isNew, "Cannot remove a traveller which doesn't already have a managed object")
+        assert(travellers[traveller.board]?[traveller.section]?[traveller.ranking[.north] ?? 0] != nil, "Traveller does not exist and cannot be deleted")
+        CoreData.update(updateLogic: {
+            CoreData.context.delete(traveller.travellerMO!)
+            travellers[traveller.section]?[traveller.ranking[.north] ?? 0] = nil
+        })
+    }
+    
+    public func save(traveller: TravellerViewModel) {
+        assert(traveller.scorecard == scorecard, "Traveller is not in current scorecard")
+        assert(travellers[traveller.board]?[traveller.section]?[traveller.ranking[.north] ?? 0] != nil, "Traveller does not exist and cannot be updated")
+        if traveller.isNew {
+            CoreData.update(updateLogic: {
+                traveller.travellerMO = TravellerMO()
+                traveller.updateMO()
+            })
+        } else if traveller.changed {
+            CoreData.update(updateLogic: {
+                traveller.updateMO()
+            })
+        }
+    }
+    
+    // MARK: - Utilities ======================================================================== -
     
     @discardableResult static public func updateScores(scorecard: ScorecardViewModel) -> Bool {
         var changed = false

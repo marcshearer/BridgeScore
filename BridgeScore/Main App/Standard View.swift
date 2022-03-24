@@ -45,7 +45,6 @@ struct StandardView <Content> : View where Content : View {
             VStack {
                 Spacer().frame(height: geometry.safeAreaInsets.top)
                 self.content()
-                    .debugPrint("standard \(info) \(slideInId?.uuidString ?? "")")
             }
             .ignoresSafeArea()
             if let slideInId = slideInId {

@@ -25,6 +25,10 @@
 		B23ADBF427B28D68001B6B38 /* Local Authentication.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23ADBF327B28D68001B6B38 /* Local Authentication.swift */; };
 		B240141A27CCBF2400C3117F /* Scorecard Filter View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B240141927CCBF2400C3117F /* Scorecard Filter View.swift */; };
 		B24EAE8E27DDE95C001B3E64 /* Multi Select Picker Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24EAE8D27DDE95C001B3E64 /* Multi Select Picker Input.swift */; };
+		B256D42127EC434100F47322 /* Traveller Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B256D42027EC434100F47322 /* Traveller Managed Object.swift */; };
+		B256D42327EC456B00F47322 /* Ranking Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B256D42227EC456B00F47322 /* Ranking Managed Object.swift */; };
+		B256D42527EC578500F47322 /* Ranking View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B256D42427EC578500F47322 /* Ranking View Model.swift */; };
+		B256D42727EC5B1700F47322 /* Traveller View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B256D42627EC5B1700F47322 /* Traveller View Model.swift */; };
 		B25ADA5E27AEB279007062AA /* Double Column View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25ADA5D27AEB279007062AA /* Double Column View.swift */; };
 		B2633A0E27AC3A460081B258 /* Layout List View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2633A0D27AC3A460081B258 /* Layout List View.swift */; };
 		B26BCDFA2799A1AC00B73501 /* BridgeScore App.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCDF92799A1AC00B73501 /* BridgeScore App.swift */; };
@@ -119,6 +123,10 @@
 		B23ADBF327B28D68001B6B38 /* Local Authentication.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Local Authentication.swift"; sourceTree = "<group>"; };
 		B240141927CCBF2400C3117F /* Scorecard Filter View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Filter View.swift"; sourceTree = "<group>"; };
 		B24EAE8D27DDE95C001B3E64 /* Multi Select Picker Input.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Multi Select Picker Input.swift"; sourceTree = "<group>"; };
+		B256D42027EC434100F47322 /* Traveller Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Traveller Managed Object.swift"; sourceTree = "<group>"; };
+		B256D42227EC456B00F47322 /* Ranking Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Ranking Managed Object.swift"; sourceTree = "<group>"; };
+		B256D42427EC578500F47322 /* Ranking View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Ranking View Model.swift"; sourceTree = "<group>"; };
+		B256D42627EC5B1700F47322 /* Traveller View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Traveller View Model.swift"; sourceTree = "<group>"; };
 		B25ADA5D27AEB279007062AA /* Double Column View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Double Column View.swift"; sourceTree = "<group>"; };
 		B2633A0D27AC3A460081B258 /* Layout List View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Layout List View.swift"; sourceTree = "<group>"; };
 		B26BCDF62799A1AC00B73501 /* BridgeScore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BridgeScore.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -312,6 +320,8 @@
 				B2EB3D67279D65CC00D64225 /* Player Managed Object.swift */,
 				B2EB3D69279D666800D64225 /* Location Managed Object.swift */,
 				B2A5A42527E2582F00754061 /* BBO Name Managed Object.swift */,
+				B256D42227EC456B00F47322 /* Ranking Managed Object.swift */,
+				B256D42027EC434100F47322 /* Traveller Managed Object.swift */,
 			);
 			name = "Managed Object Models";
 			sourceTree = "<group>";
@@ -404,6 +414,8 @@
 				B2EB3D70279D717F00D64225 /* Player View Model.swift */,
 				B2EB3D72279D734700D64225 /* Location View Model.swift */,
 				B2A5A42727E3090300754061 /* BBO Name View Model.swift */,
+				B256D42427EC578500F47322 /* Ranking View Model.swift */,
+				B256D42627EC5B1700F47322 /* Traveller View Model.swift */,
 			);
 			name = "View Models";
 			sourceTree = "<group>";
@@ -549,6 +561,7 @@
 				B2EB3D73279D734700D64225 /* Location View Model.swift in Sources */,
 				B2BBC8BA27BBF6BC00D51A26 /* Table View Model.swift in Sources */,
 				B2EB3D75279D73E100D64225 /* Board View Model.swift in Sources */,
+				B256D42127EC434100F47322 /* Traveller Managed Object.swift in Sources */,
 				B2E1B76827DC71E300204CAC /* User Defaults.swift in Sources */,
 				B24EAE8E27DDE95C001B3E64 /* Multi Select Picker Input.swift in Sources */,
 				B27CFA4E27CDFE8400B976E0 /* Popup Menu.swift in Sources */,
@@ -585,6 +598,7 @@
 				B26BCE3A2799AD6D00B73501 /* Core Data.swift in Sources */,
 				B26BCE562799AE6400B73501 /* Preview Data.swift in Sources */,
 				B2100D9827DA449D00CC0130 /* Graph View Class.swift in Sources */,
+				B256D42327EC456B00F47322 /* Ranking Managed Object.swift in Sources */,
 				B2633A0E27AC3A460081B258 /* Layout List View.swift in Sources */,
 				B2A2053727AFC41500C83C88 /* Toolbar View.swift in Sources */,
 				B213998C27D8AA830098E4A4 /* Seat Picker Popup View.swift in Sources */,
@@ -599,6 +613,7 @@
 				B2EB3D77279D73FC00D64225 /* Scorecard View Model.swift in Sources */,
 				B21CC0BE27A01293001AECC1 /* Date Picker Input.swift in Sources */,
 				B21E6F6D27C511DA00DBDCC2 /* Bridge Calculations.swift in Sources */,
+				B256D42727EC5B1700F47322 /* Traveller View Model.swift in Sources */,
 				B26BCE72279B188600B73501 /* BridgeScore.xcdatamodeld in Sources */,
 				B26BCE642799AED700B73501 /* Message Box.swift in Sources */,
 				B26BCE652799AED700B73501 /* Picker Input.swift in Sources */,
@@ -619,6 +634,7 @@
 				B2C4338E27B7B56200796F24 /* Custom Collection View Flow.swift in Sources */,
 				B23ADBF227B25356001B6B38 /* List Tile View.swift in Sources */,
 				B20B38F227C153280001B45E /* Contract Entry View.swift in Sources */,
+				B256D42527EC578500F47322 /* Ranking View Model.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
