@@ -314,26 +314,26 @@ extension NSAttributedString {
     }
     
     func labelHeight(width: CGFloat? = nil, font: UIFont? = nil) -> CGFloat {
-        let title = UILabel(frame: CGRect(x: 0, y: 0, width: width ?? CGFloat.greatestFiniteMagnitude, height: 1000))
-        title.numberOfLines = (width == nil ? 1 : 0)
+        let bboNameLabel = UILabel(frame: CGRect(x: 0, y: 0, width: width ?? CGFloat.greatestFiniteMagnitude, height: 1000))
+        bboNameLabel.numberOfLines = (width == nil ? 1 : 0)
         if let font = font {
-            title.font = font
+            bboNameLabel.font = font
         }
-        title.lineBreakMode = .byWordWrapping
-        title.attributedText = self
-        title.sizeToFit()
-        return title.frame.height
+        bboNameLabel.lineBreakMode = .byWordWrapping
+        bboNameLabel.attributedText = self
+        bboNameLabel.sizeToFit()
+        return bboNameLabel.frame.height
     }
 
     func labelWidth(height: CGFloat? = nil, font: UIFont? = nil) -> CGFloat {
-        let title = UILabel(frame: CGRect(x: 0, y: 0, width: CGFloat.greatestFiniteMagnitude, height: height ?? 30))
-        title.numberOfLines = (height == nil ? 1 : 0)
+        let bboNameLabel = UILabel(frame: CGRect(x: 0, y: 0, width: CGFloat.greatestFiniteMagnitude, height: height ?? 30))
+        bboNameLabel.numberOfLines = (height == nil ? 1 : 0)
         if let font = font {
-            title.font = font
+            bboNameLabel.font = font
         }
-        title.attributedText = self
-        title.sizeToFit()
-        return title.frame.width
+        bboNameLabel.attributedText = self
+        bboNameLabel.sizeToFit()
+        return bboNameLabel.frame.width
     }
 }
 #endif

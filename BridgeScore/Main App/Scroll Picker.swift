@@ -207,6 +207,7 @@ class ScrollPickerCell: UICollectionViewCell {
     }
     
     override func layoutSubviews() {
+        super.layoutSubviews()
         if let cornerRadius = cornerRadius {
             background.roundCorners(cornerRadius: cornerRadius)
         }

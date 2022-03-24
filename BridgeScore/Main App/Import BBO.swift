@@ -538,20 +538,28 @@ class ImportedBBOScorecard {
                 if let lines = travellers[boardNumber - boardOffset],
                     let myLine = myTravellerLine(lines: lines, myNumber: myNumber, mySection: mySection) {
                     
+                    let mySeat = seat(line: myLine, ranking: myRanking, bboName: bboName) ?? .unknown
                     var versus = ""
                     for seat in Seat.validCases {
                         let otherNumber = myLine.ranking[seat] ?? myNumber
                         if otherNumber != myNumber {
-                            if let ranking = otherRanking(number: otherNumber, section: mySection) {
+                            if let ranking = otherRanking(number: otherNumber, section: mySection), let otherBboName = ranking.players[seat]  {
                                 if versus != "" {
                                     versus += " & "
                                 }
-                                versus += MasterData.shared.realName(bboName: ranking.players[seat]) ?? "Unknown"
+                                versus += MasterData.shared.realName(bboName: otherBboName) ?? "Unknown"
+                                if seat == mySeat.partner {
+                                    table?.partner = otherBboName
+                                } else if seat == mySeat.leftOpponent {
+                                    table?.leftOpponent = otherBboName
+                                } else if seat == mySeat.rightOpponent {
+                                    table?.rightOpponent = otherBboName
+                                }
                             }
                         }
                     }
                     table?.versus = versus
-                    table?.sitting = seat(line: myLine, ranking: myRanking, bboName: bboName) ?? .unknown
+                    table?.sitting = mySeat
                                         
                     importBoard(myLine: myLine, boardNumber: boardNumber, myRanking: myRanking)
                     importTravellers(boardNumber: boardNumber)

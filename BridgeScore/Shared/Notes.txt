@@ -13,6 +13,7 @@ To Do
 =====
 Sort out dark mode
 Maybe remove file sharing in Info.plist once can backup from Mac
+Show names from import converted now rather than from snapshot at time of import
 
 Enhancements
 ============

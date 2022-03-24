@@ -373,7 +373,7 @@ extension MasterData {
     
     public func realName(bboName id: String?) -> String? {
         if let bboNameViewModel = bboName(id: id) {
-            return bboNameViewModel.name
+            return (bboNameViewModel.name == "" ? id : bboNameViewModel.name)
         } else {
             return id
         }

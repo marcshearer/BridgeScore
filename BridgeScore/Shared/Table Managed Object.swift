@@ -19,6 +19,9 @@ public class TableMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var scoreEntered: Bool
     @NSManaged public var versus: String
     @NSManaged public var sitting16: Int16
+    @NSManaged public var partner: String
+    @NSManaged public var leftOpponent: String
+    @NSManaged public var rightOpponent: String
     
     convenience init() {
         self.init(context: CoreData.context)

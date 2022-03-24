@@ -17,6 +17,9 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
     @Published public var sitting: Seat = .unknown
     @Published public var score: Float?
     @Published public var versus: String = ""
+    @Published public var partner: String = ""
+    @Published public var leftOpponent: String = ""
+    @Published public var rightOpponent: String = ""
     
     // Linked managed objects - should only be referenced in this and the Data classes
     @Published internal var tableMO: TableMO?
@@ -35,7 +38,10 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
                 self.table != mo.table ||
                 self.sitting != mo.sitting ||
                 self.score != mo.score ||
-                self.versus != mo.versus {
+                self.versus != mo.versus ||
+                self.partner != mo.partner ||
+                self.leftOpponent != mo.leftOpponent ||
+                self.rightOpponent != mo.rightOpponent {
                     result = true
             }
         } else {
@@ -68,6 +74,9 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
             self.sitting = mo.sitting
             self.score = mo.score
             self.versus = mo.versus
+            self.partner = mo.partner
+            self.leftOpponent = mo.leftOpponent
+            self.rightOpponent = mo.rightOpponent
         }
     }
     
@@ -78,6 +87,9 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
             mo.sitting = sitting
             mo.score = score
             mo.versus = versus
+            mo.partner = partner
+            mo.leftOpponent = leftOpponent
+            mo.rightOpponent = rightOpponent
         } else {
             fatalError("No managed object")
         }

@@ -29,6 +29,7 @@
 		B256D42327EC456B00F47322 /* Ranking Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B256D42227EC456B00F47322 /* Ranking Managed Object.swift */; };
 		B256D42527EC578500F47322 /* Ranking View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B256D42427EC578500F47322 /* Ranking View Model.swift */; };
 		B256D42727EC5B1700F47322 /* Traveller View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B256D42627EC5B1700F47322 /* Traveller View Model.swift */; };
+		B256D42927ECB15700F47322 /* BBO Name Replace View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B256D42827ECB15700F47322 /* BBO Name Replace View.swift */; };
 		B25ADA5E27AEB279007062AA /* Double Column View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25ADA5D27AEB279007062AA /* Double Column View.swift */; };
 		B2633A0E27AC3A460081B258 /* Layout List View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2633A0D27AC3A460081B258 /* Layout List View.swift */; };
 		B26BCDFA2799A1AC00B73501 /* BridgeScore App.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCDF92799A1AC00B73501 /* BridgeScore App.swift */; };
@@ -127,6 +128,7 @@
 		B256D42227EC456B00F47322 /* Ranking Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Ranking Managed Object.swift"; sourceTree = "<group>"; };
 		B256D42427EC578500F47322 /* Ranking View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Ranking View Model.swift"; sourceTree = "<group>"; };
 		B256D42627EC5B1700F47322 /* Traveller View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Traveller View Model.swift"; sourceTree = "<group>"; };
+		B256D42827ECB15700F47322 /* BBO Name Replace View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BBO Name Replace View.swift"; sourceTree = "<group>"; };
 		B25ADA5D27AEB279007062AA /* Double Column View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Double Column View.swift"; sourceTree = "<group>"; };
 		B2633A0D27AC3A460081B258 /* Layout List View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Layout List View.swift"; sourceTree = "<group>"; };
 		B26BCDF62799A1AC00B73501 /* BridgeScore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BridgeScore.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -439,6 +441,7 @@
 				B20B38F127C153280001B45E /* Contract Entry View.swift */,
 				B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */,
 				B2100D9927DA488200CC0130 /* Stats View.swift */,
+				B256D42827ECB15700F47322 /* BBO Name Replace View.swift */,
 			);
 			name = "Main Views";
 			sourceTree = "<group>";
@@ -625,6 +628,7 @@
 				B26BCE74279B236F00B73501 /* Layout Managed Object.swift in Sources */,
 				B2CC509927BE21060050F22C /* Scroll Picker.swift in Sources */,
 				B2EB3D7B279DCBCB00D64225 /* Default Data.swift in Sources */,
+				B256D42927ECB15700F47322 /* BBO Name Replace View.swift in Sources */,
 				B26BCE302799AB6700B73501 /* MyApp.swift in Sources */,
 				B26C555927C8BCBC00015D0A /* Scroll Picker Popup View.swift in Sources */,
 				B26BCE362799AD1700B73501 /* Config.swift in Sources */,
