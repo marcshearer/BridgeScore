@@ -19,10 +19,10 @@ class Scorecard {
     @Published private(set) var scorecard: ScorecardViewModel?
     @Published private(set) var boards: [Int:BoardViewModel] = [:]   // Board number
     @Published private(set) var tables: [Int:TableViewModel] = [:]   // Table number
-    @Published private(set) var rankings: [Int:[Int:RankingViewModel]] = [:]   // Section / Pair (team) number
+    @Published private(set) var rankings: [Int:[Int:[Int:RankingViewModel]]] = [:]   // Table / Section / Pair (team) number
     @Published private(set) var travellers: [Int:[Int:[Int:TravellerViewModel]]] = [:]   // Board number / section / north pair (team number
     
-    public var imported: Bool { !rankings.isEmpty || !travellers.isEmpty } 
+    public var isImported: Bool { !rankings.isEmpty || !travellers.isEmpty } 
     
     public var isSensitive: Bool {
         return boards.compactMap{$0.value}.firstIndex(where: {$0.comment != "" || $0.responsible != .unknown }) != nil
@@ -56,10 +56,13 @@ class Scorecard {
 
         rankings = [:]
         for rankingMO in rankingMOs {
-            if rankings[rankingMO.section] == nil {
-                rankings[rankingMO.section] = [:]
+            if rankings[rankingMO.table] == nil {
+                rankings[rankingMO.table] = [:]
             }
-            rankings[rankingMO.section]![rankingMO.number] = RankingViewModel(scorecard: scorecard, rankingMO: rankingMO)
+            if rankings[rankingMO.table]![rankingMO.section] == nil {
+                rankings[rankingMO.table]![rankingMO.section] = [:]
+            }
+            rankings[rankingMO.table]![rankingMO.section]![rankingMO.number] = RankingViewModel(scorecard: scorecard, rankingMO: rankingMO)
         }
         
         // Load travellers
@@ -149,11 +152,13 @@ class Scorecard {
             }
         }
         
-        for (_, section) in rankings {
-            for (_, ranking) in section {
-                if ranking.changed {
-                    // Save any rankings
-                    save(ranking: ranking)
+        for (_, table) in rankings {
+            for (_, section) in table {
+                for (_, ranking) in section {
+                    if ranking.changed {
+                            // Save any rankings
+                        save(ranking: ranking)
+                    }
                 }
             }
         }
@@ -198,13 +203,15 @@ class Scorecard {
    }
     
     public func removeRankings(table: Int? = nil) {
-        for (sectionNumber, sectionRankings) in rankings {
-            for (number, ranking) in sectionRankings {
-                if table == nil || ranking.table == table {
-                    if !ranking.isNew {
-                        remove(ranking: ranking)
+        for (tableNumber, tableRankings) in rankings {
+            if table == nil || tableNumber == table {
+                for (sectionNumber, sectionRankings) in tableRankings {
+                    for (number, ranking) in sectionRankings {
+                        if !ranking.isNew {
+                            remove(ranking: ranking)
+                        }
+                        rankings[sectionNumber]![number] = nil
                     }
-                    rankings[sectionNumber]![number] = nil
                 }
             }
         }
@@ -326,30 +333,33 @@ class Scorecard {
     public func insert(ranking: RankingViewModel) {
         assert(ranking.scorecard == scorecard, "Ranking is not in current scorecard")
         assert(ranking.isNew, "Cannot insert a ranking which already has a managed object")
-        assert(rankings[ranking.section]?[ranking.ranking] == nil, "Ranking already exists and cannot be created")
+        assert(rankings[ranking.table]?[ranking.section]?[ranking.number] == nil, "Ranking already exists and cannot be created")
         CoreData.update(updateLogic: {
             ranking.rankingMO = RankingMO()
             ranking.updateMO()
-            if rankings[ranking.section] == nil {
-                rankings[ranking.section] = [:]
+            if rankings[ranking.table] == nil {
+                rankings[ranking.table] = [:]
             }
-            rankings[ranking.section]![ranking.ranking] = ranking
+            if rankings[ranking.table]![ranking.section] == nil {
+                rankings[ranking.table]![ranking.section] = [:]
+            }
+            rankings[ranking.table]![ranking.section]![ranking.number] = ranking
         })
     }
     
     public func remove(ranking: RankingViewModel) {
         assert(ranking.scorecard == scorecard, "Ranking is not in current scorecard")
         assert(!ranking.isNew, "Cannot remove a ranking which doesn't already have a managed object")
-        assert(rankings[ranking.section]?[ranking.ranking] != nil, "Ranking does not exist and cannot be deleted")
+        assert(rankings[ranking.table]?[ranking.section]?[ranking.number] != nil, "Ranking does not exist and cannot be deleted")
         CoreData.update(updateLogic: {
             CoreData.context.delete(ranking.rankingMO!)
-            rankings[ranking.section]?[ranking.ranking] = nil
+            rankings[ranking.section]?[ranking.number] = nil
         })
     }
     
     public func save(ranking: RankingViewModel) {
         assert(ranking.scorecard == scorecard, "Ranking is not in current scorecard")
-        assert(rankings[ranking.section]?[ranking.ranking] != nil, "Ranking does not exist and cannot be updated")
+        assert(rankings[ranking.table]?[ranking.section]?[ranking.number] != nil, "Ranking does not exist and cannot be updated")
         if ranking.isNew {
             CoreData.update(updateLogic: {
                 ranking.rankingMO = RankingMO()

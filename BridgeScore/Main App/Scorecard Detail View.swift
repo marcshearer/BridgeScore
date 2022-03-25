@@ -119,12 +119,12 @@ struct ScorecardDetailsView: View {
                             scorecard.partner = players[index]
                         }
                     }
-                    .disabled(Scorecard.current.imported)
+                    .disabled(Scorecard.current.isImported)
                     
                     Separator()
                     
                     DatePickerInput(title: "Date", field: $scorecard.date, to: Date())
-                        .disabled(Scorecard.current.imported)
+                        .disabled(Scorecard.current.isImported)
                 }
             }
                  
@@ -132,9 +132,9 @@ struct ScorecardDetailsView: View {
                 VStack(spacing: 0) {
                     HStack {
                         InputFloat(title: scorecard.type.matchScoreType.string, field: $scorecard.score, width: 60, places: scorecard.type.matchPlaces)
-                            .disabled(!scorecard.manualTotals || Scorecard.current.imported)
+                            .disabled(!scorecard.manualTotals || Scorecard.current.isImported)
                         
-                        if scorecard.manualTotals && !Scorecard.current.imported {
+                        if scorecard.manualTotals && !Scorecard.current.isImported {
                             Text(" / ")
                             InputFloat(field: $scorecard.maxScore, width: 60, places: scorecard.type.matchPlaces)
                         } else {
@@ -149,12 +149,12 @@ struct ScorecardDetailsView: View {
                     HStack {
                         
                         InputInt(title: "Position", field: $scorecard.position, width: 40)
-                            .disabled(Scorecard.current.imported)
+                            .disabled(Scorecard.current.isImported)
                         
                         Text(" of ")
                         
                         InputInt(field: $scorecard.entry, topSpace: 0, leadingSpace: 0, width: 40, inlineTitle: false)
-                            .disabled(Scorecard.current.imported)
+                            .disabled(Scorecard.current.isImported)
                         
                         Spacer()
                     }
@@ -177,7 +177,7 @@ struct ScorecardDetailsView: View {
                             }
                         }
                     })
-                    .disabled(Scorecard.current.imported)
+                    .disabled(Scorecard.current.isImported)
                     
                     Separator()
                     
@@ -187,7 +187,7 @@ struct ScorecardDetailsView: View {
                             scorecard.manualTotals = (index == TotalCalculation.manual.rawValue)
                         }
                     }
-                    .disabled(Scorecard.current.imported)
+                    .disabled(Scorecard.current.isImported)
                     
                     Separator()
                     
@@ -195,14 +195,14 @@ struct ScorecardDetailsView: View {
                             setBoards(boardsTable: newValue)
                             tableRefresh = true
                         })
-                        .disabled(Scorecard.current.imported)
+                        .disabled(Scorecard.current.isImported)
                     
                     Separator()
                     
                     StepperInput(title: "Tables", field: $scorecard.boards, label: boardsLabel, minValue: $scorecard.boardsTable, increment: $scorecard.boardsTable) { (_) in
                         tableRefresh = true
                     }
-                    .disabled(Scorecard.current.imported)
+                    .disabled(Scorecard.current.isImported)
                     
                     Separator()
                     
@@ -211,7 +211,7 @@ struct ScorecardDetailsView: View {
                         scorecard.resetNumbers = (index == ResetBoardNumber.perTable.rawValue)
                         tableRefresh = true
                     }
-                    .disabled(Scorecard.current.imported)
+                    .disabled(Scorecard.current.isImported)
                     
                     Spacer().frame(height: 16)
                     

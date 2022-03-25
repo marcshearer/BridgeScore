@@ -12,15 +12,17 @@ struct BannerOption {
     let text: String?
     let likeBack: Bool
     @Binding var isEnabled: Bool
+    @Binding var isHidden: Bool
     let menu: Bool
     let action: ()->()
     
-    init(image: AnyView? = nil, text: String? = nil, likeBack: Bool = false, isEnabled: Binding<Bool>? = nil, menu: Bool = false, action: @escaping ()->()) {
+    init(image: AnyView? = nil, text: String? = nil, likeBack: Bool = false, isEnabled: Binding<Bool>? = nil, isHidden: Binding<Bool>? = nil, menu: Bool = false, action: @escaping ()->()) {
         self.image = image
         self.text = text
         self.likeBack = likeBack
         self.action = action
         self._isEnabled = isEnabled ?? Binding.constant(true)
+        self._isHidden = isEnabled ?? Binding.constant(false)
         self.menu = menu
     }
 }
@@ -173,7 +175,7 @@ struct Banner_Menu : View {
 
     var body: some View {
         Button {
-            let filteredOptions = options.filter{$0.isEnabled}
+            let filteredOptions = options.filter{$0.isEnabled && !$0.isHidden}
             SlideInMenu.shared.show(id: id, title: title, strings: filteredOptions.map{$0.text ?? ""}, top: bannerHeight - 20) { (option) in
                     if let selected = options.first(where: {$0.text == option}) {
                         selected.action()
@@ -199,42 +201,44 @@ struct Banner_Buttons : View {
                 let option = options[index]
                 let backgroundColor = (option.likeBack ? bannerColor.background : buttonColor.background)
                 let foregroundColor = (option.isEnabled ? (option.likeBack ? backButtonColor : buttonColor.text) : buttonColor.faintText)
-                HStack {
-                    Button {
-                        option.action()
-                    } label: {
-                        VStack {
-                            if !option.likeBack {
-                                Spacer().frame(height: 6)
-                            }
-                            HStack {
+                if !option.isHidden {
+                    HStack {
+                        Button {
+                            option.action()
+                        } label: {
+                            VStack {
                                 if !option.likeBack {
-                                    Spacer().frame(width: 16)
+                                    Spacer().frame(height: 6)
                                 }
-                                if option.image != nil {
-                                    option.image.foregroundColor(foregroundColor)
-                                }
-                                if option.image != nil && option.text != nil {
-                                    Spacer().frame(width: 16)
-                                }
-                                if option.text != nil {
-                                    Text(option.text ?? "").foregroundColor(foregroundColor)
+                                HStack {
+                                    if !option.likeBack {
+                                        Spacer().frame(width: 16)
+                                    }
+                                    if option.image != nil {
+                                        option.image.foregroundColor(foregroundColor)
+                                    }
+                                    if option.image != nil && option.text != nil {
+                                        Spacer().frame(width: 16)
+                                    }
+                                    if option.text != nil {
+                                        Text(option.text ?? "").foregroundColor(foregroundColor)
+                                    }
+                                    if !option.likeBack {
+                                        Spacer().frame(width: 16)
+                                    }
                                 }
                                 if !option.likeBack {
-                                    Spacer().frame(width: 16)
+                                    Spacer().frame(height: 6)
                                 }
-                            }
-                            if !option.likeBack {
-                                Spacer().frame(height: 6)
                             }
                         }
-                    }
-                    .disabled(!option.isEnabled)
-                    .font(alternateStyle ? .title3 : (option.likeBack ? .largeTitle : .title))
-                    .background(backgroundColor)
-                    .cornerRadius(option.likeBack ? 0 : 10.0)
-                    if index != options.count - 1 {
-                        Spacer().frame(width: 16)
+                        .disabled(!option.isEnabled)
+                        .font(alternateStyle ? .title3 : (option.likeBack ? .largeTitle : .title))
+                        .background(backgroundColor)
+                        .cornerRadius(option.likeBack ? 0 : 10.0)
+                        if index != options.count - 1 {
+                            Spacer().frame(width: 16)
+                        }
                     }
                 }
             }

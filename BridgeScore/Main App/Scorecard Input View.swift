@@ -37,6 +37,7 @@ struct ScorecardInputView: View {
     @ObservedObject var scorecard: ScorecardViewModel
     @State private var canUndo: Bool = false
     @State private var canRedo: Bool = false
+    @State private var isNotImported: Bool = true
     @State private var inputDetail: Bool = false
     @State private var refreshTableTotals = false
     @State private var deleted = false
@@ -53,6 +54,7 @@ struct ScorecardInputView: View {
     
                 // Banner
                 let bannerOptions = UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo) + [
+                    BannerOption(image: AnyView(Image(systemName: "lock.fill")), likeBack: true, isEnabled: $isNotImported, isHidden: $isNotImported, action: {}),
                     BannerOption(image: AnyView(Image(systemName: "note.text")), text: "Scorecard details", likeBack: true, menu: true, action: { UndoManager.clearActions() ; inputDetail = true }),
                     BannerOption(image: AnyView(Image(systemName: "\(detailView ? "minus" : "plus").magnifyingglass")), text: (detailView ? "Simple view" : "Alternative view"), likeBack: true, menu: true, action: { toggleView() }),
                     BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import from BBO", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importScorecard = true })]
@@ -65,6 +67,7 @@ struct ScorecardInputView: View {
             }
             .undoManager(canUndo: $canUndo, canRedo: $canRedo)
         }
+        .onChange(of: tableRefresh) { (value) in tableRefresh = false}
         .sheet(isPresented: $inputDetail, onDismiss: {
             UndoManager.clearActions()
             if deleted {
@@ -85,6 +88,7 @@ struct ScorecardInputView: View {
         }
         .onAppear {
             Scorecard.updateScores(scorecard: scorecard)
+            isNotImported = !Scorecard.current.isImported
         }
     }
     
@@ -135,10 +139,12 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
         
         if refreshTableTotals {
             uiView.refreshTableTotals()
+            refreshTableTotals = false
         }
         
         if tableRefresh {
             uiView.tableRefresh()
+            tableRefresh = false
         }
         
         uiView.switchView(detailView: detailView)
@@ -185,7 +191,6 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     private var titleView: ScorecardInputTableTitleView!
     private var mainTableView = UITableView(frame: CGRect(), style: .plain)
     private var contractEntryView: ContractEntryView
-    private var bboNameReplaceView: BBONameReplaceView
     private var scrollPickerPopupView: ScrollPickerPopupView
     private var declarerPickerPopupView: DeclarerPickerPopupView
     private var subscription: AnyCancellable?
@@ -196,6 +201,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     private var forceReload = true
     private var detailView = true
     public var inputDetail: Bool
+    private var ignoreKeyboard = false
     
     var boardColumns: [ScorecardColumn] = []
     var tableColumns: [ScorecardColumn] = []
@@ -204,7 +210,6 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         self.scorecard = scorecard
         self.inputDetail = inputDetail
         self.contractEntryView = ContractEntryView(frame: CGRect())
-        self.bboNameReplaceView = BBONameReplaceView(frame: CGRect())
         self.scrollPickerPopupView = ScrollPickerPopupView(frame: CGRect())
         self.declarerPickerPopupView = DeclarerPickerPopupView(frame: CGRect())
 
@@ -467,7 +472,10 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 editValues.append(bboName)
             }
         }
+        ignoreKeyboard = true
+        let bboNameReplaceView = BBONameReplaceView(frame: CGRect())
         bboNameReplaceView.show(from: self, values: editValues) {
+            self.ignoreKeyboard = false
             self.tableRefresh()
         }
     }
@@ -637,25 +645,27 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     // MARK: - Utility Routines ======================================================================== -
     
     func keyboardMoved(_ keyboardHeight: CGFloat) {
-        self.keyboardHeight = keyboardHeight
-        if !inputDetail && (keyboardHeight != 0 || isKeyboardOffset) {
-            let focusedTextInputBottom = (UIResponder.currentFirstResponder?.globalFrame?.maxY ?? 0)
-            let adjustOffset = max(0, focusedTextInputBottom - keyboardHeight) + safeAreaInsets.bottom
-            let current = self.mainTableView.contentOffset
-            if isKeyboardOffset && keyboardHeight == 0 {
-                self.bottomConstraint.constant = 0
-                self.mainTableView.setContentOffset(CGPoint(x: 0, y: self.lastKeyboardScrollOffset), animated: false)
-                self.lastKeyboardScrollOffset = 0
-                self.isKeyboardOffset = false
-            } else if adjustOffset != 0 && !isKeyboardOffset {
-                let newOffset = current.y + adjustOffset
-                let maxOffset = self.mainTableView.contentSize.height - mainTableView.frame.height
-                let scrollOffset = min(newOffset, maxOffset)
-                let bottomOffset = newOffset - scrollOffset
-                self.lastKeyboardScrollOffset = self.mainTableView.contentOffset.y
-                self.bottomConstraint.constant = -bottomOffset
-                self.mainTableView.setContentOffset(current.offsetBy(dy: adjustOffset), animated: false)
-                self.isKeyboardOffset = true
+        if !ignoreKeyboard {
+            self.keyboardHeight = keyboardHeight
+            if !inputDetail && (keyboardHeight != 0 || isKeyboardOffset) {
+                let focusedTextInputBottom = (UIResponder.currentFirstResponder?.globalFrame?.maxY ?? 0)
+                let adjustOffset = max(0, focusedTextInputBottom - keyboardHeight) + safeAreaInsets.bottom
+                let current = self.mainTableView.contentOffset
+                if isKeyboardOffset && keyboardHeight == 0 {
+                    self.bottomConstraint.constant = 0
+                    self.mainTableView.setContentOffset(CGPoint(x: 0, y: self.lastKeyboardScrollOffset), animated: false)
+                    self.lastKeyboardScrollOffset = 0
+                    self.isKeyboardOffset = false
+                } else if adjustOffset != 0 && !isKeyboardOffset {
+                    let newOffset = current.y + adjustOffset
+                    let maxOffset = self.mainTableView.contentSize.height - mainTableView.frame.height
+                    let scrollOffset = min(newOffset, maxOffset)
+                    let bottomOffset = newOffset - scrollOffset
+                    self.lastKeyboardScrollOffset = self.mainTableView.contentOffset.y
+                    self.bottomConstraint.constant = -bottomOffset
+                    self.mainTableView.setContentOffset(current.offsetBy(dy: adjustOffset), animated: false)
+                    self.isKeyboardOffset = true
+                }
             }
         }
     }
@@ -987,11 +997,11 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         case .board, .table, .vulnerable, .dealer:
             isEnabled = false
         case .declarer:
-            isEnabled = (table.sitting != .unknown && !Scorecard.current.imported)
+            isEnabled = (table.sitting != .unknown && !Scorecard.current.isImported)
         case .made:
-            isEnabled = board.contract.suit.valid && !Scorecard.current.imported
+            isEnabled = board.contract.suit.valid && !Scorecard.current.isImported
         case .score, .versus, .sitting, .contract:
-            isEnabled = !Scorecard.current.imported
+            isEnabled = !Scorecard.current.isImported
         default:
             break
         }
@@ -1077,7 +1087,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 label.text = table.score == nil ? "" : "\(table.score!.toString(places: scorecard.type.tablePlaces))"
             }
         case .versus:
-            if Scorecard.current.imported {
+            if Scorecard.current.isImported {
                 label.isHidden = false
                 label.text = importedVersus
                 label.isUserInteractionEnabled = true
@@ -1245,6 +1255,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             }
         }
         scorecardDelegate?.autoComplete.isHidden = true
+        textField.resignFirstResponder()
     }
     
     internal func textFieldDidBeginEditing(_ textField: UITextField) {
@@ -1408,7 +1419,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         if let column = ColumnType(rawValue: sender.view?.tag ?? -1) {
             switch column {
             case .contract:
-                if !Scorecard.current.imported {
+                if !Scorecard.current.isImported {
                     contractTapped(self)
                 }
             case .versus:
@@ -1462,7 +1473,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         scorecardDelegate?.scorecardChanged(type: rowType, itemNumber: itemNumber)
         let width: CGFloat = 70
         let space = (frame.width - width) / 2
-        if !Scorecard.current.imported {
+        if !Scorecard.current.isImported {
             scorecardDelegate?.scorecardScrollPickerPopup(values: Seat.allCases.map{ScrollPickerEntry(title: $0.short, caption: $0.string)}, maxValues: 9, selected: table.sitting.rawValue, defaultValue: nil, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 20, bottomPadding: 4) { (selected) in
                 if let seat = Seat(rawValue: selected!) {
                     self.seatPicker.set(seat)

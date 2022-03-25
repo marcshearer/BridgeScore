@@ -361,7 +361,7 @@ class ImportedBBOScorecard {
                 }
             case "section":
                 if let string = columns.element(index) {
-                    importedRanking.section = Int(string)
+                    importedRanking.section = Int(string) ?? 0
                 }
             case "bbo pts":
                 if let string = columns.element(index) {
@@ -384,12 +384,12 @@ class ImportedBBOScorecard {
                     importedTraveller.board = Int(string)
                 }
             case "nspair":
-                if let string = columns.element(index) {
+                if let string = columns.element(index)?.replacingOccurrences(of: "NS", with: "") {
                     importedTraveller.ranking[.north] = Int(string)
                     importedTraveller.ranking[.south] = Int(string)
                 }
             case "ewpair":
-                if let string = columns.element(index) {
+                if let string = columns.element(index)?.replacingOccurrences(of: "EW", with: "") {
                     importedTraveller.ranking[.east] = Int(string)
                     importedTraveller.ranking[.west] = Int(string)
                 }
@@ -526,9 +526,9 @@ class ImportedBBOScorecard {
         let bboName = scorer!.bboName.lowercased()
         if let scorecard = scorecard,
             let myRanking = myRanking,
-            let myNumber = myRanking.number,
-            let mySection = myRanking.section {
+            let myNumber = myRanking.number {
             
+            let mySection = myRanking.section
             let table = Scorecard.current.tables[tableNumber]
             
             for tableBoardNumber in 1...scorecard.boardsTable {
@@ -583,7 +583,8 @@ class ImportedBBOScorecard {
         if let scorecard = scorecard {
             for bboRanking in rankings {
                 
-                if let section = bboRanking.section, let number = bboRanking.number {
+                let section = bboRanking.section
+                if let number = bboRanking.number {
                     let ranking = RankingViewModel(scorecard: scorecard, table: table ?? 0, section: section, number: number)
                     
                     ranking.ranking = bboRanking.ranking ?? 0
@@ -660,9 +661,10 @@ class ImportedBBOScorecard {
         var lastVersus: Int? = nil
         var lastBoards: Int = 0
         var boardsTableError = false
+        
         if let myRanking = myRanking,
-           let myNumber = myRanking.number,
-           let mySection = myRanking.section {
+           let myNumber = myRanking.number {
+            let mySection = myRanking.section
             for (_, lines) in travellers.sorted(by: {$0.key < $1.key}) {
                 if let line = myTravellerLine(lines: lines, myNumber: myNumber, mySection: mySection) {
                     if let mySeat = seat(line: line, ranking: myRanking, bboName: bboName) {
@@ -754,7 +756,7 @@ class ImportedBBOScorecard {
 
 class ImportedBBOScorecardRanking {
     public var number: Int?
-    public var section: Int?
+    public var section: Int = 1
     public var players: [Seat:String] = [:]
     public var score: Float?
     public var ranking: Int?
@@ -764,7 +766,7 @@ class ImportedBBOScorecardRanking {
 class ImportedBBOBoardTravellerLine {
     public var board: Int?
     public var ranking: [Seat: Int] = [:]
-    public var section: Int = 0
+    public var section: Int = 1
     public var contract: Contract?
     public var declarer: Seat?
     public var made: Int?

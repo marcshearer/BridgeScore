@@ -57,8 +57,12 @@ class BBONameReplaceView: UIView, UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = BBONameReplaceCell.dequeue(tableView, for: indexPath)
-        cell.set(bboName: (indexPath.row == 0 ? nil : values[indexPath.row - 1]))
+        cell.set(bboName: (indexPath.row == 0 ? nil : values[indexPath.row - 1]), first: (indexPath.row == 1))
         return cell
+    }
+    
+    func tableView(_ tableView: UITableView, willSelectRowAt indexPath: IndexPath) -> IndexPath? {
+        return nil
     }
     
     // MARK: - Tap handlers ============================================================================ -
@@ -86,11 +90,12 @@ class BBONameReplaceView: UIView, UITableViewDataSource, UITableViewDelegate {
         sourceView.addSubview(self)
         sourceView.bringSubviewToFront(self)
         valuesTableView.reloadData()
+        self.bringSubviewToFront(contentView)
         contentView.isHidden = false
     }
     
     public func hide() {
-        self.contentView.isHidden = true
+        // self.contentView.isHidden = true
         removeFromSuperview()
     }
     
@@ -109,7 +114,7 @@ class BBONameReplaceView: UIView, UITableViewDataSource, UITableViewDelegate {
         backgroundView.isUserInteractionEnabled = true
         
         // Content view
-        backgroundView.addSubview(contentView)
+        addSubview(contentView)
         contentView.backgroundColor = UIColor(Palette.background.background)
         contentView.addShadow()
 
@@ -138,6 +143,9 @@ class BBONameReplaceView: UIView, UITableViewDataSource, UITableViewDelegate {
         closeButton.textAlignment = .center
         closeButton.text = "Close"
         closeButton.font = replaceTitleFont
+        let tapGesture = UITapGestureRecognizer(target: self, action: cancelSelector)
+        closeButton.addGestureRecognizer(tapGesture)
+        closeButton.isUserInteractionEnabled = true
 
         contentView.isHidden = true
     }
@@ -171,13 +179,12 @@ class BBONameReplaceCell: UITableViewCell, UITextFieldDelegate {
         realNameTextField = UITextField()
         realNameTextField.isEnabled = true
         realNameTextField.isUserInteractionEnabled = true
+        realNameTextField.autocapitalizationType = .words
+        realNameTextField.autocorrectionType = .no
         realNameTextField.delegate = self
         realNameTextField.addTarget(self, action: #selector(BBONameReplaceCell.textFieldChanged), for: .editingChanged)
         contentView.addSubview(realNameTextField, trailing: 16, top: 0, bottom: 0)
         Constraint.anchor(view: contentView, control: bboNameLabel, to: realNameTextField, constant: 16, toAttribute: .leading, attributes: .trailing)
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(BBONameReplaceCell.getFocus(_:)))
-        contentView.addGestureRecognizer(tapGesture)
-        contentView.isUserInteractionEnabled = true
     }
     
     required init?(coder: NSCoder) {
@@ -217,7 +224,7 @@ class BBONameReplaceCell: UITableViewCell, UITextFieldDelegate {
         realNameTextField.text = ""
     }
     
-    public func set(bboName: BBONameViewModel?) {
+    public func set(bboName: BBONameViewModel?, first: Bool) {
         self.bboName = bboName
         
         if let bboName = bboName {
@@ -230,6 +237,9 @@ class BBONameReplaceCell: UITableViewCell, UITextFieldDelegate {
             realNameTextField.textColor = UIColor(Palette.background.text)
             bboNameLabel.font = replaceTitleFont
             realNameTextField.font = replaceFont
+            if first {
+                realNameTextField.becomeFirstResponder()
+            }
         } else {
             // Titles
             bboNameLabel.text = "BBO Name"

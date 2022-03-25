@@ -7,7 +7,7 @@ Bugs
 ====
 Seem to lose tricks made periodically when scroll - think this now fixed
 Can only type in one number in score as it keeps clearing field - have to go out and in again
-Seem to have lost inset titles in table fields
+    Is due to full refresh being triggered continuously - add an onChange to clear it
 
 To Do
 =====
