@@ -164,6 +164,15 @@ public enum Type: Int, CaseIterable {
         }
     }
     
+    public var players: Int {
+        switch self {
+        case .percent, .xImp, .vpXImp, .vpPercent:
+            return 2
+        case .vpMatchTeam, .vpTableTeam:
+            return 4
+        }
+    }
+    
     public var tableScoreType: ScoreType {
         return tableAggregate.scoreType(subsidiaryScoreType: boardScoreType)
     }
@@ -335,8 +344,8 @@ public enum Responsible: Int, EnumPickerType {
 public enum Seat: Int, EnumPickerType, ContractEnumType {
     case unknown = 0
     case north = 1
-    case east = 2
     case south = 3
+    case east = 2
     case west = 4
     
     init(string: String) {

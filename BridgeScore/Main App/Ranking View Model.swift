@@ -19,6 +19,7 @@ public class RankingViewModel : ObservableObject, Identifiable, CustomDebugStrin
     @Published public var ranking: Int = 0
     @Published public var score: Float = 0
     @Published public var points: Float = 0
+    @Published public var players: [Seat:String] = [:]
     
     // Linked managed objects - should only be referenced in this and the Data classes
     @Published internal var rankingMO: RankingMO?
@@ -39,7 +40,8 @@ public class RankingViewModel : ObservableObject, Identifiable, CustomDebugStrin
                 self.number != mo.number ||
                 self.ranking != mo.ranking ||
                 self.score != mo.score ||
-                self.points != mo.points {
+                self.points != mo.points ||
+                self.players != mo.players {
                     result = true
             }
         } else {
@@ -76,6 +78,7 @@ public class RankingViewModel : ObservableObject, Identifiable, CustomDebugStrin
             self.ranking = mo.ranking
             self.score = mo.score
             self.points = mo.points
+            self.players = mo.players
         }
     }
     
@@ -88,6 +91,7 @@ public class RankingViewModel : ObservableObject, Identifiable, CustomDebugStrin
             mo.ranking = ranking
             mo.score = score
             mo.points = points
+            mo.players = players
         } else {
             fatalError("No managed object")
         }

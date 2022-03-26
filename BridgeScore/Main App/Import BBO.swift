@@ -581,15 +581,22 @@ class ImportedBBOScorecard {
     func importRankings(table: Int? = nil) {
         Scorecard.current.removeRankings(table: table)
         if let scorecard = scorecard {
-            for bboRanking in rankings {
+            let sortedRankings = rankings.sorted(by: {($0.ranking ?? 0) < ($1.ranking ?? 0)})
+            for (index, bboRanking) in sortedRankings.enumerated() {
                 
                 let section = bboRanking.section
                 if let number = bboRanking.number {
                     let ranking = RankingViewModel(scorecard: scorecard, table: table ?? 0, section: section, number: number)
                     
-                    ranking.ranking = bboRanking.ranking ?? 0
+                    // Sort out ties
+                    if index > 0 && sortedRankings[index - 1].score == ranking.score {
+                        ranking.ranking = sortedRankings[index - 1].ranking!
+                    } else {
+                        ranking.ranking = bboRanking.ranking ?? 0
+                    }
                     ranking.score = bboRanking.score ?? 0
                     ranking.points = bboRanking.bboPoints ?? 0
+                    ranking.players = bboRanking.players
                     
                     Scorecard.current.insert(ranking: ranking)
                 }

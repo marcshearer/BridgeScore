@@ -29,8 +29,6 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     @Published public var maxScore: Float?
     @Published public var position: Int = 0
     @Published public var entry: Int = 0
-    @Published public var drawingWidth: CGFloat = 0.0
-    @Published public var drawing = PKDrawing()
     
     public var tables: Int { get { boards / max(1, boardsTable) } }
     
@@ -63,9 +61,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
                 self.score != mo.score ||
                 self.maxScore != mo.maxScore ||
                 self.position != mo.position ||
-                self.entry != mo.entry ||
-                self.drawing != mo.drawing ||
-                self.drawingWidth != mo.drawingWidth
+                self.entry != mo.entry
             {
                     result = true
             }
@@ -73,10 +69,6 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             result = true
         }
         return result
-    }
-    
-    public var noDrawing: Bool {
-        self.drawing.strokes.isEmpty
     }
     
     public init() {
@@ -142,8 +134,6 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.maxScore = nil
         self.position = 0
         self.entry = 0
-        self.drawing = PKDrawing()
-        self.drawingWidth = 0
         self.scorecardMO = nil
     }
     
@@ -163,8 +153,6 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.maxScore = from.maxScore
         self.position = from.position
         self.entry = from.entry
-        self.drawing = from.drawing
-        self.drawingWidth = from.drawingWidth
         self.scorecardMO = from.scorecardMO
     }
     
@@ -189,8 +177,6 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             self.maxScore = mo.maxScore
             self.position = mo.position
             self.entry = mo.entry
-            self.drawing = mo.drawing
-            self.drawingWidth = mo.drawingWidth
         }
     }
     
@@ -211,8 +197,6 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             mo.maxScore = self.maxScore
             mo.position = self.position
             mo.entry = self.entry
-            mo.drawing = self.drawing
-            mo.drawingWidth = self.drawingWidth
         } else {
             fatalError("No managed object")
         }
@@ -286,13 +270,6 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         UserDefault.currentMaxScore.set(self.maxScore == nil ? "" : "\(self.maxScore!)")
         UserDefault.currentPosition.set(self.position)
         UserDefault.currentEntry.set(self.entry)
-        backupCurrentDrawing()
-    }
-    
-    public func backupCurrentDrawing(drawing: PKDrawing? = nil, width: CGFloat? = nil) {
-        UserDefault.currentDrawing.set((drawing ?? self.drawing).dataRepresentation())
-        UserDefault.currentWidth.set(Float(width ?? self.drawingWidth))
-        UserDefault.currentUnsaved.set(true)
     }
     
     public func restoreCurrent() {
@@ -320,7 +297,5 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.maxScore = maxScore == "" ? nil : Float(maxScore)
         self.position = UserDefault.currentPosition.int
         self.entry = UserDefault.currentEntry.int
-        self.drawing = (try? PKDrawing(data: UserDefault.currentDrawing.data)) ?? PKDrawing()
-        self.drawingWidth = CGFloat(UserDefault.currentWidth.float)
     }
 }

@@ -5,18 +5,19 @@ If xcode fails to install app on device it's normally because info.plist isn't w
 
 Bugs
 ====
-Seem to lose tricks made periodically when scroll - think this now fixed
-Can only type in one number in score as it keeps clearing field - have to go out and in again
-    Is due to full refresh being triggered continuously - add an onChange to clear it
+Banner not blacked out in subviews
+Background still active with MessageBox
 
 To Do
 =====
 Sort out dark mode
 Maybe remove file sharing in Info.plist once can backup from Mac
-Show names from import converted now rather than from snapshot at time of import
+Show results of import - rankings and travellers
+deduplicate addGridLine and move somewhere more appropriate - half done now in RankingView
+Replace names on table with a versus number
 
 Enhancements
 ============
 Share scorecards via iCloud?
 Open scoresheet from graph?
-Phone mode?
+Phone mode??

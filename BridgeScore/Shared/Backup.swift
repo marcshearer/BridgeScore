@@ -38,6 +38,8 @@ class Backup {
         Backup.shared.backup(LayoutMO.entity())
         Backup.shared.backup(PlayerMO.entity())
         Backup.shared.backup(LocationMO.entity())
+        Backup.shared.backup(RankingMO.entity())
+        Backup.shared.backup(TravellerMO.entity())
         Backup.shared.backup(BBONameMO.entity())
     }
     
@@ -49,6 +51,8 @@ class Backup {
         Backup.shared.restore(TableMO.entity(), directory: thisBackupUrl)
         Backup.shared.restore(LayoutMO.entity(), directory: thisBackupUrl)
         Backup.shared.restore(PlayerMO.entity(), directory: thisBackupUrl)
+        Backup.shared.restore(RankingMO.entity(), directory: thisBackupUrl)
+        Backup.shared.restore(TravellerMO.entity(), directory: thisBackupUrl)
         Backup.shared.restore(LocationMO.entity(), directory: thisBackupUrl)
         Backup.shared.restore(BBONameMO.entity(), directory: thisBackupUrl)
         MasterData.shared.load()

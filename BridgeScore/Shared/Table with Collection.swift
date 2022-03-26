@@ -73,6 +73,21 @@ public class TableViewCellWithCollectionView: UITableViewCell {
         collectionView.tag = tag
         collectionView.reloadData()
     }
+    
+    static internal func addGridLine(_ view: UIView, size: CGFloat = 2, color: UIColor = UIColor(Palette.gridLine), sides: ConstraintAnchor...) {
+        for side in sides {
+            let line = UIView()
+            let anchors: [ConstraintAnchor] = [.leading, .trailing, .top, .bottom].filter{$0 != side}
+            view.addSubview(line, anchored: anchors)
+            if side == .leading || side == .trailing {
+                Constraint.setWidth(control: line, width: size)
+            } else {
+                Constraint.setHeight(control: line, height: size)
+            }
+            line.backgroundColor = color
+            view.bringSubviewToFront(line)
+        }
+    }
 }
 
 

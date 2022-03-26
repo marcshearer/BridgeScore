@@ -44,6 +44,7 @@ struct ScorecardInputView: View {
     @State private var tableRefresh = false
     @State private var detailView = false
     @State private var importScorecard = false
+    @State private var showRankings = false
     
     var body: some View {
         StandardView("Input", slideInId: id) {
@@ -54,20 +55,21 @@ struct ScorecardInputView: View {
     
                 // Banner
                 let bannerOptions = UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo) + [
-                    BannerOption(image: AnyView(Image(systemName: "lock.fill")), likeBack: true, isEnabled: $isNotImported, isHidden: $isNotImported, action: {}),
+                    BannerOption(image: AnyView(Image(systemName: "lock.fill")), likeBack: true, isHidden: $isNotImported, action: { showRankings = true }),
                     BannerOption(image: AnyView(Image(systemName: "note.text")), text: "Scorecard details", likeBack: true, menu: true, action: { UndoManager.clearActions() ; inputDetail = true }),
                     BannerOption(image: AnyView(Image(systemName: "\(detailView ? "minus" : "plus").magnifyingglass")), text: (detailView ? "Simple view" : "Alternative view"), likeBack: true, menu: true, action: { toggleView() }),
                     BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import from BBO", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importScorecard = true })]
                 
                 Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .both, menuTitle: nil, menuId: id, options: bannerOptions)
                 GeometryReader { geometry in
-                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), refreshTableTotals: $refreshTableTotals, detailView: $detailView, inputDetail: $inputDetail, tableRefresh: $tableRefresh)
+                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), refreshTableTotals: $refreshTableTotals, detailView: $detailView, inputDetail: $inputDetail, tableRefresh: $tableRefresh, showRankings: $showRankings)
                     .ignoresSafeArea(edges: .all)
                 }
             }
             .undoManager(canUndo: $canUndo, canRedo: $canRedo)
         }
         .onChange(of: tableRefresh) { (value) in tableRefresh = false}
+        .onChange(of: showRankings) { (value) in showRankings = false}
         .sheet(isPresented: $inputDetail, onDismiss: {
             UndoManager.clearActions()
             if deleted {
@@ -124,6 +126,7 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
     @Binding var detailView: Bool
     @Binding var inputDetail: Bool
     @Binding var tableRefresh: Bool
+    @Binding var showRankings: Bool
 
     func makeUIView(context: Context) -> ScorecardInputUIView {
         
@@ -145,6 +148,11 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
         if tableRefresh {
             uiView.tableRefresh()
             tableRefresh = false
+        }
+        
+        if showRankings {
+            uiView.showRankings()
+            showRankings = false
         }
         
         uiView.switchView(detailView: detailView)
@@ -330,6 +338,11 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
             forceReload = true
             self.setNeedsLayout()
         }
+    }
+    
+    public func showRankings() {
+        let rankings = ScorecardRankingView(frame: CGRect(x: frame.midX - 500, y: frame.midY - 250, width: 1000, height: 500))
+        rankings.show(from: self)
     }
     
     // MARK: - Scorecard delegates
@@ -765,7 +778,7 @@ fileprivate class ScorecardInputTableSectionHeaderView: TableViewSectionHeaderWi
 
 class ScorecardInputBoardTableCell: TableViewCellWithCollectionView {
     
-    private static let cellIdentifier = "Board TableCell"
+    private static let cellIdentifier = "Board Table Cell"
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)

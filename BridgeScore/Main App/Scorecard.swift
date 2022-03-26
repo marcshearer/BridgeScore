@@ -205,12 +205,11 @@ class Scorecard {
     public func removeRankings(table: Int? = nil) {
         for (tableNumber, tableRankings) in rankings {
             if table == nil || tableNumber == table {
-                for (sectionNumber, sectionRankings) in tableRankings {
-                    for (number, ranking) in sectionRankings {
+                for (_, sectionRankings) in tableRankings {
+                    for (_, ranking) in sectionRankings {
                         if !ranking.isNew {
                             remove(ranking: ranking)
                         }
-                        rankings[sectionNumber]![number] = nil
                     }
                 }
             }
@@ -227,7 +226,6 @@ class Scorecard {
                 }
             }
         }
-        travellers[board] = [:]
     }
     
     public func addNew() {
@@ -353,7 +351,7 @@ class Scorecard {
         assert(rankings[ranking.table]?[ranking.section]?[ranking.number] != nil, "Ranking does not exist and cannot be deleted")
         CoreData.update(updateLogic: {
             CoreData.context.delete(ranking.rankingMO!)
-            rankings[ranking.section]?[ranking.number] = nil
+            rankings[ranking.table]?[ranking.section]?[ranking.number] = nil
         })
     }
     
@@ -397,7 +395,7 @@ class Scorecard {
         assert(travellers[traveller.board]?[traveller.section]?[traveller.ranking[.north] ?? 0] != nil, "Traveller does not exist and cannot be deleted")
         CoreData.update(updateLogic: {
             CoreData.context.delete(traveller.travellerMO!)
-            travellers[traveller.section]?[traveller.ranking[.north] ?? 0] = nil
+            travellers[traveller.board]?[traveller.section]?[traveller.ranking[.north] ?? 0] = nil
         })
     }
     

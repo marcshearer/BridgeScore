@@ -349,11 +349,14 @@ extension NSMutableAttributedString {
 }
 
 extension Float {
-    func toString(places: Int) -> String{
+    func toString(places: Int, exact: Bool = false) -> String{
         let rounded = Utility.round(self, places: places)
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.maximumFractionDigits = places
+        if exact {
+            formatter.minimumFractionDigits = places
+        }
         let number = NSNumber(value: rounded)
         return formatter.string(from: number)!
     }

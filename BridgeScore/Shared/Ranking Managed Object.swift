@@ -21,7 +21,11 @@ public class RankingMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var ranking16: Int16
     @NSManaged public var score: Float
     @NSManaged public var points: Float
-    
+    @NSManaged public var north: String
+    @NSManaged public var south: String
+    @NSManaged public var east: String
+    @NSManaged public var west: String
+
     convenience init() {
         self.init(context: CoreData.context)
     }
@@ -44,6 +48,39 @@ public class RankingMO: NSManagedObject, ManagedObject, Identifiable {
     public var ranking: Int {
         get { Int(self.ranking16) }
         set { self.ranking16 = Int16(newValue) }
+    }
+    
+    public var players: [Seat: String] {
+        get {
+            var result: [Seat:String] = [:]
+            if north != "" { result[.north] = north }
+            if south != "" { result[.south] = south }
+            if east != "" { result[.east] = east }
+            if west != "" { result[.west] = west }
+            return result
+        }
+        set {
+            if let value = newValue[.north] {
+                north = value
+            } else {
+                north = ""
+            }
+            if let value = newValue[.south] {
+                south = value
+            } else {
+                south = ""
+            }
+            if let value = newValue[.east] {
+                east = value
+           } else {
+                east = ""
+            }
+            if let value = newValue[.west] {
+                west = value
+            } else {
+                west = ""
+            }
+        }
     }
     
     public override var description: String {

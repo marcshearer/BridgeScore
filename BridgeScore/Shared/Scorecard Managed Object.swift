@@ -32,8 +32,6 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var maxScoreEntered: Bool
     @NSManaged public var position16: Int16
     @NSManaged public var entry16: Int16
-    @NSManaged public var drawingData: Data
-    @NSManaged public var drawingWidthFloat: Float
     
     convenience init() {
         self.init(context: CoreData.context)
@@ -89,16 +87,6 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
                 self.maxScoreEntered = false
             }
         }
-    }
-    
-    public var drawingWidth: CGFloat {
-        get { CGFloat(self.drawingWidthFloat) }
-        set { self.drawingWidthFloat = Float(newValue)}
-    }
-    
-    public var drawing: PKDrawing {
-        get { (try? PKDrawing(data: self.drawingData)) ?? PKDrawing() }
-        set { self.drawingData = newValue.dataRepresentation() }
     }
     
     public override var description: String {
