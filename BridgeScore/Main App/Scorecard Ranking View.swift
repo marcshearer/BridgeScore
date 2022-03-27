@@ -65,13 +65,16 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
        
     private var backgroundView = UIView()
     private var contentView = UIView()
+    private var containerView = UIView()
     private var instructionLabel = UILabel()
     private var closeButton = UILabel()
     private var titleView: ScorecardRankingTitleView!
     private var valuesTableView: UITableView!
-    private var buttonPanelHeight: CGFloat = 100
+    private var bottomSpacing: NSLayoutConstraint!
+    private var buttonSpacing: CGFloat = 25
     private var buttonHeight: CGFloat = 50
     private var buttonWidth: CGFloat = 160
+    private var paddingSize: CGFloat = 20
     private var rankingColumns: [RankingColumn] = []
     private var headingColumns: [RankingColumn] = []
     private var values: [[(ranking: RankingViewModel, tie: Bool)]] = []
@@ -98,6 +101,10 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         closeButton.roundCorners(cornerRadius: 10)
         valuesTableView.reloadData()
         titleView.collectionView.reloadData()
+        layoutIfNeeded()
+        if valuesTableView.frame.height > valuesTableView.contentSize.height {
+            bottomSpacing.constant = buttonSpacing + (valuesTableView.frame.height - valuesTableView.contentSize.height)
+        }
     }
 
     // MARK: - CollectionView Delegates ================================================================ -
@@ -337,7 +344,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
             
             let availableSize = valuesTableView.frame.width
             let fixedSize = fixedWidth * factor
-            let flexibleSize = max(10, (availableSize - fixedSize) / CGFloat(flexible))
+            let flexibleSize = max(20, (availableSize - fixedSize) / CGFloat(flexible))
             
             var remainingWidth = availableSize
             for index in 0..<columns.count - 1 {
@@ -349,7 +356,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
                 }
                 remainingWidth -= columns[index].width!
             }
-            columns[columns.count - 1].width = max(10, remainingWidth)
+            columns[columns.count - 1].width = max(20, remainingWidth)
         }
     }
     
@@ -370,23 +377,24 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         contentView.backgroundColor = UIColor(Palette.background.background)
         contentView.addShadow()
 
+        // TableView and Title Container view
+        contentView.addSubview(containerView, constant: paddingSize, anchored: .leading, .trailing, .top)
+
         // Add subviews
         titleView = ScorecardRankingTitleView(self, frame: CGRect(origin: .zero, size: CGSize(width: frame.width, height: RankingRowType.title.rowHeight(scorecard: Scorecard.current.scorecard!))), tag: RowType.boardTitle.tagOffset)
-        contentView.addSubview(titleView, constant: 20, anchored: .leading, .trailing, .top)
+        containerView.addSubview(titleView, anchored: .leading, .trailing, .top)
         Constraint.setHeight(control: titleView, height: RankingRowType.title.rowHeight(scorecard: Scorecard.current.scorecard!))
-        Constraint.addGridLine(titleView, sides: .leading, .trailing, .top, .bottom)
         
         // Table view
         loadTable(tableView: valuesTableView)
         Constraint.anchor(view: contentView, control: valuesTableView, to: titleView, toAttribute: .bottom, attributes: .top)
         
         // Close button
-        let buttonSpacing = (buttonPanelHeight - buttonHeight) / 2
         contentView.addSubview(closeButton, anchored: .centerX)
         Constraint.setHeight(control: closeButton, height: buttonHeight)
         Constraint.setWidth(control: closeButton, width: buttonWidth)
         Constraint.anchor(view: contentView, control: closeButton, constant: buttonSpacing, attributes: .bottom)
-        Constraint.anchor(view: contentView, control: closeButton, to: valuesTableView, constant: buttonSpacing, toAttribute: .bottom, attributes: .top)
+        bottomSpacing = Constraint.anchor(view: contentView, control: closeButton, to: containerView, constant: buttonSpacing, toAttribute: .bottom, attributes: .top).first!
         closeButton.backgroundColor = UIColor(Palette.highlightButton.background)
         closeButton.textColor = UIColor(Palette.highlightButton.text)
         closeButton.textAlignment = .center
@@ -396,19 +404,20 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         closeButton.addGestureRecognizer(tapGesture)
         closeButton.isUserInteractionEnabled = true
 
+        Constraint.addGridLine(containerView, size: 2, sides: .leading, .trailing, .top, .bottom)
+
         contentView.isHidden = true
     }
     
     func loadTable(tableView: UITableView) {
-        contentView.addSubview(tableView, constant: 20, anchored: .leading, .trailing)
+        containerView.addSubview(tableView, anchored: .leading, .trailing, .bottom)
         tableView.dataSource = self
         tableView.delegate = self
         tableView.backgroundColor = UIColor(Palette.background.background)
         tableView.separatorStyle = .none
         tableView.sectionHeaderTopPadding = 0
         tableView.bounces = false
-        Constraint.addGridLine(tableView, sides: .leading, .trailing, .top, .bottom)
-        
+         
         ScorecardRankingSectionHeaderView.register(tableView)
         ScorecardRankingTableCell.register(tableView)
 
@@ -505,7 +514,7 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         label.minimumScaleFactor = 0.3
         label.adjustsFontSizeToFitWidth = true
         
-        Constraint.addGridLine(self, sides: .leading, .trailing, .top, .bottom)
+        Constraint.addGridLine(self, size: 1, sides: .leading, .trailing, .top, .bottom)
     }
     
     required init?(coder: NSCoder) {
