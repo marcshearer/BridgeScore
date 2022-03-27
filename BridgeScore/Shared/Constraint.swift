@@ -9,7 +9,7 @@
 
 import UIKit
 
-enum ConstraintAnchor {
+enum ConstraintAnchor: CustomStringConvertible {
     case leading
     case trailing
     case top
@@ -17,6 +17,25 @@ enum ConstraintAnchor {
     case all
     case centerX
     case centerY
+    
+    var description: String {
+        switch self {
+        case .leading:
+            return ".leading"
+        case .trailing:
+            return ".trailing"
+        case .top:
+            return ".top"
+        case .bottom:
+            return ".bottom"
+        case .all:
+            return ".all"
+        case .centerX:
+            return ".centerX"
+        case .centerY:
+            return ".centerY"
+        }
+    }
     
     var constraints: [NSLayoutConstraint.Attribute] {
         switch self {
@@ -34,6 +53,25 @@ enum ConstraintAnchor {
             return [.centerX]
         case .centerY:
             return [.centerY]
+        }
+    }
+    
+    var opposite: ConstraintAnchor? {
+        switch self {
+        case .leading:
+            return .trailing
+        case .trailing:
+            return .leading
+        case .top:
+            return .bottom
+        case .bottom:
+            return .top
+        case .all:
+            return nil
+        case .centerX:
+            return .centerX
+        case .centerY:
+            return .centerY
         }
     }
 }
@@ -125,4 +163,18 @@ class Constraint {
         constraint.priority = (value ? .required : UILayoutPriority(1.0))
     }
     
+    static internal func addGridLine(_ view: UIView, size: CGFloat = 2, color: UIColor = UIColor(Palette.gridLine), sides: ConstraintAnchor...) {
+        for side in sides {
+            let line = UIView()
+            let anchors: [ConstraintAnchor] = [.leading, .trailing, .top, .bottom].filter{$0 != side}
+            view.addSubview(line, anchored: anchors)
+            if side == .leading || side == .trailing {
+                Constraint.setWidth(control: line, width: size)
+            } else {
+                Constraint.setHeight(control: line, height: size)
+            }
+            line.backgroundColor = color
+            view.bringSubviewToFront(line)
+        }
+    }
 }

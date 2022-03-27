@@ -32,9 +32,11 @@ extension UIView {
         Constraint.anchor(view: self, control: parent, constant: constant, attributes: attributes)
     }
     
-    func addSubview(_ parent: UIView, constant: CGFloat = 0, anchored attributes: [ConstraintAnchor]) {
+    func addSubview(_ parent: UIView, constant: CGFloat = 0, anchored attributes: [ConstraintAnchor]?) {
         self.addSubview(parent)
-        Constraint.anchor(view: self, control: parent, constant: constant, attributes: attributes)
+        if let attributes = attributes {
+            Constraint.anchor(view: self, control: parent, constant: constant, attributes: attributes)
+        }
     }
     
     func addSubview(_ parent: UIView, leading: CGFloat? = nil, trailing: CGFloat? = nil, top: CGFloat? = nil, bottom: CGFloat? = nil) {
@@ -204,6 +206,12 @@ extension Array {
             result = self[index]
         }
         return result
+    }
+}
+
+extension Dictionary {
+    public static func +=(lhs: inout [Key: Value], rhs: [Key: Value]) {
+        rhs.forEach({ lhs[$0] = $1})
     }
 }
 

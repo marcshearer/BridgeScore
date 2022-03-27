@@ -337,7 +337,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
             
             let availableSize = valuesTableView.frame.width
             let fixedSize = fixedWidth * factor
-            let flexibleSize = max(1, (availableSize - fixedSize) / CGFloat(flexible))
+            let flexibleSize = max(10, (availableSize - fixedSize) / CGFloat(flexible))
             
             var remainingWidth = availableSize
             for index in 0..<columns.count - 1 {
@@ -349,7 +349,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
                 }
                 remainingWidth -= columns[index].width!
             }
-            columns[columns.count - 1].width = max(1, remainingWidth)
+            columns[columns.count - 1].width = max(10, remainingWidth)
         }
     }
     
@@ -374,7 +374,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         titleView = ScorecardRankingTitleView(self, frame: CGRect(origin: .zero, size: CGSize(width: frame.width, height: RankingRowType.title.rowHeight(scorecard: Scorecard.current.scorecard!))), tag: RowType.boardTitle.tagOffset)
         contentView.addSubview(titleView, constant: 20, anchored: .leading, .trailing, .top)
         Constraint.setHeight(control: titleView, height: RankingRowType.title.rowHeight(scorecard: Scorecard.current.scorecard!))
-        TableViewCellWithCollectionView.addGridLine(titleView, sides: .leading, .trailing, .top, .bottom)
+        Constraint.addGridLine(titleView, sides: .leading, .trailing, .top, .bottom)
         
         // Table view
         loadTable(tableView: valuesTableView)
@@ -407,7 +407,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         tableView.separatorStyle = .none
         tableView.sectionHeaderTopPadding = 0
         tableView.bounces = false
-        TableViewCellWithCollectionView.addGridLine(tableView, sides: .leading, .trailing, .top, .bottom)
+        Constraint.addGridLine(tableView, sides: .leading, .trailing, .top, .bottom)
         
         ScorecardRankingSectionHeaderView.register(tableView)
         ScorecardRankingTableCell.register(tableView)
@@ -505,7 +505,7 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         label.minimumScaleFactor = 0.3
         label.adjustsFontSizeToFitWidth = true
         
-        TableViewCellWithCollectionView.addGridLine(self, sides: .leading, .trailing, .top, .bottom)
+        Constraint.addGridLine(self, sides: .leading, .trailing, .top, .bottom)
     }
     
     required init?(coder: NSCoder) {
@@ -593,7 +593,7 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
             label.text = text
             label.textAlignment = .left
             label.lineBreakMode = .byWordWrapping
-            label.numberOfLines = max(1, (Scorecard.current.scorecard?.type.players ?? 2) / 2)
+            label.numberOfLines = max(10, (Scorecard.current.scorecard?.type.players ?? 2) / 2)
         case .score:
             label.text = ranking.score.toString(places: scorecard.type.matchPlaces, exact: true)
             label.textAlignment = .right

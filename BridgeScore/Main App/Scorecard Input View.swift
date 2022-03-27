@@ -815,10 +815,6 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     fileprivate var declarerPicker: ScrollPicker!
     fileprivate var seatPicker: EnumPicker<Seat>!
     private var madePicker: ScrollPicker!
-    private var leadingGridLine = UIView()
-    private var trailingGridLine = UIView()
-    private var topGridLine = UIView()
-    private var bottomGridLine = UIView()
     private var table: TableViewModel!
     private var board: BoardViewModel!
     fileprivate var itemNumber: Int!
@@ -916,22 +912,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         caption.textColor = UIColor(Palette.gridBoard.text)
         captionHeight = Constraint.setHeight(control: caption, height: 0)
         
-        addGridLine(line: leadingGridLine, side: .leading)
-        addGridLine(line: trailingGridLine, side: .trailing)
-        addGridLine(line: topGridLine, side: .top)
-        addGridLine(line: bottomGridLine, side: .bottom)
-    }
-    
-    private func addGridLine(line: UIView, side: ConstraintAnchor) {
-        let size: CGFloat = 2
-        let anchors: [ConstraintAnchor] = [.leading, .trailing, .top, .bottom].filter{$0 != side}
-        addSubview(line, anchored: anchors)
-        if side == .leading || side == .trailing {
-            Constraint.setWidth(control: line, width: size)
-        } else {
-            Constraint.setHeight(control: line, height: size)
-        }
-        line.backgroundColor = UIColor(Palette.gridLine)
+        Constraint.addGridLine(self, sides: .leading, .trailing, .top, .bottom)
     }
     
     required init?(coder: NSCoder) {
