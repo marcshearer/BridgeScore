@@ -474,17 +474,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     }
     
     func scorecardBBONamesReplace(values: [String]) {
-        var editValues: [BBONameViewModel] = []
-        for value in values {
-            if let bboName = MasterData.shared.bboName(id: value) {
-                editValues.append(bboName)
-            } else {
-                let bboName = BBONameViewModel()
-                bboName.bboName = value
-                bboName.insert()
-                editValues.append(bboName)
-            }
-        }
+        let editValues = MasterData.shared.getBboNames(values: values)
         ignoreKeyboard = true
         let bboNameReplaceView = BBONameReplaceView(frame: CGRect())
         bboNameReplaceView.show(from: self, values: editValues) {

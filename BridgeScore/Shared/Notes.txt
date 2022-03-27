@@ -13,7 +13,6 @@ To Do
 Sort out dark mode
 Maybe remove file sharing in Info.plist once can backup from Mac
 Show results of import - rankings and travellers
-deduplicate addGridLine and move somewhere more appropriate - half done now in RankingView
 Replace names on table with a versus number
 
 Enhancements

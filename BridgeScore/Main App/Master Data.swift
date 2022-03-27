@@ -378,4 +378,19 @@ extension MasterData {
             return id
         }
     }
+    
+    public func getBboNames(values: [String]) -> [BBONameViewModel] {
+        var result: [BBONameViewModel] = []
+        for value in values {
+            if let bboName = MasterData.shared.bboName(id: value) {
+                result.append(bboName)
+            } else {
+                let bboName = BBONameViewModel()
+                bboName.bboName = value
+                bboName.insert()
+                result.append(bboName)
+            }
+        }
+        return result
+    }
 }

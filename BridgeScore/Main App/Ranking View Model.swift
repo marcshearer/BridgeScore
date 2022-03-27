@@ -50,6 +50,10 @@ public class RankingViewModel : ObservableObject, Identifiable, CustomDebugStrin
         return result
     }
     
+    public var isSelf: Bool {
+        players.map{$0.value}.contains(where: {$0 == MasterData.shared.scorer?.bboName.lowercased()})
+    }
+    
     public init(scorecard: ScorecardViewModel, table: Int, section: Int, number: Int) {
         self.scorecard = scorecard
         self.table = table

@@ -106,6 +106,16 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
             bottomSpacing.constant = buttonSpacing + (valuesTableView.frame.height - valuesTableView.contentSize.height)
         }
     }
+    
+    // MARK: - Replace BBO names ========================================================================= -
+    
+    func replaceNames(values: [String]) {
+        let editValues = MasterData.shared.getBboNames(values: values)
+        let bboNameReplaceView = BBONameReplaceView(frame: CGRect())
+        bboNameReplaceView.show(from: self, values: editValues) {
+            self.valuesTableView.reloadData()
+        }
+    }
 
     // MARK: - CollectionView Delegates ================================================================ -
     
@@ -192,7 +202,9 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
                 let row = index % totalRankings
                 let values = values[section][row]
                 let column = rankingColumns[indexPath.item]
-                cell.set(scorecard: Scorecard.current.scorecard!, ranking: values.ranking, tie: values.tie, rowType: .ranking, column: column)
+                cell.set(scorecard: Scorecard.current.scorecard!, ranking: values.ranking, tie: values.tie, rowType: .ranking, column: column) { (players) in
+                    self.replaceNames(values: players)
+                }
                 return cell
             case .title:
                 let cell = ScorecardRankingCollectionCell.dequeue(collectionView, for: indexPath)
@@ -503,6 +515,7 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
     private var column: RankingColumn!
     private var scorecard: ScorecardViewModel!
     private var ranking: RankingViewModel!
+    private var tapAction: (([String]) ->())?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -513,6 +526,10 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         label.textAlignment = .center
         label.minimumScaleFactor = 0.3
         label.adjustsFontSizeToFitWidth = true
+        
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardRankingCollectionCell.tapped(_:)))
+        label.addGestureRecognizer(tapGesture)
+        label.isUserInteractionEnabled = true
         
         Constraint.addGridLine(self, size: 1, sides: .leading, .trailing, .top, .bottom)
     }
@@ -566,13 +583,17 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         }
     }
  
-    func set(scorecard: ScorecardViewModel, ranking: RankingViewModel, tie: Bool = false, rowType: RankingRowType, column: RankingColumn) {
+    func set(scorecard: ScorecardViewModel, ranking: RankingViewModel, tie: Bool = false, rowType: RankingRowType, column: RankingColumn, tapAction: (([String])->())? = nil) {
         self.scorecard = scorecard
         self.ranking = ranking
+        self.tapAction = tapAction
         self.rowType = rowType
         self.column = column
         
         label.tag = column.type.rawValue
+        
+        let font = (ranking.isSelf ? cellFont.bold : cellFont)
+        label.font = font       
         
         switch column.type {
         case .ranking:
@@ -580,16 +601,8 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         case .number:
             label.text = "\(ranking.number)"
         case .players:
-            var players: [String] = []
-            var text = ""
-            for seat in Seat.validCases {
-                if let player = ranking.players[seat] {
-                    if players.first(where: {$0 == player}) == nil {
-                        players.append(player)
-                    }
-                }
-            }
-            for (index, player) in players.enumerated() {
+            var text = NSAttributedString(string: "")
+            for (index, player) in getPlayers().enumerated() {
                 if index > 0 {
                     if index % 2 == 0 {
                         text = text + "\n"
@@ -597,12 +610,18 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
                         text = text + " & "
                     }
                 }
-                text = text + (MasterData.shared.realName(bboName: player) ?? "Unknown")
+                let name = (MasterData.shared.realName(bboName: player) ?? player)
+                if name == player {
+                    text = text + NSAttributedString(name, pickerColor: UIColor(Palette.background.themeText), font: font)
+                } else {
+                    text = text + name
+                }
             }
-            label.text = text
+            label.attributedText = text
             label.textAlignment = .left
             label.lineBreakMode = .byWordWrapping
             label.numberOfLines = max(10, (Scorecard.current.scorecard?.type.players ?? 2) / 2)
+            label.isUserInteractionEnabled = true
         case .score:
             label.text = ranking.score.toString(places: scorecard.type.matchPlaces, exact: true)
             label.textAlignment = .right
@@ -616,5 +635,21 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
             label.text = "     Section \(ranking.section)"
             label.textAlignment = .left
         }
+    }
+    
+    private func getPlayers() -> [String] {
+        var players: [String] = []
+        for seat in Seat.validCases {
+            if let player = ranking.players[seat] {
+                if players.first(where: {$0 == player}) == nil {
+                    players.append(player)
+                }
+            }
+        }
+        return players
+    }
+    
+    @objc private func tapped(_ sender: Any) {
+        tapAction?(getPlayers())
     }
 }

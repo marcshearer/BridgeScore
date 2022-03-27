@@ -346,6 +346,20 @@ extension NSAttributedString {
 }
 #endif
 
+extension UIFont {
+    
+    var bold: UIFont {
+        let descriptor = fontDescriptor.withSymbolicTraits(.traitBold)
+        return UIFont(descriptor: descriptor!, size: 0)
+    }
+    
+    var italic: UIFont {
+        let descriptor = fontDescriptor.withSymbolicTraits(.traitItalic)
+        return UIFont(descriptor: descriptor!, size: 0)
+    }
+
+}
+
 extension NSMutableAttributedString {
     
     static func + (left: NSMutableAttributedString, right: NSMutableAttributedString) -> NSMutableAttributedString {
