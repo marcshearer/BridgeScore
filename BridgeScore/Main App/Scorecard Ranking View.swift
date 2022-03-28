@@ -254,15 +254,26 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
   // MARK: - View Setup ======================================================================== -
     
     private func setupColumns() {
+        let sectionRankings = Scorecard.current.rankings.flatMap{$0.1.flatMap{$0.1.flatMap{$0.1}}}
         rankingColumns = [
             RankingColumn(type: .ranking, heading: "Ranking", size: .fixed([70])),
             RankingColumn(type: .number, heading: "Number", size: .fixed([50])),
             RankingColumn(type: .players, heading: "Names", size: .flexible),
-            RankingColumn(type: .score, heading: "Score", size: .fixed([70])),
-            RankingColumn(type: .points, heading: "Points", size: .fixed([60])),
-            RankingColumn(type: .nsXImps, heading: "NS XImps", size: .fixed([60])),
-            RankingColumn(type: .ewXImps, heading: "EW XImps", size: .fixed([60]))
-        ]
+            RankingColumn(type: .score, heading: "Score", size: .fixed([70]))]
+        
+        if sectionRankings.first(where: {$0.points != 0}) != nil {
+            rankingColumns += [
+                RankingColumn(type: .points, heading: "Points", size: .fixed([60]))
+            ]
+        }
+        
+        if sectionRankings.first(where: {$0.xImps[.ns] != 0}) != nil {
+            rankingColumns += [
+                RankingColumn(type: .nsXImps, heading: "NS XImps", size: .fixed([60])),
+                RankingColumn(type: .ewXImps, heading: "EW XImps", size: .fixed([60]))
+            ]
+        }
+        
         
         headingColumns = []
         if tables > 1 {
@@ -590,6 +601,7 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         label.tag = column.type.rawValue
         
         let font = (ranking.isSelf ? cellFont.bold : cellFont)
+        let smallFont = (ranking.isSelf ? smallCellFont.bold : smallCellFont)
         label.font = font
         
         switch column.type {
@@ -625,12 +637,12 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         case .nsXImps:
             let nsXImps = ranking.xImps[.ns]
             label.text = nsXImps == 0 ? "" : nsXImps!.toString(places: 2, exact: true)
-            label.font = smallCellFont
+            label.font = smallFont
             label.textAlignment = .right
         case .ewXImps:
             let ewXImps = ranking.xImps[.ew]
             label.text = ewXImps == 0 ? "" : ewXImps!.toString(places: 2, exact: true)
-            label.font = smallCellFont
+            label.font = smallFont
             label.textAlignment = .right
         case .points:
             label.text = (ranking.points == 0 ? "" : ranking.points.toString(places: 2, exact: true))
