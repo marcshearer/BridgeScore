@@ -1473,11 +1473,11 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         let width: CGFloat = 70
         let space = (frame.width - width) / 2
         if !Scorecard.current.isImported {
-            scorecardDelegate?.scorecardScrollPickerPopup(values: Seat.allCases.map{ScrollPickerEntry(title: $0.short, caption: $0.string)}, maxValues: 9, selected: table.sitting.rawValue, defaultValue: nil, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 20, bottomPadding: 4) { (selected) in
-                if let seat = Seat(rawValue: selected!) {
-                    self.seatPicker.set(seat)
-                    self.enumPickerDidChange(to: seat)
-                }
+            let selected = Seat.allCases.firstIndex(where: {$0 == table.sitting}) ?? 0
+            scorecardDelegate?.scorecardScrollPickerPopup(values: Seat.allCases.map{ScrollPickerEntry(title: $0.short, caption: $0.string)}, maxValues: 9, selected: selected, defaultValue: nil, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 20, bottomPadding: 4) { (selected) in
+                let seat = Seat.allCases[selected!]
+                self.seatPicker.set(seat)
+                self.enumPickerDidChange(to: seat)
             }
         }
     }

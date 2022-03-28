@@ -7,13 +7,11 @@ Bugs
 ====
 Banner not blacked out in subviews
 Background still active with MessageBox
-SeatPicker seems broken (South and East inverted)
 
 To Do
 =====
 Sort out dark mode
 Maybe remove file sharing in Info.plist once can backup from Mac
-Show results of import - rankings and travellers
 Replace names on table with a versus number
 Unlock after import
 

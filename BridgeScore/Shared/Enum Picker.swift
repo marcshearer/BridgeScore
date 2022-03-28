@@ -14,6 +14,7 @@ protocol EnumPickerDelegate {
 protocol EnumPickerType : CaseIterable, Equatable {
     var string: String {get}
     var short: String {get}
+    var rawValue: Int {get}
 }
 
 class EnumPicker<EnumType> : UIView, ScrollPickerDelegate where EnumType : EnumPickerType {
