@@ -120,7 +120,7 @@ public enum ScoreType {
         switch bboScoringType {
         case "MATCH_POINTS":
             self = .percent
-        case "IMPS":
+        case "CROSS_IMPS", "IMPS":
             self = .imp
         default:
             self = .unknown
@@ -192,18 +192,18 @@ public enum Type: Int, CaseIterable {
 
     public var tablePlaces: Int {
         switch self {
-        case .percent, .xImp, .vpXImp, .vpTableTeam:
+        case .percent, .xImp, .vpXImp:
             return 2
-        case .vpMatchTeam, .vpPercent:
+        case .vpMatchTeam, .vpPercent, .vpTableTeam:
             return 0
         }
     }
     
     public var matchPlaces: Int {
         switch self {
-        case .percent, .xImp, .vpXImp, .vpMatchTeam, .vpTableTeam:
+        case .percent, .xImp, .vpXImp, .vpMatchTeam:
             return 2
-        case .vpPercent:
+        case .vpPercent, .vpTableTeam:
             return 0
         }
     }
@@ -214,7 +214,9 @@ public enum Type: Int, CaseIterable {
             return .average
         case .xImp, .vpMatchTeam:
             return .total
-        case .vpXImp, .vpTableTeam:
+        case .vpTableTeam:
+            return .discreteVp
+        case .vpXImp:
             return .continuousVp
         case .vpPercent:
             return .percentVp
@@ -267,6 +269,10 @@ public enum Type: Int, CaseIterable {
         default:
             return nil
         }
+    }
+    
+    public func invertScore(score: Float) -> Float {
+        return (self.boardScoreType == .percent ? 100 - score : (score == 0 ? 0 : -score))
     }
 }
 
@@ -341,6 +347,39 @@ public enum Responsible: Int, EnumPickerType {
     }
 }
 
+public enum Pair: Int, CaseIterable {
+    case ns
+    case ew
+    case unknown
+    
+    static var validCases: [Pair] {
+        return Pair.allCases.filter{$0 != .unknown}
+    }
+    
+    var seats: [Seat] {
+        switch self {
+        case .ns:
+            return [.north, .south]
+        case .ew:
+            return [.east, .west]
+        default:
+            return []
+        }
+    }
+    
+    var sign: Int {
+        switch self {
+        case .ns:
+            return 1
+        case .ew:
+            return -1
+        default:
+            return 0
+        }
+    }
+    
+}
+
 public enum Seat: Int, EnumPickerType, ContractEnumType {
     case unknown = 0
     case north = 1
@@ -371,6 +410,18 @@ public enum Seat: Int, EnumPickerType, ContractEnumType {
         return string
     }
     
+    public var pair: Pair {
+        switch self {
+        case .north, .south:
+            return .ns
+        case .east, .west:
+            return .ew
+        default:
+            return .unknown
+        }
+    }
+    
+    
     static public var validCases: [Seat] {
         return Seat.allCases.filter{$0 != .unknown}
     }
@@ -385,6 +436,10 @@ public enum Seat: Int, EnumPickerType, ContractEnumType {
 
     public var rightOpponent : Seat {
         (self == .unknown ? .unknown : Seat(rawValue: ((self.rawValue + 2) % 4) + 1)!)
+    }
+    
+    public var northSouth: Bool {
+        return (self == .north || self == .south)
     }
 
     public var short: String {

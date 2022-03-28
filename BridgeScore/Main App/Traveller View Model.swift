@@ -18,7 +18,8 @@ public class TravellerViewModel : ObservableObject, Identifiable, CustomDebugStr
     @Published public var declarer: Seat = .unknown
     @Published public var made: Int = 0
     @Published public var nsScore: Float = 0
-    @Published public var ranking: [Seat:Int] = [:]
+    @Published public var nsXImps: Float = 0
+    @Published public var rankingNumber: [Seat:Int] = [:]
     @Published public var section: Int = 0
     @Published public var lead: String = ""
     @Published public var playData: String = ""
@@ -42,7 +43,8 @@ public class TravellerViewModel : ObservableObject, Identifiable, CustomDebugStr
                 self.declarer != mo.declarer ||
                 self.made != mo.made ||
                 self.nsScore != mo.nsScore ||
-                self.ranking != mo.ranking ||
+                self.nsXImps != mo.nsXImps ||
+                self.rankingNumber != mo.rankingNumber ||
                 self.section != mo.section ||
                 self.lead != mo.lead ||
                 self.playData != mo.playData {
@@ -58,12 +60,12 @@ public class TravellerViewModel : ObservableObject, Identifiable, CustomDebugStr
         self.scorecard = scorecard
         self.board = board
         self.section = section
-        self.ranking = ranking
+        self.rankingNumber = ranking
         self.setupMappings()
     }
     
     public convenience init(scorecard: ScorecardViewModel, travellerMO: TravellerMO) {
-        self.init(scorecard: scorecard, board: travellerMO.board, section: travellerMO.section, ranking: travellerMO.ranking)
+        self.init(scorecard: scorecard, board: travellerMO.board, section: travellerMO.section, ranking: travellerMO.rankingNumber)
         self.travellerMO = travellerMO
         self.revert()
     }
@@ -81,7 +83,8 @@ public class TravellerViewModel : ObservableObject, Identifiable, CustomDebugStr
             self.declarer = mo.declarer
             self.made = mo.made
             self.nsScore = mo.nsScore
-            self.ranking = mo.ranking
+            self.nsXImps = mo.nsXImps
+            self.rankingNumber = mo.rankingNumber
             self.section = mo.section
             self.lead = mo.lead
             self.playData = mo.playData
@@ -96,7 +99,8 @@ public class TravellerViewModel : ObservableObject, Identifiable, CustomDebugStr
             mo.declarer = declarer
             mo.made = made
             mo.nsScore = nsScore
-            mo.ranking = ranking
+            mo.nsXImps = nsXImps
+            mo.rankingNumber = rankingNumber
             mo.section = section
             mo.lead = lead
             mo.playData = playData
@@ -127,8 +131,26 @@ public class TravellerViewModel : ObservableObject, Identifiable, CustomDebugStr
         return self.travellerMO == nil
     }
     
+    public func ranking(seat: Seat) -> RankingViewModel? {
+        assert(self.scorecard == Scorecard.current.scorecard, "Only valid when this scorecard is current")
+        let sectionRankings = Scorecard.current.rankings.flatMap{$0.1.flatMap{$0.1.flatMap{$0.1}}}
+        return sectionRankings.first(where: {$0.number == rankingNumber[seat] && $0.section == section})
+    }
+    
+    public var isSelf: Bool {
+        var result = false
+        for seat in Seat.validCases {
+            if let ranking = ranking(seat: seat) {
+                if ranking.players[seat] == MasterData.shared.scorer?.bboName.lowercased() {
+                    result = true
+                }
+            }
+        }
+        return result
+    }
+    
     public var description: String {
-        "Traveller: \(self.board), North \(self.ranking[.north] ?? 0) South \(self.ranking[.south] ?? 0) East \(self.ranking[.east] ?? 0) West \(self.ranking[.west] ?? 0)of Section \(self.section) of Scorecard: \(MasterData.shared.scorecard(id: self.scorecard.scorecardId)?.desc ?? "")"
+        "Traveller: \(self.board), North \(self.rankingNumber[.north] ?? 0) South \(self.rankingNumber[.south] ?? 0) East \(self.rankingNumber[.east] ?? 0) West \(self.rankingNumber[.west] ?? 0)of Section \(self.section) of Scorecard: \(MasterData.shared.scorecard(id: self.scorecard.scorecardId)?.desc ?? "")"
     }
     
     public var debugDescription: String { self.description }

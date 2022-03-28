@@ -390,6 +390,12 @@ extension Decimal {
     }
 }
 
+extension Int {
+    var sign: Int {
+        return (self == 0 ? 0 : (self > 0 ? 1 : -1))
+    }
+}
+
 extension View {
     /// Applies the given transform if the given condition evaluates to `true`.
     /// - Parameters:

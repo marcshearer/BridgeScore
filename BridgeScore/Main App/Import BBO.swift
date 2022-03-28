@@ -262,6 +262,7 @@ class ImportedBBOScorecard {
     private(set) var error: String?
     private(set) var scorecard: ScorecardViewModel?
     private(set) var boardsTable: Int?
+    private var translateNumber: [Int:Int] = [:]
     public var table: Int = 1
 
     private var phase: Phase = .heading
@@ -298,6 +299,8 @@ class ImportedBBOScorecard {
             }
         }
         if !lines.isEmpty {
+            combineRankings()
+            recalculateTravellers()
             validate()
         }
     }
@@ -412,7 +415,7 @@ class ImportedBBOScorecard {
                     }
                     if string.right(2).lowercased() == "xx" {
                         contract.double = .redoubled
-                    } else if string.right(2).lowercased() == "x" {
+                    } else if string.right(1).lowercased() == "x" {
                         contract.double = .doubled
                     }
                 }
@@ -458,6 +461,70 @@ class ImportedBBOScorecard {
         }
     }
     
+    private func combineRankings() {
+        if let scorecard = scorecard {
+            if scorecard.type.players == 4 && rankings.first!.players[.north] == rankings.first!.players[.east] {
+                // Teams pairs as separate lines
+                var remove: [Int] = []
+                for (index, bboRanking) in rankings.enumerated() {
+                    if bboRanking.ranking == nil && index > 0 {
+                            // Add to previous ranking
+                        rankings[index - 1].players[.east] = bboRanking.players[.north]
+                        rankings[index - 1].players[.west] = bboRanking.players[.south]
+                        if let number = bboRanking.number {
+                            translateNumber[number] = rankings[index - 1].number
+                            remove.append(index)
+                        }
+                    }
+                }
+                for removeIndex in remove.reversed() {
+                    rankings.remove(at: removeIndex)
+                }
+            }
+        }
+        for (_, boardTravellers) in travellers {
+            for traveller in boardTravellers {
+                for seat in Seat.validCases {
+                    if let number = traveller.ranking[seat] {
+                        if let toNumber = translateNumber[number] {
+                            traveller.ranking[seat] = toNumber
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private func recalculateTravellers() {
+            // BBO sometimes exports cross imps on boards rather than team imp differences - recalculate them
+       for (board, boardTravellers) in travellers {
+            for traveller in boardTravellers {
+                if let contract = traveller.contract, let declarer = traveller.declarer, let made = traveller.made {
+                    if let otherTraveller = boardTravellers.first(where: {matchingTraveller($0, traveller)}), let otherContract = otherTraveller.contract, let otherDeclarer = otherTraveller.declarer, let otherMade = otherTraveller.made {
+                        let vulnerability = Vulnerability(board: board)
+                        let nsPoints = Scorecard.points(contract: contract, vulnerability: vulnerability, declarer: declarer, made: made, seat: .north)
+                        let ewPoints = Scorecard.points(contract: otherContract, vulnerability: vulnerability, declarer: otherDeclarer, made: otherMade, seat: .east)
+                        let balance = nsPoints + ewPoints
+                        let nsImps = BridgeImps(points: balance)
+                        traveller.nsXImps = traveller.nsScore
+                        traveller.nsScore = Float(nsImps.imps ?? 0)
+                        for pair in Pair.validCases {
+                            let seat = pair.seats.first!
+                            if let ranking = rankings.first(where: {$0.number == traveller.ranking[seat]}) {
+                                ranking.xImps[pair] = (ranking.xImps[pair] ?? 0) + (traveller.nsXImps ?? 0) * Float(pair.sign)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private func matchingTraveller(_ first: ImportedBBOBoardTravellerLine, _ second: ImportedBBOBoardTravellerLine) -> Bool {
+        return first.board == second.board && first.ranking[.north] == second.ranking[.east]
+    }
+    
+        
     public func importScorecard() {
         // Update date
         if let date = date {
@@ -597,6 +664,7 @@ class ImportedBBOScorecard {
                     ranking.score = bboRanking.score ?? 0
                     ranking.points = bboRanking.bboPoints ?? 0
                     ranking.players = bboRanking.players
+                    ranking.xImps = bboRanking.xImps
                     
                     Scorecard.current.insert(ranking: ranking)
                 }
@@ -616,6 +684,7 @@ class ImportedBBOScorecard {
                     traveller.declarer = bboTraveller.declarer ?? .unknown
                     traveller.made = bboTraveller.made ?? 0
                     traveller.nsScore = bboTraveller.nsScore ?? 0
+                    traveller.nsXImps = bboTraveller.nsXImps ?? 0
                     traveller.lead = bboTraveller.lead ?? ""
                     traveller.playData = bboTraveller.playData ?? ""
                     
@@ -766,6 +835,7 @@ class ImportedBBOScorecardRanking {
     public var section: Int = 1
     public var players: [Seat:String] = [:]
     public var score: Float?
+    public var xImps: [Pair:Float] = [:]
     public var ranking: Int?
     public var bboPoints: Float?
 }
@@ -780,5 +850,6 @@ class ImportedBBOBoardTravellerLine {
     public var lead: String?
     public var points: Int?
     public var nsScore: Float?
+    public var nsXImps: Float?
     public var playData: String?
 }

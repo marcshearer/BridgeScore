@@ -12,7 +12,7 @@ public class TravellerMO: NSManagedObject, ManagedObject, Identifiable {
 
     public static let tableName = "Traveller"
     
-    public var id: (UUID, Int, [Seat:Int], Int) { (self.scorecardId, self.board, self.ranking, self.section) }
+    public var id: (UUID, Int, [Seat:Int], Int) { (self.scorecardId, self.board, self.rankingNumber, self.section) }
     @NSManaged public var scorecardId: UUID
     @NSManaged public var board16: Int16
     @NSManaged public var contractLevel16: Int16
@@ -21,6 +21,7 @@ public class TravellerMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var declarer16: Int16
     @NSManaged public var made16: Int16
     @NSManaged public var nsScore: Float
+    @NSManaged public var nsXImps: Float
     @NSManaged public var northValue: Int16
     @NSManaged public var northEntered: Bool
     @NSManaged public var southValue: Int16
@@ -76,7 +77,7 @@ public class TravellerMO: NSManagedObject, ManagedObject, Identifiable {
         }
     }
 
-    public var ranking: [Seat:Int] {
+    public var rankingNumber: [Seat:Int] {
         get {
             var result: [Seat:Int] = [:]
             if northEntered { result[.north] = Int(northValue) }
@@ -123,7 +124,7 @@ public class TravellerMO: NSManagedObject, ManagedObject, Identifiable {
     }
     
     public override var description: String {
-        "Traveller: \(self.board), North \(self.ranking[.north] ?? 0) South \(self.ranking[.south] ?? 0) East \(self.ranking[.east] ?? 0) West \(self.ranking[.west] ?? 0)of Section \(self.section) of Scorecard: \(MasterData.shared.scorecard(id: self.scorecardId)?.desc ?? "")"
+        "Traveller: \(self.board), North \(self.rankingNumber[.north] ?? 0) South \(self.rankingNumber[.south] ?? 0) East \(self.rankingNumber[.east] ?? 0) West \(self.rankingNumber[.west] ?? 0)of Section \(self.section) of Scorecard: \(MasterData.shared.scorecard(id: self.scorecardId)?.desc ?? "")"
     }
     public override var debugDescription: String { self.description }
 }

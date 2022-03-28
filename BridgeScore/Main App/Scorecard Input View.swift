@@ -171,6 +171,7 @@ protocol ScorecardDelegate {
     func scorecardCell(rowType: RowType, itemNumber: Int, columnType: ColumnType) -> ScorecardInputCollectionCell?
     func scorecardContractEntry(board: BoardViewModel, table: TableViewModel)
     func scorecardBBONamesReplace(values: [String])
+    func scorecardShowTraveller(scorecard: ScorecardViewModel, board: BoardViewModel, sitting: Seat)
     func scorecardScrollPickerPopup(values: [ScrollPickerEntry], maxValues: Int, selected: Int?, defaultValue: Int?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Int?)->())
     func scorecardDeclarerPickerPopup(values: [(Seat, ScrollPickerEntry)], selected: Seat?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Seat?)->())
     func scorecardGetDeclarers(tableNumber: Int) -> [Seat]
@@ -481,6 +482,11 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
             self.ignoreKeyboard = false
             self.tableRefresh()
         }
+    }
+    
+    func scorecardShowTraveller(scorecard: ScorecardViewModel, board: BoardViewModel, sitting: Seat) {
+        let showTraverllerView = ScorecardTravellerView(frame: CGRect())
+        showTraverllerView.show(from: self, boardNumber: board.board, sitting: sitting)
     }
     
     func scorecardScrollPickerPopup(values: [ScrollPickerEntry], maxValues: Int, selected: Int?, defaultValue: Int?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Int?)->()) {
@@ -1036,6 +1042,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             textField.clearsOnBeginEditing = true
             textField.text = board.score == nil ? "" : "\(board.score!.toString(places: scorecard.type.boardPlaces))"
             textField.isEnabled = isEnabled
+            label.isUserInteractionEnabled = !isEnabled
         case .points:
             label.isHidden = false
             if board.declarer == .unknown {
@@ -1408,6 +1415,8 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 }
             case .versus:
                 versusTapped(self)
+            case .score:
+                scoreTapped(self)
             default:
                 break
             }
@@ -1418,6 +1427,12 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         scorecardDelegate?.scorecardEndEditing(true)
         scorecardDelegate?.scorecardChanged(type: .board, itemNumber: itemNumber)
         scorecardDelegate?.scorecardContractEntry(board: board, table: table)
+    }
+    
+    @objc internal func scoreTapped(_ sender: UIView) {
+        scorecardDelegate?.scorecardEndEditing(true)
+        scorecardDelegate?.scorecardChanged(type: .board, itemNumber: itemNumber)
+        scorecardDelegate?.scorecardShowTraveller(scorecard: scorecard, board: board, sitting: table.sitting)
     }
     
     @objc internal func versusTapped(_ sender: UIView) {

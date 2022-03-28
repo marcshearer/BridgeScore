@@ -5,13 +5,6 @@
 //  Created by Marc Shearer on 25/03/2022.
 //
 
-//
-//  BBO Name View.swift
-//  BridgeScore
-//
-//  Created by Marc Shearer on 24/03/2022.
-//
-
 import UIKit
 import CoreMedia
 
@@ -23,6 +16,8 @@ enum RankingColumnType: Int, Codable {
     case ranking = 4
     case score = 5
     case points = 6
+    case nsXImps = 7
+    case ewXImps = 8
     
     var string: String {
         return "\(self)"
@@ -264,7 +259,9 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
             RankingColumn(type: .number, heading: "Number", size: .fixed([50])),
             RankingColumn(type: .players, heading: "Names", size: .flexible),
             RankingColumn(type: .score, heading: "Score", size: .fixed([70])),
-            RankingColumn(type: .points, heading: "Points", size: .fixed([60]))
+            RankingColumn(type: .points, heading: "Points", size: .fixed([60])),
+            RankingColumn(type: .nsXImps, heading: "NS XImps", size: .fixed([60])),
+            RankingColumn(type: .ewXImps, heading: "EW XImps", size: .fixed([60]))
         ]
         
         headingColumns = []
@@ -393,7 +390,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         contentView.addSubview(containerView, constant: paddingSize, anchored: .leading, .trailing, .top)
 
         // Add subviews
-        titleView = ScorecardRankingTitleView(self, frame: CGRect(origin: .zero, size: CGSize(width: frame.width, height: RankingRowType.title.rowHeight(scorecard: Scorecard.current.scorecard!))), tag: RowType.boardTitle.tagOffset)
+        titleView = ScorecardRankingTitleView(self, frame: CGRect(origin: .zero, size: CGSize(width: frame.width, height: RankingRowType.title.rowHeight(scorecard: Scorecard.current.scorecard!))), tag: RankingRowType.title.tagOffset)
         containerView.addSubview(titleView, anchored: .leading, .trailing, .top)
         Constraint.setHeight(control: titleView, height: RankingRowType.title.rowHeight(scorecard: Scorecard.current.scorecard!))
         
@@ -593,7 +590,7 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         label.tag = column.type.rawValue
         
         let font = (ranking.isSelf ? cellFont.bold : cellFont)
-        label.font = font       
+        label.font = font
         
         switch column.type {
         case .ranking:
@@ -624,6 +621,16 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
             label.isUserInteractionEnabled = true
         case .score:
             label.text = ranking.score.toString(places: scorecard.type.matchPlaces, exact: true)
+            label.textAlignment = .right
+        case .nsXImps:
+            let nsXImps = ranking.xImps[.ns]
+            label.text = nsXImps == 0 ? "" : nsXImps!.toString(places: 2, exact: true)
+            label.font = smallCellFont
+            label.textAlignment = .right
+        case .ewXImps:
+            let ewXImps = ranking.xImps[.ew]
+            label.text = ewXImps == 0 ? "" : ewXImps!.toString(places: 2, exact: true)
+            label.font = smallCellFont
             label.textAlignment = .right
         case .points:
             label.text = (ranking.points == 0 ? "" : ranking.points.toString(places: 2, exact: true))

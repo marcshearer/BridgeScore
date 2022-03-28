@@ -20,7 +20,7 @@ class Scorecard {
     @Published private(set) var boards: [Int:BoardViewModel] = [:]   // Board number
     @Published private(set) var tables: [Int:TableViewModel] = [:]   // Table number
     @Published private(set) var rankings: [Int:[Int:[Int:RankingViewModel]]] = [:]   // Table / Section / Pair (team) number
-    @Published private(set) var travellers: [Int:[Int:[Int:TravellerViewModel]]] = [:]   // Board number / section / north pair (team number
+    @Published private(set) var travellers: [Int:[Int:[Int:TravellerViewModel]]] = [:]   // Board number / section / north pair (team number)
     
     public var isImported: Bool { !rankings.isEmpty || !travellers.isEmpty } 
     
@@ -76,7 +76,7 @@ class Scorecard {
             if travellers[travellerMO.board]![travellerMO.section] == nil {
                 travellers[travellerMO.board]![travellerMO.section] = [:]
             }
-            travellers[travellerMO.board]![travellerMO.section]![travellerMO.ranking[.north] ?? 0] = TravellerViewModel(scorecard: scorecard, travellerMO: travellerMO)
+            travellers[travellerMO.board]![travellerMO.section]![travellerMO.rankingNumber[.north] ?? 0] = TravellerViewModel(scorecard: scorecard, travellerMO: travellerMO)
         }
         
         self.scorecard = scorecard
@@ -170,7 +170,7 @@ class Scorecard {
                         // Remove any travellers no longer in bounds
                         if traveller.isNew {
                             // Not yet in core data - just remove from array
-                            travellers[traveller.board]?[traveller.section]?[traveller.ranking[.north] ?? 0] = nil
+                            travellers[traveller.board]?[traveller.section]?[traveller.rankingNumber[.north] ?? 0] = nil
                         } else {
                             remove(traveller: traveller)
                         }
@@ -375,7 +375,7 @@ class Scorecard {
     public func insert(traveller: TravellerViewModel) {
         assert(traveller.scorecard == scorecard, "Traveller is not in current scorecard")
         assert(traveller.isNew, "Cannot insert a traveller which already has a managed object")
-        assert(travellers[traveller.board]?[traveller.section]?[traveller.ranking[.north] ?? 0] == nil, "Traveller already exists and cannot be created")
+        assert(travellers[traveller.board]?[traveller.section]?[traveller.rankingNumber[.north] ?? 0] == nil, "Traveller already exists and cannot be created")
         CoreData.update(updateLogic: {
             traveller.travellerMO = TravellerMO()
             traveller.updateMO()
@@ -385,23 +385,23 @@ class Scorecard {
             if travellers[traveller.board]![traveller.section] == nil {
                 travellers[traveller.board]![traveller.section] = [:]
             }
-            travellers[traveller.board]![traveller.section]![traveller.ranking[.north] ?? 0] = traveller
+            travellers[traveller.board]![traveller.section]![traveller.rankingNumber[.north] ?? 0] = traveller
         })
     }
     
     public func remove(traveller: TravellerViewModel) {
         assert(traveller.scorecard == scorecard, "Traveller is not in current scorecard")
         assert(!traveller.isNew, "Cannot remove a traveller which doesn't already have a managed object")
-        assert(travellers[traveller.board]?[traveller.section]?[traveller.ranking[.north] ?? 0] != nil, "Traveller does not exist and cannot be deleted")
+        assert(travellers[traveller.board]?[traveller.section]?[traveller.rankingNumber[.north] ?? 0] != nil, "Traveller does not exist and cannot be deleted")
         CoreData.update(updateLogic: {
             CoreData.context.delete(traveller.travellerMO!)
-            travellers[traveller.board]?[traveller.section]?[traveller.ranking[.north] ?? 0] = nil
+            travellers[traveller.board]?[traveller.section]?[traveller.rankingNumber[.north] ?? 0] = nil
         })
     }
     
     public func save(traveller: TravellerViewModel) {
         assert(traveller.scorecard == scorecard, "Traveller is not in current scorecard")
-        assert(travellers[traveller.board]?[traveller.section]?[traveller.ranking[.north] ?? 0] != nil, "Traveller does not exist and cannot be updated")
+        assert(travellers[traveller.board]?[traveller.section]?[traveller.rankingNumber[.north] ?? 0] != nil, "Traveller does not exist and cannot be updated")
         if traveller.isNew {
             CoreData.update(updateLogic: {
                 traveller.travellerMO = TravellerMO()

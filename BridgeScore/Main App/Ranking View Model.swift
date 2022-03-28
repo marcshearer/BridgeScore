@@ -18,6 +18,7 @@ public class RankingViewModel : ObservableObject, Identifiable, CustomDebugStrin
     @Published public var number: Int = 0
     @Published public var ranking: Int = 0
     @Published public var score: Float = 0
+    @Published public var xImps: [Pair:Float ] = [:]
     @Published public var points: Float = 0
     @Published public var players: [Seat:String] = [:]
     
@@ -40,6 +41,7 @@ public class RankingViewModel : ObservableObject, Identifiable, CustomDebugStrin
                 self.number != mo.number ||
                 self.ranking != mo.ranking ||
                 self.score != mo.score ||
+                self.xImps != mo.xImps ||
                 self.points != mo.points ||
                 self.players != mo.players {
                     result = true
@@ -81,6 +83,7 @@ public class RankingViewModel : ObservableObject, Identifiable, CustomDebugStrin
             self.number = mo.number
             self.ranking = mo.ranking
             self.score = mo.score
+            self.xImps = mo.xImps
             self.points = mo.points
             self.players = mo.players
         }
@@ -94,6 +97,7 @@ public class RankingViewModel : ObservableObject, Identifiable, CustomDebugStrin
             mo.number = number
             mo.ranking = ranking
             mo.score = score
+            mo.xImps = xImps
             mo.points = points
             mo.players = players
         } else {

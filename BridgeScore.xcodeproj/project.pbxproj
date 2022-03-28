@@ -31,8 +31,9 @@
 		B256D42927ECB15700F47322 /* BBO Name Replace View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B256D42827ECB15700F47322 /* BBO Name Replace View.swift */; };
 		B25ADA5E27AEB279007062AA /* Double Column View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25ADA5D27AEB279007062AA /* Double Column View.swift */; };
 		B25F653A27EDEEF400FDD6B1 /* Scorecard Ranking View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25F653927EDEEF400FDD6B1 /* Scorecard Ranking View.swift */; };
+		B25F653C27F0507600FDD6B1 /* Scorecard Traveller View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25F653B27F0507600FDD6B1 /* Scorecard Traveller View.swift */; };
 		B2633A0E27AC3A460081B258 /* Layout List View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2633A0D27AC3A460081B258 /* Layout List View.swift */; };
-		B26BCDFA2799A1AC00B73501 /* BridgeScore App.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCDF92799A1AC00B73501 /* BridgeScore App.swift */; };
+		B26BCDFA2799A1AC00B73501 /* Bridge Score App.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCDF92799A1AC00B73501 /* Bridge Score App.swift */; };
 		B26BCE012799A1AE00B73501 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B26BCE002799A1AE00B73501 /* Preview Assets.xcassets */; };
 		B26BCE2D2799AB6700B73501 /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE282799AB6700B73501 /* Persistence.swift */; };
 		B26BCE302799AB6700B73501 /* MyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE2C2799AB6700B73501 /* MyApp.swift */; };
@@ -131,9 +132,10 @@
 		B256D42827ECB15700F47322 /* BBO Name Replace View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BBO Name Replace View.swift"; sourceTree = "<group>"; };
 		B25ADA5D27AEB279007062AA /* Double Column View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Double Column View.swift"; sourceTree = "<group>"; };
 		B25F653927EDEEF400FDD6B1 /* Scorecard Ranking View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Ranking View.swift"; sourceTree = "<group>"; };
+		B25F653B27F0507600FDD6B1 /* Scorecard Traveller View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Traveller View.swift"; sourceTree = "<group>"; };
 		B2633A0D27AC3A460081B258 /* Layout List View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Layout List View.swift"; sourceTree = "<group>"; };
 		B26BCDF62799A1AC00B73501 /* BridgeScore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BridgeScore.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		B26BCDF92799A1AC00B73501 /* BridgeScore App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BridgeScore App.swift"; sourceTree = "<group>"; };
+		B26BCDF92799A1AC00B73501 /* Bridge Score App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Bridge Score App.swift"; sourceTree = "<group>"; };
 		B26BCE002799A1AE00B73501 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		B26BCE282799AB6700B73501 /* Persistence.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Persistence.swift; sourceTree = "<group>"; };
 		B26BCE2C2799AB6700B73501 /* MyApp.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MyApp.swift; sourceTree = "<group>"; };
@@ -397,7 +399,7 @@
 			isa = PBXGroup;
 			children = (
 				B22D40A127A2CF3E002F2470 /* Assets.xcassets */,
-				B26BCDF92799A1AC00B73501 /* BridgeScore App.swift */,
+				B26BCDF92799A1AC00B73501 /* Bridge Score App.swift */,
 				B26BCE532799AE4D00B73501 /* Master Data.swift */,
 				B2EB3D78279DB80000D64225 /* Scorecard.swift */,
 				B26BCE552799AE6400B73501 /* Preview Data.swift */,
@@ -410,9 +412,9 @@
 		B26BCE252799AA7900B73501 /* View Models */ = {
 			isa = PBXGroup;
 			children = (
-				B2EB3D6D279D6BA600D64225 /* Layout View Model.swift */,
 				B2EB3D76279D73FC00D64225 /* Scorecard View Model.swift */,
 				B2EB3D74279D73E100D64225 /* Board View Model.swift */,
+				B2EB3D6D279D6BA600D64225 /* Layout View Model.swift */,
 				B2BBC8B927BBF6BC00D51A26 /* Table View Model.swift */,
 				B2EB3D70279D717F00D64225 /* Player View Model.swift */,
 				B2EB3D72279D734700D64225 /* Location View Model.swift */,
@@ -441,6 +443,7 @@
 				B2C4338B27B6646700796F24 /* Scorecard Input View.swift */,
 				B20B38F127C153280001B45E /* Contract Entry View.swift */,
 				B25F653927EDEEF400FDD6B1 /* Scorecard Ranking View.swift */,
+				B25F653B27F0507600FDD6B1 /* Scorecard Traveller View.swift */,
 				B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */,
 				B2100D9927DA488200CC0130 /* Stats View.swift */,
 				B256D42827ECB15700F47322 /* BBO Name Replace View.swift */,
@@ -591,7 +594,7 @@
 				B26BCE542799AE4D00B73501 /* Master Data.swift in Sources */,
 				B26BCE4B2799AD8900B73501 /* Date Extensions.swift in Sources */,
 				B2A2053527AFC2E400C83C88 /* Player Setup View.swift in Sources */,
-				B26BCDFA2799A1AC00B73501 /* BridgeScore App.swift in Sources */,
+				B26BCDFA2799A1AC00B73501 /* Bridge Score App.swift in Sources */,
 				B2AF750D27AD14FD00233693 /* Slide In Menu.swift in Sources */,
 				B26BCE632799AED700B73501 /* Image Capture.swift in Sources */,
 				B2EB3D6A279D666800D64225 /* Location Managed Object.swift in Sources */,
@@ -601,6 +604,7 @@
 				B2EB3D71279D717F00D64225 /* Player View Model.swift in Sources */,
 				B28E2B1E27C6A582002A9EE2 /* Input Float.swift in Sources */,
 				B26BCE382799AD5800B73501 /* Version.swift in Sources */,
+				B25F653C27F0507600FDD6B1 /* Scorecard Traveller View.swift in Sources */,
 				B26BCE3A2799AD6D00B73501 /* Core Data.swift in Sources */,
 				B26BCE562799AE6400B73501 /* Preview Data.swift in Sources */,
 				B2100D9827DA449D00CC0130 /* Graph View Class.swift in Sources */,

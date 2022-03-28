@@ -19,6 +19,10 @@ class BridgeImps {
         self.imps = imps
     }
     
+    init(points: Int) {
+        imps = (pointsToImps.firstIndex(where: {$0 >= abs(points)}) ?? pointsToImps.count) * points.sign
+    }
+    
     private init(vp: Float, boards: Int, maxVp: Int = 20) {
         self.imps = impFromVp(vp: vp, boards: boards, maxVp: maxVp)
     }
@@ -87,7 +91,7 @@ class BridgeImps {
             }
         } while index != nil
         bounds.remove(at: 0)
-        return midVp + (bounds.firstIndex(where: {positive <= $0}) ?? midVp) * (imps < 0 ? -1 : 1)
+        return midVp + (bounds.firstIndex(where: {positive <= $0}) ?? midVp) * imps.sign
     }
         
     public func round(_ value: Float, places: Int = 0) -> Float {
@@ -104,6 +108,8 @@ class BridgeImps {
         }
         return result
     }
+    
+    let pointsToImps = [10, 40, 80, 120, 160, 210, 260, 310, 360, 420, 490, 590, 740, 890, 090, 1290, 1490, 1740, 1990, 2240, 2490, 2990, 3490, 3990]
 }
 
 class BridgeMatchPoints {

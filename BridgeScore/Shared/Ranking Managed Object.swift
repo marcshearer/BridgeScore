@@ -20,6 +20,8 @@ public class RankingMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var number16: Int16
     @NSManaged public var ranking16: Int16
     @NSManaged public var score: Float
+    @NSManaged public var nsXImps: Float
+    @NSManaged public var ewXImps: Float
     @NSManaged public var points: Float
     @NSManaged public var north: String
     @NSManaged public var south: String
@@ -80,6 +82,19 @@ public class RankingMO: NSManagedObject, ManagedObject, Identifiable {
             } else {
                 west = ""
             }
+        }
+    }
+    
+    public var xImps: [Pair: Float] {
+        get {
+            var result: [Pair:Float] = [:]
+            result[.ns] = nsXImps
+            result[.ew] = ewXImps
+            return result
+        }
+        set {
+            nsXImps = newValue[.ns] ?? 0
+            ewXImps = newValue[.ew] ?? 0
         }
     }
     
