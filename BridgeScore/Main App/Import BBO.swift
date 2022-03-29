@@ -615,13 +615,6 @@ class ImportedBBOScorecard {
                                     versus += " & "
                                 }
                                 versus += MasterData.shared.realName(bboName: otherBboName) ?? "Unknown"
-                                if seat == mySeat.partner {
-                                    table?.partner = otherBboName
-                                } else if seat == mySeat.leftOpponent {
-                                    table?.leftOpponent = otherBboName
-                                } else if seat == mySeat.rightOpponent {
-                                    table?.rightOpponent = otherBboName
-                                }
                             }
                         }
                     }

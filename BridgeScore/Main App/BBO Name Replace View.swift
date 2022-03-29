@@ -17,13 +17,13 @@ class BBONameReplaceView: UIView, UITableViewDataSource, UITableViewDelegate {
     private var values: [BBONameViewModel] = []
     private var selected: Int?
     private var completion: (()->())?
-    private var instructionPanelHeight: CGFloat = 100
+    private var instructionPanelHeight: CGFloat = 60
     private var instructionHeight: CGFloat = 50
     private var valuesTableViewHeight: CGFloat!
     private var buttonPanelHeight: CGFloat = 100
     private var buttonHeight: CGFloat = 50
     private var buttonWidth: CGFloat = 160
-    private let rowHeight: CGFloat = 50
+    private let rowHeight: CGFloat = 40
     
     override init(frame: CGRect) {
         super.init(frame:frame)
@@ -86,7 +86,7 @@ class BBONameReplaceView: UIView, UITableViewDataSource, UITableViewDelegate {
         backgroundView.frame = sourceView.frame
         valuesTableViewHeight = (CGFloat(min(5, values.count + 1)) * rowHeight)
         let height = instructionPanelHeight + valuesTableViewHeight + buttonPanelHeight
-        contentView.frame = CGRect(x: sourceView.frame.midX - 300, y: sourceView.frame.midY - height, width: 600, height: height)
+        contentView.frame = CGRect(x: sourceView.frame.midX - 300, y: sourceView.frame.midY - height - 70, width: 600, height: height)
         sourceView.addSubview(self)
         sourceView.bringSubviewToFront(self)
         valuesTableView.reloadData()

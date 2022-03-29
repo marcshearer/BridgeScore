@@ -22,6 +22,14 @@ class Scorecard {
     @Published private(set) var rankings: [Int:[Int:[Int:RankingViewModel]]] = [:]   // Table / Section / Pair (team) number
     @Published private(set) var travellers: [Int:[Int:[Int:TravellerViewModel]]] = [:]   // Board number / section / north pair (team number)
     
+    public var flatRankings: [RankingViewModel] {
+        return Scorecard.current.rankings.flatMap{$0.1.flatMap{$0.1.flatMap{$0.1}}}
+    }
+    
+    public var flatTravellers: [RankingViewModel] {
+        return Scorecard.current.rankings.flatMap{$0.1.flatMap{$0.1.flatMap{$0.1}}}
+    }
+    
     public var isImported: Bool {
         !rankings.isEmpty || !travellers.isEmpty
     }

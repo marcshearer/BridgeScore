@@ -1102,13 +1102,15 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     
     private var importedVersus: String {
         var versus = ""
-        if table.partner != "" {
-            let partner = MasterData.shared.realName(bboName: table.partner)!
-            versus += partner + " & "
+        let players = table.players
+        let sitting = table.sitting
+        for seat in [sitting.partner, sitting.leftOpponent, sitting.rightOpponent] {
+            if scorecard.type.players == 1 || seat != sitting.partner {
+                let bboName = players[seat]
+                let realName = MasterData.shared.realName(bboName: bboName)!
+                versus += (versus != "" ? " & " : "") + realName
+            }
         }
-        let leftOpponent = MasterData.shared.realName(bboName: table.leftOpponent)!
-        let rightOpponent = MasterData.shared.realName(bboName: table.rightOpponent)!
-        versus += leftOpponent + " & " + rightOpponent
         return versus
     }
     
@@ -1439,15 +1441,16 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         scorecardDelegate?.scorecardChanged(type: .board, itemNumber: itemNumber)
     
         var values: [String] = []
-        if table.partner != "" {
-            values.append(table.partner)
+        let players = table.players
+        let sitting = table.sitting
+        for seat in [sitting.partner, sitting.leftOpponent, sitting.rightOpponent] {
+            if scorecard.type.players == 1 || seat != sitting.partner {
+                if let player = players[seat] {
+                    values.append(player)
+                }
+            }
         }
-        if table.leftOpponent != "" {
-            values.append(table.leftOpponent)
-        }
-        if table.rightOpponent != "" {
-            values.append(table.rightOpponent)
-        }
+                
         if !values.isEmpty {
             scorecardDelegate?.scorecardBBONamesReplace(values: values)
         }

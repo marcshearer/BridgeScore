@@ -18,8 +18,6 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
     @Published public var score: Float?
     @Published public var versus: String = ""
     @Published public var partner: String = ""
-    @Published public var leftOpponent: String = ""
-    @Published public var rightOpponent: String = ""
     
     // Linked managed objects - should only be referenced in this and the Data classes
     @Published internal var tableMO: TableMO?
@@ -39,10 +37,8 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
                 self.sitting != mo.sitting ||
                 self.score != mo.score ||
                 self.versus != mo.versus ||
-                self.partner != mo.partner ||
-                self.leftOpponent != mo.leftOpponent ||
-                self.rightOpponent != mo.rightOpponent {
-                    result = true
+                self.partner != mo.partner {
+                result = true
             }
         } else {
             result = true
@@ -75,8 +71,6 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
             self.score = mo.score
             self.versus = mo.versus
             self.partner = mo.partner
-            self.leftOpponent = mo.leftOpponent
-            self.rightOpponent = mo.rightOpponent
         }
     }
     
@@ -88,8 +82,6 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
             mo.score = score
             mo.versus = versus
             mo.partner = partner
-            mo.leftOpponent = leftOpponent
-            mo.rightOpponent = rightOpponent
         } else {
             fatalError("No managed object")
         }
@@ -121,6 +113,20 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
         return self.sitting != .unknown ||
         (self.score != nil && scorecard.manualTotals) ||
         self.versus != ""
+    }
+    
+    public var players: [Seat:String] {
+        var result: [Seat:String] = [:]
+        let myBboName = MasterData.shared.scorer?.bboName.lowercased()
+        let boardNumber = ((table - 1) * scorecard.boardsTable) + 1
+        if let myRanking = Scorecard.current.flatRankings.first(where: {$0.players.contains(where: {$0.value == myBboName})}) {
+            if let myTraveller = Scorecard.current.travellers[boardNumber]?[myRanking.section]?.first(where: {$0.value.ranking(seat: sitting) == myRanking}) {
+                for seat in Seat.allCases {
+                    result[seat] = myTraveller.value.ranking(seat: seat)?.players[seat]
+                }
+            }
+        }
+        return result
     }
     
     public var description: String {

@@ -257,7 +257,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
   // MARK: - View Setup ======================================================================== -
     
     private func setupColumns() {
-        let sectionRankings = Scorecard.current.rankings.flatMap{$0.1.flatMap{$0.1.flatMap{$0.1}}}
+        let sectionRankings = Scorecard.current.flatRankings
         rankingColumns = [
             RankingColumn(type: .ranking, heading: "Ranking", size: .fixed([70])),
             RankingColumn(type: .players, heading: "Names", size: .flexible),
