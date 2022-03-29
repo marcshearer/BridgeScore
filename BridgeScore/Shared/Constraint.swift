@@ -163,18 +163,20 @@ class Constraint {
         constraint.priority = (value ? .required : UILayoutPriority(1.0))
     }
     
-    static internal func addGridLine(_ view: UIView, size: CGFloat = 2, color: UIColor = UIColor(Palette.gridLine), sides: ConstraintAnchor...) {
+    @discardableResult static internal func addGridLine(_ view: UIView, size: CGFloat = 2, color: UIColor = UIColor(Palette.gridLine), sides: ConstraintAnchor...) -> [ConstraintAnchor:NSLayoutConstraint] {
+        var sizeConstraints: [ConstraintAnchor:NSLayoutConstraint] = [:]
         for side in sides {
             let line = UIView()
-            let anchors: [ConstraintAnchor] = [.leading, .trailing, .top, .bottom].filter{$0 != side}
+            let anchors: [ConstraintAnchor] = [.leading, .trailing, .top, .bottom].filter{$0 != side.opposite}
             view.addSubview(line, anchored: anchors)
             if side == .leading || side == .trailing {
-                Constraint.setWidth(control: line, width: size)
+                sizeConstraints[side] = Constraint.setWidth(control: line, width: size)
             } else {
-                Constraint.setHeight(control: line, height: size)
+                sizeConstraints[side] = Constraint.setHeight(control: line, height: size)
             }
             line.backgroundColor = color
             view.bringSubviewToFront(line)
         }
+        return sizeConstraints
     }
 }

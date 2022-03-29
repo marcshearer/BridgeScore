@@ -22,7 +22,9 @@ class Scorecard {
     @Published private(set) var rankings: [Int:[Int:[Int:RankingViewModel]]] = [:]   // Table / Section / Pair (team) number
     @Published private(set) var travellers: [Int:[Int:[Int:TravellerViewModel]]] = [:]   // Board number / section / north pair (team number)
     
-    public var isImported: Bool { !rankings.isEmpty || !travellers.isEmpty } 
+    public var isImported: Bool {
+        !rankings.isEmpty || !travellers.isEmpty
+    }
     
     public var isSensitive: Bool {
         return boards.compactMap{$0.value}.firstIndex(where: {$0.comment != "" || $0.responsible != .unknown }) != nil
@@ -86,6 +88,8 @@ class Scorecard {
     public func clear() {
         boards = [:]
         tables = [:]
+        rankings = [:]
+        travellers = [:]
         scorecard = nil
     }
     

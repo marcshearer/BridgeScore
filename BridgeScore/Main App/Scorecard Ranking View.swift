@@ -238,7 +238,10 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         backgroundView.frame = sourceView.frame
         sourceView.addSubview(self)
         sourceView.bringSubviewToFront(self)
-        contentView.frame = CGRect(x: sourceView.frame.midX - 500, y: sourceView.frame.midY - 350, width: 1000, height: 700)
+        let width = sourceView.frame.width * 0.90
+        let padding = bannerHeight + safeAreaInsets.top + safeAreaInsets.bottom
+        let height = (sourceView.frame.height - padding) * 0.95
+        contentView.frame = CGRect(x: sourceView.frame.midX - (width / 2), y: ((bannerHeight + safeAreaInsets.top) / 2) + sourceView.frame.midY - (height / 2), width: width, height: height)
         self.bringSubviewToFront(contentView)
         contentView.isHidden = false
         setNeedsLayout()
@@ -257,7 +260,6 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         let sectionRankings = Scorecard.current.rankings.flatMap{$0.1.flatMap{$0.1.flatMap{$0.1}}}
         rankingColumns = [
             RankingColumn(type: .ranking, heading: "Ranking", size: .fixed([70])),
-            RankingColumn(type: .number, heading: "Number", size: .fixed([50])),
             RankingColumn(type: .players, heading: "Names", size: .flexible),
             RankingColumn(type: .score, heading: "Score", size: .fixed([70]))]
         
@@ -273,7 +275,6 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
                 RankingColumn(type: .ewXImps, heading: "EW XImps", size: .fixed([60]))
             ]
         }
-        
         
         headingColumns = []
         if tables > 1 {
@@ -564,7 +565,7 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         label.backgroundColor = UIColor.clear
         label.textColor = UIColor(Palette.background.text)
         label.text = ""
-        label.font = cellFont
+        label.font = smallCellFont
         label.textAlignment = .center
         label.isUserInteractionEnabled = false
         label.lineBreakMode = .byWordWrapping
@@ -600,9 +601,10 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         
         label.tag = column.type.rawValue
         
-        let font = (ranking.isSelf ? cellFont.bold : cellFont)
-        let smallFont = (ranking.isSelf ? smallCellFont.bold : smallCellFont)
-        label.font = font
+        let color = (ranking.isSelf ? Palette.alternate : Palette.background)
+        backgroundColor = UIColor(color.background)
+        label.textColor = UIColor(color.text)
+        label.font = smallCellFont
         
         switch column.type {
         case .ranking:
@@ -621,7 +623,7 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
                 }
                 let name = (MasterData.shared.realName(bboName: player) ?? player)
                 if name == player {
-                    text = text + NSAttributedString(name, pickerColor: UIColor(Palette.background.themeText), font: font)
+                    text = text + NSAttributedString(name, pickerColor: UIColor(Palette.background.themeText))
                 } else {
                     text = text + name
                 }
@@ -637,12 +639,10 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         case .nsXImps:
             let nsXImps = ranking.xImps[.ns]
             label.text = nsXImps == 0 ? "" : nsXImps!.toString(places: 2, exact: true)
-            label.font = smallFont
             label.textAlignment = .right
         case .ewXImps:
             let ewXImps = ranking.xImps[.ew]
             label.text = ewXImps == 0 ? "" : ewXImps!.toString(places: 2, exact: true)
-            label.font = smallFont
             label.textAlignment = .right
         case .points:
             label.text = (ranking.points == 0 ? "" : ranking.points.toString(places: 2, exact: true))

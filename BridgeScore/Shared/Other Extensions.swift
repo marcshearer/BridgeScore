@@ -410,3 +410,36 @@ extension View {
         }
     }
 }
+
+extension NSObject {
+    
+    class func sort(_ first: NSObject, _ second: NSObject, sortKeys: [(value: String, direction: SortDirection)]) -> Bool {
+        // Returns true if the first record is less than the second on the sort criteria
+        var sign: [Int: Int] = [:]
+        var result = false
+        for (index, key) in sortKeys.enumerated() {
+            if let firstValue = first.value(forKey: key.value) as? Float, let secondValue = second.value(forKey: key.value) as? Float {
+                // Also handles Ints and Bools
+                sign[index] = (firstValue == secondValue ? 0 : firstValue < secondValue ? -1 : 1) * (key.direction == .descending ? -1 : 1)
+            } else if let firstValue = first.value(forKey: key.value) as? String, let secondValue = second.value(forKey: key.value) as? String {
+                sign[index] = (firstValue == secondValue ? 0 : firstValue < secondValue ? -1 : 1) * (key.direction == .descending ? -1 : 1)
+            } else {
+                fatalError("This type is not supported")
+            }
+        }
+        for index in 0..<sortKeys.count {
+            if sign[index] == 0 {
+                // Equal - look at next level
+            } else if sign[index] ?? 0 > 0 {
+                // First > Second - return false
+                result = false
+                break
+            } else {
+                // First < Second - return true
+                result = true
+                break
+            }
+        }
+        return result
+    }
+}

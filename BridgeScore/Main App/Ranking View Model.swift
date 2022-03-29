@@ -9,7 +9,7 @@ import Combine
 import SwiftUI
 import CoreData
 
-public class RankingViewModel : ObservableObject, Identifiable, CustomDebugStringConvertible {
+@objcMembers public class RankingViewModel : NSObject, ObservableObject, Identifiable {
 
     // Properties in core data model
     @Published private(set) var scorecard: ScorecardViewModel
@@ -61,6 +61,7 @@ public class RankingViewModel : ObservableObject, Identifiable, CustomDebugStrin
         self.table = table
         self.section = section
         self.number = number
+        super.init()
         self.setupMappings()
     }
     
@@ -127,9 +128,9 @@ public class RankingViewModel : ObservableObject, Identifiable, CustomDebugStrin
         return self.rankingMO == nil
     }
     
-    public var description: String {
+    override public var description: String {
         return "Scorecard: \(scorecard.desc), Table: \(table) Section: \(section), Number: \(number)"
     }
     
-    public var debugDescription: String { self.description }
+    override public var debugDescription: String { self.description }
 }

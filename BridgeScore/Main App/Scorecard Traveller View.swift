@@ -7,6 +7,7 @@
 
 import UIKit
 import CoreMedia
+import WebKit
 
 enum TravellerColumnType: Int, Codable {
     case players = 0
@@ -18,6 +19,7 @@ enum TravellerColumnType: Int, Codable {
     case score = 6
     case section = 7
     case number = 8
+    case xImps = 9
     
     var string: String {
         return "\(self)"
@@ -53,7 +55,11 @@ enum TravellerRowType: Int {
     }
 }
 
-class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
+protocol ScorecardTravellerCellDelegate {
+    func showHand(traveller: TravellerViewModel)
+}
+
+class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, ScorecardTravellerCellDelegate {
        
     private var backgroundView = UIView()
     private var contentView = UIView()
@@ -105,7 +111,35 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
         }
     }
 
-    // MARK: - CollectionView Delegates ================================================================ -
+    // MARK: - Cell delegate ===================================================================== -
+    
+    func showHand(traveller: TravellerViewModel) {
+        if var string = traveller.playData.removingPercentEncoding {
+            if let pnPosition = string.position("|pn|") {
+                if let nextSeparator = string.right(string.length - pnPosition - 4).position("|") {
+                    if nextSeparator > 0 {
+                        var nameString = string.mid(pnPosition + 4, nextSeparator).lowercased()
+                        for seat in Seat.validCases {
+                            if let bboName = traveller.ranking(seat: seat)?.players[seat] {
+                                if let name = MasterData.shared.realName(bboName: bboName) {
+                                    nameString = nameString.replacingOccurrences(of: bboName.lowercased(), with: name)
+                                }
+                            }
+                        }
+                        string = string.left(pnPosition + 4) + nameString + string.right(string.length - pnPosition - nextSeparator - 4)
+                    }
+                }
+            }
+            if let encodedString = string.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) {
+                if let url = URL(string: "https://www.bridgebase.com/tools/handviewer.html?bbo=y&lin=/\(encodedString)") {
+                    let webView = ScorecardWebView(frame: CGRect())
+                    webView.show(from: self, url: url)
+                }
+            }
+        }
+    }
+    
+    // MARK: - TableView Delegates ================================================================ -
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return values.count
@@ -124,7 +158,7 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
         return nil
     }
     
-    // MARK: - CollectionView Overrides ================================================================ -
+    // MARK: - CollectionView Delegates ================================================================ -
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return travellerColumns.count
@@ -150,7 +184,8 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
                 let cell = ScorecardTravellerCollectionCell.dequeue(collectionView, for: indexPath)
                 let row = collectionView.tag % tagMultiplier
                 let column = travellerColumns[indexPath.item]
-                cell.set(scorecard: Scorecard.current.scorecard!, traveller: values[row], sitting: sitting, rowType: .traveller, column: column) { (players) in
+                let sameTeam = (row > 0 && values[row].ranking(seat: .north) == values[row - 1].ranking(seat: .east))
+                cell.set(delegate: self, scorecard: Scorecard.current.scorecard!, traveller: values[row], sitting: sitting, sameTeam: sameTeam, rowType: .traveller, column: column) { (players) in
                     self.replaceNames(values: players)
                 }
                 return cell
@@ -184,10 +219,14 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
         self.boardNumber = boardNumber
         self.sitting = sitting
         setupValues()
+        setupColumns()
         backgroundView.frame = sourceView.frame
         sourceView.addSubview(self)
         sourceView.bringSubviewToFront(self)
-        contentView.frame = CGRect(x: sourceView.frame.midX - 500, y: sourceView.frame.midY - 350, width: 1000, height: 700)
+        let width = sourceView.frame.width * 0.95
+        let padding = bannerHeight + safeAreaInsets.top + safeAreaInsets.bottom
+        let height = (sourceView.frame.height - padding) * 0.95
+        contentView.frame = CGRect(x: sourceView.frame.midX - (width / 2), y: ((bannerHeight + safeAreaInsets.top) / 2) + sourceView.frame.midY - (height / 2), width: width, height: height)
         self.bringSubviewToFront(contentView)
         contentView.isHidden = false
         setNeedsLayout()
@@ -196,7 +235,6 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
     }
     
     public func hide() {
-        // self.contentView.isHidden = true
         removeFromSuperview()
     }
     
@@ -212,6 +250,12 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
             TravellerColumn(type: .points, heading: "Points", size: .fixed([60])),
             TravellerColumn(type: .score, heading: "Score", size: .fixed([60]))]
         
+        if values.first(where: {$0.nsXImps != 0}) != nil && UIScreen.main.bounds.width > UIScreen.main.bounds.height {
+            travellerColumns += [
+                TravellerColumn(type: .xImps, heading: "XImps", size: .fixed([60]))
+            ]
+        }
+        
         setNeedsLayout()
     }
     
@@ -223,19 +267,11 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
                 }
             }
         }
-        values.sort(by: {sort($0, $1)})
-    }
-    
-    func sort(_ first: TravellerViewModel, _ second: TravellerViewModel) -> Bool {
-        let sign: Float = sitting.northSouth ? 1 : -1
-        if  (sign * first.nsScore) > (sign * second.nsScore) {
-            return true
-        } else if first.nsScore == second.nsScore && first.contract.level.rawValue > second.contract.level.rawValue {
-            return true
-        } else if first.nsScore == second.nsScore && first.isSelf {
-            return true
+        if Scorecard.current.scorecard?.type.players == 4 {
+            // Sort by teams (self first)
+            values.sort(by: {NSObject.sort($0, $1, sortKeys: [("isSelf", .descending), ("isTeam", .descending), ("minRankingNumber", .ascending)])})
         } else {
-            return false
+            values.sort(by: {NSObject.sort($0, $1, sortKeys: [("nsScore", (sitting.northSouth ? .descending : .ascending)), ("contractLevel", .descending), ("isSelf", .descending)])})
         }
     }
     
@@ -412,6 +448,7 @@ class ScorecardTravellerTableCell: TableViewCellWithCollectionView, UITextFieldD
 
 class ScorecardTravellerCollectionCell: UICollectionViewCell {
     private var label = UILabel()
+    private var topLineHeight: NSLayoutConstraint?
     private static let identifier = "Traveller Collection Cell"
     
     private var rowType: TravellerRowType!
@@ -420,6 +457,7 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
     private var traveller: TravellerViewModel!
     private var sitting: Seat!
     private var tapAction: (([String]) ->())?
+    private var delegate: ScorecardTravellerCellDelegate?
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -436,7 +474,8 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
         label.addGestureRecognizer(tapGesture)
         label.isUserInteractionEnabled = true
         
-        Constraint.addGridLine(self, size: 1, sides: .leading, .trailing, .top, .bottom)
+        let sizes = Constraint.addGridLine(self, size: 1, sides: .leading, .trailing, .top, .bottom)
+        topLineHeight = sizes[.top]
     }
     
     required init?(coder: NSCoder) {
@@ -457,6 +496,7 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
         traveller = nil
         column = nil
         rowType = nil
+        delegate = nil
         
         label.backgroundColor = UIColor.clear
         label.textColor = UIColor(Palette.background.text)
@@ -477,6 +517,9 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
         case .score:
             label.text = (sitting.northSouth ? "NS" : "EW") + "\n" + scorecard.type.boardScoreType.string
             label.numberOfLines = 2
+        case .xImps:
+            label.text = (sitting.northSouth ? "NS" : "EW") + "\nXImps"
+            label.numberOfLines = 2
         case .points:
             label.text = (sitting.northSouth ? "NS" : "EW")
         case .players:
@@ -487,7 +530,8 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
         }
     }
  
-    func set(scorecard: ScorecardViewModel, traveller: TravellerViewModel, sitting: Seat, rowType: TravellerRowType, column: TravellerColumn, tapAction: (([String])->())? = nil) {
+    func set(delegate: ScorecardTravellerCellDelegate, scorecard: ScorecardViewModel, traveller: TravellerViewModel, sitting: Seat, sameTeam: Bool = false, rowType: TravellerRowType, column: TravellerColumn, tapAction: (([String])->())? = nil) {
+        self.delegate = delegate
         self.scorecard = scorecard
         self.traveller = traveller
         self.tapAction = tapAction
@@ -495,10 +539,13 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
         self.column = column
         
         label.tag = column.type.rawValue
+        label.isUserInteractionEnabled = true
         
         let color = (traveller.isSelf ? Palette.alternate : Palette.background)
         backgroundColor = UIColor(color.background)
         label.textColor = UIColor(color.text)
+        
+        topLineHeight?.constant = (sameTeam ? 0 : 2)
         
         switch column.type {
         case .players:
@@ -530,8 +577,15 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
             let sign = sitting.northSouth ? 1 : -1
             label.text = "\(sign * Scorecard.points(contract: traveller.contract, vulnerability: Vulnerability(board: traveller.board), declarer: traveller.declarer, made: traveller.made, seat: .north))"
         case .score:
-            let score = (sitting.northSouth ? traveller.nsScore : scorecard.type.invertScore(score: traveller.nsScore))
-            label.text = score.toString(places: scorecard.type.matchPlaces)
+            if sameTeam {
+                label.text = ""
+            } else {
+                let score = (sitting.northSouth ? traveller.nsScore : scorecard.type.invertScore(score: traveller.nsScore))
+                label.text = score.toString(places: scorecard.type.matchPlaces)
+            }
+        case .xImps:
+            let xImps = traveller.nsXImps * (sitting.northSouth ? 1 : -1)
+            label.text = xImps.toString(places: 2)
         case .section:
             label.text = "\(traveller.section)"
         default:
@@ -541,12 +595,17 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
     
     @objc private func tapped(_ sender: Any) {
         var players: [String] = []
-        Seat.validCases.forEach{ (seat) in
-            let player = traveller.ranking(seat: seat)?.players[seat] ?? ""
-            if player != "" && !players.contains(where: {$0 == player}) {
-                players.append(player)
+        switch column.type {
+        case .players:
+            Seat.validCases.forEach{ (seat) in
+                let player = traveller.ranking(seat: seat)?.players[seat] ?? ""
+                if player != "" && !players.contains(where: {$0 == player}) {
+                    players.append(player)
+                }
             }
+            tapAction?(players)
+        default:
+            delegate?.showHand(traveller: traveller)
         }
-        tapAction?(players)
     }
 }

@@ -55,12 +55,12 @@ struct ScorecardInputView: View {
     
                 // Banner
                 let bannerOptions = UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo) + [
-                    BannerOption(image: AnyView(Image(systemName: "lock.fill")), likeBack: true, isHidden: $isNotImported, action: { showRankings = true }),
+                    BannerOption(image: AnyView(Image(systemName: "list.number")), likeBack: true, isHidden: $isNotImported, action: { showRankings = true }),
                     BannerOption(image: AnyView(Image(systemName: "note.text")), text: "Scorecard details", likeBack: true, menu: true, action: { UndoManager.clearActions() ; inputDetail = true }),
                     BannerOption(image: AnyView(Image(systemName: "\(detailView ? "minus" : "plus").magnifyingglass")), text: (detailView ? "Simple view" : "Alternative view"), likeBack: true, menu: true, action: { toggleView() }),
                     BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import from BBO", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importScorecard = true })]
                 
-                Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .both, menuTitle: nil, menuId: id, options: bannerOptions)
+                Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .both, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: nil, menuId: id, options: bannerOptions)
                 GeometryReader { geometry in
                     ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), refreshTableTotals: $refreshTableTotals, detailView: $detailView, inputDetail: $inputDetail, tableRefresh: $tableRefresh, showRankings: $showRankings)
                     .ignoresSafeArea(edges: .all)
@@ -152,7 +152,6 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
         
         if showRankings {
             uiView.showRankings()
-            showRankings = false
         }
         
         uiView.switchView(detailView: detailView)
@@ -342,8 +341,8 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     }
     
     public func showRankings() {
-        let rankings = ScorecardRankingView(frame: CGRect(x: frame.midX - 500, y: frame.midY - 250, width: 1000, height: 500))
-        rankings.show(from: self)
+        let rankings = ScorecardRankingView(frame: CGRect())
+        rankings.show(from: superview!.superview!)
     }
     
     // MARK: - Scorecard delegates
@@ -486,7 +485,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     
     func scorecardShowTraveller(scorecard: ScorecardViewModel, board: BoardViewModel, sitting: Seat) {
         let showTraverllerView = ScorecardTravellerView(frame: CGRect())
-        showTraverllerView.show(from: self, boardNumber: board.board, sitting: sitting)
+        showTraverllerView.show(from: superview!.superview!, boardNumber: board.board, sitting: sitting)
     }
     
     func scorecardScrollPickerPopup(values: [ScrollPickerEntry], maxValues: Int, selected: Int?, defaultValue: Int?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Int?)->()) {

@@ -9,7 +9,7 @@ import Combine
 import SwiftUI
 import CoreData
 
-public class TravellerViewModel : ObservableObject, Identifiable, CustomDebugStringConvertible {
+@objcMembers public class TravellerViewModel : NSObject, ObservableObject, Identifiable {
 
     // Properties in core data model
     @Published private(set) var scorecard: ScorecardViewModel
@@ -29,6 +29,12 @@ public class TravellerViewModel : ObservableObject, Identifiable, CustomDebugStr
     
     @Published private(set) var saveMessage: String = ""
     @Published private(set) var canSave: Bool = true
+    
+    public var contractLevel: Int { contract.level.rawValue }
+    public var minRankingNumber: Int { min(rankingNumber[.north] ?? Int.max,
+                                           rankingNumber[.south] ?? Int.max,
+                                           rankingNumber[.east] ?? Int.max,
+                                           rankingNumber[.west] ?? Int.max) }
     
     // Auto-cleanup
     private var cancellableSet: Set<AnyCancellable> = []
@@ -61,6 +67,7 @@ public class TravellerViewModel : ObservableObject, Identifiable, CustomDebugStr
         self.board = board
         self.section = section
         self.rankingNumber = ranking
+        super.init()
         self.setupMappings()
     }
     
@@ -148,10 +155,22 @@ public class TravellerViewModel : ObservableObject, Identifiable, CustomDebugStr
         }
         return result
     }
-    
-    public var description: String {
-        "Traveller: \(self.board), North \(self.rankingNumber[.north] ?? 0) South \(self.rankingNumber[.south] ?? 0) East \(self.rankingNumber[.east] ?? 0) West \(self.rankingNumber[.west] ?? 0)of Section \(self.section) of Scorecard: \(MasterData.shared.scorecard(id: self.scorecard.scorecardId)?.desc ?? "")"
+
+    public var isTeam: Bool {
+        var result = false
+        for seat in Seat.validCases {
+            if let ranking = ranking(seat: seat) {
+                if ranking.players[seat.leftOpponent] == MasterData.shared.scorer?.bboName.lowercased() {
+                    result = true
+                }
+            }
+        }
+        return result
     }
     
-    public var debugDescription: String { self.description }
+    public override var description: String {
+        "Traveller: \(self.board), North \(self.rankingNumber[.north] ?? 0) South \(self.rankingNumber[.south] ?? 0) East \(self.rankingNumber[.east] ?? 0) West \(self.rankingNumber[.west] ?? 0) of Section \(self.section) of Scorecard: \(MasterData.shared.scorecard(id: self.scorecard.scorecardId)?.desc ?? "")"
+    }
+    
+    public override var debugDescription: String { self.description }
 }

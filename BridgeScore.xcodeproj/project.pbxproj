@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B203F96A27F30BD900DA748A /* Scorecard Web View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B203F96927F30BD900DA748A /* Scorecard Web View.swift */; };
 		B204175827CE58CD00A3EFA8 /* Debug Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B204175727CE58CD00A3EFA8 /* Debug Utilities.swift */; };
 		B20B38F227C153280001B45E /* Contract Entry View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20B38F127C153280001B45E /* Contract Entry View.swift */; };
 		B2100D9827DA449D00CC0130 /* Graph View Class.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2100D9727DA449D00CC0130 /* Graph View Class.swift */; };
@@ -107,6 +108,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		B203F96927F30BD900DA748A /* Scorecard Web View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Web View.swift"; sourceTree = "<group>"; };
 		B204175727CE58CD00A3EFA8 /* Debug Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Debug Utilities.swift"; sourceTree = "<group>"; };
 		B20B38F127C153280001B45E /* Contract Entry View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contract Entry View.swift"; sourceTree = "<group>"; };
 		B2100D9727DA449D00CC0130 /* Graph View Class.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Graph View Class.swift"; sourceTree = "<group>"; };
@@ -444,6 +446,7 @@
 				B20B38F127C153280001B45E /* Contract Entry View.swift */,
 				B25F653927EDEEF400FDD6B1 /* Scorecard Ranking View.swift */,
 				B25F653B27F0507600FDD6B1 /* Scorecard Traveller View.swift */,
+				B203F96927F30BD900DA748A /* Scorecard Web View.swift */,
 				B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */,
 				B2100D9927DA488200CC0130 /* Stats View.swift */,
 				B256D42827ECB15700F47322 /* BBO Name Replace View.swift */,
@@ -614,6 +617,7 @@
 				B213998C27D8AA830098E4A4 /* Seat Picker Popup View.swift in Sources */,
 				B26BCE76279BEBA500B73501 /* Scorecard Managed Object.swift in Sources */,
 				B26BCE662799AED700B73501 /* Banner.swift in Sources */,
+				B203F96A27F30BD900DA748A /* Scorecard Web View.swift in Sources */,
 				B2A2053927B01D0000C83C88 /* Location Setup View.swift in Sources */,
 				B23ADBF427B28D68001B6B38 /* Local Authentication.swift in Sources */,
 				B2A5A42827E3090300754061 /* BBO Name View Model.swift in Sources */,

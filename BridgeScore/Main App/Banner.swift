@@ -22,7 +22,7 @@ struct BannerOption {
         self.likeBack = likeBack
         self.action = action
         self._isEnabled = isEnabled ?? Binding.constant(true)
-        self._isHidden = isEnabled ?? Binding.constant(false)
+        self._isHidden = isHidden ?? Binding.constant(false)
         self.menu = menu
     }
 }
