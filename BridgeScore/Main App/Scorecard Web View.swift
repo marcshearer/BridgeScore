@@ -9,11 +9,12 @@ import UIKit
 import CoreMedia
 import WebKit
 
-class ScorecardWebView: UIView {
+class ScorecardWebView: UIView, WKNavigationDelegate {
        
     private var backgroundView = UIView()
     private var contentView = UIView()
     private var closeButton = UILabel()
+    private var messageLabel = UILabel()
     private var webView = WKWebView()
     private var url: URL?
     private var buttonSpacing: CGFloat = 25
@@ -68,6 +69,18 @@ class ScorecardWebView: UIView {
         removeFromSuperview()
     }
     
+    internal func webView(_ webView: WKWebView, didFail: WKNavigation!, withError: Error) {
+        navigationError()
+    }
+    
+    internal func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+        navigationError()
+    }
+    
+    func navigationError() {
+        messageLabel.text = "Unable to reach online hand viewer. Check internet connection."
+    }
+    
     private func loadScorecardWebView() {
 
         // Background
@@ -86,6 +99,16 @@ class ScorecardWebView: UIView {
         // Web view
         contentView.addSubview(webView, constant: paddingSize, anchored: .leading, .trailing, .top)
         webView.allowsBackForwardNavigationGestures = false
+        webView.navigationDelegate = self
+        
+        // Message
+        contentView.addSubview(messageLabel)
+        Constraint.anchor(view: contentView, control: messageLabel, to: webView, constant: 100, attributes: .all)
+        messageLabel.font = windowTitleFont
+        messageLabel.lineBreakMode = .byWordWrapping
+        messageLabel.textAlignment = .center
+        messageLabel.numberOfLines = 3
+
         
         // Close button
         contentView.addSubview(closeButton, anchored: .centerX)
