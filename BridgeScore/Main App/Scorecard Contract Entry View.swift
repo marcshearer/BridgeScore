@@ -32,7 +32,7 @@ fileprivate let actionButtonHeight: CGFloat = 40
 fileprivate let buttonSpaceX: CGFloat = 10
 fileprivate let buttonSpaceY: CGFloat = 20
 
-class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
+class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
        
     private var sourceView: UIView!
     private var backgroundView = UIView()
@@ -144,17 +144,17 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
             switch collection {
             case .level:
                 let level = ContractLevel.validCases[indexPath.row]
-                let cell = ContractEntryCollectionCell<ContractLevel>.dequeue(collectionView, for: indexPath)
+                let cell = ScorecardContractEntryCollectionCell<ContractLevel>.dequeue(collectionView, for: indexPath)
                 cell.set(value: level, selected: (level == contract.level), tapAction: levelTapped)
                 return cell
             case .suit:
                 let suit = ContractSuit.validCases[indexPath.row]
-                let cell = ContractEntryCollectionCell<ContractSuit>.dequeue(collectionView, for: indexPath)
+                let cell = ScorecardContractEntryCollectionCell<ContractSuit>.dequeue(collectionView, for: indexPath)
                 cell.set(value: suit, selected: (suit == contract.suit), tapAction: suitTapped)
                 return cell
             case .double:
                 let double = ContractDouble.allCases[indexPath.row]
-                let cell = ContractEntryCollectionCell<ContractDouble>.dequeue(collectionView, for: indexPath)
+                let cell = ScorecardContractEntryCollectionCell<ContractDouble>.dequeue(collectionView, for: indexPath)
                 cell.set(value: double, selected: (double == contract.double && contract.level != .passout), font: smallCellFont, tapAction: doubleTapped)
                 return cell
             case .declarer:
@@ -289,7 +289,7 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         // Background
         addSubview(backgroundView)
         backgroundView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
-        let cancelSelector = #selector(ContractEntryView.cancelPressed(_:))
+        let cancelSelector = #selector(ScorecardContractEntryView.cancelPressed(_:))
         let tapGesture = UITapGestureRecognizer(target: self, action: cancelSelector)
         backgroundView.addGestureRecognizer(tapGesture)
         backgroundView.isUserInteractionEnabled = true
@@ -327,7 +327,7 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         
         // Pass Out button
         passOutButton.accessibilityIdentifier = "passOut"
-        loadActionButton(button: passOutButton, xOffset: -(actionButtonWidth + buttonSpaceX), text: "Pass Out", action: #selector(ContractEntryView.passoutTapped(_:)))
+        loadActionButton(button: passOutButton, xOffset: -(actionButtonWidth + buttonSpaceX), text: "Pass Out", action: #selector(ScorecardContractEntryView.passoutTapped(_:)))
         
         // Cancel button
         cancelButton.accessibilityIdentifier = "cancel"
@@ -335,7 +335,7 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         
         // Select button
         selectButton.accessibilityIdentifier = "select"
-        loadActionButton(button: selectButton, xOffset: (actionButtonWidth + buttonSpaceX), text: "Confirm", action: #selector(ContractEntryView.selectPressed(_:)))
+        loadActionButton(button: selectButton, xOffset: (actionButtonWidth + buttonSpaceX), text: "Confirm", action: #selector(ScorecardContractEntryView.selectPressed(_:)))
         
         // Declarer
         declarerView.accessibilityIdentifier = "declarerView"
@@ -416,7 +416,7 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
         if collection == .declarer {
             ScrollPickerCell.register(collectionView)
         } else {
-            ContractEntryCollectionCell.register(collectionView, type: type)
+            ScorecardContractEntryCollectionCell.register(collectionView, type: type)
         }
     }
 }
@@ -425,7 +425,7 @@ class ContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDel
 
 fileprivate let contractEntryCellIdentifier = "Board Collection Cell"
 
-fileprivate class ContractEntryCollectionCell<EnumType>: UICollectionViewCell where EnumType: ContractEnumType {
+fileprivate class ScorecardContractEntryCollectionCell<EnumType>: UICollectionViewCell where EnumType: ContractEnumType {
     private var label = UILabel()
     private var value: EnumType?
     private var tapAction: ((EnumType)->())?
@@ -440,7 +440,7 @@ fileprivate class ContractEntryCollectionCell<EnumType>: UICollectionViewCell wh
         label.backgroundColor = UIColor(Palette.tile.background)
         label.textColor = UIColor(Palette.tile.text)
         
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(ContractEntryCollectionCell.tapped(_:)))
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardContractEntryCollectionCell.tapped(_:)))
         label.addGestureRecognizer(tapGesture)
         label.isUserInteractionEnabled = true
         label.font = boardFont
@@ -457,11 +457,11 @@ fileprivate class ContractEntryCollectionCell<EnumType>: UICollectionViewCell wh
     }
     
     public class func register(_ collectionView: UICollectionView, type: EnumType) {
-        collectionView.register(ContractEntryCollectionCell.self, forCellWithReuseIdentifier: contractEntryCellIdentifier)
+        collectionView.register(ScorecardContractEntryCollectionCell.self, forCellWithReuseIdentifier: contractEntryCellIdentifier)
     }
 
-    public class func dequeue(_ collectionView: UICollectionView, for indexPath: IndexPath) -> ContractEntryCollectionCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: contractEntryCellIdentifier, for: indexPath) as! ContractEntryCollectionCell
+    public class func dequeue(_ collectionView: UICollectionView, for indexPath: IndexPath) -> ScorecardContractEntryCollectionCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: contractEntryCellIdentifier, for: indexPath) as! ScorecardContractEntryCollectionCell
         cell.prepareForReuse()
         return cell
     }

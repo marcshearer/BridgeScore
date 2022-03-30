@@ -188,42 +188,42 @@ struct StatsFilterView: View {
     private func loadDefaults() {
 
         // Partners
-        if let partners = UserDefault.filterPartners.array as? [String] {
+        if let partners = UserDefault.statsFilterPartners.array as? [String] {
             filterValues.partners.setArray(partners)
         }
         
         // Locations
-        if let locations = UserDefault.filterLocations.array as? [String] {
+        if let locations = UserDefault.statsFilterLocations.array as? [String] {
             filterValues.locations.setArray(locations)
         }
 
         // Types
-        if let types = UserDefault.filterTypes.array as? [Int] {
+        if let types = UserDefault.statsFilterTypes.array as? [Int] {
             filterValues.types.setArray(types)
         }
             
         // Date from
-        if let dateFrom = UserDefault.filterDateFrom.date {
+        if let dateFrom = UserDefault.statsFilterDateFrom.date {
             filterValues.dateFrom = dateFrom
         }
 
         // Date to
-        if let dateTo = UserDefault.filterDateTo.date {
+        if let dateTo = UserDefault.statsFilterDateTo.date {
             filterValues.dateTo = dateTo
         }
                     
         // Search text
-        filterValues.searchText = UserDefault.filterSearchText.string
+        filterValues.searchText = UserDefault.statsFilterSearchText.string
          
     }
     
     private func saveDefaults() {
-        UserDefault.filterPartners.set(filterValues.partners.trueValues)
-        UserDefault.filterLocations.set(filterValues.locations.trueValues)
-        UserDefault.filterTypes.set(filterValues.types.trueValues)
-        UserDefault.filterDateFrom.set(filterValues.dateFrom)
-        UserDefault.filterDateTo.set(filterValues.dateTo)
-        UserDefault.filterSearchText.set(filterValues.searchText)
+        UserDefault.statsFilterPartners.set(filterValues.partners.trueValues)
+        UserDefault.statsFilterLocations.set(filterValues.locations.trueValues)
+        UserDefault.statsFilterTypes.set(filterValues.types.trueValues)
+        UserDefault.statsFilterDateFrom.set(filterValues.dateFrom)
+        UserDefault.statsFilterDateTo.set(filterValues.dateTo)
+        UserDefault.statsFilterSearchText.set(filterValues.searchText)
     }
     
     

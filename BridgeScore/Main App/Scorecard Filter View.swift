@@ -144,6 +144,7 @@ struct ScorecardFilterView: View {
                         HStack {
                             let buttonWidth: CGFloat = (geometry.size.width - 24 - (3 * 15)) / 4
                             Spacer().frame(width: 16)
+                                .debugPrint("Partner: \(partnerIndex)")
                             PickerInput(id: id, field: $partnerIndex, values: {["No partner filter"] + players.map{$0.name}}, popupTitle: "Partners", placeholder: "Partner", width: buttonWidth, height: 40, centered: true, color: (partnerIndex != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, cornerRadius: 20, animation: .none) { (index) in
                                 if index ?? 0 > 0 {
                                     partnerIndex = index
@@ -221,6 +222,7 @@ struct ScorecardFilterView: View {
         }
         .onAppear {
             partnerIndex = filterValues.partner == nil ? nil : (players.firstIndex(where: {$0 == filterValues.partner})  ?? -1) + 1
+            print("Set partner: \(partnerIndex)")
             locationIndex = filterValues.location == nil ? nil : (locations.firstIndex(where: {$0 == filterValues.location})  ?? -1) + 1
         }
     }

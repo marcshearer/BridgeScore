@@ -32,12 +32,18 @@ enum UserDefault: String, CaseIterable {
     case currentEntry
     case currentDrawing
     case currentWidth
-    case filterPartners
-    case filterLocations
-    case filterDateFrom
-    case filterDateTo
-    case filterTypes
-    case filterSearchText
+    case listFilterPartners
+    case listFilterLocations
+    case listFilterDateFrom
+    case listFilterDateTo
+    case listFilterTypes
+    case listFilterSearchText
+    case statsFilterPartners
+    case statsFilterLocations
+    case statsFilterDateFrom
+    case statsFilterDateTo
+    case statsFilterTypes
+    case statsFilterSearchText
     
     public var name: String { "\(self)" }
     
@@ -91,17 +97,17 @@ enum UserDefault: String, CaseIterable {
             return Data()
         case .currentWidth:
             return 0.0
-        case .filterPartners:
+        case .listFilterPartners, .statsFilterPartners:
             return []
-        case .filterLocations:
+        case .listFilterLocations, .statsFilterLocations:
             return []
-        case .filterDateFrom:
+        case .listFilterDateFrom, .statsFilterDateFrom:
             return nil
-        case .filterDateTo:
+        case .listFilterDateTo,.statsFilterDateTo:
             return nil
-        case .filterTypes:
+        case .listFilterTypes, .statsFilterTypes:
             return []
-        case .filterSearchText:
+        case .listFilterSearchText, .statsFilterSearchText:
             return ""
         }
     }

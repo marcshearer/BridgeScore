@@ -198,7 +198,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     private var scorecard: ScorecardViewModel
     private var titleView: ScorecardInputTableTitleView!
     private var mainTableView = UITableView(frame: CGRect(), style: .plain)
-    private var contractEntryView: ContractEntryView
+    private var contractEntryView: ScorecardContractEntryView
     private var scrollPickerPopupView: ScrollPickerPopupView
     private var declarerPickerPopupView: DeclarerPickerPopupView
     private var subscription: AnyCancellable?
@@ -217,7 +217,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     init(frame: CGRect, scorecard: ScorecardViewModel, inputDetail: Bool) {
         self.scorecard = scorecard
         self.inputDetail = inputDetail
-        self.contractEntryView = ContractEntryView(frame: CGRect())
+        self.contractEntryView = ScorecardContractEntryView(frame: CGRect())
         self.scrollPickerPopupView = ScrollPickerPopupView(frame: CGRect())
         self.declarerPickerPopupView = DeclarerPickerPopupView(frame: CGRect())
 

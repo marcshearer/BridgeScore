@@ -6,12 +6,12 @@ If xcode fails to install app on device it's normally because info.plist isn't w
 Bugs
 ====
 Background still active with MessageBox
+Filter persists after layouts, but is not coloured and empty when click on button
 
 To Do
 =====
 Sort out dark mode
 Maybe remove file sharing in Info.plist once can backup from Mac
-Replace names on table with a versus number
 Unlock after import
 Travellers and rankings in portrait
 

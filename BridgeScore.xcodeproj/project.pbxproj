@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		B203F96A27F30BD900DA748A /* Scorecard Web View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B203F96927F30BD900DA748A /* Scorecard Web View.swift */; };
 		B204175827CE58CD00A3EFA8 /* Debug Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B204175727CE58CD00A3EFA8 /* Debug Utilities.swift */; };
-		B20B38F227C153280001B45E /* Contract Entry View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20B38F127C153280001B45E /* Contract Entry View.swift */; };
+		B20B38F227C153280001B45E /* Scorecard Contract Entry View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20B38F127C153280001B45E /* Scorecard Contract Entry View.swift */; };
 		B2100D9827DA449D00CC0130 /* Graph View Class.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2100D9727DA449D00CC0130 /* Graph View Class.swift */; };
 		B2100D9A27DA488200CC0130 /* Stats View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2100D9927DA488200CC0130 /* Stats View.swift */; };
 		B213998C27D8AA830098E4A4 /* Seat Picker Popup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B213998B27D8AA830098E4A4 /* Seat Picker Popup View.swift */; };
@@ -110,7 +110,7 @@
 /* Begin PBXFileReference section */
 		B203F96927F30BD900DA748A /* Scorecard Web View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Web View.swift"; sourceTree = "<group>"; };
 		B204175727CE58CD00A3EFA8 /* Debug Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Debug Utilities.swift"; sourceTree = "<group>"; };
-		B20B38F127C153280001B45E /* Contract Entry View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contract Entry View.swift"; sourceTree = "<group>"; };
+		B20B38F127C153280001B45E /* Scorecard Contract Entry View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Contract Entry View.swift"; sourceTree = "<group>"; };
 		B2100D9727DA449D00CC0130 /* Graph View Class.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Graph View Class.swift"; sourceTree = "<group>"; };
 		B2100D9927DA488200CC0130 /* Stats View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Stats View.swift"; sourceTree = "<group>"; };
 		B213998B27D8AA830098E4A4 /* Seat Picker Popup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Seat Picker Popup View.swift"; sourceTree = "<group>"; };
@@ -443,7 +443,7 @@
 				B240141927CCBF2400C3117F /* Scorecard Filter View.swift */,
 				B2633A0D27AC3A460081B258 /* Layout List View.swift */,
 				B2C4338B27B6646700796F24 /* Scorecard Input View.swift */,
-				B20B38F127C153280001B45E /* Contract Entry View.swift */,
+				B20B38F127C153280001B45E /* Scorecard Contract Entry View.swift */,
 				B25F653927EDEEF400FDD6B1 /* Scorecard Ranking View.swift */,
 				B25F653B27F0507600FDD6B1 /* Scorecard Traveller View.swift */,
 				B203F96927F30BD900DA748A /* Scorecard Web View.swift */,
@@ -647,7 +647,7 @@
 				B26BCE6B2799AED700B73501 /* Input Title.swift in Sources */,
 				B2C4338E27B7B56200796F24 /* Custom Collection View Flow.swift in Sources */,
 				B23ADBF227B25356001B6B38 /* List Tile View.swift in Sources */,
-				B20B38F227C153280001B45E /* Contract Entry View.swift in Sources */,
+				B20B38F227C153280001B45E /* Scorecard Contract Entry View.swift in Sources */,
 				B256D42527EC578500F47322 /* Ranking View Model.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
