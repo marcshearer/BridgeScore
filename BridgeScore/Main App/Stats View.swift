@@ -10,7 +10,7 @@ import SwiftUI
 struct StatsView: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
         
-    @StateObject var filterValues = ScorecardFilterValues()
+    @StateObject var filterValues = ScorecardFilterValues(.stats)
     @State private var hideLeft = false
     
     private let id = statsViewId
@@ -95,22 +95,22 @@ struct StatsFilterView: View {
                         
                         MultiSelectPickerInput(id: id, values: {players.map{($0.name, $0.playerId.uuidString)}}, selected: $filterValues.partners, placeholder: "Partner", multiplePlaceholder: "Multiple Partners", selectAll: "No partner filter", height: 40, centered: true, color: (filterValues.partners.firstValue(equal: true) != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
                                 filterValues.objectWillChange.send()
-                                saveDefaults()
+                                filterValues.save()
                         }
                     
                         
                         Spacer().frame(height: 15)
                         
                         MultiSelectPickerInput(id: id, values: {locations.map{($0.name, $0.locationId.uuidString)}}, selected: $filterValues.locations, placeholder: "Location", multiplePlaceholder: "Multiple Locations", selectAll: "No location filter", height: 40, centered: true, color: (filterValues.locations.firstValue(equal: true) != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
-                            filterValues.objectWillChange.send()
-                            saveDefaults()
+                                filterValues.objectWillChange.send()
+                                filterValues.save()
                         }
                         
                         Spacer().frame(height: 15)
                         
                         MultiSelectPickerInput(id: id, values: {types.map{($0.string, $0.rawValue)}}, selected: $filterValues.types, placeholder: "Scoring Method", multiplePlaceholder: "Multiple Types", selectAll: "No type filter", height: 40, centered: true, color: (filterValues.types.firstValue(equal: true) != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
-                            filterValues.objectWillChange.send()
-                            saveDefaults()
+                                filterValues.objectWillChange.send()
+                                filterValues.save()
                         }
                     }
                     
@@ -119,13 +119,13 @@ struct StatsFilterView: View {
                         Spacer().frame(height: 15)
                         
                         OptionalDatePickerInput(field: $filterValues.dateFrom, placeholder: "Date from", clearText: "Clear date from", to: filterValues.dateTo, color: (filterValues.dateFrom != nil ? Palette.filterUsed : Palette.filterUnused), textType: .normal, font: searchFont, cornerRadius: 20, height: 40, centered: true) { (dateFrom) in
-                            saveDefaults()
+                                filterValues.save()
                         }
                         
                         Spacer().frame(height: 15)
                         
                         OptionalDatePickerInput(field: $filterValues.dateTo, placeholder: "Date to", clearText: "Clear date to", from: filterValues.dateFrom, color: (filterValues.dateTo != nil ? Palette.filterUsed : Palette.filterUnused), textType: .normal, font: searchFont, cornerRadius: 20, height: 40, centered: true) { (dateTo) in
-                            saveDefaults()
+                                filterValues.save()
                         }
                     }
                     
@@ -148,7 +148,7 @@ struct StatsFilterView: View {
                                 }
                                 HStack {
                                     Input(field: $filterValues.searchText, height: 40, color: Palette.clear, clearText: (filterValues.searchText != "")) { (searchText) in
-                                        saveDefaults()
+                                            filterValues.save()
                                     }
                                     .foregroundColor(Palette.input.text)
                                 }
@@ -181,55 +181,13 @@ struct StatsFilterView: View {
         }
         .background(Palette.alternate.background)
         .onAppear {
-            loadDefaults()
+            filterValues.load()
         }
     }
-    
-    private func loadDefaults() {
-
-        // Partners
-        if let partners = UserDefault.statsFilterPartners.array as? [String] {
-            filterValues.partners.setArray(partners)
-        }
-        
-        // Locations
-        if let locations = UserDefault.statsFilterLocations.array as? [String] {
-            filterValues.locations.setArray(locations)
-        }
-
-        // Types
-        if let types = UserDefault.statsFilterTypes.array as? [Int] {
-            filterValues.types.setArray(types)
-        }
-            
-        // Date from
-        if let dateFrom = UserDefault.statsFilterDateFrom.date {
-            filterValues.dateFrom = dateFrom
-        }
-
-        // Date to
-        if let dateTo = UserDefault.statsFilterDateTo.date {
-            filterValues.dateTo = dateTo
-        }
-                    
-        // Search text
-        filterValues.searchText = UserDefault.statsFilterSearchText.string
-         
-    }
-    
-    private func saveDefaults() {
-        UserDefault.statsFilterPartners.set(filterValues.partners.trueValues)
-        UserDefault.statsFilterLocations.set(filterValues.locations.trueValues)
-        UserDefault.statsFilterTypes.set(filterValues.types.trueValues)
-        UserDefault.statsFilterDateFrom.set(filterValues.dateFrom)
-        UserDefault.statsFilterDateTo.set(filterValues.dateTo)
-        UserDefault.statsFilterSearchText.set(filterValues.searchText)
-    }
-    
     
     private func reset() {
         filterValues.clear()
-        saveDefaults()
+        filterValues.save()
     }
 }
 

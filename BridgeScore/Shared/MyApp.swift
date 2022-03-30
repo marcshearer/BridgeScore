@@ -100,6 +100,12 @@ class MyApp {
         for value in UserDefault.allCases {
             initial[value.name] = value.defaultValue ?? ""
         }
+        for type in FilterType.allCases {
+            for value in FilterUserDefault.allCases {
+                initial[value.name(type)] = value.defaultValue ?? ""
+            }
+            MyApp.defaults.register(defaults: initial)
+        }
         MyApp.defaults.register(defaults: initial)
     }
 }

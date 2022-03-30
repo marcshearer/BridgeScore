@@ -8,69 +8,6 @@
 
 import SwiftUI
 
-class Flags {
-    private var values: [AnyHashable : Bool]
-    
-    init() {
-        self.values = [:]
-    }
-    
-    public var isEmpty: Bool {
-        firstValue(equal: true) == nil
-    }
-    
-    public var hasMultiple: Bool {
-        self.values.filter({$0.value}).count > 1
-    }
-    
-    public var trueValues: [AnyHashable] {
-        values.filter{$0.value}.map{$0.key}
-    }
-    
-    public func toggle(_ id: AnyHashable) {
-        if values[id] == nil {
-            values[id] = true
-        } else {
-            values[id]!.toggle()
-        }
-    }
-    
-    public func clear(_ id: AnyHashable? = nil) {
-        if let id = id {
-            values[id] = false
-        } else {
-            values = [:]
-        }
-    }
-    
-    public func set(_ id: AnyHashable) {
-        clear()
-        values[id] = true
-    }
-    
-    public func setArray(_ ids: [AnyHashable], to: Bool = true) {
-        clear()
-        for id in ids {
-            self.values[id] = to
-        }
-    }
-    
-    public func value(_ id: AnyHashable) -> Bool {
-        if let id = id as? String {
-            return values[id] ?? false
-        } else if let id = id as? Int {
-            return values[id] ?? false
-        } else {
-            fatalError("Only support integer and string keys")
-        }
-    }
-    
-    public func firstValue(equal value: Bool) -> AnyHashable? {
-        let first = values.first(where: {$0.value == value})
-        return first?.key
-    }
-}
-
 class SlideInMenu : ObservableObject {
     
     public static let shared = SlideInMenu()
@@ -133,17 +70,12 @@ struct SlideInMenuView : View {
     @State private var refresh = false
     
     var body: some View {
-
+        
         if refresh { EmptyView() }
         
         GeometryReader { (fullGeometry) in
             GeometryReader { (geometry) in
-                let contentHeight = (CGFloat(values.options.count) + (values.title == nil ? 0 : 2.4) + (values.selectAll == nil ? 0 : 1)) * slideInMenuRowHeight
-                let proposedTop = values.top
-                let top = min(proposedTop,
-                              max(bannerHeight + 8,
-                                  geometry.size.height - contentHeight))
-
+                let (contentHeight, actualTop) = sizeToFit(geometry: geometry)
                 ZStack {
                     Rectangle()
                         .foregroundColor(values.shown == id ? (values.hideBackground ? Palette.maskBackground : Palette.clickableBackground) : Color.clear)
@@ -154,19 +86,19 @@ struct SlideInMenuView : View {
                         .ignoresSafeArea()
                     VStack(spacing: 0) {
                         
-                        Spacer().frame(height: top)
+                        Spacer().frame(height: actualTop)
                         HStack {
                             Spacer()
                             VStack(spacing: 0) {
                                 if let title = values.title {
-                                    tile(color: Palette.header, text: title, heightFactor: 1.4)
+                                    tile(color: Palette.header, text: title, centered: true, heightFactor: 1.4)
                                     .font(.title)
                                 }
                                 
                                 ScrollView {
                                     VStack(spacing: 0) {
                                         if let selectAll = values.selectAll {
-                                            tile(color: Palette.background, text: selectAll, bottomSeparator: true)
+                                            tile(color: Palette.background, text: selectAll,  bottomSeparator: true)
                                             .font(.title2)
                                             .onTapGesture {
                                                 values.selected?.clear()
@@ -198,7 +130,7 @@ struct SlideInMenuView : View {
                                 .layoutPriority(.greatestFiniteMagnitude)
                                 
                                 if values.title != nil {
-                                    tile(color: Palette.background, text: values.selected == nil ? "Cancel" : "Close")
+                                    tile(color: Palette.alternate, text: values.selected == nil ? "Cancel" : "Close", centered: true)
                                     .font(Font.title2.bold())
                                     .onTapGesture {
                                         values.hide()
@@ -232,11 +164,29 @@ struct SlideInMenuView : View {
         }
     }
     
-    func tile(color: PaletteColor, text: String, heightFactor: CGFloat = 1, bottomSeparator: Bool = false) -> some View {
+    func sizeToFit(geometry: GeometryProxy) -> (CGFloat, CGFloat) {
+        let padElements: CGFloat = (values.title == nil ? 0 : 2.4) + (values.selectAll == nil ? 0 : 1)
+        let availableHeight = geometry.size.height - bannerHeight - 8
+        let maxFit = CGFloat(Int((availableHeight / slideInMenuRowHeight) - padElements)) - 0.4
+        let allowedElements = min(maxFit, CGFloat(values.options.count))
+        print("allowed \(allowedElements)")
+        let contentHeight = (allowedElements + padElements) * slideInMenuRowHeight
+        let proposedTop = values.top
+        let top = min(proposedTop,
+                      max(bannerHeight + 8,
+                          geometry.size.height - contentHeight))
+        return (contentHeight, top)
+    }
+    
+    func tile(color: PaletteColor, text: String, centered: Bool = false, heightFactor: CGFloat = 1, bottomSeparator: Bool = false) -> some View {
         VStack(spacing: 0) {
             Spacer()
             HStack {
-                Spacer().frame(width: 20)
+                if centered {
+                    Spacer()
+                } else {
+                    Spacer().frame(width: 20)
+                }
                 Text(text)
                     .foregroundColor(color.text)
                 Spacer()

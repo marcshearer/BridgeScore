@@ -32,20 +32,6 @@ enum UserDefault: String, CaseIterable {
     case currentEntry
     case currentDrawing
     case currentWidth
-    case listFilterPartners
-    case listFilterLocations
-    case listFilterDateFrom
-    case listFilterDateTo
-    case listFilterTypes
-    case listFilterSearchText
-    case statsFilterPartners
-    case statsFilterLocations
-    case statsFilterDateFrom
-    case statsFilterDateTo
-    case statsFilterTypes
-    case statsFilterSearchText
-    
-    public var name: String { "\(self)" }
     
     public var defaultValue: Any? {
         switch self {
@@ -97,63 +83,93 @@ enum UserDefault: String, CaseIterable {
             return Data()
         case .currentWidth:
             return 0.0
-        case .listFilterPartners, .statsFilterPartners:
-            return []
-        case .listFilterLocations, .statsFilterLocations:
-            return []
-        case .listFilterDateFrom, .statsFilterDateFrom:
-            return nil
-        case .listFilterDateTo,.statsFilterDateTo:
-            return nil
-        case .listFilterTypes, .statsFilterTypes:
-            return []
-        case .listFilterSearchText, .statsFilterSearchText:
-            return ""
         }
     }
     
+    public var name: String { "\(self)" }
+       
     public func set(_ value: Any?) {
-        if value == nil {
-            MyApp.defaults.set(nil, forKey: self.name)
-        } else if let array = value as? [Any] {
-            MyApp.defaults.set(array, forKey: self.name)
-        } else if let uuid = value as? UUID {
-            MyApp.defaults.set(uuid.uuidString, forKey: self.name)
-        } else if let type = value as? Type {
-            MyApp.defaults.set("\(type.rawValue)", forKey: self.name)
-        } else if let date = value as? Date {
-            MyApp.defaults.set(date.toFullString(), forKey: self.name)
-        } else {
-            MyApp.defaults.set(value, forKey: self.name)
-        }
+        UserDefault.set(value, forKey: self.name)
     }
     
     public var string: String {
-        return MyApp.defaults.string(forKey: self.name)!
+        return UserDefault.string(forKey: self.name)
     }
     
     public var int: Int {
-        return MyApp.defaults.integer(forKey: self.name)
+        return UserDefault.int(forKey: self.name)
     }
     
     public var float: Float {
-        return MyApp.defaults.float(forKey: self.name)
+        return UserDefault.float(forKey: self.name)
     }
     
     public var bool: Bool {
-        return MyApp.defaults.bool(forKey: self.name)
+        return UserDefault.bool(forKey: self.name)
     }
     
     public var data: Data {
-        return MyApp.defaults.data(forKey: self.name)!
+        return UserDefault.data(forKey: self.name)
     }
     
     public var array: [Any] {
-        return MyApp.defaults.array(forKey: self.name)!
+        return UserDefault.array(forKey: self.name)
     }
     
     public var date: Date? {
-        let dateString = MyApp.defaults.string(forKey: self.name) ?? ""
+        return UserDefault.date(forKey: self.name)
+    }
+    
+    public var uuid: UUID? {
+        return  UserDefault.uuid(forKey: self.name)
+    }
+    
+    public var type: Type? {
+        return UserDefault.type(forKey: self.name)
+    }
+    
+    public static func set(_ value: Any?, forKey name: String) {
+        if value == nil {
+            MyApp.defaults.set(nil, forKey: name)
+        } else if let array = value as? [Any] {
+            MyApp.defaults.set(array, forKey: name)
+        } else if let uuid = value as? UUID {
+            MyApp.defaults.set(uuid.uuidString, forKey: name)
+        } else if let type = value as? Type {
+            MyApp.defaults.set("\(type.rawValue)", forKey: name)
+        } else if let date = value as? Date {
+            MyApp.defaults.set(date.toFullString(), forKey: name)
+        } else {
+            MyApp.defaults.set(value, forKey: name)
+        }
+    }
+    
+    public static func string(forKey name: String) -> String {
+        return MyApp.defaults.string(forKey: name)!
+    }
+    
+    public static func int(forKey name: String) -> Int {
+        return MyApp.defaults.integer(forKey: name)
+    }
+    
+    public static func float(forKey name: String) -> Float {
+        return MyApp.defaults.float(forKey: name)
+    }
+    
+    public static func bool(forKey name: String) -> Bool {
+        return MyApp.defaults.bool(forKey: name)
+    }
+    
+    public static func data(forKey name: String) -> Data {
+        return MyApp.defaults.data(forKey: name)!
+    }
+    
+    public static func array(forKey name: String) -> [Any] {
+        return MyApp.defaults.array(forKey: name)!
+    }
+    
+    public static func date(forKey name: String) -> Date? {
+        let dateString = MyApp.defaults.string(forKey: name) ?? ""
         if dateString == "" {
             return nil
         } else {
@@ -161,15 +177,111 @@ enum UserDefault: String, CaseIterable {
         }
     }
     
-    public var uuid: UUID? {
+    public static func uuid(forKey name: String) -> UUID? {
         var result: UUID?
-        if let uuid = UUID(uuidString: MyApp.defaults.string(forKey: self.name)!) {
+        if let uuid = UUID(uuidString: MyApp.defaults.string(forKey: name)!) {
             result = uuid
         }
         return result
     }
     
-    public var type: Type? {
-        return Type(rawValue: Int(MyApp.defaults.string(forKey: self.name) ?? "") ?? -1)
+    public static func type(forKey name: String) -> Type? {
+        return Type(rawValue: Int(MyApp.defaults.string(forKey: name) ?? "") ?? -1)
+    }
+}
+
+enum FilterType: CaseIterable {
+    case list
+    case stats
+    
+    var string: String {
+        return "\(self)"
+    }
+}
+
+enum FilterUserDefault: String, CaseIterable {
+    case filterPartners
+    case filterLocations
+    case filterDateFrom
+    case filterDateTo
+    case filterTypes
+    case filterSearchText
+    
+    public var defaultValue: Any? {
+        switch self {
+        case .filterPartners:
+            return []
+        case .filterLocations:
+            return []
+        case .filterDateFrom:
+            return nil
+        case .filterDateTo:
+            return nil
+        case .filterTypes:
+            return []
+        case .filterSearchText:
+            return ""
+        }
+    }
+    
+    public static func load(filterValues: ScorecardFilterValues, type: FilterType) {
+
+        // Partners
+        if let partners = FilterUserDefault.filterPartners.array(type) as? [String] {
+            filterValues.partners.setArray(partners)
+        }
+        
+        // Locations
+        if let locations = FilterUserDefault.filterLocations.array(type) as? [String] {
+            filterValues.locations.setArray(locations)
+        }
+
+        // Types
+        if let types = FilterUserDefault.filterTypes.array(type) as? [Int] {
+            filterValues.types.setArray(types)
+        }
+            
+        // Date from
+        if let dateFrom = FilterUserDefault.filterDateFrom.date(type) {
+            filterValues.dateFrom = dateFrom
+        }
+
+        // Date to
+        if let dateTo = FilterUserDefault.filterDateTo.date(type) {
+            filterValues.dateTo = dateTo
+        }
+                    
+        // Search text
+        filterValues.searchText = FilterUserDefault.filterSearchText.string(type)
+         
+    }
+    
+    public static func save(filterValues: ScorecardFilterValues, type: FilterType) {
+        FilterUserDefault.filterPartners.set(filterValues.partners.trueValues, type: type)
+        FilterUserDefault.filterLocations.set(filterValues.locations.trueValues, type: type)
+        FilterUserDefault.filterTypes.set(filterValues.types.trueValues, type: type)
+        FilterUserDefault.filterDateFrom.set(filterValues.dateFrom, type: type)
+        FilterUserDefault.filterDateTo.set(filterValues.dateTo, type: type)
+        FilterUserDefault.filterSearchText.set(filterValues.searchText, type: type)
+    }
+    
+    public func name(_ type: FilterType) -> String {
+        return type.string + "\(self)".capitalized
+    }
+    
+    public func set(_ value: Any?, type: FilterType) {
+        UserDefault.set(value, forKey: self.name(type))
+    }
+
+    public func string(_ type: FilterType) -> String {
+        return UserDefault.string(forKey: self.name(type))
+    }
+    
+    public func array(_ type: FilterType) -> [Any] {
+        return UserDefault.array(forKey: self.name(type))
+    }
+    
+    public func date(_ type: FilterType) -> Date? {
+        return UserDefault.date(forKey: self.name(type))
     }
 }

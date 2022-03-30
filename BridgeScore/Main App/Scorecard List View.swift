@@ -11,7 +11,7 @@ struct ScorecardListView: View {
     private let id = scorecardListViewId
     private let inputId = UUID()
     @StateObject private var selected = ScorecardViewModel()
-    @StateObject private var filterValues = ScorecardFilterValues()
+    @StateObject private var filterValues = ScorecardFilterValues(.list)
     @ObservedObject private var data = MasterData.shared
     @State private var title = "Scorecards"
     @State private var layout = LayoutViewModel()
@@ -97,7 +97,9 @@ struct ScorecardListView: View {
             .onAppear {
                 Utility.mainThread {
                     if let scorecard = scorecards.first {
-                        self.startAt = scorecard.scorecardId
+                        if  filterValues.isClear {
+                            self.startAt = scorecard.scorecardId
+                        }
                     }
                 }
                 if UserDefault.currentUnsaved.bool {
