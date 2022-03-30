@@ -169,7 +169,6 @@ struct SlideInMenuView : View {
         let availableHeight = geometry.size.height - bannerHeight - 8
         let maxFit = CGFloat(Int((availableHeight / slideInMenuRowHeight) - padElements)) - 0.4
         let allowedElements = min(maxFit, CGFloat(values.options.count))
-        print("allowed \(allowedElements)")
         let contentHeight = (allowedElements + padElements) * slideInMenuRowHeight
         let proposedTop = values.top
         let top = min(proposedTop,
