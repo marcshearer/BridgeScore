@@ -450,10 +450,10 @@
 				B2633A0D27AC3A460081B258 /* Layout List View.swift */,
 				B2C4338B27B6646700796F24 /* Scorecard Input View.swift */,
 				B20B38F127C153280001B45E /* Scorecard Contract Entry View.swift */,
+				B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */,
 				B25F653927EDEEF400FDD6B1 /* Scorecard Ranking View.swift */,
 				B25F653B27F0507600FDD6B1 /* Scorecard Traveller View.swift */,
 				B203F96927F30BD900DA748A /* Scorecard Web View.swift */,
-				B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */,
 				B2100D9927DA488200CC0130 /* Stats View.swift */,
 				B256D42827ECB15700F47322 /* BBO Name Replace View.swift */,
 			);

@@ -1021,7 +1021,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             label.isUserInteractionEnabled = true
         case .declarer:
             declarerPicker.isHidden = false
-            let selected = board.declarer.rawValue
+            let selected = declarerList.firstIndex(where: {$0.seat == board.declarer}) ?? 0
             declarerPicker.set(selected, list: declarerList.map{$0.entry}, isEnabled: isEnabled, color: color, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
         case .made:
             madePicker.isHidden = false
