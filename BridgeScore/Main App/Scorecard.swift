@@ -26,7 +26,7 @@ class Scorecard {
         return Scorecard.current.rankings.flatMap{$0.1.flatMap{$0.1.flatMap{$0.1}}}
     }
     
-    public func travellers(board: Int? = nil, seat: Seat? = nil, ranking: RankingViewModel? = nil, section: Int? = nil) -> [TravellerViewModel] {
+    public func travellers(board: Int? = nil, seat: Seat? = nil, rankingNumber: Int? = nil, section: Int? = nil) -> [TravellerViewModel] {
         var result = travellerList
         if let board = board {
             result = result.filter({$0.board == board})
@@ -35,15 +35,15 @@ class Scorecard {
             if let section = section {
                 result = result.filter({$0.section[seat] == section})
             }
-            if let ranking = ranking {
-                result = result.filter({$0.rankingNumber[seat] == ranking.number})
+            if let rankingNumber = rankingNumber {
+                result = result.filter({$0.rankingNumber[seat] == rankingNumber})
             }
         }
         return result
     }
     
-    public func traveller(board: Int, seat: Seat, ranking: RankingViewModel, section: Int) -> TravellerViewModel? {
-        let resultList = travellerList.filter{$0.board == board && $0.rankingNumber[seat] == ranking.number && $0.section[seat] == section}
+    public func traveller(board: Int, seat: Seat, rankingNumber: Int, section: Int) -> TravellerViewModel? {
+        let resultList = travellerList.filter{$0.board == board && $0.rankingNumber[seat] == rankingNumber && $0.section[seat] == section}
         return resultList.count == 1 ? resultList.first : nil
     }
     
@@ -395,7 +395,7 @@ class Scorecard {
     public func insert(traveller: TravellerViewModel) {
         assert(traveller.scorecard == scorecard, "Traveller is not in current scorecard")
         assert(traveller.isNew, "Cannot insert a traveller which already has a managed object")
-        assert(self.traveller(board: traveller.board, seat: .north, ranking: traveller.ranking(seat: .north)!, section: traveller.section[.north]!) == nil, "Traveller already exists and cannot be created")
+        assert(self.traveller(board: traveller.board, seat: .north, rankingNumber: traveller.rankingNumber[.north]!, section: traveller.section[.north]!) == nil, "Traveller already exists and cannot be created")
         CoreData.update(updateLogic: {
             traveller.travellerMO = TravellerMO()
             traveller.updateMO()
@@ -406,7 +406,7 @@ class Scorecard {
     public func remove(traveller: TravellerViewModel) {
         assert(traveller.scorecard == scorecard, "Traveller is not in current scorecard")
         assert(!traveller.isNew, "Cannot remove a traveller which doesn't already have a managed object")
-        assert(self.traveller(board: traveller.board, seat: .north, ranking: traveller.ranking(seat: .north)!, section: traveller.section[.north]!) != nil, "Traveller does not exist and cannot be deleted")
+        assert(self.traveller(board: traveller.board, seat: .north, rankingNumber: traveller.rankingNumber[.north]!, section: traveller.section[.north]!) != nil, "Traveller does not exist and cannot be deleted")
         CoreData.update(updateLogic: {
             CoreData.context.delete(traveller.travellerMO!)
             travellerList.removeAll(where: {$0 == traveller})
@@ -415,7 +415,7 @@ class Scorecard {
     
     public func save(traveller: TravellerViewModel) {
         assert(traveller.scorecard == scorecard, "Traveller is not in current scorecard")
-        assert(self.traveller(board: traveller.board, seat: .north, ranking: traveller.ranking(seat: .north)!, section: traveller.section[.north]!) != nil, "Traveller does not exist and cannot be updated")
+        assert(self.traveller(board: traveller.board, seat: .north, rankingNumber: traveller.rankingNumber[.north]!, section: traveller.section[.north]!) != nil, "Traveller does not exist and cannot be updated")
         if traveller.isNew {
             CoreData.update(updateLogic: {
                 traveller.travellerMO = TravellerMO()
