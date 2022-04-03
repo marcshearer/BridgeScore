@@ -20,18 +20,35 @@ class Scorecard {
     @Published private(set) var boards: [Int:BoardViewModel] = [:]   // Board number
     @Published private(set) var tables: [Int:TableViewModel] = [:]   // Table number
     @Published private(set) var rankings: [Int:[Int:[Int:RankingViewModel]]] = [:]   // Table / Section / Pair (team) number
-    @Published private(set) var travellers: [Int:[Int:[Int:TravellerViewModel]]] = [:]   // Board number / section / north pair (team number)
+    @Published private(set) var travellerList: [TravellerViewModel] = []   // Board number / section / north pair (team number)
     
     public var flatRankings: [RankingViewModel] {
         return Scorecard.current.rankings.flatMap{$0.1.flatMap{$0.1.flatMap{$0.1}}}
     }
     
-    public var flatTravellers: [RankingViewModel] {
-        return Scorecard.current.rankings.flatMap{$0.1.flatMap{$0.1.flatMap{$0.1}}}
+    public func travellers(board: Int? = nil, seat: Seat? = nil, ranking: RankingViewModel? = nil, section: Int? = nil) -> [TravellerViewModel] {
+        var result = travellerList
+        if let board = board {
+            result = result.filter({$0.board == board})
+        }
+        if let seat = seat {
+            if let section = section {
+                result = result.filter({$0.section[seat] == section})
+            }
+            if let ranking = ranking {
+                result = result.filter({$0.rankingNumber[seat] == ranking.number})
+            }
+        }
+        return result
+    }
+    
+    public func traveller(board: Int, seat: Seat, ranking: RankingViewModel, section: Int) -> TravellerViewModel? {
+        let resultList = travellerList.filter{$0.board == board && $0.rankingNumber[seat] == ranking.number && $0.section[seat] == section}
+        return resultList.count == 1 ? resultList.first : nil
     }
     
     public var isImported: Bool {
-        !rankings.isEmpty || !travellers.isEmpty
+        !rankings.isEmpty || !travellerList.isEmpty
     }
     
     public var isSensitive: Bool {
@@ -78,15 +95,9 @@ class Scorecard {
         // Load travellers
         let travellerMOs = CoreData.fetch(from: TravellerMO.tableName, filter: scorecardFilter) as! [TravellerMO]
 
-        travellers = [:]
+        travellerList = []
         for travellerMO in travellerMOs {
-            if travellers[travellerMO.board] == nil {
-                travellers[travellerMO.board] = [:]
-            }
-            if travellers[travellerMO.board]![travellerMO.section] == nil {
-                travellers[travellerMO.board]![travellerMO.section] = [:]
-            }
-            travellers[travellerMO.board]![travellerMO.section]![travellerMO.rankingNumber[.north] ?? 0] = TravellerViewModel(scorecard: scorecard, travellerMO: travellerMO)
+            travellerList.append(TravellerViewModel(scorecard: scorecard, travellerMO: travellerMO))
         }
         
         self.scorecard = scorecard
@@ -97,7 +108,7 @@ class Scorecard {
         boards = [:]
         tables = [:]
         rankings = [:]
-        travellers = [:]
+        travellerList = []
         scorecard = nil
     }
     
@@ -175,24 +186,22 @@ class Scorecard {
             }
         }
         
-        for (boardNumber, board) in travellers {
-            for (_, section) in board {
-                for (_, traveller) in section {
-                    if boardNumber < 1 || boardNumber > scorecard.boards {
-                        // Remove any travellers no longer in bounds
-                        if traveller.isNew {
-                            // Not yet in core data - just remove from array
-                            travellers[traveller.board]?[traveller.section]?[traveller.rankingNumber[.north] ?? 0] = nil
-                        } else {
-                            remove(traveller: traveller)
-                        }
-                    } else if traveller.changed {
-                        // Save any existing boards
-                        save(traveller: traveller)
-                    }
+        var removeList = IndexSet()
+        for (index, traveller) in travellerList.reversed().enumerated() {
+            if traveller.board < 1 || traveller.board > scorecard.boards {
+                // Remove any travellers no longer in bounds
+                if traveller.isNew {
+                    // Not yet in core data - just remove from array
+                    removeList.insert(index)
+                } else {
+                    remove(traveller: traveller)
                 }
+            } else if traveller.changed {
+                    // Save any existing boards
+                save(traveller: traveller)
             }
         }
+        travellerList.remove(atOffsets: removeList)
     }
     
     public func removeAll(scorecard: ScorecardViewModel) {
@@ -207,8 +216,10 @@ class Scorecard {
         
         removeRankings()
         
-        for (boardNumber, _) in travellers {
-            removeTravellers(board: boardNumber)
+        for traveller in travellerList {
+            if !traveller.isNew {
+                remove(traveller: traveller)
+            }
         }
         
         clear()
@@ -229,13 +240,10 @@ class Scorecard {
     }
     
     public func removeTravellers(board: Int) {
-        if let travellers = travellers[board] {
-            for (_, section) in travellers {
-                for (_, traveller) in section {
-                    if !traveller.isNew {
-                        remove(traveller: traveller)
-                    }
-                }
+        let travellers = travellers(board: board)
+        for traveller in travellers {
+            if !traveller.isNew {
+                remove(traveller: traveller)
             }
         }
     }
@@ -387,33 +395,27 @@ class Scorecard {
     public func insert(traveller: TravellerViewModel) {
         assert(traveller.scorecard == scorecard, "Traveller is not in current scorecard")
         assert(traveller.isNew, "Cannot insert a traveller which already has a managed object")
-        assert(travellers[traveller.board]?[traveller.section]?[traveller.rankingNumber[.north] ?? 0] == nil, "Traveller already exists and cannot be created")
+        assert(self.traveller(board: traveller.board, seat: .north, ranking: traveller.ranking(seat: .north)!, section: traveller.section[.north]!) == nil, "Traveller already exists and cannot be created")
         CoreData.update(updateLogic: {
             traveller.travellerMO = TravellerMO()
             traveller.updateMO()
-            if travellers[traveller.board] == nil {
-                travellers[traveller.board] = [:]
-            }
-            if travellers[traveller.board]![traveller.section] == nil {
-                travellers[traveller.board]![traveller.section] = [:]
-            }
-            travellers[traveller.board]![traveller.section]![traveller.rankingNumber[.north] ?? 0] = traveller
+            travellerList.append(traveller)
         })
     }
     
     public func remove(traveller: TravellerViewModel) {
         assert(traveller.scorecard == scorecard, "Traveller is not in current scorecard")
         assert(!traveller.isNew, "Cannot remove a traveller which doesn't already have a managed object")
-        assert(travellers[traveller.board]?[traveller.section]?[traveller.rankingNumber[.north] ?? 0] != nil, "Traveller does not exist and cannot be deleted")
+        assert(self.traveller(board: traveller.board, seat: .north, ranking: traveller.ranking(seat: .north)!, section: traveller.section[.north]!) != nil, "Traveller does not exist and cannot be deleted")
         CoreData.update(updateLogic: {
             CoreData.context.delete(traveller.travellerMO!)
-            travellers[traveller.board]?[traveller.section]?[traveller.rankingNumber[.north] ?? 0] = nil
+            travellerList.removeAll(where: {$0 == traveller})
         })
     }
     
     public func save(traveller: TravellerViewModel) {
         assert(traveller.scorecard == scorecard, "Traveller is not in current scorecard")
-        assert(travellers[traveller.board]?[traveller.section]?[traveller.rankingNumber[.north] ?? 0] != nil, "Traveller does not exist and cannot be updated")
+        assert(self.traveller(board: traveller.board, seat: .north, ranking: traveller.ranking(seat: .north)!, section: traveller.section[.north]!) != nil, "Traveller does not exist and cannot be updated")
         if traveller.isNew {
             CoreData.update(updateLogic: {
                 traveller.travellerMO = TravellerMO()
@@ -461,27 +463,12 @@ class Scorecard {
             
             var newScore = table.score
             let type = scorecard.type
-            let boards = scorecard.boardsTable
             let places = type.tablePlaces
             if !scorecard.manualTotals {
                 if count == 0 {
                     newScore = nil
                 } else {
-                    let average = (count == 0 ? 0 : Utility.round(total / Float(count), places: type.boardPlaces))
-                    switch type.tableAggregate {
-                    case .average:
-                        newScore = Utility.round(average, places: places)
-                    case .total:
-                        newScore = Utility.round(total, places: places)
-                    case .continuousVp:
-                        newScore = BridgeImps(Int(Utility.round(total))).vp(boards: boards, places: places)
-                    case .discreteVp:
-                        newScore = Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: boards))
-                    case .percentVp:
-                        if let vps = BridgeMatchPoints(average).vp(boards: boards) {
-                            newScore = Float(vps)
-                        }
-                    }
+                    newScore = Scorecard.aggregate(total: total, count: count, places: places, type: type.tableAggregate)
                 }
             }
             if newScore != table.score {
@@ -506,27 +493,12 @@ class Scorecard {
         }
         var newScore = scorecard.score
         let type = scorecard.type
-        let boards = scorecard.boards
         let places = type.matchPlaces
         if !scorecard.manualTotals {
             if count == 0 {
                 newScore = nil
             } else {
-                let average = (count == 0 ? 0 : Utility.round(total / Float(count), places: places))
-                switch type.matchAggregate {
-                case .average:
-                    newScore = average
-                case .total:
-                    newScore = Utility.round(total, places: places)
-                case .continuousVp:
-                    newScore = BridgeImps(Int(Utility.round(total))).vp(boards: boards, places: places)
-                case .discreteVp:
-                    newScore = Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: boards))
-                case .percentVp:
-                    if let vps = BridgeMatchPoints(average).vp(boards: boards) {
-                        newScore = Float(vps)
-                    }
-                }
+                newScore = Scorecard.aggregate(total: total, count: count, places: places, type: type.matchAggregate)
             }
         }
         if newScore != scorecard.score {
@@ -537,6 +509,26 @@ class Scorecard {
             scorecard.maxScore = type.maxScore(tables: count)
         }
         return changed
+    }
+    
+    static func aggregate(total: Float, count: Int, places: Int, type: AggregateType) -> Float? {
+        var result: Float?
+        let average = (count == 0 ? 0 : Utility.round(total / Float(count), places: places))
+        switch type {
+        case .average:
+            result = Utility.round(average, places: places)
+        case .total:
+            result = Utility.round(total, places: places)
+        case .continuousVp:
+            result = BridgeImps(Int(Utility.round(total))).vp(boards: count, places: places)
+        case .discreteVp:
+            result = Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: count))
+        case .percentVp:
+            if let vps = BridgeMatchPoints(average).vp(boards: count) {
+                result = Float(vps)
+            }
+        }
+        return result
     }
     
     public static func declarerList(sitting: Seat) -> [(Seat, ScrollPickerEntry)] {

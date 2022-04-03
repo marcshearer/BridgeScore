@@ -18,6 +18,7 @@ enum RankingColumnType: Int, Codable {
     case points = 6
     case nsXImps = 7
     case ewXImps = 8
+    case rounds = 9
     
     var string: String {
         return "\(self)"
@@ -35,16 +36,17 @@ struct RankingColumn: Codable, Equatable {
     }
 }
 
-enum RankingRowType: Int {
+enum RankingRowType: Int, CaseIterable {
     case heading = 1
     case ranking = 2
     case title = 3
+    case rounds = 4
     
     func rowHeight(scorecard: ScorecardViewModel) -> CGFloat {
         switch self {
         case .heading:
             return 50
-        case .ranking:
+        case .ranking, .rounds:
             return (scorecard.type.players == 4 ? 80 : 50)
         case .title:
             return 40
@@ -52,7 +54,11 @@ enum RankingRowType: Int {
     }
     
     var tagOffset: Int {
-        return self.rawValue * tagMultiplier
+        return RankingRowType.offset(self.rawValue)
+    }
+    
+    private static func offset(_ rawValue: Int) -> Int {
+        return rawValue * tagMultiplier
     }
 }
 
@@ -161,26 +167,32 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
                 columns = rankingColumns.count
             case .heading:
                 columns = headingColumns.count
+            case .rounds:
+                columns = Scorecard.current.scorecard?.tables ?? 0
             }
         }
         return columns
     }
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        var column: RankingColumn?
+        var width: CGFloat = 0
         var height: CGFloat = 0
         if let type = RankingRowType(rawValue: collectionView.tag / tagMultiplier) {
             switch type {
             case .ranking, .title:
-                column = rankingColumns[indexPath.item]
+                width = rankingColumns[indexPath.item].width ?? 0
             case .heading:
-                column = headingColumns[indexPath.item]
+                width = headingColumns[indexPath.item].width ?? 0
+            case .rounds:
+                if let roundsColumn = rankingColumns.first(where: {$0.type == .rounds}) {
+                    width = (roundsColumn.width ?? 0) / 8
+                }
             }
             height = type.rowHeight(scorecard: Scorecard.current.scorecard!)
         } else {
             fatalError()
         }
-        return CGSize(width: column?.width ?? 0, height: height)
+        return CGSize(width: width, height: height)
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
@@ -197,7 +209,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
                 let row = index % totalRankings
                 let values = values[section][row]
                 let column = rankingColumns[indexPath.item]
-                cell.set(scorecard: Scorecard.current.scorecard!, ranking: values.ranking, tie: values.tie, rowType: .ranking, column: column) { (players) in
+                cell.set(from: self, scorecard: Scorecard.current.scorecard!, ranking: values.ranking, tie: values.tie, roundsTag: RankingRowType.rounds.tagOffset + (collectionView.tag % tagMultiplier), rowType: .ranking, column: column) { (players) in
                     self.replaceNames(values: players)
                 }
                 return cell
@@ -211,7 +223,15 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
                 let section = collectionView.tag % tagMultiplier
                 let value = values[section][0]
                 let column = headingColumns[indexPath.item]
-                cell.set(scorecard: Scorecard.current.scorecard!, ranking: value.ranking, rowType: .heading, column: column)
+                cell.set(from: self, scorecard: Scorecard.current.scorecard!, ranking: value.ranking, rowType: .heading, column: column)
+                return cell
+            case .rounds:
+                let cell = ScorecardRankingRoundCollectionCell.dequeue(collectionView, for: indexPath)
+                let index = collectionView.tag % tagMultiplier
+                let section = index / totalRankings
+                let row = index % totalRankings
+                let values = values[section][row]
+                cell.set(ranking: values.ranking, tableNumber: indexPath.row + 1, places: Scorecard.current.scorecard?.type.tablePlaces ?? 2)
                 return cell
             }
         } else {
@@ -260,7 +280,14 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         let sectionRankings = Scorecard.current.flatRankings
         rankingColumns = [
             RankingColumn(type: .ranking, heading: "Ranking", size: .fixed([70])),
-            RankingColumn(type: .players, heading: "Names", size: .flexible),
+            RankingColumn(type: .players, heading: "Names", size: .flexible)]
+            
+        if Scorecard.current.scorecard?.type.tableAggregate == .discreteVp && UIScreen.main.bounds.width > UIScreen.main.bounds.height {
+            rankingColumns += [
+                RankingColumn(type: .rounds, heading: "Rounds", size: .fixed([200]))]
+        }
+        
+        rankingColumns += [
             RankingColumn(type: .score, heading: "Score", size: .fixed([70]))]
         
         if sectionRankings.first(where: {$0.points != 0}) != nil {
@@ -525,6 +552,7 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
     private var scorecard: ScorecardViewModel!
     private var ranking: RankingViewModel!
     private var tapAction: (([String]) ->())?
+    private var roundCollectionView: UICollectionView!
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -535,6 +563,14 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         label.textAlignment = .center
         label.minimumScaleFactor = 0.3
         label.adjustsFontSizeToFitWidth = true
+        
+        let layout = UICollectionViewFlowLayout()
+        layout.scrollDirection = .horizontal
+        roundCollectionView = UICollectionView(frame: frame, collectionViewLayout: layout)
+        roundCollectionView.showsHorizontalScrollIndicator = false
+        layout.minimumInteritemSpacing = 0
+        layout.minimumLineSpacing = 0
+        addSubview(roundCollectionView, anchored: .all)
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardRankingCollectionCell.tapped(_:)))
         label.addGestureRecognizer(tapGesture)
@@ -570,6 +606,10 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         label.isUserInteractionEnabled = false
         label.lineBreakMode = .byWordWrapping
         label.numberOfLines = 1
+        label.isHidden = false
+        
+        ScorecardRankingRoundCollectionCell.register(roundCollectionView)
+        roundCollectionView.isHidden = true
     }
     
     func setTitle(column: RankingColumn) {
@@ -592,7 +632,7 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         }
     }
  
-    func set(scorecard: ScorecardViewModel, ranking: RankingViewModel, tie: Bool = false, rowType: RankingRowType, column: RankingColumn, tapAction: (([String])->())? = nil) {
+    func set(from sourceView: UICollectionViewDataSource & UICollectionViewDelegate, scorecard: ScorecardViewModel, ranking: RankingViewModel, tie: Bool = false, roundsTag: Int = 0, rowType: RankingRowType, column: RankingColumn, tapAction: (([String])->())? = nil) {
         self.scorecard = scorecard
         self.ranking = ranking
         self.tapAction = tapAction
@@ -633,16 +673,25 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
             label.lineBreakMode = .byWordWrapping
             label.numberOfLines = max(10, (Scorecard.current.scorecard?.type.players ?? 2) / 2)
             label.isUserInteractionEnabled = true
+        case .rounds:
+            label.isHidden = true
+            roundCollectionView.isHidden = false
+            roundCollectionView.tag = roundsTag
+            roundCollectionView.delegate = sourceView
+            roundCollectionView.dataSource = sourceView
+            roundCollectionView.isUserInteractionEnabled = true
+            roundCollectionView.backgroundColor = UIColor(color.background)
+            roundCollectionView.reloadData()
         case .score:
             label.text = ranking.score.toString(places: scorecard.type.matchPlaces, exact: true)
             label.textAlignment = .right
         case .nsXImps:
             let nsXImps = ranking.xImps[.ns]
-            label.text = nsXImps == 0 ? "" : nsXImps!.toString(places: 2, exact: true)
+            label.text = nsXImps == 0 ? "" : nsXImps?.toString(places: 2, exact: true) ?? ""
             label.textAlignment = .right
         case .ewXImps:
             let ewXImps = ranking.xImps[.ew]
-            label.text = ewXImps == 0 ? "" : ewXImps!.toString(places: 2, exact: true)
+            label.text = ewXImps == 0 ? "" : ewXImps?.toString(places: 2, exact: true) ?? ""
             label.textAlignment = .right
         case .points:
             label.text = (ranking.points == 0 ? "" : ranking.points.toString(places: 2, exact: true))
@@ -670,5 +719,48 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
     
     @objc private func tapped(_ sender: Any) {
         tapAction?(getPlayers())
+    }
+}
+
+class ScorecardRankingRoundCollectionCell: UICollectionViewCell {
+    private var label = UILabel()
+    private static let identifier = "Ranking Round Collection Cell"
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        
+        self.backgroundColor = UIColor.clear
+        
+        addSubview(label, anchored: .all)
+        label.textAlignment = .center
+        label.font = smallCellFont
+        label.minimumScaleFactor = 0.3
+        label.adjustsFontSizeToFitWidth = true
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    public class func register(_ collectionView: UICollectionView) {
+        collectionView.register(ScorecardRankingRoundCollectionCell.self, forCellWithReuseIdentifier: identifier)
+    }
+
+    public class func dequeue(_ collectionView: UICollectionView, for indexPath: IndexPath) -> ScorecardRankingRoundCollectionCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: identifier, for: indexPath) as! ScorecardRankingRoundCollectionCell
+        cell.prepareForReuse()
+        return cell
+    }
+    
+    override func prepareForReuse() {
+        label.text = ""
+    }
+    
+     
+    func set(ranking: RankingViewModel, tableNumber: Int, places: Int) {
+        if let table = Scorecard.current.tables[tableNumber] {
+            let tableScore = table.score(ranking: ranking, seat: .north)
+            label.text = tableScore.toString(places: places)
+        }
     }
 }

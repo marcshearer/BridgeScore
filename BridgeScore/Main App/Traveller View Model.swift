@@ -20,7 +20,7 @@ import CoreData
     @Published public var nsScore: Float = 0
     @Published public var nsXImps: Float = 0
     @Published public var rankingNumber: [Seat:Int] = [:]
-    @Published public var section: Int = 0
+    @Published public var section: [Seat:Int] = [:]
     @Published public var lead: String = ""
     @Published public var playData: String = ""
     
@@ -62,7 +62,7 @@ import CoreData
         return result
     }
     
-    public init(scorecard: ScorecardViewModel, board: Int, section: Int, ranking: [Seat:Int]) {
+    public init(scorecard: ScorecardViewModel, board: Int, section: [Seat:Int], ranking: [Seat:Int]) {
         self.scorecard = scorecard
         self.board = board
         self.section = section
@@ -140,15 +140,17 @@ import CoreData
     
     public func ranking(seat: Seat) -> RankingViewModel? {
         assert(self.scorecard == Scorecard.current.scorecard, "Only valid when this scorecard is current")
-        return Scorecard.current.flatRankings.first(where: {$0.number == rankingNumber[seat] && $0.section == section})
+        return Scorecard.current.flatRankings.first(where: {$0.number == rankingNumber[seat] && $0.section == section[seat]})
     }
     
     public var isSelf: Bool {
         var result = false
         for seat in Seat.validCases {
             if let ranking = ranking(seat: seat) {
-                if ranking.players[seat] == MasterData.shared.scorer?.bboName.lowercased() {
-                    result = true
+                if let scorer = MasterData.shared.scorer, let player = ranking.players[seat]?.lowercased() {
+                    if player == scorer.bboName.lowercased() || player == scorer.name.lowercased() {
+                        result = true
+                    }
                 }
             }
         }
@@ -159,8 +161,10 @@ import CoreData
         var result = false
         for seat in Seat.validCases {
             if let ranking = ranking(seat: seat) {
-                if ranking.players[seat.leftOpponent] == MasterData.shared.scorer?.bboName.lowercased() {
-                    result = true
+                if let scorer = MasterData.shared.scorer, let player = ranking.players[seat.leftOpponent]?.lowercased() {
+                    if player == scorer.bboName.lowercased() || player == scorer.name.lowercased() {
+                        result = true
+                    }
                 }
             }
         }
@@ -168,7 +172,7 @@ import CoreData
     }
     
     public override var description: String {
-        "Traveller: \(self.board), North \(self.rankingNumber[.north] ?? 0) South \(self.rankingNumber[.south] ?? 0) East \(self.rankingNumber[.east] ?? 0) West \(self.rankingNumber[.west] ?? 0) of Section \(self.section) of Scorecard: \(MasterData.shared.scorecard(id: self.scorecard.scorecardId)?.desc ?? "")"
+        "Traveller: Board: \(self.board), North: \(self.rankingNumber[.north] ?? 0) South: \(self.rankingNumber[.south] ?? 0) East: \(self.rankingNumber[.east] ?? 0) West: \(self.rankingNumber[.west] ?? 0) of Section \(self.section) of Scorecard: \(MasterData.shared.scorecard(id: self.scorecard.scorecardId)?.desc ?? "")"
     }
     
     public override var debugDescription: String { self.description }

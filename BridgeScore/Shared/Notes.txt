@@ -6,6 +6,9 @@ If xcode fails to install app on device it's normally because info.plist isn't w
 Bugs
 ====
 Background still active with MessageBox
+Check can't continue after import
+Check exit button from import confirm
+Scores on ranking from BridgeWebs
 
 To Do
 =====
@@ -13,9 +16,14 @@ Sort out dark mode
 Maybe remove file sharing in Info.plist once can backup from Mac
 Unlock after import
 Travellers and rankings in portrait
+Change ranking on imports to pair rather than seat
 
 Enhancements
 ============
 Share scorecards via iCloud?
 Open scoresheet from graph?
 Phone mode??
+
+https://www.bridgewebs.com/cgi-bin/bwop/bw.cgi?xml=1&club=standrews&pid=xml_results_travs&msec=1&mod=Results&ekey=20220328_1
+https://www.bridgewebs.com/cgi-bin/bwop/bw.cgi?xml=1&club=sbuhighland&pid=xml_results_travs&msec=1&mod=Results&ekey=20220327_1
+

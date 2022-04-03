@@ -32,6 +32,7 @@
         <attribute name="type16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
     <entity name="Location" representedClassName="LocationMO" syncable="YES">
+        <attribute name="bridgewebsId" optional="YES" attributeType="String"/>
         <attribute name="locationId" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="name" attributeType="String"/>
         <attribute name="retired" attributeType="Boolean" usesScalarValueType="YES"/>
@@ -95,30 +96,33 @@
         <attribute name="contractSuit16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="declarer16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="eastEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="eastSection16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="eastValue" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="lead" optional="YES" attributeType="String"/>
         <attribute name="made16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="northEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="northSection16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="northValue" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="nsScore" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="nsXImps" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="playData" optional="YES" attributeType="String"/>
         <attribute name="scorecardId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
-        <attribute name="section16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="southEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="southSection16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="southValue" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="westEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="westSection16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="westValue" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
     <elements>
         <element name="BBOName" positionX="-9" positionY="162" width="128" height="59"/>
         <element name="Board" positionX="-9" positionY="144" width="128" height="209"/>
         <element name="Layout" positionX="-45" positionY="0" width="128" height="194"/>
-        <element name="Location" positionX="27" positionY="189" width="128" height="89"/>
+        <element name="Location" positionX="27" positionY="189" width="128" height="104"/>
         <element name="Player" positionX="9" positionY="171" width="128" height="119"/>
         <element name="Ranking" positionX="-9" positionY="162" width="128" height="224"/>
         <element name="Scorecard" positionX="-18" positionY="81" width="128" height="284"/>
         <element name="Table" positionX="-9" positionY="153" width="128" height="134"/>
-        <element name="Traveller" positionX="0" positionY="171" width="128" height="329"/>
+        <element name="Traveller" positionX="0" positionY="171" width="128" height="374"/>
     </elements>
 </model>

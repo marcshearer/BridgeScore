@@ -43,7 +43,8 @@ struct ScorecardInputView: View {
     @State private var deleted = false
     @State private var tableRefresh = false
     @State private var detailView = false
-    @State private var importScorecard = false
+    @State private var importBboScorecard = false
+    @State private var importBwScorecard = false
     @State private var showRankings = false
     
     var body: some View {
@@ -58,7 +59,8 @@ struct ScorecardInputView: View {
                     BannerOption(image: AnyView(Image(systemName: "list.number")), likeBack: true, isHidden: $isNotImported, action: { showRankings = true }),
                     BannerOption(image: AnyView(Image(systemName: "note.text")), text: "Scorecard details", likeBack: true, menu: true, action: { UndoManager.clearActions() ; inputDetail = true }),
                     BannerOption(image: AnyView(Image(systemName: "\(detailView ? "minus" : "plus").magnifyingglass")), text: (detailView ? "Simple view" : "Alternative view"), likeBack: true, menu: true, action: { toggleView() }),
-                    BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import from BBO", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importScorecard = true })]
+                    BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import from BBO", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importBboScorecard = true }),
+                    BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import from BridgeWebs", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importBwScorecard = true })]
                 
                 Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .both, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: nil, menuId: id, options: bannerOptions)
                 GeometryReader { geometry in
@@ -80,11 +82,19 @@ struct ScorecardInputView: View {
         }) {
             ScorecardDetailView(scorecard: scorecard, deleted: $deleted, tableRefresh: $tableRefresh, title: "Details")
         }
-        .sheet(isPresented: $importScorecard, onDismiss: {
+        .sheet(isPresented: $importBboScorecard, onDismiss: {
             UndoManager.clearActions()
             tableRefresh = true
         }) {
             ImportBBOScorecard(scorecard: scorecard) {
+                saveScorecard()
+            }
+        }
+        .sheet(isPresented: $importBwScorecard, onDismiss: {
+            UndoManager.clearActions()
+            tableRefresh = true
+        }) {
+            ImportBridgeWebsScorecard(scorecard: scorecard) {
                 saveScorecard()
             }
         }
@@ -1106,8 +1116,8 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         let sitting = table.sitting
         for seat in [sitting.partner, sitting.leftOpponent, sitting.rightOpponent] {
             if scorecard.type.players == 1 || seat != sitting.partner {
-                let bboName = players[seat]
-                let realName = MasterData.shared.realName(bboName: bboName)!
+                let bboName = players[seat] ?? "Unknown"
+                let realName = MasterData.shared.realName(bboName: bboName) ?? bboName
                 versus += (versus != "" ? " & " : "") + realName
             }
         }

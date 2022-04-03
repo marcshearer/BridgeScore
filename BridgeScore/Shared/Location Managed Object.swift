@@ -16,6 +16,7 @@ public class LocationMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var locationId: UUID
     @NSManaged public var sequence16: Int16
     @NSManaged public var name: String
+    @NSManaged public var bridgewebsId: String
     @NSManaged public var retired: Bool
 
     convenience init() {

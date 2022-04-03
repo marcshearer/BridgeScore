@@ -260,13 +260,7 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
     }
     
     private func setupValues() {
-        if let travellers = Scorecard.current.travellers[boardNumber] {
-        for (_, sectionTravellers) in travellers {
-                for (_, traveller) in sectionTravellers {
-                    values.append(traveller)
-                }
-            }
-        }
+        values = Scorecard.current.travellers(board: boardNumber)
         if Scorecard.current.scorecard?.type.players == 4 {
             // Sort by teams (self first)
             values.sort(by: {NSObject.sort($0, $1, sortKeys: [("isSelf", .descending), ("isTeam", .descending), ("minRankingNumber", .ascending)])})

@@ -12,7 +12,7 @@ public class TravellerMO: NSManagedObject, ManagedObject, Identifiable {
 
     public static let tableName = "Traveller"
     
-    public var id: (UUID, Int, [Seat:Int], Int) { (self.scorecardId, self.board, self.rankingNumber, self.section) }
+    public var id: (UUID, Int, [Seat:Int], Int16) { (self.scorecardId, self.board, self.rankingNumber, self.northSection16) }
     @NSManaged public var scorecardId: UUID
     @NSManaged public var board16: Int16
     @NSManaged public var contractLevel16: Int16
@@ -30,7 +30,10 @@ public class TravellerMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var eastEntered: Bool
     @NSManaged public var westValue: Int16
     @NSManaged public var westEntered: Bool
-    @NSManaged public var section16: Int16
+    @NSManaged public var northSection16: Int16
+    @NSManaged public var southSection16: Int16
+    @NSManaged public var eastSection16: Int16
+    @NSManaged public var westSection16: Int16
     @NSManaged public var lead: String
     @NSManaged public var playData: String
     
@@ -77,7 +80,7 @@ public class TravellerMO: NSManagedObject, ManagedObject, Identifiable {
         }
     }
 
-    public var rankingNumber: [Seat:Int] {
+    public var section: [Seat:Int] {
         get {
             var result: [Seat:Int] = [:]
             if northEntered { result[.north] = Int(northValue) }
@@ -118,9 +121,21 @@ public class TravellerMO: NSManagedObject, ManagedObject, Identifiable {
         }
     }
     
-    public var section: Int {
-        get { Int(self.section16) }
-        set { self.section16 = Int16(newValue) }
+    public var rankingNumber: [Seat:Int] {
+        get {
+            var result: [Seat:Int] = [:]
+            result[.north] = Int(northSection16)
+            result[.south] = Int(southSection16)
+            result[.east] = Int(eastSection16)
+            result[.west] = Int(westSection16)
+            return result
+        }
+        set {
+            northSection16 = Int16(newValue[.north] ?? 0)
+            southSection16 = Int16(newValue[.south] ?? 0)
+            eastSection16 = Int16(newValue[.east] ?? 0)
+            westSection16 = Int16(newValue[.west] ?? 0)
+        }
     }
     
     public override var description: String {

@@ -15,6 +15,7 @@ public class LocationViewModel : ObservableObject, Identifiable, Equatable, Cust
     @Published private(set) var locationId: UUID
     @Published public var sequence: Int
     @Published public var name: String
+    @Published public var bridgeWebsId: String
     @Published public var retired: Bool
     
     // Linked managed objects - should only be referenced in this and the Data classes
@@ -41,6 +42,7 @@ public class LocationViewModel : ObservableObject, Identifiable, Equatable, Cust
             if self.locationId != mo.locationId ||
                 self.sequence != mo.sequence ||
                 self.name != mo.name ||
+                self.bridgeWebsId != mo.bridgewebsId ||
                 self.retired != mo.retired {
                     result = true
             }
@@ -54,6 +56,7 @@ public class LocationViewModel : ObservableObject, Identifiable, Equatable, Cust
         self.locationId = UUID()
         self.sequence = Int.max
         self.name = ""
+        self.bridgeWebsId = ""
         self.retired = false
         self.setupMappings()
     }
@@ -88,6 +91,7 @@ public class LocationViewModel : ObservableObject, Identifiable, Equatable, Cust
             self.locationId = mo.locationId
             self.sequence = mo.sequence
             self.name = mo.name
+            self.bridgeWebsId = mo.bridgewebsId
             self.retired = mo.retired
         }
     }
@@ -96,6 +100,7 @@ public class LocationViewModel : ObservableObject, Identifiable, Equatable, Cust
         self.locationId = from.locationId
         self.sequence = from.sequence
         self.name = from.name
+        self.bridgeWebsId = from.bridgeWebsId
         self.retired = from.retired
         self.locationMO = from.locationMO
     }
@@ -104,6 +109,7 @@ public class LocationViewModel : ObservableObject, Identifiable, Equatable, Cust
         self.locationMO!.locationId = self.locationId
         self.locationMO!.sequence = self.sequence
         self.locationMO!.name = self.name
+        self.locationMO!.bridgewebsId = self.bridgeWebsId
         self.locationMO!.retired = self.retired
     }
 

@@ -109,7 +109,6 @@ class ScorecardWebView: UIView, WKNavigationDelegate {
         messageLabel.textAlignment = .center
         messageLabel.numberOfLines = 3
 
-        
         // Close button
         contentView.addSubview(closeButton, anchored: .centerX)
         Constraint.setHeight(control: closeButton, height: buttonHeight)

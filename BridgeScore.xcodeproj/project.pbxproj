@@ -26,6 +26,7 @@
 		B240141A27CCBF2400C3117F /* Scorecard Filter View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B240141927CCBF2400C3117F /* Scorecard Filter View.swift */; };
 		B24BC3A127F42DD200576D50 /* Scorecard Filter Values.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24BC3A027F42DD200576D50 /* Scorecard Filter Values.swift */; };
 		B24BC3A327F42EEA00576D50 /* Flags.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24BC3A227F42EEA00576D50 /* Flags.swift */; };
+		B24BC3CA27F5A07800576D50 /* Import BridgeWebs.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24BC3C927F5A07800576D50 /* Import BridgeWebs.swift */; };
 		B24EAE8E27DDE95C001B3E64 /* Multi Select Picker Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24EAE8D27DDE95C001B3E64 /* Multi Select Picker Input.swift */; };
 		B256D42127EC434100F47322 /* Traveller Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B256D42027EC434100F47322 /* Traveller Managed Object.swift */; };
 		B256D42327EC456B00F47322 /* Ranking Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B256D42227EC456B00F47322 /* Ranking Managed Object.swift */; };
@@ -85,6 +86,7 @@
 		B2A5A42827E3090300754061 /* BBO Name View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A5A42727E3090300754061 /* BBO Name View Model.swift */; };
 		B2AF750D27AD14FD00233693 /* Slide In Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AF750C27AD14FD00233693 /* Slide In Menu.swift */; };
 		B2AF750F27AD384900233693 /* Layout Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AF750E27AD384900233693 /* Layout Setup View.swift */; };
+		B2BAD9BB27F75895008D0160 /* Import Framework.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2BAD9BA27F75895008D0160 /* Import Framework.swift */; };
 		B2BBC8B827BBF4B100D51A26 /* Table Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2BBC8B727BBF4B100D51A26 /* Table Managed Object.swift */; };
 		B2BBC8BA27BBF6BC00D51A26 /* Table View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2BBC8B927BBF6BC00D51A26 /* Table View Model.swift */; };
 		B2BE9BD027A15B6B002A6F8F /* Inset View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2BE9BCF27A15B6B002A6F8F /* Inset View.swift */; };
@@ -130,6 +132,7 @@
 		B240141927CCBF2400C3117F /* Scorecard Filter View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Filter View.swift"; sourceTree = "<group>"; };
 		B24BC3A027F42DD200576D50 /* Scorecard Filter Values.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Filter Values.swift"; sourceTree = "<group>"; };
 		B24BC3A227F42EEA00576D50 /* Flags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Flags.swift; sourceTree = "<group>"; };
+		B24BC3C927F5A07800576D50 /* Import BridgeWebs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Import BridgeWebs.swift"; sourceTree = "<group>"; };
 		B24EAE8D27DDE95C001B3E64 /* Multi Select Picker Input.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Multi Select Picker Input.swift"; sourceTree = "<group>"; };
 		B256D42027EC434100F47322 /* Traveller Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Traveller Managed Object.swift"; sourceTree = "<group>"; };
 		B256D42227EC456B00F47322 /* Ranking Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Ranking Managed Object.swift"; sourceTree = "<group>"; };
@@ -192,6 +195,7 @@
 		B2A5A42727E3090300754061 /* BBO Name View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BBO Name View Model.swift"; sourceTree = "<group>"; };
 		B2AF750C27AD14FD00233693 /* Slide In Menu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Slide In Menu.swift"; sourceTree = "<group>"; };
 		B2AF750E27AD384900233693 /* Layout Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Layout Setup View.swift"; sourceTree = "<group>"; };
+		B2BAD9BA27F75895008D0160 /* Import Framework.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Import Framework.swift"; sourceTree = "<group>"; };
 		B2BBC8B727BBF4B100D51A26 /* Table Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Table Managed Object.swift"; sourceTree = "<group>"; };
 		B2BBC8B927BBF6BC00D51A26 /* Table View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Table View Model.swift"; sourceTree = "<group>"; };
 		B2BE9BCF27A15B6B002A6F8F /* Inset View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Inset View.swift"; sourceTree = "<group>"; };
@@ -277,6 +281,7 @@
 				B26BCE242799AA6C00B73501 /* Standard Components */,
 				B26BCE252799AA7900B73501 /* View Models */,
 				B26BCE6D279AEB4C00B73501 /* Main Views */,
+				B2BAD9B727F757AA008D0160 /* Imports */,
 				B2A2053327AFBFB900C83C88 /* Setup Views */,
 				B2EB3D7C279F0E6000D64225 /* Shared Views */,
 				B26BCE232799AA6300B73501 /* Utilities */,
@@ -411,7 +416,6 @@
 				B2EB3D78279DB80000D64225 /* Scorecard.swift */,
 				B26BCE552799AE6400B73501 /* Preview Data.swift */,
 				B2EB3D7A279DCBCB00D64225 /* Default Data.swift */,
-				B2DADE5027E7A06E009F7572 /* Import BBO.swift */,
 				B24BC3A027F42DD200576D50 /* Scorecard Filter Values.swift */,
 			);
 			name = "Standard Components";
@@ -468,6 +472,16 @@
 				B2A2053827B01D0000C83C88 /* Location Setup View.swift */,
 			);
 			name = "Setup Views";
+			sourceTree = "<group>";
+		};
+		B2BAD9B727F757AA008D0160 /* Imports */ = {
+			isa = PBXGroup;
+			children = (
+				B2BAD9BA27F75895008D0160 /* Import Framework.swift */,
+				B2DADE5027E7A06E009F7572 /* Import BBO.swift */,
+				B24BC3C927F5A07800576D50 /* Import BridgeWebs.swift */,
+			);
+			name = Imports;
 			sourceTree = "<group>";
 		};
 		B2CC509C27BE21D10050F22C /* Reusable UIKit Components */ = {
@@ -583,6 +597,7 @@
 				B2E1B76827DC71E300204CAC /* User Defaults.swift in Sources */,
 				B24EAE8E27DDE95C001B3E64 /* Multi Select Picker Input.swift in Sources */,
 				B27CFA4E27CDFE8400B976E0 /* Popup Menu.swift in Sources */,
+				B24BC3CA27F5A07800576D50 /* Import BridgeWebs.swift in Sources */,
 				B2276D5A27A692A40025DA80 /* Constraint.swift in Sources */,
 				B2A2053B27B108C700C83C88 /* Input Integer.swift in Sources */,
 				B2BE9BD027A15B6B002A6F8F /* Inset View.swift in Sources */,
@@ -653,6 +668,7 @@
 				B2AF750F27AD384900233693 /* Layout Setup View.swift in Sources */,
 				B28E4EE827B55F9A0059819C /* Backup.swift in Sources */,
 				B26BCE6B2799AED700B73501 /* Input Title.swift in Sources */,
+				B2BAD9BB27F75895008D0160 /* Import Framework.swift in Sources */,
 				B2C4338E27B7B56200796F24 /* Custom Collection View Flow.swift in Sources */,
 				B23ADBF227B25356001B6B38 /* List Tile View.swift in Sources */,
 				B20B38F227C153280001B45E /* Scorecard Contract Entry View.swift in Sources */,
