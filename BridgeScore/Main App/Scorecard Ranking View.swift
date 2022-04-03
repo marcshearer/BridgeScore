@@ -598,6 +598,7 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         column = nil
         rowType = nil
         
+        self.backgroundColor = UIColor(Palette.background.background)
         label.backgroundColor = UIColor.clear
         label.textColor = UIColor(Palette.background.text)
         label.text = ""
@@ -641,7 +642,7 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         
         label.tag = column.type.rawValue
         
-        let color = (ranking.isSelf ? Palette.alternate : Palette.background)
+        let color = (ranking.isSelf && rowType == .ranking ? Palette.alternate : Palette.background)
         backgroundColor = UIColor(color.background)
         label.textColor = UIColor(color.text)
         label.font = smallCellFont
