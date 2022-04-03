@@ -104,7 +104,7 @@ struct ScorecardDetailsView: View {
                                         
                     Separator()
                     
-                    PickerInput(id: id, title: "Location", field: $locationIndex, values: {locations.map{$0.name}}, selectedColor: Palette.filterUsed)
+                    PickerInput(id: id, title: "Location", field: $locationIndex, values: {locations.map{$0.name}})
                     { index in
                         if let index = index {
                             scorecard.location = locations[index]
@@ -113,7 +113,7 @@ struct ScorecardDetailsView: View {
                     
                     Separator()
                     
-                    PickerInput(id: id, title: "Partner", field: $playerIndex, values: {players.map{$0.name}}, selectedColor: Palette.filterUsed)
+                    PickerInput(id: id, title: "Partner", field: $playerIndex, values: {players.map{$0.name}})
                     { index in
                         if let index = index {
                             scorecard.partner = players[index]
@@ -168,7 +168,7 @@ struct ScorecardDetailsView: View {
             InsetView(title: "Options") {
                 VStack(spacing: 0) {
                     
-                    PickerInputAdditional(id: id, title: "Scoring", field: $typeIndex, values: {types.map{$0.string}}, selectedColor: Palette.filterUsed, additionalBinding: $scorecard.score, onChange:
+                    PickerInputAdditional(id: id, title: "Scoring", field: $typeIndex, values: {types.map{$0.string}}, additionalBinding: $scorecard.score, onChange:
                     { (index) in
                         if let index = index {
                             if scorecard.type != types[index] {
@@ -181,7 +181,7 @@ struct ScorecardDetailsView: View {
                     
                     Separator()
                     
-                    PickerInput(id: id, title: "Total calculation", field: $manualTotalsIndex, values: { TotalCalculation.allCases.map{$0.string}}, selectedColor: Palette.filterUsed)
+                    PickerInput(id: id, title: "Total calculation", field: $manualTotalsIndex, values: { TotalCalculation.allCases.map{$0.string}})
                     { (index) in
                         if let index = index {
                             scorecard.manualTotals = (index == TotalCalculation.manual.rawValue)
@@ -206,7 +206,7 @@ struct ScorecardDetailsView: View {
                     
                     Separator()
                     
-                    PickerInput(id: id, title: "Board Numbers", field: $resetBoardNumberIndex, values: { ResetBoardNumber.allCases.map{$0.string}}, selectedColor: Palette.filterUsed)
+                    PickerInput(id: id, title: "Board Numbers", field: $resetBoardNumberIndex, values: { ResetBoardNumber.allCases.map{$0.string}})
                     { (index) in
                         scorecard.resetNumbers = (index == ResetBoardNumber.perTable.rawValue)
                         tableRefresh = true

@@ -20,6 +20,7 @@ struct ImportBridgeWebsScorecard: View {
         case select
         case getFile
         case confirm
+        case importing
         case error
     }
     
@@ -48,6 +49,8 @@ struct ImportBridgeWebsScorecard: View {
                 downloadingFile
             case .confirm:
                 confirmDetails
+            case .importing:
+                importingFile
             case .error:
                 showErrorMessage
             }
@@ -186,9 +189,9 @@ struct ImportBridgeWebsScorecard: View {
                     .frame(width: 120, height: 40)
                     .cornerRadius(10)
                     .onTapGesture {
-                        importedBridgeWebsScorecard.importScorecard(rebuild: true)
-                        completion?()
-                        presentationMode.wrappedValue.dismiss()
+                        Utility.mainThread {
+                            phase = .importing
+                        }
                     }
                     Spacer()
                 }
@@ -203,6 +206,23 @@ struct ImportBridgeWebsScorecard: View {
             }
         }
         .background(Palette.alternate.background)
+    }
+    
+    var importingFile: some View {
+        VStack(spacing: 0) {
+            Banner(title: Binding.constant("Import from BridgeWebs"), backImage: Banner.crossImage)
+            Spacer()
+            Text("Importing file...")
+                .font(defaultFont)
+            Spacer()
+        }
+        .onAppear {
+            Utility.executeAfter(delay: 0.1) {
+                importedBridgeWebsScorecard.importScorecard(rebuild: true)
+                completion?()
+                presentationMode.wrappedValue.dismiss()
+            }
+        }
     }
     
     private func getList() {
@@ -391,6 +411,15 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
             case "-sc":
                 if let string = columns.element(index) {
                     importedTraveller.points = -(Int(string) ?? 0)
+                }
+            case "+":
+                if let string = columns.element(index) {
+                    importedTraveller.nsMps = (Int(string) ?? 0)
+                    importedTraveller.totalMps = (importedTraveller.totalMps ?? 0) + (Int(string) ?? 0)
+                }
+            case "-":
+                if let string = columns.element(index) {
+                    importedTraveller.totalMps = (importedTraveller.totalMps ?? 0) + (Int(string) ?? 0)
                 }
             case "ns x":
                 if let string = columns.element(index) {

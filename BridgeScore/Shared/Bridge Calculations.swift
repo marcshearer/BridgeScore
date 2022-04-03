@@ -68,10 +68,16 @@ class BridgeImps {
         return (imps < 0 ? Float(maxVp) - vp[positive] : vp[positive])
     }
     
-    public func discreteVp(boards: Int, maxVp: Int = 20) -> Int {
-        return acblVp(boards: boards)
-    }/*
-        let midVp = maxVp / 2
+    public func acblDiscreteVp(boards: Int, maxVp: Int = 20) -> Int {
+        var vp: Int = 10
+        if let element = impsToVpsAcbl.first(where: {$0.from <= boards && $0.to >= boards}) {
+            let increment = element.cutoffs.firstIndex(where: {$0 > abs(imps)}) ?? 10
+            vp = 10 + (increment * imps.sign)
+        }
+        return vp
+    }
+    
+    public func discreteVp(boards: Int, maxVp: Int = 20) -> Int {    let midVp = maxVp / 2
         let positive = abs(imps)
         
         var bounds: [Int] = []
@@ -95,7 +101,6 @@ class BridgeImps {
         bounds.remove(at: 0)
         return midVp + (bounds.firstIndex(where: {positive <= $0}) ?? midVp) * imps.sign
     }
-    */
         
     public func round(_ value: Float, places: Int = 0) -> Float {
         let scale: Float = powf(10, Float(places))
@@ -111,16 +116,7 @@ class BridgeImps {
         }
         return result
     }
-    
-    public func acblVp(boards: Int) -> Int {
-        var vp: Int = 10
-        if let element = impsToVpsAcbl.first(where: {$0.from <= boards && $0.to >= boards}) {
-            let increment = element.cutoffs.firstIndex(where: {$0 > abs(imps)}) ?? 10
-            vp = 10 + (increment * imps.sign)
-        }
-        return vp
-    }
-    
+        
     let pointsToImps = [10, 40, 80, 120, 160, 210, 260, 310, 360, 420, 490, 590, 740, 890, 1090, 1290, 1490, 1740, 1990, 2240, 2490, 2990, 3490, 3990]
     
     let impsToVpsAcbl: [(from: Int, to: Int, cutoffs: [Int])] =

@@ -268,7 +268,14 @@ class Scorecard {
         return (self.scorecard == scorecard)
     }
     
-  // MARK: - Boards ======================================================================== -
+    public func clearImport() {
+        removeRankings()
+        for boardNumber in 1...(scorecard?.boards ?? 0) {
+            removeTravellers(board: boardNumber)
+        }
+    }
+    
+    // MARK: - Boards ======================================================================== -
     
     public func insert(board: BoardViewModel) {
         assert(board.scorecard == scorecard, "Board is not in current scorecard")
@@ -515,6 +522,8 @@ class Scorecard {
             result = BridgeImps(Int(Utility.round(total))).vp(boards: count, places: places)
         case .discreteVp:
             result = Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: count))
+        case .acblDiscreteVp:
+            result = Float(BridgeImps(Int(Utility.round(total))).acblDiscreteVp(boards: count))
         case .percentVp:
             if let vps = BridgeMatchPoints(average).vp(boards: count) {
                 result = Float(vps)

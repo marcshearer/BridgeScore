@@ -161,7 +161,7 @@ struct LayoutDetailView : View {
                             
                             Separator()
                             
-                            PickerInput(id: id, title: "Location", field: $locationIndex, values: {locations.map{$0.name}}, selectedColor: Palette.filterUsed, inlineTitleWidth: 200)
+                            PickerInput(id: id, title: "Location", field: $locationIndex, values: {locations.map{$0.name}}, inlineTitleWidth: 200)
                             { index in
                                 if let index = index {
                                     selected.location = locations[index]
@@ -170,7 +170,7 @@ struct LayoutDetailView : View {
                             
                             Separator()
                             
-                            PickerInput(id: id, title: "Partner", field: $playerIndex, values: {players.map{$0.name}}, selectedColor: Palette.filterUsed, inlineTitleWidth: 200)
+                            PickerInput(id: id, title: "Partner", field: $playerIndex, values: {players.map{$0.name}}, inlineTitleWidth: 200)
                             { index in
                                 if let index = index {
                                     selected.partner = players[index]
@@ -187,7 +187,7 @@ struct LayoutDetailView : View {
                     InsetView(title: "Options") {
                         VStack(spacing: 0) {
                             
-                            PickerInput(id: id, title: "Scoring Method", field: $typeIndex, values: {types.map{$0.string}}, selectedColor: Palette.filterUsed, inlineTitleWidth: 200)
+                            PickerInput(id: id, title: "Scoring Method", field: $typeIndex, values: {types.map{$0.string}}, inlineTitleWidth: 200)
                             { index in
                                 if let index = index {
                                     selected.type = types[index]
@@ -196,7 +196,7 @@ struct LayoutDetailView : View {
 
                             Separator()
 
-                            PickerInput(id: id, title: "Total calculation", field: $manualTotalsIndex, values: { TotalCalculation.allCases.map{$0.string}}, selectedColor: Palette.filterUsed, inlineTitleWidth: 200)
+                            PickerInput(id: id, title: "Total calculation", field: $manualTotalsIndex, values: { TotalCalculation.allCases.map{$0.string}}, inlineTitleWidth: 200)
                             { (index) in
                                 if let index = index {
                                     selected.manualTotals = (index == TotalCalculation.manual.rawValue)
@@ -216,7 +216,7 @@ struct LayoutDetailView : View {
                             
                             Separator()
                             
-                            PickerInput(id: id, title: "Board Numbers", field: $resetBoardNumberIndex, values: { ResetBoardNumber.allCases.map{$0.string}}, selectedColor: Palette.filterUsed, inlineTitleWidth: 200)
+                            PickerInput(id: id, title: "Board Numbers", field: $resetBoardNumberIndex, values: { ResetBoardNumber.allCases.map{$0.string}}, inlineTitleWidth: 200)
                             { (index) in
                                 if let index = index {
                                     selected.resetNumbers = (index == ResetBoardNumber.perTable.rawValue)

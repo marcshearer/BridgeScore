@@ -108,8 +108,9 @@ struct SlideInMenuView : View {
                                         }
                                         ForEach(values.options.indices, id: \.self) { (index) in
                                             let option = values.options[index]
-                                            let color = (values.isSelected(index) ? values.selectedColor ?? Palette.banner : Palette.background)
-                                            tile(color: color, text: option.text)
+                                            let color = (values.isSelected(index) ? values.selectedColor ?? Palette.background : Palette.background)
+                                            let textType: ThemeTextType = (values.isSelected(index) && values.selectedColor == nil ? .theme : .normal)
+                                            tile(color: color, text: option.text, textType: textType)
                                             .font(.title2)
                                             .onTapGesture {
                                                 if values.selected != nil {
@@ -177,7 +178,7 @@ struct SlideInMenuView : View {
         return (contentHeight, top)
     }
     
-    func tile(color: PaletteColor, text: String, centered: Bool = false, heightFactor: CGFloat = 1, bottomSeparator: Bool = false) -> some View {
+    func tile(color: PaletteColor, text: String, centered: Bool = false, textType: ThemeTextType = .normal, heightFactor: CGFloat = 1, bottomSeparator: Bool = false) -> some View {
         VStack(spacing: 0) {
             Spacer()
             HStack {
@@ -187,7 +188,7 @@ struct SlideInMenuView : View {
                     Spacer().frame(width: 20)
                 }
                 Text(text)
-                    .foregroundColor(color.text)
+                    .foregroundColor(color.textColor(textType))
                 Spacer()
             }
             Spacer()

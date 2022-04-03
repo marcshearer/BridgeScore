@@ -21,7 +21,7 @@ struct PickerInput : View {
     var maxLabelWidth: CGFloat = 200
     var centered: Bool = false
     var color: PaletteColor = Palette.clear
-    var selectedColor: PaletteColor = Palette.clear
+    var selectedColor: PaletteColor? = nil
     var font: Font = inputFont
     var cornerRadius: CGFloat = 0
     var animation: ViewAnimation = .slideLeft
@@ -88,7 +88,7 @@ struct PickerInputAdditional<Additional>: View where Additional: Equatable  {
                             let top = geometry.frame(in: .global).minY - (slideInMenuRowHeight * 1.4)
                             let left = geometry.frame(in: .global).maxX + 30
                             
-                            PopupMenu(id: id, field: field, values: values, title: popupTitle ?? title, animation: animation, top: top, left: left, width: 400, selectedColor: selectedColor ?? color, onChange: onChange) {
+                            PopupMenu(id: id, field: field, values: values, title: popupTitle ?? title, animation: animation, top: top, left: left, width: 400, selectedColor: selectedColor, onChange: onChange) {
                                 
                                 HStack {
                                     if centered {

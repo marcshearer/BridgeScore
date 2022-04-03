@@ -250,10 +250,10 @@ class ImportedScorecard: NSObject {
     }
     
     func recalculateTravellers() {
-        // BBO etc sometimes exports cross imps on boards rather than team imp differences - recalculate them
-        if scorecard!.type.players == 4 {
-            for (board, boardTravellers) in travellers {
-                for traveller in boardTravellers {
+            // BBO etc sometimes exports cross imps on boards rather than team imp differences - recalculate them
+        for (board, boardTravellers) in travellers {
+            for traveller in boardTravellers {
+                if scorecard!.type.players == 4 {
                     if let contract = traveller.contract, let declarer = traveller.declarer, let made = traveller.made {
                         if let otherTraveller = boardTravellers.first(where: {matchingTraveller($0, traveller)}), let otherContract = otherTraveller.contract, let otherDeclarer = otherTraveller.declarer, let otherMade = otherTraveller.made {
                             let vulnerability = Vulnerability(board: board)
@@ -271,9 +271,14 @@ class ImportedScorecard: NSObject {
                             }
                         }
                     }
+                } else if scorecard.type.boardScoreType == .percent {
+                    if let nsMps = traveller.nsMps, let totalMps = traveller.totalMps {
+                        traveller.nsScore = Utility.round(Float(nsMps) / Float(totalMps) * 100, places: scorecard.type.boardPlaces)
+                    }
                 }
             }
         }
+        
     }
     
     func checkBoardsPerTable(name: String) {
@@ -379,6 +384,8 @@ class ImportedTraveller {
     public var made: Int?
     public var lead: String?
     public var points: Int?
+    public var nsMps: Int?
+    public var totalMps: Int?
     public var nsScore: Float?
     public var nsXImps: Float?
     public var playData: String?

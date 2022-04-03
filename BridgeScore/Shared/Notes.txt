@@ -18,6 +18,7 @@ Maybe remove file sharing in Info.plist once can backup from Mac
 Unlock after import
 Travellers and rankings in portrait
 Change ranking on imports to pair rather than seat
+Check imports if no network
 
 Enhancements
 ============

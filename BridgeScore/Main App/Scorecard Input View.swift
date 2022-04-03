@@ -55,14 +55,7 @@ struct ScorecardInputView: View {
                 if refreshTableTotals { EmptyView() }
     
                 // Banner
-                let bannerOptions = UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo) + [
-                    BannerOption(image: AnyView(Image(systemName: "list.number")), likeBack: true, isHidden: $isNotImported, action: { showRankings = true }),
-                    BannerOption(image: AnyView(Image(systemName: "note.text")), text: "Scorecard details", likeBack: true, menu: true, action: { UndoManager.clearActions() ; inputDetail = true }),
-                    BannerOption(image: AnyView(Image(systemName: "\(detailView ? "minus" : "plus").magnifyingglass")), text: (detailView ? "Simple view" : "Alternative view"), likeBack: true, menu: true, action: { toggleView() }),
-                    BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import from BBO", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importBboScorecard = true }),
-                    BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import from BridgeWebs", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importBwScorecard = true })]
-                
-                Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .both, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: nil, menuId: id, options: bannerOptions)
+                Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .both, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: nil, menuId: id, options: bannerOptions(isNotImported: $isNotImported))
                 GeometryReader { geometry in
                     ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), refreshTableTotals: $refreshTableTotals, detailView: $detailView, inputDetail: $inputDetail, tableRefresh: $tableRefresh, showRankings: $showRankings)
                     .ignoresSafeArea(edges: .all)
@@ -84,6 +77,7 @@ struct ScorecardInputView: View {
         }
         .sheet(isPresented: $importBboScorecard, onDismiss: {
             UndoManager.clearActions()
+            isNotImported = false
             tableRefresh = true
         }) {
             ImportBBOScorecard(scorecard: scorecard) {
@@ -92,6 +86,7 @@ struct ScorecardInputView: View {
         }
         .sheet(isPresented: $importBwScorecard, onDismiss: {
             UndoManager.clearActions()
+            isNotImported = false
             tableRefresh = true
         }) {
             ImportBridgeWebsScorecard(scorecard: scorecard) {
@@ -102,6 +97,41 @@ struct ScorecardInputView: View {
             Scorecard.updateScores(scorecard: scorecard)
             isNotImported = !Scorecard.current.isImported
         }
+    }
+    
+    func bannerOptions(isNotImported: Binding<Bool>) -> [BannerOption] {
+        var bannerOptions = UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo)
+        if !isNotImported.wrappedValue {
+            bannerOptions += [
+                BannerOption(image: AnyView(Image(systemName: "list.number")), likeBack: true, isHidden: isNotImported, action: { showRankings = true })]
+        }
+        bannerOptions += [
+                BannerOption(image: AnyView(Image(systemName: "note.text")), text: "Scorecard details", likeBack: true, menu: true, action: { UndoManager.clearActions() ; inputDetail = true }),
+                BannerOption(image: AnyView(Image(systemName: "\(detailView ? "minus" : "plus").magnifyingglass")), text: (detailView ? "Simple view" : "Alternative view"), likeBack: true, menu: true, action: { toggleView() })]
+        if isNotImported.wrappedValue {
+            bannerOptions += [
+                BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import from BBO", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importBboScorecard = true}),
+                BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import from BridgeWebs", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importBwScorecard = true})]
+        } else {
+            bannerOptions += [
+                BannerOption(image: AnyView(Image(systemName: "lock.open.fill")), text: "Remove import details", likeBack: true, menu: true, action: {
+                    UndoManager.clearActions()
+                    MessageBox.shared.show("This will remove imported rankings and travellers and unlock the scorecard for editing. Are you sure you want to do this?", cancelText: "Cancel", okText: "Remove", okDestructive: true, okAction: {
+                        MessageBox.shared.show("Clearing import...", okText: nil)
+                        Utility.executeAfter(delay: 0.1) {
+                            if let context = CoreData.context {
+                                context.performAndWait {
+                                    Scorecard.current.clearImport()
+                                }
+                                isNotImported.wrappedValue = true
+                                tableRefresh = true
+                                MessageBox.shared.hide()
+                            }
+                        }
+                    })
+                })]
+        }
+        return bannerOptions
     }
     
     func backAction() -> Bool {
@@ -157,7 +187,6 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
         
         if tableRefresh {
             uiView.tableRefresh()
-            tableRefresh = false
         }
         
         if showRankings {
