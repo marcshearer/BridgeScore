@@ -69,6 +69,8 @@ class BridgeImps {
     }
     
     public func discreteVp(boards: Int, maxVp: Int = 20) -> Int {
+        return acblVp(boards: boards)
+    }/*
         let midVp = maxVp / 2
         let positive = abs(imps)
         
@@ -93,6 +95,7 @@ class BridgeImps {
         bounds.remove(at: 0)
         return midVp + (bounds.firstIndex(where: {positive <= $0}) ?? midVp) * imps.sign
     }
+    */
         
     public func round(_ value: Float, places: Int = 0) -> Float {
         let scale: Float = powf(10, Float(places))
@@ -109,7 +112,24 @@ class BridgeImps {
         return result
     }
     
-    let pointsToImps = [10, 40, 80, 120, 160, 210, 260, 310, 360, 420, 490, 590, 740, 890, 090, 1290, 1490, 1740, 1990, 2240, 2490, 2990, 3490, 3990]
+    public func acblVp(boards: Int) -> Int {
+        var vp: Int = 10
+        if let element = impsToVpsAcbl.first(where: {$0.from <= boards && $0.to >= boards}) {
+            let increment = element.cutoffs.firstIndex(where: {$0 > abs(imps)}) ?? 10
+            vp = 10 + (increment * imps.sign)
+        }
+        return vp
+    }
+    
+    let pointsToImps = [10, 40, 80, 120, 160, 210, 260, 310, 360, 420, 490, 590, 740, 890, 1090, 1290, 1490, 1740, 1990, 2240, 2490, 2990, 3490, 3990]
+    
+    let impsToVpsAcbl: [(from: Int, to: Int, cutoffs: [Int])] =
+        [( 1,  8, [  1,  3,  5,  8, 11, 14, 17, 20, 24, 28]),
+         ( 9, 11, [  1,  3,  6, 10, 14, 18, 22, 26, 31, 36]),
+         (12, 15, [  1,  4,  7, 11, 15, 20, 25, 30, 36, 42]),
+         (16, 20, [  2,  5,  9, 14, 19, 25, 32, 39, 47, 56]),
+         (21, 27, [  3,  7, 12, 18, 25, 33, 42, 51, 61, 72]),
+         (28, 36, [  4,  9, 15, 22, 30, 39, 49, 60, 72, 85])]
 }
 
 class BridgeMatchPoints {

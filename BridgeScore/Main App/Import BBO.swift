@@ -261,6 +261,7 @@ class ImportedBBOScorecard: ImportedScorecard {
     
     init(lines: [String] = [], scorecard: ScorecardViewModel? = nil) {
         super.init()
+        self.importSource = .bbo
         self.scorecard = scorecard
         let scorer = MasterData.shared.scorer
         myName = scorer!.bboName.lowercased()

@@ -293,6 +293,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         self.namesElement = false
         self.completion = completion
         super.init()
+        self.importSource = .bridgeWebs
         self.scorecard = scorecard
         let scorer = MasterData.shared.scorer
         myName = scorer!.name.lowercased()
@@ -334,6 +335,9 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
     
     func initTraveller(columns: [String]) {
         let importedTraveller = ImportedTraveller()
+        for seat in Seat.validCases {
+            importedTraveller.section[seat] = 1
+        }
         for (index, heading) in headings.enumerated() {
             switch heading.lowercased() {
             case "ns":

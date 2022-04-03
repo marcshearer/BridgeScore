@@ -9,6 +9,7 @@ Background still active with MessageBox
 Check can't continue after import
 Check exit button from import confirm
 Scores on ranking from BridgeWebs
+Crash if edit bbo Names on bridgewebs import
 
 To Do
 =====

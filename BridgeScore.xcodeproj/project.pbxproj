@@ -329,10 +329,10 @@
 		B26BCE1E2799A9C600B73501 /* Managed Object Models */ = {
 			isa = PBXGroup;
 			children = (
-				B26BCE73279B236F00B73501 /* Layout Managed Object.swift */,
 				B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */,
 				B2EB3D65279D54D500D64225 /* Board Managed Object.swift */,
 				B2BBC8B727BBF4B100D51A26 /* Table Managed Object.swift */,
+				B26BCE73279B236F00B73501 /* Layout Managed Object.swift */,
 				B2EB3D67279D65CC00D64225 /* Player Managed Object.swift */,
 				B2EB3D69279D666800D64225 /* Location Managed Object.swift */,
 				B2A5A42527E2582F00754061 /* BBO Name Managed Object.swift */,
@@ -426,8 +426,8 @@
 			children = (
 				B2EB3D76279D73FC00D64225 /* Scorecard View Model.swift */,
 				B2EB3D74279D73E100D64225 /* Board View Model.swift */,
-				B2EB3D6D279D6BA600D64225 /* Layout View Model.swift */,
 				B2BBC8B927BBF6BC00D51A26 /* Table View Model.swift */,
+				B2EB3D6D279D6BA600D64225 /* Layout View Model.swift */,
 				B2EB3D70279D717F00D64225 /* Player View Model.swift */,
 				B2EB3D72279D734700D64225 /* Location View Model.swift */,
 				B2A5A42727E3090300754061 /* BBO Name View Model.swift */,

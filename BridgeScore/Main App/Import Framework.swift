@@ -7,7 +7,14 @@
 
 import CoreData
 
+public enum ImportSource: Int {
+    case none = 0
+    case bbo = 1
+    case bridgeWebs = 2
+}
+
 class ImportedScorecard: NSObject {
+    var importSource: ImportSource?
     var title: String?
     var boardCount: Int?
     var date: Date?
@@ -27,6 +34,9 @@ class ImportedScorecard: NSObject {
     // MARK: - Import to main data structures =================================================================== -
         
     public func importScorecard(rebuild: Bool = false) {
+        // Import source
+        scorecard?.importSource = importSource!
+        
         // Update date
         if let date = date {
             scorecard?.date = date

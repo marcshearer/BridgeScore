@@ -32,6 +32,7 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var maxScoreEntered: Bool
     @NSManaged public var position16: Int16
     @NSManaged public var entry16: Int16
+    @NSManaged public var importSource16: Int16
     
     convenience init() {
         self.init(context: CoreData.context)
@@ -56,6 +57,11 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
     public var entry: Int {
         get { Int(self.entry16) }
         set { self.entry16 = Int16(newValue)}
+    }
+    
+    public var importSource: ImportSource {
+        get { ImportSource(rawValue: Int(self.importSource16)) ?? .none }
+        set { self.importSource16 = Int16(newValue.rawValue)}
     }
     
     public var type: Type {

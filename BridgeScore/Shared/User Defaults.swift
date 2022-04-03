@@ -30,8 +30,7 @@ enum UserDefault: String, CaseIterable {
     case currentMaxScore
     case currentPosition
     case currentEntry
-    case currentDrawing
-    case currentWidth
+    case currentImportSource
     
     public var defaultValue: Any? {
         switch self {
@@ -79,10 +78,8 @@ enum UserDefault: String, CaseIterable {
             return 0
         case .currentEntry:
             return 0
-        case .currentDrawing:
-            return Data()
-        case .currentWidth:
-            return 0.0
+        case .currentImportSource:
+            return .none
         }
     }
     
@@ -126,6 +123,10 @@ enum UserDefault: String, CaseIterable {
     
     public var type: Type? {
         return UserDefault.type(forKey: self.name)
+    }
+    
+    public var importSource: ImportSource? {
+        return UserDefault.importSource(forKey: self.name)
     }
     
     public static func set(_ value: Any?, forKey name: String) {
@@ -187,6 +188,10 @@ enum UserDefault: String, CaseIterable {
     
     public static func type(forKey name: String) -> Type? {
         return Type(rawValue: Int(MyApp.defaults.string(forKey: name) ?? "") ?? -1)
+    }
+    
+    public static func importSource(forKey name: String) -> ImportSource? {
+        return ImportSource(rawValue: Int(MyApp.defaults.string(forKey: name) ?? "") ?? -1)
     }
 }
 

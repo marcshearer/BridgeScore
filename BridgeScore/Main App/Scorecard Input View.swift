@@ -484,12 +484,14 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     }
     
     func scorecardBBONamesReplace(values: [String]) {
-        let editValues = MasterData.shared.getBboNames(values: values)
-        ignoreKeyboard = true
-        let bboNameReplaceView = BBONameReplaceView(frame: CGRect())
-        bboNameReplaceView.show(from: self, values: editValues) {
-            self.ignoreKeyboard = false
-            self.tableRefresh()
+        if scorecard.importSource == .bbo {
+            let editValues = MasterData.shared.getBboNames(values: values)
+            ignoreKeyboard = true
+            let bboNameReplaceView = BBONameReplaceView(frame: CGRect())
+            bboNameReplaceView.show(from: self, values: editValues) {
+                self.ignoreKeyboard = false
+                self.tableRefresh()
+            }
         }
     }
     
@@ -1450,19 +1452,21 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         scorecardDelegate?.scorecardEndEditing(true)
         scorecardDelegate?.scorecardChanged(type: .board, itemNumber: itemNumber)
     
-        var values: [String] = []
-        let players = table.players
-        let sitting = table.sitting
-        for seat in [sitting.partner, sitting.leftOpponent, sitting.rightOpponent] {
-            if scorecard.type.players == 1 || seat != sitting.partner {
-                if let player = players[seat] {
-                    values.append(player)
+        if scorecard.importSource == .bbo {
+            var values: [String] = []
+            let players = table.players
+            let sitting = table.sitting
+            for seat in [sitting.partner, sitting.leftOpponent, sitting.rightOpponent] {
+                if scorecard.type.players == 1 || seat != sitting.partner {
+                    if let player = players[seat] {
+                        values.append(player)
+                    }
                 }
             }
-        }
-                
-        if !values.isEmpty {
-            scorecardDelegate?.scorecardBBONamesReplace(values: values)
+            
+            if !values.isEmpty {
+                scorecardDelegate?.scorecardBBONamesReplace(values: values)
+            }
         }
     }
     

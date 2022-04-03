@@ -111,10 +111,12 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
     // MARK: - Replace BBO names ========================================================================= -
     
     func replaceNames(values: [String]) {
-        let editValues = MasterData.shared.getBboNames(values: values)
-        let bboNameReplaceView = BBONameReplaceView(frame: CGRect())
-        bboNameReplaceView.show(from: self, values: editValues) {
-            self.valuesTableView.reloadData()
+        if Scorecard.current.scorecard?.importSource == .bbo {
+            let editValues = MasterData.shared.getBboNames(values: values)
+            let bboNameReplaceView = BBONameReplaceView(frame: CGRect())
+            bboNameReplaceView.show(from: self, values: editValues) {
+                self.valuesTableView.reloadData()
+            }
         }
     }
 
