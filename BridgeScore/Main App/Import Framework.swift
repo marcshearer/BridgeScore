@@ -298,7 +298,7 @@ class ImportedScorecard: NSObject {
     
     func rebuildRankingTotals() {
         // Note this works on the main data structures after the import rather than the imported layer
-        for ranking in Scorecard.current.flatRankings {
+        for ranking in Scorecard.current.rankingList {
             var tableScores: Float = 0
             for tableNumber in 1...scorecard.tables {
                 if let table = Scorecard.current.tables[tableNumber] {

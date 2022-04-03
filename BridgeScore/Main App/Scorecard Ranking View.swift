@@ -277,7 +277,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
   // MARK: - View Setup ======================================================================== -
     
     private func setupColumns() {
-        let sectionRankings = Scorecard.current.flatRankings
+        let sectionRankings = Scorecard.current.rankingList
         rankingColumns = [
             RankingColumn(type: .ranking, heading: "Ranking", size: .fixed([70])),
             RankingColumn(type: .players, heading: "Names", size: .flexible)]
@@ -321,28 +321,23 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         totalRankings = 0
         tables = 0
         sections = 0
-        let rankings = Scorecard.current.rankings.sorted(by: { $0.0 < $1.0 })
-        for (_, tableRankings) in rankings.sorted(by: { $0.0 < $1.0 }) {
-            for (_, sectionRankings) in tableRankings {
-                for (_, ranking) in sectionRankings.sorted(by: {sort($0.value, $1.value)}) {
-                    var append = false
-                    if lastTable != ranking.table {
-                        tables += 1
-                        append = true
-                    }
-                    if lastSection != ranking.section {
-                        sections += 1
-                        append = true
-                    }
-                    if append {
-                        rankingValues.append([])
-                    }
-                    rankingValues[rankingValues.count - 1].append(ranking)
-                    totalRankings += 1
-                    lastTable = ranking.table
-                    lastSection = ranking.section
-                }
+        for ranking in Scorecard.current.rankingList.sorted(by: {NSObject.sort($0, $1, sortKeys: [("table", .ascending), ("section", .ascending), ("score", .descending)])}) {
+            var append = false
+            if lastTable != ranking.table {
+                tables += 1
+                append = true
             }
+            if lastSection != ranking.section {
+                sections += 1
+                append = true
+            }
+            if append {
+                rankingValues.append([])
+            }
+            rankingValues[rankingValues.count - 1].append(ranking)
+            totalRankings += 1
+            lastTable = ranking.table
+            lastSection = ranking.section
         }
         
         // Setup main values with ties

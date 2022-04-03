@@ -119,7 +119,7 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
         var result: [Seat:String] = [:]
         if let scorer = MasterData.shared.scorer {
             let boardNumber = ((table - 1) * scorecard.boardsTable) + 1
-           if let myRanking = Scorecard.current.flatRankings.first(where: {$0.players.contains(where: {$0.value.lowercased() == scorer.bboName.lowercased() || $0.value.lowercased() == scorer.name.lowercased()})}) {
+           if let myRanking = Scorecard.current.rankingList.first(where: {$0.players.contains(where: {$0.value.lowercased() == scorer.bboName.lowercased() || $0.value.lowercased() == scorer.name.lowercased()})}) {
                if let myTraveller = Scorecard.current.traveller(board: boardNumber, seat: sitting, rankingNumber: myRanking.number, section: myRanking.section) {
                     for seat in Seat.allCases {
                         result[seat] = myTraveller.ranking(seat: seat)?.players[seat]
