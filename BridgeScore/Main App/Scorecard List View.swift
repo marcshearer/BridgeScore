@@ -10,7 +10,7 @@ import SwiftUI
 struct ScorecardListView: View {
     private let id = scorecardListViewId
     private let inputId = UUID()
-    @StateObject private var selected = ScorecardViewModel()
+    @StateObject private var selected = ScorecardViewModel(scorecardId: nullUUID)
     @StateObject private var filterValues = ScorecardFilterValues(.list)
     @ObservedObject private var data = MasterData.shared
     @State private var title = "Scorecards"
@@ -102,7 +102,7 @@ struct ScorecardListView: View {
                 Spacer()
             }
             .onAppear {
-                if selected == nil {
+                if selected.scorecardId == nullUUID {
                     Utility.mainThread {
                         if let scorecard = scorecards.first {
                             if  filterValues.isClear {

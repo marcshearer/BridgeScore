@@ -60,6 +60,7 @@ let backupDateFormat = "yyyy-MM-dd HH:mm:ss.SSS Z"
 
 // Other constants
 let tagMultiplier = 1000000
+let nullUUID = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
 
 // Localisable names
 

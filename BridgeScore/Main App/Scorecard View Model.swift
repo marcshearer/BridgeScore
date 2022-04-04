@@ -78,6 +78,13 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.setupMappings()
     }
     
+    public convenience init(scorecardId: UUID) {
+        self.init()
+        self.reset()
+        self.setupMappings()
+        self.scorecardId = scorecardId
+    }
+    
     public convenience init(scorecardMO: ScorecardMO) {
         self.init()
         self.scorecardMO = scorecardMO
