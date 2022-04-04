@@ -7,7 +7,6 @@ Bugs
 ====
 Background still active with MessageBox
 Check can't continue after import errors
-Check exit button from import confirm
 
 To Do
 =====

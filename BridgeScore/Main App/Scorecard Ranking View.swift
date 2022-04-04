@@ -695,7 +695,7 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
             label.text = (ranking.points == 0 ? "" : ranking.points.toString(places: 2, exact: true))
             label.textAlignment = .right
         case .table:
-            label.text = "     Table \(ranking.table)"
+            label.text = "     Round \(ranking.table)"
             label.textAlignment = .left
         case .section:
             label.text = "     Section \(ranking.section)"

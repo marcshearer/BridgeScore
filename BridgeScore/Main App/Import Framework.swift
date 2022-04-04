@@ -7,10 +7,25 @@
 
 import CoreData
 
-public enum ImportSource: Int {
+public enum ImportSource: Int, Equatable, CaseIterable {
     case none = 0
     case bbo = 1
     case bridgeWebs = 2
+    
+    static var validCases: [ImportSource] {
+        return ImportSource.allCases.filter({$0 != .none})
+    }
+    
+    var string: String {
+        switch self {
+        case .none:
+            return "No import"
+        case .bbo:
+            return "Import from BBO"
+        case .bridgeWebs:
+            return "Import from BridgeWebs"
+        }
+    }
 }
 
 class ImportedScorecard: NSObject {
@@ -250,7 +265,7 @@ class ImportedScorecard: NSObject {
     }
     
     func recalculateTravellers() {
-            // BBO etc sometimes exports cross imps on boards rather than team imp differences - recalculate them
+        // BBO etc sometimes exports cross imps on boards rather than team imp differences - recalculate them
         for (board, boardTravellers) in travellers {
             for traveller in boardTravellers {
                 if scorecard!.type.players == 4 {
@@ -278,7 +293,6 @@ class ImportedScorecard: NSObject {
                 }
             }
         }
-        
     }
     
     func checkBoardsPerTable(name: String) {
@@ -317,7 +331,16 @@ class ImportedScorecard: NSObject {
             var tableScores: Float = 0
             for tableNumber in 1...scorecard.tables {
                 if let table = Scorecard.current.tables[tableNumber] {
-                    tableScores += table.score(ranking: ranking, seat: .north)
+                    let players = scorecard.type.players
+                    var seats:[Seat] = []
+                    // Need to pick up this person in all seats if individual
+                    // North or East if pairs, and North only if teams since 1 of team will have sat north
+                    if players == 1 { seats = Seat.validCases }
+                    else if players == 2 { seats = [.north, .east] }
+                    else { seats = [.north] }
+                    for seat in seats {
+                        tableScores += table.score(ranking: ranking, seat: seat)
+                    }
                 }
             }
             ranking.score = 0

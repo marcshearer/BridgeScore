@@ -269,7 +269,7 @@ public enum Type: Int, CaseIterable {
         switch self {
         case .percent:
             return 100
-        case .vpXImp, .vpTableTeam, .vpPercent:
+        case .vpXImp, .vpTableTeam, .acblVpTableTeam, .vpPercent:
             return Float(tables * 20)
         case .vpMatchTeam:
             return 20

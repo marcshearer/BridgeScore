@@ -250,6 +250,10 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         return !MasterData.shared.scorecards.contains(where: {$0.desc == desc && $0 != self})
     }
     
+    public var scoreString: String {
+        "\(type.matchPrefix(scorecard: self))\((score ?? 0).toString(places: type.matchPlaces))\(type.matchSuffix(scorecard: self))"
+    }
+    
     public var description: String {
         "Scorecard: \(self.desc)"
     }

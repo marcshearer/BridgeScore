@@ -405,7 +405,7 @@ class Scorecard {
     public func remove(traveller: TravellerViewModel) {
         assert(traveller.scorecard == scorecard, "Traveller is not in current scorecard")
         assert(!traveller.isNew, "Cannot remove a traveller which doesn't already have a managed object")
-        assert(self.traveller(board: traveller.board, seat: .north, rankingNumber: traveller.rankingNumber[.north]!, section: traveller.section[.north]!) != nil, "Traveller does not exist and cannot be deleted")
+// TODO        assert(self.traveller(board: traveller.board, seat: .north, rankingNumber: traveller.rankingNumber[.north]!, section: traveller.section[.north]!) != nil, "Traveller does not exist and cannot be deleted")
         CoreData.update(updateLogic: {
             CoreData.context.delete(traveller.travellerMO!)
             travellerList.removeAll(where: {$0.board == traveller.board && $0.rankingNumber[.north] == traveller.rankingNumber[.north] && $0.section[.north] == traveller.section[.north]})
@@ -497,7 +497,8 @@ class Scorecard {
             if count == 0 {
                 newScore = nil
             } else {
-                newScore = Scorecard.aggregate(total: total, count: count, places: places, type: type.matchAggregate)
+                let boards = Scorecard.current.boards.filter({$0.value.score != nil}).count
+                newScore = Scorecard.aggregate(total: total, count: count, boards: boards, places: places, type: type.matchAggregate)
             }
         }
         if newScore != scorecard.score {
@@ -510,8 +511,9 @@ class Scorecard {
         return changed
     }
     
-    static func aggregate(total: Float, count: Int, places: Int, type: AggregateType) -> Float? {
+    static func aggregate(total: Float, count: Int, boards: Int? = nil, places: Int, type: AggregateType) -> Float? {
         var result: Float?
+        let boards = boards ?? count
         let average = (count == 0 ? 0 : Utility.round(total / Float(count), places: places))
         switch type {
         case .average:
@@ -519,13 +521,13 @@ class Scorecard {
         case .total:
             result = Utility.round(total, places: places)
         case .continuousVp:
-            result = BridgeImps(Int(Utility.round(total))).vp(boards: count, places: places)
+            result = BridgeImps(Int(Utility.round(total))).vp(boards: boards, places: places)
         case .discreteVp:
-            result = Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: count))
+            result = Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: boards))
         case .acblDiscreteVp:
-            result = Float(BridgeImps(Int(Utility.round(total))).acblDiscreteVp(boards: count))
+            result = Float(BridgeImps(Int(Utility.round(total))).acblDiscreteVp(boards: boards))
         case .percentVp:
-            if let vps = BridgeMatchPoints(average).vp(boards: count) {
+            if let vps = BridgeMatchPoints(average).vp(boards: boards) {
                 result = Float(vps)
             }
         }

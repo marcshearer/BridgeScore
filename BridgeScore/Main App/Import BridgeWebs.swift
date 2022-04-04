@@ -126,7 +126,7 @@ struct ImportBridgeWebsScorecard: View {
         
         
         return VStack(spacing: 0) {
-            Banner(title: Binding.constant("Confirm Import Details"), backImage: Banner.crossImage, backAction: {selected = nil ; return false})
+            Banner(title: Binding.constant("Confirm Import Details"), backImage: Banner.crossImage)
             Spacer().frame(height: 16)
             
             InsetView(title: "BridgeWebs Import Details") {

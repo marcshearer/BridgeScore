@@ -26,6 +26,8 @@ struct ScorecardListView: View {
     @State private var highlighted = false
     @State private var startAt: UUID?
     @State private var closeFilter = false
+    @State private var importScorecard: ImportSource = .none
+    @State private var importTapped: ImportSource = .none
 
     var body: some View {
         let scorecards = MasterData.shared.scorecards.filter({filterValues.filter($0)})
@@ -66,15 +68,20 @@ struct ScorecardListView: View {
                     ScrollViewReader { scrollViewProxy in
                         LazyVStack {
                             ForEach(scorecards) { (scorecard) in
-                                ScorecardSummaryView(scorecard: scorecard, highlighted: highlighted)
+                                ScorecardSummaryView(slideInId: id, scorecard: scorecard, highlighted: highlighted, selected: selected, importTapped: $importTapped)
                                     .id(scorecard.scorecardId)
                                     .onTapGesture {
-                                            // Copy this entry to current scorecard
+                                        // Copy this entry to current scorecard
                                         self.selected.copy(from: scorecard)
-                                        Scorecard.current.load(scorecard: self.selected)
-                                        self.linkAction()
+                                        linkAction()
                                     }
                             }
+                        }
+                        .onChange(of: importTapped) { (newValue) in
+                            if newValue != .none {
+                                linkAction(importTapped: newValue)
+                            }
+                            importTapped = .none
                         }
                         .onChange(of: self.startAt) { (newValue) in
                             if let newValue = newValue {
@@ -95,27 +102,29 @@ struct ScorecardListView: View {
                 Spacer()
             }
             .onAppear {
-                Utility.mainThread {
-                    if let scorecard = scorecards.first {
-                        if  filterValues.isClear {
-                            self.startAt = scorecard.scorecardId
+                if selected == nil {
+                    Utility.mainThread {
+                        if let scorecard = scorecards.first {
+                            if  filterValues.isClear {
+                                self.startAt = scorecard.scorecardId
+                            }
                         }
                     }
-                }
-                if UserDefault.currentUnsaved.bool {
-                    // Unsaved version - restore it and link to it
-                    let scorecard = ScorecardViewModel()
-                    scorecard.restoreCurrent()
-                    self.selected.copy(from: scorecard)
-                    Scorecard.current.load(scorecard: scorecard)
-                    linkToEdit = true
+                    if UserDefault.currentUnsaved.bool {
+                        // Unsaved version - restore it and link to it
+                        let scorecard = ScorecardViewModel()
+                        scorecard.restoreCurrent()
+                        self.selected.copy(from: scorecard)
+                        Scorecard.current.load(scorecard: scorecard)
+                        linkToEdit = true
+                    }
                 }
             }
             NavigationLink(destination: LayoutSetupView(), isActive: $linkToLayouts) {EmptyView()}
             NavigationLink(destination: PlayerSetupView(), isActive: $linkToPlayers) {EmptyView()}
             NavigationLink(destination: LocationSetupView(), isActive: $linkToLocations) {EmptyView()}
             NavigationLink(destination: StatsView(), isActive: $linkToStats) {EmptyView()}
-            NavigationLink(destination: ScorecardInputView(scorecard: selected), isActive: $linkToEdit) {EmptyView()}
+            NavigationLink(destination: ScorecardInputView(scorecard: selected, importScorecard: importScorecard), isActive: $linkToEdit) {EmptyView()}
         }
         .sheet(isPresented: $linkToNew, onDismiss: {
             if layoutSelected {
@@ -128,11 +137,14 @@ struct ScorecardListView: View {
         }
     }
     
-    private func linkAction() {
+    private func linkAction(importTapped: ImportSource = .none) {
+        Scorecard.current.load(scorecard: self.selected)
         if !Scorecard.current.isSensitive {
+            importScorecard = importTapped
             linkToEdit = true
         } else {
             LocalAuthentication.authenticate(reason: "You must authenticate to access the scorecard detail") {
+                importScorecard = importTapped
                 linkToEdit = true
             } failure: {
                 Scorecard.current.clear()
@@ -142,8 +154,13 @@ struct ScorecardListView: View {
 }
 
 struct ScorecardSummaryView: View {
+    var slideInId: UUID
     @ObservedObject var scorecard: ScorecardViewModel
     @State var highlighted: Bool
+    @ObservedObject var selected: ScorecardViewModel
+    @Binding var importTapped: ImportSource
+    @State var selectImport = false
+    @State var importSelected: Int?
     
     var body: some View {
         let color = (highlighted ? Palette.highlightTile : Palette.tile)
@@ -163,8 +180,8 @@ struct ScorecardSummaryView: View {
                                 }
                                 HStack {
                                     Spacer()
-                                    if let score = scorecard.score {
-                                        Text("\(scorecard.type.matchPrefix(scorecard: scorecard))\(score.toString(places: scorecard.type.matchPlaces))\(scorecard.type.matchSuffix(scorecard: scorecard))")
+                                    if scorecard.score != nil {
+                                        Text(scorecard.scoreString)
                                     }
                                 }
                                 .frame(width: 150)
@@ -199,24 +216,51 @@ struct ScorecardSummaryView: View {
                         .minimumScaleFactor(0.5)
                         Spacer().frame(height: 12)
                     }
-                    VStack {
-                        Spacer()
-                        Button {
-                            highlighted = true
-                            MessageBox.shared.show("This will delete the scorecard permanently.\nAre you sure you want to do this?", cancelText: "Cancel", okText: "Confirm", cancelAction: {
-                                highlighted = false
-                            }, okAction: {
-                                highlighted = false
-                                scorecard.remove()
-                            })
-                        } label: {
-                            Image(systemName: "trash.circle.fill").font(.largeTitle)
-                                .foregroundColor(color.contrastText)
-                        }
-                        Spacer()
+                    if scorecard.importSource == .none {
+                        GeometryReader { geometry in
+                            VStack {
+                                Spacer()
+                                PopupMenu(id: slideInId, field: $importSelected, values: ImportSource.validCases.map{$0.string}, animation: .none, top: geometry.frame(in: .global).minY - 30, left: geometry.frame(in: .global).minX - 290, width: 300) { (selectedIndex) in
+                                    if let selectedIndex = selectedIndex {
+                                        importTapped = ImportSource.validCases[selectedIndex]
+                                        selected.copy(from: scorecard)
+                                    }
+                                    importSelected = nil
+                                } label: {
+                                    Image(systemName: "arrow.down.circle.fill")
+                                        .font(.largeTitle)
+                                        .foregroundColor(color.contrastText)
+                                }
+                                Spacer()
+                            }
+                        }.frame(width: 50)
+                    }
+                    button("trash.circle.fill") {
+                        highlighted = true
+                        MessageBox.shared.show("This will delete the scorecard permanently.\nAre you sure you want to do this?", cancelText: "Cancel", okText: "Confirm", cancelAction: {
+                            highlighted = false
+                        }, okAction: {
+                            highlighted = false
+                            scorecard.remove()
+                        })
                     }
                 }
             }
+        }
+    }
+    
+    func button(_ imageName: String, action: @escaping ()->()) -> some View {
+        let color = (highlighted ? Palette.highlightTile : Palette.tile)
+        return VStack {
+            Spacer()
+            Button {
+                action()
+            } label: {
+                Image(systemName: imageName)
+                    .font(.largeTitle)
+                    .foregroundColor(color.contrastText)
+            }
+            Spacer()
         }
     }
 }

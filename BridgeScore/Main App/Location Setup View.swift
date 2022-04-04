@@ -148,7 +148,7 @@ struct LocationDetailView : View {
                             
                             Input(title: "Name", field: $selected.name, message: $selected.nameMessage)
                             
-                            Input(title: "BridgeWebs Id", field: $selected.bridgeWebsId, autoCapitalize: .none)
+                            Input(title: "BridgeWebs Id", field: $selected.bridgeWebsId, autoCapitalize: .none, autoCorrect: false)
                             
                             if selected.retired {
                                 

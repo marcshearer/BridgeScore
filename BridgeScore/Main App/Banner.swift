@@ -11,15 +11,17 @@ struct BannerOption {
     let image: AnyView?
     let text: String?
     let likeBack: Bool
+    let color: PaletteColor?
     @Binding var isEnabled: Bool
     @Binding var isHidden: Bool
     let menu: Bool
     let action: ()->()
     
-    init(image: AnyView? = nil, text: String? = nil, likeBack: Bool = false, isEnabled: Binding<Bool>? = nil, isHidden: Binding<Bool>? = nil, menu: Bool = false, action: @escaping ()->()) {
+    init(image: AnyView? = nil, text: String? = nil, color: PaletteColor? = nil, likeBack: Bool = false, isEnabled: Binding<Bool>? = nil, isHidden: Binding<Bool>? = nil, menu: Bool = false, action: @escaping ()->()) {
         self.image = image
         self.text = text
         self.likeBack = likeBack
+        self.color = color
         self.action = action
         self._isEnabled = isEnabled ?? Binding.constant(true)
         self._isHidden = isHidden ?? Binding.constant(false)
@@ -199,8 +201,10 @@ struct Banner_Buttons : View {
         HStack {
             ForEach(options.indices, id: \.self) { (index) in
                 let option = options[index]
-                let backgroundColor = (option.likeBack ? bannerColor.background : buttonColor.background)
-                let foregroundColor = (option.isEnabled ? (option.likeBack ? backButtonColor : buttonColor.text) : buttonColor.faintText)
+                let backgroundColor = option.color?.background ?? (option.likeBack ? bannerColor.background : buttonColor.background)
+                let foregroundColor = (option.isEnabled ?
+                                        (option.color?.text ?? (option.likeBack ? backButtonColor : buttonColor.text)) :
+                                        (option.color ?? buttonColor).faintText)
                 if !option.isHidden {
                     HStack {
                         Button {

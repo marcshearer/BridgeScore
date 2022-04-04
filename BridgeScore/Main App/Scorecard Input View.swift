@@ -35,6 +35,7 @@ struct ScorecardInputView: View {
 
     private let id = scorecardInputViewId
     @ObservedObject var scorecard: ScorecardViewModel
+    @State var importScorecard: ImportSource = .none
     @State private var canUndo: Bool = false
     @State private var canRedo: Bool = false
     @State private var isNotImported: Bool = true
@@ -77,8 +78,10 @@ struct ScorecardInputView: View {
         }
         .sheet(isPresented: $importBboScorecard, onDismiss: {
             UndoManager.clearActions()
-            isNotImported = false
-            tableRefresh = true
+            if scorecard.importSource != .none {
+                isNotImported = false
+                tableRefresh = true
+            }
         }) {
             ImportBBOScorecard(scorecard: scorecard) {
                 saveScorecard()
@@ -86,8 +89,10 @@ struct ScorecardInputView: View {
         }
         .sheet(isPresented: $importBwScorecard, onDismiss: {
             UndoManager.clearActions()
-            isNotImported = false
-            tableRefresh = true
+            if scorecard.importSource != .none {
+                isNotImported = false
+                tableRefresh = true
+            }
         }) {
             ImportBridgeWebsScorecard(scorecard: scorecard) {
                 saveScorecard()
@@ -96,11 +101,23 @@ struct ScorecardInputView: View {
         .onAppear {
             Scorecard.updateScores(scorecard: scorecard)
             isNotImported = !Scorecard.current.isImported
+            switch importScorecard {
+            case .bbo:
+                importBboScorecard = true
+            case .bridgeWebs:
+                importBwScorecard = true
+            default: break
+            }
         }
     }
     
     func bannerOptions(isNotImported: Binding<Bool>) -> [BannerOption] {
-        var bannerOptions = UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo)
+        var bannerOptions: [BannerOption] = []
+        if scorecard.score != nil && !scorecard.manualTotals {
+            bannerOptions += [
+                BannerOption(text: scorecard.scoreString, color: Palette.bannerShadow, isEnabled: Binding.constant(false), action: {}) ]
+        }
+        bannerOptions += UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo)
         if !isNotImported.wrappedValue {
             bannerOptions += [
                 BannerOption(image: AnyView(Image(systemName: "list.number")), likeBack: true, isHidden: isNotImported, action: { showRankings = true })]
@@ -108,7 +125,7 @@ struct ScorecardInputView: View {
         bannerOptions += [
                 BannerOption(image: AnyView(Image(systemName: "note.text")), text: "Scorecard details", likeBack: true, menu: true, action: { UndoManager.clearActions() ; inputDetail = true }),
                 BannerOption(image: AnyView(Image(systemName: "\(detailView ? "minus" : "plus").magnifyingglass")), text: (detailView ? "Simple view" : "Alternative view"), likeBack: true, menu: true, action: { toggleView() })]
-        if isNotImported.wrappedValue {
+        if isNotImported.wrappedValue || scorecard.resetNumbers {
             bannerOptions += [
                 BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import from BBO", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importBboScorecard = true}),
                 BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import from BridgeWebs", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importBwScorecard = true})]
@@ -1024,7 +1041,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         
         var isEnabled = true
         switch column.type {
-        case .board, .table, .vulnerable, .dealer:
+        case .board, .table, .vulnerable, .dealer, .points:
             isEnabled = false
         case .declarer:
             isEnabled = (table.sitting != .unknown && !Scorecard.current.isImported)
@@ -1084,7 +1101,6 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             textField.isEnabled = isEnabled
             label.isUserInteractionEnabled = !isEnabled
         case .points:
-            label.isHidden = false
             if board.declarer == .unknown {
                 label.text = ""
             } else {
