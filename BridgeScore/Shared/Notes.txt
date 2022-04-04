@@ -7,6 +7,8 @@ Bugs
 ====
 Background still active with MessageBox
 Check can't continue after import errors
+Mock up import scoring type from BridgeWebs from data
+Investigate direct import BBO
 
 To Do
 =====

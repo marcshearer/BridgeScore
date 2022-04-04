@@ -216,25 +216,28 @@ struct ScorecardSummaryView: View {
                         .minimumScaleFactor(0.5)
                         Spacer().frame(height: 12)
                     }
-                    if scorecard.importSource == .none {
-                        GeometryReader { geometry in
-                            VStack {
-                                Spacer()
-                                PopupMenu(id: slideInId, field: $importSelected, values: ImportSource.validCases.map{$0.string}, animation: .none, top: geometry.frame(in: .global).minY - 30, left: geometry.frame(in: .global).minX - 290, width: 300) { (selectedIndex) in
-                                    if let selectedIndex = selectedIndex {
-                                        importTapped = ImportSource.validCases[selectedIndex]
-                                        selected.copy(from: scorecard)
+                    HStack {
+                        if scorecard.importSource == .none {
+                            GeometryReader { geometry in
+                                VStack {
+                                    Spacer()
+                                    PopupMenu(id: slideInId, field: $importSelected, values: ImportSource.validCases.map{$0.string}, animation: .none, top: geometry.frame(in: .global).minY - 30, left: geometry.frame(in: .global).minX - 290, width: 300) { (selectedIndex) in
+                                        if let selectedIndex = selectedIndex {
+                                            importTapped = ImportSource.validCases[selectedIndex]
+                                            selected.copy(from: scorecard)
+                                        }
+                                        importSelected = nil
+                                    } label: {
+                                        Image(systemName: "arrow.down.circle.fill")
+                                            .font(.largeTitle)
+                                            .foregroundColor(color.contrastText)
                                     }
-                                    importSelected = nil
-                                } label: {
-                                    Image(systemName: "arrow.down.circle.fill")
-                                        .font(.largeTitle)
-                                        .foregroundColor(color.contrastText)
+                                    Spacer()
                                 }
-                                Spacer()
                             }
-                        }.frame(width: 50)
+                        }
                     }
+                    .frame(width: 50)
                     button("trash.circle.fill") {
                         highlighted = true
                         MessageBox.shared.show("This will delete the scorecard permanently.\nAre you sure you want to do this?", cancelText: "Cancel", okText: "Confirm", cancelAction: {

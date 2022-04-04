@@ -119,8 +119,10 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
         var result: [Seat:String] = [:]
         if let scorer = MasterData.shared.scorer {
             let boardNumber = ((table - 1) * scorecard.boardsTable) + 1
-           if let myRanking = Scorecard.current.rankingList.first(where: {$0.players.contains(where: {$0.value.lowercased() == scorer.bboName.lowercased() || $0.value.lowercased() == scorer.name.lowercased()})}) {
-               if let myTraveller = Scorecard.current.traveller(board: boardNumber, seat: sitting, rankingNumber: myRanking.number, section: myRanking.section) {
+            let rankings = Scorecard.current.rankings(table: table, player: (bboName: scorer.bboName, name: scorer.name))
+            if rankings.count == 1 {
+                let myRanking = rankings.first!
+                if let myTraveller = Scorecard.current.traveller(board: boardNumber, seat: sitting, rankingNumber: myRanking.number, section: myRanking.section) {
                     for seat in Seat.allCases {
                         result[seat] = myTraveller.ranking(seat: seat)?.players[seat]
                     }
@@ -130,15 +132,17 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
         return result
     }
     
-    public func score(ranking: RankingViewModel, seat: Seat) -> Float {
+    public func score(ranking: RankingViewModel, seats: [Seat]) -> Float {
         var tableTotal: Float = 0
         for tableBoard in 1...scorecard.boardsTable {
             let boardNumber = ((table - 1) * scorecard.boardsTable) + tableBoard
-            if let traveller = Scorecard.current.traveller(board: boardNumber, seat: seat, rankingNumber: ranking.number, section: ranking.section) {
-                tableTotal += (seat.pair == .ns ? traveller.nsScore : scorecard.type.invertScore(score: traveller.nsScore))
+            for seat in seats {
+                if let traveller = Scorecard.current.traveller(board: boardNumber, seat: seat, rankingNumber: ranking.number, section: ranking.section) {
+                    tableTotal += (seat.pair == .ns ? traveller.nsScore : scorecard.type.invertScore(score: traveller.nsScore))
+                }
             }
         }
-        return Scorecard.aggregate(total: tableTotal, count: scorecard.boardsTable, places: scorecard.type.tablePlaces, type: scorecard.type.tableAggregate) ?? 0
+        return Scorecard.aggregate(total: tableTotal, count: scorecard.boardsTable, subsidiaryPlaces: scorecard.type.boardPlaces, places: scorecard.type.tablePlaces, type: scorecard.type.tableAggregate) ?? 0
     }
     
     public var description: String {

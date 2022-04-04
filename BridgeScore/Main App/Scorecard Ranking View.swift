@@ -187,7 +187,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
                 width = headingColumns[indexPath.item].width ?? 0
             case .rounds:
                 if let roundsColumn = rankingColumns.first(where: {$0.type == .rounds}) {
-                    width = (roundsColumn.width ?? 0) / 8
+                    width = (roundsColumn.width ?? 0) / CGFloat(min(8, Scorecard.current.scorecard?.tables ?? 1))
                 }
             }
             height = type.rowHeight(scorecard: Scorecard.current.scorecard!)
@@ -281,16 +281,16 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
     private func setupColumns() {
         let sectionRankings = Scorecard.current.rankingList
         rankingColumns = [
-            RankingColumn(type: .ranking, heading: "Ranking", size: .fixed([70])),
+            RankingColumn(type: .ranking, heading: "Rank", size: .fixed([50])),
             RankingColumn(type: .players, heading: "Names", size: .flexible)]
-            
-        if Scorecard.current.scorecard?.type.tableAggregate == .discreteVp && UIScreen.main.bounds.width > UIScreen.main.bounds.height {
+           
+        if (Scorecard.current.scorecard?.entry ?? 0) > 2 && UIScreen.main.bounds.width > UIScreen.main.bounds.height {
             rankingColumns += [
-                RankingColumn(type: .rounds, heading: "Rounds", size: .fixed([200]))]
+                RankingColumn(type: .rounds, heading: "Rounds", size: .fixed([CGFloat(min(8, Scorecard.current.scorecard?.tables ?? 1) * 25) + 8]))]
         }
         
         rankingColumns += [
-            RankingColumn(type: .score, heading: "Score", size: .fixed([70]))]
+            RankingColumn(type: .score, heading: "Score", size: .fixed([60]))]
         
         if sectionRankings.first(where: {$0.points != 0}) != nil {
             rankingColumns += [
@@ -298,7 +298,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
             ]
         }
         
-        if sectionRankings.first(where: {$0.xImps[.ns] != 0}) != nil {
+        if sectionRankings.first(where: {$0.xImps[.ns] ?? 0 != 0}) != nil && (Scorecard.current.scorecard?.entry ?? 0) > 2 {
             rankingColumns += [
                 RankingColumn(type: .nsXImps, heading: "NS XImps", size: .fixed([60])),
                 RankingColumn(type: .ewXImps, heading: "EW XImps", size: .fixed([60]))
@@ -729,7 +729,7 @@ class ScorecardRankingRoundCollectionCell: UICollectionViewCell {
         
         self.backgroundColor = UIColor.clear
         
-        addSubview(label, anchored: .all)
+        addSubview(label, leading: 4, trailing: 4, top: 0, bottom: 0)
         label.textAlignment = .center
         label.font = smallCellFont
         label.minimumScaleFactor = 0.3
@@ -752,13 +752,20 @@ class ScorecardRankingRoundCollectionCell: UICollectionViewCell {
     
     override func prepareForReuse() {
         label.text = ""
+        label.textAlignment = .center
     }
     
      
     func set(ranking: RankingViewModel, tableNumber: Int, places: Int) {
         if let table = Scorecard.current.tables[tableNumber] {
-            let tableScore = table.score(ranking: ranking, seat: .north)
-            label.text = tableScore.toString(places: places)
+            var seats: [Seat]
+            let players = Scorecard.current.scorecard?.type.players ?? 0
+            if players == 1 { seats = Seat.validCases }
+            else if players == 2 { seats = [.north, .east] }
+            else { seats = [.north] }
+            let tableScore = table.score(ranking: ranking, seats: seats)
+            label.text = tableScore.toString(places: 0)
+            label.textAlignment = .right
         }
     }
 }

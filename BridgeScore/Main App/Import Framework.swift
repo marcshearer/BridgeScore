@@ -338,13 +338,16 @@ class ImportedScorecard: NSObject {
                     if players == 1 { seats = Seat.validCases }
                     else if players == 2 { seats = [.north, .east] }
                     else { seats = [.north] }
-                    for seat in seats {
-                        tableScores += table.score(ranking: ranking, seat: seat)
-                    }
+                    tableScores += table.score(ranking: ranking, seats: seats)
                 }
             }
             ranking.score = 0
-            ranking.score += Scorecard.aggregate(total: tableScores, count: scorecard.tables, places: scorecard.type.matchPlaces, type: scorecard.type.matchAggregate) ?? 0
+            ranking.score += Scorecard.aggregate(total: tableScores, count: scorecard.tables, subsidiaryPlaces: scorecard.type.tablePlaces, places: scorecard.type.matchPlaces, type: scorecard.type.matchAggregate) ?? 0
+        }
+        var position = 0
+        for ranking in Scorecard.current.rankingList.sorted(by: {$0.score > $1.score}) {
+            position += 1
+            ranking.ranking = position
         }
     }
     
@@ -407,8 +410,8 @@ class ImportedTraveller {
     public var made: Int?
     public var lead: String?
     public var points: Int?
-    public var nsMps: Int?
-    public var totalMps: Int?
+    public var nsMps: Float?
+    public var totalMps: Float?
     public var nsScore: Float?
     public var nsXImps: Float?
     public var playData: String?

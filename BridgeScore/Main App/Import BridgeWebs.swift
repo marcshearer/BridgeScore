@@ -66,7 +66,12 @@ struct ImportBridgeWebsScorecard: View {
             Spacer()
         }
         .onAppear {
-            getList()
+            if scorecard.location?.bridgeWebsId ?? "" == "" {
+                errorMessage = "This location does not have a BridgeWebs Id set up."
+                phase = .error
+            } else {
+                getList()
+            }
         }
     }
     
@@ -307,7 +312,6 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
     private let replacingSingleQuote = "@@replacingSingleQuote@@"
     private var board: Int!
     private var tag: String?
-    
 
     init(scorecard: ScorecardViewModel, title: String, data: Data, completion: @escaping (ImportedBridgeWebsScorecard?, String?)->()) {
         self.namesElement = false
@@ -414,12 +418,12 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 }
             case "+":
                 if let string = columns.element(index) {
-                    importedTraveller.nsMps = (Int(string) ?? 0)
-                    importedTraveller.totalMps = (importedTraveller.totalMps ?? 0) + (Int(string) ?? 0)
+                    importedTraveller.nsMps = (Float(string) ?? 0)
+                    importedTraveller.totalMps = (importedTraveller.totalMps ?? 0) + (Float(string) ?? 0)
                 }
             case "-":
                 if let string = columns.element(index) {
-                    importedTraveller.totalMps = (importedTraveller.totalMps ?? 0) + (Int(string) ?? 0)
+                    importedTraveller.totalMps = (importedTraveller.totalMps ?? 0) + (Float(string) ?? 0)
                 }
             case "ns x":
                 if let string = columns.element(index) {

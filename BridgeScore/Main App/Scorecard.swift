@@ -22,10 +22,12 @@ class Scorecard {
     @Published private(set) var rankingList: [RankingViewModel] = []
     @Published private(set) var travellerList: [TravellerViewModel] = []
     
-    public func rankings(table: Int? = nil, section: Int? = nil, number: Int? = nil) -> [RankingViewModel] {
+    public func rankings(table: Int? = nil, section: Int? = nil, number: Int? = nil, player: (bboName: String, name: String)? = nil) -> [RankingViewModel] {
         var result = rankingList
         if let table = table {
-            result = result.filter({$0.table == table})
+            if scorecard?.resetNumbers ?? false {
+                result = result.filter({$0.table == table})
+            }
         }
         if let section = section {
             result = result.filter({$0.section == section})
@@ -33,11 +35,14 @@ class Scorecard {
         if let number = number {
             result = result.filter({$0.number == number})
         }
+        if let player = player {
+            result = result.filter({$0.players.contains(where: {$0.value.lowercased() == player.bboName.lowercased() || $0.value.lowercased() == player.name.lowercased()})})
+        }
         return result
     }
     
     public func ranking(table: Int, section: Int, number: Int) -> RankingViewModel? {
-        let resultList = rankingList.filter({$0.table == table && $0.section == section && $0.number == number})
+        let resultList = rankingList.filter({(!(scorecard?.resetNumbers ?? false) || $0.table == table) && $0.section == section && $0.number == number})
         return resultList.count == 1 ? resultList.first : nil
     }
     
@@ -269,6 +274,7 @@ class Scorecard {
     }
     
     public func clearImport() {
+        scorecard?.importSource = .none
         removeRankings()
         for boardNumber in 1...(scorecard?.boards ?? 0) {
             removeTravellers(board: boardNumber)
@@ -467,7 +473,7 @@ class Scorecard {
                 if count == 0 {
                     newScore = nil
                 } else {
-                    newScore = Scorecard.aggregate(total: total, count: count, places: places, type: type.tableAggregate)
+                    newScore = Scorecard.aggregate(total: total, count: count, subsidiaryPlaces: type.boardPlaces, places: places, type: type.tableAggregate)
                 }
             }
             if newScore != table.score {
@@ -498,7 +504,7 @@ class Scorecard {
                 newScore = nil
             } else {
                 let boards = Scorecard.current.boards.filter({$0.value.score != nil}).count
-                newScore = Scorecard.aggregate(total: total, count: count, boards: boards, places: places, type: type.matchAggregate)
+                newScore = Scorecard.aggregate(total: total, count: count, boards: boards, subsidiaryPlaces: type.tablePlaces, places: places, type: type.matchAggregate)
             }
         }
         if newScore != scorecard.score {
@@ -511,10 +517,10 @@ class Scorecard {
         return changed
     }
     
-    static func aggregate(total: Float, count: Int, boards: Int? = nil, places: Int, type: AggregateType) -> Float? {
+    static func aggregate(total: Float, count: Int, boards: Int? = nil, subsidiaryPlaces: Int, places: Int, type: AggregateType) -> Float? {
         var result: Float?
         let boards = boards ?? count
-        let average = (count == 0 ? 0 : Utility.round(total / Float(count), places: places))
+        let average = (count == 0 ? 0 : Utility.round(total / Float(count), places: subsidiaryPlaces))
         switch type {
         case .average:
             result = Utility.round(average, places: places)
