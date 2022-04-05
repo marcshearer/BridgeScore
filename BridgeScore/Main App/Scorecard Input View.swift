@@ -129,7 +129,8 @@ struct ScorecardInputView: View {
             bannerOptions += [
                 BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import from BBO", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importBboScorecard = true}),
                 BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import from BridgeWebs", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importBwScorecard = true})]
-        } else {
+        }
+        if !isNotImported.wrappedValue || scorecard.resetNumbers {
             bannerOptions += [
                 BannerOption(image: AnyView(Image(systemName: "lock.open.fill")), text: "Remove import details", likeBack: true, menu: true, action: {
                     UndoManager.clearActions()
@@ -940,7 +941,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         Constraint.setWidth(control: seatPicker, width: 60)
         Constraint.anchor(view: self, control: seatPicker, attributes: .centerX)
         seatPicker.delegate = self
-        let seatGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputCollectionCell.sittingTapped))
+        let seatGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputCollectionCell.seatPickerTapped))
         seatPicker.addGestureRecognizer(seatGesture)
 
         addSubview(madePicker, top: 16, bottom: 0)
@@ -1073,6 +1074,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         case .dealer:
             seatPicker.isHidden = false
             seatPicker.set(board.dealer, isEnabled: false, color: color, titleFont: pickerTitleFont)
+            seatPicker.isUserInteractionEnabled = false
         case .contract:
             label.isHidden = false
             label.text = board.contract.string
@@ -1530,7 +1532,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         }
     }
 
-    @objc internal func sittingTapped(_ sender: UIView) {
+    @objc internal func seatPickerTapped(_ sender: UIView) {
         scorecardDelegate?.scorecardEndEditing(true)
         scorecardDelegate?.scorecardChanged(type: rowType, itemNumber: itemNumber)
         let width: CGFloat = 70

@@ -90,6 +90,16 @@ struct ImportBBOScorecard: View {
             Spacer().frame(height: 16)
             if let files = try? FileManager.default.contentsOfDirectory(at: ImportBBO.importsURL, includingPropertiesForKeys: nil).filter({$0.relativeString.right(4) == ".csv"}) {
                 let fileData: [(path: URL, number: Int?, text: String, date: Date?)] = decompose(files)
+                if fileData.isEmpty {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Text("No import files found for this date")
+                            .font(defaultFont)
+                        Spacer()
+                    }
+                    Spacer()
+                }
                 ForEach(fileData.indices, id: \.self) { (index) in
                     VStack {
                         Spacer().frame(height: 8)
@@ -157,7 +167,7 @@ struct ImportBBOScorecard: View {
             result.append((path, number, components.joined(separator: " "), date))
         }
         let baseDate = Date(timeIntervalSinceReferenceDate: 0)
-        return result.sorted(by: {($0.date ?? baseDate) > ($1.date ?? baseDate) || ($0.date == $1.date && ($0.number ?? 0) > ($1.number ?? 0))})
+        return result.filter({Date.startOfDay(from: $0.date ?? baseDate) == Date.startOfDay(from: scorecard.date)}).sorted(by: {($0.number ?? 0) > ($1.number ?? 0)})
     }
     
     func fileName(_ path: String) -> String {
@@ -396,15 +406,12 @@ class ImportedBBOScorecard: ImportedScorecard {
                 format = .teams
             case "name2":
                 importedRanking.players[.south] = columns.element(index)?.lowercased()
-                importedRanking.players[.north] = columns.element(index)?.lowercased()
                 format = .teams
             case "name3":
                 importedRanking.players[.east] = columns.element(index)?.lowercased()
-                importedRanking.players[.north] = columns.element(index)?.lowercased()
                 format = .teams
             case "name4":
                 importedRanking.players[.west] = columns.element(index)?.lowercased()
-                importedRanking.players[.north] = columns.element(index)?.lowercased()
                 format = .teams
             case "score", "imps":
                 if let string = columns.element(index) {
@@ -435,7 +442,7 @@ class ImportedBBOScorecard: ImportedScorecard {
                 }
             case "nspair", "ewpair":
                 let pair = Pair(string: heading.left(2).uppercased())
-                if let string = columns.element(index),
+                if let string = columns.element(index)?.lowercased().replacingOccurrences(of: "\(pair)".lowercased(), with: ""),
                    let rankingNumber = Int(string),
                    let ranking = rankings.first(where: {$0.number == rankingNumber}) {
                     for seat in pair.seats {
@@ -549,6 +556,7 @@ class ImportedBBOScorecard: ImportedScorecard {
                 }
             }
         }
+        type = (type == .xImp && format == .teams ? .imp : type)
     }
     
     // MARK: - Utility routines ==================================================================== -

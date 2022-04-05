@@ -27,6 +27,7 @@ public class RankingMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var south: String
     @NSManaged public var east: String
     @NSManaged public var west: String
+    @NSManaged public var way16: Int16
 
     convenience init() {
         self.init(context: CoreData.context)
@@ -40,6 +41,11 @@ public class RankingMO: NSManagedObject, ManagedObject, Identifiable {
     public var section: Int {
         get { Int(self.section16) }
         set { self.section16 = Int16(newValue) }
+    }
+    
+    public var way: Pair {
+        get { Pair(rawValue: Int(way16)) ?? .unknown }
+        set { self.way16 = Int16(newValue.rawValue) }
     }
     
     public var number: Int {

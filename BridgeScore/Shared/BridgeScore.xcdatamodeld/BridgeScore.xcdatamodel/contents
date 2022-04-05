@@ -59,6 +59,7 @@
         <attribute name="section16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="south" optional="YES" attributeType="String"/>
         <attribute name="table16" optional="YES" attributeType="Integer 16" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="way16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="west" optional="YES" attributeType="String"/>
     </entity>
     <entity name="Scorecard" representedClassName="ScorecardMO" syncable="YES">
@@ -121,7 +122,7 @@
         <element name="Layout" positionX="-45" positionY="0" width="128" height="194"/>
         <element name="Location" positionX="27" positionY="189" width="128" height="104"/>
         <element name="Player" positionX="9" positionY="171" width="128" height="119"/>
-        <element name="Ranking" positionX="-9" positionY="162" width="128" height="224"/>
+        <element name="Ranking" positionX="-9" positionY="162" width="128" height="239"/>
         <element name="Scorecard" positionX="-18" positionY="81" width="128" height="299"/>
         <element name="Table" positionX="-9" positionY="153" width="128" height="134"/>
         <element name="Traveller" positionX="0" positionY="171" width="128" height="374"/>

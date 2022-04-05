@@ -29,7 +29,7 @@ import CoreData
     
     @Published private(set) var saveMessage: String = ""
     @Published private(set) var canSave: Bool = true
-    
+        
     public var contractLevel: Int { contract.level.rawValue }
     public var minRankingNumber: Int { min(rankingNumber[.north] ?? Int.max,
                                            rankingNumber[.south] ?? Int.max,

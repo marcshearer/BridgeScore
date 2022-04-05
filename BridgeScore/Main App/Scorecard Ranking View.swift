@@ -19,6 +19,7 @@ enum RankingColumnType: Int, Codable {
     case nsXImps = 7
     case ewXImps = 8
     case rounds = 9
+    case way = 10
     
     var string: String {
         return "\(self)"
@@ -81,6 +82,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
     private var values: [[(ranking: RankingViewModel, tie: Bool)]] = []
     private var tables: Int = 0
     private var sections: Int = 0
+    private var ways: Int = 0
     private var totalRankings: Int = 0
     
     override init(frame: CGRect) {
@@ -131,7 +133,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
     }
     
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        if sections > 1 || tables > 1 {
+        if sections > 1 || tables > 1 || ways > 1 {
             return RankingRowType.heading.rowHeight(scorecard: Scorecard.current.scorecard!)
         } else {
             return 0
@@ -139,7 +141,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
     }
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        if sections > 1 || tables > 1 {
+        if sections > 1 || tables > 1 || ways > 1 {
             let view = ScorecardRankingSectionHeaderView.dequeue(self, tableView: tableView, tag: RankingRowType.heading.tagOffset + section)
             return view
         } else {
@@ -312,18 +314,23 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         if sections > 1 {
             headingColumns.append(RankingColumn(type: .section, heading: nil, size: .fixed([200])))
         }
-        
+        if ways > 1 {
+            headingColumns.append(RankingColumn(type: .way, heading: nil, size: .fixed([200])))
+        }
+
         setNeedsLayout()
     }
     
     private func setupValues() {
         var lastTable: Int?
         var lastSection: Int?
+        var lastWay: Pair?
         var rankingValues: [[RankingViewModel]] = []
         totalRankings = 0
         tables = 0
         sections = 0
-        for ranking in Scorecard.current.rankingList.sorted(by: {NSObject.sort($0, $1, sortKeys: [("table", .ascending), ("section", .ascending), ("score", .descending)])}) {
+        ways = 0
+        for ranking in Scorecard.current.rankingList.sorted(by: {NSObject.sort($0, $1, sortKeys: [("table", .ascending), ("section", .ascending), ("waySort", .ascending), ("score", .descending)])}) {
             var append = false
             if lastTable != ranking.table {
                 tables += 1
@@ -333,6 +340,10 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
                 sections += 1
                 append = true
             }
+            if lastWay != ranking.way {
+                ways += 1
+                append = true
+            }
             if append {
                 rankingValues.append([])
             }
@@ -340,6 +351,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
             totalRankings += 1
             lastTable = ranking.table
             lastSection = ranking.section
+            lastWay = ranking.way
         }
         
         // Setup main values with ties
@@ -699,6 +711,9 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
             label.textAlignment = .left
         case .section:
             label.text = "     Section \(ranking.section)"
+            label.textAlignment = .left
+        case .way:
+            label.text = "     \(ranking.way.string)"
             label.textAlignment = .left
         }
     }

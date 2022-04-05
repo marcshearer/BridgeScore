@@ -197,22 +197,23 @@ class ImportedScorecard: NSObject {
         Scorecard.current.removeRankings(table: table)
         if let scorecard = scorecard {
             let sortedRankings = rankings.sorted(by: {($0.ranking ?? 0) < ($1.ranking ?? 0)})
-            for (index, bboRanking) in sortedRankings.enumerated() {
+            for (index, importedRanking) in sortedRankings.enumerated() {
                 
-                let section = bboRanking.section
-                if let number = bboRanking.number {
+                let section = importedRanking.section
+                if let number = importedRanking.number {
                     let ranking = RankingViewModel(scorecard: scorecard, table: table ?? 0, section: section, number: number)
                     
                     // Sort out ties
                     if index > 0 && sortedRankings[index - 1].score == ranking.score {
                         ranking.ranking = sortedRankings[index - 1].ranking!
                     } else {
-                        ranking.ranking = bboRanking.ranking ?? 0
+                        ranking.ranking = importedRanking.ranking ?? 0
                     }
-                    ranking.players = bboRanking.players
-                    ranking.score = bboRanking.score ?? 0
-                    ranking.points = bboRanking.bboPoints ?? 0
-                    ranking.xImps = bboRanking.xImps
+                    ranking.players = importedRanking.players
+                    ranking.score = importedRanking.score ?? 0
+                    ranking.points = importedRanking.bboPoints ?? 0
+                    ranking.xImps = importedRanking.xImps
+                    ranking.way = importedRanking.way ?? .unknown
                     
                     Scorecard.current.insert(ranking: ranking)
                 }
@@ -419,6 +420,7 @@ class ImportedRanking {
     public var xImps: [Pair:Float] = [:]
     public var ranking: Int?
     public var bboPoints: Float?
+    public var way: Pair?
 }
 
 class ImportedTraveller {

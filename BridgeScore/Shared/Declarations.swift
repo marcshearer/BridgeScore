@@ -123,7 +123,9 @@ public enum ScoreType {
         switch importScoringType {
         case "MATCH_POINTS":
             self = .percent
-        case "CROSS_IMPS", "IMPS":
+        case "CROSS_IMPS":
+            self = .xImp
+        case "IMPS":
             self = .imp
         default:
             self = .unknown
@@ -373,6 +375,17 @@ public enum Pair: Int, CaseIterable {
             self = .ew
         default:
             self = .unknown
+        }
+    }
+    
+    var string: String {
+        switch self {
+        case .ns:
+            return "North / South"
+        case .ew:
+            return "East / West"
+        default:
+            return "Unknown"
         }
     }
     

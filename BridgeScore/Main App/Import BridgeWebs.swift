@@ -106,8 +106,12 @@ struct ImportBridgeWebsScorecard: View {
         VStack(spacing: 0) {
             Banner(title: Binding.constant("Import from BridgeWebs"), backImage: Banner.crossImage)
             Spacer()
-            Text("Downloading file...")
-                .font(defaultFont)
+            HStack {
+                Spacer()
+                Text("Downloading file...")
+                    .font(defaultFont)
+                Spacer()
+            }
             Spacer()
         }
     }
@@ -116,8 +120,12 @@ struct ImportBridgeWebsScorecard: View {
         VStack(spacing: 0) {
             Banner(title: Binding.constant("Import from BridgeWebs"), backImage: Banner.crossImage)
             Spacer()
-            Text(errorMessage ?? "Error")
+            HStack {
+                Spacer()
+                Text(errorMessage ?? "Error")
                 .font(defaultFont)
+                Spacer()
+            }
             Spacer()
         }
     }
@@ -340,9 +348,13 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 if let string = columns.element(index) {
                     importedRanking.ranking = Int(string)
                 }
-            case "no":
+            case "pair":
                 if let string = columns.element(index) {
                     importedRanking.number = Int(string)
+                }
+            case "way":
+                if let string = columns.element(index), let bwValue = Int(string) {
+                    importedRanking.way = (bwValue == 1 ? .ns : (bwValue == 2 ? .ew : .unknown))
                 }
             case "name1":
                 importedRanking.players[.north] = columns.element(index)

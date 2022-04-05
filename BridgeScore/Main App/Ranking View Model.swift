@@ -21,6 +21,7 @@ import CoreData
     @Published public var xImps: [Pair:Float ] = [:]
     @Published public var points: Float = 0
     @Published public var players: [Seat:String] = [:]
+    @Published public var way: Pair = .unknown
     
     // Linked managed objects - should only be referenced in this and the Data classes
     @Published internal var rankingMO: RankingMO?
@@ -30,7 +31,9 @@ import CoreData
     
     // Auto-cleanup
     private var cancellableSet: Set<AnyCancellable> = []
-    
+
+    public var waySort: Int { way.rawValue }
+
     // Check if view model matches managed object
     public var changed: Bool {
         var result = false
@@ -38,6 +41,7 @@ import CoreData
             if self.scorecard.scorecardId != mo.scorecardId ||
                 self.table != mo.table ||
                 self.section != mo.section ||
+                self.way != mo.way ||
                 self.number != mo.number ||
                 self.ranking != mo.ranking ||
                 self.score != mo.score ||
@@ -86,6 +90,7 @@ import CoreData
             }
             self.table = mo.table
             self.section = mo.section
+            self.way = mo.way
             self.number = mo.number
             self.ranking = mo.ranking
             self.score = mo.score
@@ -100,6 +105,7 @@ import CoreData
             mo.scorecardId = scorecard.scorecardId
             mo.table = table
             mo.section = section
+            mo.way = way
             mo.number = number
             mo.ranking = ranking
             mo.score = score
