@@ -205,7 +205,7 @@ struct ImportBridgeWebsScorecard: View {
             .onAppear {
                 if let error = importedBridgeWebsScorecard.error {
                     MessageBox.shared.show(error, okAction: {
-                        selected = nil
+                        presentationMode.wrappedValue.dismiss()
                     })
                 }
             }
@@ -346,10 +346,13 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 }
             case "name1":
                 importedRanking.players[.north] = columns.element(index)
-                importedRanking.players[.east] = columns.element(index)
             case "name2":
-                importedRanking.players[.south] = columns.element(index)
-                importedRanking.players[.west] = columns.element(index)
+                let name2 = columns.element(index) ?? ""
+                if name2 == "" {
+                    format = .individual
+                } else {
+                    importedRanking.players[.south] = name2
+                }
             default:
                 break
             }
@@ -364,19 +367,21 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         }
         for (index, heading) in headings.enumerated() {
             switch heading.lowercased() {
-            case "ns":
+            case "ns", "ew":
+                let pair = Pair(string: heading.uppercased())
                 if let string = columns.element(index) {
                     // Strip out :1 and :2 from teams
                     let component = string.components(separatedBy: ":")
-                    importedTraveller.ranking[.north] = Int(component[0])
-                    importedTraveller.ranking[.south] = Int(component[0])
+                    for seat in pair.seats {
+                        importedTraveller.ranking[seat] = Int(component[0])
+                    }
                 }
-            case "ew":
+            case "n", "s", "e", "w":
                 if let string = columns.element(index) {
-                    // Strip out :1 and :2 from teams
-                    let component = string.components(separatedBy: ":")
-                    importedTraveller.ranking[.east] = Int(component[0])
-                    importedTraveller.ranking[.west] = Int(component[0])
+                    let seat = Seat(string: heading.uppercased())
+                    if let ranking = Int(string) {
+                        importedTraveller.ranking[seat] = ranking
+                    }
                 }
             case "bid":
                 let contract = Contract()
@@ -431,12 +436,14 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                         importedTraveller.nsScore = score
                     }
                 }
+                type = .xImp
             case "ew x":
                 if let string = columns.element(index) {
                     if let score = Float(string.replacingOccurrences(of: "%", with: "")) {
                         importedTraveller.nsScore = -score
                     }
                 }
+                type = .xImp
             case "play":
                 if let string = columns.element(index) {
                     importedTraveller.playData = string
@@ -464,26 +471,38 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
     // MARK: - Utility Routines ======================================================================== -
     
     private func combineRankings() {
-        if let scorecard = scorecard {
-            if scorecard.type.players == 4 && rankings.first!.players[.north] == rankings.first!.players[.east] {
-                // Teams pairs as separate lines
-                var remove: [Int] = []
-                var position = 0
-                for (index, ranking) in rankings.enumerated() {
-                    if index > 0 && rankings[index - 1].number == ranking.number {
-                        // Add to previous ranking
-                        rankings[index - 1].players[.east] = ranking.players[.north]
-                        rankings[index - 1].players[.west] = ranking.players[.south]
-                        remove.append(index)
-                    } else {
-                        position += 1
-                        ranking.ranking = position
-                    }
-                }
-                for removeIndex in remove.reversed() {
-                    rankings.remove(at: removeIndex)
-                }
+        // Teams pairs as separate lines
+        var remove: [Int] = []
+        var position = 0
+        for (index, ranking) in rankings.enumerated() {
+            if index > 0 && rankings[index - 1].number == ranking.number {
+                // Add to previous ranking
+                rankings[index - 1].players[.east] = ranking.players[.north]
+                rankings[index - 1].players[.west] = ranking.players[.south]
+                remove.append(index)
+                format = .teams
+            } else {
+                position += 1
+                ranking.ranking = position
             }
+        }
+        for removeIndex in remove.reversed() {
+            rankings.remove(at: removeIndex)
+        }
+        for ranking in rankings {
+            if format == .individual {
+                ranking.players[.south] = ranking.players[.north]
+            }
+            if format != .teams {
+                ranking.players[.east] = ranking.players[.north]
+                ranking.players[.west] = ranking.players[.south]
+            }
+        }
+        switch format {
+        case .individual, .pairs:
+            type = type ?? .percent
+        case .teams:
+            type = .imp
         }
     }
         

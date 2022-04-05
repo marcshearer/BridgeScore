@@ -119,8 +119,8 @@ public enum ScoreType {
         }
     }
     
-    init(bboScoringType: String?) {
-        switch bboScoringType {
+    init(importScoringType: String?) {
+        switch importScoringType {
         case "MATCH_POINTS":
             self = .percent
         case "CROSS_IMPS", "IMPS":
@@ -139,6 +139,7 @@ public enum Type: Int, CaseIterable {
     case vpMatchTeam = 1
     case vpTableTeam = 6
     case acblVpTableTeam = 5
+    case percentIndividual = 7
 
     public var string: String {
         switch self {
@@ -156,12 +157,14 @@ public enum Type: Int, CaseIterable {
             return "Teams Table VPs"
         case .acblVpTableTeam:
             return "Teams Table ACBL VPs"
+        case .percentIndividual:
+            return "Individual Match Points"
         }
     }
     
     public var boardScoreType: ScoreType {
         switch self {
-        case .percent, .vpPercent:
+        case .percent, .vpPercent, .percentIndividual:
             return .percent
         case .xImp, .vpXImp:
             return .xImp
@@ -172,6 +175,8 @@ public enum Type: Int, CaseIterable {
     
     public var players: Int {
         switch self {
+        case.percentIndividual:
+            return 1
         case .percent, .xImp, .vpXImp, .vpPercent:
             return 2
         case .vpMatchTeam, .vpTableTeam, .acblVpTableTeam:
@@ -189,7 +194,7 @@ public enum Type: Int, CaseIterable {
     
     public var boardPlaces: Int {
         switch self {
-        case .percent, .xImp, .vpPercent, .vpXImp:
+        case .percent, .xImp, .vpPercent, .vpXImp, .percentIndividual:
             return 2
         case .vpMatchTeam, .vpTableTeam, .acblVpTableTeam:
             return 0
@@ -198,7 +203,7 @@ public enum Type: Int, CaseIterable {
 
     public var tablePlaces: Int {
         switch self {
-        case .percent, .xImp, .vpXImp:
+        case .percent, .xImp, .vpXImp, .percentIndividual:
             return 2
         case .vpMatchTeam, .vpPercent, .vpTableTeam, .acblVpTableTeam:
             return 0
@@ -207,7 +212,7 @@ public enum Type: Int, CaseIterable {
     
     public var matchPlaces: Int {
         switch self {
-        case .percent, .xImp, .vpXImp, .vpMatchTeam:
+        case .percent, .xImp, .vpXImp, .vpMatchTeam, .percentIndividual:
             return 2
         case .vpPercent, .vpTableTeam, .acblVpTableTeam:
             return 0
@@ -216,7 +221,7 @@ public enum Type: Int, CaseIterable {
     
     public var tableAggregate: AggregateType {
         switch self {
-        case .percent:
+        case .percent, .percentIndividual:
             return .average
         case .xImp, .vpMatchTeam:
             return .total
@@ -233,7 +238,7 @@ public enum Type: Int, CaseIterable {
     
     public var matchAggregate: AggregateType {
         switch self {
-        case .percent:
+        case .percent, .percentIndividual:
             return .average
         case .xImp, .vpXImp, .vpTableTeam, .acblVpTableTeam, .vpPercent:
             return .total
@@ -244,7 +249,7 @@ public enum Type: Int, CaseIterable {
     
     public func matchSuffix(scorecard: ScorecardViewModel) -> String {
         switch self {
-        case .percent:
+        case .percent, .percentIndividual:
             return "%"
         case .xImp:
             return " IMPs"
@@ -360,6 +365,17 @@ public enum Pair: Int, CaseIterable {
     case ew
     case unknown
     
+    init(string: String) {
+        switch string.uppercased() {
+        case "NS":
+            self = .ns
+        case "EW":
+            self = .ew
+        default:
+            self = .unknown
+        }
+    }
+    
     static var validCases: [Pair] {
         return Pair.allCases.filter{$0 != .unknown}
     }
@@ -396,7 +412,7 @@ public enum Seat: Int, EnumPickerType, ContractEnumType {
     case west = 4
     
     init(string: String) {
-        switch string {
+        switch string.uppercased() {
         case "N":
             self = .north
         case "S":

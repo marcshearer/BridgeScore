@@ -170,14 +170,16 @@ struct LayoutDetailView : View {
                             
                             Separator()
                             
-                            PickerInput(id: id, title: "Partner", field: $playerIndex, values: {players.map{$0.name}}, inlineTitleWidth: 200)
-                            { index in
-                                if let index = index {
-                                    selected.partner = players[index]
+                            if selected.type.players > 1 {
+                                PickerInput(id: id, title: "Partner", field: $playerIndex, values: {players.map{$0.name}}, inlineTitleWidth: 200)
+                                { index in
+                                    if let index = index {
+                                        selected.partner = players[index]
+                                    }
                                 }
+                                
+                                Separator()
                             }
-                            
-                            Separator()
                             
                             Input(title: "Default description", field: $selected.scorecardDesc, inlineTitleWidth: 200)
                             

@@ -6,9 +6,7 @@ If xcode fails to install app on device it's normally because info.plist isn't w
 Bugs
 ====
 Background still active with MessageBox
-Check can't continue after import errors
-Mock up import scoring type from BridgeWebs from data
-Investigate direct import BBO
+You can edit dealer!!
 
 To Do
 =====
@@ -16,6 +14,7 @@ Sort out dark mode
 Maybe remove file sharing in Info.plist once can backup from Mac
 Travellers and rankings in portrait
 Check imports if no network
+Archive imported files
 
 Enhancements
 ============

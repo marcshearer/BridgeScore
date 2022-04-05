@@ -28,6 +28,23 @@ public enum ImportSource: Int, Equatable, CaseIterable {
     }
 }
 
+enum ImportFormat {
+    case individual
+    case pairs
+    case teams
+    
+    public var players: Int {
+        switch self {
+        case .individual:
+            return 1
+        case .pairs:
+            return 2
+        case.teams:
+            return 4
+        }
+    }
+}
+
 class ImportedScorecard: NSObject {
     var importSource: ImportSource?
     var title: String?
@@ -45,6 +62,7 @@ class ImportedScorecard: NSObject {
     var scorecard: ScorecardViewModel!
     var boardsTable: Int?
     var table: Int = 1
+    var format: ImportFormat = .pairs
 
     // MARK: - Import to main data structures =================================================================== -
         
@@ -358,17 +376,19 @@ class ImportedScorecard: NSObject {
         myRanking = rankings.first(where: {$0.players.contains(where: {$0.value.lowercased() == myName})})
         if let myRanking = myRanking {
             myRankingSeat = myRanking.players.first(where: {$0.value.lowercased() == myName})?.key
-            let partnerName = myRanking.players[myRankingSeat!.partner]
-            partner = MasterData.shared.players.first(where: {$0.bboName.lowercased() == partnerName?.lowercased() || $0.name.lowercased() == partnerName?.lowercased()})
-            if partner != scorecard?.partner {
-                warnings.append("Partner in imported scorecard does not match current scorecard")
+            if format != .individual {
+                let partnerName = myRanking.players[myRankingSeat!.partner]
+                partner = MasterData.shared.players.first(where: {$0.bboName.lowercased() == partnerName?.lowercased() || $0.name.lowercased() == partnerName?.lowercased()})
+                if partner != scorecard?.partner {
+                    warnings.append("Partner in imported scorecard does not match current scorecard")
+                }
             }
         } else {
-            warnings.append("Unable to find '\(myName ?? "name")' in imported scorecard")
+            error = "Unable to find '\(myName ?? "name")' in imported scorecard"
         }
         
         // Check scoring type
-        if type != scorecard?.type.boardScoreType {
+        if type != scorecard?.type.boardScoreType || format.players != scorecard?.type.players {
             error = "Scoring type in imported scorecard must be consistent with current scorecard"
         }
         

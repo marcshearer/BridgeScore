@@ -1161,11 +1161,13 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         var versus = ""
         let players = table.players
         let sitting = table.sitting
+        var separator = ""
         for seat in [sitting.partner, sitting.leftOpponent, sitting.rightOpponent] {
             if scorecard.type.players == 1 || seat != sitting.partner {
                 let bboName = players[seat] ?? "Unknown"
                 let realName = MasterData.shared.realName(bboName: bboName) ?? bboName
-                versus += (versus != "" ? " & " : "") + realName
+                versus += separator + realName
+                separator = (seat == sitting.partner ? " v " : " & ")
             }
         }
         return versus

@@ -113,15 +113,17 @@ struct ScorecardDetailsView: View {
                     
                     Separator()
                     
-                    PickerInput(id: id, title: "Partner", field: $playerIndex, values: {players.map{$0.name}})
-                    { index in
-                        if let index = index {
-                            scorecard.partner = players[index]
+                    if scorecard.type.players > 1 {
+                        PickerInput(id: id, title: "Partner", field: $playerIndex, values: {players.map{$0.name}})
+                        { index in
+                            if let index = index {
+                                scorecard.partner = players[index]
+                            }
                         }
+                        .disabled(Scorecard.current.isImported)
+                        
+                        Separator()
                     }
-                    .disabled(Scorecard.current.isImported)
-                    
-                    Separator()
                     
                     DatePickerInput(title: "Date", field: $scorecard.date, to: Date())
                         .disabled(Scorecard.current.isImported)

@@ -89,23 +89,30 @@ struct ImportBBOScorecard: View {
             Banner(title: Binding.constant("Choose file to import"), backImage: Banner.crossImage)
             Spacer().frame(height: 16)
             if let files = try? FileManager.default.contentsOfDirectory(at: ImportBBO.importsURL, includingPropertiesForKeys: nil).filter({$0.relativeString.right(4) == ".csv"}) {
-                ForEach(files, id: \.self) { (file) in
+                let fileData: [(path: URL, number: Int?, text: String, date: Date?)] = decompose(files)
+                ForEach(fileData.indices, id: \.self) { (index) in
                     VStack {
                         Spacer().frame(height: 8)
                         HStack {
-                            let components = file.relativeString.components(separatedBy: "/")
-                            let subComponents = components.last!.components(separatedBy: ".")
                             Spacer().frame(width: 16)
-                            Text(subComponents.first!)
-                                .font(.title2)
-                                .minimumScaleFactor(0.5)
+                            HStack {
+                                Text(fileData[index].date?.toString(format: "EEE d MMM yyyy", localized: false) ?? "")
+                                Spacer()
+                            }
+                            .frame(width: 190)
+                            Spacer().frame(width: 16)
+                            Text((fileData[index].text).replacingOccurrences(of: "_", with: " "))
                             Spacer()
+                            Spacer().frame(width: 16)
                         }
+                        .font(.title2)
+                        .minimumScaleFactor(0.5)
+                                 
                         Spacer().frame(height: 8)
                     }
-                    .background((file == selected ? Palette.alternate : Palette.background).background)
+                    .background((fileData[index].path == selected ? Palette.alternate : Palette.background).background)
                     .onTapGesture {
-                        selected = file
+                        selected = fileData[index].path
                         if let scorer = MasterData.shared.scorer {
                             if scorer.bboName == "" {
                                 MessageBox.shared.show("In order to import a scorecard the player defined as yourself must have a BBO name", okAction: {
@@ -116,7 +123,7 @@ struct ImportBBOScorecard: View {
                                     presentationMode.wrappedValue.dismiss()
                                 })
                             } else {
-                                if let imported = ImportBBO.importScorecard(fileURL: file, scorecard: scorecard) {
+                                if let imported = ImportBBO.importScorecard(fileURL: selected!, scorecard: scorecard) {
                                     importedBBOScorecard = imported
                                 }
                             }
@@ -130,6 +137,35 @@ struct ImportBBOScorecard: View {
             }
             Spacer()
         }
+    }
+    
+    func decompose(_ paths: [URL]) -> [(URL, Int?, String, Date?)] {
+        var result: [(path: URL, number: Int?, text: String, date: Date?)] = []
+        
+        for path in paths {
+            var components = fileName(path.relativeString).components(separatedBy: "_")
+            var number: Int?
+            number = Int(components.first!)
+            if number != nil {
+                components.removeFirst()
+            }
+            var date: Date?
+            date = Utility.dateFromString(components.last!, format: "yyyy-MM-dd", localized: false)
+            if date != nil {
+                components.removeLast()
+            }
+            result.append((path, number, components.joined(separator: " "), date))
+        }
+        let baseDate = Date(timeIntervalSinceReferenceDate: 0)
+        return result.sorted(by: {($0.date ?? baseDate) > ($1.date ?? baseDate) || ($0.date == $1.date && ($0.number ?? 0) > ($1.number ?? 0))})
+    }
+    
+    func fileName(_ path: String) -> String {
+        let components = path.components(separatedBy: "/")
+        var subComponents = components.last!.components(separatedBy: ".")
+        subComponents.removeLast()
+        let text = subComponents.joined(separator: ".")
+        return text
     }
     
     var confirmDetails: some View {
@@ -246,6 +282,7 @@ class ImportedBBOScorecard: ImportedScorecard {
         case ranking
         case travellerHeader
         case traveller
+        case finished
     }
     
     private(set) var bboId: String?
@@ -287,10 +324,17 @@ class ImportedBBOScorecard: ImportedScorecard {
                     travellerHeadings = columns
                     phase = .traveller
                 case .traveller:
-                    if columns.count > 1 {
+                    if columns.first!.left(1) == "#" {
+                        phase = .finished
+                    } else if columns.count > 1 {
                         initTraveller(columns)
                     }
+                case .finished:
+                    break
                 }
+            }
+            if phase == .finished {
+                break
             }
         }
         if !lines.isEmpty {
@@ -316,7 +360,7 @@ class ImportedBBOScorecard: ImportedScorecard {
                 date = Date(from: string, format: "yyyy-MM-dd")
             }
         case "#scoringtype":
-            type = ScoreType(bboScoringType: columns.element(1))
+            type = ScoreType(importScoringType: columns.element(1))
         case "#ranking":
             phase = .rankingHeader
         default:
@@ -341,18 +385,27 @@ class ImportedBBOScorecard: ImportedScorecard {
                 if let combined = columns.element(index) {
                     let names = combined.components(separatedBy: "+")
                     importedRanking.players[.north] = names[0].lowercased()
-                    importedRanking.players[.south] = names[1].lowercased()
-                    importedRanking.players[.east] = names[0].lowercased()
-                    importedRanking.players[.west] = names[1].lowercased()
+                    if names.element(1) ?? "" != "" {
+                        importedRanking.players[.south] = names[1].lowercased()
+                    } else {
+                        format = .individual
+                    }
                 }
             case "name1":
                 importedRanking.players[.north] = columns.element(index)?.lowercased()
+                format = .teams
             case "name2":
                 importedRanking.players[.south] = columns.element(index)?.lowercased()
+                importedRanking.players[.north] = columns.element(index)?.lowercased()
+                format = .teams
             case "name3":
                 importedRanking.players[.east] = columns.element(index)?.lowercased()
+                importedRanking.players[.north] = columns.element(index)?.lowercased()
+                format = .teams
             case "name4":
                 importedRanking.players[.west] = columns.element(index)?.lowercased()
+                importedRanking.players[.north] = columns.element(index)?.lowercased()
+                format = .teams
             case "score", "imps":
                 if let string = columns.element(index) {
                     importedRanking.score = Float(string)
@@ -380,34 +433,28 @@ class ImportedBBOScorecard: ImportedScorecard {
                 if let string = columns.element(index) {
                     importedTraveller.board = Int(string)
                 }
-            case "north", "south", "east", "west":
-                let seat = Seat(string: heading.left(1).uppercased())
-                if let ranking = rankings.first(where: {$0.players[seat] == columns.element(index)?.lowercased()}) {
-                    importedTraveller.ranking[seat] = ranking.number
-                    importedTraveller.section[seat] = ranking.section
+            case "nspair", "ewpair":
+                let pair = Pair(string: heading.left(2).uppercased())
+                if let string = columns.element(index),
+                   let rankingNumber = Int(string),
+                   let ranking = rankings.first(where: {$0.number == rankingNumber}) {
+                    for seat in pair.seats {
+                        importedTraveller.ranking[seat] = ranking.number
+                        importedTraveller.section[seat] = ranking.section
+                    }
                 } else {
                     fatalError()
                 }
-                /*
-            case "nspair":
-                if let string = columns.element(index)?.replacingOccurrences(of: "NS", with: "") {
-                    importedTraveller.ranking[.north] = Int(string)
-                    importedTraveller.ranking[.south] = Int(string)
+            case "nplayer", "splayer", "eplayer", "wplayer":
+                let seat = Seat(string: heading.left(1).uppercased())
+                if let string = columns.element(index),
+                   let rankingNumber = Int(string),
+                   let ranking = rankings.first(where: {$0.number == rankingNumber}) {
+                        importedTraveller.ranking[seat] = ranking.number
+                        importedTraveller.section[seat] = ranking.section
+                } else {
+                    fatalError()
                 }
-            case "ewpair":
-                if let string = columns.element(index)?.replacingOccurrences(of: "EW", with: "") {
-                    importedTraveller.ranking[.east] = Int(string)
-                    importedTraveller.ranking[.west] = Int(string)
-                }
-            case "east":
-                if let string = columns.element(index) {
-                    importedTraveller.ranking[.east] = Int(string)
-                }
-            case "west":
-                if let string = columns.element(index) {
-                    importedTraveller.ranking[.west] = Int(string)
-                }
-                 */
             case "contract":
                 let contract = Contract()
                 if let string = columns.element(index) {
@@ -465,24 +512,30 @@ class ImportedBBOScorecard: ImportedScorecard {
     }
     
     private func combineRankings() {
-        if let scorecard = scorecard {
-            if scorecard.type.players == 4 && rankings.first!.players[.north] == rankings.first!.players[.east] {
-                // Teams pairs as separate lines
-                var remove: [Int] = []
-                for (index, bboRanking) in rankings.enumerated() {
-                    if bboRanking.ranking == nil && index > 0 {
-                            // Add to previous ranking
-                        rankings[index - 1].players[.east] = bboRanking.players[.north]
-                        rankings[index - 1].players[.west] = bboRanking.players[.south]
-                        if let number = bboRanking.number {
-                            translateNumber[number] = rankings[index - 1].number
-                            remove.append(index)
-                        }
-                    }
+        // Teams pairs as separate lines
+        var remove: [Int] = []
+        for (index, bboRanking) in rankings.enumerated() {
+            if bboRanking.ranking == nil && index > 0 {
+                    // Add to previous ranking
+                rankings[index - 1].players[.east] = bboRanking.players[.north]
+                rankings[index - 1].players[.west] = bboRanking.players[.south]
+                if let number = bboRanking.number {
+                    translateNumber[number] = rankings[index - 1].number
+                    remove.append(index)
                 }
-                for removeIndex in remove.reversed() {
-                    rankings.remove(at: removeIndex)
-                }
+                format = .teams
+            }
+        }
+        for removeIndex in remove.reversed() {
+            rankings.remove(at: removeIndex)
+        }
+        for ranking in rankings {
+            if format == .individual {
+                ranking.players[.south] = ranking.players[.north]
+            }
+            if format != .teams {
+                ranking.players[.east] = ranking.players[.north]
+                ranking.players[.west] = ranking.players[.south]
             }
         }
         for (_, boardTravellers) in travellers {

@@ -195,12 +195,13 @@ struct ScorecardSummaryView: View {
                         .font(.title)
                         Spacer()
                         HStack {
-                            // Text(scorecard.date.toFullString()).font(.callout).bold()
                             Text(Utility.dateString(Date.startOfDay(from: scorecard.date)!, format: "dd MMM yyyy", style: .short, doesRelativeDateFormatting: true)).font(.callout).bold()
                             Spacer()
                             HStack {
-                                Text("With: ")
-                                Text(scorecard.partner?.name ?? "").font(.callout).bold()
+                                if scorecard.type.players > 1 {
+                                    Text("With: ")
+                                    Text(scorecard.partner?.name ?? "").font(.callout).bold()
+                                }
                                 Spacer()
                             }
                             .frame(width: geometry.size.width * 0.3)
