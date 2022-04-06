@@ -231,6 +231,7 @@ protocol ScorecardDelegate {
     func scorecardContractEntry(board: BoardViewModel, table: TableViewModel)
     func scorecardBBONamesReplace(values: [String])
     func scorecardShowTraveller(scorecard: ScorecardViewModel, board: BoardViewModel, sitting: Seat)
+    func scorecardShowHand(scorecard: ScorecardViewModel, board: BoardViewModel, sitting: Seat)
     func scorecardScrollPickerPopup(values: [ScrollPickerEntry], maxValues: Int, selected: Int?, defaultValue: Int?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Int?)->())
     func scorecardDeclarerPickerPopup(values: [(Seat, ScrollPickerEntry)], selected: Seat?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Seat?)->())
     func scorecardGetDeclarers(tableNumber: Int) -> [Seat]
@@ -548,6 +549,17 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     func scorecardShowTraveller(scorecard: ScorecardViewModel, board: BoardViewModel, sitting: Seat) {
         let showTraverllerView = ScorecardTravellerView(frame: CGRect())
         showTraverllerView.show(from: superview!.superview!, boardNumber: board.board, sitting: sitting)
+    }
+    
+    func scorecardShowHand(scorecard: ScorecardViewModel, board: BoardViewModel, sitting: Seat) {
+        if let scorer = MasterData.shared.scorer {
+            let rankings = Scorecard.current.rankings(table: board.tableNumber, player: (bboName:scorer.bboName, name: scorer.name))
+            if let myRanking = rankings.first {
+                if let traveller = Scorecard.current.traveller(board: board.board, seat: sitting, rankingNumber: myRanking.number, section: myRanking.section) {
+                    Scorecard.showHand(from: self, traveller: traveller)
+                }
+            }
+        }
     }
     
     func scorecardScrollPickerPopup(values: [ScrollPickerEntry], maxValues: Int, selected: Int?, defaultValue: Int?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Int?)->()) {
@@ -1043,7 +1055,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         self.rowType = rowType
         self.column = column
         
-        var isEnabled = true
+        var isEnabled = false
         switch column.type {
         case .board, .table, .vulnerable, .dealer, .points:
             isEnabled = false
@@ -1070,14 +1082,17 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         case .board:
             label.font = boardFont
             label.text = "\(scorecard.resetNumbers ? ((board.board - 1) % scorecard.boardsTable) + 1 : board.board)"
+            label.isUserInteractionEnabled = !isEnabled
         case .vulnerable:
             label.isHidden = false
             label.font = titleFont
             label.text = board.vulnerability.string
+            label.isUserInteractionEnabled = !isEnabled
         case .dealer:
             seatPicker.isHidden = false
             seatPicker.set(board.dealer, isEnabled: false, color: color, titleFont: pickerTitleFont)
             seatPicker.isUserInteractionEnabled = false
+            label.isUserInteractionEnabled = !isEnabled
         case .contract:
             label.isHidden = false
             label.text = board.contract.string
@@ -1086,6 +1101,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             declarerPicker.isHidden = false
             let selected = declarerList.firstIndex(where: {$0.seat == board.declarer}) ?? 0
             declarerPicker.set(selected, list: declarerList.map{$0.entry}, isEnabled: isEnabled, color: color, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
+            label.isUserInteractionEnabled = !isEnabled
         case .made:
             madePicker.isHidden = false
             let (list, minValue, maxValue) = madeList
@@ -1098,6 +1114,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             }
             let makingValue = (6 + board.contract.level.rawValue)
             madePicker.set(board.made == nil ? nil : board.made! - minValue, list: list, defaultEntry: ScrollPickerEntry(caption: "Unknown"), defaultValue: min(list.count - 1, makingValue), isEnabled: isEnabled, color: color, titleFont: pickerTitleFont)
+            label.isUserInteractionEnabled = !isEnabled
         case .score:
             textField.isHidden = false
             textField.keyboardType = .numbersAndPunctuation
@@ -1112,6 +1129,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 let points = board.points(seat: table.sitting)
                 label.text = (points == nil ? "" : "\(points! > 0 ? "+" : "")\(points!)")
             }
+            label.isUserInteractionEnabled = !isEnabled
         case .comment:
             textField.isHidden = false
             textField.text = board.comment
@@ -1477,13 +1495,17 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             case .contract:
                 if !Scorecard.current.isImported {
                     contractTapped(self)
+                } else {
+                    showHand()
                 }
             case .versus:
                 versusTapped(self)
             case .score:
                 scoreTapped(self)
             default:
-                break
+                if Scorecard.current.isImported {
+                    showHand()
+                }
             }
         }
     }
@@ -1576,6 +1598,10 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 self.enumPickerDidChange(to: responsible)
             }
         }
+    }
+    
+    private func showHand() {
+        scorecardDelegate?.scorecardShowHand(scorecard: scorecard, board: board, sitting: table.sitting)
     }
     
     @nonobjc internal func scrollPickerDidChange(_ picker: ScrollPicker? = nil, to value: Int?) {

@@ -5,7 +5,7 @@
 //  Created by Marc Shearer on 23/01/2022.
 //
 
-import Foundation
+import UIKit
 
 enum ScorecardEntity {
     case table
@@ -642,5 +642,31 @@ class Scorecard {
         }
         
         return points * multiplier
+    }
+    
+    static func showHand(from parentView: UIView, traveller: TravellerViewModel) {
+        if var string = traveller.playData.removingPercentEncoding {
+            if let pnPosition = string.position("|pn|") {
+                if let nextSeparator = string.right(string.length - pnPosition - 4).position("|") {
+                    if nextSeparator > 0 {
+                        var nameString = string.mid(pnPosition + 4, nextSeparator).lowercased()
+                        for seat in Seat.validCases {
+                            if let bboName = traveller.ranking(seat: seat)?.players[seat] {
+                                if let name = MasterData.shared.realName(bboName: bboName) {
+                                    nameString = nameString.replacingOccurrences(of: bboName.lowercased(), with: name)
+                                }
+                            }
+                        }
+                        string = string.left(pnPosition + 4) + nameString + string.right(string.length - pnPosition - nextSeparator - 4)
+                    }
+                }
+            }
+            if let encodedString = string.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) {
+                if let url = URL(string: "https://www.bridgebase.com/tools/handviewer.html?bbo=y&lin=/\(encodedString)") {
+                    let webView = ScorecardWebView(frame: CGRect())
+                    webView.show(from: parentView, url: url)
+                }
+            }
+        }
     }
 }

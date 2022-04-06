@@ -30,6 +30,11 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
     // Auto-cleanup
     private var cancellableSet: Set<AnyCancellable> = []
     
+    public var tableNumber: Int {
+        assert(self.scorecard == Scorecard.current.scorecard, "Only valid when this scorecard is current")
+        return ((board - 1) / (Scorecard.current.scorecard?.boardsTable ?? 1)) + 1
+    }
+    
     // Check if view model matches managed object
     public var changed: Bool {
         var result = false
