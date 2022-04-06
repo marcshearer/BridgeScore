@@ -77,11 +77,16 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
     private var values: [TravellerViewModel] = []
     private var boardNumber: Int = 0
     private var sitting: Seat = .unknown
+    private var sourceView: UIView!
     
     override init(frame: CGRect) {
         super.init(frame:frame)
         loadScorecardTravellerView()
-        setupColumns()
+        // Handle rotations
+        UIDevice.current.beginGeneratingDeviceOrientationNotifications()
+        NotificationCenter.default.addObserver(forName: UIDevice.orientationDidChangeNotification, object: nil, queue: nil) { [weak self] (notification) in
+            self?.layoutSubviews()
+        }
     }
     
     required init?(coder: NSCoder) {
@@ -90,6 +95,9 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
     
     override func layoutSubviews() {
         super.layoutSubviews()
+        setFrames()
+        layoutIfNeeded()
+        setupColumns()
         setupSizes(columns: &travellerColumns)
         contentView.roundCorners(cornerRadius: 20)
         closeButton.roundCorners(cornerRadius: 10)
@@ -217,23 +225,29 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
     // MARK: - Show / Hide ============================================================================ -
     
     public func show(from sourceView: UIView, boardNumber: Int, sitting: Seat) {
+        self.sourceView = sourceView
         self.frame = sourceView.frame
         self.boardNumber = boardNumber
         self.sitting = sitting
-        setupValues()
-        setupColumns()
-        backgroundView.frame = sourceView.frame
         sourceView.addSubview(self)
         sourceView.bringSubviewToFront(self)
-        let width = sourceView.frame.width * 0.95
-        let padding = bannerHeight + safeAreaInsets.top + safeAreaInsets.bottom
-        let height = (sourceView.frame.height - padding) * 0.95
-        contentView.frame = CGRect(x: sourceView.frame.midX - (width / 2), y: ((bannerHeight + safeAreaInsets.top) / 2) + sourceView.frame.midY - (height / 2), width: width, height: height)
         self.bringSubviewToFront(contentView)
+        setFrames()
+        setupValues()
         contentView.isHidden = false
         setNeedsLayout()
         layoutIfNeeded()
         layoutSubviews()
+    }
+    
+    private func setFrames() {
+        if backgroundView.frame != sourceView.frame {
+            backgroundView.frame = sourceView.frame
+            let width = sourceView.frame.width * 0.95
+            let padding = bannerHeight + safeAreaInsets.top + safeAreaInsets.bottom
+            let height = (sourceView.frame.height - padding) * 0.95
+            contentView.frame = CGRect(x: sourceView.frame.midX - (width / 2), y: ((bannerHeight + safeAreaInsets.top) / 2) + sourceView.frame.midY - (height / 2), width: width, height: height)
+        }
     }
     
     public func hide() {
@@ -257,8 +271,6 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
                 TravellerColumn(type: .xImps, heading: "XImps", size: .fixed([60]))
             ]
         }
-        
-        setNeedsLayout()
     }
     
     private func setupValues() {
@@ -267,7 +279,7 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
             // Sort by teams (self first)
             values.sort(by: {NSObject.sort($0, $1, sortKeys: [("isSelf", .descending), ("isTeam", .descending), ("minRankingNumber", .ascending)])})
         } else {
-            values.sort(by: {NSObject.sort($0, $1, sortKeys: [("nsScore", (sitting.northSouth ? .descending : .ascending)), ("contractLevel", .descending), ("isSelf", .descending)])})
+            values.sort(by: {NSObject.sort($0, $1, sortKeys: [("nsScore", (sitting.pair == .ns ? .descending : .ascending)), ("contractLevel", .descending), ("isSelf", .descending)])})
         }
     }
     
@@ -498,6 +510,8 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
         label.textColor = UIColor(Palette.background.text)
         label.text = ""
         label.font = smallCellFont
+        label.adjustsFontSizeToFitWidth = true
+        label.minimumScaleFactor = 0.3
         label.textAlignment = .center
         label.isUserInteractionEnabled = false
         label.lineBreakMode = .byWordWrapping
@@ -508,19 +522,20 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
         self.column = column
         label.backgroundColor = UIColor(Palette.gridTitle.background)
         label.textColor = UIColor(Palette.gridTitle.text)
-        label.font = smallCellFont.bold
+        label.font = titleFont.bold
         switch column.type {
         case .score:
-            label.text = (sitting.northSouth ? "NS" : "EW") + "\n" + scorecard.type.boardScoreType.string
-            label.numberOfLines = 2
+            label.text = (isLandscape ? (sitting.pair.short + "\n") : "") + scorecard.type.boardScoreType.string
+            label.numberOfLines = (isLandscape ? 2 : 1)
         case .xImps:
-            label.text = (sitting.northSouth ? "NS" : "EW") + "\nXImps"
-            label.numberOfLines = 2
+            label.text = (isLandscape ? (sitting.pair.short + "\n") : "") + "\nXImps"
+            label.numberOfLines = (isLandscape ? 2 : 1)
         case .points:
-            label.text = (sitting.northSouth ? "NS" : "EW")
+            label.text = sitting.pair.short
         case .players:
+            label.text = (sitting.pair == .ns ? "North & South\nEast & West" : "East & West\nNorth & South")
             label.numberOfLines = 2
-            label.text = (sitting.northSouth ? "North & South\nEast & West" : "East & West\nNorth & South")
+            label.font = smallCellFont.bold
         default:
             label.text = column.heading
         }
@@ -552,9 +567,9 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
                 let color = (bboName == name ? UIColor(Palette.background.themeText) : nil)
                 names[seat] = NSAttributedString(name, pickerColor: color)
             }
-            let nsNames = names[.north]! + " & " + names[.south]!
-            let ewNames = names[.east]! + " & " + names[.west]!
-            label.attributedText = (sitting.northSouth ? (nsNames + "\n" + ewNames) : (ewNames + "\n" + nsNames))
+            let sameNames = names[sitting.pair.seats.first!]! + " & " + names[sitting.pair.seats.last!]!
+            let otherNames = names[sitting.leftOpponent.pair.seats.first!]! + " & " + names[sitting.rightOpponent.pair.seats.last!]!
+            label.attributedText = (sameNames + "\n" + otherNames)
             label.textAlignment = .left
             label.lineBreakMode = .byWordWrapping
             label.numberOfLines = 2
@@ -572,17 +587,17 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
                           traveller.made > 0 ? "+\(traveller.made)" : (
                           "\(traveller.made)")))
         case .points:
-            let sign = sitting.northSouth ? 1 : -1
+            let sign = (sitting.pair == .ns ? 1 : -1)
             label.text = "\(sign * Scorecard.points(contract: traveller.contract, vulnerability: Vulnerability(board: traveller.board), declarer: traveller.declarer, made: traveller.made, seat: .north))"
         case .score:
             if sameTeam {
                 label.text = ""
             } else {
-                let score = (sitting.northSouth ? traveller.nsScore : scorecard.type.invertScore(score: traveller.nsScore))
+                let score = (sitting.pair == .ns ? traveller.nsScore : scorecard.type.invertScore(score: traveller.nsScore))
                 label.text = score.toString(places: scorecard.type.matchPlaces)
             }
         case .xImps:
-            let xImps = traveller.nsXImps * (sitting.northSouth ? 1 : -1)
+            let xImps = traveller.nsXImps * (sitting.pair == .ns ? 1 : -1)
             label.text = xImps.toString(places: 2)
         case .section:
             label.text = "\(traveller.section)"

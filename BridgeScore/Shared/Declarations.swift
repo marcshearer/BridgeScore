@@ -393,6 +393,10 @@ public enum Pair: Int, CaseIterable {
         }
     }
     
+    var short: String {
+        return "\(self)".uppercased()
+    }
+    
     static var validCases: [Pair] {
         return Pair.allCases.filter{$0 != .unknown}
     }
@@ -479,10 +483,6 @@ public enum Seat: Int, EnumPickerType, ContractEnumType {
         (self == .unknown ? .unknown : Seat(rawValue: ((self.rawValue + 2) % 4) + 1)!)
     }
     
-    public var northSouth: Bool {
-        return (self == .north || self == .south)
-    }
-
     public var short: String {
         if self == .unknown {
             return ""

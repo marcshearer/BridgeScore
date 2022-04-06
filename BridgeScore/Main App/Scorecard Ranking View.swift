@@ -84,12 +84,18 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
     private var multiSections = false
     private var multiWays = false
     private var totalRankings: Int = 0
+    private var sourceView: UIView!
     
     override init(frame: CGRect) {
         super.init(frame:frame)
         loadScorecardRankingView()
         setupValues()
-        setupColumns()
+        
+        // Handle rotations
+        UIDevice.current.beginGeneratingDeviceOrientationNotifications()
+        NotificationCenter.default.addObserver(forName: UIDevice.orientationDidChangeNotification, object: nil, queue: nil) { [weak self] (notification) in
+            self?.layoutSubviews()
+        }
     }
     
     required init?(coder: NSCoder) {
@@ -98,6 +104,9 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
     
     override func layoutSubviews() {
         super.layoutSubviews()
+        setFrames()
+        layoutIfNeeded()
+        setupColumns()
         setupSizes(columns: &rankingColumns)
         setupSizes(columns: &headingColumns)
         contentView.roundCorners(cornerRadius: 20)
@@ -258,19 +267,26 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
     // MARK: - Show / Hide ============================================================================ -
     
     public func show(from sourceView: UIView) {
+        self.sourceView = sourceView
         self.frame = sourceView.frame
-        backgroundView.frame = sourceView.frame
         sourceView.addSubview(self)
         sourceView.bringSubviewToFront(self)
-        let width = sourceView.frame.width * 0.90
-        let padding = bannerHeight + safeAreaInsets.top + safeAreaInsets.bottom
-        let height = (sourceView.frame.height - padding) * 0.95
-        contentView.frame = CGRect(x: sourceView.frame.midX - (width / 2), y: ((bannerHeight + safeAreaInsets.top) / 2) + sourceView.frame.midY - (height / 2), width: width, height: height)
         self.bringSubviewToFront(contentView)
-        contentView.isHidden = false
+        setFrames()
         setNeedsLayout()
         layoutIfNeeded()
         layoutSubviews()
+        contentView.isHidden = false
+    }
+    
+    private func setFrames() {
+        if backgroundView.frame != sourceView.frame {
+            backgroundView.frame = sourceView.frame
+            let width = sourceView.frame.width * 0.90
+            let padding = bannerHeight + safeAreaInsets.top + safeAreaInsets.bottom
+            let height = (sourceView.frame.height - padding) * 0.95
+            contentView.frame = CGRect(x: sourceView.frame.midX - (width / 2), y: ((bannerHeight + safeAreaInsets.top) / 2) + sourceView.frame.midY - (height / 2), width: width, height: height)
+        }
     }
     
     public func hide() {
@@ -317,8 +333,6 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         if multiWays {
             headingColumns.append(RankingColumn(type: .way, heading: nil, size: .fixed([200])))
         }
-
-        setNeedsLayout()
     }
     
     private func setupValues() {
@@ -362,7 +376,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
             
             var factor: CGFloat = 1.0
             if isLandscape {
-                factor = UIScreen.main.bounds.width / UIScreen.main.bounds.height
+                factor = sourceView.frame.width / sourceView.frame.height
             }
             
             let availableSize = valuesTableView.frame.width
