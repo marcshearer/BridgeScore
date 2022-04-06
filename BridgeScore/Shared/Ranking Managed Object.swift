@@ -28,6 +28,7 @@ public class RankingMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var east: String
     @NSManaged public var west: String
     @NSManaged public var way16: Int16
+    @NSManaged public var tie: Bool
 
     convenience init() {
         self.init(context: CoreData.context)

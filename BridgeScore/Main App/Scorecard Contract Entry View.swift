@@ -112,7 +112,7 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
             case .level:
                 return ContractLevel.validCases.count
             case .suit:
-                return ContractSuit.validCases.count
+                return Suit.validCases.count
             case .double:
                 return ContractDouble.allCases.count
             case .declarer:
@@ -148,8 +148,8 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
                 cell.set(value: level, selected: (level == contract.level), tapAction: levelTapped)
                 return cell
             case .suit:
-                let suit = ContractSuit.validCases[indexPath.row]
-                let cell = ScorecardContractEntryCollectionCell<ContractSuit>.dequeue(collectionView, for: indexPath)
+                let suit = Suit.validCases[indexPath.row]
+                let cell = ScorecardContractEntryCollectionCell<Suit>.dequeue(collectionView, for: indexPath)
                 cell.set(value: suit, selected: (suit == contract.suit), tapAction: suitTapped)
                 return cell
             case .double:
@@ -195,7 +195,7 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         }
     }
     
-    private func suitTapped(suit: ContractSuit) {
+    private func suitTapped(suit: Suit) {
         if suit != contract.suit {
             contract.suit = suit
             suitCollectionView.reloadData()
@@ -320,7 +320,7 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         loadCollection(collectionView: levelCollectionView, xOffset: 30, yOffset: buttonSpaceY, from: title, elements: ContractLevel.validCases.count, tag: ContractCollection.level.rawValue, collection: .level, type: ContractLevel.blank)
 
         // Suits
-        loadCollection(collectionView: suitCollectionView, xOffset: 30, yOffset: buttonSpaceY, from: levelCollectionView, elements: ContractSuit.validCases.count, tag: ContractCollection.suit.rawValue, collection: .suit, type: ContractSuit.blank)
+        loadCollection(collectionView: suitCollectionView, xOffset: 30, yOffset: buttonSpaceY, from: levelCollectionView, elements: Suit.validCases.count, tag: ContractCollection.suit.rawValue, collection: .suit, type: Suit.blank)
 
         // Doubles
         loadCollection(collectionView: doubleCollectionView, xOffset: 30, yOffset: buttonSpaceY, from: suitCollectionView, elements: ContractDouble.allCases.count, tag: ContractCollection.double.rawValue, collection: .double, type: ContractDouble.undoubled)

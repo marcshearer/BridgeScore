@@ -467,7 +467,7 @@ class ImportedBBOScorecard: ImportedScorecard {
                 if let string = columns.element(index) {
                     if let level = Int(string.left(1)) {
                         contract.level = ContractLevel(rawValue: level) ?? .passout
-                        contract.suit = ContractSuit(string: string.left(2).right(1))
+                        contract.suit = Suit(string: string.left(2).right(1))
                     } else {
                         contract.level = .passout
                     }

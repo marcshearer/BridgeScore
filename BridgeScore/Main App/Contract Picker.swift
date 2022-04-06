@@ -20,7 +20,7 @@ class ContractPicker: UIView, ScrollPickerDelegate {
     private var doublePicker: ScrollPicker
     private var contract: Contract
     private let levelList = ContractLevel.allCases
-    private var suitList = ContractSuit.allCases
+    private var suitList = Suit.allCases
     private var doubleList = ContractDouble.allCases
     private var color: PaletteColor?
     private var font: UIFont?
@@ -113,7 +113,7 @@ class ContractPicker: UIView, ScrollPickerDelegate {
         return changed
     }
     
-    @discardableResult private func set(suit newValue: ContractSuit, clearBackground: Bool = true, reflect: Bool = false, force: Bool = false)  -> Bool {
+    @discardableResult private func set(suit newValue: Suit, clearBackground: Bool = true, reflect: Bool = false, force: Bool = false)  -> Bool {
         var changed = false
         if newValue != contract.suit || force {
             if !newValue.hasDouble && (contract.double != .undoubled || force) {

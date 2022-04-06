@@ -22,6 +22,7 @@ import CoreData
     @Published public var points: Float = 0
     @Published public var players: [Seat:String] = [:]
     @Published public var way: Pair = .unknown
+    @Published public var tie: Bool = false
     
     // Linked managed objects - should only be referenced in this and the Data classes
     @Published internal var rankingMO: RankingMO?
@@ -42,6 +43,7 @@ import CoreData
                 self.table != mo.table ||
                 self.section != mo.section ||
                 self.way != mo.way ||
+                self.tie != mo.tie ||
                 self.number != mo.number ||
                 self.ranking != mo.ranking ||
                 self.score != mo.score ||
@@ -91,6 +93,7 @@ import CoreData
             self.table = mo.table
             self.section = mo.section
             self.way = mo.way
+            self.tie = mo.tie
             self.number = mo.number
             self.ranking = mo.ranking
             self.score = mo.score
@@ -106,6 +109,7 @@ import CoreData
             mo.table = table
             mo.section = section
             mo.way = way
+            mo.tie = self.tie
             mo.number = number
             mo.ranking = ranking
             mo.score = score

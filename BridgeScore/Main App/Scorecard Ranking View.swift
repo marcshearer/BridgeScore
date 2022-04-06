@@ -79,10 +79,10 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
     private var paddingSize: CGFloat = 20
     private var rankingColumns: [RankingColumn] = []
     private var headingColumns: [RankingColumn] = []
-    private var values: [[(ranking: RankingViewModel, tie: Bool)]] = []
-    private var tables: Int = 0
-    private var sections: Int = 0
-    private var ways: Int = 0
+    private var rankings: [[RankingViewModel]] = []
+    private var multiTables = false
+    private var multiSections = false
+    private var multiWays = false
     private var totalRankings: Int = 0
     
     override init(frame: CGRect) {
@@ -125,15 +125,15 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
     // MARK: - CollectionView Delegates ================================================================ -
     
     func numberOfSections(in tableView: UITableView) -> Int {
-        values.count
+        rankings.count
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return values[section].count
+        return rankings[section].count
     }
     
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        if sections > 1 || tables > 1 || ways > 1 {
+        if multiTables || multiSections || multiWays {
             return RankingRowType.heading.rowHeight(scorecard: Scorecard.current.scorecard!)
         } else {
             return 0
@@ -141,7 +141,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
     }
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        if sections > 1 || tables > 1 || ways > 1 {
+        if multiTables || multiSections || multiWays {
             let view = ScorecardRankingSectionHeaderView.dequeue(self, tableView: tableView, tag: RankingRowType.heading.tagOffset + section)
             return view
         } else {
@@ -209,11 +209,11 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
             case .ranking:
                 let cell = ScorecardRankingCollectionCell.dequeue(collectionView, for: indexPath)
                 let index = collectionView.tag % tagMultiplier
-                let section = index / totalRankings
-                let row = index % totalRankings
-                let values = values[section][row]
+                let grouping = index / totalRankings
+                let item = index % totalRankings
+                let ranking = rankings[grouping][item]
                 let column = rankingColumns[indexPath.item]
-                cell.set(from: self, scorecard: Scorecard.current.scorecard!, ranking: values.ranking, tie: values.tie, roundsTag: RankingRowType.rounds.tagOffset + (collectionView.tag % tagMultiplier), rowType: .ranking, column: column) { (players) in
+                cell.set(from: self, scorecard: Scorecard.current.scorecard!, ranking: ranking, roundsTag: RankingRowType.rounds.tagOffset + (collectionView.tag % tagMultiplier), rowType: .ranking, column: column) { (players) in
                     self.replaceNames(values: players)
                 }
                 return cell
@@ -224,18 +224,18 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
                 return cell
             case .heading:
                 let cell = ScorecardRankingCollectionCell.dequeue(collectionView, for: indexPath)
-                let section = collectionView.tag % tagMultiplier
-                let value = values[section][0]
+                let grouping = collectionView.tag % tagMultiplier
+                let ranking = rankings[grouping][0]
                 let column = headingColumns[indexPath.item]
-                cell.set(from: self, scorecard: Scorecard.current.scorecard!, ranking: value.ranking, rowType: .heading, column: column)
+                cell.set(from: self, scorecard: Scorecard.current.scorecard!, ranking: ranking, rowType: .heading, column: column)
                 return cell
             case .rounds:
                 let cell = ScorecardRankingRoundCollectionCell.dequeue(collectionView, for: indexPath)
                 let index = collectionView.tag % tagMultiplier
-                let section = index / totalRankings
-                let row = index % totalRankings
-                let values = values[section][row]
-                cell.set(ranking: values.ranking, tableNumber: indexPath.row + 1, places: Scorecard.current.scorecard?.type.tablePlaces ?? 2)
+                let grouping = index / totalRankings
+                let item = index % totalRankings
+                let ranking = rankings[grouping][item]
+                cell.set(ranking: ranking, tableNumber: indexPath.row + 1, places: Scorecard.current.scorecard?.type.tablePlaces ?? 2)
                 return cell
             }
         } else {
@@ -308,13 +308,13 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         }
         
         headingColumns = []
-        if tables > 1 {
+        if multiTables {
             headingColumns.append(RankingColumn(type: .table, heading: nil, size: .fixed([200])))
         }
-        if sections > 1 {
+        if multiSections {
             headingColumns.append(RankingColumn(type: .section, heading: nil, size: .fixed([200])))
         }
-        if ways > 1 {
+        if multiWays {
             headingColumns.append(RankingColumn(type: .way, heading: nil, size: .fixed([200])))
         }
 
@@ -322,53 +322,19 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
     }
     
     private func setupValues() {
-        var lastTable: Int?
-        var lastSection: Int?
-        var lastWay: Pair?
-        var rankingValues: [[RankingViewModel]] = []
+        rankings = []
         totalRankings = 0
-        tables = 0
-        sections = 0
-        ways = 0
-        for ranking in Scorecard.current.rankingList.sorted(by: {NSObject.sort($0, $1, sortKeys: [("table", .ascending), ("section", .ascending), ("waySort", .ascending), ("score", .descending)])}) {
-            var append = false
-            if lastTable != ranking.table {
-                tables += 1
-                append = true
-            }
-            if lastSection != ranking.section {
-                sections += 1
-                append = true
-            }
-            if lastWay != ranking.way {
-                ways += 1
-                append = true
-            }
-            if append {
-                rankingValues.append([])
-            }
-            rankingValues[rankingValues.count - 1].append(ranking)
-            totalRankings += 1
-            lastTable = ranking.table
-            lastSection = ranking.section
-            lastWay = ranking.way
-        }
         
-        // Setup main values with ties
-        values = []
-        for (tableIndex, tableValues) in rankingValues.enumerated() {
-            values.append([])
-            for index in 0..<tableValues.count {
-                var tie = false
-                if (index > 0 && tableValues[index].ranking == tableValues[index - 1].ranking) {
-                    tie = true
-                }
-                if (index < tableValues.count - 1 && tableValues[index].ranking == tableValues[index + 1].ranking) {
-                    tie = true
-                }
-                values[tableIndex].append((tableValues[index], tie))
+        Scorecard.current.scanRankings() { (ranking, newGrouping) in
+            if newGrouping {
+                rankings.append([])
             }
+            rankings[rankings.count - 1].append(ranking)
+            totalRankings += 1
         }
+        multiTables = Set(rankings.map{$0.first!.table}).count > 1
+        multiSections = Set(rankings.map{$0.first!.section}).count > 1
+        multiWays = Set(rankings.map{$0.first!.way}).count > 1
     }
     
     func sort(_ first: RankingViewModel, _ second: RankingViewModel) -> Bool {
@@ -642,7 +608,7 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         }
     }
  
-    func set(from sourceView: UICollectionViewDataSource & UICollectionViewDelegate, scorecard: ScorecardViewModel, ranking: RankingViewModel, tie: Bool = false, roundsTag: Int = 0, rowType: RankingRowType, column: RankingColumn, tapAction: (([String])->())? = nil) {
+    func set(from sourceView: UICollectionViewDataSource & UICollectionViewDelegate, scorecard: ScorecardViewModel, ranking: RankingViewModel, roundsTag: Int = 0, rowType: RankingRowType, column: RankingColumn, tapAction: (([String])->())? = nil) {
         self.scorecard = scorecard
         self.ranking = ranking
         self.tapAction = tapAction
@@ -658,7 +624,7 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         
         switch column.type {
         case .ranking:
-            label.text = "\(ranking.ranking)\(tie ? " =" : "")"
+            label.text = "\(ranking.ranking)\(ranking.tie ? " =" : "")"
         case .number:
             label.text = "\(ranking.number)"
         case .players:

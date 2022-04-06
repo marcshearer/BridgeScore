@@ -76,8 +76,8 @@ public class BoardMO: NSManagedObject, ManagedObject, Identifiable {
         set { self.contractLevel16 = Int16(newValue.rawValue) }
     }
     
-    public var contractSuit: ContractSuit {
-        get { ContractSuit(rawValue: Int(contractSuit16)) ?? .blank }
+    public var contractSuit: Suit {
+        get { Suit(rawValue: Int(contractSuit16)) ?? .blank }
         set { self.contractSuit16 = Int16(newValue.rawValue) }
     }
 

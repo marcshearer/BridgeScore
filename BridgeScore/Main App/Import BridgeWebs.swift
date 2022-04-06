@@ -231,7 +231,7 @@ struct ImportBridgeWebsScorecard: View {
         }
         .onAppear {
             Utility.executeAfter(delay: 0.1) {
-                importedBridgeWebsScorecard.importScorecard(rebuild: true)
+                importedBridgeWebsScorecard.importScorecard()
                 completion?()
                 presentationMode.wrappedValue.dismiss()
             }
@@ -400,7 +400,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 if let string = columns.element(index) {
                     if let level = Int(string.left(1)) {
                         contract.level = ContractLevel(rawValue: level) ?? .passout
-                        contract.suit = ContractSuit(string: string.left(2).right(1))
+                        contract.suit = Suit(string: string.left(2).right(1))
                     } else {
                         contract.level = .passout
                     }
@@ -413,7 +413,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 importedTraveller.contract = contract
             case "ld":
                 if let string = columns.element(index) {
-                    importedTraveller.lead = string
+                    importedTraveller.lead = string.right(1) + string.left(1)
                 }
             case "by":
                 importedTraveller.declarer = Seat(string: columns.element(index) ?? "")

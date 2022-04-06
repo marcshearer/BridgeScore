@@ -491,8 +491,10 @@ class Scorecard {
         for tableNumber in 1...scorecard.tables {
             if let table = Scorecard.current.tables[tableNumber] {
                 if let score = table.score {
-                    count += 1
-                    total += score
+                    // Weight it to number of boards completed if averaging
+                    let completed = scorecard.type.matchAggregate == .average ? table.scoredBoards : 1
+                    total += score * Float(completed)
+                    count += completed
                 }
             }
         }
@@ -503,8 +505,7 @@ class Scorecard {
             if count == 0 {
                 newScore = nil
             } else {
-                let boards = Scorecard.current.boards.filter({$0.value.score != nil}).count
-                newScore = Scorecard.aggregate(total: total, count: count, boards: boards, subsidiaryPlaces: type.tablePlaces, places: places, type: type.matchAggregate)
+                newScore = Scorecard.aggregate(total: total, count: count, subsidiaryPlaces: type.tablePlaces, places: places, type: type.matchAggregate)
             }
         }
         if newScore != scorecard.score {
@@ -517,9 +518,8 @@ class Scorecard {
         return changed
     }
     
-    static func aggregate(total: Float, count: Int, boards: Int? = nil, subsidiaryPlaces: Int, places: Int, type: AggregateType) -> Float? {
+    static func aggregate(total: Float, count: Int, subsidiaryPlaces: Int, places: Int, type: AggregateType) -> Float? {
         var result: Float?
-        let boards = boards ?? count
         let average = (count == 0 ? 0 : Utility.round(total / Float(count), places: subsidiaryPlaces))
         switch type {
         case .average:
@@ -527,17 +527,41 @@ class Scorecard {
         case .total:
             result = Utility.round(total, places: places)
         case .continuousVp:
-            result = BridgeImps(Int(Utility.round(total))).vp(boards: boards, places: places)
+            result = BridgeImps(Int(Utility.round(total))).vp(boards: count, places: places)
         case .discreteVp:
-            result = Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: boards))
+            result = Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: count))
         case .acblDiscreteVp:
-            result = Float(BridgeImps(Int(Utility.round(total))).acblDiscreteVp(boards: boards))
+            result = Float(BridgeImps(Int(Utility.round(total))).acblDiscreteVp(boards: count))
         case .percentVp:
-            if let vps = BridgeMatchPoints(average).vp(boards: boards) {
+            if let vps = BridgeMatchPoints(average).vp(boards: count) {
                 result = Float(vps)
             }
         }
         return result
+    }
+    
+    public func scanRankings(action: (RankingViewModel, Bool)->()) {
+        var lastTable: Int?
+        var lastSection: Int?
+        var lastWay: Pair?
+        var newGrouping: Bool
+        
+        for ranking in Scorecard.current.rankingList.sorted(by: {NSObject.sort($0, $1, sortKeys: [("table", .ascending), ("section", .ascending), ("waySort", .ascending), ("score", .descending)])}) {
+            newGrouping = false
+            if lastTable != ranking.table {
+                newGrouping = true
+            }
+            if lastSection != ranking.section {
+                newGrouping = true
+            }
+            if lastWay != ranking.way {
+                newGrouping = true
+            }
+            action(ranking, newGrouping)
+            lastTable = ranking.table
+            lastSection = ranking.section
+            lastWay = ranking.way
+        }
     }
     
     public static func declarerList(sitting: Seat) -> [(Seat, ScrollPickerEntry)] {

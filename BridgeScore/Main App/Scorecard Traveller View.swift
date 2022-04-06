@@ -564,7 +564,9 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
         case .declarer:
             label.text = traveller.declarer.short
         case .lead:
-            label.text = traveller.lead
+            let suitString = traveller.lead.right(1)
+            let suit = Suit(string: suitString).string
+            label.text = suit + traveller.lead.left(1)
         case .made:
             label.text = (traveller.made == 0 ? "=" : (
                           traveller.made > 0 ? "+\(traveller.made)" : (

@@ -66,7 +66,7 @@ class ImportedScorecard: NSObject {
 
     // MARK: - Import to main data structures =================================================================== -
         
-    public func importScorecard(rebuild: Bool = false) {
+    public func importScorecard() {
         // Import source
         scorecard?.importSource = importSource!
         
@@ -80,6 +80,9 @@ class ImportedScorecard: NSObject {
             scorecard?.partner = partner
         }
         
+        // Clear manual totals
+        scorecard.manualTotals = false
+        
         if travellers.count > 0 {
             if !(scorecard?.resetNumbers ?? false) {
                     // Update number of boards / tables
@@ -91,27 +94,7 @@ class ImportedScorecard: NSObject {
                 }
                 Scorecard.current.addNew()
             }
-        
-            
-            if let myRanking = myRanking {
-                    // Update position
-                if !(scorecard?.resetNumbers ?? false) {
-                    if let position = myRanking.ranking {
-                        scorecard?.position = position
-                    }
-                }
-                
-                    // Update score
-                if !(scorecard?.resetNumbers ?? false) && !(scorecard?.manualTotals ?? false) {
-                    if let score = myRanking.score {
-                        scorecard?.score = score
-                    }
-                }
-            }
         }
-        
-        // Update field entry size
-        scorecard?.entry = rankings.count
         
         // Update boards and tables
         
@@ -129,17 +112,12 @@ class ImportedScorecard: NSObject {
                     }
                 }
                 Scorecard.updateScores(scorecard: scorecard)
-                if scorecard.entry == 2 && scorecard.type.boardScoreType != .percent && scorecard.score != nil && scorecard.maxScore != nil {
-                    scorecard.position = (scorecard.score! >= (scorecard.maxScore! / 2) ? 1 : 2)
-                }
             } else {
                 importRankings()
             }
           
-            // Rebuild ranking totals if necessary
-            if rebuild {
-                rebuildRankingTotals()
-            }
+            // Rebuild ranking totals
+            rebuildRankingTotals()
             
             Scorecard.current.saveAll(scorecard: scorecard)
         }
@@ -363,10 +341,39 @@ class ImportedScorecard: NSObject {
             ranking.score = 0
             ranking.score += Scorecard.aggregate(total: tableScores, count: scorecard.tables, subsidiaryPlaces: scorecard.type.tablePlaces, places: scorecard.type.matchPlaces, type: scorecard.type.matchAggregate) ?? 0
         }
+        
+        // Now reset ranking position on each ranking, set ties and fill in my position and field entry
+        var lastScore: Float?
         var position = 0
-        for ranking in Scorecard.current.rankingList.sorted(by: {$0.score > $1.score}) {
+        var groupEntry = 0
+        var myGroup = false
+        Scorecard.current.scanRankings { (ranking, newGrouping) in
+            if newGrouping {
+                if myGroup && !scorecard.resetNumbers {
+                    scorecard.entry = groupEntry
+                }
+                position = 0
+                lastScore = nil
+                groupEntry = 0
+                myGroup = false
+            }
             position += 1
+            groupEntry += 1
             ranking.ranking = position
+            if ranking.score == lastScore {
+                ranking.tie = true
+            }
+            lastScore = ranking.score
+            if ranking.number == myRanking?.number {
+                myGroup = true
+                if !scorecard.resetNumbers {
+                    scorecard.position = position
+                    scorecard.score = ranking.score
+                }
+            }
+        }
+        if myGroup && !scorecard.resetNumbers {
+            scorecard.entry = groupEntry
         }
     }
     

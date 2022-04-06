@@ -115,6 +115,20 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
         self.versus != ""
     }
     
+    public var boards: [BoardViewModel] {
+        assert(self.scorecard == Scorecard.current.scorecard, "Only valid when this scorecard is current")
+        var result: [BoardViewModel] = []
+        for tableBoard in 1...Scorecard.current.scorecard!.boardsTable {
+            let boardNumber = ((table - 1) * scorecard.boardsTable) + tableBoard
+            result.append(Scorecard.current.boards[boardNumber]!)
+        }
+        return result
+    }
+    
+    public var scoredBoards: Int {
+        return boards.filter({$0.score != nil}).count
+    }
+    
     public var players: [Seat:String] {
         var result: [Seat:String] = [:]
         if let scorer = MasterData.shared.scorer {
@@ -134,15 +148,17 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
     
     public func score(ranking: RankingViewModel, seats: [Seat]) -> Float {
         var tableTotal: Float = 0
+        var boards: Int = 0
         for tableBoard in 1...scorecard.boardsTable {
             let boardNumber = ((table - 1) * scorecard.boardsTable) + tableBoard
             for seat in seats {
                 if let traveller = Scorecard.current.traveller(board: boardNumber, seat: seat, rankingNumber: ranking.number, section: ranking.section) {
                     tableTotal += (seat.pair == .ns ? traveller.nsScore : scorecard.type.invertScore(score: traveller.nsScore))
+                    boards += 1
                 }
             }
         }
-        return Scorecard.aggregate(total: tableTotal, count: scorecard.boardsTable, subsidiaryPlaces: scorecard.type.boardPlaces, places: scorecard.type.tablePlaces, type: scorecard.type.tableAggregate) ?? 0
+        return Scorecard.aggregate(total: tableTotal, count: boards, subsidiaryPlaces: scorecard.type.boardPlaces, places: scorecard.type.tablePlaces, type: scorecard.type.tableAggregate) ?? 0
     }
     
     public var description: String {

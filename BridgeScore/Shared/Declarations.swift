@@ -652,7 +652,7 @@ public enum ContractLevel: Int, ContractEnumType {
     }
 }
 
-public enum ContractSuit: Int, ContractEnumType {
+public enum Suit: Int, ContractEnumType {
     case blank = 0
     case clubs = 1
     case diamonds = 2
@@ -706,8 +706,8 @@ public enum ContractSuit: Int, ContractEnumType {
         return self != .blank
     }
     
-    static var validCases: [ContractSuit] {
-        return ContractSuit.allCases.filter({$0.valid})
+    static var validCases: [Suit] {
+        return Suit.allCases.filter({$0.valid})
     }
     
     var hasDouble: Bool {
@@ -797,7 +797,7 @@ public class Contract: Equatable {
             }
         }
     }
-    public var suit: ContractSuit = .blank {
+    public var suit: Suit = .blank {
         didSet {
             if !suit.hasDouble {
                 double = .undoubled
@@ -817,7 +817,7 @@ public class Contract: Equatable {
         }
     }
     
-    init(level: ContractLevel = .blank, suit: ContractSuit = .blank, double: ContractDouble = .undoubled) {
+    init(level: ContractLevel = .blank, suit: Suit = .blank, double: ContractDouble = .undoubled) {
         self.level = level
         if level.hasSuit {
             self.suit = suit
