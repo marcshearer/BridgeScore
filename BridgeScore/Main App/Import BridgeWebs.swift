@@ -349,8 +349,8 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                     importedRanking.ranking = Int(string)
                 }
             case "pair":
-                if let string = columns.element(index) {
-                    importedRanking.number = Int(string)
+                if let components = columns.element(index)?.components(separatedBy: ":") {
+                    importedRanking.number = Int(components.first!)
                 }
             case "way":
                 if let string = columns.element(index), let bwValue = Int(string) {
@@ -485,7 +485,6 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
     private func combineRankings() {
         // Teams pairs as separate lines
         var remove: [Int] = []
-        var position = 0
         for (index, ranking) in rankings.enumerated() {
             if index > 0 && rankings[index - 1].number == ranking.number {
                 // Add to previous ranking
@@ -493,9 +492,6 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 rankings[index - 1].players[.west] = ranking.players[.south]
                 remove.append(index)
                 format = .teams
-            } else {
-                position += 1
-                ranking.ranking = position
             }
         }
         for removeIndex in remove.reversed() {

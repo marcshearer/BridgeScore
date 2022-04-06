@@ -325,7 +325,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         rankings = []
         totalRankings = 0
         
-        Scorecard.current.scanRankings() { (ranking, newGrouping) in
+        Scorecard.current.scanRankings() { (ranking, newGrouping, _) in
             if newGrouping {
                 rankings.append([])
             }

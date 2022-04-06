@@ -328,53 +328,54 @@ class ImportedScorecard: NSObject {
             var tableScores: Float = 0
             for tableNumber in 1...scorecard.tables {
                 if let table = Scorecard.current.tables[tableNumber] {
-                    let players = scorecard.type.players
-                    var seats:[Seat] = []
-                    // Need to pick up this person in all seats if individual
-                    // North or East if pairs, and North only if teams since 1 of team will have sat north
-                    if players == 1 { seats = Seat.validCases }
-                    else if players == 2 { seats = [.north, .east] }
-                    else { seats = [.north] }
-                    tableScores += table.score(ranking: ranking, seats: seats)
+                    if !scorecard.resetNumbers || ranking.table == tableNumber {
+                        let players = scorecard.type.players
+                        var seats:[Seat] = []
+                            // Need to pick up this person in all seats if individual
+                            // North or East if pairs, and North only if teams since 1 of team will have sat north
+                        if players == 1 { seats = Seat.validCases }
+                        else if players == 2 { seats = [.north, .east] }
+                        else { seats = [.north] }
+                        tableScores += table.score(ranking: ranking, seats: seats)
+                    }
                 }
             }
-            ranking.score = 0
-            ranking.score += Scorecard.aggregate(total: tableScores, count: scorecard.tables, subsidiaryPlaces: scorecard.type.tablePlaces, places: scorecard.type.matchPlaces, type: scorecard.type.matchAggregate) ?? 0
+            if scorecard.resetNumbers {
+                ranking.score = Scorecard.aggregate(total: tableScores, count: 1, boards: scorecard.boardsTable, subsidiaryPlaces: scorecard.type.boardPlaces, places: scorecard.type.tablePlaces, type: scorecard.type.tableAggregate) ?? 0
+            } else {
+                ranking.score = Scorecard.aggregate(total: tableScores, count: scorecard.tables, boards: scorecard.boards, subsidiaryPlaces: scorecard.type.tablePlaces, places: scorecard.type.matchPlaces, type: scorecard.type.matchAggregate) ?? 0
+            }
         }
         
         // Now reset ranking position on each ranking, set ties and fill in my position and field entry
-        var lastScore: Float?
         var position = 0
         var groupEntry = 0
         var myGroup = false
-        Scorecard.current.scanRankings { (ranking, newGrouping) in
+        Scorecard.current.scanRankings { (ranking, newGrouping, lastRanking) in
             if newGrouping {
                 if myGroup && !scorecard.resetNumbers {
                     scorecard.entry = groupEntry
                 }
                 position = 0
-                lastScore = nil
                 groupEntry = 0
                 myGroup = false
             }
             position += 1
             groupEntry += 1
             ranking.ranking = position
-            if ranking.score == lastScore {
+            if ranking.score == lastRanking?.score {
+                lastRanking!.tie = true
+                ranking.ranking = lastRanking!.ranking
                 ranking.tie = true
             }
-            lastScore = ranking.score
             if ranking.number == myRanking?.number {
                 myGroup = true
                 if !scorecard.resetNumbers {
                     scorecard.position = position
-                    scorecard.score = ranking.score
                 }
             }
         }
-        if myGroup && !scorecard.resetNumbers {
-            scorecard.entry = groupEntry
-        }
+        scorecard.entry = groupEntry
     }
     
   // MARK: - Validation ======================================================================== -±

@@ -473,7 +473,7 @@ class Scorecard {
                 if count == 0 {
                     newScore = nil
                 } else {
-                    newScore = Scorecard.aggregate(total: total, count: count, subsidiaryPlaces: type.boardPlaces, places: places, type: type.tableAggregate)
+                    newScore = Scorecard.aggregate(total: total, count: count, boards: count, subsidiaryPlaces: type.boardPlaces, places: places, type: type.tableAggregate)
                 }
             }
             if newScore != table.score {
@@ -487,14 +487,17 @@ class Scorecard {
     @discardableResult static func updateTotalScore(scorecard: ScorecardViewModel) -> Bool {
         var changed = false
         var total: Float = 0
-        var count: Int = 0
+        var count = 0
+        var completedBoards = 0
         for tableNumber in 1...scorecard.tables {
             if let table = Scorecard.current.tables[tableNumber] {
                 if let score = table.score {
                     // Weight it to number of boards completed if averaging
-                    let completed = scorecard.type.matchAggregate == .average ? table.scoredBoards : 1
-                    total += score * Float(completed)
-                    count += completed
+                    let scored = table.scoredBoards 
+                    let weight = scorecard.type.matchAggregate == .average ? scored : 1
+                    total += score * Float(weight)
+                    completedBoards += scored
+                    count += weight
                 }
             }
         }
@@ -505,11 +508,16 @@ class Scorecard {
             if count == 0 {
                 newScore = nil
             } else {
-                newScore = Scorecard.aggregate(total: total, count: count, subsidiaryPlaces: type.tablePlaces, places: places, type: type.matchAggregate)
+                newScore = Scorecard.aggregate(total: total, count: count, boards: completedBoards, subsidiaryPlaces: type.tablePlaces, places: places, type: type.matchAggregate)
             }
         }
         if newScore != scorecard.score {
             scorecard.score = newScore
+            if let newScore = newScore {
+                if scorecard.entry == 2 {
+                    scorecard.position = (newScore >= scorecard.type.invertScore(score: newScore) ? 1 : 2)
+                }
+            }
             changed = true
         }
         if !scorecard.manualTotals && count != 0 {
@@ -518,7 +526,7 @@ class Scorecard {
         return changed
     }
     
-    static func aggregate(total: Float, count: Int, subsidiaryPlaces: Int, places: Int, type: AggregateType) -> Float? {
+    static func aggregate(total: Float, count: Int, boards: Int, subsidiaryPlaces: Int, places: Int, type: AggregateType) -> Float? {
         var result: Float?
         let average = (count == 0 ? 0 : Utility.round(total / Float(count), places: subsidiaryPlaces))
         switch type {
@@ -527,40 +535,36 @@ class Scorecard {
         case .total:
             result = Utility.round(total, places: places)
         case .continuousVp:
-            result = BridgeImps(Int(Utility.round(total))).vp(boards: count, places: places)
+            result = BridgeImps(Int(Utility.round(total))).vp(boards: boards, places: places)
         case .discreteVp:
-            result = Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: count))
+            result = Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: boards))
         case .acblDiscreteVp:
-            result = Float(BridgeImps(Int(Utility.round(total))).acblDiscreteVp(boards: count))
+            result = Float(BridgeImps(Int(Utility.round(total))).acblDiscreteVp(boards: boards))
         case .percentVp:
-            if let vps = BridgeMatchPoints(average).vp(boards: count) {
+            if let vps = BridgeMatchPoints(average).vp(boards: boards) {
                 result = Float(vps)
             }
         }
         return result
     }
     
-    public func scanRankings(action: (RankingViewModel, Bool)->()) {
-        var lastTable: Int?
-        var lastSection: Int?
-        var lastWay: Pair?
+    public func scanRankings(action: (RankingViewModel, Bool, RankingViewModel?)->()) {
+        var lastRanking: RankingViewModel?
         var newGrouping: Bool
         
         for ranking in Scorecard.current.rankingList.sorted(by: {NSObject.sort($0, $1, sortKeys: [("table", .ascending), ("section", .ascending), ("waySort", .ascending), ("score", .descending)])}) {
             newGrouping = false
-            if lastTable != ranking.table {
+            if lastRanking?.table != ranking.table {
                 newGrouping = true
             }
-            if lastSection != ranking.section {
+            if lastRanking?.section != ranking.section {
                 newGrouping = true
             }
-            if lastWay != ranking.way {
+            if lastRanking?.way != ranking.way {
                 newGrouping = true
             }
-            action(ranking, newGrouping)
-            lastTable = ranking.table
-            lastSection = ranking.section
-            lastWay = ranking.way
+            action(ranking, newGrouping, newGrouping ? nil : lastRanking)
+            lastRanking = ranking
         }
     }
     

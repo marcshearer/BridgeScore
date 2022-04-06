@@ -158,7 +158,7 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
                 }
             }
         }
-        return Scorecard.aggregate(total: tableTotal, count: boards, subsidiaryPlaces: scorecard.type.boardPlaces, places: scorecard.type.tablePlaces, type: scorecard.type.tableAggregate) ?? 0
+        return Scorecard.aggregate(total: tableTotal, count: boards, boards: boards, subsidiaryPlaces: scorecard.type.boardPlaces, places: scorecard.type.tablePlaces, type: scorecard.type.tableAggregate) ?? 0
     }
     
     public var description: String {

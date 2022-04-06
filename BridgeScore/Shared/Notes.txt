@@ -6,7 +6,6 @@ If xcode fails to install app on device it's normally because info.plist isn't w
 Bugs
 ====
 Background still active with MessageBox
-Totals not right if have entered a partial table - I.e. one board
 
 To Do
 =====
