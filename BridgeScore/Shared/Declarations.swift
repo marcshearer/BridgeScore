@@ -75,6 +75,10 @@ public enum UIMode {
     case unknown
 }
 
+public var isLandscape: Bool {
+    UIScreen.main.bounds.width > UIScreen.main.bounds.height
+}
+
 // Application specific types
 public enum AggregateType {
     case average

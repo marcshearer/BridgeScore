@@ -286,7 +286,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
             RankingColumn(type: .ranking, heading: "Rank", size: .fixed([50])),
             RankingColumn(type: .players, heading: "Names", size: .flexible)]
            
-        if (Scorecard.current.scorecard?.entry ?? 0) > 2 && UIScreen.main.bounds.width > UIScreen.main.bounds.height {
+        if (Scorecard.current.scorecard?.entry ?? 0) > 2 && isLandscape {
             rankingColumns += [
                 RankingColumn(type: .rounds, heading: "Rounds", size: .fixed([CGFloat(min(8, Scorecard.current.scorecard?.tables ?? 1) * 25) + 8]))]
         }
@@ -361,7 +361,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
             }
             
             var factor: CGFloat = 1.0
-            if UIScreen.main.bounds.height < UIScreen.main.bounds.width {
+            if isLandscape {
                 factor = UIScreen.main.bounds.width / UIScreen.main.bounds.height
             }
             

@@ -252,7 +252,7 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
             TravellerColumn(type: .points, heading: "Points", size: .fixed([60])),
             TravellerColumn(type: .score, heading: "Score", size: .fixed([60]))]
         
-        if values.first(where: {$0.nsXImps != 0}) != nil && UIScreen.main.bounds.width > UIScreen.main.bounds.height {
+        if values.first(where: {$0.nsXImps != 0}) != nil && isLandscape {
             travellerColumns += [
                 TravellerColumn(type: .xImps, heading: "XImps", size: .fixed([60]))
             ]
@@ -285,7 +285,7 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
             }
             
             var factor: CGFloat = 1.0
-            if UIScreen.main.bounds.height < UIScreen.main.bounds.width {
+            if isLandscape {
                 factor = UIScreen.main.bounds.width / UIScreen.main.bounds.height
             }
             

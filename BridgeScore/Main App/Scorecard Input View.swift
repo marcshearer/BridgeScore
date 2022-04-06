@@ -753,7 +753,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         }
         
         var factor: CGFloat = 1.0
-        if UIScreen.main.bounds.height < UIScreen.main.bounds.width {
+        if isLandscape {
             factor = UIScreen.main.bounds.width / UIScreen.main.bounds.height
         }
         
