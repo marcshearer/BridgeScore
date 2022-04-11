@@ -502,7 +502,7 @@ class ScorecardCanvasUIViewCollectionViewCell: UICollectionViewCell {
         switch row.type {
         case .heading:
             self.label.text = column.heading
-            self.label.font = titleFont
+            self.label.font = titleFont.bold
             color = Palette.gridTitle
         case .body:
             if column.type == .board {

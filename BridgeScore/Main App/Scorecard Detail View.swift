@@ -244,7 +244,7 @@ struct ScorecardDetailsView: View {
     }
     
     func boardsLabel(boards: Int) -> String {
-        let tables = boards / max(1, scorecard.boardsTable)
+         let tables = boards / max(1, scorecard.boardsTable)
         return "\(tables) \(plural("table", tables)) - \(boards) \(plural("board", boards)) in total"
     }
     

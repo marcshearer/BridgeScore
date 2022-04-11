@@ -145,6 +145,7 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         let layout = CustomCollectionViewLayout(alphaFactor: 1.0, scaleFactor: 1.0, direction: .horizontal)
         layout.delegate = self
         valuesCollectionView = UICollectionView(frame: frame, collectionViewLayout: layout)
+        valuesCollectionView.contentInsetAdjustmentBehavior = .never
 
         // Background
         addSubview(backgroundView)
@@ -174,7 +175,7 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         clearLabel.text = "Clear"
         clearLabel.backgroundColor = UIColor(Palette.alternate.background)
         clearLabel.textColor = UIColor(Palette.alternate.themeText)
-        clearLabel.font = titleFont
+        clearLabel.font = titleFont.bold
         clearLabel.textAlignment = .center
         let clearTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScrollPickerPopupView.clearTapped(_:)))
         clearLabel.addGestureRecognizer(clearTapGesture)

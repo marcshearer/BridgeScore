@@ -46,7 +46,7 @@ struct StandardView <Content> : View where Content : View {
                 Spacer().frame(height: geometry.safeAreaInsets.top)
                 self.content()
             }
-            .ignoresSafeArea()
+            .ignoresSafeArea(edges: .vertical)
             if let slideInId = slideInId {
                 SlideInMenuView(id: slideInId)
             }

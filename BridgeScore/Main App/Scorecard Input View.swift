@@ -118,7 +118,7 @@ struct ScorecardInputView: View {
                 BannerOption(text: scorecard.scoreString, color: Palette.bannerShadow, isEnabled: Binding.constant(false), action: {}) ]
         }
         bannerOptions += UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo)
-        if !isNotImported.wrappedValue {
+        if !isNotImported.wrappedValue && !Scorecard.current.rankingList.isEmpty {
             bannerOptions += [
                 BannerOption(image: AnyView(Image(systemName: "list.number")), likeBack: true, isHidden: isNotImported, action: { showRankings = true })]
         }
@@ -250,9 +250,9 @@ extension ScorecardDelegate {
     }
 }
 
-fileprivate let titleRowHeight: CGFloat = 40
-fileprivate let boardRowHeight: CGFloat = 90
-fileprivate let tableRowHeight: CGFloat = 80
+fileprivate var titleRowHeight: CGFloat { MyApp.format == .phone ? (isLandscape ? 30 : 40) : 40 }
+fileprivate var boardRowHeight: CGFloat { MyApp.format == .phone ? (isLandscape ? 50 : 70) : 90 }
+fileprivate var tableRowHeight: CGFloat { MyApp.format == .phone ? (isLandscape ? 50 : 60) : 80 }
 
 class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, UITableViewDelegate, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, UIScrollViewDelegate {
     
@@ -289,7 +289,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                     
         // Add subviews
         titleView = ScorecardInputTableTitleView(self, frame: CGRect(origin: .zero, size: CGSize(width: frame.width, height: titleRowHeight)), tag: RowType.boardTitle.tagOffset)
-        self.addSubview(titleView, anchored: .leading, .trailing, .top)
+        self.addSubview(titleView, anchored: .safeLeading, .safeTrailing, .top)
         Constraint.setHeight(control: titleView, height: titleRowHeight)
         
         self.addSubview(self.mainTableView, anchored: .leading, .trailing)
@@ -547,16 +547,20 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     }
     
     func scorecardShowTraveller(scorecard: ScorecardViewModel, board: BoardViewModel, sitting: Seat) {
-        let showTraverllerView = ScorecardTravellerView(frame: CGRect())
-        showTraverllerView.show(from: superview!.superview!, boardNumber: board.board, sitting: sitting)
+        if !Scorecard.current.travellerList.isEmpty {
+            let showTraverllerView = ScorecardTravellerView(frame: CGRect())
+            showTraverllerView.show(from: superview!.superview!, boardNumber: board.board, sitting: sitting)
+        }
     }
     
     func scorecardShowHand(scorecard: ScorecardViewModel, board: BoardViewModel, sitting: Seat) {
-        if let scorer = MasterData.shared.scorer {
-            let rankings = Scorecard.current.rankings(table: board.tableNumber, player: (bboName:scorer.bboName, name: scorer.name))
-            if let myRanking = rankings.first {
-                if let traveller = Scorecard.current.traveller(board: board.board, seat: sitting, rankingNumber: myRanking.number, section: myRanking.section) {
-                    Scorecard.showHand(from: self, traveller: traveller)
+        if !Scorecard.current.travellerList.isEmpty {
+            if let scorer = MasterData.shared.scorer {
+                let rankings = Scorecard.current.rankings(table: board.tableNumber, player: (bboName:scorer.bboName, name: scorer.name))
+                if let myRanking = rankings.first {
+                    if let traveller = Scorecard.current.traveller(board: board.board, seat: sitting, rankingNumber: myRanking.number, section: myRanking.section) {
+                        Scorecard.showHand(from: self, traveller: traveller)
+                    }
                 }
             }
         }
@@ -766,10 +770,10 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         
         var factor: CGFloat = 1.0
         if isLandscape {
-            factor = UIScreen.main.bounds.width / UIScreen.main.bounds.height
+            factor = mainTableView.frame.width / 600
         }
         
-        let availableSize = frame.width
+        let availableSize = frame.width - safeAreaInsets.left - safeAreaInsets.right
         let fixedSize = fixedWidth * factor
         let flexibleSize = (availableSize - fixedSize) / CGFloat(flexible)
         
@@ -1038,7 +1042,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         self.column = column
         label.backgroundColor = UIColor(Palette.gridTitle.background)
         label.textColor = UIColor(Palette.gridTitle.text)
-        label.font = titleFont
+        label.font = titleFont.bold
         if column.type == .score {
             label.text = scorecard.type.boardScoreType.string
         } else {
@@ -1085,7 +1089,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             label.isUserInteractionEnabled = !isEnabled
         case .vulnerable:
             label.isHidden = false
-            label.font = titleFont
+            label.font = titleFont.bold
             label.text = board.vulnerability.string
             label.isUserInteractionEnabled = !isEnabled
         case .dealer:
@@ -1142,7 +1146,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             responsiblePicker.isHidden = false
             responsiblePicker.set(board.responsible, color: Palette.gridBoard, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
         case .table:
-            label.font = boardTitleFont
+            label.font = boardTitleFont.bold
             label.text = "Round \(table.table)"
         case .sitting:
             seatPicker.isHidden = false

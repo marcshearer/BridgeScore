@@ -436,7 +436,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         closeButton.textColor = UIColor(Palette.highlightButton.text)
         closeButton.textAlignment = .center
         closeButton.text = "Close"
-        closeButton.font = replaceTitleFont
+        closeButton.font = replaceTitleFont.bold
         let tapGesture = UITapGestureRecognizer(target: self, action: cancelSelector)
         closeButton.addGestureRecognizer(tapGesture)
         closeButton.isUserInteractionEnabled = true
@@ -606,7 +606,7 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         self.column = column
         label.backgroundColor = UIColor(Palette.gridTitle.background)
         label.textColor = UIColor(Palette.gridTitle.text)
-        label.font = titleFont
+        label.font = titleFont.bold
         switch column.type {
         case .number:
             switch Scorecard.current.scorecard!.type.players {

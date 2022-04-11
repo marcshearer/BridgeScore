@@ -112,13 +112,12 @@ class ImportedScorecard: NSObject {
                     }
                 }
                 Scorecard.updateScores(scorecard: scorecard)
+                rebuildRankingTotals()
+                
             } else {
                 importRankings()
             }
           
-            // Rebuild ranking totals
-            rebuildRankingTotals()
-            
             Scorecard.current.saveAll(scorecard: scorecard)
         }
     }

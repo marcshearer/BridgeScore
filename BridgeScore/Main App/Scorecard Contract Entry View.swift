@@ -368,7 +368,7 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         declarerView.addSubview(declarerLabel, leading: 40, top: 10)
         Constraint.setHeight(control: declarerLabel, height: actionButtonHeight)
         Constraint.setWidth(control: declarerLabel, width: actionButtonWidth)
-        declarerLabel.font = titleFont
+        declarerLabel.font = titleFont.bold
         declarerLabel.textAlignment = .left
         declarerLabel.textColor = UIColor(Palette.background.text)
         declarerLabel.text = "Declarer"
@@ -386,7 +386,7 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         Constraint.setWidth(control: button, width: actionButtonWidth)
         button.backgroundColor = UIColor(Palette.enabledButton.background)
         button.textColor = UIColor(Palette.enabledButton.contrastText)
-        button.font = titleFont
+        button.font = titleFont.bold
         button.textAlignment = .center
         button.text = text
         let tapGesture = UITapGestureRecognizer(target: self, action: action)

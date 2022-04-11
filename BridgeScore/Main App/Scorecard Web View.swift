@@ -119,7 +119,7 @@ class ScorecardWebView: UIView, WKNavigationDelegate {
         closeButton.textColor = UIColor(Palette.highlightButton.text)
         closeButton.textAlignment = .center
         closeButton.text = "Close"
-        closeButton.font = replaceTitleFont
+        closeButton.font = replaceTitleFont.bold
         let tapGesture = UITapGestureRecognizer(target: self, action: cancelSelector)
         closeButton.addGestureRecognizer(tapGesture)
         closeButton.isUserInteractionEnabled = true

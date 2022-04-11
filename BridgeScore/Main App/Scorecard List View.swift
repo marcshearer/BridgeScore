@@ -38,7 +38,7 @@ struct ScorecardListView: View {
                            BannerOption(text: "Locations", action: { linkToLocations = true }),
                            BannerOption(text: "Import BBO Names", action: { ImportBBO.importNames() }),
                            BannerOption(text: "Backup", action: { Backup.shared.backup() })]
-        if Utility.isSimulator {
+        if Utility.isSimulator || true {
             menuOptions.append(
                            BannerOption(text: "Restore", action: {
                               Backup.shared.restore(dateString: "Latest") }))

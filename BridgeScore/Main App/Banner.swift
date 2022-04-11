@@ -71,12 +71,14 @@ struct Banner: View {
                     if (leftTitle ?? !back) {
                         HStack {
                             backButton
-                            Spacer().frame(width: 12)
-                            titleText
+                            if MyApp.format != .phone || isLandscape || (optionMode != .buttons && optionMode != .both) {
+                                Spacer().frame(width: 12)
+                                titleText
                                 .onTapGesture {
                                     backPressed()
                                 }
-                            Spacer().frame(width: 20)
+                                Spacer().frame(width: 20)
+                            }
                             Spacer()
                             menu
                         }
@@ -91,8 +93,10 @@ struct Banner: View {
                             HStack {
                                 Spacer().frame(width: 80)
                                 Spacer()
-                                titleText
-                                Spacer()
+                                if MyApp.format != .phone || isLandscape || (optionMode != .buttons && optionMode != .both) {
+                                    titleText
+                                    Spacer()
+                                }
                                 Spacer().frame(width: 80)
                             }
                         }
@@ -122,10 +126,10 @@ struct Banner: View {
                     HStack {
                         if let backText = backText {
                             Text(backText)
-                                .font((alternateStyle ? .title3 :.title2)).bold()
+                                .font((alternateStyle ? defaultFont : captionFont)).bold()
                         } else {
                             backImage
-                                .font(.largeTitle)
+                                .font(defaultFont)
                         }
                         
                     }
@@ -148,7 +152,7 @@ struct Banner: View {
     
     var titleText: some View {
         Text(title)
-            .font((alternateStyle ? .title : .largeTitle)).bold()
+            .font((alternateStyle ? captionFont : defaultFont)).bold()
             .foregroundColor(bannerColor.text)
             .minimumScaleFactor(0.8)
     }
@@ -184,7 +188,7 @@ struct Banner_Menu : View {
                     }
                 }
             } label: {
-                (image ?? AnyView(Image(systemName: "line.3.horizontal"))).foregroundColor(bannerColor.text).font(.largeTitle)
+                (image ?? AnyView(Image(systemName: "line.3.horizontal"))).foregroundColor(bannerColor.text).font(defaultFont)
             }
     
     }
@@ -237,7 +241,7 @@ struct Banner_Buttons : View {
                             }
                         }
                         .disabled(!option.isEnabled)
-                        .font(alternateStyle ? .title3 : (option.likeBack ? .largeTitle : .title))
+                        .font(alternateStyle ? captionFont : (option.likeBack ? defaultFont : defaultFont))
                         .background(backgroundColor)
                         .cornerRadius(option.likeBack ? 0 : 10.0)
                         if index != options.count - 1 {

@@ -123,7 +123,7 @@ class BBONameReplaceView: UIView, UITableViewDataSource, UITableViewDelegate {
         contentView.addSubview(instructionLabel, leading: 20, trailing: 20, top: instructionSpacing)
         Constraint.setHeight(control: instructionLabel, height: instructionHeight)
         instructionLabel.text = "Add or Modify Names"
-        instructionLabel.font = replaceTitleFont
+        instructionLabel.font = replaceTitleFont.bold
         instructionLabel.textColor = UIColor(Palette.background.text)
         instructionLabel.textAlignment = .center
         
@@ -142,7 +142,7 @@ class BBONameReplaceView: UIView, UITableViewDataSource, UITableViewDelegate {
         closeButton.textColor = UIColor(Palette.highlightButton.text)
         closeButton.textAlignment = .center
         closeButton.text = "Close"
-        closeButton.font = replaceTitleFont
+        closeButton.font = replaceTitleFont.bold
         let tapGesture = UITapGestureRecognizer(target: self, action: cancelSelector)
         closeButton.addGestureRecognizer(tapGesture)
         closeButton.isUserInteractionEnabled = true
@@ -235,7 +235,7 @@ class BBONameReplaceCell: UITableViewCell, UITextFieldDelegate {
             backgroundColor = UIColor(Palette.background.background)
             bboNameLabel.textColor = UIColor(Palette.background.text)
             realNameTextField.textColor = UIColor(Palette.background.text)
-            bboNameLabel.font = replaceTitleFont
+            bboNameLabel.font = replaceTitleFont.bold
             realNameTextField.font = replaceFont
             if first {
                 realNameTextField.becomeFirstResponder()
@@ -248,8 +248,8 @@ class BBONameReplaceCell: UITableViewCell, UITextFieldDelegate {
             backgroundColor = UIColor(Palette.alternate.background)
             bboNameLabel.textColor = UIColor(Palette.alternate.text)
             realNameTextField.textColor = UIColor(Palette.alternate.text)
-            bboNameLabel.font = replaceTitleFont
-            realNameTextField.font = replaceTitleFont
+            bboNameLabel.font = replaceTitleFont.bold
+            realNameTextField.font = replaceTitleFont.bold
         }
     }
 }

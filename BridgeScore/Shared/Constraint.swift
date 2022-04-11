@@ -17,18 +17,27 @@ enum ConstraintAnchor: CustomStringConvertible {
     case all
     case centerX
     case centerY
+    case safeLeading
+    case safeTrailing
+    case safeTop
+    case safeBottom
+    case safeAll
+    
+    var safe: Bool {
+        return self == .safeLeading || self == .safeTop || self == .safeTop || self == .safeBottom || self == .safeAll
+    }
     
     var description: String {
         switch self {
-        case .leading:
+        case .leading, .safeLeading:
             return ".leading"
-        case .trailing:
+        case .trailing, .safeTrailing:
             return ".trailing"
-        case .top:
+        case .top, .safeTop:
             return ".top"
-        case .bottom:
+        case .bottom, .safeBottom:
             return ".bottom"
-        case .all:
+        case .all, .safeAll:
             return ".all"
         case .centerX:
             return ".centerX"
@@ -36,23 +45,34 @@ enum ConstraintAnchor: CustomStringConvertible {
             return ".centerY"
         }
     }
-    
-    var constraints: [NSLayoutConstraint.Attribute] {
+
+    var constraint: NSLayoutConstraint.Attribute {
         switch self {
-        case .leading:
-            return [.leading]
-        case .trailing:
-            return [.trailing]
-        case .top:
-            return [.top]
-        case .bottom:
-            return [.bottom]
+        case .leading, .safeLeading:
+            return .leading
+        case .trailing, .safeTrailing:
+            return .trailing
+        case .top, .safeTop:
+            return .top
+        case .bottom, .safeBottom:
+            return .bottom
+        case .all, .safeAll:
+            fatalError("Not supported")
+        case .centerX:
+            return .centerX
+        case .centerY:
+            return .centerY
+        }
+    }
+    
+    var expanded: [ConstraintAnchor] {
+        switch self {
         case .all:
             return [.leading, .trailing, .top, .bottom]
-        case .centerX:
-            return [.centerX]
-        case .centerY:
-            return [.centerY]
+        case .safeAll:
+            return [.safeLeading, .safeTrailing, .safeTop, .safeBottom]
+        default:
+            return [self]
         }
     }
     
@@ -66,7 +86,15 @@ enum ConstraintAnchor: CustomStringConvertible {
             return .bottom
         case .bottom:
             return .top
-        case .all:
+        case .safeLeading:
+            return .safeTrailing
+        case .safeTrailing:
+            return .safeLeading
+        case .safeTop:
+            return .safeBottom
+        case .safeBottom:
+            return .safeTop
+        case .all, .safeAll:
             return nil
         case .centerX:
             return .centerX
@@ -103,30 +131,40 @@ class Constraint {
     ///   - priority: Constraint priority
     ///   - attributes: list of attributes (.leading, .trailing etc)
     /// - Returns: Array of contraints created (discardable)
-    @discardableResult public static func anchor(view: UIView, control: UIView, to: UIView? = nil, multiplier: CGFloat = 1.0, constant: CGFloat = 0.0, toAttribute: NSLayoutConstraint.Attribute? = nil, priority: UILayoutPriority = .required, attributes: ConstraintAnchor...) -> [NSLayoutConstraint] {
+    @discardableResult public static func anchor(view: UIView, control: UIView, to: UIView? = nil, multiplier: CGFloat = 1.0, constant: CGFloat = 0.0, toAttribute: ConstraintAnchor? = nil, priority: UILayoutPriority = .required, attributes: ConstraintAnchor...) -> [NSLayoutConstraint] {
         
         Constraint.anchor(view: view, control: control, to: to, multiplier: multiplier, constant: constant, toAttribute: toAttribute, priority: priority, attributes: attributes)
     }
     
-    @discardableResult public static func anchor(view: UIView, control: UIView, to: UIView? = nil, multiplier: CGFloat = 1.0, constant: CGFloat = 0.0, toAttribute: NSLayoutConstraint.Attribute? = nil, priority: UILayoutPriority = .required, attributes anchorAttributes: [ConstraintAnchor]) -> [NSLayoutConstraint] {
+    @discardableResult public static func anchor(view: UIView, control: UIView, to: UIView? = nil, multiplier: CGFloat = 1.0, constant: CGFloat = 0.0, toAttribute: ConstraintAnchor? = nil, priority: UILayoutPriority = .required, attributes anchorAttributes: [ConstraintAnchor]) -> [NSLayoutConstraint] {
         var constraints: [NSLayoutConstraint] = []
         let anchorAttributes = (anchorAttributes.count == 0 ? [.all] : anchorAttributes)
-        var attributes: [NSLayoutConstraint.Attribute] = []
+        var attributes: [ConstraintAnchor] = []
         for attribute in anchorAttributes {
-            attributes.append(contentsOf: attribute.constraints)
+            attributes.append(contentsOf: attribute.expanded)
         }
         let to = to ?? view
         control.translatesAutoresizingMaskIntoConstraints = false
         control.autoresizingMask = [.flexibleTopMargin, .flexibleBottomMargin, .flexibleLeftMargin, .flexibleRightMargin]
         for attribute in attributes {
             let toAttribute = toAttribute ?? attribute
+            let control = attribute.safe ? control.safeAreaLayoutGuide : control
+            let to = toAttribute.safe ? to.safeAreaLayoutGuide : to
             let sign: CGFloat = (attribute == .trailing || attribute == .bottom ? -1.0 : 1.0)
-            let constraint = NSLayoutConstraint(item: control, attribute: attribute, relatedBy: .equal, toItem: to, attribute: toAttribute, multiplier: multiplier, constant: constant * sign)
+            let constraint = NSLayoutConstraint(item: control, attribute: attribute.constraint, relatedBy: .equal, toItem: to, attribute: toAttribute.constraint, multiplier: multiplier, constant: constant * sign)
             constraint.priority = priority
             view.addConstraint(constraint)
             constraints.append(constraint)
         }
         return constraints
+    }
+    
+    func layoutGuide(_ view: UIView?, anchor: ConstraintAnchor) -> Any? {
+        if anchor.safe {
+            return view?.safeAreaInsets
+        } else {
+            return view
+        }
     }
 
     @discardableResult public static func proportionalWidth(view: UIView, control: UIView, to: UIView? = nil, multiplier: CGFloat = 1.0, priority: UILayoutPriority = .required) -> NSLayoutConstraint {
