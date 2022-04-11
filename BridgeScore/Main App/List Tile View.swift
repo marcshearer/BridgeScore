@@ -11,10 +11,12 @@ struct ListTileView <Content> : View where Content : View {
     var color: PaletteColor
     var font: Font
     var content: Content
+    var height: CGFloat = 92
     
-    init(color: PaletteColor = Palette.tile, font: Font = .largeTitle, @ViewBuilder content: ()->Content) {
+    init(color: PaletteColor = Palette.tile, font: Font = .largeTitle, height: CGFloat = 92, @ViewBuilder content: ()->Content) {
         self.color = color
         self.font = font
+        self.height = height
         self.content = content()
     }
 
@@ -28,7 +30,7 @@ struct ListTileView <Content> : View where Content : View {
                     content
                     Spacer()
                 }
-                .frame(height: 80)
+                .frame(height: height - 12)
                 .background(color.background)
                 .cornerRadius(16)
             Spacer().frame(width: 16)

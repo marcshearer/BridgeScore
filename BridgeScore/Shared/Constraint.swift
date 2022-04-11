@@ -24,7 +24,7 @@ enum ConstraintAnchor: CustomStringConvertible {
     case safeAll
     
     var safe: Bool {
-        return self == .safeLeading || self == .safeTop || self == .safeTop || self == .safeBottom || self == .safeAll
+        return self == .safeLeading || self == .safeTrailing || self == .safeTop || self == .safeBottom || self == .safeAll
     }
     
     var description: String {

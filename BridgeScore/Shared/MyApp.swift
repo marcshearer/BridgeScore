@@ -113,3 +113,4 @@ class MyApp {
 enum BridgeScoreError: Error {
     case invalidData
 }
+

@@ -8,6 +8,7 @@
 import SwiftUI
 
 struct ScorecardListView: View {
+    @Environment(\.verticalSizeClass) var sizeClass
     private let id = scorecardListViewId
     private let inputId = UUID()
     @StateObject private var selected = ScorecardViewModel(scorecardId: nullUUID)
@@ -163,53 +164,39 @@ struct ScorecardSummaryView: View {
     @State var importSelected: Int?
     
     var body: some View {
+        if MyApp.format == .phone && !isLandscape {
+            portraitPhoneView
+        } else {
+            normalView
+        }
+    }
+    
+    var normalView: some View {
         let color = (highlighted ? Palette.highlightTile : Palette.tile)
-        ListTileView(color: color) {
+        return ListTileView(color: color) {
             GeometryReader { geometry in
                 HStack {
                     VStack {
                         Spacer().frame(height: 4)
                         HStack {
-                            HStack {
-                                let text = scorecard.desc + (scorecard.comment == "" ? "" : " (\(scorecard.comment))")
-                                Text(text)
-                                Spacer()
-                                if scorecard.position != 0 && scorecard.entry != 0 {
-                                    Text("\(scorecard.position) / \(scorecard.entry)")
-                                        .frame(width: 100)
-                                }
-                                HStack {
-                                    Spacer()
-                                    if scorecard.score != nil {
-                                        Text(scorecard.scoreString)
-                                    }
-                                }
-                                .frame(width: 150)
-                                    
-                                Spacer().frame(width: 30)
-                            }
+                            description
                             Spacer()
+                            position.frame(width: 100)
+                            score.frame(width: 150)
+                            Spacer().frame(width: 30)
                         }
                         .minimumScaleFactor(0.7)
                         .foregroundColor(color.contrastText)
                         .font(.title)
-                        Spacer()
                         HStack {
-                            Text(Utility.dateString(Date.startOfDay(from: scorecard.date)!, format: "dd MMM yyyy", style: .short, doesRelativeDateFormatting: true)).font(.callout).bold()
+                            datePlayed
                             Spacer()
                             HStack {
-                                if scorecard.type.players > 1 {
-                                    Text("With: ")
-                                    Text(scorecard.partner?.name ?? "").font(.callout).bold()
-                                }
+                                playedWith
                                 Spacer()
                             }
                             .frame(width: geometry.size.width * 0.3)
-                            HStack {
-                                Text("At: ")
-                                Text(scorecard.location?.name ?? "").font(.callout).bold()
-                                Spacer()
-                            }
+                            playedAt
                             .frame(width: geometry.size.width * 0.37)
                         }
                         .foregroundColor(color.text)
@@ -217,39 +204,139 @@ struct ScorecardSummaryView: View {
                         .minimumScaleFactor(0.5)
                         Spacer().frame(height: 12)
                     }
-                    HStack {
-                        if scorecard.importSource == .none {
-                            GeometryReader { geometry in
-                                VStack {
-                                    Spacer()
-                                    PopupMenu(id: slideInId, field: $importSelected, values: ImportSource.validCases.map{$0.string}, animation: .none, top: geometry.frame(in: .global).minY - 30, left: geometry.frame(in: .global).minX - 290, width: 300) { (selectedIndex) in
-                                        if let selectedIndex = selectedIndex {
-                                            importTapped = ImportSource.validCases[selectedIndex]
-                                            selected.copy(from: scorecard)
-                                        }
-                                        importSelected = nil
-                                    } label: {
-                                        Image(systemName: "arrow.down.circle.fill")
-                                            .font(.largeTitle)
-                                            .foregroundColor(color.contrastText)
-                                    }
-                                    Spacer()
-                                }
-                            }
+                    importButton
+                    deleteButton
+                }
+            }
+        }
+    }
+    
+    var portraitPhoneView: some View {
+        let color = (highlighted ? Palette.highlightTile : Palette.tile)
+        return ListTileView(color: color, height: 120) {
+            VStack {
+                Spacer().frame(height: 4)
+                HStack {
+                    description
+                    Spacer()
+                    score
+                }
+                .minimumScaleFactor(0.7)
+                .foregroundColor(color.contrastText)
+                .font(.title)
+                HStack {
+                    VStack {
+                        HStack {
+                            datePlayed
+                            Spacer()
+                        }
+                        Spacer().frame(height: 2)
+                        HStack {
+                            playedWith
+                            Spacer()
+                        }
+                        Spacer().frame(height: 2)
+                        HStack {
+                            playedAt
+                            Spacer()
                         }
                     }
-                    .frame(width: 50)
-                    button("trash.circle.fill") {
-                        highlighted = true
-                        MessageBox.shared.show("This will delete the scorecard permanently.\nAre you sure you want to do this?", cancelText: "Cancel", okText: "Confirm", cancelAction: {
-                            highlighted = false
-                        }, okAction: {
-                            highlighted = false
-                            scorecard.remove()
-                        })
+                    .foregroundColor(color.text)
+                    .font(.callout)
+                    .minimumScaleFactor(0.5)
+                    deleteButton
+                    
+                }
+                Spacer().frame(height: 8)
+            }
+        }
+    }
+    
+    var description: some View {
+        HStack {
+            let text = scorecard.desc + (scorecard.comment == "" ? "" : " (\(scorecard.comment))")
+            Text(text)
+        }
+    }
+    
+    var position: some View {
+        HStack {
+            if scorecard.position != 0 && scorecard.entry != 0 {
+                Text("\(scorecard.position) / \(scorecard.entry)")
+                    
+            }
+        }
+    }
+    
+    var score: some View {
+        HStack {
+            if scorecard.score != nil {
+                Text(scorecard.scoreString)
+            }
+        }
+    }
+    
+    var datePlayed: some View {
+        Text(Utility.dateString(Date.startOfDay(from: scorecard.date)!, format: "dd MMM yyyy", style: .short, doesRelativeDateFormatting: true)).font(.callout).bold()
+    }
+    
+    var playedWith: some View {
+        HStack {
+            if scorecard.type.players > 1 {
+                HStack {
+                    Text("With: ")
+                    Text(scorecard.partner?.name ?? "").font(.callout).bold()
+                    Spacer()
+                }
+            }
+        }
+    }
+    
+    var playedAt: some View {
+        HStack {
+            HStack {
+                Text("At: ")
+                Text(scorecard.location?.name ?? "").font(.callout).bold()
+                Spacer()
+            }
+        }
+    }
+    
+    var importButton: some View {
+        let color = (highlighted ? Palette.highlightTile : Palette.tile)
+        return HStack {
+            if scorecard.importSource == .none {
+                GeometryReader { geometry in
+                    VStack {
+                        Spacer()
+                        PopupMenu(id: slideInId, field: $importSelected, values: ImportSource.validCases.map{$0.string}, animation: .none, top: geometry.frame(in: .global).minY - 30, left: geometry.frame(in: .global).minX - 290, width: 300) { (selectedIndex) in
+                            if let selectedIndex = selectedIndex {
+                                importTapped = ImportSource.validCases[selectedIndex]
+                                selected.copy(from: scorecard)
+                            }
+                            importSelected = nil
+                        } label: {
+                            Image(systemName: "arrow.down.circle.fill")
+                                .font(.largeTitle)
+                                .foregroundColor(color.contrastText)
+                        }
+                        Spacer()
                     }
                 }
             }
+        }
+        .frame(width: 50)
+    }
+    
+    var deleteButton: some View {
+        button("trash.circle.fill") {
+            highlighted = true
+            MessageBox.shared.show("This will delete the scorecard permanently.\nAre you sure you want to do this?", cancelText: "Cancel", okText: "Confirm", cancelAction: {
+                highlighted = false
+            }, okAction: {
+                highlighted = false
+                scorecard.remove()
+            })
         }
     }
     

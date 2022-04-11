@@ -100,6 +100,7 @@ struct PickerInputAdditional<Additional>: View where Additional: Equatable  {
                                         .foregroundColor(placeholder == "" ? color.themeText : color.text)
                                         .font(font)
                                         .frame(maxHeight: height)
+                                        .minimumScaleFactor(0.7)
                                     if !centered {
                                         Spacer()
                                         Image(systemName: "chevron.right")

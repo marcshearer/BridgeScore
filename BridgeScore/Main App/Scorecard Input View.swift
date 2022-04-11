@@ -32,7 +32,8 @@ enum RowType: Int {
 
 struct ScorecardInputView: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
-
+    @Environment(\.verticalSizeClass) var sizeClass
+    
     private let id = scorecardInputViewId
     @ObservedObject var scorecard: ScorecardViewModel
     @State var importScorecard: ImportSource = .none
@@ -271,6 +272,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     private var detailView = true
     public var inputDetail: Bool
     private var ignoreKeyboard = false
+    private var titleHeightConstraint: NSLayoutConstraint!
     
     var boardColumns: [ScorecardColumn] = []
     var tableColumns: [ScorecardColumn] = []
@@ -288,9 +290,9 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         switchView(detailView: true, force: true)
                     
         // Add subviews
-        titleView = ScorecardInputTableTitleView(self, frame: CGRect(origin: .zero, size: CGSize(width: frame.width, height: titleRowHeight)), tag: RowType.boardTitle.tagOffset)
+        titleView = ScorecardInputTableTitleView(self, frame: CGRect(), tag: RowType.boardTitle.tagOffset)
         self.addSubview(titleView, anchored: .safeLeading, .safeTrailing, .top)
-        Constraint.setHeight(control: titleView, height: titleRowHeight)
+        titleHeightConstraint = Constraint.setHeight(control: titleView, height: titleRowHeight)
         
         self.addSubview(self.mainTableView, anchored: .leading, .trailing)
         Constraint.anchor(view: self, control: titleView, to: mainTableView, toAttribute: .top, attributes: .bottom)
@@ -323,6 +325,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         let oldTableColumns = tableColumns
         setupSizes(columns: &boardColumns)
         setupSizes(columns: &tableColumns)
+        titleHeightConstraint.constant = titleRowHeight
         if boardColumns != oldBoardColumns || tableColumns != oldTableColumns || forceReload {
             mainTableView.reloadData()
             titleView.collectionView.reloadData()
@@ -358,7 +361,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 tableColumns = [
                     ScorecardColumn(type: .table, heading: "", size: .fixed([70, 30, 50])),
                     ScorecardColumn(type: .sitting, heading: "Sitting", size: .fixed([95, 70])),
-                    ScorecardColumn(type: .tableScore, heading: "Score", size: .fixed([60, 80, 80])),
+                    ScorecardColumn(type: .tableScore, heading: "", size: .fixed([60, 80, 80])),
                     ScorecardColumn(type: .versus, heading: "Versus", size: .flexible)
                 ]
             } else if MyApp.format == .phone {
@@ -374,7 +377,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 tableColumns = [
                     ScorecardColumn(type: .table, heading: "", size: .fixed([50, 50])),
                     ScorecardColumn(type: .sitting, heading: "Sitting", size: .fixed([50, 50])),
-                    ScorecardColumn(type: .tableScore, heading: "Score", size: .fixed([50])),
+                    ScorecardColumn(type: .tableScore, heading: "", size: .fixed([50])),
                     ScorecardColumn(type: .versus, heading: "Versus", size: .flexible)
                 ]
             } else {
@@ -391,7 +394,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 tableColumns = [
                     ScorecardColumn(type: .table, heading: "", size: .fixed([70, 95])),
                     ScorecardColumn(type: .sitting, heading: "Sitting", size: .fixed([70, 60])),
-                    ScorecardColumn(type: .tableScore, heading: "Score", size: .fixed([80, 65])),
+                    ScorecardColumn(type: .tableScore, heading: "", size: .fixed([80, 65])),
                     ScorecardColumn(type: .versus, heading: "Versus", size: .flexible)
                 ]
             }
@@ -516,9 +519,10 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     }
     
     func scorecardContractEntry(board: BoardViewModel, table: TableViewModel) {
+        contractEntryView = ScorecardContractEntryView(frame: CGRect())
         let section = (board.board - 1) / self.scorecard.boardsTable
         let row = (board.board - 1) % self.scorecard.boardsTable
-        contractEntryView.show(from: self, contract: board.contract, sitting: table.sitting, declarer: board.declarer) { (contract, declarer) in
+        contractEntryView.show(from: superview!.superview!, contract: board.contract, sitting: table.sitting, declarer: board.declarer) { (contract, declarer) in
 
             if let tableCell = self.mainTableView.cellForRow(at: IndexPath(row: row, section: section)) as? ScorecardInputBoardTableCell {
                 if contract != board.contract || declarer != board.declarer {

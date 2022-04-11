@@ -16,9 +16,9 @@ fileprivate enum ContractCollection: Int {
     var buttonWidth: CGFloat {
         switch self {
         case .level, .suit, .double:
-            return 60
+            return MyApp.format == .phone ? 40 : 60
         case .declarer:
-            return 80
+            return MyApp.format == .phone ? 50 : 80
         }
     }
     
@@ -27,10 +27,12 @@ fileprivate enum ContractCollection: Int {
     }
 }
 
-fileprivate let actionButtonWidth: CGFloat = 120
+fileprivate let actionButtonWidth: CGFloat = MyApp.format == .phone ? 100 : 120
 fileprivate let actionButtonHeight: CGFloat = 40
 fileprivate let buttonSpaceX: CGFloat = 10
 fileprivate let buttonSpaceY: CGFloat = 20
+fileprivate var contractLeadingSpace: CGFloat { MyApp.format == .phone && isLandscape ? 0 : 30 }
+fileprivate var contractTopSpace: CGFloat { MyApp.format == .phone && !isLandscape ? 50 : 0}
 
 class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
        
@@ -58,7 +60,10 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
     private var portraitConstraints: [NSLayoutConstraint]!
     private var landscapeConstraints: [NSLayoutConstraint]!
     private var declarerList: [(seat: Seat, entry: ScrollPickerEntry)]!
-    
+    private var lastLandscape: Bool?
+    private var contractLeadingSpaceConstraints: [NSLayoutConstraint] = []
+    private var contractTopSpaceConstraints: [NSLayoutConstraint] = []
+
     required init?(coder: NSCoder) {
         fatalError("Not implemented")
     }
@@ -67,12 +72,11 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         super.init(frame:frame)
         loadContractEntryView()
         
-        // Handle rotations
-        UIDevice.current.beginGeneratingDeviceOrientationNotifications()
-        NotificationCenter.default.addObserver(forName: UIDevice.orientationDidChangeNotification, object: nil, queue: nil) { [weak self] (notification) in
-            self?.setNeedsLayout()
-            self?.layoutIfNeeded()
-        }
+    }
+    
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        self.setNeedsLayout()
     }
     
     override func layoutSubviews() {
@@ -88,19 +92,32 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
     }
     
     func setOrientationConstraints() {
-        backgroundView.frame = sourceView?.frame ?? CGRect()
-        
-        let isLandscape = (sourceView?.frame.width ?? 0 > sourceView?.frame.height ?? 0)
-        
-        heightConstraint.constant = (sitting == .unknown || isLandscape ? 450 : 700)
-        widthConstraint.constant = (sitting == .unknown || !isLandscape ? 540 : 940)
-        declarerHeight.constant = (sitting == .unknown || isLandscape ? 0 : 320)
-        declarerWidth.constant = (sitting == .unknown || !isLandscape ? 0 : 400)
-        
-        // Need to deactivate all constraints before activating relevant ones
-        for pass in 1...2 {
-            landscapeConstraints.forEach { (constraint) in constraint.isActive = isLandscape && pass == 2 }
-            portraitConstraints.forEach { (constraint) in constraint.isActive = !isLandscape && pass == 2 }
+        if isLandscape != lastLandscape {
+            print("Landsape: \(isLandscape)")
+            if MyApp.format != .phone {
+                backgroundView.frame = sourceView?.frame ?? CGRect()
+                heightConstraint.constant = (sitting == .unknown || isLandscape ? 450 : 700)
+                widthConstraint.constant = (sitting == .unknown || !isLandscape ? 540 : 940)
+            }
+                 
+            declarerHeight.constant = (sitting == .unknown || isLandscape ? 0 : 320)
+            declarerWidth.constant = (sitting == .unknown || !isLandscape ? 0 : 400)
+            
+            // Need to deactivate all constraints before activating relevant ones
+            for pass in 1...2 {
+                landscapeConstraints.forEach { (constraint) in constraint.isActive = isLandscape && pass == 2 }
+                portraitConstraints.forEach { (constraint) in constraint.isActive = !isLandscape && pass == 2 }
+            }
+            
+            contractLeadingSpaceConstraints.forEach { (constraint) in
+                constraint.constant = contractLeadingSpace
+            }
+            contractTopSpaceConstraints.forEach { (constraint) in
+                constraint.constant = buttonSpaceY + contractTopSpace
+            }
+            
+            setNeedsLayout()
+            lastLandscape = isLandscape
         }
     }
     
@@ -257,7 +274,11 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         self.declarer = declarer
         self.completion = completion
         self.frame = sourceView.frame
-        sourceView.addSubview(self)
+        if MyApp.format == .phone {
+            sourceView.addSubview(self, anchored: .all)
+        } else {
+            sourceView.addSubview(self)
+        }
         sourceView.bringSubviewToFront(self)
         declarerList = Scorecard.orderedDeclarerList(sitting: sitting)
         declarerView.isHidden = (sitting == .unknown)
@@ -280,6 +301,8 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
   // MARK: - View Setup ======================================================================== -
     
     private func loadContractEntryView() {
+        contractLeadingSpaceConstraints = []
+        contractTopSpaceConstraints  = []
         
         levelCollectionView = UICollectionView(frame: frame, collectionViewLayout: UICollectionViewFlowLayout())
         suitCollectionView = UICollectionView(frame: frame, collectionViewLayout: UICollectionViewFlowLayout())
@@ -295,35 +318,42 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         backgroundView.isUserInteractionEnabled = true
         
         // Content
-        contentView.accessibilityIdentifier = "title"
-        backgroundView.addSubview(contentView, anchored: .centerX, .centerY)
-        widthConstraint = Constraint.setWidth(control: contentView, width: 0)
-        heightConstraint = Constraint.setHeight(control: contentView, height: 0)
+        contentView.accessibilityIdentifier = "content"
+        if MyApp.format == .phone {
+            addSubview(contentView, anchored: .all)
+        } else {
+            backgroundView.addSubview(contentView, anchored: .centerX, .centerY)
+            contentView.addShadow()
+            contentView.layer.cornerRadius = 20
+            widthConstraint = Constraint.setWidth(control: contentView, width: 0)
+            heightConstraint = Constraint.setHeight(control: contentView, height: 0)
+        }
         contentView.backgroundColor = UIColor(Palette.alternate.background)
-        contentView.addShadow()
-        contentView.layer.cornerRadius = 20
         let nullGesture = UITapGestureRecognizer(target: self, action: nil)
         contentView.addGestureRecognizer(nullGesture)
         contentView.isUserInteractionEnabled = true
                   
         // Title
         title.accessibilityIdentifier = "title"
-        contentView.addSubview(title, anchored: .leading, .trailing, .top)
+        let titleBackground = UIView()
+        titleBackground.backgroundColor = UIColor(Palette.banner.background)
+        contentView.addSubview(titleBackground, anchored: .leading, .trailing, .top)
+        Constraint.anchor(view: contentView, control: contentView, to: titleBackground, constant: -50, toAttribute: .bottom, attributes: .safeTop)
+        titleBackground.addSubview(title, anchored: .leading, .trailing, .bottom)
         Constraint.setHeight(control: title, height: 50)
-        title.backgroundColor = UIColor(Palette.banner.background)
         title.textColor = UIColor(Palette.banner.text)
         title.font = windowTitleFont
         title.textAlignment = .center
         title.text = "Select Contract"
         
         // Level numbers
-        loadCollection(collectionView: levelCollectionView, xOffset: 30, yOffset: buttonSpaceY, from: title, elements: ContractLevel.validCases.count, tag: ContractCollection.level.rawValue, collection: .level, type: ContractLevel.blank)
+        loadCollection(collectionView: levelCollectionView, xOffset: contractLeadingSpace, yOffset: buttonSpaceY, additionalYOffset: contractTopSpace, from: title, elements: ContractLevel.validCases.count, tag: ContractCollection.level.rawValue, collection: .level, type: ContractLevel.blank)
 
         // Suits
-        loadCollection(collectionView: suitCollectionView, xOffset: 30, yOffset: buttonSpaceY, from: levelCollectionView, elements: Suit.validCases.count, tag: ContractCollection.suit.rawValue, collection: .suit, type: Suit.blank)
+        loadCollection(collectionView: suitCollectionView, xOffset: contractLeadingSpace, yOffset: buttonSpaceY, from: levelCollectionView, elements: Suit.validCases.count, tag: ContractCollection.suit.rawValue, collection: .suit, type: Suit.blank)
 
         // Doubles
-        loadCollection(collectionView: doubleCollectionView, xOffset: 30, yOffset: buttonSpaceY, from: suitCollectionView, elements: ContractDouble.allCases.count, tag: ContractCollection.double.rawValue, collection: .double, type: ContractDouble.undoubled)
+        loadCollection(collectionView: doubleCollectionView, xOffset: contractLeadingSpace, yOffset: buttonSpaceY, from: suitCollectionView, elements: ContractDouble.allCases.count, tag: ContractCollection.double.rawValue, collection: .double, type: ContractDouble.undoubled)
         
         // Pass Out button
         passOutButton.accessibilityIdentifier = "passOut"
@@ -339,7 +369,7 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         
         // Declarer
         declarerView.accessibilityIdentifier = "declarerView"
-        contentView.addSubview(declarerView, anchored: .trailing)
+        contentView.addSubview(declarerView, anchored: .safeTrailing)
         contentView.sendSubviewToBack(declarerView)
         let declarerSeparator = UIView()
         declarerView.addSubview(declarerSeparator)
@@ -368,7 +398,7 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         declarerView.addSubview(declarerLabel, leading: 40, top: 10)
         Constraint.setHeight(control: declarerLabel, height: actionButtonHeight)
         Constraint.setWidth(control: declarerLabel, width: actionButtonWidth)
-        declarerLabel.font = titleFont.bold
+        declarerLabel.font = sectionTitleFont.bold
         declarerLabel.textAlignment = .left
         declarerLabel.textColor = UIColor(Palette.background.text)
         declarerLabel.text = "Declarer"
@@ -380,8 +410,10 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
     }
     
     func loadActionButton(button: UILabel, xOffset: CGFloat, text: String, action: Selector) {
-        contentView.addSubview(button, constant: 20, anchored: .bottom)
-        Constraint.anchor(view: contentView, control: button, to: levelCollectionView, constant: xOffset, attributes: .centerX)
+        button.accessibilityIdentifier = text
+        contentView.addSubview(button)
+        Constraint.anchor(view: contentView, control: button, to: contentView, constant: -(actionButtonHeight + 20), toAttribute: .safeBottom, attributes: .top)
+        Constraint.anchor(view: contentView, control: button, to: levelCollectionView, constant: xOffset - (buttonSpaceX / 2), attributes: .centerX)
         Constraint.setHeight(control: button, height: actionButtonHeight)
         Constraint.setWidth(control: button, width: actionButtonWidth)
         button.backgroundColor = UIColor(Palette.enabledButton.background)
@@ -394,7 +426,7 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         button.isUserInteractionEnabled = true
     }
     
-    private func loadCollection<EnumType>(collectionView: UICollectionView, to view: UIView? = nil, xOffset: CGFloat = 0, yOffset: CGFloat = 0, from toView: UIView? = nil, elements: Int, tag: Int, across: Int? = nil, down: Int? = nil, collection: ContractCollection, type: EnumType, anchored: ConstraintAnchor...) where EnumType: ContractEnumType {
+    private func loadCollection<EnumType>(collectionView: UICollectionView, to view: UIView? = nil, xOffset: CGFloat = 0, yOffset: CGFloat = 0, additionalYOffset: CGFloat = 0, from toView: UIView? = nil, elements: Int, tag: Int, across: Int? = nil, down: Int? = nil, collection: ContractCollection, type: EnumType, anchored: ConstraintAnchor...) where EnumType: ContractEnumType {
         let across = across ?? elements
         let down = down ?? 1
         let view = view ?? contentView
@@ -404,12 +436,15 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         } else {
             // Other collections
             view.addSubview(collectionView)
-            Constraint.anchor(view: view, control: collectionView, constant: xOffset, attributes: .leading)
-            Constraint.anchor(view: view, control: collectionView, to: toView, constant: yOffset, toAttribute: .bottom, attributes: .top)
+            contractLeadingSpaceConstraints.append(contentsOf: Constraint.anchor(view: view, control: collectionView, constant: xOffset, attributes: .safeLeading))
+            let constraints = Constraint.anchor(view: view, control: collectionView, to: toView, constant: yOffset + additionalYOffset, toAttribute: .bottom, attributes: .top)
+            if additionalYOffset != 0 {
+                contractTopSpaceConstraints.append(contentsOf: constraints)
+            }
         }
         Constraint.setWidth(control: collectionView, width: (CGFloat(across) * (collection.buttonWidth + buttonSpaceX)))
         Constraint.setHeight(control: collectionView, height: (CGFloat(down) * (collection.buttonHeight)) + (CGFloat(down - 1) * buttonSpaceY))
-    collectionView.tag = tag
+        collectionView.tag = tag
         collectionView.dataSource = self
         collectionView.delegate = self
         collectionView.backgroundColor = UIColor.clear

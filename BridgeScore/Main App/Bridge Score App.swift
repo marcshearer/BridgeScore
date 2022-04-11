@@ -8,6 +8,7 @@
 import SwiftUI
 import UIKit
 import CoreData
+import Combine
 
 @main
 struct BridgeScoreApp: App {
@@ -59,7 +60,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
                 
         return true
     }
- 
+    
     override func buildMenu(with builder: UIMenuBuilder) {
         super.buildMenu(with: builder)
         if builder.system == UIMenuSystem.main {

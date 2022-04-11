@@ -112,7 +112,7 @@ struct Banner: View {
             buttonColor = (alternateStyle ? Palette.alternateBannerButton : Palette.bannerButton)
             backButtonColor = (alternateStyle ? Palette.alternateBannerBackButton : Palette.bannerBackButton)
         }
-        .frame(height: (alternateStyle ? alternateBannerHeight : bannerHeight))
+        .frame(height: (alternateStyle ? alternateBannerHeight : bannerHeight + bannerBottom))
         .background(bannerColor.background)
     }
         

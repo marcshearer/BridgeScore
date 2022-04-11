@@ -121,7 +121,7 @@ struct OptionalDatePickerInput : View {
                         Spacer().frame(width: 16)
                     }
                     Spacer().frame(width: 4)
-                    Text(field.wrappedValue == nil ? placeholder : Utility.dateString(field.wrappedValue!, format: "EEEE d MMMM yyyy"))
+                    Text(field.wrappedValue == nil ? placeholder : Utility.dateString(field.wrappedValue!, format: (width ?? 200 < 200 ? "dd/MM/yyyy" : "EEEE d MMMM yyyy")))
                         .foregroundColor(color.textColor(textType))
                     
                     Spacer()
