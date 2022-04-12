@@ -73,10 +73,10 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
     private var titleView: ScorecardRankingTitleView!
     private var valuesTableView: UITableView!
     private var bottomSpacing: NSLayoutConstraint!
-    private var buttonSpacing: CGFloat = 25
-    private var buttonHeight: CGFloat = 50
-    private var buttonWidth: CGFloat = 160
-    private var paddingSize: CGFloat = 20
+    private var buttonSpacing: CGFloat { MyApp.format == .phone ? 10 : 25 }
+    private var buttonHeight: CGFloat { MyApp.format == .phone ? 30 : 50 }
+    private var buttonWidth: CGFloat { MyApp.format == .phone ? 100 : 160 }
+    private var paddingSize: CGFloat { MyApp.format == .phone ? 15 : 20 }
     private var rankingColumns: [RankingColumn] = []
     private var headingColumns: [RankingColumn] = []
     private var rankings: [[RankingViewModel]] = []
@@ -85,21 +85,21 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
     private var multiWays = false
     private var totalRankings: Int = 0
     private var sourceView: UIView!
+    private var orientation: UIDeviceOrientation?
     
     override init(frame: CGRect) {
         super.init(frame:frame)
         loadScorecardRankingView()
         setupValues()
-        
-        // Handle rotations
-        UIDevice.current.beginGeneratingDeviceOrientationNotifications()
-        NotificationCenter.default.addObserver(forName: UIDevice.orientationDidChangeNotification, object: nil, queue: nil) { [weak self] (notification) in
-            self?.layoutSubviews()
-        }
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        setNeedsLayout()
     }
     
     override func layoutSubviews() {
@@ -113,10 +113,10 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         closeButton.roundCorners(cornerRadius: 10)
         valuesTableView.reloadData()
         titleView.collectionView.reloadData()
-        layoutIfNeeded()
         if valuesTableView.frame.height > valuesTableView.contentSize.height {
             bottomSpacing.constant = buttonSpacing + (valuesTableView.frame.height - valuesTableView.contentSize.height)
         }
+        layoutIfNeeded()
     }
     
     // MARK: - Replace BBO names ========================================================================= -
@@ -268,7 +268,6 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
     
     public func show(from sourceView: UIView) {
         self.sourceView = sourceView
-        self.frame = sourceView.frame
         sourceView.addSubview(self)
         sourceView.bringSubviewToFront(self)
         self.bringSubviewToFront(contentView)
@@ -280,17 +279,19 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
     }
     
     private func setFrames() {
-        if backgroundView.frame != sourceView.frame {
-            backgroundView.frame = sourceView.frame
-            let width = sourceView.frame.width * 0.90
+        if backgroundView.frame != UIScreen.main.bounds || orientation != UIDevice.current.orientation {
+            backgroundView.frame = UIScreen.main.bounds
+            frame = backgroundView.frame
+            let width = backgroundView.frame.width * 0.90
             let padding = bannerHeight + safeAreaInsets.top + safeAreaInsets.bottom
-            let height = (sourceView.frame.height - padding) * 0.95
-            contentView.frame = CGRect(x: sourceView.frame.midX - (width / 2), y: ((bannerHeight + safeAreaInsets.top) / 2) + sourceView.frame.midY - (height / 2), width: width, height: height)
+            let height = (backgroundView.frame.height - padding) * 0.95
+            contentView.frame = CGRect(x: backgroundView.frame.midX - (width / 2), y: ((bannerHeight + safeAreaInsets.top) / 2) + backgroundView.frame.midY - (height / 2), width: width, height: height)
+            orientation = UIDevice.current.orientation
+            setNeedsLayout()
         }
     }
     
     public func hide() {
-        // self.contentView.isHidden = true
         removeFromSuperview()
     }
     
@@ -300,9 +301,9 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         let sectionRankings = Scorecard.current.rankingList
         rankingColumns = [
             RankingColumn(type: .ranking, heading: "Rank", size: .fixed([50])),
-            RankingColumn(type: .players, heading: "Names", size: .flexible)]
+            RankingColumn(type: .players, heading: "Players", size: .flexible)]
            
-        if (Scorecard.current.scorecard?.entry ?? 0) > 2 && isLandscape {
+        if (Scorecard.current.scorecard?.entry ?? 0) > 2 && isLandscape && MyApp.format != .phone {
             rankingColumns += [
                 RankingColumn(type: .rounds, heading: "Rounds", size: .fixed([CGFloat(min(8, Scorecard.current.scorecard?.tables ?? 1) * 25) + 8]))]
         }
@@ -618,6 +619,14 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
                 label.text = "Number"
             }
         default:
+            switch column.type {
+            case .players:
+                label.textAlignment = .left
+            case .points, .score, .nsXImps, .ewXImps:
+                label.textAlignment = .right
+            default:
+                break
+            }
             label.text = column.heading
         }
     }

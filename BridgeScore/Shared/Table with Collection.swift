@@ -15,7 +15,9 @@ public class TableViewSectionHeaderWithCollectionView: UITableViewHeaderFooterVi
     
     override init(reuseIdentifier: String?) {
         super.init(reuseIdentifier: reuseIdentifier)
-        self.layout = UICollectionViewFlowLayout()
+        layout = UICollectionViewFlowLayout()
+        layout.minimumInteritemSpacing = 0
+        layout.minimumLineSpacing = 0
         self.collectionView = UICollectionView(frame: self.frame, collectionViewLayout: layout)
         self.contentView.addSubview(collectionView, anchored: .all)
         self.contentView.bringSubviewToFront(self.collectionView)

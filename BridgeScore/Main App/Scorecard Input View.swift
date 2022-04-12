@@ -273,6 +273,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     public var inputDetail: Bool
     private var ignoreKeyboard = false
     private var titleHeightConstraint: NSLayoutConstraint!
+    private var orientation: UIDeviceOrientation?
     
     var boardColumns: [ScorecardColumn] = []
     var tableColumns: [ScorecardColumn] = []
@@ -319,6 +320,12 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        endEditing(true)
+        setNeedsLayout()
+    }
+    
     override func layoutSubviews() {
         super.layoutSubviews()
         let oldBoardColumns = boardColumns
@@ -326,9 +333,10 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         setupSizes(columns: &boardColumns)
         setupSizes(columns: &tableColumns)
         titleHeightConstraint.constant = titleRowHeight
-        if boardColumns != oldBoardColumns || tableColumns != oldTableColumns || forceReload {
+        if boardColumns != oldBoardColumns || tableColumns != oldTableColumns || orientation != UIDevice.current.orientation || forceReload {
             mainTableView.reloadData()
             titleView.collectionView.reloadData()
+            orientation = UIDevice.current.orientation
             forceReload = false
         }
     }
@@ -366,19 +374,19 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 ]
             } else if MyApp.format == .phone {
                 boardColumns = [
-                    ScorecardColumn(type: .board, heading: "Board", size: .fixed([50])),
-                    ScorecardColumn(type: .contract, heading: "Contract", size: .fixed([50])),
+                    ScorecardColumn(type: .board, heading: "Board", size: .fixed([40])),
+                    ScorecardColumn(type: .contract, heading: "Contract", size: .fixed([60])),
                     ScorecardColumn(type: .declarer, heading: "By", size: .fixed([50])),
                     ScorecardColumn(type: .made, heading: "Made", size: .fixed([50])),
-                    ScorecardColumn(type: .score, heading: "Score", size: .fixed([50])),
+                    ScorecardColumn(type: .score, heading: "Score", size: .fixed([60])),
                     ScorecardColumn(type: .comment, heading: "Comment", size: .flexible)
                 ]
                 
                 tableColumns = [
-                    ScorecardColumn(type: .table, heading: "", size: .fixed([50, 50])),
+                    ScorecardColumn(type: .table, heading: "", size: .fixed([40, 60])),
                     ScorecardColumn(type: .sitting, heading: "Sitting", size: .fixed([50, 50])),
-                    ScorecardColumn(type: .tableScore, heading: "", size: .fixed([50])),
-                    ScorecardColumn(type: .versus, heading: "Versus", size: .flexible)
+                    ScorecardColumn(type: .tableScore, heading: "", size: .fixed([60])),
+                    ScorecardColumn(type: .versus, heading: "", size: .flexible)
                 ]
             } else {
                 boardColumns = [
@@ -915,7 +923,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         let endEditingGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputCollectionCell.endEditingTapped))
         self.addGestureRecognizer(endEditingGesture)
         
-        addSubview(label, anchored: .all)
+        addSubview(label, constant: 2, anchored: .all)
         label.textAlignment = .center
         label.minimumScaleFactor = 0.3
         label.adjustsFontSizeToFitWidth = true
@@ -1039,6 +1047,8 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         label.font = cellFont
         label.textAlignment = .center
         label.isUserInteractionEnabled = false
+        label.numberOfLines = 1
+        label.lineBreakMode = .byWordWrapping
     }
     
     func setTitle(column: ScorecardColumn, scorecard: ScorecardViewModel) {
@@ -1169,6 +1179,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 label.isHidden = false
                 label.text = importedVersus
                 label.isUserInteractionEnabled = true
+                label.numberOfLines = 2
             } else {
                 textField.isHidden = false
                 textField.text = table.versus
@@ -1568,7 +1579,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     @objc internal func seatPickerTapped(_ sender: UIView) {
         scorecardDelegate?.scorecardEndEditing(true)
         scorecardDelegate?.scorecardChanged(type: rowType, itemNumber: itemNumber)
-        let width: CGFloat = 70
+        let width: CGFloat = (MyApp.format == .phone ? 50 : 70)
         let space = (frame.width - width) / 2
         if !Scorecard.current.isImported {
             let selected = Seat.allCases.firstIndex(where: {$0 == table.sitting}) ?? 0
@@ -1584,7 +1595,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         scorecardDelegate?.scorecardEndEditing(true)
         scorecardDelegate?.scorecardChanged(type: rowType, itemNumber: itemNumber)
         let (madeList, _, _) = madeList
-        let width: CGFloat = 70
+        let width: CGFloat = min(frame.width, 70)
         let space = (frame.width - width) / 2
         let makingValue = (6 + board.contract.level.rawValue)
         let selected = board.made == nil ? nil : board.made! + makingValue

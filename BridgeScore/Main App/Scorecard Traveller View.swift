@@ -68,11 +68,11 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
     private var closeButton = UILabel()
     private var titleView: ScorecardTravellerTitleView!
     private var valuesTableView: UITableView!
+    private var buttonSpacing: CGFloat { MyApp.format == .phone ? 10 : 25 }
+    private var buttonHeight: CGFloat { MyApp.format == .phone ? 30 : 50 }
+    private var buttonWidth: CGFloat { MyApp.format == .phone ? 100 : 160 }
+    private var paddingSize: CGFloat { MyApp.format == .phone ? 15 : 20 }
     private var bottomSpacing: NSLayoutConstraint!
-    private var buttonSpacing: CGFloat = 25
-    private var buttonHeight: CGFloat = 50
-    private var buttonWidth: CGFloat = 160
-    private var paddingSize: CGFloat = 20
     private var travellerColumns: [TravellerColumn] = []
     private var values: [TravellerViewModel] = []
     private var boardNumber: Int = 0
@@ -82,15 +82,15 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
     override init(frame: CGRect) {
         super.init(frame:frame)
         loadScorecardTravellerView()
-        // Handle rotations
-        UIDevice.current.beginGeneratingDeviceOrientationNotifications()
-        NotificationCenter.default.addObserver(forName: UIDevice.orientationDidChangeNotification, object: nil, queue: nil) { [weak self] (notification) in
-            self?.layoutSubviews()
-        }
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        setNeedsLayout()
     }
     
     override func layoutSubviews() {
@@ -219,12 +219,13 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
     }
     
     private func setFrames() {
-        if backgroundView.frame != sourceView.frame {
-            backgroundView.frame = sourceView.frame
-            let width = sourceView.frame.width * 0.95
+        if backgroundView.frame != UIScreen.main.bounds {
+            backgroundView.frame = UIScreen.main.bounds
+            self.frame = backgroundView.frame
+            let width = backgroundView.frame.width * (MyApp.format == .phone && isLandscape ? 0.90 : 0.95) // Allow for safe area
             let padding = bannerHeight + safeAreaInsets.top + safeAreaInsets.bottom
-            let height = (sourceView.frame.height - padding) * 0.95
-            contentView.frame = CGRect(x: sourceView.frame.midX - (width / 2), y: ((bannerHeight + safeAreaInsets.top) / 2) + sourceView.frame.midY - (height / 2), width: width, height: height)
+            let height = (backgroundView.frame.height - padding) * 0.95
+            contentView.frame = CGRect(x: backgroundView.frame.midX - (width / 2), y: ((bannerHeight + safeAreaInsets.top) / 2) + backgroundView.frame.midY - (height / 2), width: width, height: height)
         }
     }
     
@@ -237,14 +238,22 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
     private func setupColumns() {
         travellerColumns = [
             TravellerColumn(type: .players, heading: "Players", size: .flexible),
-            TravellerColumn(type: .contract, heading: "Contract", size: .fixed([70])),
-            TravellerColumn(type: .declarer, heading: "By", size: .fixed([60])),
-            TravellerColumn(type: .lead, heading: "Lead", size: .fixed([50])),
-            TravellerColumn(type: .made, heading: "Made", size: .fixed([50])),
-            TravellerColumn(type: .points, heading: "Points", size: .fixed([60])),
+            TravellerColumn(type: .contract, heading: "Contract", size: .fixed([60])),
+            TravellerColumn(type: .declarer, heading: "By", size: .fixed([40]))]
+        if MyApp.format != .phone || isLandscape {
+            travellerColumns += [
+            TravellerColumn(type: .lead, heading: "Lead", size: .fixed([50]))]
+        }
+        travellerColumns += [
+            TravellerColumn(type: .made, heading: "Made", size: .fixed([40]))]
+        if MyApp.format != .phone {
+            travellerColumns += [
+            TravellerColumn(type: .points, heading: "Points", size: .fixed([60]))]
+        }
+        travellerColumns += [
             TravellerColumn(type: .score, heading: "Score", size: .fixed([60]))]
         
-        if values.first(where: {$0.nsXImps != 0}) != nil && isLandscape {
+        if values.first(where: {$0.nsXImps != 0}) != nil && isLandscape && MyApp.format != .phone {
             travellerColumns += [
                 TravellerColumn(type: .xImps, heading: "XImps", size: .fixed([60]))
             ]
@@ -277,11 +286,14 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
             var factor: CGFloat = 1.0
             if isLandscape {
                 factor = UIScreen.main.bounds.width / UIScreen.main.bounds.height
+                if MyApp.format == .phone {
+                    factor /= 2
+                }
             }
             
             let availableSize = valuesTableView.frame.width
             let fixedSize = fixedWidth * factor
-            let flexibleSize = max(20, (availableSize - fixedSize) / CGFloat(flexible))
+            let flexibleSize = max(10, (availableSize - fixedSize) / CGFloat(flexible))
             
             var remainingWidth = availableSize
             for index in 0..<columns.count - 1 {
@@ -293,14 +305,15 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
                 }
                 remainingWidth -= columns[index].width!
             }
-            columns[columns.count - 1].width = max(20, remainingWidth)
+            columns[columns.count - 1].width = max(10, remainingWidth)
+            print("\(availableSize) \(columns.map{$0.width!}) \(columns.map{$0.width!}.reduce(0,+))")
         }
     }
     
     private func loadScorecardTravellerView() {
         
         valuesTableView = UITableView()
-
+        
         // Background
         addSubview(backgroundView)
         backgroundView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
@@ -370,7 +383,9 @@ fileprivate class ScorecardTravellerTitleView: UIView {
     init<D: UICollectionViewDataSource & UICollectionViewDelegate>
     (_ dataSourceDelegate: D, frame: CGRect, tag: Int) {
         super.init(frame: frame)
-        self.layout = UICollectionViewFlowLayout()
+        layout = UICollectionViewFlowLayout()
+        layout.minimumInteritemSpacing = 0
+        layout.minimumLineSpacing = 0
         self.collectionView = UICollectionView(frame: self.frame, collectionViewLayout: layout)
         self.addSubview(collectionView, anchored: .all)
         self.bringSubviewToFront(self.collectionView)
@@ -550,7 +565,7 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
             label.attributedText = (sameNames + "\n" + otherNames)
             label.textAlignment = .left
             label.lineBreakMode = .byWordWrapping
-            label.numberOfLines = 2
+            label.numberOfLines = 4
             label.isUserInteractionEnabled = true
         case .contract:
             label.text = traveller.contract.string

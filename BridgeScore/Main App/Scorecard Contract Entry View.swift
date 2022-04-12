@@ -93,7 +93,6 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
     
     func setOrientationConstraints() {
         if isLandscape != lastLandscape {
-            print("Landsape: \(isLandscape)")
             if MyApp.format != .phone {
                 backgroundView.frame = sourceView?.frame ?? CGRect()
                 heightConstraint.constant = (sitting == .unknown || isLandscape ? 450 : 700)

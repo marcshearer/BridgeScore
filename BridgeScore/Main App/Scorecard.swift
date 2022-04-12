@@ -411,7 +411,6 @@ class Scorecard {
     public func remove(traveller: TravellerViewModel) {
         assert(traveller.scorecard == scorecard, "Traveller is not in current scorecard")
         assert(!traveller.isNew, "Cannot remove a traveller which doesn't already have a managed object")
-// TODO        assert(self.traveller(board: traveller.board, seat: .north, rankingNumber: traveller.rankingNumber[.north]!, section: traveller.section[.north]!) != nil, "Traveller does not exist and cannot be deleted")
         CoreData.update(updateLogic: {
             CoreData.context.delete(traveller.travellerMO!)
             travellerList.removeAll(where: {$0.board == traveller.board && $0.rankingNumber[.north] == traveller.rankingNumber[.north] && $0.section[.north] == traveller.section[.north]})

@@ -37,7 +37,7 @@ var searchFont = Font.system(size: (MyApp.format == .tablet ? 20.0 : 12.0))
 
 // Fonts in scorecard (UIFont)
 var titleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 16.0 : 10.0))
-var titleCaptionFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 16.0 : 10.0))
+var titleCaptionFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 16.0 : 8.0))
 var cellFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 14.0))
 var boardFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 14.0))
 var boardTitleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 14.0))
