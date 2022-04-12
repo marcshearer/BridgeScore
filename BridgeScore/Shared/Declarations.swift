@@ -21,7 +21,7 @@ let inputDefaultHeight: CGFloat = 30.0
 let inputToggleDefaultHeight: CGFloat = (MyApp.format == .tablet ? 30.0 : 16.0)
 var bannerHeight: CGFloat { isLandscape ? (MyApp.format == .tablet ? 80.0 : 50.0)
                                         : (MyApp.format == .tablet ? 80.0 : 40.0) }
-let alternateBannerHeight: CGFloat = (MyApp.format == .tablet ? 50.0 : 30.0)
+let alternateBannerHeight: CGFloat = (MyApp.format == .tablet ? 50.0 : 35.0)
 let minimumBannerHeight: CGFloat = (MyApp.format == .tablet ? 40.0 : 20.0)
 var bannerBottom: CGFloat { (MyApp.format == .tablet ? 30.0 : (isLandscape ? 5.0 : 10.0)) }
 let slideInMenuRowHeight: CGFloat = (MyApp.target == .iOS ? 50 : 25)
