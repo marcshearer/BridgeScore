@@ -193,17 +193,16 @@ struct ScorecardDetailsView: View {
                     
                     Separator()
                     
-                    StepperInputAdditional(title: "Boards", field: $scorecard.boardsTable, label: { value in "\(value) boards per round" }, minValue: $minValue, additionalBinding: $scorecard.boards, onChange: { (newValue) in
+                    StepperInputAdditional(title: "Boards", field: $scorecard.boardsTable, label: { value in "\(value) boards per round" }, isEnabled: !Scorecard.current.isImported, minValue: $minValue, additionalBinding: $scorecard.boards, onChange: { (newValue) in
                             setBoards(boardsTable: newValue)
                             tableRefresh = true
                         })
-                        .disabled(Scorecard.current.isImported)
                     
                     Separator()
                     
-                    StepperInput(title: "Tables", field: $scorecard.boards, label: boardsLabel, minValue: $scorecard.boardsTable, increment: $scorecard.boardsTable) { (_) in
+                    StepperInput(title: "Tables", field: $scorecard.boards, label: boardsLabel, isEnabled: !Scorecard.current.isImported, minValue: $scorecard.boardsTable, increment: $scorecard.boardsTable, onChange:  { (newValue) in
                         tableRefresh = true
-                    }
+                    })
                     .disabled(Scorecard.current.isImported)
                     
                     Separator()

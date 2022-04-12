@@ -13,6 +13,7 @@ struct StepperInput: View {
     var title: String?
     var field: Binding<Int>
     var label: ((Int)->String)?
+    var isEnabled: Bool = true
     var minValue: Binding<Int>? = nil
     var maxValue: Binding<Int>? = nil
     var increment: Binding<Int>? = nil
@@ -22,20 +23,24 @@ struct StepperInput: View {
     var height: CGFloat = 45
     var width: CGFloat?
     var labelWidth: CGFloat?
+    var buttonWidth: ()->(CGFloat) = {MyApp.format == .phone && !isLandscape ? 25 : 50}
+    var buttonHeight: ()->(CGFloat) = {30}
     var inlineTitle: Bool = true
     var inlineTitleWidth: CGFloat = 150
     var onChange: ((Int)->())? = nil
     
     var body: some View {
-            StepperInputAdditional<Int>(title: title, field: field, label: label, minValue: minValue, maxValue: maxValue, increment: increment, message: message, topSpace: topSpace, leadingSpace: leadingSpace, height: height, width: width, labelWidth: labelWidth, inlineTitle: inlineTitle, inlineTitleWidth: inlineTitleWidth, setAdditional: { (_, _) in}, onChange: onChange)
+            StepperInputAdditional<Int>(title: title, field: field, label: label, isEnabled: isEnabled, minValue: minValue, maxValue: maxValue, increment: increment, message: message, topSpace: topSpace, leadingSpace: leadingSpace, height: height, width: width, labelWidth: labelWidth, buttonWidth: buttonWidth, buttonHeight: buttonHeight, inlineTitle: inlineTitle, inlineTitleWidth: inlineTitleWidth, setAdditional: { (_, _) in}, onChange: onChange)
     }
 }
 
 struct StepperInputAdditional<Additional>: View where Additional: Equatable {
+    @Environment(\.verticalSizeClass) var sizeClass
     
     var title: String?
     var field: Binding<Int>
     var label: ((Int)->String)?
+    var isEnabled: Bool = true
     var minValue: Binding<Int>? = nil
     var maxValue: Binding<Int>? = nil
     var increment: Binding<Int>? = nil
@@ -45,6 +50,8 @@ struct StepperInputAdditional<Additional>: View where Additional: Equatable {
     var height: CGFloat = 45
     var width: CGFloat?
     var labelWidth: CGFloat?
+    var buttonWidth: ()->(CGFloat) = {MyApp.format == .phone && !isLandscape ? 25 : 50}
+    var buttonHeight: ()->(CGFloat) = {30}
     var inlineTitle: Bool = true
     var inlineTitleWidth: CGFloat = 150
     var additionalBinding: Binding<Additional>? = nil
@@ -80,16 +87,33 @@ struct StepperInputAdditional<Additional>: View where Additional: Equatable {
                     }
                     Spacer().frame(width: 8)
                     UndoWrapperAdditional(field, additionalBinding: additionalBinding, setAdditional: setAdditional) { (field) in
-                        Stepper {
+                        HStack(spacing: 2) {
                             if let label = label {
                                 Text(label(field.wrappedValue))
                             } else {
                                 Text(String(field.wrappedValue))
                             }
-                        } onIncrement: {
-                            change(field, direction: +1)
-                        } onDecrement: {
-                            change(field, direction: -1)
+                            Spacer()
+                            if isEnabled {
+                                Button {
+                                    change(field, direction: +1)
+                                } label: {
+                                    Image(systemName: "plus")
+                                        .frame(width: buttonWidth(), height: buttonHeight())
+                                        .background(Palette.disabledButton.background)
+                                        .foregroundColor(Palette.disabledButton.themeText)
+                                        .cornerRadius(4)
+                                }
+                                Button {
+                                    change(field, direction: -1)
+                                } label: {
+                                    Image(systemName: "minus")
+                                        .frame(width: buttonWidth(), height: buttonHeight())
+                                        .background(Palette.disabledButton.background)
+                                        .foregroundColor(Palette.disabledButton.themeText)
+                                        .cornerRadius(4)
+                                }
+                            }
                         }
                         .if(labelWidth != nil) { (view) in
                             view.frame(width: labelWidth! + 100)
