@@ -16,38 +16,38 @@ public let widgetKind = "com.sheareronline.BridgeScore"
 
 // Sizes
 
-let inputTopHeight: CGFloat = (MyApp.format == .tablet ? 20.0 : 10.0)
+var inputTopHeight: CGFloat { MyApp.format == .tablet ? 20.0 : 10.0 }
 let inputDefaultHeight: CGFloat = 30.0
-let inputToggleDefaultHeight: CGFloat = (MyApp.format == .tablet ? 30.0 : 16.0)
+var inputToggleDefaultHeight: CGFloat { MyApp.format == .tablet ? 30.0 : 16.0 }
 var bannerHeight: CGFloat { isLandscape ? (MyApp.format == .tablet ? 80.0 : 50.0)
                                         : (MyApp.format == .tablet ? 80.0 : 40.0) }
-let alternateBannerHeight: CGFloat = (MyApp.format == .tablet ? 50.0 : 35.0)
-let minimumBannerHeight: CGFloat = (MyApp.format == .tablet ? 40.0 : 20.0)
+var alternateBannerHeight: CGFloat { MyApp.format == .tablet ? 50.0 : 35.0 }
+var minimumBannerHeight: CGFloat { MyApp.format == .tablet ? 40.0 : 20.0 }
 var bannerBottom: CGFloat { (MyApp.format == .tablet ? 30.0 : (isLandscape ? 5.0 : 10.0)) }
-let slideInMenuRowHeight: CGFloat = (MyApp.target == .iOS ? 50 : 25)
+var slideInMenuRowHeight: CGFloat { MyApp.target == .iOS ? 50 : 25 }
 
 // Fonts (Font)
-var defaultFont = Font.system(size: (MyApp.format == .tablet ? 28.0 : 14.0))
-var toolbarFont = Font.system(size: (MyApp.format == .tablet ? 16.0 : 10.0))
-var captionFont = Font.system(size: (MyApp.format == .tablet ? 20.0 : 12.0))
-var inputTitleFont = Font.system(size: (MyApp.format == .tablet ? 20.0 : 12.0))
-var inputFont = Font.system(size: (MyApp.format == .tablet ? 16.0 : 10.0))
-var messageFont = Font.system(size: (MyApp.format == .tablet ? 16.0 : 102.0))
-var searchFont = Font.system(size: (MyApp.format == .tablet ? 20.0 : 12.0))
+var defaultFont: Font { Font.system(size: (MyApp.format == .tablet ? 28.0 : 24.0)) }
+var toolbarFont: Font { Font.system(size: (MyApp.format == .tablet ? 16.0 : 14.0)) }
+var captionFont: Font { Font.system(size: (MyApp.format == .tablet ? 20.0 : 18.0)) }
+var inputTitleFont: Font { Font.system(size: (MyApp.format == .tablet ? 20.0 : 18.0)) }
+var inputFont: Font { Font.system(size: (MyApp.format == .tablet ? 16.0 : 14.0)) }
+var messageFont: Font { Font.system(size: (MyApp.format == .tablet ? 16.0 : 14.0)) }
+var searchFont: Font { Font.system(size: (MyApp.format == .tablet ? 20.0 : 16.0)) }
 
 // Fonts in scorecard (UIFont)
-var titleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 16.0 : 10.0))
-var titleCaptionFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 16.0 : 8.0))
-var cellFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 14.0))
-var boardFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 14.0))
-var boardTitleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 14.0))
-var pickerTitleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 16.0))
-var pickerCaptionFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 12.0 : 8.0))
-var windowTitleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 24.0))
-var sectionTitleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 24.0 : 16.0))
-var smallCellFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 22.0 : 12.0))
-var replaceFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 16.0))
-var replaceTitleFont = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 16.0))
+var titleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 16.0 : 10.0)) }
+var titleCaptionFont: UIFont { UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 16.0 : 10.0)) }
+var cellFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 16.0)) }
+var boardFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 18.0)) }
+var boardTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 14.0)) }
+var pickerTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 18.0)) }
+var pickerCaptionFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 12.0 : 8.0)) }
+var windowTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 30.0)) }
+var sectionTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 24.0 : 24.0)) }
+var smallCellFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 22.0 : 22.0)) }
+var replaceFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 30.0)) }
+var replaceTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 30.0)) }
 
 // Slide in IDs - Need to be declared here as there seem to be multiple instances of views
 let scorecardListViewId = UUID()

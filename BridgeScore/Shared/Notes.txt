@@ -18,4 +18,13 @@ Enhancements
 ============
 Share scorecards via iCloud?
 Open scoresheet from graph?
-Phone mode??
+
+Phone stuff
+===========
+Scrolling of scorepad for keyboard is wrong
+Expand out the comment / versus boxes when entering (and wrap when not)
+Setup options
+Stats
+Slide in needs to be a popover
+Initial content offset (to hide filter) seems to go wrong when rotate
+Font too small in banner?

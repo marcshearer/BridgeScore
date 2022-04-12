@@ -253,7 +253,7 @@ extension ScorecardDelegate {
 
 fileprivate var titleRowHeight: CGFloat { MyApp.format == .phone ? (isLandscape ? 30 : 40) : 40 }
 fileprivate var boardRowHeight: CGFloat { MyApp.format == .phone ? (isLandscape ? 50 : 70) : 90 }
-fileprivate var tableRowHeight: CGFloat { MyApp.format == .phone ? (isLandscape ? 50 : 60) : 80 }
+fileprivate var tableRowHeight: CGFloat { MyApp.format == .phone ? (isLandscape ? 60 : 60) : 80 }
 
 class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, UITableViewDelegate, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, UIScrollViewDelegate {
     
@@ -782,7 +782,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         
         var factor: CGFloat = 1.0
         if isLandscape {
-            factor = mainTableView.frame.width / 600
+            factor = min(1.3, mainTableView.frame.width / mainTableView.frame.height)
         }
         
         let availableSize = frame.width - safeAreaInsets.left - safeAreaInsets.right

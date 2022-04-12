@@ -155,6 +155,8 @@ struct ScorecardListView: View {
 }
 
 struct ScorecardSummaryView: View {
+    @Environment(\.verticalSizeClass) var sizeClass
+
     var slideInId: UUID
     @ObservedObject var scorecard: ScorecardViewModel
     @State var highlighted: Bool
@@ -254,9 +256,16 @@ struct ScorecardSummaryView: View {
     
     var description: some View {
         HStack {
-            let text = scorecard.desc + (scorecard.comment == "" ? "" : " (\(scorecard.comment))")
-            Text(text)
+            let text = scorecard.desc + (scorecard.comment == "" || portraitPhone ? "" : " (\(scorecard.comment))")
+            Text(text).lineLimit(portraitPhone ? 1 : 2)
+                .if(MyApp.format == .phone) { (view) in
+                    view.minimumScaleFactor(1)
+                }
         }
+    }
+    
+    var portraitPhone: Bool {
+        MyApp.format == .phone && !isLandscape
     }
     
     var position: some View {
@@ -271,7 +280,11 @@ struct ScorecardSummaryView: View {
     var score: some View {
         HStack {
             if scorecard.score != nil {
-                Text(scorecard.scoreString)
+                if !portraitPhone {
+                    Text(scorecard.scoreString)
+                } else {
+                    Text(scorecard.score!.toString(places: scorecard.type.matchPlaces))
+                }
             }
         }
     }

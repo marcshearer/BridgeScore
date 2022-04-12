@@ -126,7 +126,7 @@ struct Banner: View {
                     HStack {
                         if let backText = backText {
                             Text(backText)
-                                .font((alternateStyle && MyApp.format != .phone ? defaultFont : captionFont)).bold()
+                                .font((alternateStyle ? captionFont : defaultFont)).bold()
                         } else {
                             backImage
                                 .font(defaultFont)
@@ -152,9 +152,8 @@ struct Banner: View {
     
     var titleText: some View {
         Text(title)
-            .font((alternateStyle && MyApp.format != .phone ? defaultFont : captionFont)).bold()
+            .font((alternateStyle ? captionFont : defaultFont)).bold()
             .foregroundColor(bannerColor.text)
-            .minimumScaleFactor(0.8)
     }
     
     var menu: some View {
