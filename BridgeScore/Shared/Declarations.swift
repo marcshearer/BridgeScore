@@ -19,14 +19,16 @@ public let widgetKind = "com.sheareronline.BridgeScore"
 var inputTopHeight: CGFloat { MyApp.format == .tablet ? 20.0 : 10.0 }
 let inputDefaultHeight: CGFloat = 30.0
 var inputToggleDefaultHeight: CGFloat { MyApp.format == .tablet ? 30.0 : 16.0 }
-var bannerHeight: CGFloat { isLandscape ? (MyApp.format == .tablet ? 80.0 : 50.0)
-                                        : (MyApp.format == .tablet ? 80.0 : 40.0) }
+var bannerHeight: CGFloat { isLandscape ? (MyApp.format == .tablet ? 60.0 : 50.0)
+                                        : (MyApp.format == .tablet ? 60.0 : 40.0) }
 var alternateBannerHeight: CGFloat { MyApp.format == .tablet ? 50.0 : 35.0 }
 var minimumBannerHeight: CGFloat { MyApp.format == .tablet ? 40.0 : 20.0 }
 var bannerBottom: CGFloat { (MyApp.format == .tablet ? 30.0 : (isLandscape ? 5.0 : 10.0)) }
 var slideInMenuRowHeight: CGFloat { MyApp.target == .iOS ? 50 : 25 }
 
 // Fonts (Font)
+var bannerFont: Font { Font.system(size: (MyApp.format == .tablet ? 32.0 : 24.0)) }
+var alternateBannerFont: Font { Font.system(size: (MyApp.format == .tablet ? 20.0 : 18.0)) }
 var defaultFont: Font { Font.system(size: (MyApp.format == .tablet ? 28.0 : 24.0)) }
 var toolbarFont: Font { Font.system(size: (MyApp.format == .tablet ? 16.0 : 14.0)) }
 var captionFont: Font { Font.system(size: (MyApp.format == .tablet ? 20.0 : 18.0)) }

@@ -128,10 +128,10 @@ struct Banner: View {
                     HStack {
                         if let backText = backText {
                             Text(backText)
-                                .font((alternateStyle ? captionFont : defaultFont)).bold()
+                                .font((alternateStyle ? alternateBannerFont : bannerFont)).bold()
                         } else {
                             backImage
-                                .font(defaultFont)
+                                .font(bannerFont)
                         }
                         
                     }
@@ -154,7 +154,7 @@ struct Banner: View {
     
     var titleText: some View {
         Text(title)
-            .font((alternateStyle ? captionFont : defaultFont)).bold()
+            .font((alternateStyle ? alternateBannerFont : bannerFont)).bold()
             .foregroundColor(bannerColor.text)
     }
     
@@ -189,7 +189,7 @@ struct Banner_Menu : View {
                     }
                 }
             } label: {
-                (image ?? AnyView(Image(systemName: "line.3.horizontal"))).foregroundColor(bannerColor.text).font(defaultFont)
+                (image ?? AnyView(Image(systemName: "line.3.horizontal"))).foregroundColor(bannerColor.text).font(bannerFont)
             }
     
     }
@@ -242,7 +242,7 @@ struct Banner_Buttons : View {
                             }
                         }
                         .disabled(!option.isEnabled)
-                        .font(alternateStyle || MyApp.format == .phone ? captionFont : defaultFont)
+                        .font(alternateStyle || MyApp.format == .phone ? alternateBannerFont : bannerFont)
                         .background(backgroundColor)
                         .cornerRadius(option.likeBack ? 0 : 10.0)
                         if index != options.count - 1 {
