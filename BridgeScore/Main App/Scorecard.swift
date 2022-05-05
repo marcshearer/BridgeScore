@@ -643,7 +643,7 @@ class Scorecard {
         return points * multiplier
     }
     
-    static func showHand(from parentView: UIView, traveller: TravellerViewModel) {
+    static func showHand(from parentView: UIView, traveller: TravellerViewModel, completion: (()->())? = nil) {
         if var string = traveller.playData.removingPercentEncoding {
             if let pnPosition = string.position("|pn|") {
                 if let nextSeparator = string.right(string.length - pnPosition - 4).position("|") {
@@ -663,7 +663,7 @@ class Scorecard {
             if let encodedString = string.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) {
                 if let url = URL(string: "https://www.bridgebase.com/tools/handviewer.html?bbo=y&lin=/\(encodedString)") {
                     let webView = ScorecardWebView(frame: CGRect())
-                    webView.show(from: parentView, url: url)
+                    webView.show(from: parentView.superview?.superview ?? parentView, url: url, completion: completion)
                 }
             }
         }

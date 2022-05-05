@@ -53,6 +53,7 @@ struct Banner: View {
     var menuTitle: String?
     var menuId: UUID? = nil
     var options: [BannerOption]? = nil
+    var disabled: Binding<Bool> = Binding.constant(false)
     public static let crossImage = AnyView(Image(systemName: "xmark"))
     
     @State private var bannerColor: PaletteColor = Palette.banner
@@ -107,6 +108,7 @@ struct Banner: View {
                 Spacer().frame(height: (alternateStyle ? 0 : bannerBottom))
             }
         }
+        .disabled(disabled.wrappedValue)
         .onAppear {
             bannerColor = (alternateStyle ? Palette.alternateBanner : Palette.banner)
             buttonColor = (alternateStyle ? Palette.alternateBannerButton : Palette.bannerButton)

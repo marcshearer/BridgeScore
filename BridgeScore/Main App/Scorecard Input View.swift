@@ -48,6 +48,7 @@ struct ScorecardInputView: View {
     @State private var importBboScorecard = false
     @State private var importBwScorecard = false
     @State private var showRankings = false
+    @State private var disableBanner = false
     
     var body: some View {
         StandardView("Input", slideInId: id) {
@@ -57,9 +58,10 @@ struct ScorecardInputView: View {
                 if refreshTableTotals { EmptyView() }
     
                 // Banner
-                Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .both, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: nil, menuId: id, options: bannerOptions(isNotImported: $isNotImported))
+                Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .both, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: nil, menuId: id, options: bannerOptions(isNotImported: $isNotImported), disabled: $disableBanner)
+                    .disabled(disableBanner)
                 GeometryReader { geometry in
-                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), refreshTableTotals: $refreshTableTotals, detailView: $detailView, inputDetail: $inputDetail, tableRefresh: $tableRefresh, showRankings: $showRankings)
+                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), refreshTableTotals: $refreshTableTotals, detailView: $detailView, inputDetail: $inputDetail, tableRefresh: $tableRefresh, showRankings: $showRankings, disableBanner: $disableBanner)
                     .ignoresSafeArea(edges: .all)
                 }
             }
@@ -121,7 +123,7 @@ struct ScorecardInputView: View {
         bannerOptions += UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo)
         if !isNotImported.wrappedValue && !Scorecard.current.rankingList.isEmpty {
             bannerOptions += [
-                BannerOption(image: AnyView(Image(systemName: "list.number")), likeBack: true, isHidden: isNotImported, action: { showRankings = true })]
+                BannerOption(image: AnyView(Image(systemName: "list.number")), likeBack: true, isHidden: isNotImported, action: { disableBanner = true ; showRankings = true })]
         }
         bannerOptions += [
                 BannerOption(image: AnyView(Image(systemName: "note.text")), text: "Scorecard details", likeBack: true, menu: true, action: { UndoManager.clearActions() ; inputDetail = true }),
@@ -189,10 +191,11 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
     @Binding var inputDetail: Bool
     @Binding var tableRefresh: Bool
     @Binding var showRankings: Bool
+    @Binding var disableBanner: Bool
 
     func makeUIView(context: Context) -> ScorecardInputUIView {
         
-        let view = ScorecardInputUIView(frame: frame, scorecard: scorecard, inputDetail: inputDetail)
+        let view = ScorecardInputUIView(frame: frame, scorecard: scorecard, inputDetail: inputDetail, disableBanner: $disableBanner)
         UndoManager.clearActions()
        
         return view
@@ -271,6 +274,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     private var forceReload = true
     private var detailView = true
     public var inputDetail: Bool
+    private var disableBanner: Binding<Bool>
     private var ignoreKeyboard = false
     private var titleHeightConstraint: NSLayoutConstraint!
     private var orientation: UIDeviceOrientation?
@@ -278,9 +282,10 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     var boardColumns: [ScorecardColumn] = []
     var tableColumns: [ScorecardColumn] = []
     
-    init(frame: CGRect, scorecard: ScorecardViewModel, inputDetail: Bool) {
+    init(frame: CGRect, scorecard: ScorecardViewModel, inputDetail: Bool, disableBanner: Binding<Bool>) {
         self.scorecard = scorecard
         self.inputDetail = inputDetail
+        self.disableBanner = disableBanner
         self.contractEntryView = ScorecardContractEntryView(frame: CGRect())
         self.scrollPickerPopupView = ScrollPickerPopupView(frame: CGRect())
         self.declarerPickerPopupView = DeclarerPickerPopupView(frame: CGRect())
@@ -414,7 +419,9 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     
     public func showRankings() {
         let rankings = ScorecardRankingView(frame: CGRect())
-        rankings.show(from: superview!.superview!)
+        rankings.show(from: superview!.superview!) {
+            self.disableBanner.wrappedValue = false
+        }
     }
     
     // MARK: - Scorecard delegates
@@ -530,19 +537,22 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         contractEntryView = ScorecardContractEntryView(frame: CGRect())
         let section = (board.board - 1) / self.scorecard.boardsTable
         let row = (board.board - 1) % self.scorecard.boardsTable
+        disableBanner.wrappedValue = true
         contractEntryView.show(from: superview!.superview!, contract: board.contract, sitting: table.sitting, declarer: board.declarer) { (contract, declarer) in
-
-            if let tableCell = self.mainTableView.cellForRow(at: IndexPath(row: row, section: section)) as? ScorecardInputBoardTableCell {
-                if contract != board.contract || declarer != board.declarer {
-                    // Update contract and/or declarer
-                    if let item = self.boardColumns.firstIndex(where: {$0.type == .contract}) {
-                        if let cell = tableCell.collectionView.cellForItem(at: IndexPath(item: item, section: 0)) as? ScorecardInputCollectionCell {
-                            cell.label.text = contract.string
-                            cell.contractDidChange(to: contract, declarer: declarer)
+            if let contract = contract {
+                if let tableCell = self.mainTableView.cellForRow(at: IndexPath(row: row, section: section)) as? ScorecardInputBoardTableCell {
+                    if contract != board.contract || declarer != board.declarer {
+                        // Update contract and/or declarer
+                        if let item = self.boardColumns.firstIndex(where: {$0.type == .contract}) {
+                            if let cell = tableCell.collectionView.cellForItem(at: IndexPath(item: item, section: 0)) as? ScorecardInputCollectionCell {
+                                cell.label.text = contract.string
+                                cell.contractDidChange(to: contract, declarer: declarer)
+                            }
                         }
                     }
                 }
             }
+            self.disableBanner.wrappedValue = false
         }
     }
     
@@ -551,7 +561,9 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
             let editValues = MasterData.shared.getBboNames(values: values)
             ignoreKeyboard = true
             let bboNameReplaceView = BBONameReplaceView(frame: CGRect())
-            bboNameReplaceView.show(from: self, values: editValues) {
+            disableBanner.wrappedValue = true
+            bboNameReplaceView.show(from: self.superview!.superview!, values: editValues) {
+                self.disableBanner.wrappedValue = false
                 self.ignoreKeyboard = false
                 self.tableRefresh()
             }
@@ -561,7 +573,10 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     func scorecardShowTraveller(scorecard: ScorecardViewModel, board: BoardViewModel, sitting: Seat) {
         if !Scorecard.current.travellerList.isEmpty {
             let showTraverllerView = ScorecardTravellerView(frame: CGRect())
-            showTraverllerView.show(from: superview!.superview!, boardNumber: board.board, sitting: sitting)
+            disableBanner.wrappedValue = true
+            showTraverllerView.show(from: superview!.superview!, boardNumber: board.board, sitting: sitting) {
+                self.disableBanner.wrappedValue = false
+            }
         }
     }
     
@@ -571,7 +586,10 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 let rankings = Scorecard.current.rankings(table: board.tableNumber, player: (bboName:scorer.bboName, name: scorer.name))
                 if let myRanking = rankings.first {
                     if let traveller = Scorecard.current.traveller(board: board.board, seat: sitting, rankingNumber: myRanking.number, section: myRanking.section) {
-                        Scorecard.showHand(from: self, traveller: traveller)
+                        disableBanner.wrappedValue = true
+                        Scorecard.showHand(from: self, traveller: traveller) {
+                            self.disableBanner.wrappedValue = false
+                        }
                     }
                 }
             }

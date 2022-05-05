@@ -15,6 +15,8 @@ enum ConstraintAnchor: CustomStringConvertible {
     case top
     case bottom
     case all
+    case horizontal
+    case vertical
     case centerX
     case centerY
     case safeLeading
@@ -22,9 +24,11 @@ enum ConstraintAnchor: CustomStringConvertible {
     case safeTop
     case safeBottom
     case safeAll
+    case safeHorizontal
+    case safeVertical
     
     var safe: Bool {
-        return self == .safeLeading || self == .safeTrailing || self == .safeTop || self == .safeBottom || self == .safeAll
+        return self == .safeLeading || self == .safeTrailing || self == .safeTop || self == .safeBottom || self == .safeAll || self == .safeHorizontal || self == .safeVertical
     }
     
     var description: String {
@@ -39,6 +43,10 @@ enum ConstraintAnchor: CustomStringConvertible {
             return ".bottom"
         case .all, .safeAll:
             return ".all"
+        case .horizontal, .safeHorizontal:
+            return ".horizontal"
+        case .vertical, .safeVertical:
+            return ".vertical"
         case .centerX:
             return ".centerX"
         case .centerY:
@@ -56,7 +64,7 @@ enum ConstraintAnchor: CustomStringConvertible {
             return .top
         case .bottom, .safeBottom:
             return .bottom
-        case .all, .safeAll:
+        case .all, .safeAll, .horizontal, .safeHorizontal, .vertical, .safeVertical:
             fatalError("Not supported")
         case .centerX:
             return .centerX
@@ -67,10 +75,18 @@ enum ConstraintAnchor: CustomStringConvertible {
     
     var expanded: [ConstraintAnchor] {
         switch self {
+        case .horizontal:
+            return [.leading, .trailing]
+        case .vertical:
+            return [.top, .bottom]
         case .all:
             return [.leading, .trailing, .top, .bottom]
         case .safeAll:
             return [.safeLeading, .safeTrailing, .safeTop, .safeBottom]
+        case .safeHorizontal:
+            return [.safeLeading, .safeTrailing]
+        case .safeVertical:
+            return [.safeTop, .safeBottom]
         default:
             return [self]
         }
@@ -94,7 +110,7 @@ enum ConstraintAnchor: CustomStringConvertible {
             return .safeBottom
         case .safeBottom:
             return .safeTop
-        case .all, .safeAll:
+        case .all, .safeAll, .horizontal, .safeHorizontal, .vertical, .safeVertical:
             return nil
         case .centerX:
             return .centerX

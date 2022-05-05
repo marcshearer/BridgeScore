@@ -43,11 +43,11 @@ var boardFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28
 var boardTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 28.0 : 14.0)) }
 var pickerTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 18.0)) }
 var pickerCaptionFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 12.0 : 8.0)) }
-var windowTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 30.0)) }
-var sectionTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 24.0 : 24.0)) }
-var smallCellFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 22.0 : 22.0)) }
-var replaceFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 30.0)) }
-var replaceTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 30.0)) }
+var windowTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 20.0)) }
+var sectionTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 24.0 : 16.0)) }
+var smallCellFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 22.0 : 12.0)) }
+var replaceFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 20.0)) }
+var replaceTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 20.0)) }
 
 // Slide in IDs - Need to be declared here as there seem to be multiple instances of views
 let scorecardListViewId = UUID()

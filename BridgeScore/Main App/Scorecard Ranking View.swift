@@ -86,6 +86,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
     private var totalRankings: Int = 0
     private var sourceView: UIView!
     private var orientation: UIDeviceOrientation?
+    private var completion: (()->())? = nil
     
     override init(frame: CGRect) {
         super.init(frame:frame)
@@ -266,8 +267,9 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
     
     // MARK: - Show / Hide ============================================================================ -
     
-    public func show(from sourceView: UIView) {
+    public func show(from sourceView: UIView, completion: (()->())? = nil) {
         self.sourceView = sourceView
+        self.completion = completion
         sourceView.addSubview(self)
         sourceView.bringSubviewToFront(self)
         self.bringSubviewToFront(contentView)
@@ -292,6 +294,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
     }
     
     public func hide() {
+        self.completion?()
         removeFromSuperview()
     }
     

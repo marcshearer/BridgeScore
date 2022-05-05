@@ -52,7 +52,7 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
     private var contract = Contract()
     private var sitting: Seat!
     private var declarer: Seat?
-    private var completion: ((Contract, Seat?)->())?
+    private var completion: ((Contract?, Seat?)->())?
     private var heightConstraint: NSLayoutConstraint!
     private var widthConstraint: NSLayoutConstraint!
     private var declarerWidth: NSLayoutConstraint!
@@ -256,6 +256,7 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
     }
     
     @objc private func cancelPressed(_ sender: UILabel) {
+        self.completion?(nil, nil)
         hide()
     }
     
@@ -266,7 +267,7 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
     
     // MARK: - Show / Hide ============================================================================ -
     
-    public func show(from sourceView: UIView, contract: Contract, sitting: Seat, declarer: Seat, hideBackground: Bool = true, completion: @escaping (Contract, Seat?)->()) {
+    public func show(from sourceView: UIView, contract: Contract, sitting: Seat, declarer: Seat, hideBackground: Bool = true, completion: @escaping (Contract?, Seat?)->()) {
         self.sourceView = sourceView
         self.contract = Contract(copying: contract)
         self.sitting = sitting

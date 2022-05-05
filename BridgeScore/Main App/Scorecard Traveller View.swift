@@ -78,6 +78,7 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
     private var boardNumber: Int = 0
     private var sitting: Seat = .unknown
     private var sourceView: UIView!
+    private var completion: (()->())? = nil
     
     override init(frame: CGRect) {
         super.init(frame:frame)
@@ -202,8 +203,9 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
     
     // MARK: - Show / Hide ============================================================================ -
     
-    public func show(from sourceView: UIView, boardNumber: Int, sitting: Seat) {
+    public func show(from sourceView: UIView, boardNumber: Int, sitting: Seat, completion: (()->())? = nil) {
         self.sourceView = sourceView
+        self.completion = completion
         self.frame = sourceView.frame
         self.boardNumber = boardNumber
         self.sitting = sitting
@@ -230,6 +232,7 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
     }
     
     public func hide() {
+        self.completion?()
         removeFromSuperview()
     }
     
