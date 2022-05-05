@@ -941,7 +941,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         let endEditingGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputCollectionCell.endEditingTapped))
         self.addGestureRecognizer(endEditingGesture)
         
-        addSubview(label, constant: 2, anchored: .all)
+        addSubview(label, constant: 2, anchored: .leading, .trailing, .bottom)
         label.textAlignment = .center
         label.minimumScaleFactor = 0.3
         label.adjustsFontSizeToFitWidth = true
@@ -1014,6 +1014,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         caption.backgroundColor = UIColor.clear
         caption.textColor = UIColor(Palette.gridBoard.text)
         captionHeight = Constraint.setHeight(control: caption, height: 0)
+        Constraint.anchor(view: self, control: label, to: caption, constant: 0, toAttribute: .bottom, attributes: .top)
         
         Constraint.addGridLine(self, sides: .leading, .trailing, .top, .bottom)
     }
@@ -1198,12 +1199,14 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 label.text = importedVersus
                 label.isUserInteractionEnabled = true
                 label.numberOfLines = 2
+                label.font = (scorecard.type.players == 1 ? smallCellFont : cellFont)
             } else {
                 textField.isHidden = false
                 textField.text = table.versus
                 textField.textAlignment = (isEnabled ? .left : .center)
                 textField.autocapitalizationType = .words
                 textField.isEnabled = isEnabled
+                textField.font = (scorecard.type.players == 1 ? smallCellFont : cellFont)
                 textClear.isHidden = (!isEnabled || table.versus == "")
                 textClearWidth.constant = 34
                 textClearPadding.forEach { (constraint) in constraint.constant = 8 }
