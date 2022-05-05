@@ -36,7 +36,6 @@ class ScorecardWebView: UIView, WKNavigationDelegate {
         // Handle rotations
         UIDevice.current.beginGeneratingDeviceOrientationNotifications()
         NotificationCenter.default.addObserver(forName: UIDevice.orientationDidChangeNotification, object: nil, queue: nil) { [weak self] (notification) in
-            print("bounds layout")
             self?.setNeedsLayout()
         }
     }
@@ -79,7 +78,6 @@ class ScorecardWebView: UIView, WKNavigationDelegate {
     
     private func setFrames() {
         let bounds = UIScreen.main.bounds
-        print("bounds: \(bounds)")
         if frame != bounds {
             let bannerHeight: CGFloat = (MyApp.format == .phone ? 0 : bannerHeight)
             let fraction: CGFloat = (MyApp.format == .phone ? 0.99 : 0.9)

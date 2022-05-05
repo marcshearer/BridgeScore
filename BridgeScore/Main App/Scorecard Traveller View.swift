@@ -309,7 +309,6 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
                 remainingWidth -= columns[index].width!
             }
             columns[columns.count - 1].width = max(10, remainingWidth)
-            print("\(availableSize) \(columns.map{$0.width!}) \(columns.map{$0.width!}.reduce(0,+))")
         }
     }
     
