@@ -283,7 +283,7 @@ public enum Type: Int, CaseIterable {
     
     public func maxScore(tables: Int) -> Float? {
         switch self {
-        case .percent:
+        case .percent, .percentIndividual:
             return 100
         case .vpXImp, .vpTableTeam, .acblVpTableTeam, .vpPercent:
             return Float(tables * 20)
