@@ -38,7 +38,7 @@ class MyApp {
     static let defaults = UserDefaults(suiteName: appGroup)!
     
     /// Database to use - This  **MUST MUST MUST** match icloud entitlement
-    static let expectedDatabase: Database = .production
+    static let expectedDatabase: Database = .development
     
     public static var database: Database = .unknown
     public static var undoManager = UndoManager()

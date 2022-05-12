@@ -96,6 +96,7 @@
 		B2CC509927BE21060050F22C /* Scroll Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CC509827BE21060050F22C /* Scroll Picker.swift */; };
 		B2CC509E27BE22210050F22C /* Enum Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CC509D27BE22210050F22C /* Enum Picker.swift */; };
 		B2CC50A027BE22900050F22C /* Contract Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CC509F27BE22900050F22C /* Contract Picker.swift */; };
+		B2D86C37282AA5D300607286 /* CloudKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B2D86C36282AA5D300607286 /* CloudKit.framework */; };
 		B2DADE5127E7A06E009F7572 /* Import BBO.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2DADE5027E7A06E009F7572 /* Import BBO.swift */; };
 		B2E1B76827DC71E300204CAC /* User Defaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E1B76727DC71E300204CAC /* User Defaults.swift */; };
 		B2EB3D66279D54D500D64225 /* Board Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D65279D54D500D64225 /* Board Managed Object.swift */; };
@@ -205,6 +206,7 @@
 		B2CC509827BE21060050F22C /* Scroll Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Scroll Picker.swift"; path = "../Main App/Scroll Picker.swift"; sourceTree = "<group>"; };
 		B2CC509D27BE22210050F22C /* Enum Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Enum Picker.swift"; sourceTree = "<group>"; };
 		B2CC509F27BE22900050F22C /* Contract Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contract Picker.swift"; sourceTree = "<group>"; };
+		B2D86C36282AA5D300607286 /* CloudKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CloudKit.framework; path = System/Library/Frameworks/CloudKit.framework; sourceTree = SDKROOT; };
 		B2DADE5027E7A06E009F7572 /* Import BBO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Import BBO.swift"; sourceTree = "<group>"; };
 		B2E1B76727DC71E300204CAC /* User Defaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "User Defaults.swift"; sourceTree = "<group>"; };
 		B2EB3D65279D54D500D64225 /* Board Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Board Managed Object.swift"; sourceTree = "<group>"; };
@@ -225,6 +227,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B2D86C37282AA5D300607286 /* CloudKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -245,6 +248,7 @@
 			children = (
 				B26BCDF82799A1AC00B73501 /* BridgeScore */,
 				B26BCDF72799A1AC00B73501 /* Products */,
+				B2D86C35282AA5D300607286 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -493,6 +497,14 @@
 				B26C555627C7EA9200015D0A /* Table with Collection.swift */,
 			);
 			name = "Reusable UIKit Components";
+			sourceTree = "<group>";
+		};
+		B2D86C35282AA5D300607286 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				B2D86C36282AA5D300607286 /* CloudKit.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 		B2EB3D7C279F0E6000D64225 /* Shared Views */ = {
