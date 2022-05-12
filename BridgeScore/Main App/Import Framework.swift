@@ -370,7 +370,7 @@ class ImportedScorecard: NSObject {
             if ranking.number == myRanking?.number {
                 myGroup = true
                 if !scorecard.resetNumbers {
-                    scorecard.position = position
+                    scorecard.position = ranking.ranking
                 }
             }
         }
