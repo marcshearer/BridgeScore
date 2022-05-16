@@ -377,6 +377,9 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         for seat in Seat.validCases {
             importedTraveller.section[seat] = 1
         }
+        // TODO Used to debug Scottish Swiss Pairs
+        if board == 39 && columns.element(0)  == "46" {
+        }
         for (index, heading) in headings.enumerated() {
             switch heading.lowercased() {
             case "ns", "ew":
@@ -469,7 +472,10 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         if travellers[board] == nil {
             travellers[board] = []
         }
-        travellers[board]!.append(importedTraveller)
+        // TODO - inserted to allow import of Scottish Swiss Pairs - playdata is split into 2 boards!
+        if importedTraveller.ranking.count > 0 {
+            travellers[board]!.append(importedTraveller)
+        }
     }
     
     func initComplete() {
