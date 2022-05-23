@@ -6,7 +6,6 @@ If xcode fails to install app on device it's normally because info.plist isn't w
 Bugs
 ====
 Background still active with MessageBox
-Don't seem to consider ties when allocate position
 
 To Do
 =====
