@@ -853,6 +853,10 @@ public class Contract: Equatable {
         self.suit = from.suit
         self.double = from.double
     }
+    
+    public var canClear: Bool {
+        level != .blank || suit != .blank || double != .undoubled
+    }
 }
 
 #if canImport(UIKit)

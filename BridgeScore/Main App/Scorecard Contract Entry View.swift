@@ -48,8 +48,10 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
     private var declarerLabel = UILabel()
     private var passOutButton = UILabel()
     private var cancelButton = UILabel()
+    private var clearButton = UILabel()
     private var selectButton = UILabel()
     private var contract = Contract()
+    private var canClear = false
     private var sitting: Seat!
     private var declarer: Seat?
     private var completion: ((Contract?, Seat?)->())?
@@ -88,6 +90,7 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         contentView.roundCorners(cornerRadius: 20)
         passOutButton.roundCorners(cornerRadius: 10)
         cancelButton.roundCorners(cornerRadius: 10)
+        clearButton.roundCorners(cornerRadius: 10)
         selectButton.roundCorners(cornerRadius: 10)
     }
     
@@ -249,7 +252,11 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
     private func updateButtons() {
         let selectEnabled = (contract.suit != .blank)
         selectButton.isUserInteractionEnabled = selectEnabled
-
+        
+        let canClear = (canClear && contract.canClear)
+        cancelButton.isHidden = canClear
+        clearButton.isHidden = !canClear
+        
         let selectColor = (selectEnabled ? Palette.highlightButton : Palette.disabledButton)
         selectButton.backgroundColor = UIColor(selectColor.background)
         selectButton.textColor = UIColor(selectColor.text).withAlphaComponent(selectEnabled ? 1 : 0.3)
@@ -265,11 +272,17 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         hide()
     }
     
+    @objc private func clearPressed(_ sender: UILabel) {
+        self.completion?(Contract(), .unknown)
+        hide()
+    }
+    
     // MARK: - Show / Hide ============================================================================ -
     
     public func show(from sourceView: UIView, contract: Contract, sitting: Seat, declarer: Seat, hideBackground: Bool = true, completion: @escaping (Contract?, Seat?)->()) {
         self.sourceView = sourceView
         self.contract = Contract(copying: contract)
+        self.canClear = contract.canClear
         self.sitting = sitting
         self.declarer = declarer
         self.completion = completion
@@ -363,6 +376,10 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         cancelButton.accessibilityIdentifier = "cancel"
         loadActionButton(button: cancelButton, xOffset: 0, text: "Cancel", action: cancelSelector)
         
+        // Clear button
+        clearButton.accessibilityIdentifier = "clear"
+        loadActionButton(button: clearButton, xOffset: 0, text: "Clear", action: #selector(ScorecardContractEntryView.clearPressed(_:)))
+
         // Select button
         selectButton.accessibilityIdentifier = "select"
         loadActionButton(button: selectButton, xOffset: (actionButtonWidth + buttonSpaceX), text: "Confirm", action: #selector(ScorecardContractEntryView.selectPressed(_:)))
