@@ -240,6 +240,7 @@ protocol ScorecardDelegate {
     func scorecardDeclarerPickerPopup(values: [(Seat, ScrollPickerEntry)], selected: Seat?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Seat?)->())
     func scorecardGetDeclarers(tableNumber: Int) -> [Seat]
     func scorecardUpdateDeclarers(tableNumber: Int, to: [Seat]?)
+    func scorecardSelectScore(boardNumber: Int)
     func scorecardEndEditing(_ force: Bool)
     var autoComplete: AutoComplete {get}
     var keyboardHeight: CGFloat {get}
@@ -638,6 +639,21 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         }
     }
     
+    func scorecardSelectScore(boardNumber: Int) {
+        if boardNumber <= scorecard.boards {
+            let section = (boardNumber - 1) / self.scorecard.boardsTable
+            let row = (boardNumber - 1) % self.scorecard.boardsTable
+            if let tableCell = self.mainTableView.cellForRow(at: IndexPath(row: row, section: section)) as? ScorecardInputBoardTableCell {
+                // Update contract and/or declarer
+                if let item = self.boardColumns.firstIndex(where: {$0.type == .score}) {
+                    if let cell = tableCell.collectionView.cellForItem(at: IndexPath(item: item, section: 0)) as? ScorecardInputCollectionCell {
+                        cell.textField.becomeFirstResponder()
+                    }
+                }
+            }
+        }
+    }
+    
     func scorecardEndEditing(_ force: Bool) {
         self.endEditing(force)
     }
@@ -909,7 +925,7 @@ class ScorecardInputBoardTableCell: TableViewCellWithCollectionView {
 class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, EnumPickerDelegate, UITextViewDelegate, UITextFieldDelegate, AutoCompleteDelegate {
     fileprivate var label = UILabel()
     fileprivate var caption = UILabel()
-    private var textField = UITextField()
+    fileprivate var textField = UITextField()
     private var textView = UITextView()
     private var textClear = UIImageView()
     private var textClearWidth: NSLayoutConstraint!
@@ -1390,6 +1406,12 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     
     internal func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
+        switch column.type {
+        case .score:
+            scorecardDelegate?.scorecardSelectScore(boardNumber: board.board + 1)
+        default:
+            break
+        }
         return true
     }
     
