@@ -13,7 +13,6 @@ Sort out dark mode
 Maybe remove file sharing in Info.plist once can backup from Mac
 Check imports if no network
 Archive imported files
-Automatically move to next score after input
 
 Enhancements
 ============
