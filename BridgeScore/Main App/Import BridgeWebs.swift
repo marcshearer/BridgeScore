@@ -492,12 +492,16 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         // Teams pairs as separate lines
         var remove: [Int] = []
         for (index, ranking) in rankings.enumerated() {
-            if index > 0 && rankings[index - 1].number == ranking.number {
-                // Add to previous ranking
-                rankings[index - 1].players[.east] = ranking.players[.north]
-                rankings[index - 1].players[.west] = ranking.players[.south]
-                remove.append(index)
-                format = .teams
+            if index > 0 {
+                if let matchIndex = rankings.firstIndex(where: {$0.number == ranking.number}) {
+                    if matchIndex < index {
+                        // Add to previous ranking
+                        rankings[matchIndex].players[.east] = ranking.players[.north]
+                        rankings[matchIndex].players[.west] = ranking.players[.south]
+                        remove.append(index)
+                        format = .teams
+                    }
+                }
             }
         }
         for removeIndex in remove.reversed() {
