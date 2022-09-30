@@ -377,7 +377,49 @@ class ImportedScorecard: NSObject {
         scorecard.entry = groupEntry
     }
     
-  // MARK: - Validation ======================================================================== -±
+  // MARK: - Discard unplayed travellers ======================================================= -
+    
+    func discardUnplayedBoards() {
+        var boardMap: [Int:Int] = [:]
+        var nextBoard = 1
+        
+        myRanking = rankings.first(where: {$0.players.contains(where: {$0.value.lowercased() == myName})})
+        if let myRanking = myRanking,
+            let myNumber = myRanking.number {
+            
+            let mySection = myRanking.section
+            
+            for (board, lines) in travellers.sorted(by: {$0.key < $1.key}) {
+                
+                if myTravellerLine(lines: lines, myNumber: myNumber, mySection: mySection) != nil {
+                    // Traveller for me for this board
+                    boardMap[board] = nextBoard
+                    nextBoard += 1
+                } else {
+                    boardMap[board] = -1
+                }
+                
+            }
+            
+            for (board, newBoard) in boardMap.sorted(by: {$0.key < $1.key}) {
+                if newBoard == -1 {
+                    // Remove
+                    travellers[board] = nil
+                } else if board != newBoard {
+                    // Resequence
+                    if let lines = travellers[board] {
+                        for line in lines {
+                            line.board = newBoard
+                        }
+                        travellers[newBoard] = lines
+                        travellers[board] = nil
+                    }
+                }
+            }
+        }
+    }
+    
+  // MARK: - Validation ======================================================================== -
     
     func validate() {
         // Find self and partner

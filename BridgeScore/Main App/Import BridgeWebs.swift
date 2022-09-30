@@ -481,6 +481,8 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
     func initComplete() {
         boardCount = board
         combineRankings()
+        discardUnplayedBoards()
+        boardCount = travellers.count
         recalculateTravellers()
         validate()
         completion(self, nil)
