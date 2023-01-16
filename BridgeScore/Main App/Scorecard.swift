@@ -22,7 +22,7 @@ class Scorecard {
     @Published private(set) var rankingList: [RankingViewModel] = []
     @Published private(set) var travellerList: [TravellerViewModel] = []
     
-    public func rankings(table: Int? = nil, section: Int? = nil, number: Int? = nil, player: (bboName: String, name: String)? = nil) -> [RankingViewModel] {
+    public func rankings(table: Int? = nil, section: Int? = nil, way: Pair? = nil, number: Int? = nil, player: (bboName: String, name: String)? = nil) -> [RankingViewModel] {
         var result = rankingList
         if let table = table {
             if scorecard?.resetNumbers ?? false {
@@ -35,14 +35,17 @@ class Scorecard {
         if let number = number {
             result = result.filter({$0.number == number})
         }
+        if let way = way {
+            result = result.filter({$0.way == way})
+        }
         if let player = player {
             result = result.filter({$0.players.contains(where: {$0.value.lowercased() == player.bboName.lowercased() || $0.value.lowercased() == player.name.lowercased()})})
         }
         return result
     }
     
-    public func ranking(table: Int, section: Int, number: Int) -> RankingViewModel? {
-        let resultList = rankingList.filter({(!(scorecard?.resetNumbers ?? false) || $0.table == table) && $0.section == section && $0.number == number})
+    public func ranking(table: Int, section: Int, way: Pair, number: Int) -> RankingViewModel? {
+        let resultList = rankingList.filter({(!(scorecard?.resetNumbers ?? false) || $0.table == table) && $0.section == section && $0.way == way && $0.number == number})
         return resultList.count == 1 ? resultList.first : nil
     }
     
@@ -362,7 +365,7 @@ class Scorecard {
     public func insert(ranking: RankingViewModel) {
         assert(ranking.scorecard == scorecard, "Ranking is not in current scorecard")
         assert(ranking.isNew, "Cannot insert a ranking which already has a managed object")
-        assert(self.ranking(table: ranking.table, section: ranking.section, number: ranking.number) == nil, "Ranking already exists and cannot be created")
+        assert(self.ranking(table: ranking.table, section: ranking.section, way: ranking.way,  number: ranking.number) == nil, "Ranking already exists and cannot be created")
         CoreData.update(updateLogic: {
             ranking.rankingMO = RankingMO()
             ranking.updateMO()
@@ -373,7 +376,7 @@ class Scorecard {
     public func remove(ranking: RankingViewModel) {
         assert(ranking.scorecard == scorecard, "Ranking is not in current scorecard")
         assert(!ranking.isNew, "Cannot remove a ranking which doesn't already have a managed object")
-        assert(self.ranking(table: ranking.table, section: ranking.section, number: ranking.number) != nil, "Ranking does not exist and cannot be deleted")
+        assert(self.ranking(table: ranking.table, section: ranking.section, way: ranking.way, number: ranking.number) != nil, "Ranking does not exist and cannot be deleted")
         CoreData.update(updateLogic: {
             CoreData.context.delete(ranking.rankingMO!)
             rankingList.removeAll(where: {$0.table == ranking.table && $0.section == ranking.section && $0.number == ranking.number})
@@ -382,7 +385,7 @@ class Scorecard {
     
     public func save(ranking: RankingViewModel) {
         assert(ranking.scorecard == scorecard, "Ranking is not in current scorecard")
-        assert(self.ranking(table: ranking.table, section: ranking.section, number: ranking.number) != nil, "Ranking does not exist and cannot be updated")
+        assert(self.ranking(table: ranking.table, section: ranking.section, way: ranking.way, number: ranking.number) != nil, "Ranking does not exist and cannot be updated")
         if ranking.isNew {
             CoreData.update(updateLogic: {
                 ranking.rankingMO = RankingMO()

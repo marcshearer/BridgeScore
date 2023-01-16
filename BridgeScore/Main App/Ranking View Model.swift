@@ -67,7 +67,7 @@ import CoreData
         }
     }
     
-    public init(scorecard: ScorecardViewModel, table: Int, section: Int, number: Int) {
+    public init(scorecard: ScorecardViewModel, table: Int, section: Int, way: Pair, number: Int) {
         self.scorecard = scorecard
         self.table = table
         self.section = section
@@ -77,7 +77,7 @@ import CoreData
     }
     
     public convenience init(scorecard: ScorecardViewModel, rankingMO: RankingMO) {
-        self.init(scorecard: scorecard, table: rankingMO.table, section: rankingMO.section, number: rankingMO.number)
+        self.init(scorecard: scorecard, table: rankingMO.table, section: rankingMO.section, way: rankingMO.way, number: rankingMO.number)
         self.rankingMO = rankingMO
         self.revert()
     }

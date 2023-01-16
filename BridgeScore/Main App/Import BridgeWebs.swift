@@ -308,12 +308,14 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         case view
         case columns
         case row
+        case type
     }
     
     private var namesElement: Bool
     private var data: Data!
     private var completion: (ImportedBridgeWebsScorecard?, String?)->()
     private var headings: [String] = []
+    private var players: Int?
     private var zone = Zone.unknown
     private var element = Element.unknown
     private var parser: XMLParser!
@@ -376,9 +378,6 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         let importedTraveller = ImportedTraveller()
         for seat in Seat.validCases {
             importedTraveller.section[seat] = 1
-        }
-        // TODO Used to debug Scottish Swiss Pairs
-        if board == 39 && columns.element(0)  == "46" {
         }
         for (index, heading) in headings.enumerated() {
             switch heading.lowercased() {
@@ -492,22 +491,24 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
     
     private func combineRankings() {
         // Teams pairs as separate lines
-        var remove: [Int] = []
-        for (index, ranking) in rankings.enumerated() {
-            if index > 0 {
-                if let matchIndex = rankings.firstIndex(where: {$0.number == ranking.number}) {
-                    if matchIndex < index {
-                        // Add to previous ranking
-                        rankings[matchIndex].players[.east] = ranking.players[.north]
-                        rankings[matchIndex].players[.west] = ranking.players[.south]
-                        remove.append(index)
-                        format = .teams
+        if players == 4 {
+            var remove: [Int] = []
+            for (index, ranking) in rankings.enumerated() {
+                if index > 0 {
+                    if let matchIndex = rankings.firstIndex(where: {$0.number == ranking.number}) {
+                        if matchIndex < index {
+                                // Add to previous ranking
+                            rankings[matchIndex].players[.east] = ranking.players[.north]
+                            rankings[matchIndex].players[.west] = ranking.players[.south]
+                            remove.append(index)
+                            format = .teams
+                        }
                     }
                 }
             }
-        }
-        for removeIndex in remove.reversed() {
-            rankings.remove(at: removeIndex)
+            for removeIndex in remove.reversed() {
+                rankings.remove(at: removeIndex)
+            }
         }
         for ranking in rankings {
             if format == .individual {
@@ -537,6 +538,8 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
             element = .columns
         case "rw":
             element = .row
+        case "type":
+            element = .type
         default:
             break
         }
@@ -566,6 +569,15 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 initTraveller(columns: values)
             default:
                 break
+            }
+        case .type:
+            switch string.lowercased() {
+            case "s":
+                players = 1
+            case "4":
+                players = 4
+            default:
+                players = 2
             }
         default:
             if zone == .travellers && tag == "bd" {

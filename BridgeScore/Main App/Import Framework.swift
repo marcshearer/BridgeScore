@@ -177,8 +177,10 @@ class ImportedScorecard: NSObject {
             for (index, importedRanking) in sortedRankings.enumerated() {
                 
                 let section = importedRanking.section
-                if let number = importedRanking.number {
-                    let ranking = RankingViewModel(scorecard: scorecard, table: table ?? 0, section: section, number: number)
+                
+                if let number = importedRanking.number,
+                   let way = importedRanking.way {
+                    let ranking = RankingViewModel(scorecard: scorecard, table: table ?? 0, section: section, way: way, number: number)
                     
                     // Sort out ties
                     if index > 0 && sortedRankings[index - 1].score == ranking.score {
@@ -333,8 +335,13 @@ class ImportedScorecard: NSObject {
                             // Need to pick up this person in all seats if individual
                             // North or East if pairs, and North only if teams since 1 of team will have sat north
                         if players == 1 { seats = Seat.validCases }
-                        else if players == 2 { seats = [.north, .east] }
-                        else { seats = [.north] }
+                        else if players == 2 {
+                            if ranking.way == .unknown {
+                                seats = [.north, .east]
+                            } else {
+                                seats = [ranking.way.seats.first!]
+                            }
+                        } else { seats = [.north] }
                         tableScores += table.score(ranking: ranking, seats: seats)
                     }
                 }
@@ -415,6 +422,9 @@ class ImportedScorecard: NSObject {
                         travellers[board] = nil
                     }
                 }
+            }
+            if let boardCount = boardCount {
+                scorecard.boards = boardCount
             }
         }
     }

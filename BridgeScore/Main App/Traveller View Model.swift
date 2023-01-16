@@ -141,7 +141,7 @@ import CoreData
     public func ranking(seat: Seat) -> RankingViewModel? {
         assert(self.scorecard == Scorecard.current.scorecard, "Only valid when this scorecard is current")
         let table = ((board - 1) / scorecard.boardsTable) + 1
-        return Scorecard.current.ranking(table: table, section: section[seat] ?? 0, number: rankingNumber[seat] ?? 0)
+        return Scorecard.current.ranking(table: table, section: section[seat] ?? 0, way: seat.pair, number: rankingNumber[seat] ?? 0)
     }
     
     public var isSelf: Bool {
