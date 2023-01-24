@@ -29,7 +29,7 @@ public class BBONameViewModel : ObservableObject, Identifiable, Equatable, Custo
     
     // Equals
     public static func == (lhs: BBONameViewModel, rhs: BBONameViewModel) -> Bool {
-        lhs.bboName == rhs.bboName
+        lhs.bboName.lowercased() == rhs.bboName.lowercased()
     }
     
     // Check if view model matches managed object

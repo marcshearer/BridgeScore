@@ -354,7 +354,7 @@ extension MasterData {
     }
     
     public func bboName(id bboName: String?) -> BBONameViewModel? {
-        return (bboName == nil ? nil : self.bboNames.first(where: {$0.bboName == bboName?.lowercased()}))
+        return (bboName == nil ? nil : self.bboNames.first(where: {$0.bboName.lowercased() == bboName?.lowercased()}))
     }
     
     public func realName(bboName id: String?) -> String? {
@@ -372,7 +372,7 @@ extension MasterData {
                 result.append(bboName)
             } else {
                 let bboName = BBONameViewModel()
-                bboName.bboName = value
+                bboName.bboName = value.lowercased()
                 bboName.insert()
                 result.append(bboName)
             }

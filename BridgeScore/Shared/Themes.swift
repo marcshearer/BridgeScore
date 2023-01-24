@@ -87,6 +87,7 @@ enum ThemeBackgroundColorName: CaseIterable {
     case subHeader
     case gridTitle
     case gridBoard
+    case gridBoardSitout
     case gridBoardDisabled
     case gridTable
     case gridTableDisabled
@@ -378,6 +379,7 @@ class Themes {
                 .divider                     : ThemeColor(#colorLiteral(red: 0, green: 0, blue: 0, alpha: 1), #colorLiteral(red: 0.6286649108, green: 0.6231410503, blue: 0.6192827821, alpha: 1), .darkBackground,  .lightBackground),
                 .gridTitle                   : ThemeColor(#colorLiteral(red: 0.999904573, green: 1, blue: 0.9998808503, alpha: 1), #colorLiteral(red: 0.4756349325, green: 0.4756467342, blue: 0.4756404161, alpha: 1), .lightBackground, .darkBackground),
                 .gridBoard                   : ThemeColor(#colorLiteral(red: 0.999904573, green: 1, blue: 0.9998808503, alpha: 1), #colorLiteral(red: 0.4756349325, green: 0.4756467342, blue: 0.4756404161, alpha: 1), .lightBackground, .darkBackground),
+                .gridBoardSitout             : ThemeColor(#colorLiteral(red: 0.9254901961, green: 0.9254901961, blue: 0.9254901961, alpha: 1), #colorLiteral(red: 0.4509803922, green: 0.4509803922, blue: 0.4509803922, alpha: 1), .lightBackground, .darkBackground),
                 .gridBoardDisabled           : ThemeColor(#colorLiteral(red: 0.9607843137, green: 0.9607843137, blue: 0.9607843137, alpha: 1), #colorLiteral(red: 0.4756349325, green: 0.4756467342, blue: 0.4756404161, alpha: 1), .lightBackground, .darkBackground),
                 .gridTable                   : ThemeColor(#colorLiteral(red: 0.8616076436, green: 0.8620930367, blue: 0.8620918949, alpha: 1), #colorLiteral(red: 0.5741485357, green: 0.5741624236, blue: 0.574154973, alpha: 1), .lightBackground, .lightBackground),
                 .gridTableDisabled           : ThemeColor(#colorLiteral(red: 0.8616076436, green: 0.8620930367, blue: 0.8620918949, alpha: 1), #colorLiteral(red: 0.5741485357, green: 0.5741624236, blue: 0.574154973, alpha: 1), .lightBackground, .lightBackground),

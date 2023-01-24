@@ -487,6 +487,10 @@ public enum Seat: Int, EnumPickerType, ContractEnumType {
         (self == .unknown ? .unknown : Seat(rawValue: ((self.rawValue + 2) % 4) + 1)!)
     }
     
+    public var opponents : [Seat] {
+        return [leftOpponent, rightOpponent]
+    }
+    
     public var short: String {
         if self == .unknown {
             return ""

@@ -308,7 +308,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
            
         if (Scorecard.current.scorecard?.entry ?? 0) > 2 && isLandscape && MyApp.format != .phone {
             rankingColumns += [
-                RankingColumn(type: .rounds, heading: "Rounds", size: .fixed([CGFloat(min(8, Scorecard.current.scorecard?.tables ?? 1) * 25) + 8]))]
+                RankingColumn(type: .rounds, heading: "Tables", size: .fixed([CGFloat(min(8, Scorecard.current.scorecard?.tables ?? 1) * 25) + 8]))]
         }
         
         rankingColumns += [
@@ -767,12 +767,19 @@ class ScorecardRankingRoundCollectionCell: UICollectionViewCell {
         if let table = Scorecard.current.tables[tableNumber] {
             var seats: [Seat]
             let players = Scorecard.current.scorecard?.type.players ?? 0
-            if players == 1 { seats = Seat.validCases }
-            else if players == 2 { seats = [.north, .east] }
+            if players == 1 {
+                seats = Seat.validCases }
+            else if players == 2 {
+                if ranking.way == .unknown {
+                    seats = [.north, .east]
+                } else {
+                    seats = [ranking.way.seats.first!]
+                }
+            }
             else { seats = [.north] }
             let tableScore = table.score(ranking: ranking, seats: seats)
-            label.text = tableScore.toString(places: 0)
-            label.textAlignment = .right
+            label.text = tableScore == nil ? "-" : tableScore!.toString(places: 0)
+            label.textAlignment = .center
         }
     }
 }

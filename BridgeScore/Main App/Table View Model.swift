@@ -133,7 +133,7 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
         var result: [Seat:String] = [:]
         if let scorer = MasterData.shared.scorer {
             let boardNumber = ((table - 1) * scorecard.boardsTable) + 1
-            let rankings = Scorecard.current.rankings(table: table, player: (bboName: scorer.bboName, name: scorer.name))
+            let rankings = Scorecard.current.rankings(table: table, player: (bboName: scorer.bboName.lowercased(), name: scorer.name))
             if rankings.count == 1 {
                 let myRanking = rankings.first!
                 if let myTraveller = Scorecard.current.traveller(board: boardNumber, seat: sitting, rankingNumber: myRanking.number, section: myRanking.section) {
@@ -146,19 +146,19 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
         return result
     }
     
-    public func score(ranking: RankingViewModel, seats: [Seat]) -> Float {
-        var tableTotal: Float = 0
+    public func score(ranking: RankingViewModel, seats: [Seat]) -> Float? {
+        var tableTotal: Float? = nil
         var boards: Int = 0
         for tableBoard in 1...scorecard.boardsTable {
             let boardNumber = ((table - 1) * scorecard.boardsTable) + tableBoard
             for seat in seats {
                 if let traveller = Scorecard.current.traveller(board: boardNumber, seat: seat, rankingNumber: ranking.number, section: ranking.section) {
-                    tableTotal += (seat.pair == .ns ? traveller.nsScore : scorecard.type.invertScore(score: traveller.nsScore))
+                    tableTotal = (tableTotal ?? 0) + (seat.pair == .ns ? traveller.nsScore : scorecard.type.invertScore(score: traveller.nsScore))
                     boards += 1
                 }
             }
         }
-        return Scorecard.aggregate(total: tableTotal, count: boards, boards: boards, subsidiaryPlaces: scorecard.type.boardPlaces, places: scorecard.type.tablePlaces, type: scorecard.type.tableAggregate) ?? 0
+        return (tableTotal == nil ? nil : Scorecard.aggregate(total: tableTotal!, count: boards, boards: boards, subsidiaryPlaces: scorecard.type.boardPlaces, places: scorecard.type.tablePlaces, type: scorecard.type.tableAggregate) ?? 0)
     }
     
     public var description: String {

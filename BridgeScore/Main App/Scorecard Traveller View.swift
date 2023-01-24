@@ -528,7 +528,7 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
         case .points:
             label.text = sitting.pair.short
         case .players:
-            label.text = (sitting.pair == .ns ? "North & South\nEast & West" : "East & West\nNorth & South")
+            label.text = (sitting.pair != .ew ? "North & South\nEast & West" : "East & West\nNorth & South")
             label.numberOfLines = 2
             label.font = smallCellFont.bold
         default:
@@ -561,6 +561,10 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
                 let name = MasterData.shared.realName(bboName: bboName) ?? "Unknown"
                 let color = (bboName == name ? UIColor(Palette.background.themeText) : nil)
                 names[seat] = NSAttributedString(name, pickerColor: color)
+            }
+            var sitting = sitting
+            if sitting == .unknown {
+                sitting = .north
             }
             let sameNames = names[sitting.pair.seats.first!]! + " & " + names[sitting.pair.seats.last!]!
             let otherNames = names[sitting.leftOpponent.pair.seats.first!]! + " & " + names[sitting.rightOpponent.pair.seats.last!]!

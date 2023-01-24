@@ -125,7 +125,8 @@ class ImportedScorecard: NSObject {
     private func importTable(tableNumber: Int, boardOffset: Int = 0) {
         if let scorecard = scorecard,
             let myRanking = myRanking,
-            let myNumber = myRanking.number {
+            let myNumber = myRanking.number,
+            let myPair = myRanking.way {
             
             let mySection = myRanking.section
             let table = Scorecard.current.tables[tableNumber]
@@ -135,27 +136,30 @@ class ImportedScorecard: NSObject {
                 let boardNumber = ((tableNumber - 1) * scorecard.boardsTable) + tableBoardNumber
                 
                 if let lines = travellers[boardNumber - boardOffset],
-                    let myLine = myTravellerLine(lines: lines, myNumber: myNumber, mySection: mySection) {
+                   let myLine = myTravellerLine(lines: lines, myNumber: myNumber, myPair: myPair, mySection: mySection) {
                     
-                    let mySeat = seat(line: myLine, ranking: myRanking, name: myName) ?? .unknown
+                    let mySeat = seat(line: myLine, ranking: myRanking, myPair: myPair, name: myName) ?? .unknown
                     var versus = ""
                     for seat in Seat.validCases {
-                        let otherNumber = myLine.ranking[seat] ?? myNumber
-                        if otherNumber != myNumber {
-                            if let ranking = otherRanking(number: otherNumber, section: mySection), let otherName = ranking.players[seat]  {
+                        if seat != mySeat && (scorecard.type.players == 1 || seat.pair != myPair) {
+                            let otherNumber = myLine.ranking[seat] ?? myNumber
+                            if let ranking = otherRanking(number: otherNumber, myPair: mySeat.pair, section: mySection), let otherName = ranking.players[seat]  {
                                 if versus != "" {
                                     versus += " & "
                                 }
-                                versus += MasterData.shared.realName(bboName: otherName) ?? "Unknown" // Try bbo lookup but will fail on other imports and return itself
+                                let name = MasterData.shared.realName(bboName: otherName) ?? "Unknown" // Try bbo lookup but will fail on other imports and return itself
+                                versus += name
                             }
                         }
                     }
                     table?.versus = versus
                     table?.sitting = mySeat
-                                        
+                    
                     importBoard(myLine: myLine, boardNumber: boardNumber, myRanking: myRanking)
-                    importTravellers(boardNumber: boardNumber, boardOffset: boardOffset)
+                } else {
+                    table?.versus = "Sitout"
                 }
+                importTravellers(boardNumber: boardNumber, boardOffset: boardOffset)
             }
         }
     }
@@ -166,7 +170,15 @@ class ImportedScorecard: NSObject {
         board?.declarer = myLine.declarer ?? .unknown
         board?.made = myLine.made
         if let nsScore = myLine.nsScore, let scorecard = scorecard {
-            board?.score = (myLine.ranking[.north] == myRanking.number || myLine.ranking[.south] == myRanking.number ? nsScore : ( (scorecard.type.boardScoreType == .percent ? 100 - nsScore : (nsScore == 0 ? 0 : -nsScore))))
+            var myPair: Pair
+            if (myRanking.way ?? .unknown) != .unknown {
+                myPair = myRanking.way!
+            } else if myLine.ranking[.north] == myRanking.number || myLine.ranking[.south] == myRanking.number {
+                myPair = .ns
+            } else {
+                myPair = .ew
+            }
+            board?.score = (myPair == .ns ? nsScore : scorecard.type.invertScore(score: nsScore))
         }
     }
     
@@ -224,10 +236,14 @@ class ImportedScorecard: NSObject {
     
     // MARK: - Utility Routines ======================================================================== -
     
-    func myTravellerLine(lines: [ImportedTraveller], myNumber: Int, mySection: Int) -> ImportedTraveller? {
+    func myTravellerLine(lines: [ImportedTraveller], myNumber: Int, myPair: Pair? = .unknown, mySection: Int) -> ImportedTraveller? {
         var result: ImportedTraveller?
+        var validSeats = Seat.validCases
         
-        for seat in Seat.validCases {
+        if myPair != .unknown {
+            validSeats = myPair!.seats
+        }
+        for seat in validSeats {
             if let line = lines.first(where: {$0.ranking[seat] == myNumber}) {
                 if myRanking?.players[seat]?.lowercased() == myName{
                     result = line
@@ -243,18 +259,20 @@ class ImportedScorecard: NSObject {
         return first.board == second.board && first.ranking[.north] == second.ranking[.east]
     }
     
-    func otherRanking(number: Int, section: Int) -> ImportedRanking? {
-        return rankings.first(where: {$0.number == number && $0.section == section})
+    func otherRanking(number: Int, myPair: Pair, section: Int) -> ImportedRanking? {
+        return rankings.first(where: {$0.number == number && $0.section == section && $0.way != myPair})
     }
     
-    func seat(line: ImportedTraveller, ranking: ImportedRanking, name: String) -> Seat? {
+    func seat(line: ImportedTraveller, ranking: ImportedRanking, myPair: Pair = .unknown, name: String) -> Seat? {
         var result: Seat?
         
         for seat in Seat.validCases {
-            if line.ranking[seat] == ranking.number {
-                if ranking.players[seat]?.lowercased() == name {
-                    result = seat
-                    break
+            if myPair == .unknown || myPair.seats.contains(where: {$0 == seat}) {
+                if line.ranking[seat] == ranking.number {
+                    if ranking.players[seat]?.lowercased() == name {
+                        result = seat
+                        break
+                    }
                 }
             }
         }
@@ -299,10 +317,11 @@ class ImportedScorecard: NSObject {
         var lastBoards: Int = 0
         var boardsTableError = false
         if let myRanking = myRanking,
-           let myNumber = myRanking.number {
+           let myNumber = myRanking.number,
+           let myPair = myRanking.way {
             let mySection = myRanking.section
             for (_, lines) in travellers.sorted(by: {$0.key < $1.key}) {
-                if let line = myTravellerLine(lines: lines, myNumber: myNumber, mySection: mySection) {
+                if let line = myTravellerLine(lines: lines, myNumber: myNumber, myPair: myPair, mySection: mySection) {
                     if let mySeat = seat(line: line, ranking: myRanking, name: name) {
                         let thisVersus = line.ranking[mySeat.leftOpponent]
                         if lastVersus != thisVersus && lastVersus != nil {
@@ -327,6 +346,7 @@ class ImportedScorecard: NSObject {
         // Note this works on the main data structures after the import rather than the imported layer
         for ranking in Scorecard.current.rankingList {
             var tableScores: Float = 0
+            var tablesPlayed = 0
             for tableNumber in 1...scorecard.tables {
                 if let table = Scorecard.current.tables[tableNumber] {
                     if !scorecard.resetNumbers || ranking.table == tableNumber {
@@ -342,14 +362,17 @@ class ImportedScorecard: NSObject {
                                 seats = [ranking.way.seats.first!]
                             }
                         } else { seats = [.north] }
-                        tableScores += table.score(ranking: ranking, seats: seats)
+                        if let tableScore = table.score(ranking: ranking, seats: seats) {
+                            tableScores += tableScore
+                            tablesPlayed += 1
+                        }
                     }
                 }
             }
             if scorecard.resetNumbers {
                 ranking.score = Scorecard.aggregate(total: tableScores, count: 1, boards: scorecard.boardsTable, subsidiaryPlaces: scorecard.type.boardPlaces, places: scorecard.type.tablePlaces, type: scorecard.type.tableAggregate) ?? 0
             } else {
-                ranking.score = Scorecard.aggregate(total: tableScores, count: scorecard.tables, boards: scorecard.boards, subsidiaryPlaces: scorecard.type.tablePlaces, places: scorecard.type.matchPlaces, type: scorecard.type.matchAggregate) ?? 0
+                ranking.score = Scorecard.aggregate(total: tableScores, count: tablesPlayed, boards: scorecard.boards, subsidiaryPlaces: scorecard.type.tablePlaces, places: scorecard.type.matchPlaces, type: scorecard.type.matchAggregate) ?? 0
             }
         }
         
@@ -382,51 +405,6 @@ class ImportedScorecard: NSObject {
             }
         }
         scorecard.entry = groupEntry
-    }
-    
-  // MARK: - Discard unplayed travellers ======================================================= -
-    
-    func discardUnplayedBoards() {
-        var boardMap: [Int:Int] = [:]
-        var nextBoard = 1
-        
-        myRanking = rankings.first(where: {$0.players.contains(where: {$0.value.lowercased() == myName})})
-        if let myRanking = myRanking,
-            let myNumber = myRanking.number {
-            
-            let mySection = myRanking.section
-            
-            for (board, lines) in travellers.sorted(by: {$0.key < $1.key}) {
-                
-                if myTravellerLine(lines: lines, myNumber: myNumber, mySection: mySection) != nil {
-                    // Traveller for me for this board
-                    boardMap[board] = nextBoard
-                    nextBoard += 1
-                } else {
-                    boardMap[board] = -1
-                }
-                
-            }
-            
-            for (board, newBoard) in boardMap.sorted(by: {$0.key < $1.key}) {
-                if newBoard == -1 {
-                    // Remove
-                    travellers[board] = nil
-                } else if board != newBoard {
-                    // Resequence
-                    if let lines = travellers[board] {
-                        for line in lines {
-                            line.board = newBoard
-                        }
-                        travellers[newBoard] = lines
-                        travellers[board] = nil
-                    }
-                }
-            }
-            if let boardCount = boardCount {
-                scorecard.boards = boardCount
-            }
-        }
     }
     
   // MARK: - Validation ======================================================================== -
@@ -479,7 +457,7 @@ class ImportedRanking {
     public var xImps: [Pair:Float] = [:]
     public var ranking: Int?
     public var bboPoints: Float?
-    public var way: Pair?
+    public var way: Pair? = .unknown
 }
 
 class ImportedTraveller {

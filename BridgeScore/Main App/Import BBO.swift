@@ -34,7 +34,7 @@ class ImportBBO {
                                     bboNameMO.name = name
                                 } else {
                                     let bboNameMO = NSManagedObject(entity: entity, insertInto: CoreData.context) as! BBONameMO
-                                    bboNameMO.bboName = bboName
+                                    bboNameMO.bboName = bboName.lowercased()
                                     bboNameMO.name = name
                                 }
                             } else {
@@ -88,7 +88,7 @@ struct ImportBBOScorecard: View {
         VStack(spacing: 0) {
             Banner(title: Binding.constant("Choose file to import"), backImage: Banner.crossImage)
             Spacer().frame(height: 16)
-            if let files = try? FileManager.default.contentsOfDirectory(at: ImportBBO.importsURL, includingPropertiesForKeys: nil).filter({$0.relativeString.right(4) == ".csv"}) {
+            if let files = try! FileManager.default.contentsOfDirectory(at: ImportBBO.importsURL, includingPropertiesForKeys: nil).filter({$0.relativeString.right(4) == ".csv"}) {
                 let fileData: [(path: URL, number: Int?, text: String, date: Date?)] = decompose(files)
                 if fileData.isEmpty {
                     Spacer()

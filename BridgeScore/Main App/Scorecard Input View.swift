@@ -1122,8 +1122,23 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             break
         }
         
-        let color = (rowType == .board ? (isEnabled ? Palette.gridBoard : Palette.gridBoardDisabled)
-                                       : (isEnabled ? Palette.gridTable : Palette.gridTableDisabled))
+        var color: PaletteColor
+        if rowType == .board {
+            if Scorecard.current.isImported && board?.score == nil {
+                color = Palette.gridBoardSitout
+            } else if isEnabled {
+                color = Palette.gridBoard
+            } else {
+                color = Palette.gridBoardDisabled
+            }
+        } else {
+            if isEnabled {
+                color = Palette.gridTable
+            } else {
+                color = Palette.gridTableDisabled
+            }
+        }
+        
         label.backgroundColor = UIColor(color.background)
         label.textColor = UIColor(color.text)
         textField.textColor = UIColor(color.text)
@@ -1184,7 +1199,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             }
             label.isUserInteractionEnabled = !isEnabled
         case .comment:
-            textField.isHidden = false
+            textField.isHidden = (Scorecard.current.isImported && board.score == nil)
             textField.text = board.comment
             textField.textAlignment = .left
             textField.autocapitalizationType = .sentences
@@ -1192,11 +1207,11 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             textClearWidth.constant = 34
             textClearPadding.forEach { (constraint) in constraint.constant = 8 }
         case .responsible:
-            responsiblePicker.isHidden = false
+            responsiblePicker.isHidden = (Scorecard.current.isImported && board.score == nil)
             responsiblePicker.set(board.responsible, color: Palette.gridBoard, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
         case .table:
             label.font = boardTitleFont.bold
-            label.text = "Round \(table.table)"
+            label.text = (Scorecard.current.isImported ? "" : "Round \(table.table)")
         case .sitting:
             seatPicker.isHidden = false
             seatPicker.set(table.sitting, isEnabled: isEnabled, color: color, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
@@ -1241,15 +1256,19 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         let players = table.players
         let sitting = table.sitting
         var separator = ""
-        for seat in [sitting.partner, sitting.leftOpponent, sitting.rightOpponent] {
-            if scorecard.type.players == 1 || seat != sitting.partner {
-                let bboName = players[seat] ?? "Unknown"
-                let realName = MasterData.shared.realName(bboName: bboName) ?? bboName
-                versus += separator + realName
-                separator = (seat == sitting.partner ? " v " : " & ")
+        if sitting == .unknown {
+            versus = "Sitout"
+        } else {
+            for seat in [sitting.partner, sitting.leftOpponent, sitting.rightOpponent] {
+                if scorecard.type.players == 1 || seat != sitting.partner {
+                    let bboName = players[seat] ?? "Unknown"
+                    let realName = MasterData.shared.realName(bboName: bboName) ?? bboName
+                    versus += separator + realName
+                    separator = (seat == sitting.partner ? " v " : " & ")
+                }
             }
         }
-        return versus
+        return (versus == "" ? table.versus : versus)
     }
     
     private var madeList: (list: [ScrollPickerEntry], minValue: Int, maxValue: Int) {

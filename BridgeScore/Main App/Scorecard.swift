@@ -45,10 +45,9 @@ class Scorecard {
     }
     
     public func ranking(table: Int, section: Int, way: Pair, number: Int) -> RankingViewModel? {
-        let resultList = rankingList.filter({(!(scorecard?.resetNumbers ?? false) || $0.table == table) && $0.section == section && $0.way == way && $0.number == number})
+        let resultList = rankingList.filter({(!(scorecard?.resetNumbers ?? false) || $0.table == table) && $0.section == section && ($0.way == .unknown || $0.way == way) && $0.number == number})
         return resultList.count == 1 ? resultList.first : nil
     }
-    
     
     public func travellers(board: Int? = nil, seat: Seat? = nil, rankingNumber: Int? = nil, section: Int? = nil) -> [TravellerViewModel] {
         var result = travellerList
@@ -379,7 +378,7 @@ class Scorecard {
         assert(self.ranking(table: ranking.table, section: ranking.section, way: ranking.way, number: ranking.number) != nil, "Ranking does not exist and cannot be deleted")
         CoreData.update(updateLogic: {
             CoreData.context.delete(ranking.rankingMO!)
-            rankingList.removeAll(where: {$0.table == ranking.table && $0.section == ranking.section && $0.number == ranking.number})
+            rankingList.removeAll(where: {$0.table == ranking.table && $0.section == ranking.section && $0.way == ranking.way && $0.number == ranking.number})
         })
     }
     

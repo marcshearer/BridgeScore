@@ -471,7 +471,6 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         if travellers[board] == nil {
             travellers[board] = []
         }
-        // TODO - inserted to allow import of Scottish Swiss Pairs - playdata is split into 2 boards!
         if importedTraveller.ranking.count > 0 {
             travellers[board]!.append(importedTraveller)
         }
@@ -479,8 +478,8 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
     
     func initComplete() {
         boardCount = board
+        updateWays()
         combineRankings()
-        discardUnplayedBoards()
         boardCount = travellers.count
         recalculateTravellers()
         validate()
@@ -524,6 +523,16 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
             type = type ?? .percent
         case .teams:
             type = .imp
+        }
+    }
+    
+    private func updateWays() {
+        
+        if Set(rankings.map{$0.way}).count == 1 {
+            // Only one pair direction setup - remove them
+            for ranking in rankings {
+                ranking.way = .unknown
+            }
         }
     }
         

@@ -27,6 +27,7 @@ class Palette {
     @BackgroundColor(.subHeader) static var subHeader
     @BackgroundColor(.gridTitle) static var gridTitle
     @BackgroundColor(.gridBoard) static var gridBoard
+    @BackgroundColor(.gridBoardSitout) static var gridBoardSitout
     @BackgroundColor(.gridBoardDisabled) static var gridBoardDisabled
     @BackgroundColor(.gridTable) static var gridTable
     @BackgroundColor(.gridTableDisabled) static var gridTableDisabled
