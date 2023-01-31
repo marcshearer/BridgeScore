@@ -428,12 +428,12 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                     }
                 }
             case "+sc":
-                if let string = columns.element(index) {
-                    importedTraveller.points = Int(string) ?? 0
+                if let string = columns.element(index), let value = Int(string) {
+                    importedTraveller.points = value
                 }
             case "-sc":
-                if let string = columns.element(index) {
-                    importedTraveller.points = -(Int(string) ?? 0)
+                if let string = columns.element(index), let value = Int(string) {
+                    importedTraveller.points = -value
                 }
             case "+":
                 if let string = columns.element(index) {

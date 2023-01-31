@@ -111,9 +111,8 @@ class ImportedScorecard: NSObject {
                         importRankings()
                     }
                 }
-                Scorecard.updateScores(scorecard: scorecard)
                 rebuildRankingTotals()
-                
+                Scorecard.updateScores(scorecard: scorecard)
             } else {
                 importRankings()
             }
@@ -306,6 +305,8 @@ class ImportedScorecard: NSObject {
                     if let nsMps = traveller.nsMps, let totalMps = traveller.totalMps {
                         traveller.nsScore = Utility.round(Float(nsMps) / Float(totalMps) * 100, places: scorecard.type.boardPlaces)
                     }
+                } else if scorecard.type.boardScoreType == .aggregate {
+                    traveller.nsScore = Float(traveller.points ?? 0)
                 }
             }
         }

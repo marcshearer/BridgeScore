@@ -110,6 +110,7 @@ public enum ScoreType {
     case xImp
     case acblVp
     case vp
+    case aggregate
     case unknown
     
     public var string: String {
@@ -122,6 +123,8 @@ public enum ScoreType {
             return "Imps"
         case .vp, .acblVp:
             return "VPs"
+        case .aggregate:
+            return "Score"
         case .unknown:
             return ""
         }
@@ -146,6 +149,7 @@ public enum Type: Int, CaseIterable {
     case vpPercent = 3
     case vpXImp = 4
     case xImp = 2
+    case aggregate = 8
     case vpMatchTeam = 1
     case vpTableTeam = 6
     case acblVpTableTeam = 5
@@ -161,6 +165,8 @@ public enum Type: Int, CaseIterable {
             return "Pairs Cross-IMPs"
         case .vpXImp:
             return "Pairs Cross-IMPs as VPs"
+        case .aggregate:
+            return "Pairs Aggregate"
         case .vpMatchTeam:
             return "Teams Match VPs"
         case .vpTableTeam:
@@ -180,6 +186,8 @@ public enum Type: Int, CaseIterable {
             return .xImp
         case .vpMatchTeam, .vpTableTeam, .acblVpTableTeam:
             return .imp
+        case .aggregate:
+            return .aggregate
         }
     }
     
@@ -187,7 +195,7 @@ public enum Type: Int, CaseIterable {
         switch self {
         case.percentIndividual:
             return 1
-        case .percent, .xImp, .vpXImp, .vpPercent:
+        case .percent, .xImp, .vpXImp, .vpPercent, .aggregate:
             return 2
         case .vpMatchTeam, .vpTableTeam, .acblVpTableTeam:
             return 4
@@ -206,7 +214,7 @@ public enum Type: Int, CaseIterable {
         switch self {
         case .percent, .xImp, .vpPercent, .vpXImp, .percentIndividual:
             return 2
-        case .vpMatchTeam, .vpTableTeam, .acblVpTableTeam:
+        case .vpMatchTeam, .vpTableTeam, .acblVpTableTeam,.aggregate:
             return 0
         }
     }
@@ -215,7 +223,7 @@ public enum Type: Int, CaseIterable {
         switch self {
         case .percent, .xImp, .vpXImp, .percentIndividual:
             return 2
-        case .vpMatchTeam, .vpPercent, .vpTableTeam, .acblVpTableTeam:
+        case .vpMatchTeam, .vpPercent, .vpTableTeam, .acblVpTableTeam, .aggregate:
             return 0
         }
     }
@@ -224,7 +232,7 @@ public enum Type: Int, CaseIterable {
         switch self {
         case .percent, .xImp, .vpXImp, .vpMatchTeam, .percentIndividual:
             return 2
-        case .vpPercent, .vpTableTeam, .acblVpTableTeam:
+        case .vpPercent, .vpTableTeam, .acblVpTableTeam, .aggregate:
             return 0
         }
     }
@@ -233,7 +241,7 @@ public enum Type: Int, CaseIterable {
         switch self {
         case .percent, .percentIndividual:
             return .average
-        case .xImp, .vpMatchTeam:
+        case .xImp, .vpMatchTeam, .aggregate:
             return .total
         case .vpTableTeam:
             return .discreteVp
@@ -250,7 +258,7 @@ public enum Type: Int, CaseIterable {
         switch self {
         case .percent, .percentIndividual:
             return .average
-        case .xImp, .vpXImp, .vpTableTeam, .acblVpTableTeam, .vpPercent:
+        case .xImp, .vpXImp, .vpTableTeam, .acblVpTableTeam, .vpPercent, .aggregate:
             return .total
         case  .vpMatchTeam:
             return .continuousVp
@@ -269,12 +277,14 @@ public enum Type: Int, CaseIterable {
             } else {
                 return ""
             }
+        case .aggregate:
+            return ""
         }
     }
     
     public func matchPrefix(scorecard: ScorecardViewModel) -> String {
         switch self {
-        case .xImp:
+        case .xImp, .aggregate:
             return (scorecard.score ?? 0 > 0 ? "+" : "")
         default:
             return ""

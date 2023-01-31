@@ -318,7 +318,7 @@ struct ScorecardSummaryView: View {
     var importButton: some View {
         let color = (highlighted ? Palette.highlightTile : Palette.tile)
         return HStack {
-            if scorecard.importSource == .none {
+            if scorecard.importSource == .none && !scorecard.manualTotals {
                 GeometryReader { geometry in
                     VStack {
                         Spacer()
