@@ -1149,7 +1149,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         switch column.type {
         case .board:
             label.font = boardFont
-            label.text = "\(scorecard.resetNumbers ? ((board.board - 1) % scorecard.boardsTable) + 1 : board.board)"
+            label.text = "\(board.boardNumber)"
             label.isUserInteractionEnabled = !isEnabled
         case .vulnerable:
             label.isHidden = false

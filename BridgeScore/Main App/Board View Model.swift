@@ -135,8 +135,12 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
         Seat(rawValue: ((board - 1) % 4) + 1) ?? .unknown
     }
     
+    public var boardNumber: Int {
+        return scorecard.resetNumbers ? ((board - 1) % scorecard.boardsTable) + 1 : board
+    }
+    
     public var vulnerability: Vulnerability {
-        Vulnerability(board: board)
+        Vulnerability(board: boardNumber)
     }
     
     public func points(seat: Seat) -> Int? {

@@ -138,6 +138,10 @@ import CoreData
         return self.travellerMO == nil
     }
     
+    public var boardNumber: Int {
+        return scorecard.resetNumbers ? ((board - 1) % scorecard.boardsTable) + 1 : board
+    }
+    
     public func ranking(seat: Seat) -> RankingViewModel? {
         assert(self.scorecard == Scorecard.current.scorecard, "Only valid when this scorecard is current")
         let table = ((board - 1) / scorecard.boardsTable) + 1

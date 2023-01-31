@@ -587,7 +587,7 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
                           "\(traveller.made)")))
         case .points:
             let sign = (sitting.pair == .ns ? 1 : -1)
-            label.text = "\(sign * Scorecard.points(contract: traveller.contract, vulnerability: Vulnerability(board: traveller.board), declarer: traveller.declarer, made: traveller.made, seat: .north))"
+            label.text = "\(sign * Scorecard.points(contract: traveller.contract, vulnerability: Vulnerability(board: traveller.boardNumber), declarer: traveller.declarer, made: traveller.made, seat: .north))"
         case .score:
             if sameTeam {
                 label.text = ""
