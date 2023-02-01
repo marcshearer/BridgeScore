@@ -588,7 +588,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 if let myRanking = rankings.first {
                     if let traveller = Scorecard.current.traveller(board: board.board, seat: sitting, rankingNumber: myRanking.number, section: myRanking.section) {
                         disableBanner.wrappedValue = true
-                        Scorecard.showHand(from: self, traveller: traveller) {
+                        Scorecard.showHand(from: self, board: board, traveller: traveller) {
                             self.disableBanner.wrappedValue = false
                         }
                     }
@@ -1154,11 +1154,11 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         case .vulnerable:
             label.isHidden = false
             label.font = titleFont.bold
-            label.text = board.vulnerability.string
+            label.text = (board.vulnerability ?? .unknown).string
             label.isUserInteractionEnabled = !isEnabled
         case .dealer:
             seatPicker.isHidden = false
-            seatPicker.set(board.dealer, isEnabled: false, color: color, titleFont: pickerTitleFont)
+            seatPicker.set(board.dealer ?? .unknown, isEnabled: false, color: color, titleFont: pickerTitleFont)
             seatPicker.isUserInteractionEnabled = false
             label.isUserInteractionEnabled = !isEnabled
         case .contract:

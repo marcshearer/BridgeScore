@@ -525,17 +525,20 @@ public enum Seat: Int, EnumPickerType, ContractEnumType {
 }
 
 public enum Vulnerability: Int {
-    case none = 0
-    case ns = 1
-    case ew = 2
-    case both = 3
+    case unknown = 0
+    case none = 1
+    case ns = 2
+    case ew = 3
+    case both = 4
 
     init(board: Int) {
-        self = Vulnerability(rawValue: ((board - 1) + ((board - 1) / 4)) % 4)!
+        self = Vulnerability(rawValue: (((board - 1) + ((board - 1) / 4)) % 4) + 1) ?? .unknown
     }
     
     public var string: String {
         switch self {
+        case .unknown:
+            return "?"
         case .none:
             return "-"
         case .ns:
@@ -544,6 +547,21 @@ public enum Vulnerability: Int {
             return "EW"
         case .both:
             return "All"
+        }
+    }
+    
+    public var short: String {
+        switch self {
+        case .unknown:
+            return "?"
+        case .none:
+            return "-"
+        case .ns:
+            return "N"
+        case .ew:
+            return "E"
+        case .both:
+            return "B"
         }
     }
     
@@ -717,7 +735,7 @@ public enum Suit: Int, ContractEnumType {
     }
     
     var short: String {
-        return string
+        return "\(self)".left(1).uppercased()
     }
     
     var button: String {
@@ -835,7 +853,7 @@ public class Contract: Equatable {
         case .passout:
             return "Pass Out"
         default:
-            return "\(level.short) \(suit.short) \(double.short)"
+            return "\(level.short) \(suit.string) \(double.short)"
         }
     }
     

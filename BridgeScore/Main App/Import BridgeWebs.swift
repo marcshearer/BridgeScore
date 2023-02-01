@@ -309,6 +309,10 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         case columns
         case row
         case type
+        case hand
+        case board
+        case vulnerability
+        case dealer
     }
     
     private var namesElement: Bool
@@ -375,6 +379,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
     }
     
     func initTraveller(columns: [String]) {
+        
         let importedTraveller = ImportedTraveller()
         for seat in Seat.validCases {
             importedTraveller.section[seat] = 1
@@ -549,6 +554,14 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
             element = .row
         case "type":
             element = .type
+        case "hand":
+            element = .hand
+        case "bd":
+            element = .board
+        case "dlr":
+            element = .dealer
+        case "vul":
+            element = .vulnerability
         default:
             break
         }
@@ -566,6 +579,9 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         case .view:
             if let view = Int(string) {
                 zone = Zone(rawValue: view) ?? .unknown
+                hand = nil
+                dealer = nil
+                vulnerability = nil
             }
         case .columns:
             headings = string.components(separatedBy: ";")
@@ -588,12 +604,48 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
             default:
                 players = 2
             }
-        default:
-            if zone == .travellers && tag == "bd" {
+        case .hand:
+            switch zone {
+            case .travellers:
+                if let board = boards[board] {
+                    let elements = string.components(separatedBy: ";")
+                    board.hand = elements[0...15].joined(separator: ",")
+                }
+            default:
+                break
+            }
+        case .dealer:
+            switch zone {
+            case .travellers:
+                if let number = Int(string), let board = boards[board] {
+                    board.dealer = Seat(rawValue: number)
+                }
+            default:
+                break
+            }
+        case .vulnerability:
+            switch zone {
+            case .travellers:
+                if let number = Int(string), let board = boards[board] {
+                    board.vulnerability = Vulnerability(rawValue: number)
+                }
+            default:
+                break
+            }
+        case .board:
+            switch zone {
+            case .travellers:
                 if let number = Int(string) {
                     board = number
+                    if boards[board] == nil {
+                        boards[board] = ImportedBoard()
+                    }
                 }
+            default:
+                break
             }
+        default:
+            break
         }
     }
     

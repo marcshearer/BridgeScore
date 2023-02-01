@@ -57,12 +57,17 @@ class ImportedScorecard: NSObject {
     var myRankingSeat: Seat?
     var myName: String!
     var travellers: [Int:[ImportedTraveller]] = [:]
+    var boards: [Int:ImportedBoard] = [:]
     var warnings: [String] = []
     var error: String?
     var scorecard: ScorecardViewModel!
     var boardsTable: Int?
     var table: Int = 1
     var format: ImportFormat = .pairs
+    var hand: String?
+    var dealer: Seat?
+    var vulnerability: Vulnerability?
+
 
     // MARK: - Import to main data structures =================================================================== -
         
@@ -179,6 +184,11 @@ class ImportedScorecard: NSObject {
             }
             board?.score = (myPair == .ns ? nsScore : scorecard.type.invertScore(score: nsScore))
         }
+        if let board = board {
+            board.vulnerability = boards[board.board]?.vulnerability
+            board.dealer = boards[board.board]?.dealer
+            board.hand = boards[board.board]?.hand ?? ""
+        }
     }
     
     func importRankings(table: Int? = nil) {
@@ -226,6 +236,10 @@ class ImportedScorecard: NSObject {
                     traveller.nsXImps = importedTraveller.nsXImps ?? 0
                     traveller.lead = importedTraveller.lead ?? ""
                     traveller.playData = importedTraveller.playData ?? ""
+                    if let importedBoard = boards[board] {
+                        traveller.vulnerability = importedBoard.vulnerability
+                        traveller.dealer = importedBoard.dealer
+                    }
                     
                     Scorecard.current.insert(traveller: traveller)
                 }
@@ -286,7 +300,7 @@ class ImportedScorecard: NSObject {
                 if scorecard!.type.players == 4 {
                     if let contract = traveller.contract, let declarer = traveller.declarer, let made = traveller.made {
                         if let otherTraveller = boardTravellers.first(where: {matchingTraveller($0, traveller)}), let otherContract = otherTraveller.contract, let otherDeclarer = otherTraveller.declarer, let otherMade = otherTraveller.made {
-                            let vulnerability = Vulnerability(board: board)
+                            let vulnerability =  boards[board]?.vulnerability ?? Vulnerability(board: board)
                             let nsPoints = Scorecard.points(contract: contract, vulnerability: vulnerability, declarer: declarer, made: made, seat: .north)
                             let ewPoints = Scorecard.points(contract: otherContract, vulnerability: vulnerability, declarer: otherDeclarer, made: otherMade, seat: .east)
                             let balance = nsPoints + ewPoints
@@ -477,3 +491,8 @@ class ImportedTraveller {
     public var playData: String?
 }
 
+class ImportedBoard {
+    public var hand: String?
+    public var vulnerability: Vulnerability?
+    public var dealer: Seat?
+}

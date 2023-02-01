@@ -14,6 +14,8 @@ import CoreData
     // Properties in core data model
     @Published private(set) var scorecard: ScorecardViewModel
     @Published public var board: Int = 0
+    @Published public var dealer: Seat?
+    @Published public var vulnerability: Vulnerability?
     @Published public var contract = Contract()
     @Published public var declarer: Seat = .unknown
     @Published public var made: Int = 0
@@ -45,6 +47,8 @@ import CoreData
         if let mo = self.travellerMO {
             if self.scorecard.scorecardId != mo.scorecardId ||
                 self.board != mo.board ||
+                self.dealer != mo.dealer ||
+                self.vulnerability != mo.vulnerability ||
                 self.contract != mo.contract ||
                 self.declarer != mo.declarer ||
                 self.made != mo.made ||
@@ -86,6 +90,8 @@ import CoreData
                 self.scorecard = scorecard
             }
             self.board = mo.board
+            self.dealer = mo.dealer ?? Seat(rawValue: ((board - 1) % 4) + 1) ?? .unknown
+            self.vulnerability = mo.vulnerability ?? Vulnerability(board: Scorecard.boardNumber(scorecard: scorecard, board: board))
             self.contract = mo.contract
             self.declarer = mo.declarer
             self.made = mo.made
@@ -102,6 +108,8 @@ import CoreData
         if let mo = travellerMO {
             mo.scorecardId = scorecard.scorecardId
             mo.board = board
+            mo.dealer = dealer
+            mo.vulnerability = vulnerability
             mo.contract = contract
             mo.declarer = declarer
             mo.made = made

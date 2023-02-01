@@ -15,6 +15,8 @@ public class BoardMO: NSManagedObject, ManagedObject, Identifiable {
     public var id: (UUID, Int) { (self.scorecardId, self.board) }
     @NSManaged public var scorecardId: UUID
     @NSManaged public var board16: Int16
+    @NSManaged public var dealer16: Int16
+    @NSManaged public var vulnerability16: Int16
     @NSManaged public var contractLevel16: Int16
     @NSManaged public var contractSuit16: Int16
     @NSManaged public var contractDouble16: Int16
@@ -25,6 +27,7 @@ public class BoardMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var scoreEntered: Bool
     @NSManaged public var comment: String
     @NSManaged public var responsible16: Int16
+    @NSManaged public var hand: String
     
     convenience init() {
         self.init(context: CoreData.context)
@@ -35,6 +38,16 @@ public class BoardMO: NSManagedObject, ManagedObject, Identifiable {
         set { self.board16 = Int16(newValue)}
     }
     
+    public var dealer: Seat? {
+        get { dealer16 == Seat.unknown.rawValue ? nil : Seat(rawValue: Int(dealer16)) }
+        set { self.dealer16 = Int16(newValue?.rawValue ?? Seat.unknown.rawValue) }
+    }
+    
+    public var vulnerability: Vulnerability? {
+        get { vulnerability16 == Vulnerability.unknown.rawValue ? nil : Vulnerability(rawValue: Int(vulnerability16)) }
+        set { self.vulnerability16 = Int16(newValue?.rawValue ?? Vulnerability.unknown.rawValue) }
+    }
+
     public var declarer: Seat {
         get { Seat(rawValue: Int(declarer16)) ?? .unknown }
         set { self.declarer16 = Int16(newValue.rawValue) }

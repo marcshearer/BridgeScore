@@ -125,7 +125,9 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
     // MARK: - Cell delegate ===================================================================== -
     
     func showHand(traveller: TravellerViewModel) {
-        Scorecard.showHand(from: self, traveller: traveller)
+        if let board = Scorecard.current.boards[boardNumber] {
+            Scorecard.showHand(from: self, board: board, traveller: traveller)
+        }
     }
     
     // MARK: - TableView Delegates ================================================================ -

@@ -436,6 +436,10 @@ class Scorecard {
     
     // MARK: - Utilities ======================================================================== -
     
+    public static func boardNumber(scorecard: ScorecardViewModel, board: Int) -> Int {
+        return scorecard.resetNumbers ? ((board - 1) % scorecard.boardsTable) + 1 : board
+    }
+    
     @discardableResult static public func updateScores(scorecard: ScorecardViewModel) -> Bool {
         var changed = false
         
@@ -645,29 +649,68 @@ class Scorecard {
         return points * multiplier
     }
     
-    static func showHand(from parentView: UIView, traveller: TravellerViewModel, completion: (()->())? = nil) {
-        if var string = traveller.playData.removingPercentEncoding {
-            if let pnPosition = string.position("|pn|") {
-                if let nextSeparator = string.right(string.length - pnPosition - 4).position("|") {
-                    if nextSeparator > 0 {
-                        var nameString = string.mid(pnPosition + 4, nextSeparator).lowercased()
-                        for seat in Seat.validCases {
-                            if let bboName = traveller.ranking(seat: seat)?.players[seat] {
-                                if let name = MasterData.shared.realName(bboName: bboName) {
-                                    nameString = nameString.replacingOccurrences(of: bboName.lowercased(), with: name)
-                                }
-                            }
+    static func showHand(from parentView: UIView, board: BoardViewModel, traveller: TravellerViewModel, completion: (()->())? = nil) {
+        
+        var playData = ""
+        var linData = traveller.playData.removingPercentEncoding ?? ""
+        if linData != "" {
+            // Got lin data - just replace names
+            var nameString = ""
+            let seats: [Seat] = [.south, .west, .north, .east]
+            for seat in seats {
+                var name = "Unknown"
+                if let ranking = traveller.ranking(seat: seat) {
+                    name = (ranking.players[seat] ?? name)
+                    if Scorecard.current.scorecard?.importSource == .bbo {
+                        if let realName = MasterData.shared.realName(bboName: name) {
+                            name = realName
                         }
-                        string = string.left(pnPosition + 4) + nameString + string.right(string.length - pnPosition - nextSeparator - 4)
+                    }
+                }
+                nameString += name
+                if seat != .east {
+                    nameString += ","
+                }
+            }
+            if let pnPosition = linData.position("|pn|") {
+                if let nextSeparator = linData.right(linData.length - pnPosition - 4).position("|") {
+                    if nextSeparator > 0 {
+                        linData = linData.left(pnPosition + 4) + nameString + linData.right(linData.length - pnPosition - nextSeparator - 4)
                     }
                 }
             }
-            if let encodedString = string.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) {
-                if let url = URL(string: "https://www.bridgebase.com/tools/handviewer.html?bbo=y&lin=/\(encodedString)") {
-                    let webView = ScorecardWebView(frame: CGRect())
-                    webView.show(from: parentView.superview?.superview ?? parentView, url: url, completion: completion)
+            playData = "?bbo=y&tbt=y&lin=/\(linData.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? "")"
+        } else if board.hand != "" {
+            // Try to construct from hand
+            playData = "?d=\(board.declarer.short.lowercased())"
+            for seat in Seat.validCases {
+                var name = "Unknown"
+                if let ranking = traveller.ranking(seat: seat) {
+                    name = (ranking.players[seat] ?? name).addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!
+                }
+                playData += "&\(seat.short.lowercased())n=\(name)"
+            }
+            playData += "&v=\(board.vulnerability?.short.lowercased() ?? "-")"
+            playData += "&b=\(board.board)"
+            let suits = board.hand.components(separatedBy: ",")
+            for seat in Seat.validCases {
+                playData += "&\(seat.short.lowercased())="
+                for suit in 0...3 {
+                    playData += "shdc".mid(suit, 1)
+                    let suit = suits[((seat.rawValue - 1) * 4) + suit]
+                    playData += (suit == "--" ? "" : suit)
                 }
             }
+            playData += "&a=\(traveller.contract.level.short)\(traveller.contract.suit.short)\(traveller.declarer.short)"
+        }
+        
+        if playData != "" {
+            if let url = URL(string: "https://www.bridgebase.com/tools/handviewer.html\(playData)") {
+                let webView = ScorecardWebView(frame: CGRect())
+                webView.show(from: parentView.superview?.superview ?? parentView, url: url, completion: completion)
+            }
+        } else {
+            completion?()
         }
     }
 }

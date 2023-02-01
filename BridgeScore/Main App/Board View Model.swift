@@ -14,12 +14,15 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
     // Properties in core data model
     @Published private(set) var scorecard: ScorecardViewModel
     @Published public var board: Int
+    @Published public var dealer: Seat?
+    @Published public var vulnerability: Vulnerability?
     @Published public var contract = Contract()
     @Published public var declarer: Seat = .unknown
     @Published public var made: Int? = nil
     @Published public var score: Float?
     @Published public var comment: String = ""
     @Published public var responsible: Responsible = .unknown
+    @Published public var hand: String = ""
     
     // Linked managed objects - should only be referenced in this and the Data classes
     @Published internal var boardMO: BoardMO?
@@ -41,12 +44,15 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
         if let mo = self.boardMO {
             if self.scorecard.scorecardId != mo.scorecardId ||
                 self.board != mo.board ||
+                self.dealer != mo.dealer ||
+                self.vulnerability != mo.vulnerability ||
                 self.contract != mo.contract ||
                 self.declarer != mo.declarer ||
                 self.made != mo.made ||
                 self.score != mo.score ||
                 self.comment != mo.comment ||
-                self.responsible != mo.responsible {
+                self.responsible != mo.responsible ||
+                self.hand != mo.hand {
                     result = true
             }
         } else {
@@ -58,6 +64,8 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
     public init(scorecard: ScorecardViewModel, board: Int) {
         self.scorecard = scorecard
         self.board = board
+        self.dealer = Seat(rawValue: ((board - 1) % 4) + 1) ?? .unknown
+        self.vulnerability = Vulnerability(board: boardNumber)
         self.setupMappings()
     }
     
@@ -76,12 +84,15 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
                 self.scorecard = scorecard
             }
             self.board = mo.board
+            self.dealer = mo.dealer ?? Seat(rawValue: ((board - 1) % 4) + 1) ?? .unknown
+            self.vulnerability = mo.vulnerability ?? Vulnerability(board: Scorecard.boardNumber(scorecard: scorecard, board: board))
             self.contract = mo.contract
             self.declarer = mo.declarer
             self.made = mo.made
             self.score = mo.score
             self.comment = mo.comment
             self.responsible = mo.responsible
+            self.hand = mo.hand
         }
     }
     
@@ -89,12 +100,15 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
         if let mo = boardMO {
             mo.scorecardId = scorecard.scorecardId
             mo.board = board
+            mo.dealer = dealer
+            mo.vulnerability = vulnerability
             mo.contract = contract
             mo.declarer = declarer
             mo.made = made
             mo.score = score
             mo.comment = comment
             mo.responsible = responsible
+            mo.hand = hand
         } else {
             fatalError("No managed object")
         }
@@ -131,20 +145,12 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
         self.responsible != .unknown
     }
     
-    public var dealer: Seat {
-        Seat(rawValue: ((board - 1) % 4) + 1) ?? .unknown
-    }
-    
     public var boardNumber: Int {
-        return scorecard.resetNumbers ? ((board - 1) % scorecard.boardsTable) + 1 : board
-    }
-    
-    public var vulnerability: Vulnerability {
-        Vulnerability(board: boardNumber)
+        Scorecard.boardNumber(scorecard: scorecard, board: board)
     }
     
     public func points(seat: Seat) -> Int? {
-        return (made == nil ? nil : Scorecard.points(contract: contract, vulnerability: vulnerability, declarer: declarer, made: made!, seat: seat))
+        return (made == nil ? nil : Scorecard.points(contract: contract, vulnerability: vulnerability!, declarer: declarer, made: made!, seat: seat))
     }
     
     public var description: String {
