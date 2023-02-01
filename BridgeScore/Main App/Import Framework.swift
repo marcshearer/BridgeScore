@@ -412,14 +412,16 @@ class ImportedScorecard: NSObject {
                 ranking.ranking = lastRanking!.ranking
                 ranking.tie = true
             }
-            if ranking.number == myRanking?.number {
+            if ranking.number == myRanking?.number && (myRanking?.way == .unknown || ranking.way == myRanking?.way) {
                 myGroup = true
                 if !scorecard.resetNumbers {
                     scorecard.position = ranking.ranking
                 }
             }
         }
-        scorecard.entry = groupEntry
+        if myGroup && !scorecard.resetNumbers {
+            scorecard.entry = groupEntry
+        }
     }
     
   // MARK: - Validation ======================================================================== -

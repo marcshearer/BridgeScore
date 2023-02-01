@@ -588,7 +588,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 if let myRanking = rankings.first {
                     if let traveller = Scorecard.current.traveller(board: board.board, seat: sitting, rankingNumber: myRanking.number, section: myRanking.section) {
                         disableBanner.wrappedValue = true
-                        Scorecard.showHand(from: self, board: board, traveller: traveller) {
+                        Scorecard.showHand(from: self, board: board, traveller: traveller, sitting: sitting) {
                             self.disableBanner.wrappedValue = false
                         }
                     }

@@ -649,7 +649,7 @@ class Scorecard {
         return points * multiplier
     }
     
-    static func showHand(from parentView: UIView, board: BoardViewModel, traveller: TravellerViewModel, completion: (()->())? = nil) {
+    static func showHand(from parentView: UIView, board: BoardViewModel, traveller: TravellerViewModel, sitting: Seat = .south, completion: (()->())? = nil) {
         
         var playData = ""
         var linData = traveller.playData.removingPercentEncoding ?? ""
