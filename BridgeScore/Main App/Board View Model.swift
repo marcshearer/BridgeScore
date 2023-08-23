@@ -14,8 +14,6 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
     // Properties in core data model
     @Published private(set) var scorecard: ScorecardViewModel
     @Published public var board: Int
-    @Published public var dealer: Seat?
-    @Published public var vulnerability: Vulnerability?
     @Published public var contract = Contract()
     @Published public var declarer: Seat = .unknown
     @Published public var made: Int? = nil
@@ -36,6 +34,12 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
     public var tableNumber: Int {
         assert(self.scorecard == Scorecard.current.scorecard, "Only valid when this scorecard is current")
         return ((board - 1) / (Scorecard.current.scorecard?.boardsTable ?? 1)) + 1
+    }
+    public var vulnerability: Vulnerability {
+        return Vulnerability(board: board)
+    }
+    public var dealer: Seat {
+        return Seat(rawValue: ((board - 1) % 4) + 1) ?? .unknown
     }
     
     // Check if view model matches managed object
@@ -64,8 +68,6 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
     public init(scorecard: ScorecardViewModel, board: Int) {
         self.scorecard = scorecard
         self.board = board
-        self.dealer = Seat(rawValue: ((board - 1) % 4) + 1) ?? .unknown
-        self.vulnerability = Vulnerability(board: boardNumber)
         self.setupMappings()
     }
     
@@ -84,8 +86,6 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
                 self.scorecard = scorecard
             }
             self.board = mo.board
-            self.dealer = mo.dealer ?? Seat(rawValue: ((board - 1) % 4) + 1) ?? .unknown
-            self.vulnerability = mo.vulnerability ?? Vulnerability(board: Scorecard.boardNumber(scorecard: scorecard, board: board))
             self.contract = mo.contract
             self.declarer = mo.declarer
             self.made = mo.made
@@ -150,7 +150,7 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
     }
     
     public func points(seat: Seat) -> Int? {
-        return (made == nil ? nil : Scorecard.points(contract: contract, vulnerability: vulnerability!, declarer: declarer, made: made!, seat: seat))
+        return (made == nil ? nil : Scorecard.points(contract: contract, vulnerability: vulnerability, declarer: declarer, made: made!, seat: seat))
     }
     
     public var description: String {

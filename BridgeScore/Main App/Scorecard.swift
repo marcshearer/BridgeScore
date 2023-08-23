@@ -690,7 +690,7 @@ class Scorecard {
                 }
                 playData += "&\(seat.short.lowercased())n=\(name)"
             }
-            playData += "&v=\(board.vulnerability?.short.lowercased() ?? "-")"
+            playData += "&v=\(board.vulnerability.short.lowercased())"
             playData += "&b=\(board.board)"
             let suits = board.hand.components(separatedBy: ",")
             for seat in Seat.validCases {
