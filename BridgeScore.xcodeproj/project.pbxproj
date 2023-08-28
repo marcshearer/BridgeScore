@@ -143,7 +143,7 @@
 		B25F653927EDEEF400FDD6B1 /* Scorecard Ranking View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Ranking View.swift"; sourceTree = "<group>"; };
 		B25F653B27F0507600FDD6B1 /* Scorecard Traveller View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Traveller View.swift"; sourceTree = "<group>"; };
 		B2633A0D27AC3A460081B258 /* Layout List View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Layout List View.swift"; sourceTree = "<group>"; };
-		B26BCDF62799A1AC00B73501 /* BridgeScore.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BridgeScore.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B26BCDF62799A1AC00B73501 /* Bridge Score.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Bridge Score.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B26BCDF92799A1AC00B73501 /* Bridge Score App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Bridge Score App.swift"; sourceTree = "<group>"; };
 		B26BCE002799A1AE00B73501 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		B26BCE282799AB6700B73501 /* Persistence.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Persistence.swift; sourceTree = "<group>"; };
@@ -251,7 +251,7 @@
 		B26BCDF72799A1AC00B73501 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				B26BCDF62799A1AC00B73501 /* BridgeScore.app */,
+				B26BCDF62799A1AC00B73501 /* Bridge Score.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -520,7 +520,7 @@
 			);
 			name = BridgeScore;
 			productName = BridgeScore;
-			productReference = B26BCDF62799A1AC00B73501 /* BridgeScore.app */;
+			productReference = B26BCDF62799A1AC00B73501 /* Bridge Score.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -804,7 +804,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_ASSET_PATHS = "\"BridgeScore/Main App/Preview Content\"";
 				DEVELOPMENT_TEAM = 3T7CT2S464;
 				ENABLE_PREVIEWS = YES;
@@ -825,7 +825,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = MarcShearer.BridgeScore;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "Bridge Score";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTS_MACCATALYST = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -843,7 +843,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_ASSET_PATHS = "\"BridgeScore/Main App/Preview Content\"";
 				DEVELOPMENT_TEAM = 3T7CT2S464;
 				ENABLE_PREVIEWS = YES;
@@ -864,7 +864,7 @@
 				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = MarcShearer.BridgeScore;
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "Bridge Score";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SUPPORTS_MACCATALYST = YES;
 				SWIFT_EMIT_LOC_STRINGS = YES;

@@ -95,7 +95,9 @@ class ImportedScorecard: NSObject {
                     scorecard?.boards = boardCount
                 }
                 if let boardsTable = boardsTable {
-                    scorecard?.boardsTable = boardsTable
+                    if boardsTable > 0 {
+                        scorecard?.boardsTable = boardsTable
+                    }
                 }
                 Scorecard.current.addNew()
             }
@@ -185,8 +187,6 @@ class ImportedScorecard: NSObject {
             board?.score = (myPair == .ns ? nsScore : scorecard.type.invertScore(score: nsScore))
         }
         if let board = board {
-            board.vulnerability = boards[board.board]?.vulnerability
-            board.dealer = boards[board.board]?.dealer
             board.hand = boards[board.board]?.hand ?? ""
         }
     }

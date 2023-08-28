@@ -7,7 +7,6 @@
 
 import CoreData
 import SwiftUI
-import CoreMedia
 
 struct FileNameElement: Hashable {
     var file: String
@@ -340,7 +339,8 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         self.type = scorecard.type.boardScoreType
         let string = String(decoding: data, as: UTF8.self)
         let replacedQuote = string.replacingOccurrences(of: "&#39;", with: replacingSingleQuote)
-        self.data = replacedQuote.data(using: .utf8)
+        let replacedEGrave = replacedQuote.replacingOccurrences(of: "&#xe8;", with: "e")
+        self.data = replacedEGrave.data(using: .utf8)
         parser = XMLParser(data: self.data)
         parser.delegate = self
         parser.parse()
@@ -356,7 +356,21 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 }
             case "pair":
                 if let components = columns.element(index)?.components(separatedBy: ":") {
-                    importedRanking.number = Int(components.first!)
+                    if importedRanking.number == nil || importedRanking.way != nil {
+                        // Don't overwrite if filled from team and don't have a pair direction
+                        importedRanking.number = Int(components.first!)
+                        format = .pairs
+                    }
+                }
+            case "team":
+                if let components = columns.element(index)?.components(separatedBy: ":") {
+                    if importedRanking.number == nil {
+                        // Don't overwrite pair number
+                        importedRanking.number = Int(components.first!)
+                        if players ?? 0 > 2 {
+                            format = .teams
+                        }
+                    }
                 }
             case "way":
                 if let string = columns.element(index), let bwValue = Int(string) {
@@ -596,13 +610,18 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 break
             }
         case .type:
-            switch string.lowercased() {
-            case "s":
-                players = 1
-            case "4":
-                players = 4
+            switch zone {
+            case .rankings:
+                switch string.lowercased() {
+                case "s":
+                    players = 2
+                case "4", "8":
+                    players = 4
+                default:
+                    players = 2
+                }
             default:
-                players = 2
+                break
             }
         case .hand:
             switch zone {
