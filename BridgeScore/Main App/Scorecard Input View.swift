@@ -49,6 +49,11 @@ struct ScorecardInputView: View {
     @State private var importBwScorecard = false
     @State private var showRankings = false
     @State private var disableBanner = false
+    @State private var handViewer = false
+    @State private var handBoard: BoardViewModel? = nil
+    @State private var handTraveller: TravellerViewModel? = nil
+    @State private var handSitting = Seat.unknown
+    @State private var handView: UIView!
     
     var body: some View {
         StandardView("Input", slideInId: id) {
@@ -61,7 +66,7 @@ struct ScorecardInputView: View {
                 Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .both, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: nil, menuId: id, options: bannerOptions(isNotImported: $isNotImported), disabled: $disableBanner)
                     .disabled(disableBanner)
                 GeometryReader { geometry in
-                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), refreshTableTotals: $refreshTableTotals, detailView: $detailView, inputDetail: $inputDetail, tableRefresh: $tableRefresh, showRankings: $showRankings, disableBanner: $disableBanner)
+                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), refreshTableTotals: $refreshTableTotals, detailView: $detailView, inputDetail: $inputDetail, tableRefresh: $tableRefresh, showRankings: $showRankings, disableBanner: $disableBanner, handViewer: $handViewer, handBoard: $handBoard, handTraveller: $handTraveller, handSitting: $handSitting, handView: $handView)
                     .ignoresSafeArea(edges: .all)
                 }
             }
@@ -99,6 +104,16 @@ struct ScorecardInputView: View {
         }) {
             ImportBridgeWebsScorecard(scorecard: scorecard) {
                 saveScorecard()
+            }
+        }
+        .sheet(isPresented: $handViewer, onDismiss: {
+            UndoManager.clearActions()
+            disableBanner = false
+        }) {
+            if let handBoard = handBoard {
+                if let handTraveller = handTraveller {
+                    HandViewer(board: handBoard, traveller: handTraveller, sitting: handSitting, from: handView)
+                }
             }
         }
         .onAppear {
@@ -192,13 +207,18 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
     @Binding var tableRefresh: Bool
     @Binding var showRankings: Bool
     @Binding var disableBanner: Bool
+    @Binding var handViewer: Bool
+    @Binding var handBoard: BoardViewModel?
+    @Binding var handTraveller: TravellerViewModel?
+    @Binding var handSitting: Seat
+    @Binding var handView: UIView?
 
     func makeUIView(context: Context) -> ScorecardInputUIView {
         
-        let view = ScorecardInputUIView(frame: frame, scorecard: scorecard, inputDetail: inputDetail, disableBanner: $disableBanner)
+        let inputView = ScorecardInputUIView(frame: frame, scorecard: scorecard, inputDetail: inputDetail, disableBanner: $disableBanner, handViewer: $handViewer, handBoard: $handBoard, handTraveller: $handTraveller, handSitting: $handSitting, handView: $handView)
         UndoManager.clearActions()
        
-        return view
+        return inputView
     }
 
     func updateUIView(_ uiView: ScorecardInputUIView, context: Context) {
@@ -276,6 +296,11 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     private var detailView = true
     public var inputDetail: Bool
     private var disableBanner: Binding<Bool>
+    public var handViewer: Binding<Bool>
+    public var handBoard: Binding<BoardViewModel?>
+    public var handTravelller: Binding<TravellerViewModel?>
+    public var handSitting: Binding<Seat>
+    public var handView: Binding<UIView?>
     private var ignoreKeyboard = false
     private var titleHeightConstraint: NSLayoutConstraint!
     private var orientation: UIDeviceOrientation?
@@ -283,16 +308,21 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     var boardColumns: [ScorecardColumn] = []
     var tableColumns: [ScorecardColumn] = []
     
-    init(frame: CGRect, scorecard: ScorecardViewModel, inputDetail: Bool, disableBanner: Binding<Bool>) {
+    init(frame: CGRect, scorecard: ScorecardViewModel, inputDetail: Bool, disableBanner: Binding<Bool>, handViewer: Binding<Bool>, handBoard: Binding<BoardViewModel?>, handTraveller: Binding<TravellerViewModel?>, handSitting: Binding<Seat>, handView: Binding<UIView?>) {
         self.scorecard = scorecard
         self.inputDetail = inputDetail
         self.disableBanner = disableBanner
+        self.handViewer = handViewer
+        self.handBoard = handBoard
+        self.handTravelller = handTraveller
+        self.handSitting = handSitting
+        self.handView = handView
         self.contractEntryView = ScorecardContractEntryView(frame: CGRect())
         self.scrollPickerPopupView = ScrollPickerPopupView(frame: CGRect())
         self.declarerPickerPopupView = DeclarerPickerPopupView(frame: CGRect())
 
         super.init(frame: frame)
-        
+    
         // Set up view
         switchView(detailView: true, force: true)
                     
@@ -575,7 +605,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         if !Scorecard.current.travellerList.isEmpty {
             let showTraverllerView = ScorecardTravellerView(frame: CGRect())
             disableBanner.wrappedValue = true
-            showTraverllerView.show(from: superview!.superview!, boardNumber: board.board, sitting: sitting) {
+            showTraverllerView.show(from: self, boardNumber: board.board, sitting: sitting) {
                 self.disableBanner.wrappedValue = false
             }
         }
@@ -588,9 +618,11 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 if let myRanking = rankings.first {
                     if let traveller = Scorecard.current.traveller(board: board.board, seat: sitting, rankingNumber: myRanking.number, section: myRanking.section) {
                         disableBanner.wrappedValue = true
-                        Scorecard.showHand(from: self, board: board, traveller: traveller, sitting: sitting) {
-                            self.disableBanner.wrappedValue = false
-                        }
+                        handBoard.wrappedValue = board
+                        handTravelller.wrappedValue = traveller
+                        handSitting.wrappedValue = sitting
+                        handView.wrappedValue = self
+                        handViewer.wrappedValue = true
                     }
                 }
             }
@@ -1154,11 +1186,11 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         case .vulnerable:
             label.isHidden = false
             label.font = titleFont.bold
-            label.text = (board.vulnerability ?? .unknown).string
+            label.text = board.vulnerability.string
             label.isUserInteractionEnabled = !isEnabled
         case .dealer:
             seatPicker.isHidden = false
-            seatPicker.set(board.dealer ?? .unknown, isEnabled: false, color: color, titleFont: pickerTitleFont)
+            seatPicker.set(board.dealer, isEnabled: false, color: color, titleFont: pickerTitleFont)
             seatPicker.isUserInteractionEnabled = false
             label.isUserInteractionEnabled = !isEnabled
         case .contract:

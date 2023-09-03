@@ -35,6 +35,11 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
         assert(self.scorecard == Scorecard.current.scorecard, "Only valid when this scorecard is current")
         return ((board - 1) / (Scorecard.current.scorecard?.boardsTable ?? 1)) + 1
     }
+    public var table: TableViewModel? {
+        assert(self.scorecard == Scorecard.current.scorecard, "Only valid when this scorecard is current")
+        let table = ((board - 1) / (Scorecard.current.scorecard?.boardsTable ?? 1)) + 1
+        return Scorecard.current.tables[table]
+    }
     public var vulnerability: Vulnerability {
         return Vulnerability(board: board)
     }

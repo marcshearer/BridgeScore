@@ -65,6 +65,7 @@ let backupDateFormat = "yyyy-MM-dd HH:mm:ss.SSS Z"
 // Other constants
 let tagMultiplier = 1000000
 let nullUUID = UUID(uuidString: "00000000-0000-0000-0000-000000000000")!
+let useBboHandViewer = false
 
 // Localisable names
 
@@ -442,18 +443,18 @@ public enum Pair: Int, CaseIterable {
 public enum Seat: Int, EnumPickerType, ContractEnumType {
     case unknown = 0
     case north = 1
-    case south = 3
     case east = 2
+    case south = 3
     case west = 4
     
     init(string: String) {
         switch string.uppercased() {
         case "N":
             self = .north
-        case "S":
-            self = .south
         case "E":
             self = .east
+        case "S":
+            self = .south
         case "W":
             self = .west
         default:
@@ -480,6 +481,13 @@ public enum Seat: Int, EnumPickerType, ContractEnumType {
         }
     }
     
+    func offset(by offset: Int) -> Seat {
+        return Seat(rawValue: (((self.rawValue + offset - 1) % 4) + 1))!
+    }
+    
+    func offset(to seat: Seat) -> Int {
+        return (seat.rawValue + 4 - self.rawValue) % 4
+    }
     
     static public var validCases: [Seat] {
         return Seat.allCases.filter{$0 != .unknown}
@@ -734,6 +742,19 @@ public enum Suit: Int, ContractEnumType {
         }
     }
     
+    public var color: Color {
+        get {
+            switch self {
+            case .diamonds, .hearts:
+                return .red
+            case .clubs, .spades:
+                return .black
+            default:
+                return .black
+            }
+        }
+    }
+    
     var short: String {
         return "\(self)".left(1).uppercased()
     }
@@ -748,6 +769,10 @@ public enum Suit: Int, ContractEnumType {
     
     static var validCases: [Suit] {
         return Suit.allCases.filter({$0.valid})
+    }
+    
+    static var realSuits: [Suit] {
+        return Suit.allCases.filter({$0.valid && $0 != .noTrumps})
     }
     
     var hasDouble: Bool {
@@ -854,6 +879,17 @@ public class Contract: Equatable {
             return "Pass Out"
         default:
             return "\(level.short) \(suit.string) \(double.short)"
+        }
+    }
+    
+    public var compact: String {
+        switch level {
+        case .blank:
+            return ""
+        case .passout:
+            return "Pass Out"
+        default:
+            return "\(level.short)\(suit.string)\(double.short)"
         }
     }
     

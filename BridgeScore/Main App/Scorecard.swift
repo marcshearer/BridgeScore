@@ -81,19 +81,19 @@ class Scorecard {
     public var hasData: Bool {
         return (boards.compactMap{$0.value}.firstIndex(where: {$0.hasData}) != nil) || (tables.compactMap{$0.value}.firstIndex(where: {$0.hasData}) != nil)
     }
-
+    
     public func load(scorecard: ScorecardViewModel) {
         let scorecardFilter = NSPredicate(format: "scorecardId = %@", scorecard.scorecardId as NSUUID)
-
-        // Load boards
+        
+            // Load boards
         let boardMOs = CoreData.fetch(from: BoardMO.tableName, filter: scorecardFilter) as! [BoardMO]
         
         boards = [:]
         for boardMO in boardMOs {
             boards[boardMO.board] = BoardViewModel(scorecard: scorecard, boardMO: boardMO)
         }
-
-        // Load tables
+        
+            // Load tables
         let tableMOs = CoreData.fetch(from: TableMO.tableName, filter: scorecardFilter) as! [TableMO]
         
         tables = [:]
@@ -101,17 +101,17 @@ class Scorecard {
             tables[tableMO.table] = TableViewModel(scorecard: scorecard, tableMO: tableMO)
         }
         
-        // Load rankings
+            // Load rankings
         let rankingMOs = CoreData.fetch(from: RankingMO.tableName, filter: scorecardFilter) as! [RankingMO]
-
+        
         rankingList = []
         for rankingMO in rankingMOs {
             rankingList.append(RankingViewModel(scorecard: scorecard, rankingMO: rankingMO))
         }
         
-        // Load travellers
+            // Load travellers
         let travellerMOs = CoreData.fetch(from: TravellerMO.tableName, filter: scorecardFilter) as! [TravellerMO]
-
+        
         travellerList = []
         for travellerMO in travellerMOs {
             travellerList.append(TravellerViewModel(scorecard: scorecard, travellerMO: travellerMO))
@@ -164,51 +164,51 @@ class Scorecard {
         
         for (boardNumber, board) in boards {
             if boardNumber < 1 || boardNumber > scorecard.boards {
-                // Remove any boards no longer in bounds
+                    // Remove any boards no longer in bounds
                 if board.isNew {
-                    // Not yet in core data - just remove from array
+                        // Not yet in core data - just remove from array
                     boards[board.board] = nil
                 } else {
                     remove(board: board)
                 }
             } else if board.changed {
-                // Save any existing boards
+                    // Save any existing boards
                 save(board: board)
             }
         }
         
         for (tableNumber, table) in tables {
             if tableNumber < 1 || tableNumber > scorecard.tables {
-                // Remove any tables no longer in bounds
+                    // Remove any tables no longer in bounds
                 if table.isNew {
-                    // Not yet in core data - just remove from array
+                        // Not yet in core data - just remove from array
                     tables[table.table] = nil
                 } else {
                     remove(table: table)
                 }
             } else if table.changed {
-                // Save any existing tables
+                    // Save any existing tables
                 save(table: table)
             }
         }
         
         for (ranking) in rankingList {
-            // Save any existing travellers
+                // Save any existing travellers
             save(ranking: ranking)
         }
         
         var removeList = IndexSet()
         for (index, traveller) in travellerList.reversed().enumerated() {
             if traveller.board < 1 || traveller.board > scorecard.boards {
-                // Remove any travellers no longer in bounds
+                    // Remove any travellers no longer in bounds
                 if traveller.isNew {
-                    // Not yet in core data - just remove from array
+                        // Not yet in core data - just remove from array
                     removeList.insert(index)
                 } else {
                     remove(traveller: traveller)
                 }
             } else if traveller.changed {
-                // Save any existing travellers
+                    // Save any existing travellers
                 save(traveller: traveller)
             }
         }
@@ -234,7 +234,7 @@ class Scorecard {
         }
         
         clear()
-   }
+    }
     
     public func removeRankings(table: Int? = nil) {
         for ranking in rankings(table: table).reversed() {
@@ -255,14 +255,14 @@ class Scorecard {
     
     public func addNew() {
         if let scorecard = scorecard {
-            // Fill in any gaps in boards
+                // Fill in any gaps in boards
             for boardNumber in 1...scorecard.boards {
                 if boards[boardNumber] == nil {
                     boards[boardNumber] = BoardViewModel(scorecard: scorecard, board: boardNumber)
                 }
             }
             
-            // Fill in any gaps in tables
+                // Fill in any gaps in tables
             for tableNumber in 1...scorecard.tables {
                 if tables[tableNumber] == nil {
                     tables[tableNumber] = TableViewModel(scorecard: scorecard, table: tableNumber)
@@ -283,7 +283,7 @@ class Scorecard {
         }
     }
     
-    // MARK: - Boards ======================================================================== -
+        // MARK: - Boards ======================================================================== -
     
     public func insert(board: BoardViewModel) {
         assert(board.scorecard == scorecard, "Board is not in current scorecard")
@@ -321,8 +321,8 @@ class Scorecard {
         }
     }
     
-    // MARK: - Boards ======================================================================== -
-
+        // MARK: - Boards ======================================================================== -
+    
     public func insert(table: TableViewModel) {
         assert(table.scorecard == scorecard, "Table is not in current scorecard")
         assert(table.isNew, "Cannot insert a table which already has a managed object")
@@ -359,7 +359,7 @@ class Scorecard {
         }
     }
     
-    // MARK: - Rankings ======================================================================== -
+        // MARK: - Rankings ======================================================================== -
     
     public func insert(ranking: RankingViewModel) {
         assert(ranking.scorecard == scorecard, "Ranking is not in current scorecard")
@@ -397,8 +397,8 @@ class Scorecard {
         }
     }
     
-    // MARK: - Travellers ======================================================================== -
-
+        // MARK: - Travellers ======================================================================== -
+    
     public func insert(traveller: TravellerViewModel) {
         assert(traveller.scorecard == scorecard, "Traveller is not in current scorecard")
         assert(traveller.isNew, "Cannot insert a traveller which already has a managed object")
@@ -434,7 +434,7 @@ class Scorecard {
         }
     }
     
-    // MARK: - Utilities ======================================================================== -
+        // MARK: - Utilities ======================================================================== -
     
     public static func boardNumber(scorecard: ScorecardViewModel, board: Int) -> Int {
         return scorecard.resetNumbers ? ((board - 1) % scorecard.boardsTable) + 1 : board
@@ -497,8 +497,8 @@ class Scorecard {
         for tableNumber in 1...scorecard.tables {
             if let table = Scorecard.current.tables[tableNumber] {
                 if let score = table.score {
-                    // Weight it to number of boards completed if averaging
-                    let scored = table.scoredBoards 
+                        // Weight it to number of boards completed if averaging
+                    let scored = table.scoredBoards
                     let weight = scorecard.type.matchAggregate == .average ? scored : 1
                     total += score * Float(weight)
                     completedBoards += scored
@@ -585,7 +585,7 @@ class Scorecard {
     public static func points(contract: Contract, vulnerability: Vulnerability, declarer: Seat, made: Int, seat: Seat) -> Int {
         var points = 0
         let multiplier = (seat == declarer || seat == declarer.partner ? 1 : -1)
-
+        
         if contract.level != .passout {
             
             let level = contract.level
@@ -596,12 +596,12 @@ class Scorecard {
             
             if made >= 0 {
                 
-                // Add in base points for making contract
+                    // Add in base points for making contract
                 let madePoints = suit.trickPoints(tricks: level.rawValue) * double.multiplier
                 gameMade = (madePoints >= values.gamePoints)
                 points += madePoints
                 
-                // Add in any overtricks
+                    // Add in any overtricks
                 if made >= 1 {
                     if double == .undoubled {
                         points += suit.overTrickPoints(tricks: made)
@@ -610,19 +610,19 @@ class Scorecard {
                     }
                 }
                 
-                // Add in the insult
+                    // Add in the insult
                 if double != .undoubled {
                     points += values.insult * (double.multiplier / 2)
                 }
                 
-                // Add in any game bonus or part score bonus
+                    // Add in any game bonus or part score bonus
                 if gameMade {
                     points += (values.gameBonus)
                 } else {
                     points += values.partScoreBonus
                 }
                 
-                // Add in any slam bonus
+                    // Add in any slam bonus
                 if level.rawValue == 7 {
                     points += values.grandSlamBonus
                 } else if level.rawValue == 6 {
@@ -630,17 +630,17 @@ class Scorecard {
                 }
             } else {
                 
-                // Subtract points for undertricks
+                    // Subtract points for undertricks
                 if double == .undoubled {
                     points = values.firstUndertrick * made
                 } else {
-                    // Subtract first trick
+                        // Subtract first trick
                     points -= values.firstUndertrick * double.multiplier
                     
-                    // Subtract second and third undertricks
+                        // Subtract second and third undertricks
                     points += values.nextTwoDoubledUndertricks * (double.multiplier / 2) * min(0, max(-2, made + 1))
                     
-                    // Subtract all other undertricks
+                        // Subtract all other undertricks
                     points += values.subsequentDoubledUndertricks * (double.multiplier / 2) * min(0, made + 3)
                 }
             }
@@ -649,15 +649,14 @@ class Scorecard {
         return points * multiplier
     }
     
-    static func showHand(from parentView: UIView, board: BoardViewModel, traveller: TravellerViewModel, sitting: Seat = .south, completion: (()->())? = nil) {
+    static func bboShowHand(from parentView: UIView, board: BoardViewModel, traveller: TravellerViewModel, completion: (()->())? = nil) {
         
         var playData = ""
         var linData = traveller.playData.removingPercentEncoding ?? ""
         if linData != "" {
             // Got lin data - just replace names
             var nameString = ""
-            let seats: [Seat] = [.south, .west, .north, .east]
-            for seat in seats {
+            for seat in [Seat.south, Seat.west, Seat.north, Seat.east] {
                 var name = "Unknown"
                 if let ranking = traveller.ranking(seat: seat) {
                     name = (ranking.players[seat] ?? name)
@@ -681,7 +680,7 @@ class Scorecard {
             }
             playData = "?bbo=y&tbt=y&lin=/\(linData.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? "")"
         } else if board.hand != "" {
-            // Try to construct from hand
+                // Try to construct from hand
             playData = "?d=\(board.declarer.short.lowercased())"
             for seat in Seat.validCases {
                 var name = "Unknown"
@@ -712,5 +711,6 @@ class Scorecard {
         } else {
             completion?()
         }
+        
     }
 }

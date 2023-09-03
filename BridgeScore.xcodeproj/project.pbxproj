@@ -20,6 +20,7 @@
 		B21E6F6D27C511DA00DBDCC2 /* Bridge Calculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21E6F6C27C511DA00DBDCC2 /* Bridge Calculations.swift */; };
 		B2276D5A27A692A40025DA80 /* Constraint.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2276D5927A692A40025DA80 /* Constraint.swift */; };
 		B22D40A227A2CF3E002F2470 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B22D40A127A2CF3E002F2470 /* Assets.xcassets */; };
+		B22F55452A9CF33F0058443D /* Hand Viewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22F55442A9CF33F0058443D /* Hand Viewer.swift */; };
 		B23ADBEE27B1CC68001B6B38 /* Notes.txt in Resources */ = {isa = PBXBuildFile; fileRef = B23ADBED27B1CC68001B6B38 /* Notes.txt */; };
 		B23ADBF227B25356001B6B38 /* List Tile View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23ADBF127B25356001B6B38 /* List Tile View.swift */; };
 		B23ADBF427B28D68001B6B38 /* Local Authentication.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23ADBF327B28D68001B6B38 /* Local Authentication.swift */; };
@@ -108,6 +109,7 @@
 		B2EB3D77279D73FC00D64225 /* Scorecard View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D76279D73FC00D64225 /* Scorecard View Model.swift */; };
 		B2EB3D79279DB80000D64225 /* Scorecard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D78279DB80000D64225 /* Scorecard.swift */; };
 		B2EB3D7B279DCBCB00D64225 /* Default Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D7A279DCBCB00D64225 /* Default Data.swift */; };
+		B2F3C3A42AA1E72200A58E89 /* Card Class.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2F3C3A32AA1E72200A58E89 /* Card Class.swift */; };
 		B2FCC05127A05BA500A3D9F5 /* Input Toggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2FCC05027A05BA500A3D9F5 /* Input Toggle.swift */; };
 /* End PBXBuildFile section */
 
@@ -126,6 +128,7 @@
 		B2276D5727A5A2C90025DA80 /* Scorecard Canvas View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Canvas View.swift"; sourceTree = "<group>"; };
 		B2276D5927A692A40025DA80 /* Constraint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constraint.swift; sourceTree = "<group>"; };
 		B22D40A127A2CF3E002F2470 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B22F55442A9CF33F0058443D /* Hand Viewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Hand Viewer.swift"; sourceTree = "<group>"; };
 		B23ADBED27B1CC68001B6B38 /* Notes.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Notes.txt; sourceTree = "<group>"; };
 		B23ADBF127B25356001B6B38 /* List Tile View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "List Tile View.swift"; sourceTree = "<group>"; };
 		B23ADBF327B28D68001B6B38 /* Local Authentication.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Local Authentication.swift"; sourceTree = "<group>"; };
@@ -217,6 +220,7 @@
 		B2EB3D76279D73FC00D64225 /* Scorecard View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard View Model.swift"; sourceTree = "<group>"; };
 		B2EB3D78279DB80000D64225 /* Scorecard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scorecard.swift; sourceTree = "<group>"; };
 		B2EB3D7A279DCBCB00D64225 /* Default Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Default Data.swift"; sourceTree = "<group>"; };
+		B2F3C3A32AA1E72200A58E89 /* Card Class.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Card Class.swift"; sourceTree = "<group>"; };
 		B2FCC05027A05BA500A3D9F5 /* Input Toggle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Input Toggle.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -433,6 +437,7 @@
 				B2A5A42727E3090300754061 /* BBO Name View Model.swift */,
 				B256D42427EC578500F47322 /* Ranking View Model.swift */,
 				B256D42627EC5B1700F47322 /* Traveller View Model.swift */,
+				B2F3C3A32AA1E72200A58E89 /* Card Class.swift */,
 			);
 			name = "View Models";
 			sourceTree = "<group>";
@@ -460,6 +465,7 @@
 				B203F96927F30BD900DA748A /* Scorecard Web View.swift */,
 				B2100D9927DA488200CC0130 /* Stats View.swift */,
 				B256D42827ECB15700F47322 /* BBO Name Replace View.swift */,
+				B22F55442A9CF33F0058443D /* Hand Viewer.swift */,
 			);
 			name = "Main Views";
 			sourceTree = "<group>";
@@ -596,6 +602,7 @@
 				B256D42127EC434100F47322 /* Traveller Managed Object.swift in Sources */,
 				B2E1B76827DC71E300204CAC /* User Defaults.swift in Sources */,
 				B24EAE8E27DDE95C001B3E64 /* Multi Select Picker Input.swift in Sources */,
+				B2F3C3A42AA1E72200A58E89 /* Card Class.swift in Sources */,
 				B27CFA4E27CDFE8400B976E0 /* Popup Menu.swift in Sources */,
 				B24BC3CA27F5A07800576D50 /* Import BridgeWebs.swift in Sources */,
 				B2276D5A27A692A40025DA80 /* Constraint.swift in Sources */,
@@ -659,6 +666,7 @@
 				B2C4338C27B6646700796F24 /* Scorecard Input View.swift in Sources */,
 				B26BCE4E2799AD8900B73501 /* Link Presentation.swift in Sources */,
 				B26BCE74279B236F00B73501 /* Layout Managed Object.swift in Sources */,
+				B22F55452A9CF33F0058443D /* Hand Viewer.swift in Sources */,
 				B2CC509927BE21060050F22C /* Scroll Picker.swift in Sources */,
 				B2EB3D7B279DCBCB00D64225 /* Default Data.swift in Sources */,
 				B256D42927ECB15700F47322 /* BBO Name Replace View.swift in Sources */,
@@ -819,6 +827,7 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -858,6 +867,7 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

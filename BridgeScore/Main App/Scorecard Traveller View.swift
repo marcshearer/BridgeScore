@@ -77,7 +77,7 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
     private var values: [TravellerViewModel] = []
     private var boardNumber: Int = 0
     private var sitting: Seat = .unknown
-    private var sourceView: UIView!
+    private var sourceView: ScorecardInputUIView!
     private var completion: (()->())? = nil
     
     override init(frame: CGRect) {
@@ -126,7 +126,16 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
     
     func showHand(traveller: TravellerViewModel) {
         if let board = Scorecard.current.boards[boardNumber] {
-            Scorecard.showHand(from: self, board: board, traveller: traveller)
+            var sitting = traveller.declarer
+            if let table = board.table {
+                sitting = table.sitting
+            }
+            
+            sourceView.handBoard.wrappedValue = board
+            sourceView.handTravelller.wrappedValue = traveller
+            sourceView.handSitting.wrappedValue = sitting
+            sourceView.handView.wrappedValue = self
+            sourceView.handViewer.wrappedValue = true
         }
     }
     
@@ -205,14 +214,14 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
     
     // MARK: - Show / Hide ============================================================================ -
     
-    public func show(from sourceView: UIView, boardNumber: Int, sitting: Seat, completion: (()->())? = nil) {
+    public func show(from sourceView: ScorecardInputUIView, boardNumber: Int, sitting: Seat, completion: (()->())? = nil) {
         self.sourceView = sourceView
         self.completion = completion
         self.frame = sourceView.frame
         self.boardNumber = boardNumber
         self.sitting = sitting
-        sourceView.addSubview(self)
-        sourceView.bringSubviewToFront(self)
+        sourceView.superview!.superview!.addSubview(self)
+        sourceView.superview!.superview!.bringSubviewToFront(self)
         self.bringSubviewToFront(contentView)
         setFrames()
         setupValues()
