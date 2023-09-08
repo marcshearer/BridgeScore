@@ -213,17 +213,18 @@ enum FilterUserDefault: String, CaseIterable {
     case filterSearchText
     
     public var defaultValue: Any? {
+        let empty: [Any?] = []
         switch self {
         case .filterPartners:
-            return []
+            return empty
         case .filterLocations:
-            return []
+            return empty
         case .filterDateFrom:
             return nil
         case .filterDateTo:
             return nil
         case .filterTypes:
-            return []
+            return empty
         case .filterSearchText:
             return ""
         }

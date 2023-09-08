@@ -28,6 +28,13 @@ public class BoardMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var comment: String
     @NSManaged public var responsible16: Int16
     @NSManaged public var hand: String
+    @NSManaged public var optimumContractLevel16: Int16
+    @NSManaged public var optimumContractSuit16: Int16
+    @NSManaged public var optimumContractDouble16: Int16
+    @NSManaged public var optimumDeclarer16: Int16
+    @NSManaged public var optimumMade16: Int16
+    @NSManaged public var optimumNsPoints16: Int16
+    @NSManaged public var optimumEntered: Bool
     
     convenience init() {
         self.init(context: CoreData.context)
@@ -84,17 +91,17 @@ public class BoardMO: NSManagedObject, ManagedObject, Identifiable {
         }
     }
 
-    public var contractLevel: ContractLevel {
+    private var contractLevel: ContractLevel {
         get { ContractLevel(rawValue: Int(contractLevel16)) ?? .blank }
         set { self.contractLevel16 = Int16(newValue.rawValue) }
     }
     
-    public var contractSuit: Suit {
+    private var contractSuit: Suit {
         get { Suit(rawValue: Int(contractSuit16)) ?? .blank }
         set { self.contractSuit16 = Int16(newValue.rawValue) }
     }
 
-    public var contractDouble: ContractDouble {
+    private var contractDouble: ContractDouble {
         get { ContractDouble(rawValue: Int(contractDouble16)) ?? .undoubled }
         set { self.contractDouble16 = Int16(newValue.rawValue) }
     }
@@ -105,6 +112,64 @@ public class BoardMO: NSManagedObject, ManagedObject, Identifiable {
             contractLevel = newValue.level
             contractSuit = newValue.suit
             contractDouble = newValue.double
+        }
+    }
+    
+    private var optimumContractLevel: ContractLevel {
+        get { ContractLevel(rawValue: Int(optimumContractLevel16)) ?? .blank }
+        set { self.optimumContractLevel16 = Int16(newValue.rawValue) }
+    }
+    
+    private var optimumContractSuit: Suit {
+        get { Suit(rawValue: Int(optimumContractSuit16)) ?? .blank }
+        set { self.optimumContractSuit16 = Int16(newValue.rawValue) }
+    }
+
+    private var optimumContractDouble: ContractDouble {
+        get { ContractDouble(rawValue: Int(optimumContractDouble16)) ?? .undoubled }
+        set { self.optimumContractDouble16 = Int16(newValue.rawValue) }
+    }
+    
+    private var optimumContract: Contract {
+        get { Contract(level: optimumContractLevel, suit: optimumContractSuit, double: optimumContractDouble) }
+        set {
+            optimumContractLevel = newValue.level
+            optimumContractSuit = newValue.suit
+            optimumContractDouble = newValue.double
+        }
+    }
+    
+    private var optimumDeclarer: Pair {
+        get { Pair(rawValue: Int(optimumDeclarer16)) ?? .unknown }
+        set { self.optimumDeclarer16 = Int16(newValue.rawValue) }
+    }
+    
+    private var optimumMade: Int {
+        get { Int(self.optimumMade16) }
+        set { self.optimumMade16 = Int16(newValue)}
+    }
+    
+    private var optimumNsPoints: Int {
+        get { Int(self.optimumNsPoints16) }
+        set { self.optimumNsPoints16 = Int16(newValue)}
+    }
+    
+    public var optimumScore: OptimumScore? {
+        get { optimumEntered ? OptimumScore(contract: optimumContract, declarer: optimumDeclarer, made: optimumMade, nsPoints: optimumNsPoints) : nil}
+        set {
+            if let newValue = newValue {
+                self.optimumContract = newValue.contract
+                self.optimumDeclarer = newValue.declarer
+                self.optimumMade = newValue.made
+                self.optimumNsPoints = newValue.nsPoints
+                self.optimumEntered = true
+            } else {
+                self.optimumContract = Contract()
+                self.optimumDeclarer = .unknown
+                self.optimumMade = 0
+                self.optimumNsPoints = 0
+                self.optimumEntered = false
+            }
         }
     }
 

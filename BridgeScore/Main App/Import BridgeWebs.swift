@@ -323,7 +323,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
     private var element = Element.unknown
     private var parser: XMLParser!
     private let replacingSingleQuote = "@@replacingSingleQuote@@"
-    private var board: Int!
+    private var boardNumber: Int!
     private var tag: String?
 
     init(scorecard: ScorecardViewModel, title: String, data: Data, completion: @escaping (ImportedBridgeWebsScorecard?, String?)->()) {
@@ -486,17 +486,17 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 break
             }
         }
-        importedTraveller.board = board
-        if travellers[board] == nil {
-            travellers[board] = []
+        importedTraveller.board = boardNumber
+        if travellers[boardNumber] == nil {
+            travellers[boardNumber] = []
         }
         if importedTraveller.ranking.count > 0 {
-            travellers[board]!.append(importedTraveller)
+            travellers[boardNumber]!.append(importedTraveller)
         }
     }
     
     func initComplete() {
-        boardCount = board
+        boardCount = boardNumber
         updateWays()
         combineRankings()
         boardCount = travellers.count
@@ -597,6 +597,18 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 dealer = nil
                 vulnerability = nil
             }
+        case .board:
+            switch zone {
+            case .travellers:
+                if let number = Int(string) {
+                    boardNumber = number
+                    if boards[boardNumber] == nil {
+                        boards[boardNumber] = ImportedBoard()
+                    }
+                }
+            default:
+                break
+            }
         case .columns:
             headings = string.components(separatedBy: ";")
         case .row:
@@ -626,9 +638,28 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         case .hand:
             switch zone {
             case .travellers:
-                if let board = boards[board] {
+                if let board = boards[boardNumber] {
                     let elements = string.components(separatedBy: ";")
+                    // First 16 elements are cards
                     board.hand = elements[0...15].joined(separator: ",")
+                    // 17-20 are HCP of each hand
+                    // 21-40 are double dummy tricks
+                    board.doubleDummy = [:]
+                    if elements.count >= 40 {
+                        var index = 20
+                        for declarer in [Seat.north, .south, .east, .west] {
+                            board.doubleDummy[declarer] = [:]
+                            for suit in [Suit.clubs, . diamonds, .hearts, .spades, .noTrumps] {
+                                board.doubleDummy[declarer]![suit] = Int(elements[index])
+                                index += 1
+                            }
+                        }
+                    }
+                    // 41 is the optimum score
+                    if elements.count >= 41 {
+                        board.optimumScore = OptimumScore(string: elements[40], vulnerability: Vulnerability(board: boardNumber))
+                    }
+                        
                 }
             default:
                 break
@@ -636,7 +667,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         case .dealer:
             switch zone {
             case .travellers:
-                if let number = Int(string), let board = boards[board] {
+                if let number = Int(string), let board = boards[boardNumber] {
                     board.dealer = Seat(rawValue: number)
                 }
             default:
@@ -645,20 +676,8 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         case .vulnerability:
             switch zone {
             case .travellers:
-                if let number = Int(string), let board = boards[board] {
+                if let number = Int(string), let board = boards[boardNumber] {
                     board.vulnerability = Vulnerability(rawValue: number)
-                }
-            default:
-                break
-            }
-        case .board:
-            switch zone {
-            case .travellers:
-                if let number = Int(string) {
-                    board = number
-                    if boards[board] == nil {
-                        boards[board] = ImportedBoard()
-                    }
                 }
             default:
                 break

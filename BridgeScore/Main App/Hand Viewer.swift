@@ -73,7 +73,11 @@ struct HandViewer: View {
                     Spacer().frame(height: 10)
                     HStack {
                         Spacer().frame(width: 10)
-                        Rectangle().fill(.clear)
+                        if board.doubleDummy.count != 0 || board.optimumScore != nil {
+                            HandViewOptimum(board: board, sitting: sitting)
+                        } else {
+                            Rectangle().fill(.clear)
+                        }
                         Spacer().frame(width: 10)
                         HandViewHand(board: board, traveller: traveller, seat: sitting, hand: deal.hands[sitting] ?? Hand(), trickNumber: $trickNumber)
                         Spacer().frame(width: 10)
@@ -81,9 +85,8 @@ struct HandViewer: View {
                         Spacer().frame(width: 10)
                     }
                     Spacer().frame(height: 30)
-                }.background(.green)
+                }.background(Palette.handTable.background)
                 Spacer().frame(height: 10)
-                // Separator(thickness: 2, color: .gray)
                 HandViewButtons(board: board, traveller: traveller, from: $from, bidding: $bidding, tricks: $tricks, trickNumber: $trickNumber, visible: $visible, animate: $animate, showClaim: $showClaim)
                 Spacer().frame(height: 10)
             }
@@ -138,7 +141,7 @@ struct HandViewer: View {
         var tricks: [Trick] = []
         var nsTricks = 0
         var cards: [Card] = []
-
+        
         func saveLast() {
             if let last = tricks.last {
                 if !cards.isEmpty {
@@ -151,7 +154,7 @@ struct HandViewer: View {
                 }
             }
         }
-                
+        
         
         for (index, element) in data.enumerated() {
             if element == "pc" && index + 1 < data.count {
@@ -331,7 +334,7 @@ struct HandViewer: View {
                             }
                         }
                         Spacer()
-                    }.foregroundColor(.white).frame(width: 100)
+                    }.foregroundColor(Palette.handTable.contrastText).frame(width: 100)
                     Spacer().frame(width: 10)
                     VStack {
                         Spacer().frame(height: 10)
@@ -354,7 +357,7 @@ struct HandViewer: View {
                             Spacer()
                         }
                         HStack {
-                            Text("\(traveller.contract.compact)")
+                            Text("\(traveller.contract.colorCompact)")
                             Spacer()
                         }
                         if traveller.contract.level != .passout {
@@ -371,9 +374,9 @@ struct HandViewer: View {
                         }
                         Spacer()
                     }
-                    .foregroundColor(.black)
+                    .foregroundColor(Palette.handTable.text)
                     Spacer().frame(width: 2)
-                }.font(.title2).overlay(RoundedRectangle(cornerRadius: 4).stroke(.gray,  lineWidth: 2)).lineLimit(1).minimumScaleFactor(0.5)
+                }.font(.title2).overlay(RoundedRectangle(cornerRadius: 4).stroke(Palette.separator.background,  lineWidth: 2)).lineLimit(1).minimumScaleFactor(0.5)
             }
             
         }
@@ -394,12 +397,12 @@ struct HandViewer: View {
                                 Spacer().frame(width: 10)
                                 VStack {
                                     Spacer().frame(height: 10)
-                                    Text("Bid explanation:").foregroundColor(.white)
-                                    Text(announce).foregroundColor(.black)
+                                    Text("Bid explanation:").foregroundColor(Palette.handTable.contrastText)
+                                    Text(announce).foregroundColor(Palette.handTable.text)
                                     Spacer().frame(height: 10)
                                 }
                                 Spacer().frame(width: 10)
-                            }.font(.title2).overlay(RoundedRectangle(cornerRadius: 4).stroke(.gray,  lineWidth: 2))
+                            }.font(.title2).overlay(RoundedRectangle(cornerRadius: 4).stroke(Palette.separator.background,  lineWidth: 2))
                         }
                         Spacer()
                     }
@@ -418,15 +421,15 @@ struct HandViewer: View {
         
         var body: some View {
             ZStack {
-                Rectangle().fill(.white).cornerRadius(6)
+                Rectangle().fill(Palette.handCards.background).cornerRadius(6)
                 VStack {
                     ZStack {
-                        Rectangle().fill(.teal).frame(height: 50)
+                        Rectangle().fill(Palette.handPlayer.background).frame(height: 50)
                         HStack{
                             Spacer().frame(width: 10)
-                            Text(seat.short).font(.title).bold().foregroundColor(.white)
+                            Text(seat.short).font(.title).bold().foregroundColor(Palette.handPlayer.text)
                             Spacer().frame(width: 10)
-                            Text(name).font(.title).minimumScaleFactor(0.2).lineLimit(1)
+                            Text(name).font(.title).minimumScaleFactor(0.2).lineLimit(1).foregroundColor(Palette.handPlayer.contrastText)
                             Spacer()
                         }
                     }
@@ -469,7 +472,8 @@ struct HandViewer: View {
                 Spacer().frame(height: 4)
                 HStack(spacing: 2) {
                     Spacer().frame(width: 4)
-                    Text(suit.string)
+                    Text(suit.colorString).font(.title).minimumScaleFactor(0.2).frame(minWidth: 24)
+                    Spacer().frame(width: 1)
                     if let cards = handSuit?.cards {
                         if cards.reduce(false, {$0 || trickNumber < ($1.data as! Int)}) {
                             ForEach(0..<cards.count, id: \.self) { index in
@@ -516,13 +520,13 @@ struct HandViewer: View {
                     ZStack {
                         HStack(spacing: 0) {
                             if seat != sitting {
-                                Rectangle().foregroundColor(.gray).frame(width: 3, height: 30)
+                                Rectangle().foregroundColor(Palette.handBidding.background).frame(width: 3, height: 30)
                             }
-                            Rectangle().frame(height: 30).foregroundColor(vulnerable ? .red : .white)
+                            Rectangle().frame(height: 30).foregroundColor(vulnerable ? Palette.vulnerable.background : Palette.nonVulnerable.background)
                         }
                         HStack {
                             Spacer()
-                            Text(seat.short).foregroundColor(vulnerable ? .white : .black).bold()
+                            Text(seat.short).foregroundColor(vulnerable ? Palette.vulnerable.text : Palette.nonVulnerable.text).bold()
                             Spacer()
                         }
                     }
@@ -563,7 +567,7 @@ struct HandViewer: View {
                                                     bidAnnounce = announce ?? ""
                                                 }
                                                 Spacer().frame(height: 1)
-                                            }.background((announce ?? "") != "" ? .white : .clear).cornerRadius(4).overlay(RoundedRectangle(cornerRadius: 4).stroke(.blue,  lineWidth: (alert ? 2 : 0)))
+                                            }.background((announce ?? "") != "" ? Palette.card.background : .clear).cornerRadius(4).overlay(RoundedRectangle(cornerRadius: 4).stroke(Palette.handTable.strongText,  lineWidth: (alert ? 2 : 0)))
                                         } else {
                                             HStack {
                                                 Spacer()
@@ -583,8 +587,8 @@ struct HandViewer: View {
             }
         }
         
-        var bids: [(String, Bool, String?)] {
-            var result: [(String, Bool, String?)] = []
+        var bids: [(AttributedString, Bool, String?)] {
+            var result: [(AttributedString, Bool, String?)] = []
             let tokens = traveller.playData.removingPercentEncoding!.components(separatedBy: "|")
             let skip = sitting.offset(to: board.dealer)
             if skip > 0 {
@@ -612,23 +616,25 @@ struct HandViewer: View {
             return result
         }
         
-        func replace(bid: String) -> String {
-            var bid = bid.uppercased()
+        func replace(bid: String) -> AttributedString {
+            let bid = bid.uppercased()
+            var result: AttributedString
+            
             switch bid {
             case "P":
-                bid = "Pass"
+                result = AttributedString("Pass")
             case "D":
-                bid = "Dbl"
+                result = AttributedString("Dbl")
             case "R":
-                bid = "Rdbl"
+                result = AttributedString("Rdbl")
             default:
                 if bid.right(2) == "NT" {
-                        // Leave unchanged
+                    result = AttributedString(bid)
                 } else {
-                    bid = bid.left(1) + Suit(string: bid.right(1)).string
+                    result = AttributedString(bid.left(1)) + Suit(string: bid.right(1)).colorString
                 }
             }
-            return bid
+            return result
         }
     }
     
@@ -658,13 +664,13 @@ struct HandViewer: View {
                             if cardNumber < trick.cards.count {
                                 HStack(spacing: 0) {
                                     Spacer()
-                                    Text(trick.cards[cardNumber].string)
+                                    Text(trick.cards[cardNumber].colorString)
                                     Spacer()
-                                }.frame(width: width, height: height).background(.white).cornerRadius(4).transition(.opacity)
+                                }.frame(width: width, height: height).background(Palette.card.background).cornerRadius(4).transition(.opacity)
                             }
                         }
                     }.frame(width: width, height: height)
-                    Spacer().frame(height: 10)
+                    Spacer().frame(height: 20)
                     HStack {
                         Spacer().frame(width: 10)
                         HStack(spacing: 0) {
@@ -673,9 +679,9 @@ struct HandViewer: View {
                                 if cardNumber < trick.cards.count {
                                     HStack(spacing: 0) {
                                         Spacer()
-                                        Text(trick.cards[cardNumber].string)
+                                        Text(trick.cards[cardNumber].colorString)
                                         Spacer()
-                                    }.frame(width: width, height: height).background(.white).cornerRadius(4).transition(.opacity)
+                                    }.frame(width: width, height: height).background(Palette.card.background).cornerRadius(4).transition(.opacity)
                                 }
                             }
                         }.frame(width: width, height: height)
@@ -686,15 +692,15 @@ struct HandViewer: View {
                                 if cardNumber < trick.cards.count {
                                     HStack(spacing: 0) {
                                         Spacer()
-                                        Text(trick.cards[cardNumber].string)
+                                        Text(trick.cards[cardNumber].colorString)
                                         Spacer()
-                                    }.frame(width: width, height: height).background(.white).cornerRadius(4).transition(.opacity)
+                                    }.frame(width: width, height: height).background(Palette.card.background).cornerRadius(4).transition(.opacity)
                                 }
                             }
                         }.frame(width: width, height: height)
                         Spacer().frame(width: 10)
                     }
-                    Spacer().frame(height: 10)
+                    Spacer().frame(height: 20)
                     HStack {
                         HStack(spacing: 0) {
                             if visible[2] {
@@ -702,9 +708,9 @@ struct HandViewer: View {
                                 if cardNumber < trick.cards.count {
                                     HStack(spacing: 0) {
                                         Spacer()
-                                        Text(trick.cards[cardNumber].string)
+                                        Text(trick.cards[cardNumber].colorString)
                                         Spacer()
-                                    }.frame(width: width, height: height).background(.white).cornerRadius(4).transition(.opacity)
+                                    }.frame(width: width, height: height).background(Palette.card.background).cornerRadius(4).transition(.opacity)
                                 }
                             }
                         }.frame(width: width, height: height)
@@ -757,7 +763,7 @@ struct HandViewer: View {
         @Binding var trickNumber: Int
         @Binding var showClaim: Bool
         @State var declarer: Seat
-
+        
         var body: some View {
             let trick = tricks[max(0, trickNumber - 1)]
             ZStack {
@@ -770,7 +776,7 @@ struct HandViewer: View {
                             Spacer()
                             if showClaim {
                                 HStack {
-                                    Text("\(6 + traveller.contractLevel + traveller.made) tricks \(trickNumber != 0 && trickNumber < 13 ? "claimed" : "made")").foregroundColor(.white).bold()
+                                    Text("\(6 + traveller.contractLevel + traveller.made) tricks \(trickNumber != 0 && trickNumber < 13 ? "claimed" : "made")").foregroundColor(Palette.handTable.contrastText).bold()
                                 }
                             } else {
                                 HStack {
@@ -783,7 +789,7 @@ struct HandViewer: View {
                                         Text("Declarer: ")
                                         Spacer()
                                     }.frame(width: 130)
-                                    Text("\(declarer.pair == .ns ?  trick.nsTricks : trick.trickNumber - trick.nsTricks)").foregroundColor(.white)
+                                    Text("\(declarer.pair == .ns ?  trick.nsTricks : trick.trickNumber - trick.nsTricks)").foregroundColor(Palette.handTable.contrastText)
                                     Spacer()
                                 }
                                 HStack {
@@ -791,17 +797,78 @@ struct HandViewer: View {
                                         Text("Defence: ")
                                         Spacer()
                                     }.frame(width: 130)
-                                    Text("\(declarer.pair == .ew ?  trick.nsTricks : trick.trickNumber - trick.nsTricks)").foregroundColor(.white)
+                                    Text("\(declarer.pair == .ew ?  trick.nsTricks : trick.trickNumber - trick.nsTricks)").foregroundColor(Palette.handTable.contrastText)
                                     Spacer()
                                 }
                             }
                             Spacer()
                         }
-                        .foregroundColor(.black)
+                        .foregroundColor(Palette.handTable.text)
                         Spacer().frame(width: 2)
                     }
                     Spacer()
-                }.font(.title2).minimumScaleFactor(0.5).overlay(RoundedRectangle(cornerRadius: 4).stroke(.gray,  lineWidth: 2)).lineLimit(1).minimumScaleFactor(0.5)
+                }.font(.title2).minimumScaleFactor(0.5).overlay(RoundedRectangle(cornerRadius: 4).stroke(Palette.separator.background,  lineWidth: 2)).lineLimit(1).minimumScaleFactor(0.5)
+            }
+        }
+    }
+    
+    struct HandViewOptimum: View {
+        @State var board: BoardViewModel
+        @State var sitting: Seat
+        
+        var body: some View {
+            ZStack {
+                Rectangle().fill(.clear)
+                HStack {
+                    Spacer().frame(width: 4)
+                    VStack {
+                        Spacer().frame(height: 5)
+                        if board.doubleDummy.count > 0 {
+                            HStack {
+                                Text("").frame(width: 20)
+                                ForEach(Suit.validCases, id: \.self) { suit in
+                                    Spacer()
+                                    Text(suit.colorString).frame(width:30).font(.title2)
+                                }
+                            }
+                            ForEach([Seat.north, Seat.south, Seat.east, Seat.west], id: \.self) { declarer in
+                                Spacer().frame(height: 4)
+                                HStack {
+                                    Text(declarer.short).frame(width: 20).bold()
+                                    ForEach(Suit.validCases, id: \.self) { suit in
+                                        Spacer()
+                                        let made = board.doubleDummy[declarer]?[suit]?.made ?? 0
+                                        Text(made >= 7 ? "\(made - 6)" : "-").frame(width:30).foregroundColor(Palette.handTable.contrastText)
+                                    }
+                                }.font(.callout)
+                            }
+                        }
+                        Spacer()
+                        if let optimumScore = board.optimumScore {
+                            Spacer().frame(height: 10)
+                            HStack {
+                                Spacer().frame(width: 4)
+                                VStack {
+                                    Text("Optimum: ").foregroundColor(Palette.handTable.contrastText).bold()
+                                    Text(" ")
+                                }
+                                VStack {
+                                    HStack {
+                                        Text("\(optimumScore.declarer.short) \(optimumScore.contract.colorCompact) \(optimumScore.made == 0 ? "=" : String(format: "%+d", optimumScore.made))")
+                                        Spacer()
+                                    }
+                                    HStack {
+                                        Text("\(String(format: "%+d", (sitting.pair == .ns ? 1 : -1) * optimumScore.nsPoints))")
+                                        Spacer()
+                                    }
+                                }
+                                Spacer()
+                            }.font(.body)
+                        }
+                        Spacer().frame(height: 5)
+                    }
+                    Spacer().frame(width: 4)
+                }.minimumScaleFactor(0.5).overlay(RoundedRectangle(cornerRadius: 4).stroke(Palette.separator.background,  lineWidth: 2)).lineLimit(1)
             }
         }
     }

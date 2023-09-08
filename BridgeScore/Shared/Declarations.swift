@@ -388,9 +388,9 @@ public enum Pair: Int, CaseIterable {
     
     init(string: String) {
         switch string.uppercased() {
-        case "NS":
+        case "NS", "N", "S":
             self = .ns
-        case "EW":
+        case "EW", "E", "W":
             self = .ew
         default:
             self = .unknown
@@ -730,16 +730,20 @@ public enum Suit: Int, ContractEnumType {
         case .blank:
             return ""
         case .clubs:
-            return "♣️"
+            return "♣︎"
         case .diamonds:
-            return "♦️"
+            return "♦︎"
         case .hearts:
-            return "♥️"
+            return "♥︎"
         case .spades:
-            return "♠️"
+            return "♠︎"
         case .noTrumps:
             return "NT"
         }
+    }
+    
+    var colorString: AttributedString {
+        return AttributedString(self.string, color: self.color)
     }
     
     public var color: Color {
@@ -893,6 +897,28 @@ public class Contract: Equatable {
         }
     }
     
+    public var colorString: AttributedString {
+        switch level {
+        case .blank:
+            return ""
+        case .passout:
+            return "Pass Out"
+        default:
+            return AttributedString("\(level.short) ") + suit.colorString + AttributedString(" \(double.short)")
+        }
+    }
+    
+    public var colorCompact: AttributedString {
+        switch level {
+        case .blank:
+            return ""
+        case .passout:
+            return "Pass Out"
+        default:
+            return AttributedString(level.short) + suit.colorString + AttributedString(double.short)
+        }
+    }
+    
     init(level: ContractLevel = .blank, suit: Suit = .blank, double: ContractDouble = .undoubled) {
         self.level = level
         if level.hasSuit {
@@ -905,6 +931,36 @@ public class Contract: Equatable {
         } else {
             self.suit = .blank
             self.double = .undoubled
+        }
+    }
+    
+    init(string: String) {
+        self.level = .blank
+        self.suit = .blank
+        self.double = .undoubled
+
+        var string = string.trim().uppercased()
+        if string != "" {
+            if string.left(1) == "P" {
+                self.level = .passout
+            } else {
+                let level = ContractLevel(rawValue: Int(string.left(1)) ?? ContractLevel.blank.rawValue) ?? .blank
+                if level != .blank && level != .passout {
+                    var double = ContractDouble.undoubled
+                    if string.right(2) == "XX" {
+                        double = .redoubled
+                    } else if string.right(1) == "X" {
+                        double = .doubled
+                    }
+                    string = string.replacingOccurrences(of: "X", with: "")
+                    let suit = Suit(string: string.mid(1,1))
+                    if suit != .blank {
+                        self.level = level
+                        self.suit = suit
+                        self.double = double
+                    }
+                }
+            }
         }
     }
     
@@ -924,6 +980,63 @@ public class Contract: Equatable {
     
     public var canClear: Bool {
         level != .blank || suit != .blank || double != .undoubled
+    }
+}
+
+public class OptimumScore: Equatable {
+    public var contract: Contract
+    public var declarer: Pair
+    public var made: Int
+    public var nsPoints: Int
+    
+    init(contract: Contract, declarer: Pair, made: Int, nsPoints: Int) {
+        self.contract = contract
+        self.declarer = declarer
+        self.made = made
+        self.nsPoints = nsPoints
+    }
+    
+    init?(string: String, vulnerability: Vulnerability) {
+        var contract: Contract?
+        var declarer: Pair?
+        var made: Int?
+        var nsPoints: Int?
+        
+        var contractsPointsStrings = string.components(separatedBy: ": ")
+        if contractsPointsStrings.count == 1 {
+            contractsPointsStrings = string.components(separatedBy: "; ")
+        }
+        if contractsPointsStrings.count >= 2 {
+            let nsPointsString = contractsPointsStrings.last!
+            let declarerContractStrings = contractsPointsStrings.first!.components(separatedBy: ",").first!.components(separatedBy: " ")
+            if declarerContractStrings.count >= 2 {
+                let declarerString = declarerContractStrings.first!
+                let contractString = declarerContractStrings.last!.components(separatedBy: "=").first!.components(separatedBy: "+").first!.components(separatedBy: "-").first!
+                declarer = Pair(string: declarerString)
+                if declarer != .unknown {
+                    contract = Contract(string: contractString)
+                    if contract?.level != .blank {
+                        nsPoints = Int(nsPointsString)
+                        if nsPoints != nil {
+                            made = Scorecard.made(contract: contract!, vulnerability: vulnerability, declarer: declarer!.seats.first!, points: (declarer! == .ns ? nsPoints! : -nsPoints!))
+                        }
+                    }
+                }
+            }
+        }
+        if let contract = contract, let declarer = declarer, let made = made, let nsPoints = nsPoints {
+            self.contract = contract
+            self.declarer = declarer
+            self.made = made
+            self.nsPoints = nsPoints
+        } else {
+            return nil
+        }
+    }
+    
+    
+    public static func == (lhs: OptimumScore, rhs: OptimumScore) -> Bool {
+        lhs.contract == rhs.contract && lhs.declarer == rhs.declarer && lhs.made == rhs.made && lhs.nsPoints == rhs.nsPoints
     }
 }
 

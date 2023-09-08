@@ -665,7 +665,7 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
                 }
                 let name = (MasterData.shared.realName(bboName: player) ?? player)
                 if name == player {
-                    text = text + NSAttributedString(name, pickerColor: UIColor(Palette.background.themeText))
+                    text = text + NSAttributedString(name, color: UIColor(Palette.background.themeText))
                 } else {
                     text = text + name
                 }

@@ -390,7 +390,7 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         contentView.sendSubviewToBack(declarerView)
         let declarerSeparator = UIView()
         declarerView.addSubview(declarerSeparator)
-        declarerSeparator.backgroundColor = UIColor(Palette.separator.background)
+        declarerSeparator.backgroundColor = UIColor(Palette.highlightButton.background)
         
         // Constraints in landscape mode
         landscapeConstraints = []

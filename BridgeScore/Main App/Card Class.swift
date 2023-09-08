@@ -86,9 +86,8 @@ class Card : CustomStringConvertible, CustomDebugStringConvertible, Hashable {
         return "\(self.rankString)\(self.suit.string)"
     }
     
-    func toAttributedString() -> NSMutableAttributedString {
-        let suitColor = [NSAttributedString.Key.foregroundColor: self.suit.color]
-        return NSMutableAttributedString(string: self.string, attributes: suitColor)
+    public var colorString: AttributedString {
+        return AttributedString(self.string, color: self.suit.color)
     }
 }
 

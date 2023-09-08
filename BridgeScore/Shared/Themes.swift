@@ -108,6 +108,14 @@ enum ThemeBackgroundColorName: CaseIterable {
     case filterUnused
     case filterUsed
     case datePicker
+    case vulnerable
+    case nonVulnerable
+    case handTable
+    case handPlayer
+    case handCards
+    case handBidding
+    case handButtonPanel
+    case card
 }
 
 enum ThemeTextColorSetName: CaseIterable {
@@ -387,7 +395,7 @@ class Themes {
                 .contractSelected            : ThemeColor(#colorLiteral(red: 0.0166248735, green: 0.4766505957, blue: 0.9990670085, alpha: 1), nil, .darkBackground),
                 .contractUnselected          : ThemeColor(#colorLiteral(red: 0.4705882353, green: 0.7058823529, blue: 0.7843137255, alpha: 1), nil, .lightBackground),
                 .contractDisabled            : ThemeColor(#colorLiteral(red: 0.6096856772, green: 1, blue: 1, alpha: 1), nil, .lightBackground),
-                .separator                   : ThemeColor(#colorLiteral(red: 0.6666069031, green: 0.6667050123, blue: 0.6665856242, alpha: 1), nil, .midBackground),
+                .separator                   : ThemeColor(#colorLiteral(red: 0.8784313725, green: 0.8784313725, blue: 0.8784313725, alpha: 1), nil, .midBackground),
                 .listButton                  : ThemeColor(#colorLiteral(red: 0, green: 0.3921568627, blue: 0.7058823529, alpha: 1), nil, .midBackground),
                 .menuEntry                   : ThemeColor(#colorLiteral(red: 0.9569241405, green: 0.9567349553, blue: 0.9526277184, alpha: 1), #colorLiteral(red: 0.999904573, green: 1, blue: 0.9998808503, alpha: 1), .darkBackground,  .lightBackground),
                 .imagePlaceholder            : ThemeColor(#colorLiteral(red: 0.9215686275, green: 0.9215686275, blue: 0.9215686275, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1), .lightBackground, .darkBackground),
@@ -398,7 +406,15 @@ class Themes {
                 .filterTile                  : ThemeColor(#colorLiteral(red: 0.862745098, green: 0.862745098, blue: 0.862745098, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1), .lightBackground, .darkBackground),
                 .filterUnused                : ThemeColor(#colorLiteral(red: 0, green: 0.5690457821, blue: 0.5746168494, alpha: 1), #colorLiteral(red: 0.5704585314, green: 0.5704723597, blue: 0.5704649091, alpha: 1), .darkBackground, .darkBackground),
                 .filterUsed                  : ThemeColor(#colorLiteral(red: 0, green: 0.3285208941, blue: 0.5748849511, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1), .darkBackground, .darkBackground),
-                .datePicker                  : ThemeColor(#colorLiteral(red: 0.9019607843, green: 0.9019607843, blue: 1, alpha: 1), nil, .midBackground)
+                .datePicker                  : ThemeColor(#colorLiteral(red: 0.9019607843, green: 0.9019607843, blue: 1, alpha: 1), nil, .lightBackground),
+                .vulnerable                  : ThemeColor(#colorLiteral(red: 1, green: 0, blue: 0, alpha: 1), nil, .darkBackground),
+                .nonVulnerable               : ThemeColor(#colorLiteral(red: 1, green: 1, blue: 1, alpha: 1), nil, .lightBackground),
+                .handTable                   : ThemeColor(#colorLiteral(red: 0.1566063498, green: 0.6008257185, blue: 0.1555970899, alpha: 1), nil, .midBackground),
+                .handPlayer                  : ThemeColor(#colorLiteral(red: 0, green: 0.6941176471, blue: 0.8274509804, alpha: 1), nil, .midBackground),
+                .handCards                   : ThemeColor(#colorLiteral(red: 1, green: 1, blue: 1, alpha: 1), nil, .lightBackground),
+                .handBidding                 : ThemeColor(#colorLiteral(red: 0.8784313725, green: 0.8784313725, blue: 0.8784313725, alpha: 1), nil, .lightBackground),
+                .handButtonPanel             : ThemeColor(#colorLiteral(red: 0.9019607843, green: 0.9019607843, blue: 1, alpha: 1), nil, .lightBackground),
+                .card                        : ThemeColor(#colorLiteral(red: 1, green: 1, blue: 1, alpha: 1), nil, .lightBackground)
             ],
             text: [
                 .lightBackground             : ThemeTextColor(normal: #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1), contrast: #colorLiteral(red: 0.337254902, green: 0.4509803922, blue: 0.4549019608, alpha: 1), strong: #colorLiteral(red: 0.9981788993, green: 0.2295429707, blue: 0.1891850233, alpha: 1), faint: #colorLiteral(red: 0.7843137255, green: 0.7843137255, blue: 0.7843137255, alpha: 1), theme: #colorLiteral(red: 0.0166248735, green: 0.4766505957, blue: 0.9990670085, alpha: 1)) ,

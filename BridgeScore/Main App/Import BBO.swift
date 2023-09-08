@@ -60,7 +60,14 @@ class ImportBBO {
         
         if let contents = try? String(contentsOf: fileURL) {
             let lines = contents.replacingOccurrences(of: "\r\n", with: "\n").components(separatedBy: "\n")
-            return ImportedBBOScorecard(lines: lines, scorecard: scorecard)
+            let imported = ImportedBBOScorecard(lines: lines, scorecard: scorecard)
+            if let pbnURL = URL(string: fileURL.absoluteString.replacingOccurrences(of: ".csv", with: ".pbn")) {
+                if let contents = try? String(contentsOf: pbnURL) {
+                    let lines = contents.replacingOccurrences(of: "\r\n", with: "\n").components(separatedBy: "\n")
+                    imported.importOptimum(lines: lines, scorecard: scorecard)
+                }
+            }
+            return imported
         } else {
             return nil
         }
@@ -515,6 +522,45 @@ class ImportedBBOScorecard: ImportedScorecard {
                 travellers[board] = []
             }
             travellers[board]!.append(importedTraveller)
+        }
+    }
+    
+    public func importOptimum(lines: [String], scorecard: ScorecardViewModel) {
+        var found = false
+        var boardNumber: Int?
+        
+        for line in lines {
+            if line.left(7) == "[Board " {
+                boardNumber = Int(line.mid(7, line.count - 7).replacingOccurrences(of: "\"", with: "").replacingOccurrences(of: "]", with: ""))
+                if let boardNumber = boardNumber {
+                    if boards[boardNumber] == nil {
+                        boards[boardNumber] = ImportedBoard()
+                    }
+                }
+            } else if let boardNumber = boardNumber {
+                if line.left(20) == "[OptimumResultTable " {
+                    found = true
+                } else if line.left(14) == "[OptimumScore " {
+                    found = false
+                    let optimumScoreString = line.mid(14, line.count - 14).replacingOccurrences(of: "\"", with: "").replacingOccurrences(of: "]", with: "")
+                    boards[boardNumber]!.optimumScore = OptimumScore(string: optimumScoreString, vulnerability: Vulnerability(board: boardNumber))
+                } else if line.left(1) == "[" {
+                    found = false
+                } else if found {
+                    let components = line.replacingOccurrences(of: "  ", with: " ").components(separatedBy: " ")
+                    if components.count >= 3 {
+                        let declarer = Seat(string: components[0])
+                        let suit = Suit(string: components[1].left(1))
+                        let made = Int(components[2])
+                        if declarer != .unknown && suit != .blank && made != nil {
+                            if boards[boardNumber]!.doubleDummy[declarer] == nil {
+                                boards[boardNumber]!.doubleDummy[declarer] = [:]
+                            }
+                            boards[boardNumber]!.doubleDummy[declarer]![suit] = made
+                        }
+                    }
+                }
+            }
         }
     }
     

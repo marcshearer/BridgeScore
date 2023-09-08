@@ -137,7 +137,7 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
             if rankings.count == 1 {
                 let myRanking = rankings.first!
                 if let myTraveller = Scorecard.current.traveller(board: boardNumber, seat: sitting, rankingNumber: myRanking.number, section: myRanking.section) {
-                    for seat in Seat.allCases {
+                    for seat in Seat.validCases {
                         result[seat] = myTraveller.ranking(seat: seat)?.players[seat]
                     }
                 }

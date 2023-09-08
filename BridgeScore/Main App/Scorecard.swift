@@ -93,6 +93,24 @@ class Scorecard {
             boards[boardMO.board] = BoardViewModel(scorecard: scorecard, boardMO: boardMO)
         }
         
+            // Load double dummies
+        let doubleDummyMOs = CoreData.fetch(from: DoubleDummyMO.tableName, filter: scorecardFilter) as! [DoubleDummyMO]
+        
+        for doubleDummyMO in doubleDummyMOs {
+            if let board = boards[doubleDummyMO.board] {
+                // Add to double dummy MO dicionary
+                if board.doubleDummy[doubleDummyMO.declarer] == nil {
+                    board.doubleDummy[doubleDummyMO.declarer] = [:]
+                }
+                board.doubleDummy[doubleDummyMO.declarer]![doubleDummyMO.suit] = DoubleDummyViewModel(scorecard: scorecard, doubleDummyMO: doubleDummyMO)
+                // Add to double dummy dictionary
+                if board.doubleDummyMO[doubleDummyMO.declarer] == nil {
+                    board.doubleDummyMO[doubleDummyMO.declarer] = [:]
+                }
+                board.doubleDummyMO[doubleDummyMO.declarer]![doubleDummyMO.suit] = doubleDummyMO
+            }
+        }
+        
             // Load tables
         let tableMOs = CoreData.fetch(from: TableMO.tableName, filter: scorecardFilter) as! [TableMO]
         
@@ -283,15 +301,29 @@ class Scorecard {
         }
     }
     
-        // MARK: - Boards ======================================================================== -
+    
+    // MARK: - Boards (including Double Dummies) ================================================ -
     
     public func insert(board: BoardViewModel) {
         assert(board.scorecard == scorecard, "Board is not in current scorecard")
         assert(board.isNew, "Cannot insert a board which already has a managed object")
         assert(boards[board.board] == nil, "Board already exists and cannot be created")
+        assert(board.doubleDummy.isEmpty, "Board double dummies already exist")
         CoreData.update(updateLogic: {
+            // Add board MO
             board.boardMO = BoardMO()
             board.updateMO()
+            // Add double dummy MOs
+            board.forEachDoubleDummy { (declarer, suit, doubleDummy) in
+                if board.doubleDummyMO[declarer] == nil {
+                    board.doubleDummyMO[declarer] = [:]
+                }
+                let mo = DoubleDummyMO()
+                doubleDummy.updateMO(mo)
+                // Add to double dummy MO dictionary
+                board.doubleDummyMO[declarer]![suit] = mo
+            }
+            // Add to board dictionary
             boards[board.board] = board
         })
     }
@@ -301,7 +333,16 @@ class Scorecard {
         assert(!board.isNew, "Cannot remove a board which doesn't already have a managed object")
         assert(boards[board.board] != nil, "Board does not exist and cannot be deleted")
         CoreData.update(updateLogic: {
+            // Delete board MO
             CoreData.context.delete(board.boardMO!)
+            // Delete double dummy MOs
+            board.forEachDoubleDummyMO { (declarer, suit, mo) in
+                CoreData.context.delete(mo)
+            }
+            // Remove from double dummy dictionaries
+            board.doubleDummyMO = [:]
+            board.doubleDummy = [:]
+            // Remove from boards dictionary
             boards[board.board] = nil
         })
     }
@@ -311,17 +352,45 @@ class Scorecard {
         assert(boards[board.board] != nil, "Board does not exist and cannot be updated")
         if board.isNew {
             CoreData.update(updateLogic: {
+                // Create board MO
                 board.boardMO = BoardMO()
                 board.updateMO()
+                // Create any double dummy MOs
+                board.forEachDoubleDummy { (declarer, suit, doubleDummy) in
+                    let mo = DoubleDummyMO()
+                    doubleDummy.updateMO(mo)
+                    // Add to double dummy MO dictionary
+                    if board.doubleDummyMO[declarer] == nil {
+                        board.doubleDummyMO[declarer] = [:]
+                    }
+                    board.doubleDummyMO[declarer]![suit] = mo
+                }
             })
         } else if board.changed {
             CoreData.update(updateLogic: {
+                // Update board MO
                 board.updateMO()
+                // Update double dummy MOs
+                board.forEachDoubleDummy { (declarer, suit, doubleDummy) in
+                    let mo = board.doubleDummyMO[declarer]?[suit] ?? DoubleDummyMO()
+                    doubleDummy.updateMO(mo)
+                    if board.doubleDummyMO[declarer] == nil {
+                        board.doubleDummyMO[declarer] = [:]
+                    }
+                    board.doubleDummyMO[declarer]![suit] = mo
+                }
+                // Remove any double dummy MOs which aren't in view model
+                board.forEachDoubleDummyMO { (declarer, suit, mo) in
+                    if board.doubleDummy[declarer]?[suit] == nil {
+                        CoreData.context.delete(mo)
+                        board.doubleDummyMO[declarer]![suit] = nil
+                    }
+                }
             })
         }
     }
     
-        // MARK: - Boards ======================================================================== -
+    // MARK: - Tables ======================================================================== -
     
     public func insert(table: TableViewModel) {
         assert(table.scorecard == scorecard, "Table is not in current scorecard")
@@ -359,7 +428,7 @@ class Scorecard {
         }
     }
     
-        // MARK: - Rankings ======================================================================== -
+    // MARK: - Rankings ======================================================================== -
     
     public func insert(ranking: RankingViewModel) {
         assert(ranking.scorecard == scorecard, "Ranking is not in current scorecard")
@@ -397,7 +466,7 @@ class Scorecard {
         }
     }
     
-        // MARK: - Travellers ======================================================================== -
+    // MARK: - Travellers ======================================================================== -
     
     public func insert(traveller: TravellerViewModel) {
         assert(traveller.scorecard == scorecard, "Traveller is not in current scorecard")
@@ -434,7 +503,7 @@ class Scorecard {
         }
     }
     
-        // MARK: - Utilities ======================================================================== -
+    // MARK: - Utilities ======================================================================== -
     
     public static func boardNumber(scorecard: ScorecardViewModel, board: Int) -> Int {
         return scorecard.resetNumbers ? ((board - 1) % scorecard.boardsTable) + 1 : board
@@ -647,6 +716,29 @@ class Scorecard {
         }
         
         return points * multiplier
+    }
+    
+    public static func made(contract: Contract, vulnerability: Vulnerability, declarer: Seat, points: Int) -> Int? {
+        var result: Int?
+        if contract.level != .passout && contract.level != .blank && points != 0 {
+            var from: Int
+            var to: Int
+            if points > 0 {
+                // Made
+                from = 0
+                to = 7 - contract.level.rawValue
+            } else {
+                // Went off
+                from = -(contract.level.rawValue + 6)
+                to = -1
+            }
+            for tricks in from...to {
+                if self.points(contract: contract, vulnerability: vulnerability, declarer: declarer, made: tricks, seat: declarer) == points {
+                    result = tricks
+                }
+            }
+        }
+        return result
     }
     
     static func bboShowHand(from parentView: UIView, board: BoardViewModel, traveller: TravellerViewModel, completion: (()->())? = nil) {

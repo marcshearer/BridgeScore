@@ -21,9 +21,12 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
     @Published public var comment: String = ""
     @Published public var responsible: Responsible = .unknown
     @Published public var hand: String = ""
+    @Published public var optimumScore: OptimumScore?
+    @Published public var doubleDummy: [Seat:[Suit:DoubleDummyViewModel]] = [:]
     
     // Linked managed objects - should only be referenced in this and the Data classes
     @Published internal var boardMO: BoardMO?
+    @Published internal var doubleDummyMO: [Seat:[Suit:DoubleDummyMO]] = [:]
     
     @Published private(set) var saveMessage: String = ""
     @Published private(set) var canSave: Bool = true
@@ -61,8 +64,37 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
                 self.score != mo.score ||
                 self.comment != mo.comment ||
                 self.responsible != mo.responsible ||
-                self.hand != mo.hand {
+                self.hand != mo.hand ||
+                self.optimumScore != mo.optimumScore{
                     result = true
+            }
+            if !result {
+                // Check double dummy entries match
+                if doubleDummy.count != doubleDummyMO.count {
+                    result = true
+                } else {
+                    for (declarer, suitDictionary) in doubleDummy {
+                        if suitDictionary.count != doubleDummyMO[declarer]?.count {
+                            result = true
+                            break
+                        } else {
+                            for (suit, doubleDummy) in suitDictionary {
+                                if let mo = doubleDummyMO[declarer]?[suit] {
+                                    if doubleDummy.changed(mo) {
+                                        result = true
+                                        break
+                                    }
+                                } else {
+                                    result = true
+                                    break
+                                }
+                            }
+                            if result == true {
+                                break
+                            }
+                        }
+                    }
+                }
             }
         } else {
             result = true
@@ -98,6 +130,16 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
             self.comment = mo.comment
             self.responsible = mo.responsible
             self.hand = mo.hand
+            self.optimumScore = mo.optimumScore
+            self.doubleDummy = [:]
+            for (declarer, suitDictionary) in doubleDummyMO {
+                for (suit, mo) in suitDictionary {
+                    if self.doubleDummy[declarer] == nil {
+                        self.doubleDummy[declarer] = [:]
+                    }
+                    self.doubleDummy[declarer]![suit] = DoubleDummyViewModel(scorecard: scorecard, doubleDummyMO: mo)
+                }
+            }
         }
     }
     
@@ -114,6 +156,12 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
             mo.comment = comment
             mo.responsible = responsible
             mo.hand = hand
+            mo.optimumScore = optimumScore
+            forEachDoubleDummy { (declarer, suit, doubleDummy) in
+                if let mo = self.doubleDummyMO[declarer]?[suit] {
+                    doubleDummy.updateMO(mo)
+                }
+            }
         } else {
             fatalError("No managed object")
         }
@@ -147,7 +195,25 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
         self.made != 0 ||
         self.score != nil ||
         self.comment != "" ||
-        self.responsible != .unknown
+        self.responsible != .unknown ||
+        self.optimumScore != nil ||
+        !self.doubleDummy.isEmpty
+    }
+    
+    public func forEachDoubleDummy(action: (Seat, Suit, DoubleDummyViewModel)->()) {
+        for (declarer, suitDictionary) in doubleDummy {
+            for (suit, doubleDummy) in suitDictionary {
+                action(declarer, suit, doubleDummy)
+            }
+        }
+    }
+
+    public func forEachDoubleDummyMO(action: (Seat, Suit, DoubleDummyMO)->()) {
+        for (declarer, suitDictionary) in doubleDummyMO {
+            for (suit, mo) in suitDictionary {
+                action(declarer, suit, mo)
+            }
+        }
     }
     
     public var boardNumber: Int {

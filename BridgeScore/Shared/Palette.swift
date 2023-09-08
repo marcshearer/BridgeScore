@@ -48,6 +48,14 @@ class Palette {
     @BackgroundColor(.filterUsed) static var filterUsed
     @BackgroundColor(.filterUnused) static var filterUnused
     @BackgroundColor(.datePicker) static var datePicker
+    @BackgroundColor(.vulnerable) static var vulnerable
+    @BackgroundColor(.nonVulnerable) static var nonVulnerable
+    @BackgroundColor(.handTable) static var handTable
+    @BackgroundColor(.handPlayer) static var handPlayer
+    @BackgroundColor(.handCards) static var handCards
+    @BackgroundColor(.handBidding) static var handBidding
+    @BackgroundColor(.handButtonPanel) static var handButtonPanel
+    @BackgroundColor(.card) static var card
     
     // Specific colors
     @SpecificColor(.bannerBackButton) static var bannerBackButton

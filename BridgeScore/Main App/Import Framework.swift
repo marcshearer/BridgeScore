@@ -67,8 +67,8 @@ class ImportedScorecard: NSObject {
     var hand: String?
     var dealer: Seat?
     var vulnerability: Vulnerability?
-
-
+    var doubleDummyTricks: [Seat:[Suit:Int]] = [:]
+    
     // MARK: - Import to main data structures =================================================================== -
         
     public func importScorecard() {
@@ -188,6 +188,16 @@ class ImportedScorecard: NSObject {
         }
         if let board = board {
             board.hand = boards[board.board]?.hand ?? ""
+            board.optimumScore = boards[board.board]?.optimumScore
+            board.doubleDummy = [:]
+            for declarer in Seat.validCases {
+                board.doubleDummy[declarer] = [:]
+                for suit in Suit.validCases {
+                    if let made = boards[board.board]?.doubleDummy[declarer]?[suit] {
+                        board.doubleDummy[declarer]![suit] = DoubleDummyViewModel(scorecard: scorecard, board: board.board, declarer: declarer, suit: suit, made: made)
+                    }
+                }
+            }
         }
     }
     
@@ -418,6 +428,10 @@ class ImportedScorecard: NSObject {
                     scorecard.position = ranking.ranking
                 }
             }
+            if ranking.way != .unknown && scorecard.type.players == 4 {
+                // Shouldn't have a way on teams rankings
+                ranking.way = .unknown
+            }
         }
         if myGroup && !scorecard.resetNumbers {
             scorecard.entry = groupEntry
@@ -497,4 +511,6 @@ class ImportedBoard {
     public var hand: String?
     public var vulnerability: Vulnerability?
     public var dealer: Seat?
+    public var doubleDummy: [Seat:[Suit:Int]] = [:]
+    public var optimumScore: OptimumScore?
 }

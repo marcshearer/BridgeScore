@@ -186,7 +186,11 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
                 let column = travellerColumns[indexPath.item]
                 let sameTeam = (row > 0 && values[row].ranking(seat: .north) == values[row - 1].ranking(seat: .east))
                 cell.set(delegate: self, scorecard: Scorecard.current.scorecard!, traveller: values[row], sitting: sitting, sameTeam: sameTeam, rowType: .traveller, column: column) { (players) in
-                    self.replaceNames(values: players)
+                    if Scorecard.current.scorecard?.importSource == .bbo {
+                        self.replaceNames(values: players)
+                    } else {
+                        self.showHand(traveller: self.values[row])
+                    }
                 }
                 return cell
             case .title:
@@ -571,7 +575,7 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
                 let bboName = traveller.ranking(seat: seat)?.players[seat]
                 let name = MasterData.shared.realName(bboName: bboName) ?? "Unknown"
                 let color = (bboName == name ? UIColor(Palette.background.themeText) : nil)
-                names[seat] = NSAttributedString(name, pickerColor: color)
+                names[seat] = NSAttributedString(name, color: color)
             }
             var sitting = sitting
             if sitting == .unknown {
@@ -585,13 +589,15 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
             label.numberOfLines = 4
             label.isUserInteractionEnabled = true
         case .contract:
-            label.text = traveller.contract.string
+            let contract = traveller.contract
+            label.attributedText = NSAttributedString("\(contract.level.short) ") + NSAttributedString(contract.suit.string, color: UIColor(contract.suit.color)) + NSAttributedString(" \(contract.double.short)")
         case .declarer:
             label.text = traveller.declarer.short
         case .lead:
             let suitString = traveller.lead.right(1)
-            let suit = Suit(string: suitString).string
-            label.text = suit + traveller.lead.left(1)
+            let suit = Suit(string: suitString)
+            let card = traveller.lead.left(1) + suit.string
+            label.attributedText = NSAttributedString(card, color: UIColor(suit.color))
         case .made:
             label.text = (traveller.made == 0 ? "=" : (
                           traveller.made > 0 ? "+\(traveller.made)" : (
