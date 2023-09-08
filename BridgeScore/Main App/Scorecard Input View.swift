@@ -60,19 +60,17 @@ struct ScorecardInputView: View {
     var body: some View {
         StandardView("Input", slideInId: id) {
             VStack(spacing: 0) {
-                
-                // Just to trigger view refresh
+                    // Just to trigger view refresh
                 if refreshTableTotals { EmptyView() }
-    
-                // Banner
+                
+                    // Banner
                 Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .both, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: nil, menuId: id, options: bannerOptions(isNotImported: $isNotImported), disabled: $disableBanner)
                     .disabled(disableBanner)
                 GeometryReader { geometry in
-                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), refreshTableTotals: $refreshTableTotals, detailView: $detailView, inputDetail: $inputDetail, tableRefresh: $tableRefresh, showRankings: $showRankings, disableBanner: $disableBanner, handViewer: $handViewer, handBoard: $handBoard, handTraveller: $handTraveller, handSitting: $handSitting, handView: $handView, analysisViewer: $analysisViewer)
-                    .ignoresSafeArea(edges: .all)
+                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), refreshTableTotals: $refreshTableTotals, detailView: $detailView, analysisView: $analysisView, inputDetail: $inputDetail, tableRefresh: $tableRefresh, showRankings: $showRankings, disableBanner: $disableBanner, handViewer: $handViewer, handBoard: $handBoard, handTraveller: $handTraveller, handSitting: $handSitting, handView: $handView, analysisViewer: $analysisViewer)
+                        .ignoresSafeArea(edges: .all)
                 }
-            }
-            .undoManager(canUndo: $canUndo, canRedo: $canRedo)
+            }.undoManager(canUndo: $canUndo, canRedo: $canRedo)
         }
         .onChange(of: tableRefresh) { (value) in tableRefresh = false}
         .onChange(of: showRankings) { (value) in showRankings = false}
@@ -126,8 +124,8 @@ struct ScorecardInputView: View {
                 if let handTraveller = handTraveller {
                     ZStack{
                         Color.black.opacity(0.4)
-                        HandViewer(board: handBoard, traveller: handTraveller, sitting: handSitting, from: handView)
-                            .frame(width: 800, height: 800)
+                        AnalysisViewer(board: handBoard, traveller: handTraveller, sitting: handSitting, from: handView)
+                            .frame(width: UIScreen.main.bounds.width , height: UIScreen.main.bounds.size.height )
                             .cornerRadius(8)
                     }
                     .background(BackgroundBlurView())
@@ -243,6 +241,7 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
     @State var frame: CGRect
     @Binding var refreshTableTotals: Bool
     @Binding var detailView: Bool
+    @Binding var analysisView: Bool
     @Binding var inputDetail: Bool
     @Binding var tableRefresh: Bool
     @Binding var showRankings: Bool
@@ -279,7 +278,7 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
             uiView.showRankings()
         }
         
-        uiView.switchView(detailView: detailView)
+        uiView.switchView(detailView: detailView, analysisView: analysisView)
     }
     
     func makeCoordinator() -> Coordinator {
@@ -335,6 +334,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     private var bottomConstraint: NSLayoutConstraint!
     private var forceReload = true
     private var detailView = true
+    private var analysisView = false
     public var inputDetail: Bool
     private var disableBanner: Binding<Bool>
     public var handViewer: Binding<Bool>
@@ -367,7 +367,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         super.init(frame: frame)
     
         // Set up view
-        switchView(detailView: true, force: true)
+        switchView(detailView: true, analysisView: false, force: true)
                     
         // Add subviews
         titleView = ScorecardInputTableTitleView(self, frame: CGRect(), tag: RowType.boardTitle.tagOffset)
@@ -430,9 +430,26 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         mainTableView.reloadData()
     }
     
-    public func switchView(detailView: Bool, force: Bool = false) {
-        if self.detailView != detailView || force {
-            if detailView {
+    public func switchView(detailView: Bool, analysisView: Bool, force: Bool = false) {
+        if (!analysisView && self.detailView != detailView) || self.analysisView != analysisView || force {
+            if analysisView {
+                boardColumns = [
+                    ScorecardColumn(type: .board, heading: "Board", size: .fixed([70])),
+                    ScorecardColumn(type: .contract, heading: "Contract", size: .fixed([95])),
+                    ScorecardColumn(type: .declarer, heading: "By", size: .fixed([70])),
+                    ScorecardColumn(type: .made, heading: "Made", size: .fixed([60])),
+                    ScorecardColumn(type: .score, heading: "Score", size: .fixed([80])),
+                    ScorecardColumn(type: .responsible, heading: "Resp", size: .fixed([65])),
+                    ScorecardColumn(type: .comment, heading: "Analysis", size: .flexible)
+                ]
+                
+                tableColumns = [
+                    ScorecardColumn(type: .table, heading: "", size: .fixed([70, 95])),
+                    ScorecardColumn(type: .sitting, heading: "Sitting", size: .fixed([70, 60])),
+                    ScorecardColumn(type: .tableScore, heading: "", size: .fixed([80, 65])),
+                    ScorecardColumn(type: .versus, heading: "Versus", size: .flexible)
+                ]
+            } else if detailView {
                 boardColumns = [
                     ScorecardColumn(type: .board, heading: "Board", size: .fixed([70])),
                     ScorecardColumn(type: .vulnerable, heading: "Vul", size: .fixed([30])),
@@ -486,6 +503,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 ]
             }
             self.detailView = detailView
+            self.analysisView = analysisView
             forceReload = true
             self.setNeedsLayout()
         }
@@ -665,8 +683,13 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                         handTravelller.wrappedValue = traveller
                         handSitting.wrappedValue = sitting
                         handView.wrappedValue = self
-                        handViewer.wrappedValue = true
-                        analysisViewer.wrappedValue = false
+                        if analysisView {
+                            handViewer.wrappedValue = false
+                            analysisViewer.wrappedValue = true
+                        } else {
+                            handViewer.wrappedValue = true
+                            analysisViewer.wrappedValue = false
+                        }
                     }
                 }
             }

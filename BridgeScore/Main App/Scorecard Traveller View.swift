@@ -596,7 +596,7 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
         case .lead:
             let suitString = traveller.lead.right(1)
             let suit = Suit(string: suitString)
-            let card = traveller.lead.left(1) + suit.string
+            let card = traveller.lead.left(traveller.lead.count - 1) + suit.string
             label.attributedText = NSAttributedString(card, color: UIColor(suit.color))
         case .made:
             label.text = (traveller.made == 0 ? "=" : (

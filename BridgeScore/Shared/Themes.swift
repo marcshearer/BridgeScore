@@ -409,10 +409,10 @@ class Themes {
                 .datePicker                  : ThemeColor(#colorLiteral(red: 0.9019607843, green: 0.9019607843, blue: 1, alpha: 1), nil, .lightBackground),
                 .vulnerable                  : ThemeColor(#colorLiteral(red: 1, green: 0, blue: 0, alpha: 1), nil, .darkBackground),
                 .nonVulnerable               : ThemeColor(#colorLiteral(red: 1, green: 1, blue: 1, alpha: 1), nil, .lightBackground),
-                .handTable                   : ThemeColor(#colorLiteral(red: 0.1566063498, green: 0.6008257185, blue: 0.1555970899, alpha: 1), nil, .midBackground),
+                .handTable                   : ThemeColor(#colorLiteral(red: 0, green: 0.7468389053, blue: 0.5775149598, alpha: 1), nil, .midBackground),
                 .handPlayer                  : ThemeColor(#colorLiteral(red: 0, green: 0.6941176471, blue: 0.8274509804, alpha: 1), nil, .midBackground),
                 .handCards                   : ThemeColor(#colorLiteral(red: 1, green: 1, blue: 1, alpha: 1), nil, .lightBackground),
-                .handBidding                 : ThemeColor(#colorLiteral(red: 0.8784313725, green: 0.8784313725, blue: 0.8784313725, alpha: 1), nil, .lightBackground),
+                .handBidding                 : ThemeColor(#colorLiteral(red: 0, green: 0.7468389053, blue: 0.5775149598, alpha: 1), nil, .lightBackground),
                 .handButtonPanel             : ThemeColor(#colorLiteral(red: 0.9019607843, green: 0.9019607843, blue: 1, alpha: 1), nil, .lightBackground),
                 .card                        : ThemeColor(#colorLiteral(red: 1, green: 1, blue: 1, alpha: 1), nil, .lightBackground)
             ],

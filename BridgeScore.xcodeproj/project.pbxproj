@@ -111,6 +111,7 @@
 		B2EB3D77279D73FC00D64225 /* Scorecard View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D76279D73FC00D64225 /* Scorecard View Model.swift */; };
 		B2EB3D79279DB80000D64225 /* Scorecard.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D78279DB80000D64225 /* Scorecard.swift */; };
 		B2EB3D7B279DCBCB00D64225 /* Default Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D7A279DCBCB00D64225 /* Default Data.swift */; };
+		B2EEFC782AAB5BE4005A1ECA /* Analysis Viewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EEFC772AAB5BE4005A1ECA /* Analysis Viewer.swift */; };
 		B2F3C3A42AA1E72200A58E89 /* Card Class.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2F3C3A32AA1E72200A58E89 /* Card Class.swift */; };
 		B2FCC05127A05BA500A3D9F5 /* Input Toggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2FCC05027A05BA500A3D9F5 /* Input Toggle.swift */; };
 /* End PBXBuildFile section */
@@ -224,6 +225,7 @@
 		B2EB3D76279D73FC00D64225 /* Scorecard View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard View Model.swift"; sourceTree = "<group>"; };
 		B2EB3D78279DB80000D64225 /* Scorecard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Scorecard.swift; sourceTree = "<group>"; };
 		B2EB3D7A279DCBCB00D64225 /* Default Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Default Data.swift"; sourceTree = "<group>"; };
+		B2EEFC772AAB5BE4005A1ECA /* Analysis Viewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Analysis Viewer.swift"; sourceTree = "<group>"; };
 		B2F3C3A32AA1E72200A58E89 /* Card Class.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Card Class.swift"; sourceTree = "<group>"; };
 		B2FCC05027A05BA500A3D9F5 /* Input Toggle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Input Toggle.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -472,6 +474,7 @@
 				B2100D9927DA488200CC0130 /* Stats View.swift */,
 				B256D42827ECB15700F47322 /* BBO Name Replace View.swift */,
 				B22F55442A9CF33F0058443D /* Hand Viewer.swift */,
+				B2EEFC772AAB5BE4005A1ECA /* Analysis Viewer.swift */,
 			);
 			name = "Main Views";
 			sourceTree = "<group>";
@@ -592,6 +595,7 @@
 				B2DADE5127E7A06E009F7572 /* Import BBO.swift in Sources */,
 				B24BC3A127F42DD200576D50 /* Scorecard Filter Values.swift in Sources */,
 				B26BCE6C2799AED700B73501 /* Separator.swift in Sources */,
+				B2EEFC782AAB5BE4005A1ECA /* Analysis Viewer.swift in Sources */,
 				B2100D9A27DA488200CC0130 /* Stats View.swift in Sources */,
 				B2C4339027B7B59700796F24 /* Custom View Animations.swift in Sources */,
 				B26BCE492799AD8900B73501 /* Palette.swift in Sources */,
