@@ -84,7 +84,7 @@ import CoreData
     private func setupMappings() {
     }
     
-    private func revert() {
+    internal func revert() {
         if let mo = self.travellerMO {
             if let scorecard = MasterData.shared.scorecard(id: mo.scorecardId) {
                 self.scorecard = scorecard
@@ -178,6 +178,33 @@ import CoreData
                     if player == scorer.bboName.lowercased() || player == scorer.name.lowercased() {
                         result = true
                     }
+                }
+            }
+        }
+        return result
+    }
+    
+    public var contracts: [Contract?] {
+        var result: [Contract?] = []
+        var lastBid: Contract?
+        if playData != "" {
+            let tokens = playData.removingPercentEncoding!.components(separatedBy: "|")
+            for (index, token) in tokens.enumerated() {
+                if token == "mb" {
+                    let bid = tokens[index + 1]
+                    var contract: Contract? = nil
+                    switch bid.uppercased() {
+                    case "P":
+                        break
+                    case "D":
+                        lastBid?.double = .doubled
+                    case "R":
+                        lastBid?.double = .redoubled
+                    default:
+                        contract = Contract(string: bid)
+                        lastBid = contract
+                    }
+                    result.append(contract)
                 }
             }
         }

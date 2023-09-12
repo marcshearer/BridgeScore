@@ -590,21 +590,29 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
             label.isUserInteractionEnabled = true
         case .contract:
             let contract = traveller.contract
-            label.attributedText = NSAttributedString("\(contract.level.short) ") + NSAttributedString(contract.suit.string, color: UIColor(contract.suit.color)) + NSAttributedString(" \(contract.double.short)")
+            label.attributedText = NSAttributedString("\(contract.level.short) ") + NSAttributedString(contract.suit.string, color: UIColor(contract.suit.color)) + NSAttributedString(" \(contract.double.bold)")
         case .declarer:
             label.text = traveller.declarer.short
         case .lead:
             let suitString = traveller.lead.right(1)
             let suit = Suit(string: suitString)
-            let card = traveller.lead.left(traveller.lead.count - 1) + suit.string
+            let card = traveller.lead == "" ? "" : (traveller.lead.left(traveller.lead.count - 1) + suit.string)
             label.attributedText = NSAttributedString(card, color: UIColor(suit.color))
         case .made:
-            label.text = (traveller.made == 0 ? "=" : (
-                          traveller.made > 0 ? "+\(traveller.made)" : (
-                          "\(traveller.made)")))
+            if traveller.contract.level == .passout {
+                label.text = ""
+            } else {
+                label.text = (traveller.made == 0 ? "=" : (
+                    traveller.made > 0 ? "+\(traveller.made)" : (
+                        "\(traveller.made)")))
+            }
         case .points:
-            let sign = (sitting.pair == .ns ? 1 : -1)
-            label.text = "\(sign * Scorecard.points(contract: traveller.contract, vulnerability: Vulnerability(board: traveller.boardNumber), declarer: traveller.declarer, made: traveller.made, seat: .north))"
+            if traveller.contract.level == .passout {
+                label.text = ""
+            } else {
+                let sign = (sitting.pair == .ns ? 1 : -1)
+                label.text = "\(sign * Scorecard.points(contract: traveller.contract, vulnerability: Vulnerability(board: traveller.boardNumber), declarer: traveller.declarer, made: traveller.made, seat: .north))"
+            }
         case .score:
             if sameTeam {
                 label.text = ""

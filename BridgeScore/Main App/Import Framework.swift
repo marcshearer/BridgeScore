@@ -147,7 +147,7 @@ class ImportedScorecard: NSObject {
                     let mySeat = seat(line: myLine, ranking: myRanking, myPair: myPair, name: myName) ?? .unknown
                     var versus = ""
                     for seat in Seat.validCases {
-                        if seat != mySeat && (scorecard.type.players == 1 || seat.pair != myPair) {
+                        if seat != mySeat && (scorecard.type.players == 1 || seat.pair != mySeat.pair) {
                             let otherNumber = myLine.ranking[seat] ?? myNumber
                             if let ranking = otherRanking(number: otherNumber, myPair: mySeat.pair, section: mySection), let otherName = ranking.players[seat]  {
                                 if versus != "" {

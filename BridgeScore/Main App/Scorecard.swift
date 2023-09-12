@@ -651,6 +651,10 @@ class Scorecard {
         return orderedList.map{($0, ScrollPickerEntry(title: $0.short, caption: $0.player(sitting: sitting)))}
     }
     
+    public static func madePoints(contract: Contract) -> Int {
+        return contract.suit.trickPoints(tricks: contract.level.rawValue) * contract.double.multiplier
+    }
+    
     public static func points(contract: Contract, vulnerability: Vulnerability, declarer: Seat, made: Int, seat: Seat) -> Int {
         var points = 0
         let multiplier = (seat == declarer || seat == declarer.partner ? 1 : -1)
@@ -666,7 +670,7 @@ class Scorecard {
             if made >= 0 {
                 
                     // Add in base points for making contract
-                let madePoints = suit.trickPoints(tricks: level.rawValue) * double.multiplier
+                let madePoints = Scorecard.madePoints(contract: contract)
                 gameMade = (madePoints >= values.gamePoints)
                 points += madePoints
                 
@@ -735,6 +739,23 @@ class Scorecard {
             for tricks in from...to {
                 if self.points(contract: contract, vulnerability: vulnerability, declarer: declarer, made: tricks, seat: declarer) == points {
                     result = tricks
+                }
+            }
+        }
+        return result
+    }
+    
+    public static func getBoardTraveller(boardNumber: Int) -> (BoardViewModel, TravellerViewModel)? {
+        var result: (BoardViewModel, TravellerViewModel)?
+        if let nextBoard = Scorecard.current.boards[boardNumber] {
+            if !Scorecard.current.travellerList.isEmpty {
+                if let scorer = MasterData.shared.scorer {
+                    let rankings = Scorecard.current.rankings(table: nextBoard.tableNumber, player: (bboName:scorer.bboName, name: scorer.name))
+                    if let myRanking = rankings.first {
+                        if let nextTraveller = Scorecard.current.traveller(board: nextBoard.board, seat: nextBoard.table!.sitting, rankingNumber: myRanking.number, section: myRanking.section) {
+                            result = (nextBoard, nextTraveller)
+                        }
+                    }
                 }
             }
         }

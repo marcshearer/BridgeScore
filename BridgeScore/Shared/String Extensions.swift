@@ -81,6 +81,14 @@ extension String {
         return NSAttributedString(self).labelWidth(height: height, font: font)
     }
     #endif
+    
+    var splitCapitals: String {
+        let value = NSMutableString(string: self)
+        let pattern = "[A-Z]"
+        let regex = try! NSRegularExpression(pattern: pattern)
+        regex.replaceMatches(in: value, range: NSRange(location: 0, length: value.length), withTemplate: " $0")
+        return (value as String).capitalized
+    }
 }
 
 @propertyWrapper public final class OptionalStringBinding {

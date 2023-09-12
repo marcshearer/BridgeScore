@@ -45,7 +45,7 @@ struct ScorecardInputView: View {
     @State private var deleted = false
     @State private var tableRefresh = false
     @State private var detailView = false
-    @State private var analysisView = false
+    @State private var analysisView = true // TODO Change to false
     @State private var importBboScorecard = false
     @State private var importBwScorecard = false
     @State private var showRankings = false
@@ -112,7 +112,7 @@ struct ScorecardInputView: View {
         }) {
             if let handBoard = handBoard {
                 if let handTraveller = handTraveller {
-                    HandViewer(board: handBoard, traveller: handTraveller, sitting: handSitting, from: handView)
+                    HandViewerForm(board: handBoard, traveller: handTraveller, sitting: handSitting, from: handView)
                 }
             }
         }
@@ -125,7 +125,7 @@ struct ScorecardInputView: View {
                     ZStack{
                         Color.black.opacity(0.4)
                         AnalysisViewer(board: handBoard, traveller: handTraveller, sitting: handSitting, from: handView)
-                            .frame(width: UIScreen.main.bounds.width , height: UIScreen.main.bounds.size.height )
+                            .frame(width: UIScreen.main.bounds.width - 60, height: UIScreen.main.bounds.size.height - 40 )
                             .cornerRadius(8)
                     }
                     .background(BackgroundBlurView())
@@ -333,7 +333,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     private var isKeyboardOffset = false
     private var bottomConstraint: NSLayoutConstraint!
     private var forceReload = true
-    private var detailView = true
+    private var detailView = false
     private var analysisView = false
     public var inputDetail: Bool
     private var disableBanner: Binding<Bool>
@@ -674,23 +674,18 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     
     func scorecardShowHand(scorecard: ScorecardViewModel, board: BoardViewModel, sitting: Seat) {
         if !Scorecard.current.travellerList.isEmpty {
-            if let scorer = MasterData.shared.scorer {
-                let rankings = Scorecard.current.rankings(table: board.tableNumber, player: (bboName:scorer.bboName, name: scorer.name))
-                if let myRanking = rankings.first {
-                    if let traveller = Scorecard.current.traveller(board: board.board, seat: sitting, rankingNumber: myRanking.number, section: myRanking.section) {
-                        disableBanner.wrappedValue = true
-                        handBoard.wrappedValue = board
-                        handTravelller.wrappedValue = traveller
-                        handSitting.wrappedValue = sitting
-                        handView.wrappedValue = self
-                        if analysisView {
-                            handViewer.wrappedValue = false
-                            analysisViewer.wrappedValue = true
-                        } else {
-                            handViewer.wrappedValue = true
-                            analysisViewer.wrappedValue = false
-                        }
-                    }
+            if let (board, traveller) = Scorecard.getBoardTraveller(boardNumber: board.boardNumber) {
+                disableBanner.wrappedValue = true
+                handBoard.wrappedValue = board
+                handTravelller.wrappedValue = traveller
+                handSitting.wrappedValue = sitting
+                handView.wrappedValue = self
+                if analysisView {
+                    handViewer.wrappedValue = false
+                    analysisViewer.wrappedValue = true
+                } else {
+                    handViewer.wrappedValue = true
+                    analysisViewer.wrappedValue = false
                 }
             }
         }
@@ -1263,7 +1258,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         case .contract:
             label.isHidden = false
             let contract = board.contract
-            label.attributedText = NSAttributedString("\(contract.level.short) ") + NSAttributedString(contract.suit.string, color: UIColor(contract.suit.color)) + NSAttributedString(" \(contract.double.short)")
+            label.attributedText = NSAttributedString("\(contract.level.short) ") + NSAttributedString(contract.suit.string, color: UIColor(contract.suit.color)) + NSAttributedString(" \(contract.double.bold)")
             label.isUserInteractionEnabled = true
         case .declarer:
             declarerPicker.isHidden = false

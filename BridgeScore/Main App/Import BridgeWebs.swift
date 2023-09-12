@@ -434,7 +434,11 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 importedTraveller.contract = contract
             case "ld":
                 if let string = columns.element(index) {
-                    importedTraveller.lead = string.right(string.count - 1) + string.left(1)
+                    if string == "" {
+                        importedTraveller.lead = ""
+                    } else {
+                        importedTraveller.lead = string.right(string.count - 1) + string.left(1)
+                    }
                 }
             case "by":
                 importedTraveller.declarer = Seat(string: columns.element(index) ?? "")
