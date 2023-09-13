@@ -756,7 +756,7 @@ public enum ContractLevel: Int, ContractEnumType {
     }
 }
 
-public enum Suit: Int, ContractEnumType, Equatable {
+public enum Suit: Int, ContractEnumType, Equatable, Comparable {
     case blank = 0
     case clubs = 1
     case diamonds = 2
@@ -882,7 +882,11 @@ public enum Suit: Int, ContractEnumType, Equatable {
         return (tricks < 0 ? 0 : tricks * subsequentTricks)
     }
     
-    static func < (lhs: Suit, rhs: Suit) -> Bool {
+    public static func == (lhs: Suit, rhs: Suit) -> Bool {
+        return lhs.rawValue == rhs.rawValue
+    }
+    
+    public static func < (lhs: Suit, rhs: Suit) -> Bool {
         return lhs.rawValue < rhs.rawValue
     }
     

@@ -64,6 +64,13 @@ struct AnalysisViewer: View {
         .onAppear() {
             initialTraveller = traveller
         }
+        .onSwipe() { direction in
+            if let (newBoard, newTraveller) = Scorecard.getBoardTraveller(boardNumber: board.boardNumber + (direction == .left ? 1 : -1)) {
+                board = newBoard
+                traveller = newTraveller
+                sitting = newBoard.table!.sitting
+            }
+        }
     }
     
     struct ButtonBar: View{
@@ -110,7 +117,7 @@ struct AnalysisBiddingOptions : View {
     @Binding var board: BoardViewModel
     @Binding var traveller: TravellerViewModel
     @Binding var sitting: Seat
-    @State var options: [AnalysisOption] = []
+    @State var options: [AnalysisOptionType:AnalysisOption] = [:]
     let columns = [GridItem(.flexible(minimum: 100), spacing: 0), GridItem(.fixed(45), spacing: 0),GridItem(.fixed(40), spacing: 0),  GridItem(.flexible(minimum: 60), spacing: 0), GridItem(.flexible(minimum: 60), spacing: 0), GridItem(.flexible(minimum: 60), spacing: 0), GridItem(.flexible(minimum: 60), spacing: 0),GridItem(.flexible(minimum: 60), spacing: 0)]
     
     var body: some View {
@@ -128,7 +135,7 @@ struct AnalysisBiddingOptions : View {
                             LeadingText("")
                             LeadingText("")
                             ForEach(AnalysisAssessmentMethod.allCases, id: \.self) { method in
-                                CenteredText(method.short)
+                                TrailingText(method.short)
                             }
                         }
                     }
@@ -136,29 +143,36 @@ struct AnalysisBiddingOptions : View {
                     .foregroundColor(Palette.tile.text)
                     .font(smallFont)
                     .bold()
-                    ForEach(options) { option in // TODO These are wrong way round - should be grid above for
-                        LazyVGrid(columns: columns, spacing: 0) {
-                            GridRow {
-                                LeadingText(option.type.string)
-                                LeadingAttributedText(option.contract.colorCompact)
-                                LeadingText(option.declarer.short)
-                                ForEach(AnalysisAssessmentMethod.allCases, id: \.self) { method in
-                                    let methodPoints = option.assessment[method]?.points
-                                    CenteredText(methodPoints == nil ? "" : "\(methodPoints!)")
+                    ScrollView {
+                            // TODO These are wrong way round - should be grid above for
+                        ForEach(options.map{$0.value}.sorted(by: {$0.sequence < $1.sequence})) { option in
+                            if !option.removed {
+                                LazyVGrid(columns: columns, spacing: 0) {
+                                    GridRow {
+                                        LeadingText(option.type.string)
+                                        LeadingAttributedText(option.contract.colorCompact)
+                                        LeadingText(option.declarer.short)
+                                        ForEach(AnalysisAssessmentMethod.allCases, id: \.self) { method in
+                                            let methodPoints = option.assessment[method]?.points
+                                            TrailingText(methodPoints == nil ? "" : "\(methodPoints!)")
+                                        }
+                                    }
+                                    .foregroundColor(option.removed ? Palette.alternate.strongText : Palette.alternate.text)
+                                    .frame(height: 20)
+                                    .if(option.separator) { view in
+                                        view.overlay(Separator(thickness: 2, color: Palette.tile.background), alignment: .bottom)
+                                    }
+                                        //}
                                 }
-                            }
-                            .frame(height: 25)
-                            .if(option.separator) { view in
-                                view.overlay(Separator(thickness: 2, color: Palette.tile.background), alignment: .bottom)
                             }
                         }
                     }
-                    Spacer()
                 }
                 Spacer()
             }
+            Spacer()
         }
-        .frame(width: 520)
+        .frame(width: 520, height: 250)
         .background(Palette.alternate.background).cornerRadius(16)
         .font(smallFont)
         .onAppear {
@@ -170,7 +184,7 @@ struct AnalysisBiddingOptions : View {
     }
     
     func buildOptions() {
-        options = []
+        options = [:]
         
         let contracts = traveller.contracts
         let declarer = traveller.declarer.pair
@@ -178,6 +192,8 @@ struct AnalysisBiddingOptions : View {
         var bidder = declarer
         var previousBid: Contract?
         var started = false
+        var sequence = 0
+        
         for bid in contracts.reversed() {
             if bid != nil || started {
                 started = true
@@ -194,7 +210,6 @@ struct AnalysisBiddingOptions : View {
         let ourGameLevel = ourSuit?.gameTricks
         let ourLevel = ourBid?.level.rawValue
         let theirBid = (weDeclared ? previousBid : traveller.contract)
-        let theirLevel = theirBid?.level.rawValue
         
         let multiplier: Float = (sitting.pair == .ns ? 1 : -1)
         let travellers = Scorecard.current.travellers(board: board.boardNumber).sorted(by: { (($0.nsScore - $1.nsScore) * multiplier) < 0 })
@@ -203,73 +218,12 @@ struct AnalysisBiddingOptions : View {
         for type in types {
             var contract: Contract?
             var declarer = sitting.pair
+            
+            // Generic options
             switch type {
             case .actual:
                 contract = Contract(copying: traveller.contract)
                 declarer = traveller.declarer.pair
-            case .ourLast:
-                if let bid = ourBid {
-                    contract = Contract(copying: bid)
-                }
-            case .higher, .higherDouble:
-                if let level = ourLevel, let bid = ourBid {
-                    if level <= Values.trickOffset {
-                        if type == .higher || bid.double == .undoubled {
-                            contract = Contract(copying: bid)
-                            contract?.level = ContractLevel(rawValue: level + 1)!
-                            if type == .higherDouble {
-                                contract?.double = .doubled
-                            }
-                        }
-                    }
-                }
-            case .game:
-                if let level = ourLevel, let bid = ourBid, let gameLevel = ourGameLevel {
-                    if level + 1 < gameLevel {
-                        contract = Contract(copying: bid)
-                        contract?.level = ContractLevel(rawValue: gameLevel)!
-                    }
-                }
-            case .smallSlam:
-                if let level = ourLevel, let bid = ourBid {
-                    if level + 1 < Values.smallSlamLevel.rawValue {
-                        contract = Contract(copying: bid)
-                        contract?.level = Values.smallSlamLevel
-                    }
-                }
-            case .grandSlam:
-                if let level = ourLevel, let bid = ourBid {
-                    if level + 1 < Values.grandSlamLevel.rawValue {
-                        contract = Contract(copying: bid)
-                        contract?.level = Values.grandSlamLevel
-                    }
-                }
-            case .lower:
-                if let level = ourLevel, let bid = ourBid {
-                    if weDeclared && level - 1 > 0 {
-                        contract = Contract(copying: bid)
-                        contract?.level = ContractLevel(rawValue: level - 1)!
-                        contract?.double = .undoubled
-                    }
-                }
-            case .oppLast:
-                if let bid = theirBid {
-                    contract = Contract(copying: bid)
-                    declarer = sitting.pair.other
-                }
-            case .oppHigher, .oppHigherDouble:
-                if let level = theirLevel, let bid = theirBid {
-                    if level <= Values.trickOffset {
-                        if type == .oppHigher || bid.double == .undoubled {
-                            contract = Contract(copying: bid)
-                            contract?.level = ContractLevel(rawValue: level + 1)!
-                            if type == .oppHigherDouble {
-                                contract?.double = .doubled
-                            }
-                            declarer = sitting.pair.other
-                        }
-                    }
-                }
             case .optimum:
                 if (board.optimumScore?.contract.level ?? .blank) != .blank {
                     contract = Contract(copying: board.optimumScore!.contract)
@@ -283,22 +237,96 @@ struct AnalysisBiddingOptions : View {
             default:
                 break
             }
-            if let contract = contract {
-                print("\(options.count) \(type.string)")
-                options.append(AnalysisOption(type: type, contract: contract, declarer: declarer))
+            
+            // Options for us
+            if let level = ourLevel, let bid = ourBid {
+                let higherLevel = (bid.suit <= traveller.contract.suit ? traveller.contractLevel + 1 : traveller.contractLevel)
+                switch type {
+                case .ourLast:
+                    break
+                    // contract = Contract(copying: bid)
+                case .higher, .higherDouble:
+                    if higherLevel <= Values.grandSlamLevel.rawValue {
+                        if type == .higher || bid.double == .undoubled {
+                            contract = Contract(copying: bid)
+                            contract?.level = ContractLevel(rawValue: higherLevel)!
+                            if type == .higherDouble {
+                                contract?.double = .doubled
+                            }
+                        }
+                    }
+                case .game:
+                    if let gameLevel = ourGameLevel {
+                        if higherLevel < gameLevel {
+                            contract = Contract(copying: bid)
+                            contract?.level = ContractLevel(rawValue: gameLevel)!
+                        }
+                    }
+                case .smallSlam:
+                    if higherLevel < Values.smallSlamLevel.rawValue {
+                        contract = Contract(copying: bid)
+                        contract?.level = Values.smallSlamLevel
+                    }
+                case .grandSlam:
+                    if higherLevel < Values.grandSlamLevel.rawValue {
+                        contract = Contract(copying: bid)
+                        contract?.level = Values.grandSlamLevel
+                    }
+                case .lower:
+                    if weDeclared && level - 1 > 0 {
+                        contract = Contract(copying: bid)
+                        contract?.level = ContractLevel(rawValue: level - 1)!
+                        contract?.double = .undoubled
+                    }
+                default:
+                    break
+                }
             }
-        }
-        for (index, option) in options.enumerated() {
-            if index > 0 && (options[index - 1].declarer != option.declarer) {
-                options[index - 1].separator = true
+            
+            // Options for them
+            if let bid = theirBid {
+                let higherLevel = (bid.suit <= traveller.contract.suit ? traveller.contractLevel + 1 : traveller.contractLevel)
+                switch type {
+                case .oppLast:
+                    contract = Contract(copying: bid)
+                    declarer = sitting.pair.other
+                case .oppHigher, .oppHigherDouble:
+                    if higherLevel <= Values.grandSlamLevel.rawValue {
+                        if type == .oppHigher || bid.double == .undoubled {
+                            contract = Contract(copying: bid)
+                            contract?.level = ContractLevel(rawValue: higherLevel)!
+                            if type == .oppHigherDouble {
+                                contract?.double = .doubled
+                            }
+                            declarer = sitting.pair.other
+                        }
+                    }
+                default:
+                    break
+                }
+            }
+            if let contract = contract {
+                options[type] = AnalysisOption(type: type, contract: contract, declarer: declarer, sequence: sequence)
+                sequence += 1
             }
         }
         buildScores()
+        removeBadOptions()
+        // Set separators
+        var lastOption: AnalysisOption?
+        for option in options.map({$0.value}).sorted(by: {$0.sequence < $1.sequence}) {
+            if !option.removed {
+                if lastOption != nil && (lastOption?.declarer != option.declarer) {
+                    lastOption?.separator = true
+                }
+                lastOption = option
+            }
+        }
     }
     
     func buildScores(){
         let tricksMade = buildTricksMade()
-        for option in options {
+        for (_, option) in options {
             var assessment: [Int:AnalysisAssessment] = [:]
             if let allTricksMade = tricksMade[option.declarer]?[option.contract.suit]?.map({$0.value}) {
                 let tricksMadeSet = Set(allTricksMade)
@@ -309,6 +337,65 @@ struct AnalysisBiddingOptions : View {
                 for method in AnalysisAssessmentMethod.allCases {
                     if let methodTricks = tricksMade[option.declarer]?[option.contract.suit]?[method] {
                         option.assessment[method] = assessment[methodTricks]
+                    }
+                }
+            }
+        }
+    }
+    
+    func removeBadOptions () {
+        let declarer = traveller.declarer.pair
+        let weDeclared = (declarer == sitting.pair)
+        print("==================================")
+        
+            // Remove anything palpably worse for the team bidding it than the actual or a higher defence bid (excluding doubles)
+        for baselineType in [AnalysisOptionType.actual, .higher, .oppHigher] {
+            if let baseline = options[baselineType] {
+                for (_, option) in options.filter({baseline.sequence < $0.value.sequence && $0.value.type != .higherDouble && $0.value.type != .oppHigherDouble && baseline.declarer == $0.value.declarer}) {
+                    if AnalysisOption.equalOrWorsePoints(option, baseline, invert: option.declarer != sitting.pair) {
+                        if !option.removed {
+                            option.removed = true
+                            print("Removal 1 = \(option.type) because of \(baseline.type)")
+                        }
+                    }
+                }
+            }
+        }
+            // Remove high level bids / doubles if they are clearly worse for declarer than a 'higher' bid
+        for baselineType in [AnalysisOptionType.higher, .oppHigher] {
+            if let baseline = options[baselineType] {
+                for type in [AnalysisOptionType.game, .smallSlam, .grandSlam, .oppHigherDouble] {
+                    if let option = options[type] {
+                        if baseline.declarer == option.declarer && AnalysisOption.equalOrWorsePoints(option, baseline) {
+                            if !option.removed {
+                                option.removed = true
+                                print("Removal 2 = \(option.type) because of \(baseline.type)")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+            // Remove higher bids if wouldn't have been forced
+        if weDeclared {
+            if (options[.oppHigher]?.removed ?? true) && (options[.oppHigherDouble]?.removed ?? true) {
+                for type in [AnalysisOptionType.higher, .higherDouble] {
+                    if let option = options[type] {
+                        if !option.removed {
+                            option.removed = true
+                            print("Removal 3 = \(option.type) because not forced")
+                        }
+                    }
+                }
+            }
+        } else {
+            if (options[.higher]?.removed ?? true) && (options[.higherDouble]?.removed ?? true) {
+                for type in [AnalysisOptionType.oppHigher, .oppHigherDouble] {
+                    if let option = options[type] {
+                        if !option.removed {
+                            option.removed = true
+                            print("Removal 4 = \(option.type) because not forced")
+                        }
                     }
                 }
             }
@@ -386,13 +473,13 @@ struct AnalysisTravellerView: View {
                         VStack {
                             LazyVGrid(columns: columns, spacing: 0) {
                                 GridRow {
-                                    Text("Freq")
-                                    Text("Contract")
-                                    Text("By")
-                                    Text("Lead")
-                                    Text("Made").gridColumnAlignment(.trailing)
-                                    TrailingText(sitting.pair.short).gridColumnAlignment(.trailing)
-                                    TrailingText("\(sitting.pair.short)\(scorecard.type.boardScoreType.suffix)").gridColumnAlignment(.trailing).frame(width: 80)
+                                    CenteredText("Freq")
+                                    CenteredText("Contract")
+                                    CenteredText("By")
+                                    CenteredText("Lead")
+                                    CenteredText("Made")
+                                    TrailingText(sitting.pair.short)
+                                    TrailingText("\(sitting.pair.short)\(scorecard.type.boardScoreType.suffix)")
                                 }
                                 .foregroundColor(Palette.tile.text).bold()
                                 .frame(height: 25)
@@ -866,21 +953,40 @@ class AnalysisAssessment : Hashable {
     }
 }
 
-class AnalysisOption : Identifiable, Equatable {
+class AnalysisOption : Identifiable {
     public var id: UUID = UUID()
     public var type: AnalysisOptionType
     public var contract: Contract
     public var declarer: Pair
+    public var sequence: Int
+    public var removed = false
     public var assessment: [AnalysisAssessmentMethod:AnalysisAssessment] = [:]
     public var separator = false
     
-    init(type: AnalysisOptionType, contract: Contract, declarer: Pair) {
+    init(type: AnalysisOptionType, contract: Contract, declarer: Pair, sequence: Int) {
         self.type = type
         self.contract = contract
         self.declarer = declarer
+        self.sequence = sequence
     }
     
     public static func == (lhs: AnalysisOption, rhs: AnalysisOption) -> Bool {
-        return lhs.type == rhs.type
+        return lhs.id == rhs.id
+    }
+    
+    public static func equalOrWorsePoints(_ lhs: AnalysisOption, _ rhs: AnalysisOption, invert: Bool = false) -> Bool{
+        var result = false
+        if lhs.declarer == rhs.declarer {// && lhs.assessment.count == rhs.assessment.count {
+            result = true
+            for (index, lhsValue) in lhs.assessment {
+                if let rhsValue = rhs.assessment[index] {
+                    if (lhsValue.points - rhsValue.points) * (invert ? -1 : 1) > 0 {
+                        result = false
+                        break
+                    }
+                }
+            }
+        }
+        return result
     }
 }
