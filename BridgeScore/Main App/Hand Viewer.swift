@@ -25,7 +25,7 @@ struct HandViewerForm: View {
         
         StandardView("HandViewerForm") {
             VStack {
-                HandViewer(board: $board, traveller: $traveller, sitting: $sitting, from: from)
+                HandViewer(board: $board, traveller: $traveller, sitting: $sitting, from: from, bidAnnounce: $bidAnnounce)
                 Spacer().frame(height: 2)
                 HandViewButtonBar()
                 Spacer().frame(height: 2)
@@ -78,7 +78,7 @@ struct HandViewer: View {
     @Binding var traveller: TravellerViewModel
     @Binding var sitting: Seat
     @State var from: UIView
-    @State var bidAnnounce = ""
+    @Binding var bidAnnounce: String
     @State var trickNumber = 0
     @State var deal = Deal()
     @State var tricks: [Trick] = []
@@ -133,7 +133,7 @@ struct HandViewer: View {
                             if tricks.count > 0 || traveller.playData != "" {
                                 VStack {
                                     if showClaim || bidAnnounce == "" {
-                                        HandViewTrickCount(traveller: $traveller, tricks: $tricks, trickNumber: $trickNumber, showClaim: $showClaim, declarer: traveller.declarer)
+                                        HandViewTrickCount(traveller: $traveller, sitting: $sitting, tricks: $tricks, trickNumber: $trickNumber, showClaim: $showClaim, declarer: traveller.declarer)
                                     } else {
                                         HandViewBidAnnounce(announce: $bidAnnounce)
                                     }
@@ -810,6 +810,7 @@ struct HandViewer: View {
     
     struct HandViewTrickCount: View {
         @Binding var traveller: TravellerViewModel
+        @Binding var sitting: Seat
         @Binding var tricks: [Trick]
         @Binding var trickNumber: Int
         @Binding var showClaim: Bool
@@ -824,19 +825,35 @@ struct HandViewer: View {
                     VStack {
                         Spacer().frame(height: 30)
                         if trickNumber == 0 {
-                            HStack {
-                                Spacer()
-                                Text(traveller.contract.colorCompact)
-                                if traveller.contract.level != .passout {
-                                    HStack(spacing: 0) {
-                                        Text("\(traveller.declarer.short) ")
-                                        Text((traveller.made == 0 ? "=" : (
-                                            traveller.made > 0 ? "+\(traveller.made)" : (
-                                                "\(traveller.made)"))))
+                            VStack {
+                                HStack {
+                                    Spacer()
+                                    Text(traveller.contract.colorCompact)
+                                    if traveller.contract.level != .passout {
+                                        HStack(spacing: 0) {
+                                            Text("\(traveller.declarer.short) ")
+                                            Text((traveller.made == 0 ? "=" : (
+                                                traveller.made > 0 ? "+\(traveller.made)" : (
+                                                    "\(traveller.made)"))))
+                                        }
                                     }
+                                    Spacer()
+                                }.foregroundColor(Palette.handTable.text).bold().font(bannerFont)
+                                if traveller.contract.level != .passout {
+                                    Spacer().frame(height: 20)
+                                    HStack {
+                                        if traveller.contract.level != .passout {
+                                            if sitting.pair != traveller.declarer.pair {
+                                                Text("Defence")
+                                            } else if sitting == traveller.declarer {
+                                                Text("Declarer")
+                                            } else {
+                                                Text("Dummy")
+                                            }
+                                        }
+                                    }.foregroundColor(Palette.handTable.contrastText).font(defaultFont)
                                 }
-                                Spacer()
-                            }.foregroundColor(Palette.handTable.text).bold().font(bannerFont)
+                            }
                         } else if showClaim || trickNumber == 13 {
                             Text("\(Values.trickOffset + traveller.contractLevel + traveller.made) tricks \(trickNumber != 0 && trickNumber < 13 ? "agreed" : "made")").foregroundColor(Palette.handTable.text).bold()
                             Spacer().frame(height: 10)
@@ -848,20 +865,23 @@ struct HandViewer: View {
                                 Text("Tricks made").foregroundColor(Palette.handTable.text).bold()
                                 Spacer()
                             }
-                            Spacer().frame(height: 10)
+                            Spacer().frame(height: 20)
                             HStack {
+                                Spacer()
                                 HStack {
                                     Text("Declarer: ")
                                     Spacer()
-                                }.frame(width: 130)
+                                }.frame(width: 100)
                                 Text("\(declarer.pair == .ns ?  trick.nsTricks : trick.trickNumber - trick.nsTricks)")
                                 Spacer()
                             }
                             HStack {
+                                Spacer()
                                 HStack {
+                                   
                                     Text("Defence: ")
                                     Spacer()
-                                }.frame(width: 130)
+                                }.frame(width: 100)
                                 Text("\(declarer.pair == .ew ?  trick.nsTricks : trick.trickNumber - trick.nsTricks)")
                                 Spacer()
                             }

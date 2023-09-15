@@ -12,9 +12,19 @@ struct AnalysisViewer: View {
     let scorecard = Scorecard.current.scorecard!
     @State var board: BoardViewModel
     @State var traveller: TravellerViewModel
-    @State var initialTraveller: TravellerViewModel?
+    @State var initialTraveller: TravellerViewModel
     @State var sitting: Seat
     @State var from: UIView
+    @State var bidAnnounce = ""
+    @State var summaryMode = true
+    
+    init(board: BoardViewModel, traveller: TravellerViewModel, sitting: Seat, from: UIView) {
+        self.board = board
+        self.traveller = traveller
+        self.initialTraveller = traveller
+        self.sitting = sitting
+        self.from = from
+    }
     
     var body: some View {
         HStack {
@@ -24,7 +34,7 @@ struct AnalysisViewer: View {
                     Spacer()
                     HStack {
                         Spacer().frame(width: 50)
-                        Text("Board \(board.boardNumber) \(traveller.rankingNumber == initialTraveller?.rankingNumber ? "v \(board.table?.versus ?? "Unknown")" : "  -  Viewing Other Traveller")")
+                        Text("Board \(board.boardNumber) \(traveller.rankingNumber == initialTraveller.rankingNumber ? "v \(board.table?.versus ?? "Unknown")" : "  -  Viewing Other Traveller")")
                         Spacer()
                         VStack {
                             HStack {
@@ -36,7 +46,7 @@ struct AnalysisViewer: View {
                             }.frame(width: 200, height: 50).background(Palette.bannerShadow.background).foregroundColor(Palette.banner.text).cornerRadius(6).opacity(0.7)
                         }
                         Spacer().frame(width: 50)
-                        ButtonBar(board: $board, traveller: $traveller, sitting: $sitting)
+                        ButtonBar(board: $board, traveller: $traveller, initialTraveller: $initialTraveller, sitting: $sitting, bidAnnounce: $bidAnnounce, summaryMode: $summaryMode)
                         Spacer().frame(width: 20)
                     }.font(bannerFont).foregroundColor(Palette.banner.text)
                     Spacer()
@@ -47,13 +57,14 @@ struct AnalysisViewer: View {
                 VStack {
                     Spacer().frame(height: 10)
                     HStack {
-                        HandViewer(board: $board, traveller: $traveller, sitting: $sitting, from: from)
+                        HandViewer(board: $board, traveller: $traveller, sitting: $sitting, from: from, bidAnnounce: $bidAnnounce)
                             .cornerRadius(16)
                         Spacer().frame(width: 10)
                         VStack {
                             AnalysisBiddingOptions(board: $board, traveller: $traveller, sitting: $sitting)
                             Spacer()
-                            AnalysisTravellerView(board: $board, traveller: $traveller, sitting: $sitting)
+                            AnalysisCommentView(board: $board)
+                            AnalysisTravellerView(board: $board, traveller: $traveller, sitting: $sitting, summaryMode: $summaryMode)
                         }
                     }
                 }
@@ -68,7 +79,10 @@ struct AnalysisViewer: View {
             if let (newBoard, newTraveller) = Scorecard.getBoardTraveller(boardNumber: board.boardNumber + (direction == .left ? 1 : -1)) {
                 board = newBoard
                 traveller = newTraveller
+                initialTraveller = newTraveller
                 sitting = newBoard.table!.sitting
+                bidAnnounce = ""
+                summaryMode = true
             }
         }
     }
@@ -78,7 +92,10 @@ struct AnalysisViewer: View {
         let scorecard = Scorecard.current.scorecard!
         @Binding var board: BoardViewModel
         @Binding var traveller: TravellerViewModel
+        @Binding var initialTraveller: TravellerViewModel
         @Binding var sitting: Seat
+        @Binding var bidAnnounce: String
+        @Binding var summaryMode: Bool
         
         var body: some View {
             HStack {
@@ -86,7 +103,10 @@ struct AnalysisViewer: View {
                     if let (newBoard, newTraveller) = Scorecard.getBoardTraveller(boardNumber: board.boardNumber - 1) {
                         board = newBoard
                         traveller = newTraveller
+                        initialTraveller = newTraveller
                         sitting = newBoard.table!.sitting
+                        bidAnnounce = ""
+                        summaryMode = true
                     }
                 } label: {
                     Image(systemName: "backward.frame")
@@ -96,7 +116,10 @@ struct AnalysisViewer: View {
                     if let (newBoard, newTraveller) = Scorecard.getBoardTraveller(boardNumber: board.boardNumber + 1) {
                         board = newBoard
                         traveller = newTraveller
+                        initialTraveller = newTraveller
                         sitting = newBoard.table!.sitting
+                        bidAnnounce = ""
+                        summaryMode = true
                     }
                 } label: {
                     Image(systemName: "forward.frame")
@@ -157,7 +180,7 @@ struct AnalysisBiddingOptions : View {
                                             TrailingText(methodPoints == nil ? "" : "\(methodPoints!)")
                                         }
                                     }
-                                    .foregroundColor(option.removed ? Palette.alternate.strongText : Palette.alternate.text)
+                                    .foregroundColor(option.removed ? Palette.background.strongText : Palette.background.text)
                                     .frame(height: 20)
                                     .if(option.separator) { view in
                                         view.overlay(Separator(thickness: 2, color: Palette.tile.background), alignment: .bottom)
@@ -173,7 +196,7 @@ struct AnalysisBiddingOptions : View {
             Spacer()
         }
         .frame(width: 520, height: 250)
-        .background(Palette.alternate.background).cornerRadius(16)
+        .background(Palette.background.background).cornerRadius(16)
         .font(smallFont)
         .onAppear {
             buildOptions()
@@ -400,6 +423,15 @@ struct AnalysisBiddingOptions : View {
                 }
             }
         }
+        // Remove lower level if it is below making actual
+        if weDeclared && traveller.made >= 0 {
+            if let option = options[.lower] {
+                if !option.removed {
+                    option.removed = true
+                    print("Removal 5 = \(option.type) because lower than making")
+                }
+            }
+        }
     }
     
     func buildTricksMade() -> [Pair:[Suit:[AnalysisAssessmentMethod:Int]]] {
@@ -447,6 +479,35 @@ struct AnalysisBiddingOptions : View {
     }
 }
 
+struct AnalysisCommentView: View {
+    @Binding var board: BoardViewModel
+    
+    var body: some View {
+        HStack {
+            ZStack {
+                Rectangle()
+                    .foregroundColor(Palette.background.background)
+                    .cornerRadius(16)
+                VStack {
+                    Spacer().frame(height: 6)
+                    HStack {
+                        Spacer().frame(width: 6)
+                        TextField("", text: $board.comment)
+                            .padding(.all, 2)
+                            .foregroundColor(Palette.background.text)
+                        Spacer().frame(width: 6)
+                    }
+                    Spacer().frame(height: 6)
+                }
+                .cornerRadius(16)
+                .keyboardAdaptive
+            }
+            .frame(width: 520, height: 80)
+            .font(defaultFont)
+        }
+    }
+}
+
 struct AnalysisTravellerView: View {
     let scorecard = Scorecard.current.scorecard!
     @Binding var board: BoardViewModel
@@ -455,10 +516,10 @@ struct AnalysisTravellerView: View {
     @State var handSummary: TravellerSummary!
     @State var selectedSummary: TravellerSummary?
     @Binding var sitting: Seat
-    @State var summaryMode: Bool = true
+    @Binding var summaryMode: Bool
     @State var travellers: [TravellerExtension] = []
     @State var summary: [TravellerSummary] = []
-    let columns = [GridItem(.fixed(50), spacing: 0), GridItem(.flexible(minimum: 90), spacing: 0), GridItem(.fixed(50), spacing: 0), GridItem(.fixed(60), spacing: 0), GridItem(.fixed(70), spacing: 0), GridItem(.fixed(60), spacing: 0), GridItem(.flexible(minimum: 70), spacing: 0)]
+    let columns = [GridItem(.fixed(50), spacing: 0), GridItem(.fixed(50), spacing: 0), GridItem(.flexible(minimum: 90), spacing: 0), GridItem(.fixed(50), spacing: 0), GridItem(.fixed(60), spacing: 0), GridItem(.fixed(70), spacing: 0), GridItem(.fixed(55), spacing: 0), GridItem(.flexible(minimum: 70), spacing: 0)]
     
     var body: some View {
         VStack {
@@ -473,7 +534,8 @@ struct AnalysisTravellerView: View {
                         VStack {
                             LazyVGrid(columns: columns, spacing: 0) {
                                 GridRow {
-                                    CenteredText("Freq")
+                                    LeadingText("")
+                                    CenteredText("Frq")
                                     CenteredText("Contract")
                                     CenteredText("By")
                                     CenteredText("Lead")
@@ -488,6 +550,18 @@ struct AnalysisTravellerView: View {
                                 LazyVGrid(columns: columns, spacing: 3) {
                                     ForEach(summary, id: \.self) { summary in
                                         GridRow {
+                                            if !(handTraveller == summary) {
+                                                Image(systemName: "arrow.up.left")
+                                                    .background(Palette.background.background)
+                                                    .foregroundColor(Palette.background.text)
+                                                    .onTapGesture {
+                                                        if let newTraveller = travellers.first(where: { $0 == summary }) {
+                                                            reflectSelectionChange(traveller: newTraveller)
+                                                        }
+                                                    }
+                                            } else {
+                                                CenteredText("")
+                                            }
                                             CenteredText("\(summary.frequency)")
                                             CenteredAttributedText(summary.contractStringPlus)
                                             CenteredText(summary.declarer.short)
@@ -500,17 +574,13 @@ struct AnalysisTravellerView: View {
                                         .if(handTraveller == summary) { view in
                                             view.background(Palette.handPlayer.background).foregroundColor(Palette.handPlayer.contrastText)
                                         }
-                                        .foregroundColor(summary.made >= 0 ? Palette.alternate.text : Palette.alternate.faintText)
+                                        .foregroundColor(summary.made >= 0 ? Palette.background.text : Palette.background.faintText)
                                         .onTapGesture {
                                             selectedSummary = summary
                                             summaryMode.toggle()
                                         }
                                         .onSwipe() { direction in
-                                            if direction == .left {
-                                                if let newTraveller = travellers.first(where: { $0 == summary }) {
-                                                    reflectSelectionChange(traveller: newTraveller)
-                                                }
-                                            }
+                                            
                                         }
                                     }
                                 }
@@ -520,6 +590,7 @@ struct AnalysisTravellerView: View {
                         VStack {
                             LazyVGrid(columns: columns, spacing: 0) {
                                 GridRow {
+                                    LeadingText("")
                                     CenteredText("")
                                     CenteredText("Contract")
                                     CenteredText("By")
@@ -535,6 +606,16 @@ struct AnalysisTravellerView: View {
                                 LazyVGrid(columns: columns, spacing: 3) {
                                     ForEach(travellers.filter({$0 == selectedSummary!}), id: \.self) { traveller in
                                         GridRow {
+                                            if traveller.rankingNumber != handTraveller.rankingNumber {
+                                                Image(systemName: "arrow.up.left")
+                                                    .background(Palette.background.background)
+                                                    .foregroundColor(Palette.background.text)
+                                                    .onTapGesture {
+                                                        reflectSelectionChange(traveller: traveller)
+                                                    }
+                                            } else {
+                                                CenteredText("")
+                                            }
                                             CenteredText("")
                                             CenteredAttributedText(traveller.contract.colorCompact)
                                             CenteredText(traveller.declarer.short)
@@ -544,17 +625,12 @@ struct AnalysisTravellerView: View {
                                             TrailingText(traveller.scoreString(sitting: sitting))
                                         }
                                         .frame(height: 25)
-                                        .foregroundColor(traveller.made >= 0 ? Palette.alternate.text : Palette.alternate.faintText)
+                                        .foregroundColor(traveller.made >= 0 ? Palette.background.text : Palette.background.faintText)
                                         .if(traveller.rankingNumber == handTraveller.rankingNumber) { view in
                                             view.background(Palette.handPlayer.background).foregroundColor(Palette.handPlayer.contrastText)
                                         }
                                         .onTapGesture {
                                             summaryMode.toggle()
-                                        }
-                                        .onSwipe() { direction in
-                                            if direction == .left {
-                                                reflectSelectionChange(traveller: traveller)
-                                            }
                                         }
                                     }
                                 }
@@ -576,8 +652,8 @@ struct AnalysisTravellerView: View {
             reflectChange()
         }
         .frame(width: 520, height: 200)
-        .background(Palette.alternate.background)
-        .foregroundColor(Palette.alternate.text)
+        .background(Palette.background.background)
+        .foregroundColor(Palette.background.text)
         .font(.body)
         .cornerRadius(16)
     }
