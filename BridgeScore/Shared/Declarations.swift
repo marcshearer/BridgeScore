@@ -950,7 +950,7 @@ public enum ContractDouble: Int, ContractEnumType, Equatable {
     }
 }
 
-public class Contract: Equatable {
+public class Contract: Equatable, Comparable {
     public var level: ContractLevel = .blank {
         didSet {
             if !level.hasSuit {
@@ -1058,6 +1058,18 @@ public class Contract: Equatable {
     
     init(copying contract: Contract) {
         self.copy(from: contract)
+    }
+    
+    convenience init?(higher than: Contract, suit: Suit) {
+        self.init(copying: than)
+        self.suit = suit
+        if suit < than.suit {
+            if let nextLevel = ContractLevel(rawValue: self.level.rawValue + 1) {
+                self.level = nextLevel
+            } else {
+                return nil
+            }
+        }
     }
     
     static public func == (lhs: Contract, rhs: Contract) -> Bool {

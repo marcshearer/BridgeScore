@@ -140,7 +140,7 @@ struct AnalysisBiddingOptions : View {
     @Binding var board: BoardViewModel
     @Binding var traveller: TravellerViewModel
     @Binding var sitting: Seat
-    @State var options: [AnalysisOptionType:AnalysisOption] = [:]
+    @State var options: [AnalysisOption] = []
     let columns = [GridItem(.flexible(minimum: 100), spacing: 0), GridItem(.fixed(45), spacing: 0),GridItem(.fixed(40), spacing: 0),  GridItem(.flexible(minimum: 60), spacing: 0), GridItem(.flexible(minimum: 60), spacing: 0), GridItem(.flexible(minimum: 60), spacing: 0), GridItem(.flexible(minimum: 60), spacing: 0),GridItem(.flexible(minimum: 60), spacing: 0)]
     
     var body: some View {
@@ -168,11 +168,13 @@ struct AnalysisBiddingOptions : View {
                     .bold()
                     ScrollView {
                             // TODO These are wrong way round - should be grid above for
-                        ForEach(options.map{$0.value}.sorted(by: {$0.sequence < $1.sequence})) { option in
+                        ForEach(options) { option in
                             if !option.removed {
                                 LazyVGrid(columns: columns, spacing: 0) {
                                     GridRow {
-                                        LeadingText(option.type.string)
+                                        let type = option.displayType
+                                        let doubleString = (type.double ? AnalysisOptionType.doubleString(option.linked?.displayType) : nil)
+                                        LeadingText(doubleString ?? type.string)
                                         LeadingAttributedText(option.contract.colorCompact)
                                         LeadingText(option.declarer.short)
                                         ForEach(AnalysisAssessmentMethod.allCases, id: \.self) { method in
@@ -185,7 +187,6 @@ struct AnalysisBiddingOptions : View {
                                     .if(option.separator) { view in
                                         view.overlay(Separator(thickness: 2, color: Palette.tile.background), alignment: .bottom)
                                     }
-                                        //}
                                 }
                             }
                         }
@@ -207,16 +208,16 @@ struct AnalysisBiddingOptions : View {
     }
     
     func buildOptions() {
-        options = [:]
+        options = [] // TODO Need options just to be an array
         
         let contracts = traveller.contracts
         let declarer = traveller.declarer.pair
         let weDeclared = (declarer == sitting.pair)
+        
+        // Find last bid by defenders
         var bidder = declarer
         var previousBid: Contract?
         var started = false
-        var sequence = 0
-        
         for bid in contracts.reversed() {
             if bid != nil || started {
                 started = true
@@ -231,7 +232,6 @@ struct AnalysisBiddingOptions : View {
         let ourBid = (weDeclared ? traveller.contract : previousBid)
         let ourSuit = ourBid?.suit
         let ourGameLevel = ourSuit?.gameTricks
-        let ourLevel = ourBid?.level.rawValue
         let theirBid = (weDeclared ? previousBid : traveller.contract)
         
         let multiplier: Float = (sitting.pair == .ns ? 1 : -1)
@@ -239,105 +239,155 @@ struct AnalysisBiddingOptions : View {
         
         let types = (weDeclared ? AnalysisOptionType.declaringCases : AnalysisOptionType.defendingCases)
         for type in types {
-            var contract: Contract?
+            var contract: [Contract] = []
             var declarer = sitting.pair
+            var decisionBy: Pair?
             
             // Generic options
             switch type {
             case .actual:
-                contract = Contract(copying: traveller.contract)
+                contract = [Contract(copying: traveller.contract)]
                 declarer = traveller.declarer.pair
             case .optimum:
                 if (board.optimumScore?.contract.level ?? .blank) != .blank {
-                    contract = Contract(copying: board.optimumScore!.contract)
+                    contract = [Contract(copying: board.optimumScore!.contract)]
                     declarer = board.optimumScore!.declarer
                 }
             case .best:
                 if let bestTraveller = travellers.last {
-                    contract = Contract(copying: bestTraveller.contract)
+                    contract = [Contract(copying: bestTraveller.contract)]
                     declarer = bestTraveller.declarer.pair
                 }
             default:
                 break
             }
             
-            // Options for us
-            if let level = ourLevel, let bid = ourBid {
-                let higherLevel = (bid.suit <= traveller.contract.suit ? traveller.contractLevel + 1 : traveller.contractLevel)
+            if weDeclared {
+                    // Options if we declared
                 switch type {
-                case .ourLast:
-                    break
-                    // contract = Contract(copying: bid)
-                case .higher, .higherDouble:
-                    if higherLevel <= Values.grandSlamLevel.rawValue {
-                        if type == .higher || bid.double == .undoubled {
-                            contract = Contract(copying: bid)
-                            contract?.level = ContractLevel(rawValue: higherLevel)!
-                            if type == .higherDouble {
-                                contract?.double = .doubled
+                case .stopLower:
+                        // Stop in a lower contract below game
+                    if let ourBid = ourBid {
+                        if ourBid.level.rawValue > 1 {
+                            for level in 1..<ourBid.level.rawValue {
+                                let tryBid = Contract(copying: ourBid)
+                                tryBid.level = ContractLevel(rawValue: level)!
+                                if theirBid == nil || tryBid > theirBid! {
+                                    contract.append(tryBid)
+                                    declarer = sitting.pair
+                                }
                             }
                         }
                     }
-                case .game:
-                    if let gameLevel = ourGameLevel {
-                        if higherLevel < gameLevel {
-                            contract = Contract(copying: bid)
-                            contract?.level = ContractLevel(rawValue: gameLevel)!
+                case .otherSuit, .median, .mode:
+                        // TODO
+                    break
+                default:
+                    break
+                }
+            } else {
+                // Options if they declared
+                switch type {
+                case .bidOver:
+                        // Bid on below game level
+                    if let ourSuit = ourSuit, let ourGameLevel = ourGameLevel, let theirBid = theirBid {
+                        if let bidOver = Contract.init(higher: theirBid, suit: ourSuit) {
+                            if bidOver.level.rawValue < ourGameLevel {
+                                contract.append(bidOver)
+                                declarer = sitting.pair
+                            }
                         }
-                    }
-                case .smallSlam:
-                    if higherLevel < Values.smallSlamLevel.rawValue {
-                        contract = Contract(copying: bid)
-                        contract?.level = Values.smallSlamLevel
-                    }
-                case .grandSlam:
-                    if higherLevel < Values.grandSlamLevel.rawValue {
-                        contract = Contract(copying: bid)
-                        contract?.level = Values.grandSlamLevel
-                    }
-                case .lower:
-                    if weDeclared && level - 1 > 0 {
-                        contract = Contract(copying: bid)
-                        contract?.level = ContractLevel(rawValue: level - 1)!
-                        contract?.double = .undoubled
                     }
                 default:
                     break
                 }
             }
             
-            // Options for them
-            if let bid = theirBid {
-                let higherLevel = (bid.suit <= traveller.contract.suit ? traveller.contractLevel + 1 : traveller.contractLevel)
-                switch type {
-                case .oppLast:
-                    contract = Contract(copying: bid)
-                    declarer = sitting.pair.other
-                case .oppHigher, .oppHigherDouble:
-                    if higherLevel <= Values.grandSlamLevel.rawValue {
-                        if type == .oppHigher || bid.double == .undoubled {
-                            contract = Contract(copying: bid)
-                            contract?.level = ContractLevel(rawValue: higherLevel)!
-                            if type == .oppHigherDouble {
-                                contract?.double = .doubled
-                            }
-                            declarer = sitting.pair.other
+            // Options if bidding or declaring
+            switch type {
+            case .pass:
+                // Pass their last bid
+                if let theirBid = theirBid {
+                    if weDeclared || theirBid.double == .doubled {
+                        contract = [Contract(copying: theirBid)]
+                        contract.last!.double = .undoubled
+                        declarer = sitting.pair.other
+                        decisionBy = sitting.pair
+                    }
+                }
+            case .double:
+                // Double their last bid
+                if let theirBid = theirBid {
+                    if theirBid.double == .undoubled {
+                        contract = [Contract(copying: theirBid)]
+                        contract.first!.double = .doubled
+                        declarer = sitting.pair.other
+                        decisionBy = sitting.pair
+                    }
+                }
+            case .upToGame:
+                    // Bid on to game level
+                if let ourBid = ourBid, let ourGameLevel = ourGameLevel {
+                    if ourBid.level.rawValue < ourGameLevel {
+                        for level in ourBid.level.rawValue+1...ourGameLevel {
+                            contract.append(Contract(copying: ourBid))
+                            contract.last!.level = ContractLevel(rawValue: level)!
+                            declarer = sitting.pair
                         }
                     }
-                default:
-                    break
+                }
+            case .upToSlam:
+                    // Bid on to small slam level
+                if let ourBid = ourBid {
+                    if ourBid.level < Values.smallSlamLevel {
+                        contract.append(Contract(copying: ourBid))
+                        contract.last!.level = Values.smallSlamLevel
+                        declarer = sitting.pair
+                    }
+                }
+            case .upToGrand:
+                    // Bid on to grand slam level
+                if let ourBid = ourBid {
+                    if ourBid.level < Values.grandSlamLevel {
+                        contract.append(Contract(copying: ourBid))
+                        contract.last!.level = Values.grandSlamLevel
+                        declarer = sitting.pair
+                    }
+                }
+            default:
+                break
+            }
+
+            if !contract.isEmpty {
+                let decisionBy = decisionBy ?? declarer
+                for contract in contract {
+                    let option = AnalysisOption(type: type, contract: contract, declarer: declarer, decisionBy: decisionBy)
+                    options.append(option)
+                    
+                    if !weDeclared && declarer == sitting.pair {
+                        // Add linked options for opps doubling or overbidding and us them doubling them
+                        let doubleUs = Contract(copying: contract)
+                        doubleUs.double = .doubled
+                        options.append(AnalysisOption(type: .double, contract: doubleUs, declarer: declarer, decisionBy: declarer.other, linked: option))
+                        
+                        if let bidOver = Contract(higher: contract, suit: theirBid!.suit) {
+                            let bidOverOption = AnalysisOption(type: .bidOver, contract: bidOver, declarer: declarer.other, decisionBy: declarer.other, linked: option)
+                            options.append(bidOverOption)
+                            
+                            let doubleThem = Contract(copying: bidOver)
+                            doubleThem.double = .doubled
+                            options.append(AnalysisOption(type: .bidOverDouble, contract: doubleThem, declarer: declarer.other, decisionBy: declarer, linked: bidOverOption))
+                        }
+                    }
                 }
             }
-            if let contract = contract {
-                options[type] = AnalysisOption(type: type, contract: contract, declarer: declarer, sequence: sequence)
-                sequence += 1
-            }
         }
+                
         buildScores()
         removeBadOptions()
         // Set separators
         var lastOption: AnalysisOption?
-        for option in options.map({$0.value}).sorted(by: {$0.sequence < $1.sequence}) {
+        for option in options {
             if !option.removed {
                 if lastOption != nil && (lastOption?.declarer != option.declarer) {
                     lastOption?.separator = true
@@ -349,7 +399,7 @@ struct AnalysisBiddingOptions : View {
     
     func buildScores(){
         let tricksMade = buildTricksMade()
-        for (_, option) in options {
+        for option in options {
             var assessment: [Int:AnalysisAssessment] = [:]
             if let allTricksMade = tricksMade[option.declarer]?[option.contract.suit]?.map({$0.value}) {
                 let tricksMadeSet = Set(allTricksMade)
@@ -367,70 +417,46 @@ struct AnalysisBiddingOptions : View {
     }
     
     func removeBadOptions () {
-        let declarer = traveller.declarer.pair
-        let weDeclared = (declarer == sitting.pair)
-        print("==================================")
-        
-            // Remove anything palpably worse for the team bidding it than the actual or a higher defence bid (excluding doubles)
-        for baselineType in [AnalysisOptionType.actual, .higher, .oppHigher] {
-            if let baseline = options[baselineType] {
-                for (_, option) in options.filter({baseline.sequence < $0.value.sequence && $0.value.type != .higherDouble && $0.value.type != .oppHigherDouble && baseline.declarer == $0.value.declarer}) {
-                    if AnalysisOption.equalOrWorsePoints(option, baseline, invert: option.declarer != sitting.pair) {
-                        if !option.removed {
-                            option.removed = true
-                            print("Removal 1 = \(option.type) because of \(baseline.type)")
-                        }
+        if options.count >= 2 {
+            for optionIndex in 1..<options.count {
+                let option = options[optionIndex]
+                for compareIndex in 0..<optionIndex {
+                    let compare = options[compareIndex]
+                    if AnalysisOption.equalOrWorsePoints(option, compare, invert: invert(option)) {
+                        option.removed = true
                     }
                 }
             }
-        }
-            // Remove high level bids / doubles if they are clearly worse for declarer than a 'higher' bid
-        for baselineType in [AnalysisOptionType.higher, .oppHigher] {
-            if let baseline = options[baselineType] {
-                for type in [AnalysisOptionType.game, .smallSlam, .grandSlam, .oppHigherDouble] {
-                    if let option = options[type] {
-                        if baseline.declarer == option.declarer && AnalysisOption.equalOrWorsePoints(option, baseline) {
-                            if !option.removed {
-                                option.removed = true
-                                print("Removal 2 = \(option.type) because of \(baseline.type)")
+            
+            // Remove linking options if no longer in play
+            for option in options {
+                if let linked = option.linked {
+                    if linked.removed {
+                        option.removed = true
+                    }
+                }
+            }
+            
+            // Now consider removing original linked double if worse than double
+            for option in options {
+                if option.type.double && !option.removed {
+                    if let linked = option.linked {
+                        if !linked.removed {
+                            if AnalysisOption.equalOrWorsePoints(linked, option, invert: invert(option)) {
+                                linked.removed = true
                             }
                         }
                     }
                 }
             }
         }
-            // Remove higher bids if wouldn't have been forced
-        if weDeclared {
-            if (options[.oppHigher]?.removed ?? true) && (options[.oppHigherDouble]?.removed ?? true) {
-                for type in [AnalysisOptionType.higher, .higherDouble] {
-                    if let option = options[type] {
-                        if !option.removed {
-                            option.removed = true
-                            print("Removal 3 = \(option.type) because not forced")
-                        }
-                    }
-                }
+        
+        func invert(_ option: AnalysisOption) -> Bool {
+            var invert = option.declarer != sitting.pair
+            if option.decisionBy != option.declarer {
+                invert.toggle()
             }
-        } else {
-            if (options[.higher]?.removed ?? true) && (options[.higherDouble]?.removed ?? true) {
-                for type in [AnalysisOptionType.oppHigher, .oppHigherDouble] {
-                    if let option = options[type] {
-                        if !option.removed {
-                            option.removed = true
-                            print("Removal 4 = \(option.type) because not forced")
-                        }
-                    }
-                }
-            }
-        }
-        // Remove lower level if it is below making actual
-        if weDeclared && traveller.made >= 0 {
-            if let option = options[.lower] {
-                if !option.removed {
-                    option.removed = true
-                    print("Removal 5 = \(option.type) because lower than making")
-                }
-            }
+            return invert
         }
     }
     
@@ -959,28 +985,43 @@ fileprivate enum OutcomeLevel {
 
 enum AnalysisOptionType : Int, CaseIterable, Hashable {
     case actual = 0
-    case ourLast = 1
-    case higher = 2
-    case higherDouble = 3
-    case game = 4
-    case smallSlam = 5
-    case grandSlam = 6
-    case lower = 7
-    case oppLast = 8
-    case oppHigher = 9
-    case oppHigherDouble = 10
-    case median = 11
-    case mode = 12
-    case best = 13
-    case optimum = 14
+    case pass = 1
+    case double = 2
+    case stopLower = 3
+    case otherSuit = 4
+    case bidOver = 5
+    case bidOverDouble = 6
+    case upToGame = 7
+    case upToSlam = 8
+    case upToGrand = 9
+    case median = 10
+    case mode = 11
+    case best = 12
+    case optimum = 13
     
     var string: String {
         return "\(self)".replacingOccurrences(of: "Double", with: "*").splitCapitals
     }
     
-    static var declaringCases: [AnalysisOptionType] = [.lower, .actual, .higher, .higherDouble, .game, .smallSlam, .grandSlam, .oppHigher, .oppHigherDouble, .oppLast, .median, .mode, .best, .optimum]
+    var upToTypes: [AnalysisOptionType] {
+        return [.upToGame, .upToSlam, .upToGrand]
+    }
     
-    static var defendingCases: [AnalysisOptionType] = [.actual, .oppHigher, oppHigherDouble, .ourLast, .higher, .higherDouble, .game, .smallSlam, .grandSlam, .lower, .median, .mode, .best, .optimum]
+    var notMakingType: AnalysisOptionType {
+        return (upToTypes.contains(self) ? .bidOver : self)
+    }
+    
+    static func doubleString(_ type: AnalysisOptionType?) -> String? {
+        return type == nil ? nil : "\(type!.string)*"
+    }
+    
+    static var declaringCases: [AnalysisOptionType] = [.actual, .pass, .double, .stopLower, .otherSuit, .upToGame, .upToSlam, .upToGrand, .median, .mode, .best, .optimum]
+    
+    static var defendingCases: [AnalysisOptionType] = [.actual, .pass, .double, .bidOver, .upToGame, .upToSlam,. upToGrand, .median, .mode, .best, .optimum]
+    
+    var double: Bool {
+        return self == .double || self == .bidOverDouble
+    }
     
 }
 
@@ -1034,32 +1075,41 @@ class AnalysisOption : Identifiable {
     public var type: AnalysisOptionType
     public var contract: Contract
     public var declarer: Pair
-    public var sequence: Int
+    public var decisionBy: Pair
     public var removed = false
     public var assessment: [AnalysisAssessmentMethod:AnalysisAssessment] = [:]
     public var separator = false
+    public var linked: AnalysisOption?
     
-    init(type: AnalysisOptionType, contract: Contract, declarer: Pair, sequence: Int) {
+    init(type: AnalysisOptionType, contract: Contract, declarer: Pair, decisionBy: Pair, linked: AnalysisOption? = nil) {
         self.type = type
         self.contract = contract
         self.declarer = declarer
-        self.sequence = sequence
+        self.decisionBy = decisionBy
+        self.linked = linked
     }
     
     public static func == (lhs: AnalysisOption, rhs: AnalysisOption) -> Bool {
         return lhs.id == rhs.id
     }
     
+    public var displayType : AnalysisOptionType {
+        var allNotMaking = true
+        for (_, assess) in assessment {
+            if assess.tricks >= Values.trickOffset + contract.level.rawValue {
+                allNotMaking = false
+            }
+        }
+        return allNotMaking ? type.notMakingType : type
+    }
+    
     public static func equalOrWorsePoints(_ lhs: AnalysisOption, _ rhs: AnalysisOption, invert: Bool = false) -> Bool{
-        var result = false
-        if lhs.declarer == rhs.declarer {// && lhs.assessment.count == rhs.assessment.count {
-            result = true
-            for (index, lhsValue) in lhs.assessment {
-                if let rhsValue = rhs.assessment[index] {
-                    if (lhsValue.points - rhsValue.points) * (invert ? -1 : 1) > 0 {
-                        result = false
-                        break
-                    }
+        var result = true
+        for (index, lhsValue) in lhs.assessment {
+            if let rhsValue = rhs.assessment[index] {
+                if (lhsValue.points - rhsValue.points) * (invert ? -1 : 1) > 0 {
+                    result = false
+                    break
                 }
             }
         }
