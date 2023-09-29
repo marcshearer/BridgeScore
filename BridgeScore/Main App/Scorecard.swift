@@ -21,6 +21,7 @@ class Scorecard {
     @Published private(set) var tables: [Int:TableViewModel] = [:]   // Table number
     @Published private(set) var rankingList: [RankingViewModel] = []
     @Published private(set) var travellerList: [TravellerViewModel] = []
+    @Published private(set) var analysisList: [Int:[Int:[Seat:Analysis]]] = [:] // Board number, Ranking number, Sitting
     
     public func rankings(table: Int? = nil, section: Int? = nil, way: Pair? = nil, number: Int? = nil, player: (bboName: String, name: String)? = nil) -> [RankingViewModel] {
         var result = rankingList
@@ -68,6 +69,23 @@ class Scorecard {
     public func traveller(board: Int, seat: Seat, rankingNumber: Int, section: Int) -> TravellerViewModel? {
         let resultList = travellerList.filter{$0.board == board && $0.rankingNumber[seat] == rankingNumber && $0.section[seat] == section}
         return resultList.count == 1 ? resultList.first : nil
+    }
+    
+    public func analysis(board: BoardViewModel, traveller: TravellerViewModel, sitting: Seat) -> Analysis {
+        let rankingNumber = traveller.rankingNumber[sitting] ?? -1
+        if let analysis = analysisList[board.board]?[rankingNumber]?[sitting] {
+            return analysis
+        } else {
+            let analysis = Analysis(board: board, traveller: traveller, sitting: sitting)
+            if analysisList[board.board] == nil {
+                analysisList[board.board] = [:]
+            }
+            if analysisList[board.board]![rankingNumber] == nil {
+                analysisList[board.board]![rankingNumber] = [:]
+            }
+            analysisList[board.board]![rankingNumber]![sitting] = analysis
+            return analysis
+        }
     }
     
     public var isImported: Bool {
@@ -135,6 +153,9 @@ class Scorecard {
             travellerList.append(TravellerViewModel(scorecard: scorecard, travellerMO: travellerMO))
         }
         
+            // Empty analysis
+        analysisList = [:]
+        
         self.scorecard = scorecard
         addNew()
     }
@@ -144,6 +165,7 @@ class Scorecard {
         tables = [:]
         rankingList = []
         travellerList = []
+        analysisList = [:]
         scorecard = nil
     }
     
@@ -622,6 +644,10 @@ class Scorecard {
         return result
     }
     
+    public static func madeString(made: Int) -> String {
+        return made == 0 ? "=" : String(format: "%+d", made)
+    }
+    
     public func scanRankings(action: (RankingViewModel, Bool, RankingViewModel?)->()) {
         var lastRanking: RankingViewModel?
         var newGrouping: Bool
@@ -745,15 +771,19 @@ class Scorecard {
         return result
     }
     
-    public static func getBoardTraveller(boardNumber: Int) -> (BoardViewModel, TravellerViewModel)? {
-        var result: (BoardViewModel, TravellerViewModel)?
+    public static func getBoardTraveller(boardNumber: Int, equivalentSeat: Bool = false) -> (BoardViewModel, TravellerViewModel, Seat)? {
+        var result: (BoardViewModel, TravellerViewModel, Seat)?
         if let nextBoard = Scorecard.current.boards[boardNumber] {
             if !Scorecard.current.travellerList.isEmpty {
                 if let scorer = MasterData.shared.scorer {
                     let rankings = Scorecard.current.rankings(table: nextBoard.tableNumber, player: (bboName:scorer.bboName, name: scorer.name))
                     if let myRanking = rankings.first {
-                        if let nextTraveller = Scorecard.current.traveller(board: nextBoard.board, seat: nextBoard.table!.sitting, rankingNumber: myRanking.number, section: myRanking.section) {
-                            result = (nextBoard, nextTraveller)
+                        var seat = nextBoard.table!.sitting
+                        if equivalentSeat {
+                            seat = seat.equivalent
+                        }
+                        if let nextTraveller = Scorecard.current.traveller(board: nextBoard.board, seat: seat, rankingNumber: myRanking.number, section: myRanking.section) {
+                            result = (nextBoard, nextTraveller, seat)
                         }
                     }
                 }

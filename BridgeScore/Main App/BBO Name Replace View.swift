@@ -200,7 +200,9 @@ class BBONameReplaceCell: UITableViewCell, UITextFieldDelegate {
     }
     
     internal func textFieldDidEndEditing(_ textField: UITextField) {
-        bboName.save()
+        if Scorecard.current.scorecard?.importSource == .bbo {
+            bboName.save()
+        }
     }
     
     public class func register(_ tableView: UITableView) {
@@ -242,7 +244,7 @@ class BBONameReplaceCell: UITableViewCell, UITextFieldDelegate {
             }
         } else {
             // Titles
-            bboNameLabel.text = "BBO Name"
+            bboNameLabel.text = (Scorecard.current.scorecard?.importSource == .bbo ? "BBO Name" : "Current Name")
             realNameTextField.text = "Real Name"
             realNameTextField.isEnabled = false
             backgroundColor = UIColor(Palette.alternate.background)

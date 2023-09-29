@@ -176,6 +176,7 @@ public enum Type: Int, CaseIterable {
     case aggregate = 8
     case vpMatchTeam = 1
     case vpTableTeam = 6
+    case vpContTableTeam = 9
     case acblVpTableTeam = 5
     case percentIndividual = 7
 
@@ -194,7 +195,9 @@ public enum Type: Int, CaseIterable {
         case .vpMatchTeam:
             return "Teams Match VPs"
         case .vpTableTeam:
-            return "Teams Table VPs"
+            return "Teams Table VPs (Disc)"
+        case .vpContTableTeam:
+            return "Teams Table VPs (Cont)"
         case .acblVpTableTeam:
             return "Teams Table ACBL VPs"
         case .percentIndividual:
@@ -208,7 +211,7 @@ public enum Type: Int, CaseIterable {
             return .percent
         case .xImp, .vpXImp:
             return .xImp
-        case .vpMatchTeam, .vpTableTeam, .acblVpTableTeam:
+        case .vpMatchTeam, .vpTableTeam, .vpContTableTeam, .acblVpTableTeam:
             return .imp
         case .aggregate:
             return .aggregate
@@ -221,7 +224,7 @@ public enum Type: Int, CaseIterable {
             return 1
         case .percent, .xImp, .vpXImp, .vpPercent, .aggregate:
             return 2
-        case .vpMatchTeam, .vpTableTeam, .acblVpTableTeam:
+        case .vpMatchTeam, .vpTableTeam, .vpContTableTeam, .acblVpTableTeam:
             return 4
         }
     }
@@ -238,14 +241,14 @@ public enum Type: Int, CaseIterable {
         switch self {
         case .percent, .xImp, .vpPercent, .vpXImp, .percentIndividual:
             return 2
-        case .vpMatchTeam, .vpTableTeam, .acblVpTableTeam,.aggregate:
+        case .vpMatchTeam, .vpTableTeam, .vpContTableTeam, .acblVpTableTeam,.aggregate:
             return 0
         }
     }
 
     public var tablePlaces: Int {
         switch self {
-        case .percent, .xImp, .vpXImp, .percentIndividual:
+        case .percent, .xImp, .vpXImp,  .vpContTableTeam, .percentIndividual:
             return 2
         case .vpMatchTeam, .vpPercent, .vpTableTeam, .acblVpTableTeam, .aggregate:
             return 0
@@ -254,7 +257,7 @@ public enum Type: Int, CaseIterable {
     
     public var matchPlaces: Int {
         switch self {
-        case .percent, .xImp, .vpXImp, .vpMatchTeam, .percentIndividual:
+        case .percent, .xImp, .vpXImp, .vpContTableTeam, .vpMatchTeam, .percentIndividual:
             return 2
         case .vpPercent, .vpTableTeam, .acblVpTableTeam, .aggregate:
             return 0
@@ -271,7 +274,7 @@ public enum Type: Int, CaseIterable {
             return .discreteVp
         case .acblVpTableTeam:
             return .acblDiscreteVp
-        case .vpXImp:
+        case .vpXImp, .vpContTableTeam:
             return .continuousVp
         case .vpPercent:
             return .percentVp
@@ -282,7 +285,7 @@ public enum Type: Int, CaseIterable {
         switch self {
         case .percent, .percentIndividual:
             return .average
-        case .xImp, .vpXImp, .vpTableTeam, .acblVpTableTeam, .vpPercent, .aggregate:
+        case .xImp, .vpXImp, .vpTableTeam,  .vpContTableTeam, .acblVpTableTeam, .vpPercent, .aggregate:
             return .total
         case  .vpMatchTeam:
             return .continuousVp
@@ -295,7 +298,7 @@ public enum Type: Int, CaseIterable {
             return "%"
         case .xImp:
             return " IMPs"
-        case .vpXImp, .vpTableTeam, .acblVpTableTeam, .vpPercent, .vpMatchTeam:
+        case .vpXImp, .vpTableTeam, .vpContTableTeam, .acblVpTableTeam, .vpPercent, .vpMatchTeam:
             if let maxScore = scorecard.maxScore {
                 return " / \(maxScore.toString(places: matchPlaces))"
             } else {
@@ -333,6 +336,17 @@ public enum Type: Int, CaseIterable {
             return score
         } else {
             return (self.boardScoreType == .percent ? 100 - score : (score == 0 ? 0 : -score))
+        }
+    }
+    
+    public var description: String {
+        switch players {
+        case 1:
+            return "Player"
+        case 4:
+            return "Team"
+        default:
+            return "Pair"
         }
     }
 }
@@ -408,10 +422,12 @@ public enum Responsible: Int, EnumPickerType {
     }
 }
 
-public enum Pair: Int, CaseIterable {
+public enum Pair: Int, CaseIterable, Identifiable {
     case ns
     case ew
     case unknown
+    
+    public var id: Self { self }
     
     init(string: String) {
         switch string.uppercased() {
@@ -476,6 +492,10 @@ public enum Pair: Int, CaseIterable {
         }
     }
     
+    public static func < (lhs: Pair, rhs: Pair) -> Bool {
+        return lhs.rawValue < rhs.rawValue
+    }
+    
 }
 
 public enum SeatPlayer: Int {
@@ -485,12 +505,14 @@ public enum SeatPlayer: Int {
     case rhOpponent = 3
 }
 
-public enum Seat: Int, EnumPickerType, ContractEnumType {
+public enum Seat: Int, EnumPickerType, ContractEnumType, Identifiable {
     case unknown = 0
     case north = 1
     case east = 2
     case south = 3
     case west = 4
+    
+    public var id: Self { self }
     
     init(string: String) {
         switch string.uppercased() {
@@ -505,6 +527,10 @@ public enum Seat: Int, EnumPickerType, ContractEnumType {
         default:
             self = .unknown
         }
+    }
+    
+    public static func dealer(board: Int) -> Seat {
+        return Seat(rawValue: ((board - 1) % 4) + 1) ?? .unknown
     }
     
     public func seatPlayer(_ seatPlayer: SeatPlayer) -> Seat {
@@ -528,6 +554,10 @@ public enum Seat: Int, EnumPickerType, ContractEnumType {
         default:
             return .unknown
         }
+    }
+    
+    var equivalent: Seat {
+        Seat(rawValue: ((6 - self.rawValue) % 4) + 1)!
     }
     
     func offset(by offset: Int) -> Seat {
@@ -556,6 +586,14 @@ public enum Seat: Int, EnumPickerType, ContractEnumType {
     
     public var opponents : [Seat] {
         return [leftOpponent, rightOpponent]
+    }
+    
+    public var versus: [Seat] {
+        if Scorecard.current.scorecard?.type.players == 1 {
+            return [partner] + opponents
+        } else {
+            return opponents
+        }
     }
     
     public var short: String {
@@ -705,7 +743,7 @@ protocol ContractEnumType : CaseIterable, Equatable {
     var rawValue: Int {get}
 }
 
-public enum ContractLevel: Int, ContractEnumType {
+public enum ContractLevel: Int, ContractEnumType, Equatable, Comparable {
     case blank = 0
     case passout = -1
     case one = 1
@@ -731,6 +769,10 @@ public enum ContractLevel: Int, ContractEnumType {
         return (self == .passout) ? "Pass" : string.left(1)
     }
     
+    static var smallSlam: ContractLevel { Values.smallSlamLevel }
+    
+    static var grandSlam: ContractLevel { Values.grandSlamLevel }
+    
     var button: String {
         return string
     }
@@ -751,8 +793,12 @@ public enum ContractLevel: Int, ContractEnumType {
         return hasSuit
     }
     
-    static func < (lhs: ContractLevel, rhs: ContractLevel) -> Bool {
+    public static func < (lhs: ContractLevel, rhs: ContractLevel) -> Bool {
         return lhs.rawValue < rhs.rawValue
+    }
+    
+    public static func == (lhs: ContractLevel, rhs: ContractLevel) -> Bool {
+        return lhs.rawValue == rhs.rawValue
     }
 }
 
@@ -800,6 +846,10 @@ public enum Suit: Int, ContractEnumType, Equatable, Comparable {
     
     var colorString: AttributedString {
         return AttributedString(self.string, color: self.color)
+    }
+    
+    var attributedString: NSAttributedString {
+        return NSAttributedString(self.string, color: UIColor(self.color))
     }
     
     public var color: Color {
@@ -892,7 +942,7 @@ public enum Suit: Int, ContractEnumType, Equatable, Comparable {
     
 }
 
-public enum ContractDouble: Int, ContractEnumType, Equatable {
+public enum ContractDouble: Int, ContractEnumType, Equatable, Comparable {
     case undoubled = 0
     case doubled = 1
     case redoubled = 2
@@ -945,12 +995,15 @@ public enum ContractDouble: Int, ContractEnumType, Equatable {
         }
     }
     
-    static func < (lhs: ContractDouble, rhs: ContractDouble) -> Bool {
+    public static func < (lhs: ContractDouble, rhs: ContractDouble) -> Bool {
         return lhs.rawValue < rhs.rawValue
     }
 }
 
-public class Contract: Equatable, Comparable {
+infix operator <-: ComparisonPrecedence
+infix operator >+: ComparisonPrecedence
+
+public class Contract: Equatable, Comparable, Hashable {
     public var level: ContractLevel = .blank {
         didSet {
             if !level.hasSuit {
@@ -997,6 +1050,17 @@ public class Contract: Equatable, Comparable {
             return "Pass Out"
         default:
             return AttributedString("\(level.short) ") + suit.colorString + AttributedString(" ") + AttributedString(double.bold)
+        }
+    }
+    
+    public var attributedString: NSAttributedString {
+        switch level {
+        case .blank:
+            return NSAttributedString("")
+        case .passout:
+            return NSAttributedString("Pass Out")
+        default:
+            return NSAttributedString("\(level.short) ") + suit.attributedString + NSAttributedString(" ") + NSAttributedString(double.bold)
         }
     }
     
@@ -1063,7 +1127,7 @@ public class Contract: Equatable, Comparable {
     convenience init?(higher than: Contract, suit: Suit) {
         self.init(copying: than)
         self.suit = suit
-        if suit < than.suit {
+        if suit <= than.suit {
             if let nextLevel = ContractLevel(rawValue: self.level.rawValue + 1) {
                 self.level = nextLevel
             } else {
@@ -1072,14 +1136,34 @@ public class Contract: Equatable, Comparable {
         }
     }
     
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(level)
+        hasher.combine(suit)
+        hasher.combine(double)
+    }
+    
     static public func == (lhs: Contract, rhs: Contract) -> Bool {
         return lhs.level == rhs.level && lhs.suit == rhs.suit && lhs.double == rhs.double
     }
-    
+
     static public func < (lhs: Contract, rhs: Contract) -> Bool {
         return lhs.level < rhs.level || (lhs.level == rhs.level && (lhs.suit < rhs.suit || (lhs.suit == rhs.suit && lhs.double < rhs.double)))
     }
     
+    static public func > (lhs: Contract, rhs: Contract) -> Bool {
+        return lhs.level > rhs.level || (lhs.level == rhs.level && (lhs.suit > rhs.suit || (lhs.suit == rhs.suit && lhs.double > rhs.double)))
+    }
+
+    static public func <- (lhs: Contract, rhs: Contract) -> Bool {
+        // Lesser level and suit (not just doubled)
+        return lhs.level < rhs.level ||  (lhs.level == rhs.level && (lhs.suit < rhs.suit))
+    }
+
+    static public func >+ (lhs: Contract, rhs: Contract) -> Bool {
+        // Greater level and suit (not just doubled)
+        return lhs.level > rhs.level || (lhs.level == rhs.level && (lhs.suit > rhs.suit))
+    }
+
     func copy(from: Contract) {
         self.level = from.level
         self.suit = from.suit
@@ -1089,6 +1173,8 @@ public class Contract: Equatable, Comparable {
     public var canClear: Bool {
         level != .blank || suit != .blank || double != .undoubled
     }
+    
+    public var tricks: Int { level == .passout ? 0 : Values.trickOffset + level.rawValue }
 }
 
 public class OptimumScore: Equatable {

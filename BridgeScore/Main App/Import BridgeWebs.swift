@@ -47,7 +47,12 @@ struct ImportBridgeWebsScorecard: View {
             case .getFile:
                 downloadingFile
             case .confirm:
-                confirmDetails
+                let importedScorecard = Binding.constant(importedBridgeWebsScorecard as ImportedScorecard)
+                importedBridgeWebsScorecard.confirmDetails(importedScorecard: importedScorecard, onError: {
+                    presentationMode.wrappedValue.dismiss()
+                }, completion: {
+                    phase = .importing
+                })
             case .importing:
                 importingFile
             case .error:
@@ -129,97 +134,6 @@ struct ImportBridgeWebsScorecard: View {
         }
     }
     
-    var confirmDetails: some View {
-        @OptionalStringBinding(importedBridgeWebsScorecard.title) var titleBinding
-        @OptionalStringBinding(Utility.dateString(importedBridgeWebsScorecard.date, format: "EEEE d MMMM yyyy")) var dateBinding
-        @OptionalStringBinding(importedBridgeWebsScorecard.partner?.name) var partnerBinding
-        @OptionalStringBinding("\(importedBridgeWebsScorecard.boardCount ?? 0)") var boardCountBinding
-        @OptionalStringBinding("\(importedBridgeWebsScorecard.boardsTable ?? 0)") var boardsTableBinding
-        
-        
-        return VStack(spacing: 0) {
-            Banner(title: Binding.constant("Confirm Import Details"), backImage: Banner.crossImage)
-            Spacer().frame(height: 16)
-            
-            InsetView(title: "BridgeWebs Import Details") {
-                VStack(spacing: 0) {
-                    
-                    Input(title: "Title", field: titleBinding, clearText: false)
-                    .disabled(true)
-                    Input(title: "Date", field: dateBinding, clearText: false)
-                    .disabled(true)
-                    Input(title: "Partner", field: partnerBinding, clearText: false)
-                    .disabled(true)
-                    
-                    Spacer().frame(height: 8)
-                    Separator()
-                    Spacer().frame(height: 8)
-
-                    Input(title: (scorecard.resetNumbers ? "Boards / Table" : "Total Boards"), field: boardCountBinding, clearText: false)
-                    .disabled(true)
-                    if !scorecard.resetNumbers {
-                        Input(title: "Boards / Table", field: boardsTableBinding, clearText: false)
-                        .disabled(true)
-                    }
-                    
-                    Spacer()
-                }
-            }
-
-            if !importedBridgeWebsScorecard.warnings.isEmpty {
-                InsetView(title: "Warnings") {
-                    VStack(spacing: 0) {
-                        Spacer().frame(height: 16)
-                        ForEach(importedBridgeWebsScorecard.warnings, id: \.self) { (warning) in
-                            HStack {
-                                Spacer().frame(width: 8)
-                                Text(warning)
-                                Spacer()
-                            }
-                            .frame(height: 30)
-                        }
-                        Spacer().frame(height: 16)
-                    }
-                }
-            }
-            
-            VStack {
-                Spacer().frame(height: 16)
-                HStack {
-                    Spacer()
-                    VStack {
-                        Spacer()
-                        HStack {
-                            Spacer()
-                                Text("Confirm")
-                            Spacer()
-                        }
-                        Spacer()
-                    }
-                    .foregroundColor(Palette.highlightButton.text)
-                    .background(Palette.highlightButton.background)
-                    .frame(width: 120, height: 40)
-                    .cornerRadius(10)
-                    .onTapGesture {
-                        Utility.mainThread {
-                            phase = .importing
-                        }
-                    }
-                    Spacer()
-                }
-                Spacer().frame(height: 16)
-            }
-            .onAppear {
-                if let error = importedBridgeWebsScorecard.error {
-                    MessageBox.shared.show(error, okAction: {
-                        presentationMode.wrappedValue.dismiss()
-                    })
-                }
-            }
-        }
-        .background(Palette.alternate.background)
-    }
-    
     var importingFile: some View {
         VStack(spacing: 0) {
             Banner(title: Binding.constant("Import from BridgeWebs"), backImage: Banner.crossImage)
@@ -237,8 +151,8 @@ struct ImportBridgeWebsScorecard: View {
         }
     }
     
-    private func getList() {
-        let urlString = "https://www.bridgewebs.com/cgi-bin/bwop/bw.cgi?club=\(scorecard.location!.bridgeWebsId)&pid=display_past"
+    private func getList(_ urlString: String? = nil) {
+        let urlString = urlString ?? "https://www.bridgewebs.com/cgi-bin/bwop/bw.cgi?club=\(scorecard.location!.bridgeWebsId)&pid=display_past"
         
         let url = URL(string: urlString)!
 
@@ -247,17 +161,22 @@ struct ImportBridgeWebsScorecard: View {
                 errorMessage = "Error get list of available files\nCheck network connection"
                 phase = .error
             } else if let data = data {
+                fileList = []
                 let listParser = ImportBridgeWebsListParser(data: data, date: scorecard.date)
                 fileList = listParser.list
-                switch fileList.count {
-                case 0:
-                    errorMessage = "No files available for this location on this date"
-                    phase = .error
-                case 1:
-                    downloadFile(filename: fileList[0].file, title: fileList[0].desc)
-                    phase = .getFile
-                default:
-                    phase = .select
+                if fileList.isEmpty && listParser.nextPage != nil {
+                    getList(listParser.nextPage!)
+                } else {
+                    switch fileList.count {
+                    case 0:
+                        errorMessage = "No files available for this location on this date"
+                        phase = .error
+                    case 1:
+                        downloadFile(filename: fileList[0].file, title: fileList[0].desc)
+                        phase = .getFile
+                    default:
+                        phase = .select
+                    }
                 }
             }
         }
@@ -452,20 +371,20 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 }
             case "+sc":
                 if let string = columns.element(index), let value = Int(string) {
-                    importedTraveller.points = value
+                    importedTraveller.nsPoints = value
                 }
             case "-sc":
                 if let string = columns.element(index), let value = Int(string) {
-                    importedTraveller.points = -value
+                    importedTraveller.nsPoints = -value
                 }
             case "+":
                 if let string = columns.element(index) {
-                    importedTraveller.nsMps = (Float(string) ?? 0)
-                    importedTraveller.totalMps = (importedTraveller.totalMps ?? 0) + (Float(string) ?? 0)
+                    importedTraveller.nsMps = (Int(string) ?? 0)
+                    importedTraveller.totalMps = (importedTraveller.totalMps ?? 0) + (Int(string) ?? 0)
                 }
             case "-":
                 if let string = columns.element(index) {
-                    importedTraveller.totalMps = (importedTraveller.totalMps ?? 0) + (Float(string) ?? 0)
+                    importedTraveller.totalMps = (importedTraveller.totalMps ?? 0) + (Int(string) ?? 0)
                 }
             case "ns x":
                 if let string = columns.element(index) {
@@ -504,6 +423,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         updateWays()
         combineRankings()
         boardCount = travellers.count
+        scoreTravellers()
         recalculateTravellers()
         validate()
         completion(self, nil)
@@ -607,7 +527,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 if let number = Int(string) {
                     boardNumber = number
                     if boards[boardNumber] == nil {
-                        boards[boardNumber] = ImportedBoard()
+                        boards[boardNumber] = ImportedBoard(boardNumber: boardNumber)
                     }
                 }
             default:
@@ -654,7 +574,8 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                         for declarer in [Seat.north, .south, .east, .west] {
                             board.doubleDummy[declarer] = [:]
                             for suit in [Suit.clubs, . diamonds, .hearts, .spades, .noTrumps] {
-                                board.doubleDummy[declarer]![suit] = Int(elements[index])
+                                let made = Int(elements[index])
+                                board.doubleDummy[declarer]![suit] = (made == 1 ? nil : made)
                                 index += 1
                             }
                         }
@@ -671,8 +592,10 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         case .dealer:
             switch zone {
             case .travellers:
-                if let number = Int(string), let board = boards[boardNumber] {
-                    board.dealer = Seat(rawValue: number)
+                if let number = Int(string) {
+                    if number != Seat.dealer(board: boardNumber).rawValue {
+                        fatalError("Wrong dealer")
+                    }
                 }
             default:
                 break
@@ -680,8 +603,10 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         case .vulnerability:
             switch zone {
             case .travellers:
-                if let number = Int(string), let board = boards[boardNumber] {
-                    board.vulnerability = Vulnerability(rawValue: number)
+                if let number = Int(string) {
+                    if number != Vulnerability(board: boardNumber).rawValue {
+                        fatalError("Wrong vulnerability")
+                    }
                 }
             default:
                 break
@@ -706,27 +631,44 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
 
 class ImportBridgeWebsListParser {
     fileprivate var list: [FileNameElement] = []
+    fileprivate var nextPage: String?
     
     init(data: Data, date: Date) {
         let find = "eventLink ("
+        let nextPageFind = "next page"
         let dateString = date.toString(format: "yyyyMMdd", localized: false)
         let string = String(decoding: data, as: UTF8.self)
         let lines = string.components(separatedBy: "\n")
-        for line in lines {
-            if line.contains(find) {
-                if let data = line.data(using: .utf8) {
-                    if let desc = try? NSAttributedString(data: data, options: [
-                        .documentType: NSAttributedString.DocumentType.html,
-                        .characterEncoding: String.Encoding.utf8.rawValue],
-                                                          documentAttributes: nil).string {
-                        let start = line.position(find)! + find.length
-                        let string = line.right(line.length - start)
-                        if let end = string.position(",") {
-                            let filename = string.left(end - 1).replacingOccurrences(of: "\'", with: "").ltrim().rtrim()
-                            if filename.left(8) == dateString {
-                                list.append(FileNameElement(file: filename, desc: desc))
-                            }
+        for line in lines.filter({$0.contains(find)}) {
+            let start = line.position(find)! + find.length
+            let string = line.right(line.length - start)
+            if let end = string.position(",") {
+                let filename = string.left(end - 1).replacingOccurrences(of: "\'", with: "").ltrim().rtrim()
+                let fileDate = filename.left(8)
+                if fileDate == dateString {
+                    if let data = line.data(using: .utf8) {
+                        if let desc = try? NSAttributedString(data: data, options: [
+                            .documentType: NSAttributedString.DocumentType.html,
+                            .characterEncoding: String.Encoding.utf8.rawValue],
+                                                              documentAttributes: nil).string {
+                            
+                            list.append(FileNameElement(file: filename, desc: desc))
                         }
+                    }
+                } else if fileDate < dateString {
+                        // Gone past required date - quit
+                    nextPage = nil
+                    break
+                }
+            }
+        }
+        for line in lines.filter({$0.lowercased().contains(nextPageFind)}) {
+            if let leftEnd = line.lowercased().position(nextPageFind) {
+                let leftLine = line.left(leftEnd)
+                if let start = leftLine.position("href=\"", backwards: true) {
+                    let string = leftLine.right(leftLine.length - (start + 6))
+                    if let end = string.position("\"") {
+                        nextPage = "https://www.bridgewebs.com" + string.left(end)
                     }
                 }
             }

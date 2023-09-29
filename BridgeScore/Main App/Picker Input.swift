@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct PickerInputOld : View {
+struct PickerInput : View {
     var id: UUID
     var title: String? = nil
     var field: Binding<Int?>

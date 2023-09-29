@@ -13,6 +13,7 @@
 		B2100D9827DA449D00CC0130 /* Graph View Class.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2100D9727DA449D00CC0130 /* Graph View Class.swift */; };
 		B2100D9A27DA488200CC0130 /* Stats View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2100D9927DA488200CC0130 /* Stats View.swift */; };
 		B213998C27D8AA830098E4A4 /* Seat Picker Popup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B213998B27D8AA830098E4A4 /* Seat Picker Popup View.swift */; };
+		B213A33D2AB8616700EA098F /* import PBN.swift in Sources */ = {isa = PBXBuildFile; fileRef = B213A33C2AB8616700EA098F /* import PBN.swift */; };
 		B217314427D026050096DAE8 /* Undo Handler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B217314327D026050096DAE8 /* Undo Handler.swift */; };
 		B21CC0BC279FDD3A001AECC1 /* Scorecard Detail View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */; };
 		B21CC0BE27A01293001AECC1 /* Date Picker Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21CC0BD27A01292001AECC1 /* Date Picker Input.swift */; };
@@ -29,6 +30,7 @@
 		B24BC3A327F42EEA00576D50 /* Flags.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24BC3A227F42EEA00576D50 /* Flags.swift */; };
 		B24BC3CA27F5A07800576D50 /* Import BridgeWebs.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24BC3C927F5A07800576D50 /* Import BridgeWebs.swift */; };
 		B24EAE8E27DDE95C001B3E64 /* Multi Select Picker Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24EAE8D27DDE95C001B3E64 /* Multi Select Picker Input.swift */; };
+		B250412E2ABD9A0E00C58CAD /* Picker Input Simple.swift in Sources */ = {isa = PBXBuildFile; fileRef = B250412D2ABD9A0E00C58CAD /* Picker Input Simple.swift */; };
 		B256D42127EC434100F47322 /* Traveller Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B256D42027EC434100F47322 /* Traveller Managed Object.swift */; };
 		B256D42327EC456B00F47322 /* Ranking Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B256D42227EC456B00F47322 /* Ranking Managed Object.swift */; };
 		B256D42527EC578500F47322 /* Ranking View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B256D42427EC578500F47322 /* Ranking View Model.swift */; };
@@ -87,6 +89,7 @@
 		B2A2053D27B13F2F00C83C88 /* Keyboard Adaptive.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053C27B13F2F00C83C88 /* Keyboard Adaptive.swift */; };
 		B2A5A42627E2582F00754061 /* BBO Name Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A5A42527E2582F00754061 /* BBO Name Managed Object.swift */; };
 		B2A5A42827E3090300754061 /* BBO Name View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A5A42727E3090300754061 /* BBO Name View Model.swift */; };
+		B2AB6ECB2AC2CCA900ED002A /* Analysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AB6ECA2AC2CCA900ED002A /* Analysis.swift */; };
 		B2AF750D27AD14FD00233693 /* Slide In Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AF750C27AD14FD00233693 /* Slide In Menu.swift */; };
 		B2AF750F27AD384900233693 /* Layout Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AF750E27AD384900233693 /* Layout Setup View.swift */; };
 		B2BAD9BB27F75895008D0160 /* Import Framework.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2BAD9BA27F75895008D0160 /* Import Framework.swift */; };
@@ -123,6 +126,7 @@
 		B2100D9727DA449D00CC0130 /* Graph View Class.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Graph View Class.swift"; sourceTree = "<group>"; };
 		B2100D9927DA488200CC0130 /* Stats View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Stats View.swift"; sourceTree = "<group>"; };
 		B213998B27D8AA830098E4A4 /* Seat Picker Popup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Seat Picker Popup View.swift"; sourceTree = "<group>"; };
+		B213A33C2AB8616700EA098F /* import PBN.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "import PBN.swift"; sourceTree = "<group>"; };
 		B217314327D026050096DAE8 /* Undo Handler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Undo Handler.swift"; sourceTree = "<group>"; };
 		B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Detail View.swift"; sourceTree = "<group>"; };
 		B21CC0BD27A01292001AECC1 /* Date Picker Input.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date Picker Input.swift"; sourceTree = "<group>"; };
@@ -140,6 +144,7 @@
 		B24BC3A227F42EEA00576D50 /* Flags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Flags.swift; sourceTree = "<group>"; };
 		B24BC3C927F5A07800576D50 /* Import BridgeWebs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Import BridgeWebs.swift"; sourceTree = "<group>"; };
 		B24EAE8D27DDE95C001B3E64 /* Multi Select Picker Input.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Multi Select Picker Input.swift"; sourceTree = "<group>"; };
+		B250412D2ABD9A0E00C58CAD /* Picker Input Simple.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Picker Input Simple.swift"; sourceTree = "<group>"; };
 		B256D42027EC434100F47322 /* Traveller Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Traveller Managed Object.swift"; sourceTree = "<group>"; };
 		B256D42227EC456B00F47322 /* Ranking Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Ranking Managed Object.swift"; sourceTree = "<group>"; };
 		B256D42427EC578500F47322 /* Ranking View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Ranking View Model.swift"; sourceTree = "<group>"; };
@@ -201,6 +206,7 @@
 		B2A5A42427E2420800754061 /* BridgeScore.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BridgeScore.entitlements; sourceTree = "<group>"; };
 		B2A5A42527E2582F00754061 /* BBO Name Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BBO Name Managed Object.swift"; sourceTree = "<group>"; };
 		B2A5A42727E3090300754061 /* BBO Name View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BBO Name View Model.swift"; sourceTree = "<group>"; };
+		B2AB6ECA2AC2CCA900ED002A /* Analysis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analysis.swift; sourceTree = "<group>"; };
 		B2AF750C27AD14FD00233693 /* Slide In Menu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Slide In Menu.swift"; sourceTree = "<group>"; };
 		B2AF750E27AD384900233693 /* Layout Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Layout Setup View.swift"; sourceTree = "<group>"; };
 		B2BAD9BA27F75895008D0160 /* Import Framework.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Import Framework.swift"; sourceTree = "<group>"; };
@@ -389,6 +395,7 @@
 				B2A2053A27B108C700C83C88 /* Input Integer.swift */,
 				B28E2B1D27C6A582002A9EE2 /* Input Float.swift */,
 				B2FCC05027A05BA500A3D9F5 /* Input Toggle.swift */,
+				B250412D2ABD9A0E00C58CAD /* Picker Input Simple.swift */,
 				B26BCE5A2799AED700B73501 /* Picker Input.swift */,
 				B24EAE8D27DDE95C001B3E64 /* Multi Select Picker Input.swift */,
 				B21CC0BD27A01292001AECC1 /* Date Picker Input.swift */,
@@ -425,6 +432,7 @@
 				B26BCDF92799A1AC00B73501 /* Bridge Score App.swift */,
 				B26BCE532799AE4D00B73501 /* Master Data.swift */,
 				B2EB3D78279DB80000D64225 /* Scorecard.swift */,
+				B2AB6ECA2AC2CCA900ED002A /* Analysis.swift */,
 				B2F3C3A32AA1E72200A58E89 /* Card Class.swift */,
 				B26BCE552799AE6400B73501 /* Preview Data.swift */,
 				B2EB3D7A279DCBCB00D64225 /* Default Data.swift */,
@@ -495,6 +503,7 @@
 				B2BAD9BA27F75895008D0160 /* Import Framework.swift */,
 				B2DADE5027E7A06E009F7572 /* Import BBO.swift */,
 				B24BC3C927F5A07800576D50 /* Import BridgeWebs.swift */,
+				B213A33C2AB8616700EA098F /* import PBN.swift */,
 			);
 			name = Imports;
 			sourceTree = "<group>";
@@ -630,6 +639,7 @@
 				B2A2053D27B13F2F00C83C88 /* Keyboard Adaptive.swift in Sources */,
 				B2A5A42627E2582F00754061 /* BBO Name Managed Object.swift in Sources */,
 				B26BCE482799AD8900B73501 /* Day Number.swift in Sources */,
+				B213A33D2AB8616700EA098F /* import PBN.swift in Sources */,
 				B26BCE6F279AEB6C00B73501 /* Scorecard List View.swift in Sources */,
 				B26BCE4C2799AD8900B73501 /* My Image.swift in Sources */,
 				B25F653A27EDEEF400FDD6B1 /* Scorecard Ranking View.swift in Sources */,
@@ -675,6 +685,8 @@
 				B204175827CE58CD00A3EFA8 /* Debug Utilities.swift in Sources */,
 				B24BC3A327F42EEA00576D50 /* Flags.swift in Sources */,
 				B217314427D026050096DAE8 /* Undo Handler.swift in Sources */,
+				B250412E2ABD9A0E00C58CAD /* Picker Input Simple.swift in Sources */,
+				B2AB6ECB2AC2CCA900ED002A /* Analysis.swift in Sources */,
 				B2C4338C27B6646700796F24 /* Scorecard Input View.swift in Sources */,
 				B26BCE4E2799AD8900B73501 /* Link Presentation.swift in Sources */,
 				B26BCE74279B236F00B73501 /* Layout Managed Object.swift in Sources */,
@@ -839,7 +851,7 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -879,7 +891,7 @@
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UIUserInterfaceStyle = Light;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

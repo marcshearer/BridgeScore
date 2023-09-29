@@ -69,6 +69,7 @@ class MyApp {
               
         #if canImport(UIKit)
         UITextView.appearance().backgroundColor = .clear
+        UISegmentedControl.appearance().selectedSegmentTintColor = UIColor(Palette.tile.background)
         #endif
         #endif
     }

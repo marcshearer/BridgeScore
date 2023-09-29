@@ -6,11 +6,13 @@
 //
 
 import CoreData
+import SwiftUI
 
 public enum ImportSource: Int, Equatable, CaseIterable {
     case none = 0
     case bbo = 1
     case bridgeWebs = 2
+    case pbn = 3
     
     static var validCases: [ImportSource] {
         return ImportSource.allCases.filter({$0 != .none})
@@ -24,6 +26,8 @@ public enum ImportSource: Int, Equatable, CaseIterable {
             return "Import from BBO"
         case .bridgeWebs:
             return "Import from BridgeWebs"
+        case .pbn:
+            return "Import PBN file"
         }
     }
 }
@@ -68,6 +72,7 @@ class ImportedScorecard: NSObject {
     var dealer: Seat?
     var vulnerability: Vulnerability?
     var doubleDummyTricks: [Seat:[Suit:Int]] = [:]
+    var identifySelf = false
     
     // MARK: - Import to main data structures =================================================================== -
         
@@ -161,7 +166,7 @@ class ImportedScorecard: NSObject {
                     table?.versus = versus
                     table?.sitting = mySeat
                     
-                    importBoard(myLine: myLine, boardNumber: boardNumber, myRanking: myRanking)
+                    importBoard(myLine: myLine, boardNumber: boardNumber, boardOffset: boardOffset, myRanking: myRanking)
                 } else {
                     table?.versus = "Sitout"
                 }
@@ -170,7 +175,7 @@ class ImportedScorecard: NSObject {
         }
     }
     
-    func importBoard(myLine: ImportedTraveller, boardNumber: Int, myRanking: ImportedRanking) {
+    func importBoard(myLine: ImportedTraveller, boardNumber: Int, boardOffset: Int, myRanking: ImportedRanking) {
         let board = Scorecard.current.boards[boardNumber]
         board?.contract = myLine.contract ?? Contract()
         board?.declarer = myLine.declarer ?? .unknown
@@ -186,14 +191,14 @@ class ImportedScorecard: NSObject {
             }
             board?.score = (myPair == .ns ? nsScore : scorecard.type.invertScore(score: nsScore))
         }
-        if let board = board {
-            board.hand = boards[board.board]?.hand ?? ""
-            board.optimumScore = boards[board.board]?.optimumScore
+        if let board = board, let importedBoard = boards[boardNumber - boardOffset] {
+            board.hand = importedBoard.hand ?? ""
+            board.optimumScore = importedBoard.optimumScore
             board.doubleDummy = [:]
             for declarer in Seat.validCases {
                 board.doubleDummy[declarer] = [:]
                 for suit in Suit.validCases {
-                    if let made = boards[board.board]?.doubleDummy[declarer]?[suit] {
+                    if let made = importedBoard.doubleDummy[declarer]?[suit] {
                         board.doubleDummy[declarer]![suit] = DoubleDummyViewModel(scorecard: scorecard, board: board.board, declarer: declarer, suit: suit, made: made)
                     }
                 }
@@ -246,10 +251,6 @@ class ImportedScorecard: NSObject {
                     traveller.nsXImps = importedTraveller.nsXImps ?? 0
                     traveller.lead = importedTraveller.lead ?? ""
                     traveller.playData = importedTraveller.playData ?? ""
-                    if let importedBoard = boards[board] {
-                        traveller.vulnerability = importedBoard.vulnerability
-                        traveller.dealer = importedBoard.dealer
-                    }
                     
                     Scorecard.current.insert(traveller: traveller)
                 }
@@ -303,6 +304,18 @@ class ImportedScorecard: NSObject {
         return result
     }
     
+    func  scoreTravellers() {
+        for (board, boardTravellers) in travellers {
+            for traveller in boardTravellers {
+                if traveller.contract?.level == .passout {
+                    traveller.nsPoints = 0
+                } else if let contract = traveller.contract, let declarer = traveller.declarer, let tricks = traveller.made {
+                    traveller.nsPoints = Scorecard.points(contract: contract, vulnerability: Vulnerability(board: board), declarer: declarer, made: tricks, seat: .north)
+                }
+            }
+        }
+    }
+    
     func recalculateTravellers() {
         // BBO etc sometimes exports cross imps on boards rather than team imp differences - recalculate them
         for (board, boardTravellers) in travellers {
@@ -310,7 +323,7 @@ class ImportedScorecard: NSObject {
                 if scorecard!.type.players == 4 {
                     if let contract = traveller.contract, let declarer = traveller.declarer, let made = traveller.made {
                         if let otherTraveller = boardTravellers.first(where: {matchingTraveller($0, traveller)}), let otherContract = otherTraveller.contract, let otherDeclarer = otherTraveller.declarer, let otherMade = otherTraveller.made {
-                            let vulnerability =  boards[board]?.vulnerability ?? Vulnerability(board: board)
+                            let vulnerability =  Vulnerability(board: board)
                             let nsPoints = Scorecard.points(contract: contract, vulnerability: vulnerability, declarer: declarer, made: made, seat: .north)
                             let ewPoints = Scorecard.points(contract: otherContract, vulnerability: vulnerability, declarer: otherDeclarer, made: otherMade, seat: .east)
                             let balance = nsPoints + ewPoints
@@ -326,11 +339,22 @@ class ImportedScorecard: NSObject {
                         }
                     }
                 } else if scorecard.type.boardScoreType == .percent {
-                    if let nsMps = traveller.nsMps, let totalMps = traveller.totalMps {
-                        traveller.nsScore = Utility.round(Float(nsMps) / Float(totalMps) * 100, places: scorecard.type.boardPlaces)
+                    if traveller.nsMps == nil || traveller.totalMps == nil {
+                        traveller.totalMps = (boardTravellers.count - 1) * 2
+                        traveller.nsMps = 0
+                        for otherTraveller in boardTravellers {
+                            if otherTraveller != traveller {
+                                if traveller.nsPoints! == otherTraveller.nsPoints! {
+                                    traveller.nsMps! += 1
+                                } else if traveller.nsPoints! > otherTraveller.nsPoints! {
+                                    traveller.nsMps! += 2
+                                }
+                            }
+                        }
                     }
+                    traveller.nsScore = Utility.round(Float(traveller.nsMps!) / Float(traveller.totalMps!) * 100, places: scorecard.type.boardPlaces)
                 } else if scorecard.type.boardScoreType == .aggregate {
-                    traveller.nsScore = Float(traveller.points ?? 0)
+                    traveller.nsScore = Float(traveller.nsPoints ?? 0)
                 }
             }
         }
@@ -442,18 +466,20 @@ class ImportedScorecard: NSObject {
     
     func validate() {
         // Find self and partner
-        myRanking = rankings.first(where: {$0.players.contains(where: {$0.value.lowercased() == myName})})
-        if let myRanking = myRanking {
-            myRankingSeat = myRanking.players.first(where: {$0.value.lowercased() == myName})?.key
-            if format != .individual {
-                let partnerName = myRanking.players[myRankingSeat!.partner]
-                partner = MasterData.shared.players.first(where: {$0.bboName.lowercased() == partnerName?.lowercased() || $0.name.lowercased() == partnerName?.lowercased()})
-                if partner != scorecard?.partner {
-                    warnings.append("Partner in imported scorecard does not match current scorecard")
+        if !identifySelf {
+            myRanking = rankings.first(where: {$0.players.contains(where: {$0.value.lowercased() == myName})})
+            if let myRanking = myRanking {
+                myRankingSeat = myRanking.players.first(where: {$0.value.lowercased() == myName})?.key
+                if format != .individual {
+                    let partnerName = myRanking.players[myRankingSeat!.partner]
+                    partner = MasterData.shared.players.first(where: {$0.bboName.lowercased() == partnerName?.lowercased() || $0.name.lowercased() == partnerName?.lowercased()})
+                    if partner != scorecard?.partner {
+                        warnings.append("Partner in imported scorecard does not match current scorecard")
+                    }
                 }
+            } else {
+                error = "Unable to find '\(myName ?? "name")' in imported scorecard"
             }
-        } else {
-            error = "Unable to find '\(myName ?? "name")' in imported scorecard"
         }
         
         // Check scoring type
@@ -478,20 +504,143 @@ class ImportedScorecard: NSObject {
         }
         checkBoardsPerTable(name: myName)
     }
+    
+    public func confirmDetails(importedScorecard: Binding<ImportedScorecard>, onError: @escaping ()->(), completion: @escaping ()->()) -> some View {
+        @OptionalStringBinding(importedScorecard.wrappedValue.title) var titleBinding
+        @OptionalStringBinding(Utility.dateString(importedScorecard.wrappedValue.date, format: "EEEE d MMMM yyyy")) var dateBinding
+        @OptionalStringBinding(importedScorecard.wrappedValue.partner?.name) var partnerBinding
+        @OptionalStringBinding("\(importedScorecard.wrappedValue.boardCount ?? 0)") var boardCountBinding
+        @OptionalStringBinding("\(importedScorecard.wrappedValue.boardsTable ?? 0)") var boardsTableBinding
+
+        
+        return VStack(spacing: 0) {
+            Banner(title: Binding.constant("Confirm Import Details"), backImage: Banner.crossImage)
+            Spacer().frame(height: 16)
+            
+            if scorecard.tables > 1 && scorecard.resetNumbers {
+                InsetView(title: "Import Settings") {
+                    VStack(spacing: 0) {
+                
+                        StepperInput(title: "Import for table", field: importedScorecard.table, label: stepperLabel, minValue: Binding.constant(1), maxValue: Binding.constant(scorecard.tables))
+                        
+                        Spacer().frame(height: 16)
+                    }
+                }
+            }
+            
+            InsetView(title: "BBO Import Details") {
+                VStack(spacing: 0) {
+                    
+                    Input(title: "Title", field: titleBinding, clearText: false)
+                    .disabled(true)
+                    Input(title: "Date", field: dateBinding, clearText: false)
+                    .disabled(true)
+                    Input(title: "Partner", field: partnerBinding, clearText: false)
+                    .disabled(true)
+                    
+                    Spacer().frame(height: 8)
+                    Separator()
+                    Spacer().frame(height: 8)
+
+                    Input(title: (scorecard.resetNumbers ? "Boards / Table" : "Total Boards"), field: boardCountBinding, clearText: false)
+                    .disabled(true)
+                    if !scorecard.resetNumbers {
+                        Input(title: "Boards / Table", field: boardsTableBinding, clearText: false)
+                        .disabled(true)
+                    }
+                    
+                    Spacer()
+                }
+            }
+
+            if !importedScorecard.wrappedValue.warnings.isEmpty {
+                InsetView(title: "Warnings") {
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            Spacer().frame(height: 16)
+                            ForEach(importedScorecard.wrappedValue.warnings, id: \.self) { (warning) in
+                                HStack {
+                                    Spacer().frame(width: 8)
+                                    Text(warning)
+                                    Spacer()
+                                }
+                                .frame(height: 30)
+                            }
+                            Spacer().frame(height: 16)
+                        }
+                    }
+                }
+            }
+            
+            VStack {
+                Spacer().frame(height: 16)
+                HStack {
+                    Spacer()
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                                Text("Confirm")
+                            Spacer()
+                        }
+                        Spacer()
+                    }
+                    .foregroundColor(Palette.highlightButton.text)
+                    .background(Palette.highlightButton.background)
+                    .frame(width: 120, height: 40)
+                    .cornerRadius(10)
+                    .onTapGesture {
+                        Utility.mainThread {
+                            completion()
+                        }
+                    }
+                    Spacer()
+                }
+                Spacer().frame(height: 16)
+            }
+            .onAppear {
+                if let error = importedScorecard.wrappedValue.error {
+                    MessageBox.shared.show(error, okAction: {
+                        onError()
+                    })
+                }
+            }
+        }
+        .background(Palette.alternate.background)
+    }
+    
+    private func stepperLabel(value: Int) -> String {
+        return "Table \(value) of \(scorecard.tables)"
+    }
 }
 
-class ImportedRanking {
+class ImportedRanking : Identifiable, Equatable {
+    public var id = UUID()
     public var number: Int?
     public var section: Int = 1
+    public var full: String?
     public var players: [Seat:String] = [:]
     public var score: Float?
     public var xImps: [Pair:Float] = [:]
     public var ranking: Int?
     public var bboPoints: Float?
     public var way: Pair? = .unknown
+    
+    convenience init(number: Int, name: String) {
+        self.init()
+        self.number = number
+        self.full = name
+        for seat in Seat.validCases {
+            players[seat] = "\(name) - \(seat.string.capitalized)"
+        }
+    }
+    
+    static func == (lhs: ImportedRanking, rhs: ImportedRanking) -> Bool {
+        return lhs.id == rhs.id
+    }
 }
 
-class ImportedTraveller {
+class ImportedTraveller: Equatable {
     public var board: Int?
     public var ranking: [Seat: Int] = [:]
     public var section: [Seat: Int] = [:]
@@ -499,18 +648,30 @@ class ImportedTraveller {
     public var declarer: Seat?
     public var made: Int?
     public var lead: String?
-    public var points: Int?
-    public var nsMps: Float?
-    public var totalMps: Float?
+    public var nsPoints: Int?
+    public var nsMps: Int?
+    public var totalMps: Int?
     public var nsScore: Float?
     public var nsXImps: Float?
     public var playData: String?
+       
+    convenience init(board: Int) {
+        self.init()
+        self.board = board
+    }
+
+    static func == (lhs: ImportedTraveller, rhs: ImportedTraveller) -> Bool {
+        return (lhs.ranking == rhs.ranking && lhs.section == rhs.section)
+    }
 }
 
 class ImportedBoard {
+    public var boardNumber: Int
     public var hand: String?
-    public var vulnerability: Vulnerability?
-    public var dealer: Seat?
     public var doubleDummy: [Seat:[Suit:Int]] = [:]
     public var optimumScore: OptimumScore?
+    
+    init(boardNumber: Int) {
+        self.boardNumber = boardNumber
+    }
 }

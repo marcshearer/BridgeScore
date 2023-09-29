@@ -9,7 +9,7 @@ import Combine
 import SwiftUI
 import CoreData
 
-public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringConvertible {
+public class BoardViewModel : NSObject, ObservableObject, Identifiable {
 
     // Properties in core data model
     @Published private(set) var scorecard: ScorecardViewModel
@@ -44,7 +44,7 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
         return Scorecard.current.tables[table]
     }
     public var vulnerability: Vulnerability {
-        return Vulnerability(board: board)
+        return Vulnerability(board: boardNumber)
     }
     public var dealer: Seat {
         return Seat(rawValue: ((board - 1) % 4) + 1) ?? .unknown
@@ -105,6 +105,7 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
     public init(scorecard: ScorecardViewModel, board: Int) {
         self.scorecard = scorecard
         self.board = board
+        super.init()
         self.setupMappings()
     }
     
@@ -224,9 +225,9 @@ public class BoardViewModel : ObservableObject, Identifiable, CustomDebugStringC
         return (made == nil ? nil : Scorecard.points(contract: contract, vulnerability: vulnerability, declarer: declarer, made: made!, seat: seat))
     }
     
-    public var description: String {
+    public override var description: String {
         return "Scorecard: \(scorecard.desc), Board: \(board)"
     }
     
-    public var debugDescription: String { self.description }
+    public override var debugDescription: String { self.description }
 }

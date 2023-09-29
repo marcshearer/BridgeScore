@@ -368,13 +368,19 @@ extension MasterData {
     public func getBboNames(values: [String]) -> [BBONameViewModel] {
         var result: [BBONameViewModel] = []
         for value in values {
-            if let bboName = MasterData.shared.bboName(id: value) {
+            if Scorecard.current.scorecard?.importSource != .bbo {
+                let bboName = BBONameViewModel()
+                bboName.bboName = value
                 result.append(bboName)
             } else {
-                let bboName = BBONameViewModel()
-                bboName.bboName = value.lowercased()
-                bboName.insert()
-                result.append(bboName)
+                if let bboName = MasterData.shared.bboName(id: value) {
+                    result.append(bboName)
+                } else {
+                    let bboName = BBONameViewModel()
+                    bboName.bboName = value.lowercased()
+                    bboName.insert()
+                    result.append(bboName)
+                }
             }
         }
         return result

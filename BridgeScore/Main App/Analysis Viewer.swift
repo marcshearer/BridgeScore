@@ -7,64 +7,64 @@
 
 import SwiftUI
 import UIKit
+import Combine
+
+fileprivate enum OutcomeLevel {
+    case passout
+    case grandSlam
+    case smallSlam
+    case game
+    case partScore
+    case penalty
+}
 
 struct AnalysisViewer: View {
     let scorecard = Scorecard.current.scorecard!
     @State var board: BoardViewModel
     @State var traveller: TravellerViewModel
-    @State var initialTraveller: TravellerViewModel
+    @State var handTraveller: TravellerViewModel
+    @State var initialSitting: Seat
     @State var sitting: Seat
+    @State var rotated: Int = 0
     @State var from: UIView
+    @State var options: [AnalysisOption] = []
+    @State var otherOptions: [AnalysisOption] = []
+    @State var combinations: [AnalysisTrickCombination] = []
+    @State var madeValues: [AnalysisTrickCombination:(method: AnalysisAssessmentMethod, default: Int, override: Int?)] = [:]
     @State var bidAnnounce = ""
     @State var summaryMode = true
+    @State var focused = false
+    @State var stopEdit = false
+    @State var formatInt: Int
     
     init(board: BoardViewModel, traveller: TravellerViewModel, sitting: Seat, from: UIView) {
         self.board = board
         self.traveller = traveller
-        self.initialTraveller = traveller
+        self.handTraveller = traveller
+        self.initialSitting = sitting
         self.sitting = sitting
         self.from = from
+        _formatInt = State(initialValue: UserDefault.analysisOptionFormat.int)
     }
     
     var body: some View {
         HStack {
             VStack {
                 Spacer().frame(height: 15)
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer().frame(width: 50)
-                        Text("Board \(board.boardNumber) \(traveller.rankingNumber == initialTraveller.rankingNumber ? "v \(board.table?.versus ?? "Unknown")" : "  -  Viewing Other Traveller")")
-                        Spacer()
-                        VStack {
-                            HStack {
-                                Spacer().frame(width: 20)
-                                let score = sitting.pair == .ns ? traveller.nsScore : scorecard.type.invertScore(score: traveller.nsScore)
-                                let places = scorecard.type.boardPlaces
-                                Text("\(scorecard.type.boardScoreType.prefix(score: score))\(score.toString(places: places))\(scorecard.type.boardScoreType.suffix)")
-                                Spacer().frame(width: 20)
-                            }.frame(width: 200, height: 50).background(Palette.bannerShadow.background).foregroundColor(Palette.banner.text).cornerRadius(6).opacity(0.7)
-                        }
-                        Spacer().frame(width: 50)
-                        ButtonBar(board: $board, traveller: $traveller, initialTraveller: $initialTraveller, sitting: $sitting, bidAnnounce: $bidAnnounce, summaryMode: $summaryMode)
-                        Spacer().frame(width: 20)
-                    }.font(bannerFont).foregroundColor(Palette.banner.text)
-                    Spacer()
-                }
-                .background(Palette.banner.background)
-                .frame(height: 80)
-                .cornerRadius(16)
+                AnalysisBanner(nextTraveller: nextTraveller, updateOptions: updateAnalysis, board: $board, traveller: $traveller, handTraveller: $handTraveller, sitting: $sitting, rotated: $rotated, initialSitting: $initialSitting, bidAnnounce: $bidAnnounce, summaryMode: $summaryMode)
                 VStack {
                     Spacer().frame(height: 10)
                     HStack {
-                        HandViewer(board: $board, traveller: $traveller, sitting: $sitting, from: from, bidAnnounce: $bidAnnounce)
+                        HandViewer(board: $board, traveller: $handTraveller, sitting: $sitting, rotated: $rotated, from: from, bidAnnounce: $bidAnnounce, stopEdit: $stopEdit)
                             .cornerRadius(16)
                         Spacer().frame(width: 10)
                         VStack {
-                            AnalysisBiddingOptions(board: $board, traveller: $traveller, sitting: $sitting)
+                            AnalysisCommentView(board: $board, stopEdit: $stopEdit)
+                            AnalysisTricksMade(board: $board, traveller: $traveller, sitting: $sitting, combinations: $combinations, madeValues: $madeValues, stopEdit: $stopEdit, options: $options)
+                            AnalysisBiddingOptions(board: $board, traveller: $traveller, sitting: $sitting, stopEdit: $stopEdit, options: $options, formatInt: $formatInt)
+                            AnalysisActionView(board: $board, sitting: $sitting, formatInt: $formatInt, stopEdit: $stopEdit, options: $options, otherOptions: $otherOptions)
                             Spacer()
-                            AnalysisCommentView(board: $board)
-                            AnalysisTravellerView(board: $board, traveller: $traveller, sitting: $sitting, summaryMode: $summaryMode)
+                            AnalysisTravellerView(board: $board, traveller: $handTraveller, sitting: $sitting, summaryMode: $summaryMode, stopEdit: $stopEdit)
                         }
                     }
                 }
@@ -72,78 +72,228 @@ struct AnalysisViewer: View {
             }
         }
         .background(.clear)
-        .onAppear() {
-            initialTraveller = traveller
+        .onChange(of: board.board, initial: true) {
+            updateAnalysis()
         }
         .onSwipe() { direction in
-            if let (newBoard, newTraveller) = Scorecard.getBoardTraveller(boardNumber: board.boardNumber + (direction == .left ? 1 : -1)) {
-                board = newBoard
-                traveller = newTraveller
-                initialTraveller = newTraveller
-                sitting = newBoard.table!.sitting
-                bidAnnounce = ""
-                summaryMode = true
+            nextTraveller(direction == .left ? 1 : -1)
+        }
+        .onReceive(publisher) { (_, _, _) in
+            let analysis = Scorecard.current.analysis(board: board, traveller: traveller, sitting: sitting)
+            analysis.refreshOptions()
+            if let (_, made) = analysis.tricksMade[AnalysisTrickCombination(board: board.board, suit: Suit(string: "C"), declarer: .ew)] {
+                print(made[AnalysisAssessmentMethod.override])
+            }
+            updateAnalysis()
+        }
+        .ignoresSafeArea(.keyboard)
+    }
+    
+    struct AnalysisBanner : View {
+        @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
+        let scorecard = Scorecard.current.scorecard!
+        @State var nextTraveller: (Int)->()
+        @State var updateOptions: ()->()
+        @Binding var board: BoardViewModel
+        @Binding var traveller: TravellerViewModel
+        @Binding var handTraveller: TravellerViewModel
+        @Binding var sitting: Seat
+        @Binding var rotated: Int
+        @Binding var initialSitting: Seat
+        @Binding var bidAnnounce: String
+        @Binding var summaryMode: Bool
+        
+        var body : some View {
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer().frame(width: 50)
+                    Button {
+                        save()
+                        presentationMode.wrappedValue.dismiss()
+                    } label: {
+                        Image(systemName: "chevron.left")
+                    }
+                    Spacer().frame(width: 20)
+                    Text("Board \(board.boardNumber)")
+                    if traveller.rankingNumber == handTraveller.rankingNumber {
+                        Text(" v \(versus)").minimumScaleFactor(0.5)
+                    } else {
+                        Text(" - Other table ")
+                        Button {
+                            handTraveller = traveller
+                        } label: {
+                            HStack {
+                                Spacer()
+                                Image(systemName: "chevron.backward.2")
+                                Text(" Back")
+                                Spacer()
+                            }
+                            .frame(width: 160, height: 40)
+                            .palette(.bannerButton)
+                            .cornerRadius(8)
+                        }
+                    }
+                    Spacer()
+                    VStack {
+                        HStack {
+                            Spacer().frame(width: 20)
+                            let score = sitting.pair == .ns ? traveller.nsScore : scorecard.type.invertScore(score: traveller.nsScore)
+                            let places = scorecard.type.boardPlaces
+                            Text("\(scorecard.type.boardScoreType.prefix(score: score))\(score.toString(places: places))\(scorecard.type.boardScoreType.suffix)")
+                            Spacer().frame(width: 20)
+                        }
+                        .minimumScaleFactor(0.5)
+                        .frame(width: (scorecard.type.players == 4 ? 150 : 230), height: 50)
+                        .palette(.bannerShadow)
+                        .cornerRadius(16)
+                        .opacity(0.7)
+                    }
+                    Spacer().frame(width: 50)
+                    ButtonBar(nextTraveller: nextTraveller, otherTable: otherTable, save: save, board: $board, traveller: $handTraveller, sitting: $sitting, initialSitting: initialSitting, bidAnnounce: $bidAnnounce, summaryMode: $summaryMode)
+                    Spacer().frame(width: 20)
+                }.font(bannerFont).foregroundColor(Palette.banner.text)
+                Spacer()
+            }
+            .background(Palette.banner.background)
+            .frame(height: 80)
+            .cornerRadius(16)
+        }
+        
+        func save() {
+            if let board = Scorecard.current.boards[board.board] {
+                if board.changed {
+                    Scorecard.current.save(board: board)
+                }
             }
         }
+        
+        func otherTable() {
+            if let rankingNumber = traveller.rankingNumber[sitting] {
+                let newSitting = (sitting == initialSitting ? sitting.equivalent : initialSitting)
+                if let newTraveller = Scorecard.current.travellers(board: board.board, seat: newSitting, rankingNumber: rankingNumber).first {
+                    sitting = newSitting
+                    traveller = newTraveller
+                    handTraveller = traveller
+                    rotated = sitting.offset(to: initialSitting)
+                }
+                updateOptions()
+            }
+        }
+        
+        var versus: String {
+            var versus = ""
+            for seat in sitting.versus {
+                if let ranking = traveller.ranking(seat: seat) {
+                    var name = (ranking.players[seat] ?? "Unknown")
+                    if Scorecard.current.scorecard?.importSource == .bbo {
+                        if let realName = MasterData.shared.realName(bboName: name) {
+                            name = realName
+                        }
+                    }
+                    if versus != "" {
+                        versus += " & "
+                    }
+                    versus += name
+                }
+            }
+            return versus
+        }
+    }
+    
+    func nextTraveller(_ direction: Int) {
+        let boards = Scorecard.current.boards.count
+        var boardNumber = board.board
+        repeat {
+            boardNumber += direction
+            if let (newBoard, newTraveller, newSitting) = Scorecard.getBoardTraveller(boardNumber: boardNumber, equivalentSeat: (sitting != initialSitting)) {
+                initialSitting = newBoard.table!.sitting
+                sitting =  newSitting
+                rotated = sitting.offset(to: initialSitting)
+                board = newBoard
+                traveller = newTraveller
+                handTraveller = newTraveller
+                bidAnnounce = ""
+                summaryMode = true
+                break
+            }
+        } while boardNumber > 1 && boardNumber < boards
     }
     
     struct ButtonBar: View{
         @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
         let scorecard = Scorecard.current.scorecard!
+        @State var nextTraveller: (Int)->()
+        @State var otherTable: ()->()
+        @State var save: ()->()
         @Binding var board: BoardViewModel
         @Binding var traveller: TravellerViewModel
-        @Binding var initialTraveller: TravellerViewModel
         @Binding var sitting: Seat
+        @State var initialSitting: Seat
         @Binding var bidAnnounce: String
         @Binding var summaryMode: Bool
         
         var body: some View {
+            let boards = Scorecard.current.boards.count
             HStack {
-                Button {
-                    if let (newBoard, newTraveller) = Scorecard.getBoardTraveller(boardNumber: board.boardNumber - 1) {
-                        board = newBoard
-                        traveller = newTraveller
-                        initialTraveller = newTraveller
-                        sitting = newBoard.table!.sitting
-                        bidAnnounce = ""
-                        summaryMode = true
+                if scorecard.type.players == 4 {
+                    Button {
+                        otherTable()
+                    } label: {
+                        Image(systemName: "arrow.2.squarepath")
+                            .if(sitting == initialSitting) { view in
+                                view.scaleEffect(CGSize(width: 1.0, height: -1.0))
+                            }
                     }
-                } label: {
-                    Image(systemName: "backward.frame")
-                }.disabled(board.boardNumber <= 1).foregroundColor(Palette.banner.text.opacity(board.boardNumber <= 1 ? 0.5 : 1))
+                }
                 Spacer().frame(width: 20)
                 Button {
-                    if let (newBoard, newTraveller) = Scorecard.getBoardTraveller(boardNumber: board.boardNumber + 1) {
-                        board = newBoard
-                        traveller = newTraveller
-                        initialTraveller = newTraveller
-                        sitting = newBoard.table!.sitting
-                        bidAnnounce = ""
-                        summaryMode = true
-                    }
+                    save()
+                    nextTraveller(-1)
+                } label: {
+                    Image(systemName: "backward.frame")
+                }.disabled(board.board <= 1).foregroundColor(Palette.banner.text.opacity(board.board <= 1 ? 0.5 : 1))
+                Spacer().frame(width: 20)
+                Button {
+                    save()
+                    nextTraveller(1)
                 } label: {
                     Image(systemName: "forward.frame")
-                }.disabled(board.boardNumber >= scorecard.boards).foregroundColor(Palette.banner.text.opacity(board.boardNumber >= scorecard.boards ? 0.5 : 1))
-                Spacer().frame(width: 30)
-                Button {
-                    presentationMode.wrappedValue.dismiss()
-                } label: {
-                    Image(systemName: "xmark")
-                }
+                }.disabled(board.board >= boards).foregroundColor(Palette.banner.text.opacity(board.board >= boards ? 0.5 : 1))
             }
         }
     }
+    
+    func updateAnalysis() {
+        let analysis = Scorecard.current.analysis(board: board, traveller: traveller, sitting: sitting)
+        options = analysis.options
+        let set = Set(options.map({AnalysisTrickCombination(board: $0.board, suit: $0.contract.suit, declarer: $0.declarer)}))
+        combinations = set.sorted(by: {$0.declarer < $1.declarer || ($0.declarer == $1.declarer && $0.suit < $1.suit)})
+        madeValues = analysis.madeValues(combinations: combinations)
+        if let rankingNumber = traveller.rankingNumber[sitting], let otherTraveller = Scorecard.current.travellers(board: board.board, seat: sitting.equivalent, rankingNumber: rankingNumber).first {
+            otherOptions = Scorecard.current.analysis(board: board, traveller: otherTraveller, sitting: sitting.equivalent).options
+        } else {
+            otherOptions = []
+        }
+    }
+        
 }
 
-struct AnalysisBiddingOptions : View {
+let publisher = PassthroughSubject<(Int, Suit, Pair), Never>()
+
+struct AnalysisTricksMade : View {
     let scorecard = Scorecard.current.scorecard!
     @Binding var board: BoardViewModel
     @Binding var traveller: TravellerViewModel
     @Binding var sitting: Seat
-    @State var options: [AnalysisOption] = []
-    let columns = [GridItem(.flexible(minimum: 100), spacing: 0), GridItem(.fixed(45), spacing: 0),GridItem(.fixed(40), spacing: 0),  GridItem(.flexible(minimum: 60), spacing: 0), GridItem(.flexible(minimum: 60), spacing: 0), GridItem(.flexible(minimum: 60), spacing: 0), GridItem(.flexible(minimum: 60), spacing: 0),GridItem(.flexible(minimum: 60), spacing: 0)]
+    @Binding var combinations: [AnalysisTrickCombination]
+    @Binding var madeValues: [AnalysisTrickCombination:(method: AnalysisAssessmentMethod, default: Int, override: Int?)]
+    @Binding var stopEdit: Bool
+    @Binding var options: [AnalysisOption]
     
     var body: some View {
+        let columns = [GridItem(.fixed(80), spacing: 0), GridItem(.fixed(80), spacing: 0), GridItem(.flexible(minimum: 140), spacing: 0), GridItem(.flexible(minimum: 100), spacing: 0), GridItem(.flexible(minimum: 100), spacing: 0)]
+        
         ZStack {
             VStack {
                 Rectangle().frame(height: 30).foregroundColor(Palette.tile.background)
@@ -154,39 +304,168 @@ struct AnalysisBiddingOptions : View {
                 VStack {
                     LazyVGrid(columns: columns, spacing: 0) {
                         GridRow {
-                            LeadingText("")
-                            LeadingText("")
-                            LeadingText("")
-                            ForEach(AnalysisAssessmentMethod.allCases, id: \.self) { method in
-                                TrailingText(method.short)
+                            CenteredText("Suit")
+                            CenteredText("Declarer")
+                            CenteredText("Source")
+                            CenteredText("Tricks")
+                            CenteredText("Override")
+                        }
+                    }
+                    .frame(height: 30)
+                    .foregroundColor(Palette.tile.text)
+                    ScrollView {
+                        ForEach(combinations, id: \.self) { combination in
+                            LazyVGrid(columns: columns, spacing: 0) {
+                                GridRow {
+                                    CenteredAttributedText(combination.suit.colorString)
+                                    CenteredText(combination.declarer.short)
+                                    if let (method, made, _) = madeValues[combination] {
+                                        CenteredText(method.string)
+                                        CenteredText("\(made)")
+                                        HStack {
+                                            Button {
+                                                let value = max(0, (madeValues[combination]?.override ?? made) - 1)
+                                                madeValues[combination]?.override = value
+                                                Scorecard.current.analysis(board: board, traveller: traveller, sitting: sitting).setOverride(board: board.board, suit: combination.suit, declarer: combination.declarer, override: value)
+                                                publisher.send((value, combination.suit, combination.declarer))
+                                            } label: {
+                                                Text("-").font(.title)
+                                            }
+                                            Spacer().frame(width: 10)
+                                            let override = madeValues[combination]?.override ?? made
+                                            UpdatingText(override, blankIf: made, suit: combination.suit, declarer: combination.declarer)
+                                            Spacer().frame(width: 10)
+                                            Button {
+                                                let value = min(13, (madeValues[combination]?.override ?? made) + 1)
+                                                madeValues[combination]?.override = value
+                                                Scorecard.current.analysis(board: board, traveller: traveller, sitting: sitting).setOverride(board: board.board, suit: combination.suit, declarer: combination.declarer, override: value)
+                                                publisher.send((value, combination.suit, combination.declarer))
+                                            } label: {
+                                                Text("+").font(.title)
+                                            }
+                                        }
+                                    } else {
+                                        Text("")
+                                        Text("")
+                                        Text("")
+                                    }
+                                }
+                                .foregroundColor(Palette.background.text)
+                                .frame(height: 20)
                             }
+                        }
+                        Spacer()
+                    }
+                }
+                Spacer().frame(width: 10)
+            }
+        }
+        .frame(width: 520, height: 150)
+        .background(Palette.background.background).cornerRadius(16)
+        .font(smallFont)
+        .onTapGesture {
+            stopEdit = true
+        }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
+    }
+}
+
+struct UpdatingText: View {
+    @State var value: Int
+    @State var blankIf: Int
+    @State var suit: Suit
+    @State var declarer: Pair
+    
+    init(_ value: Int, blankIf: Int, suit: Suit, declarer: Pair) {
+        _value = State(initialValue: value)
+        _blankIf = State(initialValue: blankIf)
+        _suit = State(initialValue: suit)
+        _declarer = State(initialValue: declarer)
+    }
+    
+    var body: some View {
+        HStack {
+            Spacer()
+            Text(value == blankIf ? "" : "\(value)")
+                .onReceive(publisher) { (value, suit, declarer) in
+                    if suit == self.suit && declarer == self.declarer {
+                        self.value = value
+                    }
+                }
+            Spacer()
+        }
+    }
+}
+
+struct AnalysisBiddingOptions : View {
+    let scorecard = Scorecard.current.scorecard!
+    @Binding var board: BoardViewModel
+    @Binding var traveller: TravellerViewModel
+    @Binding var sitting: Seat
+    @Binding var stopEdit: Bool
+    @Binding var options: [AnalysisOption]
+    @Binding var formatInt: Int
+    
+    var format: AnalysisOptionFormat { AnalysisOptionFormat(rawValue: formatInt) ?? .score }
+    
+    var body: some View {
+        let columns = [GridItem(.flexible(minimum: 60), spacing: 0), GridItem(.flexible(minimum: 60), spacing: 0), GridItem(.flexible(minimum: 60), spacing: 0), GridItem(.flexible(minimum: 60), spacing: 0),GridItem(.flexible(minimum: 60), spacing: 0)]
+        let headerColumns = [GridItem(.fixed(195), spacing: 0)] + columns
+        let bodyColumns = [GridItem(.fixed(110), spacing: 0), GridItem(.fixed(45), spacing: 0),GridItem(.fixed(40), spacing: 0)] + columns
+        ZStack {
+            VStack {
+                Rectangle().frame(height: 30).foregroundColor(Palette.tile.background)
+                Spacer()
+            }
+            HStack {
+                Spacer().frame(width: 10)
+                VStack {
+                    LazyVGrid(columns: headerColumns, spacing: 0) {
+                        GridRow {
+                            HStack {
+                                PickerInputSimple(title: "Show", field: $formatInt, values: AnalysisOptionFormat.allCases.map{$0.string}) { newValue in
+                                    UserDefault.analysisOptionFormat.set(newValue)
+                                }.frame(width: 140)
+                                Spacer()
+                            }
+                            ForEach(AnalysisAssessmentMethod.realCases, id: \.self) { method in
+                                if format == .made {
+                                    CenteredText(method.short)
+                                } else {
+                                    TrailingText(method.short)
+                                }
+                            }.bold()
                         }
                     }
                     .frame(height: 30)
                     .foregroundColor(Palette.tile.text)
                     .font(smallFont)
-                    .bold()
                     ScrollView {
-                            // TODO These are wrong way round - should be grid above for
+                            // TODO These are wrong way round - should be Grid above ForEach
                         ForEach(options) { option in
                             if !option.removed {
-                                LazyVGrid(columns: columns, spacing: 0) {
+                                LazyVGrid(columns: bodyColumns, spacing: 0) {
                                     GridRow {
                                         let type = option.displayType
-                                        let doubleString = (type.double ? AnalysisOptionType.doubleString(option.linked?.displayType) : nil)
+                                        let doubleString = (option.double ? AnalysisOptionType.doubleString(option.linked?.displayType) : nil)
                                         LeadingText(doubleString ?? type.string)
                                         LeadingAttributedText(option.contract.colorCompact)
                                         LeadingText(option.declarer.short)
-                                        ForEach(AnalysisAssessmentMethod.allCases, id: \.self) { method in
-                                            let methodPoints = option.assessment[method]?.points
-                                            TrailingText(methodPoints == nil ? "" : "\(methodPoints!)")
+                                        ForEach(AnalysisAssessmentMethod.realCases, id: \.self) { method in
+                                            HStack {
+                                                Spacer()
+                                                let compare = options.first?.assessments[.play]
+                                                Text(option.value(method: method, format: format, compare: compare))
+                                                if format == .made {
+                                                    Spacer()
+                                                } else {
+                                                    Spacer().frame(width: 2)
+                                                }
+                                            }
                                         }
                                     }
                                     .foregroundColor(option.removed ? Palette.background.strongText : Palette.background.text)
                                     .frame(height: 20)
-                                    .if(option.separator) { view in
-                                        view.overlay(Separator(thickness: 2, color: Palette.tile.background), alignment: .bottom)
-                                    }
                                 }
                             }
                         }
@@ -196,317 +475,22 @@ struct AnalysisBiddingOptions : View {
             }
             Spacer()
         }
-        .frame(width: 520, height: 250)
+        .frame(width: 520, height: 150)
         .background(Palette.background.background).cornerRadius(16)
         .font(smallFont)
-        .onAppear {
-            buildOptions()
+        .onTapGesture {
+            stopEdit = true
         }
-        .onChange(of: traveller) { traveller in
-            buildOptions()
-        }
-    }
-    
-    func buildOptions() {
-        options = [] // TODO Need options just to be an array
-        
-        let contracts = traveller.contracts
-        let declarer = traveller.declarer.pair
-        let weDeclared = (declarer == sitting.pair)
-        
-        // Find last bid by defenders
-        var bidder = declarer
-        var previousBid: Contract?
-        var started = false
-        for bid in contracts.reversed() {
-            if bid != nil || started {
-                started = true
-                if bidder != declarer && bid != nil {
-                    previousBid = bid
-                    break
-                }
-                bidder = bidder.other
-            }
-        }
-        
-        let ourBid = (weDeclared ? traveller.contract : previousBid)
-        let ourSuit = ourBid?.suit
-        let ourGameLevel = ourSuit?.gameTricks
-        let theirBid = (weDeclared ? previousBid : traveller.contract)
-        
-        let multiplier: Float = (sitting.pair == .ns ? 1 : -1)
-        let travellers = Scorecard.current.travellers(board: board.boardNumber).sorted(by: { (($0.nsScore - $1.nsScore) * multiplier) < 0 })
-        
-        let types = (weDeclared ? AnalysisOptionType.declaringCases : AnalysisOptionType.defendingCases)
-        for type in types {
-            var contract: [Contract] = []
-            var declarer = sitting.pair
-            var decisionBy: Pair?
-            
-            // Generic options
-            switch type {
-            case .actual:
-                contract = [Contract(copying: traveller.contract)]
-                declarer = traveller.declarer.pair
-            case .optimum:
-                if (board.optimumScore?.contract.level ?? .blank) != .blank {
-                    contract = [Contract(copying: board.optimumScore!.contract)]
-                    declarer = board.optimumScore!.declarer
-                }
-            case .best:
-                if let bestTraveller = travellers.last {
-                    contract = [Contract(copying: bestTraveller.contract)]
-                    declarer = bestTraveller.declarer.pair
-                }
-            default:
-                break
-            }
-            
-            if weDeclared {
-                    // Options if we declared
-                switch type {
-                case .stopLower:
-                        // Stop in a lower contract below game
-                    if let ourBid = ourBid {
-                        if ourBid.level.rawValue > 1 {
-                            for level in 1..<ourBid.level.rawValue {
-                                let tryBid = Contract(copying: ourBid)
-                                tryBid.level = ContractLevel(rawValue: level)!
-                                if theirBid == nil || tryBid > theirBid! {
-                                    contract.append(tryBid)
-                                    declarer = sitting.pair
-                                }
-                            }
-                        }
-                    }
-                case .otherSuit, .median, .mode:
-                        // TODO
-                    break
-                default:
-                    break
-                }
-            } else {
-                // Options if they declared
-                switch type {
-                case .bidOver:
-                        // Bid on below game level
-                    if let ourSuit = ourSuit, let ourGameLevel = ourGameLevel, let theirBid = theirBid {
-                        if let bidOver = Contract.init(higher: theirBid, suit: ourSuit) {
-                            if bidOver.level.rawValue < ourGameLevel {
-                                contract.append(bidOver)
-                                declarer = sitting.pair
-                            }
-                        }
-                    }
-                default:
-                    break
-                }
-            }
-            
-            // Options if bidding or declaring
-            switch type {
-            case .pass:
-                // Pass their last bid
-                if let theirBid = theirBid {
-                    if weDeclared || theirBid.double == .doubled {
-                        contract = [Contract(copying: theirBid)]
-                        contract.last!.double = .undoubled
-                        declarer = sitting.pair.other
-                        decisionBy = sitting.pair
-                    }
-                }
-            case .double:
-                // Double their last bid
-                if let theirBid = theirBid {
-                    if theirBid.double == .undoubled {
-                        contract = [Contract(copying: theirBid)]
-                        contract.first!.double = .doubled
-                        declarer = sitting.pair.other
-                        decisionBy = sitting.pair
-                    }
-                }
-            case .upToGame:
-                    // Bid on to game level
-                if let ourBid = ourBid, let ourGameLevel = ourGameLevel {
-                    if ourBid.level.rawValue < ourGameLevel {
-                        for level in ourBid.level.rawValue+1...ourGameLevel {
-                            contract.append(Contract(copying: ourBid))
-                            contract.last!.level = ContractLevel(rawValue: level)!
-                            declarer = sitting.pair
-                        }
-                    }
-                }
-            case .upToSlam:
-                    // Bid on to small slam level
-                if let ourBid = ourBid {
-                    if ourBid.level < Values.smallSlamLevel {
-                        contract.append(Contract(copying: ourBid))
-                        contract.last!.level = Values.smallSlamLevel
-                        declarer = sitting.pair
-                    }
-                }
-            case .upToGrand:
-                    // Bid on to grand slam level
-                if let ourBid = ourBid {
-                    if ourBid.level < Values.grandSlamLevel {
-                        contract.append(Contract(copying: ourBid))
-                        contract.last!.level = Values.grandSlamLevel
-                        declarer = sitting.pair
-                    }
-                }
-            default:
-                break
-            }
-
-            if !contract.isEmpty {
-                let decisionBy = decisionBy ?? declarer
-                for contract in contract {
-                    let option = AnalysisOption(type: type, contract: contract, declarer: declarer, decisionBy: decisionBy)
-                    options.append(option)
-                    
-                    if !weDeclared && declarer == sitting.pair {
-                        // Add linked options for opps doubling or overbidding and us them doubling them
-                        let doubleUs = Contract(copying: contract)
-                        doubleUs.double = .doubled
-                        options.append(AnalysisOption(type: .double, contract: doubleUs, declarer: declarer, decisionBy: declarer.other, linked: option))
-                        
-                        if let bidOver = Contract(higher: contract, suit: theirBid!.suit) {
-                            let bidOverOption = AnalysisOption(type: .bidOver, contract: bidOver, declarer: declarer.other, decisionBy: declarer.other, linked: option)
-                            options.append(bidOverOption)
-                            
-                            let doubleThem = Contract(copying: bidOver)
-                            doubleThem.double = .doubled
-                            options.append(AnalysisOption(type: .bidOverDouble, contract: doubleThem, declarer: declarer.other, decisionBy: declarer, linked: bidOverOption))
-                        }
-                    }
-                }
-            }
-        }
-                
-        buildScores()
-        removeBadOptions()
-        // Set separators
-        var lastOption: AnalysisOption?
-        for option in options {
-            if !option.removed {
-                if lastOption != nil && (lastOption?.declarer != option.declarer) {
-                    lastOption?.separator = true
-                }
-                lastOption = option
-            }
-        }
-    }
-    
-    func buildScores(){
-        let tricksMade = buildTricksMade()
-        for option in options {
-            var assessment: [Int:AnalysisAssessment] = [:]
-            if let allTricksMade = tricksMade[option.declarer]?[option.contract.suit]?.map({$0.value}) {
-                let tricksMadeSet = Set(allTricksMade)
-                for made in tricksMadeSet {
-                    let points = Scorecard.points(contract: option.contract, vulnerability: Vulnerability(board: traveller.boardNumber), declarer: option.declarer.seats.first!, made: made - Values.trickOffset - option.contract.level.rawValue, seat: sitting)
-                    assessment[made] = (AnalysisAssessment(tricks: made, points: points, score: 0))
-                }
-                for method in AnalysisAssessmentMethod.allCases {
-                    if let methodTricks = tricksMade[option.declarer]?[option.contract.suit]?[method] {
-                        option.assessment[method] = assessment[methodTricks]
-                    }
-                }
-            }
-        }
-    }
-    
-    func removeBadOptions () {
-        if options.count >= 2 {
-            for optionIndex in 1..<options.count {
-                let option = options[optionIndex]
-                for compareIndex in 0..<optionIndex {
-                    let compare = options[compareIndex]
-                    if AnalysisOption.equalOrWorsePoints(option, compare, invert: invert(option)) {
-                        option.removed = true
-                    }
-                }
-            }
-            
-            // Remove linking options if no longer in play
-            for option in options {
-                if let linked = option.linked {
-                    if linked.removed {
-                        option.removed = true
-                    }
-                }
-            }
-            
-            // Now consider removing original linked double if worse than double
-            for option in options {
-                if option.type.double && !option.removed {
-                    if let linked = option.linked {
-                        if !linked.removed {
-                            if AnalysisOption.equalOrWorsePoints(linked, option, invert: invert(option)) {
-                                linked.removed = true
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        
-        func invert(_ option: AnalysisOption) -> Bool {
-            var invert = option.declarer != sitting.pair
-            if option.decisionBy != option.declarer {
-                invert.toggle()
-            }
-            return invert
-        }
-    }
-    
-    func buildTricksMade() -> [Pair:[Suit:[AnalysisAssessmentMethod:Int]]] {
-        var result: [Pair:[Suit:[AnalysisAssessmentMethod:Int]]] = [:]
-        for pair in Pair.validCases {
-            result[pair] = [:]
-            for suit in Suit.validCases {
-                result[pair]![suit] = [:]
-                let multiplier = (pair == .ns ? 1 : -1)
-                let suitTravellers = Scorecard.current.travellers(board: board.boardNumber).filter({ $0.contract.suit == suit && $0.declarer.pair == pair && $0 != traveller }) .sorted(by: { ((($0.contractLevel + $0.made) - ($1.contractLevel + $1.made)) * multiplier) < 0 })
-                    // Play
-                if suit == traveller.contract.suit {
-                    result[pair]![suit]![.play] = Values.trickOffset + traveller.contractLevel + traveller.made
-                }
-                
-                    // Double dummy
-                var made: [Int] = []
-                for index in 0...1 {
-                    made.append(board.doubleDummy[pair.seats[index]]?[suit]?.made ?? -1)
-                }
-                if made.max() ?? -1 >= 0 {
-                    result[pair]![suit]![.doubleDummy] = made.max()
-                }
-                
-                    // Median
-                if suitTravellers.count > 0 {
-                    let medianTraveller = suitTravellers[(suitTravellers.count) / 2]
-                    result[pair]![suit]![.median] = Values.trickOffset + medianTraveller.contractLevel + medianTraveller.made
-                }
-                
-                    //Mode
-                let counts = NSCountedSet(array: suitTravellers.map{Values.trickOffset + $0.contractLevel + $0.made})
-                if counts.count > 0 {
-                    if let maxCount = counts.max(by: { counts.count(for: $0) < counts.count(for: $1)}), let mostFrequent = maxCount as? Int {
-                        result[pair]![suit]![.mode] = mostFrequent
-                    }
-                }
-                    // Best
-                if let bestTraveller = suitTravellers.last {
-                    result[pair]![suit]![.best] = Values.trickOffset + bestTraveller.contractLevel + bestTraveller.made
-                }
-            }
-        }
-        return result
+        .ignoresSafeArea(.keyboard, edges: .bottom)
     }
 }
 
 struct AnalysisCommentView: View {
     @Binding var board: BoardViewModel
+    @Binding var stopEdit: Bool
+    @State var comment: String = ""
+    @FocusState var focused: Bool
+    @State var showClear = false
     
     var body: some View {
         HStack {
@@ -515,21 +499,149 @@ struct AnalysisCommentView: View {
                     .foregroundColor(Palette.background.background)
                     .cornerRadius(16)
                 VStack {
-                    Spacer().frame(height: 6)
+                    Spacer().frame(height: 4)
                     HStack {
-                        Spacer().frame(width: 6)
-                        TextField("", text: $board.comment)
+                        Spacer().frame(width: 16)
+                        Text("COMMENT").font(smallFont).foregroundColor(Palette.background.faintText)
+                        Spacer()
+                    }
+                    Spacer().frame(height: 2)
+                    HStack {
+                        Spacer().frame(width: 16)
+                        TextField("", text: $comment)
+                            .onChange(of: comment, initial: false) {
+                                board.comment = comment
+                                showClear = (comment != "")
+                            }
+                            .focused($focused)
                             .padding(.all, 2)
                             .foregroundColor(Palette.background.text)
+                            .font(inputTitleFont)
+                            .minimumScaleFactor(0.8)
+                        Spacer().frame(width: 6)
+                        if showClear {
+                            VStack {
+                                Spacer()
+                                Button {
+                                    focused = false
+                                    comment = ""
+                                    Utility.mainThread {
+                                        focused = true
+                                    }
+                                } label: {
+                                    Image(systemName: "x.circle.fill").font(inputTitleFont).foregroundColor(Palette.clearText)
+                                }
+                                Spacer()
+                            }
+                            .frame(width: 40)
+                        }
                         Spacer().frame(width: 6)
                     }
-                    Spacer().frame(height: 6)
+                    Spacer()
+                }
+                .onTapGesture {
+                    focused = true
                 }
                 .cornerRadius(16)
-                .keyboardAdaptive
             }
-            .frame(width: 520, height: 80)
+            .frame(width: 520, height: 70)
             .font(defaultFont)
+        }
+        .onChange(of: stopEdit, initial: false) {
+            if stopEdit {
+                focused = false
+                stopEdit = false
+            }
+        }
+        .onChange(of: board, initial: true) {
+            comment = board.comment
+            showClear = (comment != "")
+        }
+    }
+}
+
+struct AnalysisActionView: View {
+    @Binding var board: BoardViewModel
+    @Binding var sitting: Seat
+    @Binding var formatInt: Int
+    @Binding var stopEdit: Bool
+    @Binding var options: [AnalysisOption]
+    @Binding var otherOptions: [AnalysisOption]
+    
+    var body: some View {
+        HStack {
+            ZStack {
+                Rectangle()
+                    .foregroundColor(Palette.background.background)
+                    .cornerRadius(16)
+                VStack {
+                    Spacer().frame(height: 4)
+                    HStack {
+                        Spacer().frame(width: 8)
+                        Text("SUGGESTED BIDDING").font(smallFont).foregroundColor(Palette.background.faintText)
+                        Spacer()
+                    }
+                    Spacer().frame(height: 10)
+                    Action(description: "Us", options: $options, formatInt: $formatInt)
+                    if Scorecard.current.scorecard?.type.players == 4 {
+                        Spacer().frame(height: 10)
+                        Action(description: "Team", options: $otherOptions, formatInt: $formatInt)
+                    }
+                    Spacer()
+                }
+            }
+            .frame(width: 520, height: 90)
+            .font(defaultFont)
+        }
+    }
+    
+    struct Action: View {
+        @State var description: String
+        @Binding var options: [AnalysisOption]
+        @Binding var formatInt: Int
+        @State var bestOption: AnalysisOption?
+        
+        var body: some View {
+            HStack(spacing: 0) {
+                if let bestOption = bestOption, let useMethod = bestOption.useMethod {
+                    Spacer().frame(width: 16)
+                    if Scorecard.current.scorecard?.type.players == 4 {
+                        HStack(spacing: 0) {
+                            Text("\(description):")
+                            Spacer()
+                        }.frame(width: 70)
+                    }
+                    HStack(spacing: 0) {
+                        Text(bestOption.contract.colorCompact)
+                        Text("\(bestOption.value(method: useMethod, format: .made, colorCode: false))")
+                        Spacer().frame(width: 6)
+                        Text(bestOption.declarer.short)
+                        Spacer().frame(width: 12)
+                        Spacer()
+                    }.frame(width: 130)
+                    Text(bestOption.action.description)
+                    Spacer()
+                    let compare = options.first?.assessments[.play]
+                    Text("\(bestOption.value(method: useMethod, format: .score, compare: compare, verbose: true, showVariance: true, colorCode: false))").frame(width: 100)
+                    Spacer().frame(width: 4)
+                }
+            }
+            .font(inputTitleFont).minimumScaleFactor(0.8)
+            .onChange(of: options, initial: true) {
+                let options = self.options.filter({!$0.removed})
+                let sorted = options.sorted(by:{$0.reliability < $1.reliability || ($0.reliability == $1.reliability && ($0.useAssessment?.score ?? -9999.99) < ($1.useAssessment?.score ?? -9999.99))})
+                if var bestOption = sorted.last {
+                    // Ignore double if within 1 of making
+                    if let tricks = bestOption.useAssessment?.tricks {
+                        if bestOption.double && bestOption.linked != nil && tricks >= bestOption.contract.tricks - 1 {
+                            bestOption = bestOption.linked!
+                        }
+                    }
+                    self.bestOption = bestOption
+                } else {
+                    self.bestOption = nil
+                }
+            }
         }
     }
 }
@@ -543,11 +655,15 @@ struct AnalysisTravellerView: View {
     @State var selectedSummary: TravellerSummary?
     @Binding var sitting: Seat
     @Binding var summaryMode: Bool
+    @Binding var stopEdit: Bool
     @State var travellers: [TravellerExtension] = []
     @State var summary: [TravellerSummary] = []
-    let columns = [GridItem(.fixed(50), spacing: 0), GridItem(.fixed(50), spacing: 0), GridItem(.flexible(minimum: 90), spacing: 0), GridItem(.fixed(50), spacing: 0), GridItem(.fixed(60), spacing: 0), GridItem(.fixed(70), spacing: 0), GridItem(.fixed(55), spacing: 0), GridItem(.flexible(minimum: 70), spacing: 0)]
     
     var body: some View {
+        let columns = [GridItem(.flexible(minimum: 90), spacing: 0), GridItem(.fixed(50), spacing: 0), GridItem(.fixed(60), spacing: 0), GridItem(.fixed(70), spacing: 0), GridItem(.fixed(60), spacing: 0), GridItem(.flexible(minimum: 70), spacing: 0)]
+        let summaryColumns = [GridItem(.fixed(30), spacing: 0), GridItem(.fixed(50), spacing: 0)] + columns
+        let detailColumns = [GridItem(.fixed(80), spacing: 0)] + columns
+        
         VStack {
             ZStack {
                 VStack {
@@ -558,10 +674,10 @@ struct AnalysisTravellerView: View {
                     Spacer()
                     if summaryMode {
                         VStack {
-                            LazyVGrid(columns: columns, spacing: 0) {
+                            LazyVGrid(columns: summaryColumns, spacing: 0) {
                                 GridRow {
                                     LeadingText("")
-                                    CenteredText("Frq")
+                                    CenteredText("Rep")
                                     CenteredText("Contract")
                                     CenteredText("By")
                                     CenteredText("Lead")
@@ -573,22 +689,27 @@ struct AnalysisTravellerView: View {
                                 .frame(height: 25)
                             }
                             ScrollView {
-                                LazyVGrid(columns: columns, spacing: 3) {
+                                LazyVGrid(columns: summaryColumns, spacing: 3) {
                                     ForEach(summary, id: \.self) { summary in
                                         GridRow {
                                             if !(handTraveller == summary) {
-                                                Image(systemName: "arrow.up.left")
-                                                    .background(Palette.background.background)
-                                                    .foregroundColor(Palette.background.text)
-                                                    .onTapGesture {
-                                                        if let newTraveller = travellers.first(where: { $0 == summary }) {
-                                                            reflectSelectionChange(traveller: newTraveller)
+                                                HStack {
+                                                    Spacer().frame(width: 10)
+                                                    Image(systemName: "arrow.up.left")
+                                                        .background(Palette.background.background)
+                                                        .foregroundColor(Palette.background.text)
+                                                        .onTapGesture {
+                                                            if let newTraveller = travellers.first(where: { $0 == summary }) {
+                                                                traveller = newTraveller
+                                                                reflectSelectionChange(traveller: newTraveller)
+                                                            }
                                                         }
-                                                    }
+                                                    Spacer()
+                                                }
                                             } else {
                                                 CenteredText("")
                                             }
-                                            CenteredText("\(summary.frequency)")
+                                            CenteredText(summary.frequency <= 1 ? "" : "x\(summary.frequency)")
                                             CenteredAttributedText(summary.contractStringPlus)
                                             CenteredText(summary.declarer.short)
                                             CenteredAttributedText(summary.leadStringPlus)
@@ -602,11 +723,11 @@ struct AnalysisTravellerView: View {
                                         }
                                         .foregroundColor(summary.made >= 0 ? Palette.background.text : Palette.background.faintText)
                                         .onTapGesture {
-                                            selectedSummary = summary
-                                            summaryMode.toggle()
-                                        }
-                                        .onSwipe() { direction in
-                                            
+                                            if summary.frequency > 1 {
+                                                selectedSummary = summary
+                                                summaryMode.toggle()
+                                            }
+                                            stopEdit = true
                                         }
                                     }
                                 }
@@ -614,10 +735,23 @@ struct AnalysisTravellerView: View {
                         }
                     } else {
                         VStack {
-                            LazyVGrid(columns: columns, spacing: 0) {
+                            LazyVGrid(columns: detailColumns, spacing: 0) {
                                 GridRow {
-                                    LeadingText("")
-                                    CenteredText("")
+                                    Button {
+                                        summaryMode = true
+                                    } label: {
+                                        HStack {
+                                            Spacer()
+                                            Image(systemName: "chevron.backward.2")
+                                            Text("Back")
+                                            Spacer()
+                                        }
+                                        .bold(false)
+                                        .frame(width: 80, height: 18)
+                                        .minimumScaleFactor(0.5)
+                                        .palette(.bannerButton)
+                                        .cornerRadius(4)
+                                    }
                                     CenteredText("Contract")
                                     CenteredText("By")
                                     CenteredText("Lead")
@@ -629,20 +763,24 @@ struct AnalysisTravellerView: View {
                                 .frame(height: 25)
                             }
                             ScrollView {
-                                LazyVGrid(columns: columns, spacing: 3) {
+                                LazyVGrid(columns: detailColumns, spacing: 3) {
                                     ForEach(travellers.filter({$0 == selectedSummary!}), id: \.self) { traveller in
                                         GridRow {
                                             if traveller.rankingNumber != handTraveller.rankingNumber {
-                                                Image(systemName: "arrow.up.left")
-                                                    .background(Palette.background.background)
-                                                    .foregroundColor(Palette.background.text)
-                                                    .onTapGesture {
-                                                        reflectSelectionChange(traveller: traveller)
-                                                    }
+                                                HStack {
+                                                    Spacer().frame(width: 10)
+                                                    Image(systemName: "arrow.up.left")
+                                                        .background(Palette.background.background)
+                                                        .foregroundColor(Palette.background.text)
+                                                        .onTapGesture {
+                                                            self.traveller = traveller
+                                                            reflectSelectionChange(traveller: traveller)
+                                                        }
+                                                    Spacer()
+                                                }
                                             } else {
                                                 CenteredText("")
                                             }
-                                            CenteredText("")
                                             CenteredAttributedText(traveller.contract.colorCompact)
                                             CenteredText(traveller.declarer.short)
                                             CenteredAttributedText(traveller.leadString)
@@ -664,6 +802,7 @@ struct AnalysisTravellerView: View {
                         }
                         .onTapGesture {
                             summaryMode = true
+                            stopEdit = true
                         }
                     }
                     Spacer()
@@ -671,11 +810,14 @@ struct AnalysisTravellerView: View {
             }
             Spacer().frame(height: 4)
         }
-        .onAppear() {
+        .onChange(of: board.board, initial: true) {
             reflectChange()
         }
-        .onChange(of: board.boardNumber) { boardNumber in
+        .onChange(of: sitting, initial: true) {
             reflectChange()
+        }
+        .onTapGesture {
+            stopEdit = true
         }
         .frame(width: 520, height: 200)
         .background(Palette.background.background)
@@ -685,21 +827,20 @@ struct AnalysisTravellerView: View {
     }
     
     func reflectChange() {
+        summaryMode = true
         travellers = buildTravellers(board: self.board, sitting: self.sitting)
         summary = buildSummary()
-        handTraveller = TravellerExtension(scorecard: scorecard, traveller: traveller)
-        reflectSelectionChange(traveller: handTraveller)
+        reflectSelectionChange(traveller: TravellerExtension(scorecard: scorecard, traveller: traveller))
     }
     
     func reflectSelectionChange(traveller: TravellerExtension) {
         handTraveller = traveller
-        self.traveller = traveller
         handSummary = summary.first(where: {traveller == $0})
     }
     
     func buildTravellers(board: BoardViewModel, sitting: Seat) -> [TravellerExtension] {
         var result: [TravellerExtension] = []
-        for traveller in Scorecard.current.travellers(board: board.boardNumber) {
+        for traveller in Scorecard.current.travellers(board: board.board) {
             result.append(TravellerExtension(scorecard: scorecard, traveller: traveller))
         }
         return result.sorted(by: {TravellerExtension.sort($0, $1, sitting: sitting)})
@@ -727,6 +868,7 @@ struct AnalysisTravellerView: View {
 }
 
 class TravellerSummary: Equatable, Identifiable, Hashable {
+    var board: BoardViewModel
     var contract: Contract
     var declarer: Seat
     var lead: String
@@ -744,10 +886,11 @@ class TravellerSummary: Equatable, Identifiable, Hashable {
     var scoreString: String
     
     init(board: BoardViewModel, traveller: TravellerExtension, sitting: Seat) {
+        self.board = board
         self.contract = Contract(copying: traveller.contract)
         self.declarer = traveller.declarer
         self.lead = traveller.lead
-        self.made = traveller.made
+        self.made = traveller.contract.level == .passout ? 0 : traveller.made
         self.tricksMade = Values.trickOffset + contract.level.rawValue + traveller.made
         self.nsPoints = Scorecard.points(contract: traveller.contract, vulnerability: Vulnerability(board: traveller.boardNumber), declarer: traveller.declarer, made: traveller.made, seat: .north)
         self.nsScore = traveller.nsScore
@@ -762,12 +905,13 @@ class TravellerSummary: Equatable, Identifiable, Hashable {
     }
     
     public func hash(into hasher: inout Hasher) {
+        hasher.combine(board)
+        hasher.combine(outcomeLevel)
         hasher.combine(contract.suit)
         hasher.combine(contract.double)
         hasher.combine(declarer)
-        hasher.combine(made)
+        hasher.combine(tricksMade)
         hasher.combine(nsPoints)
-        hasher.combine(outcomeLevel)
     }
     
     public var contractStringPlus: AttributedString {
@@ -783,7 +927,7 @@ class TravellerSummary: Equatable, Identifiable, Hashable {
     }
     
     static func == (lhs: TravellerSummary, rhs: TravellerSummary) -> Bool {
-        return lhs.contract.suit == rhs.contract.suit && lhs.contract.double == rhs.contract.double && lhs.declarer == rhs.declarer && lhs.tricksMade == rhs.tricksMade && lhs.outcomeLevel == rhs.outcomeLevel && lhs.nsPoints == rhs.nsPoints
+        return lhs.outcomeLevel == rhs.outcomeLevel && (lhs.outcomeLevel == .passout || ( lhs.contract.suit == rhs.contract.suit && lhs.contract.double == rhs.contract.double && lhs.declarer == rhs.declarer && lhs.tricksMade == rhs.tricksMade && lhs.nsPoints == rhs.nsPoints))
     }
 }
 
@@ -803,7 +947,9 @@ class TravellerExtension: TravellerViewModel {
     
     fileprivate var outcomeLevel: OutcomeLevel {
         var level: OutcomeLevel
-        if made < 0 {
+        if  contract.level == .passout {
+            level = .passout
+        } else if made < 0 {
             level = .penalty
         } else if contract.level == .six {
             level = .smallSlam
@@ -818,7 +964,7 @@ class TravellerExtension: TravellerViewModel {
     }
     
     static func == (lhs: TravellerExtension, rhs: TravellerSummary) -> Bool {
-        return lhs.contract.suit == rhs.contract.suit && lhs.contract.double == rhs.contract.double && lhs.declarer == rhs.declarer && lhs.tricksMade == rhs.tricksMade && lhs.outcomeLevel == rhs.outcomeLevel && lhs.nsPoints == rhs.nsPoints
+        return lhs.outcomeLevel == rhs.outcomeLevel && (lhs.outcomeLevel == .passout || (lhs.contract.suit == rhs.contract.suit && lhs.contract.double == rhs.contract.double && lhs.declarer == rhs.declarer && lhs.tricksMade == rhs.tricksMade && lhs.nsPoints == rhs.nsPoints))
     }
     
     var leadString: AttributedString {
@@ -841,7 +987,6 @@ class TravellerExtension: TravellerViewModel {
     }
     
     func pointsString(board: BoardViewModel, sitting: Seat) -> String {
-        let passout = (contract.level == .passout)
         let sign = (sitting.pair == .ns ? 1 : -1)
         return (passout ? "0" : String(format: "%+d",sign * Scorecard.points(contract: contract, vulnerability: Vulnerability(board: boardNumber), declarer: declarer, made: made, seat: .north)))
     }
@@ -972,147 +1117,5 @@ struct TrailingAttributedText: View {
             Text(text)
             Spacer().frame(width: 2)
         }
-    }
-}
-
-fileprivate enum OutcomeLevel {
-    case grandSlam
-    case smallSlam
-    case game
-    case partScore
-    case penalty
-}
-
-enum AnalysisOptionType : Int, CaseIterable, Hashable {
-    case actual = 0
-    case pass = 1
-    case double = 2
-    case stopLower = 3
-    case otherSuit = 4
-    case bidOver = 5
-    case bidOverDouble = 6
-    case upToGame = 7
-    case upToSlam = 8
-    case upToGrand = 9
-    case median = 10
-    case mode = 11
-    case best = 12
-    case optimum = 13
-    
-    var string: String {
-        return "\(self)".replacingOccurrences(of: "Double", with: "*").splitCapitals
-    }
-    
-    var upToTypes: [AnalysisOptionType] {
-        return [.upToGame, .upToSlam, .upToGrand]
-    }
-    
-    var notMakingType: AnalysisOptionType {
-        return (upToTypes.contains(self) ? .bidOver : self)
-    }
-    
-    static func doubleString(_ type: AnalysisOptionType?) -> String? {
-        return type == nil ? nil : "\(type!.string)*"
-    }
-    
-    static var declaringCases: [AnalysisOptionType] = [.actual, .pass, .double, .stopLower, .otherSuit, .upToGame, .upToSlam, .upToGrand, .median, .mode, .best, .optimum]
-    
-    static var defendingCases: [AnalysisOptionType] = [.actual, .pass, .double, .bidOver, .upToGame, .upToSlam,. upToGrand, .median, .mode, .best, .optimum]
-    
-    var double: Bool {
-        return self == .double || self == .bidOverDouble
-    }
-    
-}
-
-enum AnalysisAssessmentMethod : Int, CaseIterable, Hashable {
-    case play = 0
-    case median = 1
-    case mode = 2
-    case best = 3
-    case doubleDummy = 4
-    
-    var string: String {
-        return "\(self).splitCapitals"
-    }
-    
-    var short: String {
-        switch self {
-        case .doubleDummy:
-            return "DD"
-        case .median:
-            return "Med"
-        default:
-            return "\(self)".capitalized
-        }
-    }
-}
-
-class AnalysisAssessment : Hashable {
-    var tricks: Int
-    var points: Int
-    var score: Float
-    
-    init(tricks: Int, points: Int, score: Float) {
-        self.tricks = tricks
-        self.points = points
-        self.score = score
-    }
-    
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(tricks)
-        hasher.combine(points)
-        hasher.combine(score)
-    }
-    
-    static func == (lhs: AnalysisAssessment, rhs: AnalysisAssessment) -> Bool {
-        return (lhs.tricks == rhs.tricks && lhs.points == rhs.points && lhs.score == rhs.score)
-    }
-}
-
-class AnalysisOption : Identifiable {
-    public var id: UUID = UUID()
-    public var type: AnalysisOptionType
-    public var contract: Contract
-    public var declarer: Pair
-    public var decisionBy: Pair
-    public var removed = false
-    public var assessment: [AnalysisAssessmentMethod:AnalysisAssessment] = [:]
-    public var separator = false
-    public var linked: AnalysisOption?
-    
-    init(type: AnalysisOptionType, contract: Contract, declarer: Pair, decisionBy: Pair, linked: AnalysisOption? = nil) {
-        self.type = type
-        self.contract = contract
-        self.declarer = declarer
-        self.decisionBy = decisionBy
-        self.linked = linked
-    }
-    
-    public static func == (lhs: AnalysisOption, rhs: AnalysisOption) -> Bool {
-        return lhs.id == rhs.id
-    }
-    
-    public var displayType : AnalysisOptionType {
-        var allNotMaking = true
-        for (_, assess) in assessment {
-            if assess.tricks >= Values.trickOffset + contract.level.rawValue {
-                allNotMaking = false
-            }
-        }
-        return allNotMaking ? type.notMakingType : type
-    }
-    
-    public static func equalOrWorsePoints(_ lhs: AnalysisOption, _ rhs: AnalysisOption, invert: Bool = false) -> Bool{
-        var result = true
-        for (index, lhsValue) in lhs.assessment {
-            if let rhsValue = rhs.assessment[index] {
-                if (lhsValue.points - rhsValue.points) * (invert ? -1 : 1) > 0 {
-                    result = false
-                    break
-                }
-            }
-        }
-        return result
     }
 }

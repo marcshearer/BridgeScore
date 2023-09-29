@@ -13,6 +13,7 @@ Sort out dark mode
 Maybe remove file sharing in Info.plist once can backup from Mac
 Check imports if no network
 Archive imported files
+Need more resilience in import and pass error message back up the stack
 
 Enhancements
 ============

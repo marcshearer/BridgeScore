@@ -1,5 +1,5 @@
 //
-//  Import BBO Names.swift
+//  Import BBO.swift
 //  BridgeScore
 //
 //  Created by Marc Shearer on 20/03/2022.
@@ -86,7 +86,14 @@ struct ImportBBOScorecard: View {
             if selected == nil {
                 fileList
             } else {
-                confirmDetails
+                let importedScorecard = Binding.constant(importedBBOScorecard as ImportedScorecard)
+                importedBBOScorecard.confirmDetails(importedScorecard: importedScorecard, onError: {
+                    presentationMode.wrappedValue.dismiss()
+                }, completion: {
+                    importedBBOScorecard.importScorecard()
+                    completion?()
+                    presentationMode.wrappedValue.dismiss()
+                })
             }
         }
     }
@@ -184,112 +191,6 @@ struct ImportBBOScorecard: View {
         let text = subComponents.joined(separator: ".")
         return text
     }
-    
-    var confirmDetails: some View {
-        @OptionalStringBinding(importedBBOScorecard.title) var titleBinding
-        @OptionalStringBinding(Utility.dateString(importedBBOScorecard.date, format: "EEEE d MMMM yyyy")) var dateBinding
-        @OptionalStringBinding(importedBBOScorecard.partner?.name) var partnerBinding
-        @OptionalStringBinding("\(importedBBOScorecard.boardCount ?? 0)") var boardCountBinding
-        @OptionalStringBinding("\(importedBBOScorecard.boardsTable ?? 0)") var boardsTableBinding
-        
-        
-        return VStack(spacing: 0) {
-            Banner(title: Binding.constant("Confirm Import Details"), backImage: Banner.crossImage, backAction: {selected = nil ; return false})
-            Spacer().frame(height: 16)
-            
-            if scorecard.tables > 1 && scorecard.resetNumbers {
-                InsetView(title: "Import Settings") {
-                    VStack(spacing: 0) {
-                
-                        StepperInput(title: "Import for table", field: $importedBBOScorecard.table, label: stepperLabel, minValue: Binding.constant(1), maxValue: Binding.constant(scorecard.tables))
-                        
-                        Spacer().frame(height: 16)
-                    }
-                }
-            }
-            
-            InsetView(title: "BBO Import Details") {
-                VStack(spacing: 0) {
-                    
-                    Input(title: "Title", field: titleBinding, clearText: false)
-                    .disabled(true)
-                    Input(title: "Date", field: dateBinding, clearText: false)
-                    .disabled(true)
-                    Input(title: "Partner", field: partnerBinding, clearText: false)
-                    .disabled(true)
-                    
-                    Spacer().frame(height: 8)
-                    Separator()
-                    Spacer().frame(height: 8)
-
-                    Input(title: (scorecard.resetNumbers ? "Boards / Table" : "Total Boards"), field: boardCountBinding, clearText: false)
-                    .disabled(true)
-                    if !scorecard.resetNumbers {
-                        Input(title: "Boards / Table", field: boardsTableBinding, clearText: false)
-                        .disabled(true)
-                    }
-                    
-                    Spacer()
-                }
-            }
-
-            if !importedBBOScorecard.warnings.isEmpty {
-                InsetView(title: "Warnings") {
-                    VStack(spacing: 0) {
-                        Spacer().frame(height: 16)
-                        ForEach(importedBBOScorecard.warnings, id: \.self) { (warning) in
-                            HStack {
-                                Spacer().frame(width: 8)
-                                Text(warning)
-                                Spacer()
-                            }
-                            .frame(height: 30)
-                        }
-                        Spacer().frame(height: 16)
-                    }
-                }
-            }
-            
-            VStack {
-                Spacer().frame(height: 16)
-                HStack {
-                    Spacer()
-                    VStack {
-                        Spacer()
-                        HStack {
-                            Spacer()
-                                Text("Confirm")
-                            Spacer()
-                        }
-                        Spacer()
-                    }
-                    .foregroundColor(Palette.highlightButton.text)
-                    .background(Palette.highlightButton.background)
-                    .frame(width: 120, height: 40)
-                    .cornerRadius(10)
-                    .onTapGesture {
-                        importedBBOScorecard.importScorecard()
-                        completion?()
-                        presentationMode.wrappedValue.dismiss()
-                    }
-                    Spacer()
-                }
-                Spacer().frame(height: 16)
-            }
-            .onAppear {
-                if let error = importedBBOScorecard.error {
-                    MessageBox.shared.show(error, okAction: {
-                        selected = nil
-                    })
-                }
-            }
-        }
-        .background(Palette.alternate.background)
-    }
-    
-    private func stepperLabel(value: Int) -> String {
-        return "Table \(value) of \(scorecard.tables)"
-    }
 }
 
 class ImportedBBOScorecard: ImportedScorecard {
@@ -356,6 +257,7 @@ class ImportedBBOScorecard: ImportedScorecard {
         }
         if !lines.isEmpty {
             combineRankings()
+            scoreTravellers()
             recalculateTravellers()
             validate()
         }
@@ -499,7 +401,7 @@ class ImportedBBOScorecard: ImportedScorecard {
                 importedTraveller.lead = columns.element(index)
             case "score":
                 if let string = columns.element(index) {
-                    importedTraveller.points = Int(string)
+                    importedTraveller.nsPoints = Int(string)
                 }
             case "percent", "imps":
                 if let string = columns.element(index) {
@@ -534,7 +436,7 @@ class ImportedBBOScorecard: ImportedScorecard {
                 boardNumber = Int(line.mid(7, line.count - 7).replacingOccurrences(of: "\"", with: "").replacingOccurrences(of: "]", with: ""))
                 if let boardNumber = boardNumber {
                     if boards[boardNumber] == nil {
-                        boards[boardNumber] = ImportedBoard()
+                        boards[boardNumber] = ImportedBoard(boardNumber: boardNumber)
                     }
                 }
             } else if let boardNumber = boardNumber {

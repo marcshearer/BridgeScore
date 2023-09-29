@@ -406,17 +406,34 @@ extension Int {
 }
 
 extension View {
-    /// Applies the given transform if the given condition evaluates to `true`.
-    /// - Parameters:
-    ///   - condition: The condition to evaluate.
-    ///   - transform: The transform to apply to the source `View`.
-    /// - Returns: Either the original `View` or the modified `View` if the condition is `true`.
+        /// Applies the given transform if the given condition evaluates to `true`.
+        /// - Parameters:
+        ///   - condition: The condition to evaluate.
+        ///   - transform: The transform to apply to the source `View`.
+        /// - Returns: Either the original `View` or the modified `View` if the condition is `true`.
     @ViewBuilder func `if`<Content: View>(_ condition: @autoclosure () -> Bool, transform: (Self) -> Content) -> some View {
         if condition() {
             transform(self)
         } else {
             self
         }
+    }
+}
+
+    
+struct PaletteModifier : ViewModifier {
+    var color: PaletteColor
+    var textType: ThemeTextType = .normal
+    
+    func body(content: Content) -> some View { content
+        .background(color.background)
+        .foregroundColor(color.textColor(textType))
+    }
+}
+
+extension View {
+    func palette(_ color: ThemeBackgroundColorName, _ textType: ThemeTextType? = .normal) -> some View {
+        self.modifier(PaletteModifier(color: PaletteColor(color), textType: textType ?? .normal))
     }
 }
 

@@ -17,6 +17,7 @@ extension Date {
     init(from dateString: String, format: String = "dd/MM/yyyy") {
         let formatter = DateFormatter()
         formatter.dateFormat = format
+        formatter.timeZone = .gmt
         self = formatter.date(from: dateString) ?? Date(timeIntervalSince1970: 0)
     }
 

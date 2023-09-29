@@ -14,6 +14,7 @@ enum UserDefault: String, CaseIterable {
     case minVersion
     case minMessage
     case infoMessage
+    case analysisOptionFormat
     case currentUnsaved
     case currentId
     case currentLocation
@@ -46,6 +47,8 @@ enum UserDefault: String, CaseIterable {
             return ""
         case .infoMessage:
             return ""
+        case .analysisOptionFormat:
+            return AnalysisOptionFormat.score.rawValue
         case .currentUnsaved:
             return false
         case .currentId:

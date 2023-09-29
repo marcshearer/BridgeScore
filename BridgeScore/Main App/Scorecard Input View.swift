@@ -48,6 +48,7 @@ struct ScorecardInputView: View {
     @State private var analysisView = true // TODO Change to false
     @State private var importBboScorecard = false
     @State private var importBwScorecard = false
+    @State private var importPbnScorecard = false
     @State private var showRankings = false
     @State private var disableBanner = false
     @State private var handViewer = false
@@ -106,6 +107,17 @@ struct ScorecardInputView: View {
                 saveScorecard()
             }
         }
+        .sheet(isPresented: $importPbnScorecard, onDismiss: {
+            UndoManager.clearActions()
+            if scorecard.importSource != .none {
+                isNotImported = false
+                tableRefresh = true
+            }
+        }) {
+            ImportPBNScorecard(scorecard: scorecard) {
+                saveScorecard()
+            }
+        }
         .sheet(isPresented: $handViewer, onDismiss: {
             UndoManager.clearActions()
             disableBanner = false
@@ -119,6 +131,7 @@ struct ScorecardInputView: View {
         .fullScreenCover(isPresented: $analysisViewer, onDismiss: {
             UndoManager.clearActions()
             disableBanner = false
+            tableRefresh = true
         }) {
             if let handBoard = handBoard {
                 if let handTraveller = handTraveller {
@@ -141,7 +154,10 @@ struct ScorecardInputView: View {
                 importBboScorecard = true
             case .bridgeWebs:
                 importBwScorecard = true
-            default: break
+            case .pbn:
+                importPbnScorecard = true
+            default:
+                break
             }
         }
     }
@@ -167,11 +183,13 @@ struct ScorecardInputView: View {
                 BannerOption(image: AnyView(Image(systemName: "\(analysisView ? "minus" : "plus").magnifyingglass")), text: (analysisView ? "Normal View" : "Analysis View"), likeBack: true, menu: true, action: { toggleAnalysis() })]
         if isNotImported.wrappedValue || scorecard.resetNumbers {
             bannerOptions += [
-                BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import from BBO", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importBboScorecard = true})]
+                BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import PBN file", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importPbnScorecard = true}),
+                BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import BBO files", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importBboScorecard = true})]
             if scorecard.location?.bridgeWebsId != "" {
                 bannerOptions += [
                     BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import from BridgeWebs", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importBwScorecard = true})]
             }
+               
         }
         if !isNotImported.wrappedValue {
             bannerOptions += [
@@ -225,14 +243,15 @@ struct ScorecardInputView: View {
 }
 
 struct BackgroundBlurView: UIViewRepresentable {
+    
     func makeUIView(context: Context) -> UIView {
-        let view = UIVisualEffectView(effect: UIBlurEffect(style: .extraLight))
+        let view = UIVisualEffectView(effect: UIBlurEffect(style: .light))
         DispatchQueue.main.async {
-            view.superview?.superview?.backgroundColor = .clear
+            view.superview?.superview?.backgroundColor = .black.withAlphaComponent(0.4)
         }
         return view
     }
-
+    
     func updateUIView(_ uiView: UIView, context: Context) {}
 }
 
@@ -637,7 +656,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                         // Update contract and/or declarer
                         if let item = self.boardColumns.firstIndex(where: {$0.type == .contract}) {
                             if let cell = tableCell.collectionView.cellForItem(at: IndexPath(item: item, section: 0)) as? ScorecardInputCollectionCell {
-                                cell.label.text = contract.string
+                                cell.label.attributedText = contract.attributedString
                                 cell.contractDidChange(to: contract, declarer: declarer)
                             }
                         }
@@ -674,7 +693,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     
     func scorecardShowHand(scorecard: ScorecardViewModel, board: BoardViewModel, sitting: Seat) {
         if !Scorecard.current.travellerList.isEmpty {
-            if let (board, traveller) = Scorecard.getBoardTraveller(boardNumber: board.boardNumber) {
+            if let (board, traveller, _) = Scorecard.getBoardTraveller(boardNumber: board.board) {
                 disableBanner.wrappedValue = true
                 handBoard.wrappedValue = board
                 handTravelller.wrappedValue = traveller
@@ -1258,7 +1277,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         case .contract:
             label.isHidden = false
             let contract = board.contract
-            label.attributedText = NSAttributedString("\(contract.level.short) ") + NSAttributedString(contract.suit.string, color: UIColor(contract.suit.color)) + NSAttributedString(" \(contract.double.bold)")
+            label.attributedText = contract.attributedString
             label.isUserInteractionEnabled = true
         case .declarer:
             declarerPicker.isHidden = false
@@ -1275,7 +1294,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                     board.made = maxValue
                 }
             }
-            let makingValue = (6 + board.contract.level.rawValue)
+            let makingValue = (Values.trickOffset + board.contract.level.rawValue)
             madePicker.set(board.made == nil ? nil : board.made! - minValue, list: list, defaultEntry: ScrollPickerEntry(caption: "Unknown"), defaultValue: min(list.count - 1, makingValue), isEnabled: isEnabled, color: color, titleFont: pickerTitleFont)
             label.isUserInteractionEnabled = !isEnabled
         case .score:
@@ -1306,7 +1325,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             responsiblePicker.set(board.responsible, color: Palette.gridBoard, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
         case .table:
             label.font = boardTitleFont.bold
-            label.text = (Scorecard.current.isImported ? "" : "Round \(table.table)")
+            label.text = (Scorecard.current.isImported ? "" : "Table \(table.table)")
         case .sitting:
             seatPicker.isHidden = false
             seatPicker.set(table.sitting, isEnabled: isEnabled, color: color, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
@@ -1372,21 +1391,11 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         var maxValue = 0
         if board.contract.suit != .blank {
             let tricks = board.contract.level.rawValue
-            minValue = -(6 + tricks)
+            minValue = -(Values.trickOffset + tricks)
             maxValue = 7 - tricks
             for made in 0...13 {
                 let plusMinus = made - 6 - tricks
-                var value = ""
-                switch true {
-                case plusMinus < 0:
-                    value = "\(plusMinus)"
-                case plusMinus == 0:
-                    value = "="
-                case plusMinus > 0:
-                    value = "+\(plusMinus)"
-                default:
-                    break
-                }
+                let value = Scorecard.madeString(made: plusMinus)
                 list.append(ScrollPickerEntry(title: value, caption: "Made \(made)"))
             }
         }
@@ -1651,7 +1660,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             if value != undoValue || made != undoMade || declarer != undoDeclarer {
                 UndoManager.registerUndo(withTarget: label) { (label) in
                     if let cell = self.scorecardDelegate?.scorecardCell(rowType: rowType, itemNumber: itemNumber, columnType: columnType) {
-                        cell.label.text = undoValue.string
+                        cell.label.attributedText = NSAttributedString(undoValue.colorString)
                         cell.board.made = made
                         cell.board.declarer = declarer
                         cell.contractDidChange(to: undoValue, made: undoMade, declarer: undoDeclarer)
@@ -1754,7 +1763,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         let (madeList, _, _) = madeList
         let width: CGFloat = min(frame.width, 70)
         let space = (frame.width - width) / 2
-        let makingValue = (6 + board.contract.level.rawValue)
+        let makingValue = (Values.trickOffset + board.contract.level.rawValue)
         let selected = board.made == nil ? nil : board.made! + makingValue
         scorecardDelegate?.scorecardScrollPickerPopup(values: madeList, maxValues: 9, selected: selected, defaultValue: makingValue, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 16, bottomPadding: 0) { (selected) in
             self.madePicker.set(selected, reload: self.board.made == nil || selected == nil)
@@ -1790,7 +1799,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         case .declarer:
             undoValue = declarerList.firstIndex(where: {$0.seat == board.declarer})!
         case .made:
-            undoValue = board.made == nil ? nil : board.made! + (6 + board.contract.level.rawValue)
+            undoValue = board.made == nil ? nil : board.made! + (Values.trickOffset + board.contract.level.rawValue)
         default:
             found = false
         }
@@ -1815,7 +1824,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 case .declarer:
                     board.declarer = declarerList[value!].seat
                 case .made:
-                    board.made =  (value == nil ? nil : value! - (6 + board.contract.level.rawValue))
+                    board.made =  (value == nil ? nil : value! - (Values.trickOffset + board.contract.level.rawValue))
                 default:
                     break
                 }

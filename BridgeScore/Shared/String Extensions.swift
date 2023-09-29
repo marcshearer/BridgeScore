@@ -43,14 +43,14 @@ extension String {
         return string.range(of: contains) != nil
     }
     
-    func position(_ contains: String, caseless: Bool = false) -> Int? {
+    func position(_ contains: String, caseless: Bool = false, backwards: Bool = false) -> Int? {
         var string = self
         var contains = contains
         if caseless {
             string = string.lowercased()
             contains = contains.lowercased()
         }
-        let range = string.range(of: contains)
+        let range = string.range(of: contains, options: (backwards ? .backwards : []))
         if range == nil {
             return nil
         } else {

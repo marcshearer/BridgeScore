@@ -115,18 +115,33 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         valuesTableView.reloadData()
         titleView.collectionView.reloadData()
         if valuesTableView.frame.height > valuesTableView.contentSize.height {
-            bottomSpacing.constant = buttonSpacing + (valuesTableView.frame.height - valuesTableView.contentSize.height)
+            bottomSpacing.constant = (valuesTableView.frame.height - valuesTableView.contentSize.height) - buttonSpacing
         }
         layoutIfNeeded()
     }
     
     // MARK: - Replace BBO names ========================================================================= -
     
-    func replaceNames(values: [String]) {
-        if Scorecard.current.scorecard?.importSource == .bbo {
+    func replaceNames(values: [String], ranking: RankingViewModel) {
+        let source = Scorecard.current.scorecard?.importSource
+        if source == .bbo || source == .pbn {
             let editValues = MasterData.shared.getBboNames(values: values)
             let bboNameReplaceView = BBONameReplaceView(frame: CGRect())
             bboNameReplaceView.show(from: self, values: editValues) {
+                if source != .bbo {
+                    // Replace ranking player names
+                    for editValue in editValues {
+                        for seat in Seat.validCases {
+                            if ranking.players[seat] == editValue.bboName {
+                                if editValue.name == "" {
+                                    ranking.players[seat] = editValue.bboName
+                                } else {
+                                    ranking.players[seat] = editValue.name
+                                }
+                            }
+                        }
+                    }
+                }
                 self.valuesTableView.reloadData()
             }
         }
@@ -224,7 +239,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
                 let ranking = rankings[grouping][item]
                 let column = rankingColumns[indexPath.item]
                 cell.set(from: self, scorecard: Scorecard.current.scorecard!, ranking: ranking, roundsTag: RankingRowType.rounds.tagOffset + (collectionView.tag % tagMultiplier), rowType: .ranking, column: column) { (players) in
-                    self.replaceNames(values: players)
+                    self.replaceNames(values: players, ranking: ranking)
                 }
                 return cell
             case .title:
@@ -699,7 +714,7 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
             label.text = (ranking.points == 0 ? "" : ranking.points.toString(places: 2, exact: true))
             label.textAlignment = .right
         case .table:
-            label.text = "     Round \(ranking.table)"
+            label.text = "     Stanza \(ranking.table)"
             label.textAlignment = .left
         case .section:
             label.text = "     Section \(ranking.section)"
@@ -712,7 +727,7 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
     
     private func getPlayers() -> [String] {
         var players: [String] = []
-        for seat in Seat.validCases {
+        for seat in [Seat.north, .south, .east, .west] {
             if let player = ranking.players[seat] {
                 if players.first(where: {$0 == player}) == nil {
                     players.append(player)

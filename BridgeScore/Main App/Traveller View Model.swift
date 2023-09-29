@@ -14,8 +14,6 @@ import CoreData
     // Properties in core data model
     @Published private(set) var scorecard: ScorecardViewModel
     @Published public var board: Int = 0
-    @Published public var dealer: Seat?
-    @Published public var vulnerability: Vulnerability?
     @Published public var contract = Contract()
     @Published public var declarer: Seat = .unknown
     @Published public var made: Int = 0
@@ -40,6 +38,10 @@ import CoreData
     
     // Auto-cleanup
     private var cancellableSet: Set<AnyCancellable> = []
+        
+    public var madeString: String {
+        Scorecard.madeString(made: made)
+    }
     
     // Check if view model matches managed object
     public var changed: Bool {
@@ -47,8 +49,6 @@ import CoreData
         if let mo = self.travellerMO {
             if self.scorecard.scorecardId != mo.scorecardId ||
                 self.board != mo.board ||
-                self.dealer != mo.dealer ||
-                self.vulnerability != mo.vulnerability ||
                 self.contract != mo.contract ||
                 self.declarer != mo.declarer ||
                 self.made != mo.made ||
@@ -90,8 +90,6 @@ import CoreData
                 self.scorecard = scorecard
             }
             self.board = mo.board
-            self.dealer = mo.dealer ?? Seat(rawValue: ((board - 1) % 4) + 1) ?? .unknown
-            self.vulnerability = mo.vulnerability ?? Vulnerability(board: Scorecard.boardNumber(scorecard: scorecard, board: board))
             self.contract = mo.contract
             self.declarer = mo.declarer
             self.made = mo.made
@@ -108,8 +106,6 @@ import CoreData
         if let mo = travellerMO {
             mo.scorecardId = scorecard.scorecardId
             mo.board = board
-            mo.dealer = dealer
-            mo.vulnerability = vulnerability
             mo.contract = contract
             mo.declarer = declarer
             mo.made = made
@@ -184,7 +180,11 @@ import CoreData
         return result
     }
     
-    public var contracts: [Contract?] {
+    public func points(sitting: Seat = .north) -> Int {
+        return Scorecard.points(contract: self.contract, vulnerability: Vulnerability(board: self.boardNumber), declarer: self.declarer, made: self.made, seat: sitting)
+    }
+
+    public var bids: [Contract?] {
         var result: [Contract?] = []
         var lastBid: Contract?
         if playData != "" {
@@ -216,4 +216,10 @@ import CoreData
     }
     
     public override var debugDescription: String { self.description }
+    
+    public static func == (lhs: TravellerViewModel, rhs: TravellerViewModel) -> Bool {
+        // Just checks vital bits
+        return lhs.boardNumber == rhs.boardNumber && lhs.section == rhs.section && lhs.rankingNumber == rhs.rankingNumber
+        
+    }
 }

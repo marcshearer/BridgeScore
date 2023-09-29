@@ -89,6 +89,10 @@ class Card : CustomStringConvertible, CustomDebugStringConvertible, Hashable {
     public var colorString: AttributedString {
         return AttributedString(self.string, color: self.suit.color)
     }
+    
+    public var hcp: Int {
+        return max(0, rank - 9)
+    }
 }
 
 class Hand : NSObject, NSCopying {
@@ -241,6 +245,18 @@ class Hand : NSObject, NSCopying {
         }
         return copy
     }
+    
+    public var hcp: Int {
+        return cards.map{$0.hcp}.reduce(0,+)
+    }
+    
+    public var shape: String {
+        var suitLength: [Int] = []
+        for suit in Suit.realSuits {
+            suitLength.append(xrefSuit[suit]?.cards.count ?? 0)
+        }
+        return suitLength.sorted(by: {$0 > $1}).map{"\($0)"}.joined(separator: "-")
+    }
 }
 
 class HandSuit: NSObject, NSCopying {
@@ -283,17 +299,19 @@ class Deal: NSObject, NSCopying {
     
     init(fromCards: [String]) {
         hands = [:]
-        for hand in (0...3) {
-            var cards: [Card] = []
-            let start = hand * 4
-            for suit in (0...3) {
-                if fromCards[start + suit].count > 0 {
-                    for card in 0...(fromCards[start + suit].count - 1) {
-                        cards.append(Card(rankString: fromCards[start + suit].mid(card,1), suitString: "SHDC".mid(suit, 1)))
+        if fromCards.count >= 16 {
+            for hand in (0...3) {
+                var cards: [Card] = []
+                let start = hand * 4
+                for suit in (0...3) {
+                    if fromCards[start + suit].count > 0 {
+                        for card in 0...(fromCards[start + suit].count - 1) {
+                            cards.append(Card(rankString: fromCards[start + suit].mid(card,1), suitString: "SHDC".mid(suit, 1)))
+                        }
                     }
                 }
+                hands[Seat(rawValue: hand + 1)!] = Hand(fromCards: cards, sorted: true)
             }
-            hands[Seat(rawValue: hand + 1)!] = Hand(fromCards: cards, sorted: true)
         }
     }
     

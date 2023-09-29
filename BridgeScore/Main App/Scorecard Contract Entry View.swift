@@ -169,7 +169,7 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
             case .suit:
                 let suit = Suit.validCases[indexPath.row]
                 let cell = ScorecardContractEntryCollectionCell<Suit>.dequeue(collectionView, for: indexPath)
-                cell.set(value: suit, selected: (suit == contract.suit), tapAction: suitTapped)
+                cell.set(value: suit, color: UIColor(suit.color), selected: (suit == contract.suit), tapAction: suitTapped)
                 return cell
             case .double:
                 let double = ContractDouble.allCases[indexPath.row]
@@ -521,14 +521,18 @@ fileprivate class ScorecardContractEntryCollectionCell<EnumType>: UICollectionVi
     override func prepareForReuse() {
     }
     
-    func set(value: EnumType, selected: Bool, disabled: Bool = false, font: UIFont? = nil, tapAction: @escaping (EnumType)->()) where EnumType: ContractEnumType {
+    func set(value: EnumType, color: UIColor? = nil, selected: Bool, disabled: Bool = false, font: UIFont? = nil, tapAction: @escaping (EnumType)->()) where EnumType: ContractEnumType {
         self.value = value
         label.text = value.button
         self.tapAction = tapAction
         self.label.isUserInteractionEnabled = !disabled
-        let color = (disabled ? Palette.contractDisabled : (selected ? Palette.contractSelected : Palette.contractUnselected))
-        self.label.backgroundColor = UIColor(color.background)
-        self.label.textColor = UIColor(color.text).withAlphaComponent(disabled ? 0.5 : 1)
+        let defaultColor = (disabled ? Palette.contractDisabled : (selected ? Palette.contractSelected : Palette.contractUnselected))
+        self.label.backgroundColor = UIColor(defaultColor.background)
+        if let color = color {
+            self.label.textColor = color
+        } else {
+            self.label.textColor = UIColor(defaultColor.text).withAlphaComponent(disabled ? 0.5 : 1)
+        }
         if let font = font {
             self.label.font = font
         }
