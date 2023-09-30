@@ -45,9 +45,6 @@ class Analysis : ObservableObject {
     
     public func setOverride(board: Int, suit: Suit, declarer: Pair, override: Int) {
         tricksMade[AnalysisTrickCombination(board: board, suit: suit, declarer: declarer)]?.made[.override] = override
-        if let (_, made) = tricksMade[AnalysisTrickCombination(board: board, suit: Suit(string: "C"), declarer: .ew)] {
-            print(made[AnalysisAssessmentMethod.override])
-        }
     }
     
     public func useMethod(suit: Suit, declarer: Pair) -> AnalysisAssessmentMethod? {
