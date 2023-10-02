@@ -209,10 +209,9 @@ class Analysis : ObservableObject {
                 }
             }
         }
-                
+        tricksMade  = buildTricksMade()
         buildScores()
         removeBadOptions()
-        
     }
     
     public func refreshOptions() {
@@ -264,7 +263,6 @@ class Analysis : ObservableObject {
     }
     
     private func buildScores(){
-        tricksMade  = buildTricksMade()
         for option in options {
             var assessment: [Int:AnalysisAssessment] = [:]
             let combination = AnalysisTrickCombination(board: board.board, suit: option.contract.suit, declarer: option.declarer)
@@ -533,6 +531,8 @@ enum AnalysisAssessmentMethod : Int, CaseIterable, Hashable {
         switch self {
         case .doubleDummy:
             return "DD"
+        case .override:
+            return "Man"
         case .median:
             return "Med"
         default:

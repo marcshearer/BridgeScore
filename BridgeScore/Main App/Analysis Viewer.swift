@@ -18,6 +18,13 @@ fileprivate enum OutcomeLevel {
     case penalty
 }
 
+class AnalysisData : ObservableObject {
+    @Published var madeValues: [AnalysisTrickCombination:(method: AnalysisAssessmentMethod, default: Int, override: Int?)] = [:]
+    @Published var options: [AnalysisOption] = []
+    @Published var otherOptions: [AnalysisOption] = []
+    @Published var combinations: [AnalysisTrickCombination] = []
+}
+
 struct AnalysisViewer: View {
     let scorecard = Scorecard.current.scorecard!
     @State var board: BoardViewModel
@@ -27,10 +34,7 @@ struct AnalysisViewer: View {
     @State var sitting: Seat
     @State var rotated: Int = 0
     @State var from: UIView
-    @State var options: [AnalysisOption] = []
-    @State var otherOptions: [AnalysisOption] = []
-    @State var combinations: [AnalysisTrickCombination] = []
-    @State var madeValues: [AnalysisTrickCombination:(method: AnalysisAssessmentMethod, default: Int, override: Int?)] = [:]
+    @StateObject var analysisData = AnalysisData()
     @State var bidAnnounce = ""
     @State var summaryMode = true
     @State var focused = false
@@ -60,9 +64,9 @@ struct AnalysisViewer: View {
                         Spacer().frame(width: 10)
                         VStack {
                             AnalysisCommentView(board: $board, stopEdit: $stopEdit)
-                            AnalysisTricksMade(board: $board, traveller: $traveller, sitting: $sitting, combinations: $combinations, madeValues: $madeValues, stopEdit: $stopEdit, options: $options)
-                            AnalysisBiddingOptions(board: $board, traveller: $traveller, sitting: $sitting, stopEdit: $stopEdit, options: $options, formatInt: $formatInt)
-                            AnalysisActionView(board: $board, sitting: $sitting, formatInt: $formatInt, stopEdit: $stopEdit, options: $options, otherOptions: $otherOptions)
+                            AnalysisTricksMade(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData, stopEdit: $stopEdit)
+                            AnalysisBiddingOptions(board: $board, traveller: $traveller, sitting: $sitting, stopEdit: $stopEdit, analysisData: analysisData, formatInt: $formatInt)
+                            AnalysisActionView(board: $board, sitting: $sitting, formatInt: $formatInt, stopEdit: $stopEdit, analysisData: analysisData)
                             Spacer()
                             AnalysisTravellerView(board: $board, traveller: $handTraveller, sitting: $sitting, summaryMode: $summaryMode, stopEdit: $stopEdit)
                         }
@@ -78,11 +82,11 @@ struct AnalysisViewer: View {
         .onSwipe() { direction in
             nextTraveller(direction == .left ? 1 : -1)
         }
-        .onReceive(publisher) { (_, _, _) in
+        .onReceive(publisher) { (_, _, _) in // TODO remove publisher
             let analysis = Scorecard.current.analysis(board: board, traveller: traveller, sitting: sitting)
             analysis.refreshOptions()
             if let (_, made) = analysis.tricksMade[AnalysisTrickCombination(board: board.board, suit: Suit(string: "C"), declarer: .ew)] {
-                print(made[AnalysisAssessmentMethod.override])
+                print(made[AnalysisAssessmentMethod.override] ?? -1)
             }
             updateAnalysis()
         }
@@ -266,14 +270,14 @@ struct AnalysisViewer: View {
     
     func updateAnalysis() {
         let analysis = Scorecard.current.analysis(board: board, traveller: traveller, sitting: sitting)
-        options = analysis.options
-        let set = Set(options.map({AnalysisTrickCombination(board: $0.board, suit: $0.contract.suit, declarer: $0.declarer)}))
-        combinations = set.sorted(by: {$0.declarer < $1.declarer || ($0.declarer == $1.declarer && $0.suit < $1.suit)})
-        madeValues = analysis.madeValues(combinations: combinations)
+        analysisData.options = analysis.options
+        let set = Set(analysisData.options.map({AnalysisTrickCombination(board: $0.board, suit: $0.contract.suit, declarer: $0.declarer)}))
+        analysisData.combinations = set.sorted(by: {$0.declarer < $1.declarer || ($0.declarer == $1.declarer && $0.suit < $1.suit)})
+        analysisData.madeValues = analysis.madeValues(combinations: analysisData.combinations)
         if let rankingNumber = traveller.rankingNumber[sitting], let otherTraveller = Scorecard.current.travellers(board: board.board, seat: sitting.equivalent, rankingNumber: rankingNumber).first {
-            otherOptions = Scorecard.current.analysis(board: board, traveller: otherTraveller, sitting: sitting.equivalent).options
+            analysisData.otherOptions = Scorecard.current.analysis(board: board, traveller: otherTraveller, sitting: sitting.equivalent).options
         } else {
-            otherOptions = []
+            analysisData.otherOptions = []
         }
     }
         
@@ -286,10 +290,8 @@ struct AnalysisTricksMade : View {
     @Binding var board: BoardViewModel
     @Binding var traveller: TravellerViewModel
     @Binding var sitting: Seat
-    @Binding var combinations: [AnalysisTrickCombination]
-    @Binding var madeValues: [AnalysisTrickCombination:(method: AnalysisAssessmentMethod, default: Int, override: Int?)]
+    @ObservedObject var analysisData: AnalysisData
     @Binding var stopEdit: Bool
-    @Binding var options: [AnalysisOption]
     
     var body: some View {
         let columns = [GridItem(.fixed(80), spacing: 0), GridItem(.fixed(80), spacing: 0), GridItem(.flexible(minimum: 140), spacing: 0), GridItem(.flexible(minimum: 100), spacing: 0), GridItem(.flexible(minimum: 100), spacing: 0)]
@@ -314,30 +316,30 @@ struct AnalysisTricksMade : View {
                     .frame(height: 30)
                     .foregroundColor(Palette.tile.text)
                     ScrollView {
-                        ForEach(combinations, id: \.self) { combination in
+                        ForEach(analysisData.combinations, id: \.self) { combination in
                             LazyVGrid(columns: columns, spacing: 0) {
                                 GridRow {
                                     CenteredAttributedText(combination.suit.colorString)
                                     CenteredText(combination.declarer.short)
-                                    if let (method, made, _) = madeValues[combination] {
+                                    if let (method, made, _) = analysisData.madeValues[combination] {
                                         CenteredText(method.string)
                                         CenteredText("\(made)")
                                         HStack {
                                             Button {
-                                                let value = max(0, (madeValues[combination]?.override ?? made) - 1)
-                                                madeValues[combination]?.override = value
+                                                let value = max(0, (analysisData.madeValues[combination]?.override ?? made) - 1)
+                                                analysisData.madeValues[combination]?.override = value
                                                 Scorecard.current.analysis(board: board, traveller: traveller, sitting: sitting).setOverride(board: board.board, suit: combination.suit, declarer: combination.declarer, override: value)
                                                 publisher.send((value, combination.suit, combination.declarer))
                                             } label: {
                                                 Text("-").font(.title)
                                             }
                                             Spacer().frame(width: 10)
-                                            let override = madeValues[combination]?.override ?? made
+                                            let override = analysisData.madeValues[combination]?.override ?? made
                                             UpdatingText(override, blankIf: made, suit: combination.suit, declarer: combination.declarer)
                                             Spacer().frame(width: 10)
                                             Button {
-                                                let value = min(13, (madeValues[combination]?.override ?? made) + 1)
-                                                madeValues[combination]?.override = value
+                                                let value = min(13, (analysisData.madeValues[combination]?.override ?? made) + 1)
+                                                analysisData.madeValues[combination]?.override = value
                                                 Scorecard.current.analysis(board: board, traveller: traveller, sitting: sitting).setOverride(board: board.board, suit: combination.suit, declarer: combination.declarer, override: value)
                                                 publisher.send((value, combination.suit, combination.declarer))
                                             } label: {
@@ -403,13 +405,13 @@ struct AnalysisBiddingOptions : View {
     @Binding var traveller: TravellerViewModel
     @Binding var sitting: Seat
     @Binding var stopEdit: Bool
-    @Binding var options: [AnalysisOption]
+    @ObservedObject var analysisData: AnalysisData
     @Binding var formatInt: Int
     
     var format: AnalysisOptionFormat { AnalysisOptionFormat(rawValue: formatInt) ?? .score }
     
     var body: some View {
-        let columns = [GridItem(.flexible(minimum: 60), spacing: 0), GridItem(.flexible(minimum: 60), spacing: 0), GridItem(.flexible(minimum: 60), spacing: 0), GridItem(.flexible(minimum: 60), spacing: 0),GridItem(.flexible(minimum: 60), spacing: 0)]
+        let columns = [GridItem(.flexible(minimum: 50), spacing: 0), GridItem(.flexible(minimum: 50), spacing: 0), GridItem(.flexible(minimum: 50), spacing: 0), GridItem(.flexible(minimum: 50), spacing: 0), GridItem(.flexible(minimum: 50), spacing: 0), GridItem(.flexible(minimum: 50), spacing: 0)]
         let headerColumns = [GridItem(.fixed(195), spacing: 0)] + columns
         let bodyColumns = [GridItem(.fixed(110), spacing: 0), GridItem(.fixed(45), spacing: 0),GridItem(.fixed(40), spacing: 0)] + columns
         ZStack {
@@ -428,13 +430,13 @@ struct AnalysisBiddingOptions : View {
                                 }.frame(width: 140)
                                 Spacer()
                             }
-                            ForEach(AnalysisAssessmentMethod.realCases, id: \.self) { method in
+                            ForEach(AnalysisAssessmentMethod.allCases, id: \.self) { method in
                                 if format == .made {
                                     CenteredText(method.short)
                                 } else {
                                     TrailingText(method.short)
                                 }
-                            }.bold()
+                            }.bold().minimumScaleFactor(0.5)
                         }
                     }
                     .frame(height: 30)
@@ -442,7 +444,7 @@ struct AnalysisBiddingOptions : View {
                     .font(smallFont)
                     ScrollView {
                             // TODO These are wrong way round - should be Grid above ForEach
-                        ForEach(options) { option in
+                        ForEach(analysisData.options) { option in
                             if !option.removed {
                                 LazyVGrid(columns: bodyColumns, spacing: 0) {
                                     GridRow {
@@ -451,10 +453,10 @@ struct AnalysisBiddingOptions : View {
                                         LeadingText(doubleString ?? type.string)
                                         LeadingAttributedText(option.contract.colorCompact)
                                         LeadingText(option.declarer.short)
-                                        ForEach(AnalysisAssessmentMethod.realCases, id: \.self) { method in
+                                        ForEach(AnalysisAssessmentMethod.allCases, id: \.self) { method in
                                             HStack {
                                                 Spacer()
-                                                let compare = options.first?.assessments[.play]
+                                                let compare = analysisData.options.first?.assessments[.play]
                                                 Text(option.value(method: method, format: format, compare: compare))
                                                 if format == .made {
                                                     Spacer()
@@ -464,6 +466,7 @@ struct AnalysisBiddingOptions : View {
                                             }
                                         }
                                     }
+                                    .minimumScaleFactor(0.5)
                                     .foregroundColor(option.removed ? Palette.background.strongText : Palette.background.text)
                                     .frame(height: 20)
                                 }
@@ -565,8 +568,7 @@ struct AnalysisActionView: View {
     @Binding var sitting: Seat
     @Binding var formatInt: Int
     @Binding var stopEdit: Bool
-    @Binding var options: [AnalysisOption]
-    @Binding var otherOptions: [AnalysisOption]
+    @ObservedObject var analysisData: AnalysisData
     
     var body: some View {
         HStack {
@@ -582,10 +584,10 @@ struct AnalysisActionView: View {
                         Spacer()
                     }
                     Spacer().frame(height: 10)
-                    Action(description: "Us", options: $options, formatInt: $formatInt)
+                    Action(description: "Us", analysisData: analysisData, formatInt: $formatInt, useOther: false)
                     if Scorecard.current.scorecard?.type.players == 4 {
                         Spacer().frame(height: 10)
-                        Action(description: "Team", options: $otherOptions, formatInt: $formatInt)
+                        Action(description: "Team", analysisData: analysisData, formatInt: $formatInt, useOther: true)
                     }
                     Spacer()
                 }
@@ -597,8 +599,9 @@ struct AnalysisActionView: View {
     
     struct Action: View {
         @State var description: String
-        @Binding var options: [AnalysisOption]
+        @ObservedObject var analysisData: AnalysisData
         @Binding var formatInt: Int
+        @State var useOther: Bool
         @State var bestOption: AnalysisOption?
         
         var body: some View {
@@ -621,14 +624,15 @@ struct AnalysisActionView: View {
                     }.frame(width: 130)
                     Text(bestOption.action.description)
                     Spacer()
+                    let options = useOther ? analysisData.otherOptions : analysisData.options
                     let compare = options.first?.assessments[.play]
                     Text("\(bestOption.value(method: useMethod, format: .score, compare: compare, verbose: true, showVariance: true, colorCode: false))").frame(width: 100)
                     Spacer().frame(width: 4)
                 }
             }
             .font(inputTitleFont).minimumScaleFactor(0.8)
-            .onChange(of: options, initial: true) {
-                let options = self.options.filter({!$0.removed})
+            .onChange(of: analysisData.options, initial: true) {
+                let options = (useOther ? analysisData.otherOptions : analysisData.options).filter({!$0.removed})
                 let sorted = options.sorted(by:{$0.reliability < $1.reliability || ($0.reliability == $1.reliability && ($0.useAssessment?.score ?? -9999.99) < ($1.useAssessment?.score ?? -9999.99))})
                 if var bestOption = sorted.last {
                     // Ignore double if within 1 of making
