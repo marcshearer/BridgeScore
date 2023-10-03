@@ -22,6 +22,7 @@ class Scorecard {
     @Published private(set) var rankingList: [RankingViewModel] = []
     @Published private(set) var travellerList: [TravellerViewModel] = []
     @Published private(set) var analysisList: [Int:[Int:[Seat:Analysis]]] = [:] // Board number, Ranking number, Sitting
+    @Published private(set) var overrideList: [Int:AnalysisOverride] = [:] // Board number
     
     public func rankings(table: Int? = nil, section: Int? = nil, way: Pair? = nil, number: Int? = nil, player: (bboName: String, name: String)? = nil) -> [RankingViewModel] {
         var result = rankingList
@@ -76,7 +77,12 @@ class Scorecard {
         if let analysis = analysisList[board.board]?[rankingNumber]?[sitting] {
             return analysis
         } else {
-            let analysis = Analysis(board: board, traveller: traveller, sitting: sitting)
+            var override = overrideList[board.board]
+            if override == nil {
+                override = AnalysisOverride(board: board)
+                overrideList[board.board] = override
+            }
+            let analysis = Analysis(override: override!, board: board, traveller: traveller, sitting: sitting)
             if analysisList[board.board] == nil {
                 analysisList[board.board] = [:]
             }
@@ -153,8 +159,9 @@ class Scorecard {
             travellerList.append(TravellerViewModel(scorecard: scorecard, travellerMO: travellerMO))
         }
         
-            // Empty analysis
+        // Empty analysis
         analysisList = [:]
+        overrideList = [:]
         
         self.scorecard = scorecard
         addNew()
@@ -166,6 +173,7 @@ class Scorecard {
         rankingList = []
         travellerList = []
         analysisList = [:]
+        overrideList = [:]
         scorecard = nil
     }
     

@@ -381,11 +381,15 @@ public enum TotalCalculation: Int, CaseIterable {
 
 public enum Responsible: Int, EnumPickerType {
     case opponentMinus = -3
+    case luckMinus = -5
+    case teamMinus = -4
     case partnerMinus = -2
     case scorerMinus = -1
     case unknown = 0
     case scorerPlus = 1
     case partnerPlus = 2
+    case teamPlus = 4
+    case luckPlus = 5
     case opponentPlus = 3
     
     public var string: String {
@@ -396,6 +400,12 @@ public enum Responsible: Int, EnumPickerType {
             return "Self"
         case .partnerMinus, .partnerPlus:
             return "Partner"
+        case .teamMinus, .teamPlus:
+            return "Team"
+        case .luckPlus:
+            return "Lucky"
+        case .luckMinus:
+            return "Unlucky"
         default:
             return "Opponent"
         }
@@ -414,9 +424,9 @@ public enum Responsible: Int, EnumPickerType {
         switch self {
         case .unknown:
             return ""
-        case .scorerMinus, .partnerMinus, .opponentMinus:
+        case .scorerMinus, .partnerMinus, .opponentMinus, .teamMinus, .luckMinus:
             return "\(string.left(1))-"
-        case .scorerPlus, .partnerPlus, .opponentPlus:
+        case .scorerPlus, .partnerPlus, .opponentPlus, .teamPlus, .luckPlus:
             return "\(string.left(1))+"
         }
     }

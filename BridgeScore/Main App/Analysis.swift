@@ -7,18 +7,41 @@
 
 import Foundation
 
-class Analysis : ObservableObject {
-    @Published private(set) var tricksMade: [AnalysisTrickCombination:(modeFraction: Float, made: [AnalysisAssessmentMethod:Int])] = [:]
+class AnalysisOverride: ObservableObject, Equatable {
+    @Published var board: BoardViewModel
+    @Published var tricksMade: [AnalysisTrickCombination:Int] = [:]
+    
+    init(board: BoardViewModel) {
+        self.board = board
+    }
+    
+    public func set(board: Int, suit: Suit, declarer: Pair, value: Int?) {
+        tricksMade[AnalysisTrickCombination(board: board, suit: suit, declarer: declarer)] = value
+    }
+    
+    public func value(board: Int, suit: Suit, declarer: Pair) -> Int? {
+        return tricksMade[AnalysisTrickCombination(board: board, suit: suit, declarer: declarer)]
+    }
+
+    static func == (lhs: AnalysisOverride, rhs: AnalysisOverride) -> Bool {
+        lhs.board == rhs.board && lhs.tricksMade == rhs.tricksMade
+    }
+}
+
+class Analysis {
+    private var tricksMade: [AnalysisTrickCombination:(modeFraction: Float, made: [AnalysisAssessmentMethod:Int])] = [:]
     private(set) var options: [AnalysisOption] = []
     private(set) var rankingNumber: Int
     private(set) var sitting: Seat
     private(set) var board: BoardViewModel
     private(set) var traveller: TravellerViewModel
+    private(set) var override: AnalysisOverride
     private var boardTravellers: [TravellerViewModel]
     private var scoreType: Type
     private var boardScoreType: ScoreType
     
-    init(board: BoardViewModel, traveller: TravellerViewModel, sitting: Seat) {
+    init(override: AnalysisOverride, board: BoardViewModel, traveller: TravellerViewModel, sitting: Seat) {
+        self.override = override
         self.rankingNumber = traveller.rankingNumber[sitting] ?? -1
         self.sitting = sitting
         self.board = board
@@ -29,39 +52,51 @@ class Analysis : ObservableObject {
         buildOptions()
     }
     
-    public func madeValues(combinations: [AnalysisTrickCombination]) -> [AnalysisTrickCombination:(method: AnalysisAssessmentMethod, default: Int, override: Int?)] {
-        var result: [AnalysisTrickCombination:(method: AnalysisAssessmentMethod, default: Int, override: Int?)] = [:]
+    public func useMethodmadeValues(combinations: [AnalysisTrickCombination]) -> [AnalysisTrickCombination:(method: AnalysisAssessmentMethod, value: Int)] {
+        var result: [AnalysisTrickCombination:(method: AnalysisAssessmentMethod, value: Int)] = [:]
         for combination in combinations {
-            if let method = useMethod(suit: combination.suit, declarer: combination.declarer), let made = made(board: board.board, suit: combination.suit, declarer: combination.declarer, method: method) {
-                result[combination] = (method, default: made, override: nil)
+            if let madeValue = useMethodMadeValue(combination: combination) {
+                result[combination] = madeValue
             }
         }
         return result
     }
     
-    public func made(board: Int, suit: Suit, declarer: Pair, method: AnalysisAssessmentMethod) -> Int? {
-        return tricksMade[AnalysisTrickCombination(board: board, suit: suit, declarer: declarer)]?.made[method]
+    public func useMethodMadeValue(combination: AnalysisTrickCombination) -> (method: AnalysisAssessmentMethod, value: Int)? {
+        var result: (method: AnalysisAssessmentMethod, value: Int)?
+        if let method = useMethod(suit: combination.suit, declarer: combination.declarer), let made = madeValues(combination: combination).made[method] {
+            result = (method, made)
+        }
+        return result
     }
     
-    public func setOverride(board: Int, suit: Suit, declarer: Pair, override: Int) {
-        tricksMade[AnalysisTrickCombination(board: board, suit: suit, declarer: declarer)]?.made[.override] = override
+    public func madeValues(combination: AnalysisTrickCombination) -> (modeFraction: Float, made: [AnalysisAssessmentMethod:Int]) {
+        var result: (modeFraction: Float, made: [AnalysisAssessmentMethod:Int])
+        if let made = tricksMade[combination] {
+            result = made
+        } else {
+            result = (0.0, [:])
+        }
+        if let overrideValue = override.value(board: combination.board, suit: combination.suit, declarer: combination.declarer) {
+            result.made[.override] = overrideValue
+        }
+        return result
     }
-    
+        
     public func useMethod(suit: Suit, declarer: Pair) -> AnalysisAssessmentMethod? {
         var result: AnalysisAssessmentMethod?
         if traveller.contract.suit == suit {
             result = .play
         }
         let combination = AnalysisTrickCombination(board: board.board, suit: suit, declarer: declarer)
-        if let (modeFraction, made) = tricksMade[combination] {
-            if made[.override] != nil {
-                result = .override
-            } else if result == nil && modeFraction >= 0.25 {
-                result = .mode
-            }
-            if result == nil {
-                result = (made[.median] != nil ? .median : .doubleDummy)
-            }
+        let (modeFraction, made) = madeValues(combination: combination)
+        if made[.override] != nil {
+            result = .override
+        } else if result == nil && modeFraction >= 0.25 {
+            result = .mode
+        }
+        if result == nil {
+            result = (made[.median] != nil ? .median : .doubleDummy)
         }
         return result
     }
@@ -99,12 +134,12 @@ class Analysis : ObservableObject {
                     // Generic options
                 switch type {
                 case .actual:
-                    typeOptions.append(AnalysisOption(parent: self, type: type, board: board.board, contract: Contract(copying: traveller.contract), declarer: traveller.declarer.pair))
+                    typeOptions.append(AnalysisOption(parent: self, board: board.board, type: type, contract: Contract(copying: traveller.contract), declarer: traveller.declarer.pair))
                 case .otherTable:
                     if let otherTableTraveller = boardTravellers.filter({$0.rankingNumber[sitting.leftOpponent] == traveller.rankingNumber[sitting]}).first {
                         let contract = Contract(copying: otherTableTraveller.contract)
                         if otherTableTraveller.declarer.pair == sitting.pair && (theirBid == nil || contract >+ theirBid!) {
-                            typeOptions.append(AnalysisOption(parent: self, type: type, board: board.board, contract: contract, declarer: otherTableTraveller.declarer.pair))
+                            typeOptions.append(AnalysisOption(parent: self, board: board.board, type: type, contract: contract, declarer: otherTableTraveller.declarer.pair))
                         }
                     }
                 default:
@@ -122,7 +157,7 @@ class Analysis : ObservableObject {
                                     let tryBid = Contract(copying: ourBid)
                                     tryBid.level = ContractLevel(rawValue: level)!
                                     if theirBid == nil || tryBid >+ theirBid! {
-                                        typeOptions.append(AnalysisOption(parent: self, type: type, board: board.board, contract: tryBid, declarer: sitting.pair))
+                                        typeOptions.append(AnalysisOption(parent: self, board: board.board, type: type, contract: tryBid, declarer: sitting.pair))
                                     }
                                 }
                             }
@@ -140,7 +175,7 @@ class Analysis : ObservableObject {
                         if weDeclared || theirBid.double == .doubled {
                             let contract = Contract(copying: theirBid)
                             contract.double = .undoubled
-                            typeOptions.append(AnalysisOption(parent: self, type: type, board: board.board, contract: contract, declarer: sitting.pair.other, decisionBy: sitting.pair))
+                            typeOptions.append(AnalysisOption(parent: self, board: board.board, type: type, contract: contract, declarer: sitting.pair.other, decisionBy: sitting.pair))
                         }
                     }
                 case .upToGame:
@@ -181,29 +216,29 @@ class Analysis : ObservableObject {
                                 // We have doubled them - consider not doubling
                                 let dontDouble = Contract(copying: option.contract)
                                 dontDouble.double = .undoubled
-                                options.append(AnalysisOption(parent: self, type: .dontDouble, board: board.board, contract: dontDouble, declarer: option.declarer, decisionBy: option.declarer.other, linked: option))
+                                options.append(AnalysisOption(parent: self, board: board.board, type: .dontDouble, contract: dontDouble, declarer: option.declarer, decisionBy: option.declarer.other, linked: option))
                             } else if option.declarer == sitting.pair {
                                 // We have over bid
                                 // Add linked options for opps doubling or overbidding
                                 // and us then doubling them or them doubling us
                                 let doubleUs = Contract(copying: option.contract)
                                 doubleUs.double = .doubled
-                                options.append(AnalysisOption(parent: self, type: .double, board: board.board, contract: doubleUs, declarer: option.declarer, decisionBy: option.declarer.other, linked: option, double: true))
+                                options.append(AnalysisOption(parent: self, board: board.board, type: .double, contract: doubleUs, declarer: option.declarer, decisionBy: option.declarer.other, linked: option, double: true))
                                 
                                 if let bidOver = Contract(higher: option.contract, suit: theirBid!.suit) {
-                                    let bidOverOption = AnalysisOption(parent: self, type: .bidOver, board: board.board, contract: bidOver, declarer: option.declarer.other, decisionBy: option.declarer.other, linked: option)
+                                    let bidOverOption = AnalysisOption(parent: self, board: board.board, type: .bidOver, contract: bidOver, declarer: option.declarer.other, decisionBy: option.declarer.other, linked: option)
                                     options.append(bidOverOption)
                                     
                                     let doubleThem = Contract(copying: bidOver)
                                     doubleThem.double = .doubled
-                                    options.append(AnalysisOption(parent: self, type: .bidOverDouble, board: board.board, contract: doubleThem, declarer: option.declarer.other, decisionBy: option.declarer, linked: bidOverOption, double: true))
+                                    options.append(AnalysisOption(parent: self, board: board.board, type: .bidOverDouble, contract: doubleThem, declarer: option.declarer.other, decisionBy: option.declarer, linked: bidOverOption, double: true))
                                 }
                             }
                         } else if option.type == .passPrevious || (!weDeclared && option.type == .actual) {
                             // If we passed them consider doubling them
                             let doubleThem = Contract(copying: option.contract)
                             doubleThem.double = .doubled
-                            options.append(AnalysisOption(parent: self, type: .passPrevious, board: board.board, contract: doubleThem, declarer: option.declarer, decisionBy: option.declarer.other, linked: option, double: true))
+                            options.append(AnalysisOption(parent: self, board: board.board, type: .passPrevious, contract: doubleThem, declarer: option.declarer, decisionBy: option.declarer.other, linked: option, double: true))
                         }
                     }
                 }
@@ -225,7 +260,7 @@ class Analysis : ObservableObject {
     private func bidOverOptions(ourBid: Contract?, above: Contract?, forceType: AnalysisOptionType? = nil) -> [AnalysisOption] {
         var options: [AnalysisOption] = []
         if let ourBid = ourBid, let ourGameLevel = ContractLevel(rawValue: ourBid.suit.gameTricks) {
-            if ourBid.level < .grandSlam {
+            if ourBid.level <= .grandSlam {
                 var startLevel = ourBid.level
                 if let above = above {
                     if above >+ ourBid {
@@ -254,7 +289,7 @@ class Analysis : ObservableObject {
                         } else {
                             type = .upToGrand
                         }
-                        options.append(AnalysisOption(parent: self, type: type, board: board.board, contract: contract, declarer: sitting.pair))
+                        options.append(AnalysisOption(parent: self, board: board.board, type: type, contract: contract, declarer: sitting.pair))
                     }
                 }
             }
@@ -264,38 +299,41 @@ class Analysis : ObservableObject {
     
     private func buildScores(){
         for option in options {
+            option.assessments = [:]
             var assessment: [Int:AnalysisAssessment] = [:]
             let combination = AnalysisTrickCombination(board: board.board, suit: option.contract.suit, declarer: option.declarer)
-            if let allTricksMade = tricksMade[combination]?.made.map({$0.value}) {
-                let tricksMadeSet = Set(allTricksMade)
-                for made in tricksMadeSet {
-                    let points = Scorecard.points(contract: option.contract, vulnerability: Vulnerability(board: traveller.boardNumber), declarer: option.declarer.seats.first!, made: made - Values.trickOffset - option.contract.level.rawValue, seat: sitting)
-                    assessment[made] = (AnalysisAssessment(tricks: made, points: points, score: 0))
-                }
-                for method in AnalysisAssessmentMethod.allCases {
-                    if let methodTricks = tricksMade[combination]?.made[method] {
-                        option.assessments[method] = assessment[methodTricks]
-                        option.modeFraction = tricksMade[combination]?.modeFraction ?? 0
-                    }
-                }
-                option.calculateScores(traveller: traveller, sitting: sitting)
+            var allTricksMade = madeValues(combination: combination).made.map({$0.value})
+            if let overrideTricksMade = override.value(board: board.board, suit: combination.suit, declarer: combination.declarer) {
+                allTricksMade.append(overrideTricksMade)
             }
+            for made in Set(allTricksMade) {
+                let points = Scorecard.points(contract: option.contract, vulnerability: Vulnerability(board: traveller.boardNumber), declarer: option.declarer.seats.first!, made: made - Values.trickOffset - option.contract.level.rawValue, seat: sitting)
+                
+                assessment[made] = (AnalysisAssessment(tricks: made, points: points, score: 0))
+            }
+            for method in AnalysisAssessmentMethod.allCases {
+                if let methodTricks = madeValues(combination: combination).made[method] {
+                    option.assessments[method] = assessment[methodTricks]
+                    option.modeFraction = madeValues(combination: combination).modeFraction
+                }
+            }
+            option.calculateScores(traveller: traveller, sitting: sitting)
         }
     }
     
     private func removeBadOptions () {
         if options.count >= 2 {
-            // Remove any option which is always equal or worse to something above it (for decision maker)
+                // Remove any option which is always equal or worse to something above it (for decision maker)
             for optionIndex in 1..<options.count {
                 let option = options[optionIndex]
                 for compareIndex in 0..<optionIndex {
                     let compare = options[compareIndex]
                     if !compare.removed {
-                        // First consider removing the option if it is worse
+                            // First consider removing the option if it is worse
                         if AnalysisOption.equalOrWorsePoints(option, compare, invert: invert(option), specificMethod: (compare.type == .actual && option.contract.suit == compare.contract.suit && option.declarer == compare.declarer ? .play : nil)) {
                             option.removed(by: compare, reason: "Earlier better")
                         } else if option.contract.suit == compare.contract.suit && option.contract.double == .undoubled && compare.contract.double == .undoubled && option.declarer == compare.declarer && option.type == compare.type {
-                            // Different levels for the same thing - allow earlier (lower) option to be removed as well
+                                // Different levels for the same thing - allow earlier (lower) option to be removed as well
                             if AnalysisOption.equalOrWorsePoints(compare, option, invert: invert(compare), specificMethod: (compare.type == .actual && option.contract.suit == compare.contract.suit && option.declarer == compare.declarer ? .play : nil)) {
                                 compare.removed(by: option, reason: "Later better")
                                 break
@@ -305,7 +343,7 @@ class Analysis : ObservableObject {
                 }
             }
             
-            // Remove linking options if no longer in play
+                // Remove linking options if no longer in play
             for option in options {
                 if let linked = option.linked {
                     if linked.removed {
@@ -314,7 +352,7 @@ class Analysis : ObservableObject {
                 }
             }
             
-            // Now consider removing original linked bid if worse than double
+                // Now consider removing original linked bid if worse than double
             for option in options {
                 if option.double && !option.removed {
                     if let linked = option.linked {
@@ -327,7 +365,7 @@ class Analysis : ObservableObject {
                 }
             }
             
-            // Now consider removing doubled bid if original bid does not make sense if doubled
+                // Now consider removing doubled bid if original bid does not make sense if doubled
             for optionIndex in 1..<options.count {
                 let option = options[optionIndex]
                 if option.double && !option.removed {
@@ -338,7 +376,7 @@ class Analysis : ObservableObject {
                                 if !compare.removed {
                                     if AnalysisOption.equalOrWorsePoints(option, compare, invert: invert(linked), specificMethod: (compare.type == .actual && option.contract.suit == compare.contract.suit && option.declarer == compare.declarer ? .play : nil)) {
                                         option.removed(by: compare, reason: "Original bad dbled")
-                                        // And remove any options also linked to this original bad option
+                                            // And remove any options also linked to this original bad option
                                         for linking in options {
                                             if linking.linked == linked {
                                                 linking.removed(by: option, reason: "Linked to bad bid")
@@ -352,14 +390,13 @@ class Analysis : ObservableObject {
                 }
             }
         }
-        
-        func invert(_ option: AnalysisOption) -> Bool {
-            var invert = option.declarer != sitting.pair
-            if option.decisionBy != option.declarer {
-                invert.toggle()
-            }
-            return invert
+    }
+    func invert(_ option: AnalysisOption) -> Bool {
+        var invert = option.declarer != sitting.pair
+        if option.decisionBy != option.declarer {
+            invert.toggle()
         }
+        return invert
     }
     
     private func buildTricksMade() -> [AnalysisTrickCombination:(Float, [AnalysisAssessmentMethod:Int])] {
@@ -428,14 +465,14 @@ enum AnalysisActionType: Int, CaseIterable {
     case dontDouble
     case otherSuit
     
-    var description: String {
+    func description(otherTable: Bool = true) -> String {
         return switch self {
         case .noAction:
             "Stick with actual bidding"
         case .otherTable:
-            "Bid as on the other table"
+            "Bid as on \(otherTable ? "this table":"the other table")"
         case .bidLower:
-            "Stop bidding at a lower level"
+            "Stop bidding at lower level"
         case .bidToMake:
             "Overcall to make"
         case .sacrifice:
@@ -447,15 +484,15 @@ enum AnalysisActionType: Int, CaseIterable {
         case .upToGrandSlam:
             "Bid on to grand slam"
         case .passPrevious:
-            "Pass last bid by opponents"
+            "Pass last bid by opps"
         case .doublePrevious:
-            "Double last bid by opponents"
+            "Double last bid by opps"
         case .doubleThem:
-            "Double last bid by opponents"
+            "Double last bid by opps"
         case .doubleOvercall:
             "Overcall and then double"
         case .dontDouble:
-            "Don't double opponents"
+            "Don't double opps"
         case .otherSuit:
             "Bid another suit"
         }
@@ -576,8 +613,8 @@ enum AnalysisOptionFormat: Int, CaseIterable, Identifiable {
 
 class AnalysisOption : Identifiable, Equatable, Hashable {
     private(set) var id: UUID = UUID()
-    public var type: AnalysisOptionType
     public var board: Int
+    public var type: AnalysisOptionType
     public var contract: Contract
     public var declarer: Pair
     public var decisionBy: Pair
@@ -588,10 +625,10 @@ class AnalysisOption : Identifiable, Equatable, Hashable {
     public var modeFraction: Float = 0
     weak private var parent: Analysis!
     
-    init(parent: Analysis, type: AnalysisOptionType, board: Int, contract: Contract, declarer: Pair, decisionBy: Pair? = nil, linked: AnalysisOption? = nil, double: Bool = false) {
+    init(parent: Analysis, board: Int, type: AnalysisOptionType, contract: Contract, declarer: Pair, decisionBy: Pair? = nil, linked: AnalysisOption? = nil, double: Bool = false) {
         self.parent = parent
-        self.type = type
         self.board = board
+        self.type = type
         self.contract = contract
         self.declarer = declarer
         self.decisionBy = decisionBy ?? declarer
@@ -600,12 +637,16 @@ class AnalysisOption : Identifiable, Equatable, Hashable {
     }
     
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(type)
         hasher.combine(board)
+        hasher.combine(type)
         hasher.combine(contract)
         hasher.combine(declarer)
+        hasher.combine(decisionBy)
         hasher.combine(assessments)
+        hasher.combine(linked)
         hasher.combine(removedBy)
+        hasher.combine(double)
+        hasher.combine(modeFraction)
     }
     
     public var action: AnalysisActionType {
@@ -675,7 +716,7 @@ class AnalysisOption : Identifiable, Equatable, Hashable {
     public var removed: Bool { removedBy != nil }
     
     public static func == (lhs: AnalysisOption, rhs: AnalysisOption) -> Bool {
-        return lhs.id == rhs.id
+        return lhs.board == rhs.board && lhs.type == rhs.type && lhs.contract == rhs.contract && lhs.declarer == rhs.declarer && lhs.assessments == rhs.assessments && lhs.linked?.id == rhs.linked?.id && lhs.removedBy?.id == rhs.removedBy?.id && lhs.double == rhs.double && lhs.modeFraction == rhs.modeFraction
     }
     
     public var displayType : AnalysisOptionType {
@@ -689,7 +730,9 @@ class AnalysisOption : Identifiable, Equatable, Hashable {
     }
     
     public func removed(by: AnalysisOption?, reason: String? = nil) {
-        if self.type.allowRemove && removedBy == nil {
+        if by == nil {
+            self.removedBy = nil
+        } else if self.type.allowRemove && removedBy == nil {
             self.removedBy = by
             if let by = by {
                 print("\((reason ?? "Unknown").padding(toLength: 30, withPad: " ", startingAt: 0)) - \(type.string) \(contract.compact) removed by \(by.type.string) \(by.contract.compact)")
@@ -783,12 +826,18 @@ class AnalysisOption : Identifiable, Equatable, Hashable {
     
     public static func equalOrWorsePoints(_ lhs: AnalysisOption, _ rhs: AnalysisOption, invert: Bool = false, specificMethod: AnalysisAssessmentMethod? = nil) -> Bool{
         var result = true
-        for (method, lhsValue) in lhs.assessments {
-            if specificMethod == nil || method == specificMethod {
-                if let rhsValue = rhs.assessments[method] {
-                    if (lhsValue.points - rhsValue.points) * (invert ? -1 : 1) > 0 {
-                        result = false
-                        break
+        if let lhsValue = lhs.assessments[.override], let rhsValue = rhs.assessments[.override] {
+            // Use override values if they exist
+            result = (lhsValue.points - rhsValue.points) * (invert ? -1 : 1) <= 0
+        } else {
+            // Check all
+            for (method, lhsValue) in lhs.assessments {
+                if specificMethod == nil || method == specificMethod {
+                    if let rhsValue = rhs.assessments[method] {
+                        if (lhsValue.points - rhsValue.points) * (invert ? -1 : 1) > 0 {
+                            result = false
+                            break
+                        }
                     }
                 }
             }
