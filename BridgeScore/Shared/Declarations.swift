@@ -37,6 +37,8 @@ var inputFont: Font { Font.system(size: (MyApp.format == .tablet ? 16.0 : 14.0))
 var messageFont: Font { Font.system(size: (MyApp.format == .tablet ? 16.0 : 14.0)) }
 var searchFont: Font { Font.system(size: (MyApp.format == .tablet ? 20.0 : 16.0)) }
 var smallFont: Font { Font.system(size: (MyApp.format == .tablet ? 14.0 : 12.0)) }
+var responsibleTitleFont: Font {  Font.system(size: (MyApp.format == .tablet ? 30.0 : 18.0)) }
+var responsibleCaptionFont: Font {  Font.system(size: (MyApp.format == .tablet ? 12.0 : 8.0)) }
 
 // Fonts in scorecard (UIFont)
 var titleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 16.0 : 10.0)) }
@@ -379,7 +381,9 @@ public enum TotalCalculation: Int, CaseIterable {
     }
 }
 
-public enum Responsible: Int, EnumPickerType {
+public enum Responsible: Int, EnumPickerType, Identifiable {
+    public var id: Int { rawValue }
+    
     case opponentMinus = -3
     case luckMinus = -5
     case teamMinus = -4
@@ -391,10 +395,11 @@ public enum Responsible: Int, EnumPickerType {
     case teamPlus = 4
     case luckPlus = 5
     case opponentPlus = 3
+    case blank = -99
     
     public var string: String {
         switch self {
-        case .unknown:
+        case .unknown, .blank:
             return ""
         case .scorerMinus, .scorerPlus:
             return "Self"
@@ -402,12 +407,12 @@ public enum Responsible: Int, EnumPickerType {
             return "Partner"
         case .teamMinus, .teamPlus:
             return "Team"
+        case .opponentPlus, .opponentMinus:
+            return "Opponent"
         case .luckPlus:
             return "Lucky"
         case .luckMinus:
             return "Unlucky"
-        default:
-            return "Opponent"
         }
     }
     
@@ -422,13 +427,19 @@ public enum Responsible: Int, EnumPickerType {
     
     public var short: String {
         switch self {
-        case .unknown:
+        case .unknown, .blank:
             return ""
-        case .scorerMinus, .partnerMinus, .opponentMinus, .teamMinus, .luckMinus:
+        case .luckMinus:
+            return "L-"
+        case .scorerMinus, .partnerMinus, .opponentMinus, .teamMinus:
             return "\(string.left(1))-"
         case .scorerPlus, .partnerPlus, .opponentPlus, .teamPlus, .luckPlus:
             return "\(string.left(1))+"
         }
+    }
+    
+    public static var validCases: [Responsible] {
+        allCases.filter({$0 != .blank})
     }
 }
 

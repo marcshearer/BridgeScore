@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import SwiftUI
 
 protocol EnumPickerDelegate {
     func enumPickerDidChange(to: Any)

@@ -234,7 +234,9 @@ class Analysis {
                                     options.append(AnalysisOption(parent: self, board: board.board, type: .bidOverDouble, contract: doubleThem, declarer: option.declarer.other, decisionBy: option.declarer, linked: bidOverOption, double: true))
                                 }
                             }
-                        } else if option.type == .passPrevious || (!weDeclared && option.type == .actual) {
+                        }
+                        
+                        if option.type == .passPrevious || (!weDeclared && option.type == .actual) {
                             // If we passed them consider doubling them
                             let doubleThem = Contract(copying: option.contract)
                             doubleThem.double = .doubled

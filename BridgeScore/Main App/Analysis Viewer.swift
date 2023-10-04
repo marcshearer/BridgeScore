@@ -18,6 +18,8 @@ fileprivate enum OutcomeLevel {
     case penalty
 }
 
+let analysisCornerSize: CGFloat = 6
+
 class AnalysisData : ObservableObject, Identifiable {
     private(set) var id = UUID()
     @Published var analysis: Analysis
@@ -81,6 +83,7 @@ struct AnalysisViewer: View {
     @State var focused = false
     @State var stopEdit = false
     @State var formatInt: Int
+    @State var responsiblePicker = false
     
     init(board: BoardViewModel, traveller: TravellerViewModel, sitting: Seat, from: UIView) {
         self._analysisData = StateObject(wrappedValue: AnalysisData(analysis: Scorecard.current.analysis(board: board, traveller: traveller, sitting: sitting), otherAnalysis: nil))
@@ -97,19 +100,31 @@ struct AnalysisViewer: View {
         HStack {
             VStack {
                 Spacer().frame(height: 15)
-                AnalysisBanner(nextTraveller: nextTraveller, updateOptions: updateAnalysisData, board: $board, traveller: $traveller, handTraveller: $handTraveller, sitting: $sitting, rotated: $rotated, initialSitting: $initialSitting, bidAnnounce: $bidAnnounce, summaryMode: $summaryMode)
+                AnalysisBanner(nextTraveller: nextTraveller, updateOptions: updateAnalysisData, board: $board, traveller: $traveller, handTraveller: $handTraveller, sitting: $sitting, rotated: $rotated, initialSitting: $initialSitting, bidAnnounce: $bidAnnounce, summaryMode: $summaryMode, responsiblePicker: $responsiblePicker)
+                    .ignoresSafeArea(.keyboard)
                 VStack {
                     Spacer().frame(height: 8)
                     HStack {
                         HandViewer(board: $board, traveller: $handTraveller, sitting: $sitting, rotated: $rotated, from: from, bidAnnounce: $bidAnnounce, stopEdit: $stopEdit)
-                            .cornerRadius(16)
+                            .cornerRadius(analysisCornerSize)
+                            .ignoresSafeArea(.keyboard)
                         Spacer().frame(width: 10)
                         VStack {
-                            AnalysisCommentView(board: $board, stopEdit: $stopEdit)
-                            AnalysisCombinationTricks(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData, stopEdit: $stopEdit)
-                            AnalysisBiddingOptions(board: $board, traveller: $traveller, sitting: $sitting, stopEdit: $stopEdit, analysisData: analysisData, formatInt: $formatInt)
-                            AnalysisActionView(board: $board, sitting: $sitting, formatInt: $formatInt, stopEdit: $stopEdit, analysisData: analysisData)
-                            AnalysisTravellerView(board: $board, traveller: $handTraveller, sitting: $sitting, summaryMode: $summaryMode, stopEdit: $stopEdit)
+                            AnalysisWrapper(label: "Notes", height: 75, stopEdit: $stopEdit) {
+                                AnalysisCommentView(board: $board, stopEdit: $stopEdit)
+                            }
+                            AnalysisWrapper(label: "Tricks", height: 150, stopEdit: $stopEdit) {
+                                AnalysisCombinationTricks(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData)
+                            }
+                            AnalysisWrapper(label: "Bid Options", height: 150, stopEdit: $stopEdit) {
+                                AnalysisBiddingOptions(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData, formatInt: $formatInt)
+                            }
+                            AnalysisWrapper(label: "Suggest", height: (Scorecard.current.scorecard?.type.players == 4 ? 120 : 70), stopEdit: $stopEdit) {
+                                AnalysisSuggestionView(board: $board, sitting: $sitting, formatInt: $formatInt, analysisData: analysisData)
+                            }
+                            AnalysisWrapper(label: "Travellers", height: (Scorecard.current.scorecard?.type.players == 4 ? 150 : 200), stopEdit: $stopEdit) {
+                                AnalysisTravellerView(board: $board, traveller: $handTraveller, sitting: $sitting, summaryMode: $summaryMode, stopEdit: $stopEdit)
+                            }
                         }
                     }
                 }
@@ -136,7 +151,6 @@ struct AnalysisViewer: View {
             }
             print(options)
         }
-        .ignoresSafeArea(.keyboard)
     }
     
     struct AnalysisBanner : View {
@@ -152,6 +166,7 @@ struct AnalysisViewer: View {
         @Binding var initialSitting: Seat
         @Binding var bidAnnounce: String
         @Binding var summaryMode: Bool
+        @Binding var responsiblePicker: Bool
         
         var body : some View {
             VStack {
@@ -167,9 +182,9 @@ struct AnalysisViewer: View {
                     Spacer().frame(width: 20)
                     Text("Board \(board.boardNumber)")
                     if traveller.rankingNumber == handTraveller.rankingNumber {
-                        Text(" v \(versus)").minimumScaleFactor(0.5)
+                        Text(" \(versus)").minimumScaleFactor(0.5)
                     } else {
-                        Text(" - Other table ")
+                        Text(" Other table ")
                         Button {
                             handTraveller = traveller
                         } label: {
@@ -185,6 +200,8 @@ struct AnalysisViewer: View {
                         }
                     }
                     Spacer()
+                    AnalysisResponsible(board: $board, responsiblePicker: $responsiblePicker)
+                    Spacer().frame(width: 40)
                     VStack {
                         HStack {
                             Spacer().frame(width: 20)
@@ -196,7 +213,7 @@ struct AnalysisViewer: View {
                         .minimumScaleFactor(0.5)
                         .frame(width: (scorecard.type.players == 4 ? 150 : 230), height: 50)
                         .palette(.bannerShadow)
-                        .cornerRadius(16)
+                        .cornerRadius(analysisCornerSize)
                         .opacity(0.7)
                     }
                     Spacer().frame(width: 50)
@@ -207,7 +224,7 @@ struct AnalysisViewer: View {
             }
             .background(Palette.banner.background)
             .frame(height: 80)
-            .cornerRadius(16)
+            .cornerRadius(analysisCornerSize)
         }
         
         func save() {
@@ -238,7 +255,7 @@ struct AnalysisViewer: View {
                     var name = (ranking.players[seat] ?? "Unknown")
                     if Scorecard.current.scorecard?.importSource == .bbo {
                         if let realName = MasterData.shared.realName(bboName: name) {
-                            name = realName
+                            name = realName.components(separatedBy: " ").last!
                         }
                     }
                     if versus != "" {
@@ -268,6 +285,133 @@ struct AnalysisViewer: View {
                 break
             }
         } while boardNumber > 1 && boardNumber < boards
+    }
+    
+    struct AnalysisResponsible : View {
+        @Binding var board: BoardViewModel
+        @Binding var responsiblePicker: Bool
+        @State var scrollId: Int?
+        @State var changed = false
+        let show = 9 // Must be odd
+
+        var body : some View {
+            AnalysisResponsibleElement(responsible: $board.responsible, changed: $changed)
+            .palette(.bannerShadow)
+            .cornerRadius(analysisCornerSize)
+            .frame(width: 80, height: 60)
+            .onTapGesture {
+                responsiblePicker = true
+            }
+            .popover(isPresented: $responsiblePicker) {
+                ZStack {
+                    Palette.bannerShadow.background.scaleEffect(1.5)
+                    AnalysisResponsiblePicker(board: $board, show: show, scrollId: $scrollId, changed: $changed)
+                        .palette(.bannerShadow)
+                }
+            }
+            .onChange(of: changed, initial: false) {
+                if changed {
+                    changed = false
+                }
+            }
+        }
+    }
+    
+    struct AnalysisResponsibleElement : View {
+        @Binding var responsible: Responsible
+        @Binding var changed: Bool
+        
+        var body : some View {
+            VStack {
+                if changed { EmptyView() }
+                Spacer()
+                HStack {
+                    Spacer()
+                    Text(responsible.short).font(responsibleTitleFont)
+                    Spacer()
+                }
+                Spacer().frame(height: 2)
+                HStack {
+                    Spacer()
+                    Text(responsible.full).font(responsibleCaptionFont)
+                    Spacer()
+                }
+                Spacer().frame(height: 6)
+            }.onChange(of: changed, initial: false) {
+                if changed {
+                    changed = false
+                }
+            }
+        }
+    }
+    
+    class AnalysisResponsibleEnumeration: Identifiable {
+        var id: Int { index }
+        var index: Int
+        var responsible: Responsible
+        
+        init(index: Int, responsible: Responsible) {
+            self.index = index
+            self.responsible = responsible
+        }
+    }
+    
+    struct AnalysisResponsiblePicker : View {
+        @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
+        @Binding var board: BoardViewModel
+        var show: Int
+        @Binding var scrollId: Int?
+        @Binding var changed: Bool
+        @State var refresh = false
+        
+        var body : some View {
+            let cases = Responsible.validCases.count
+            let blanks = (cases / 2) - 1
+            let list = (Array(repeating: .blank, count: blanks) + Responsible.validCases + Array(repeating: .blank, count: blanks)).enumerated().map{AnalysisResponsibleEnumeration(index: $0.0, responsible: $0.1)}
+            
+            return ScrollView(.horizontal, showsIndicators: false) {
+                LazyHStack(spacing: 0) {
+                    ForEach(list) { (item) in
+                        HStack(spacing: 0) {
+                            if item.responsible != .blank {
+                                if refresh { EmptyView() }
+                                AnalysisResponsibleElement(responsible: Binding.constant(item.responsible), changed: $changed)
+                                    .foregroundColor(item.responsible == board.responsible ? Palette.banner.contrastText : Palette.banner.text)
+                                    .onTapGesture {
+                                        scrollId = item.id
+                                        board.responsible = item.responsible
+                                        changed = true
+                                        presentationMode.wrappedValue.dismiss()
+                                    }
+                                Rectangle().foregroundColor(.black).frame(width: 1, height: 60)
+                            } else {
+                                Spacer()
+                                if item.index == blanks - 1 {
+                                    Rectangle().foregroundColor(.black).frame(width: 1, height: 60)
+                                }
+                            }
+                        }
+                        .frame(width: 80, height: 60)
+                    }
+                }
+                .scrollTargetLayout()
+            }
+            .scrollPosition(id: $scrollId, anchor: .center)
+            .scrollTargetBehavior(.viewAligned)
+            .onChange(of: scrollId, initial: false) {
+                if let scrollId = scrollId {
+                    board.responsible = list[scrollId].responsible
+                    changed = true
+                    refresh.toggle()
+                }
+            }
+            .onAppear {
+                scrollId = (list.first(where: {$0.responsible == board.responsible}))?.id
+            }
+            .palette(.bannerShadow)
+            .frame(width: (80 * CGFloat(show)), height: 60)
+        }
+        
     }
     
     struct ButtonBar: View{
@@ -345,15 +489,50 @@ struct AnalysisWrapper <Content> : View where Content : View {
     }
     
     var body: some View {
-    
-    content()
-        .frame(width: 520, height: 150)
-        .background(Palette.background.background).cornerRadius(16)
-        .font(inputFont).minimumScaleFactor(0.6)
+        
+        HStack(spacing: 0) {
+            ZStack {
+                UnevenRoundedRectangle(cornerRadii: .init(topLeading: analysisCornerSize,
+                                                          bottomLeading: analysisCornerSize,
+                                                          bottomTrailing: 0,
+                                                          topTrailing: 0),
+                                       style: .continuous)
+                .foregroundColor(Palette.background.background)
+                .frame(width: 500, height: height)
+                
+                content()
+                    .frame(width: 500, height: height)
+                    .font(inputFont).minimumScaleFactor(0.6)
+            }
+            
+            ZStack {
+                UnevenRoundedRectangle(cornerRadii: .init(topLeading: 0,
+                                                          bottomLeading: 0,
+                                                          bottomTrailing: analysisCornerSize,
+                                                          topTrailing: analysisCornerSize),
+                                       style: .continuous)
+                .foregroundColor(Palette.handPlayer.background)
+                .frame(width: 20, height: height)
+                
+                HStack(spacing: 0) {
+                    Spacer()
+                    Text(label)
+                        .foregroundColor(Palette.handPlayer.contrastText)
+                        .font(smallFont)
+                        .minimumScaleFactor(0.5)
+                    Spacer()
+                }
+                .frame(width: height, height: 20)
+                .fixedSize()
+                .frame(width: 20, height: height)
+                .rotationEffect(.degrees(90))
+            }
+        }
         .onTapGesture {
             stopEdit.wrappedValue = true
         }
         .ignoresSafeArea(.keyboard, edges: .bottom)
+    }
 }
 
 struct AnalysisCombinationTricks : View {
@@ -362,14 +541,14 @@ struct AnalysisCombinationTricks : View {
     @Binding var traveller: TravellerViewModel
     @Binding var sitting: Seat
     @ObservedObject var analysisData: AnalysisData
-    @Binding var stopEdit: Bool
     
     var body: some View {
-        let columns = [GridItem(.fixed(80), spacing: 0), GridItem(.fixed(100), spacing: 0), GridItem(.fixed(80), spacing: 0), GridItem(.flexible(minimum: 130), spacing: 0), GridItem(.fixed(150), spacing: 0)]
+        let columns = [GridItem(.fixed(60), spacing: 0), GridItem(.fixed(85), spacing: 0), GridItem(.fixed(70), spacing: 0), GridItem(.flexible(minimum: 130), spacing: 0), GridItem(.fixed(145), spacing: 0)]
         
         ZStack {
             VStack {
-                Rectangle().frame(height: 30).foregroundColor(Palette.tile.background)
+                UnevenRoundedRectangle(cornerRadii: .init(topLeading: analysisCornerSize), style: .continuous)
+                    .frame(height: 30).foregroundColor(Palette.tile.background)
                 Spacer()
             }
             HStack {
@@ -413,13 +592,6 @@ struct AnalysisCombinationTricks : View {
                 }
             }
         }
-        .frame(width: 520, height: 150)
-        .background(Palette.background.background).cornerRadius(16)
-        .font(inputFont).minimumScaleFactor(0.6)
-        .onTapGesture {
-            stopEdit = true
-        }
-        .ignoresSafeArea(.keyboard, edges: .bottom)
     }
     
     func buttonBar(combination: AnalysisTrickCombination, method: AnalysisAssessmentMethod, default made: Int) -> some View {
@@ -472,19 +644,19 @@ struct AnalysisBiddingOptions : View {
     @Binding var board: BoardViewModel
     @Binding var traveller: TravellerViewModel
     @Binding var sitting: Seat
-    @Binding var stopEdit: Bool
     @ObservedObject var analysisData: AnalysisData
     @Binding var formatInt: Int
     
     var format: AnalysisOptionFormat { AnalysisOptionFormat(rawValue: formatInt) ?? .score }
     
     var body: some View {
-        let columns = [GridItem(.flexible(minimum: 50), spacing: 0), GridItem(.flexible(minimum: 50), spacing: 0), GridItem(.flexible(minimum: 50), spacing: 0), GridItem(.flexible(minimum: 50), spacing: 0), GridItem(.flexible(minimum: 50), spacing: 0), GridItem(.flexible(minimum: 50), spacing: 0)]
-        let headerColumns = [GridItem(.fixed(195), spacing: 0)] + columns
-        let bodyColumns = [GridItem(.fixed(110), spacing: 0), GridItem(.fixed(45), spacing: 0),GridItem(.fixed(40), spacing: 0)] + columns
+        let columns = Array(repeating: GridItem(.flexible(minimum: 50), spacing: 0), count: 6)
+        let headerColumns = [GridItem(.fixed(180), spacing: 0)] + columns
+        let bodyColumns = [GridItem(.fixed(105), spacing: 0), GridItem(.fixed(40), spacing: 0),GridItem(.fixed(35), spacing: 0)] + columns
         ZStack {
             VStack {
-                Rectangle().frame(height: 30).foregroundColor(Palette.tile.background)
+                UnevenRoundedRectangle(cornerRadii: .init(topLeading: analysisCornerSize), style: .continuous)
+                    .frame(height: 30).foregroundColor(Palette.tile.background)
                 Spacer()
             }
             HStack {
@@ -546,13 +718,7 @@ struct AnalysisBiddingOptions : View {
             }
             Spacer()
         }
-        .frame(width: 520, height: 150)
-        .background(Palette.background.background).cornerRadius(16)
         .font(smallFont)
-        .onTapGesture {
-            stopEdit = true
-        }
-        .ignoresSafeArea(.keyboard, edges: .bottom)
     }
 }
 
@@ -565,58 +731,44 @@ struct AnalysisCommentView: View {
     
     var body: some View {
         HStack {
-            ZStack {
-                Rectangle()
-                    .foregroundColor(Palette.background.background)
-                    .cornerRadius(16)
-                VStack {
-                    Spacer().frame(height: 4)
-                    HStack {
-                        Spacer().frame(width: 16)
-                        Text("COMMENT").font(smallFont).foregroundColor(Palette.background.faintText)
-                        Spacer()
-                    }
-                    Spacer().frame(height: 2)
-                    HStack {
-                        Spacer().frame(width: 16)
-                        TextField("", text: $comment)
-                            .onChange(of: comment, initial: false) {
-                                board.comment = comment
-                                showClear = (comment != "")
-                            }
-                            .focused($focused)
-                            .padding(.all, 2)
-                            .foregroundColor(Palette.background.text)
-                            .font(inputTitleFont)
-                            .minimumScaleFactor(0.8)
-                        Spacer().frame(width: 6)
-                        if showClear {
-                            VStack {
-                                Spacer()
-                                Button {
-                                    focused = false
-                                    comment = ""
-                                    Utility.mainThread {
-                                        focused = true
-                                    }
-                                } label: {
-                                    Image(systemName: "x.circle.fill").font(inputTitleFont).foregroundColor(Palette.clearText)
-                                }
-                                Spacer()
-                            }
-                            .frame(width: 40)
+            VStack {
+                Spacer().frame(height: 4)
+                HStack {
+                    Spacer().frame(width: 16)
+                    TextField("", text: $comment)
+                        .onChange(of: comment, initial: false) {
+                            board.comment = comment
+                            showClear = (comment != "")
                         }
-                        Spacer().frame(width: 6)
+                        .focused($focused)
+                        .padding(.all, 2)
+                        .foregroundColor(Palette.background.text)
+                        .font(inputTitleFont)
+                        .minimumScaleFactor(0.8)
+                    Spacer().frame(width: 6)
+                    if showClear {
+                        VStack {
+                            Spacer()
+                            Button {
+                                focused = false
+                                comment = ""
+                                Utility.mainThread {
+                                    focused = true
+                                }
+                            } label: {
+                                Image(systemName: "x.circle.fill").font(inputTitleFont).foregroundColor(Palette.clearText)
+                            }
+                            Spacer()
+                        }
+                        .frame(width: 40)
                     }
-                    Spacer()
+                    Spacer().frame(width: 6)
                 }
-                .onTapGesture {
-                    focused = true
-                }
-                .cornerRadius(16)
+                Spacer()
             }
-            .frame(width: 520, height: 70)
-            .font(defaultFont)
+            .onTapGesture {
+                focused = true
+            }
         }
         .onChange(of: stopEdit, initial: false) {
             if stopEdit {
@@ -631,73 +783,65 @@ struct AnalysisCommentView: View {
     }
 }
 
-struct AnalysisActionView: View {
+struct AnalysisSuggestionView: View {
     @Binding var board: BoardViewModel
     @Binding var sitting: Seat
     @Binding var formatInt: Int
-    @Binding var stopEdit: Bool
     @ObservedObject var analysisData: AnalysisData
     
     var body: some View {
         HStack {
-            ZStack {
-                Rectangle()
-                    .foregroundColor(Palette.background.background)
-                    .cornerRadius(16)
-                VStack {
-                    Spacer().frame(height: 4)
-                    HStack {
-                        Spacer().frame(width: 8)
-                        Text("SUGGESTED BIDDING").font(smallFont).foregroundColor(Palette.background.faintText)
-                        Spacer()
-                    }
-                    Spacer().frame(height: 6)
-                    Action(description: "Table", analysisData: analysisData, formatInt: $formatInt, otherTable: false)
-                    if Scorecard.current.scorecard?.type.players == 4 {
-                        Spacer().frame(height: 8)
-                        Action(description: "Other", analysisData: analysisData, formatInt: $formatInt, otherTable: true)
-                    }
-                    Spacer()
+            VStack {
+                Spacer().frame(height: Scorecard.current.scorecard?.type.players == 4 ? 6 : 20)
+                Suggestion(description: "This Table:", analysisData: analysisData, formatInt: $formatInt, otherTable: false)
+                if Scorecard.current.scorecard?.type.players == 4 {
+                    Spacer().frame(height: 5)
+                    Separator(padding: true, thickness: 3)
+                    Spacer().frame(height: 7)
+                    Suggestion(description: "Other Table:", analysisData: analysisData, formatInt: $formatInt, otherTable: true)
                 }
+                Spacer()
             }
-            .frame(width: 520, height: 80)
-            .font(inputTitleFont)
         }
     }
     
-    struct Action: View {
+    struct Suggestion: View {
         @State var description: String
         @ObservedObject var analysisData: AnalysisData
         @Binding var formatInt: Int
         @State var otherTable: Bool
         
         var body: some View {
-            HStack(spacing: 0) {
-                if let bestOption = analysisData.bestOption[otherTable], let useMethod = bestOption.useMethod {
-                    Spacer().frame(width: 16)
+            if let bestOption = analysisData.bestOption[otherTable], let useMethod = bestOption.useMethod {
+                VStack {
                     if Scorecard.current.scorecard?.type.players == 4 {
                         HStack(spacing: 0) {
-                            Text("\(description):")
+                            Spacer().frame(width: 10)
+                            Text("\(description)")
                             Spacer()
-                        }.frame(width: 70)
+                        }
+                        Spacer().frame(height: 6)
                     }
                     HStack(spacing: 0) {
-                        Text(bestOption.contract.colorCompact)
-                        Text("\(bestOption.value(method: useMethod, format: .made, colorCode: false))")
-                        Spacer().frame(width: 6)
-                        Text(bestOption.declarer.short)
-                        Spacer().frame(width: 12)
+                        Spacer().frame(width: Scorecard.current.scorecard?.type.players == 4 ? 40 : 20)
+                        HStack(spacing: 0) {
+                            Text(bestOption.contract.colorCompact)
+                            Text("\(bestOption.value(method: useMethod, format: .made, colorCode: false))")
+                            Spacer().frame(width: 6)
+                            Text(bestOption.declarer.short)
+                            Spacer().frame(width: 12)
+                            Spacer()
+                        }.frame(width: 130)
+                        Text(bestOption.action.description(otherTable: otherTable))
                         Spacer()
-                    }.frame(width: 130)
-                    Text(bestOption.action.description(otherTable: otherTable))
-                    Spacer()
-                    let options = otherTable ? analysisData.otherAnalysis?.options ?? [] : analysisData.analysis.options
-                    let compare = options.first?.assessments[.play]
-                    Text("\(bestOption.value(method: useMethod, format: .score, compare: compare, verbose: true, showVariance: true, colorCode: false))").frame(width: 100)
-                    Spacer().frame(width: 4)
+                        let options = otherTable ? analysisData.otherAnalysis?.options ?? [] : analysisData.analysis.options
+                        let compare = options.first?.assessments[.play]
+                        let bestOptionDescription = bestOption.value(method: useMethod, format: .score, compare: compare, verbose: true, showVariance: true, colorCode: false)
+                        Text("\(bestOptionDescription ==  "" ? "No change" : bestOptionDescription)").frame(width: 100)
+                        Spacer().frame(width: 4)
+                    }
                 }
             }
-            .font(inputTitleFont).minimumScaleFactor(0.8)
         }
     }
 }
@@ -723,7 +867,8 @@ struct AnalysisTravellerView: View {
         VStack {
             ZStack {
                 VStack {
-                    Rectangle().frame(height: 30).foregroundColor(Palette.tile.background)
+                    UnevenRoundedRectangle(cornerRadii: .init(topLeading: analysisCornerSize), style: .continuous)
+                        .frame(height: 30).foregroundColor(Palette.tile.background)
                     Spacer()
                 }
                 HStack {
@@ -752,8 +897,7 @@ struct AnalysisTravellerView: View {
                                                 HStack {
                                                     Spacer().frame(width: 10)
                                                     Image(systemName: "arrow.up.left")
-                                                        .background(Palette.background.background)
-                                                        .foregroundColor(Palette.background.text)
+                                                        .palette(.background)
                                                         .onTapGesture {
                                                             if let newTraveller = travellers.first(where: { $0 == summary }) {
                                                                 traveller = newTraveller
@@ -775,7 +919,7 @@ struct AnalysisTravellerView: View {
                                         }
                                         .frame(height: 25)
                                         .if(handTraveller == summary) { view in
-                                            view.background(Palette.handPlayer.background).foregroundColor(Palette.handPlayer.contrastText)
+                                            view.palette(.handPlayer, .contrast)
                                         }
                                         .foregroundColor(summary.made >= 0 ? Palette.background.text : Palette.background.faintText)
                                         .onTapGesture {
@@ -826,8 +970,7 @@ struct AnalysisTravellerView: View {
                                                 HStack {
                                                     Spacer().frame(width: 10)
                                                     Image(systemName: "arrow.up.left")
-                                                        .background(Palette.background.background)
-                                                        .foregroundColor(Palette.background.text)
+                                                        .palette(.background)
                                                         .onTapGesture {
                                                             self.traveller = traveller
                                                             reflectSelectionChange(traveller: traveller)
@@ -847,7 +990,7 @@ struct AnalysisTravellerView: View {
                                         .frame(height: 25)
                                         .foregroundColor(traveller.made >= 0 ? Palette.background.text : Palette.background.faintText)
                                         .if(traveller.rankingNumber == handTraveller.rankingNumber) { view in
-                                            view.background(Palette.handPlayer.background).foregroundColor(Palette.handPlayer.contrastText)
+                                            view.palette(.handPlayer, .contrast)
                                         }
                                         .onTapGesture {
                                             summaryMode.toggle()
@@ -872,14 +1015,6 @@ struct AnalysisTravellerView: View {
         .onChange(of: sitting, initial: true) {
             reflectChange()
         }
-        .onTapGesture {
-            stopEdit = true
-        }
-        .frame(width: 520, height: 200)
-        .background(Palette.background.background)
-        .foregroundColor(Palette.background.text)
-        .font(.body)
-        .cornerRadius(16)
     }
     
     func reflectChange() {

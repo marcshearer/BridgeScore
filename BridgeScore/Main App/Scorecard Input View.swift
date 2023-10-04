@@ -1776,12 +1776,11 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         scorecardDelegate?.scorecardChanged(type: rowType, itemNumber: itemNumber)
         let width: CGFloat = 70
         let space = (frame.width - width) / 2
-        let selected = board.responsible.rawValue + 3
-        scorecardDelegate?.scorecardScrollPickerPopup(values: Responsible.allCases.map{ScrollPickerEntry(title: $0.short, caption: $0.full)}, maxValues: 13, selected: selected, defaultValue: nil, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 16, bottomPadding: 0) { (selected) in
-            if let responsible = Responsible(rawValue: selected! - 3) {
-                self.responsiblePicker.set(responsible)
-                self.enumPickerDidChange(to: responsible)
-            }
+        let selected = Responsible.validCases.firstIndex(of: board.responsible)
+        scorecardDelegate?.scorecardScrollPickerPopup(values: Responsible.validCases.map{ScrollPickerEntry(title: $0.short, caption: $0.full)}, maxValues: 13, selected: selected, defaultValue: nil, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 16, bottomPadding: 0) { (selected) in
+            let responsible = Responsible.validCases[selected!]
+            self.responsiblePicker.set(responsible)
+            self.enumPickerDidChange(to: responsible)
         }
     }
     

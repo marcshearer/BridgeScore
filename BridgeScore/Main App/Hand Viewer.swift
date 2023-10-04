@@ -92,67 +92,67 @@ struct HandViewer: View {
     
     var body: some View {
         
-        StandardView("HandViewer") {
-            VStack(spacing: 0) {
-                Spacer().frame(height: 10)
-                HStack {
-                    Spacer().frame(width: 10)
-                    HandViewBoardDetails(board:$board, traveller: $traveller)
-                    Spacer().frame(width: 10)
-                    HandViewHand(board: $board, traveller: $traveller, sitting: $sitting, player: .partner, rotated: $rotated, deal: $deal, trickNumber: $trickNumber)
-                    Spacer().frame(width: 10)
-                    if board.doubleDummy.count != 0 || board.optimumScore != nil {
-                        HandViewOptimum(board: $board, sitting: $sitting)
+        VStack(spacing: 0) {
+            Spacer().frame(height: 10)
+            HStack {
+                Spacer().frame(width: 10)
+                HandViewBoardDetails(board:$board, traveller: $traveller)
+                Spacer().frame(width: 10)
+                HandViewHand(board: $board, traveller: $traveller, sitting: $sitting, player: .partner, rotated: $rotated, deal: $deal, trickNumber: $trickNumber)
+                Spacer().frame(width: 10)
+                if board.doubleDummy.count != 0 || board.optimumScore != nil {
+                    HandViewOptimum(board: $board, sitting: $sitting)
+                } else {
+                    Rectangle().fill(.clear)
+                }
+                Spacer().frame(width: 10)
+            }
+            Spacer().frame(height: 10)
+            HStack() {
+                Spacer().frame(width: 10)
+                HandViewHand(board: $board, traveller: $traveller, sitting: $sitting, player: .lhOpponent, rotated: $rotated, deal: $deal, trickNumber: $trickNumber)
+                Spacer().frame(width: 10)
+                VStack(spacing: 0) {
+                    if trickNumber > 0 {
+                        HandViewPlay(board: $board, traveller: $traveller, sitting: $sitting, rotated: $rotated, tricks: $tricks, trickNumber: $trickNumber, visible: $visible, animate: $animate, showClaim: $showClaim)
                     } else {
+                        HandViewPoints(board: $board, deal: $deal, sitting: $sitting)
+                    }
+                }.cornerRadius(6)
+                Spacer().frame(width: 10)
+                HandViewHand(board: $board, traveller: $traveller, sitting: $sitting, player: .rhOpponent, rotated: $rotated, deal: $deal, trickNumber: $trickNumber)
+                Spacer().frame(width: 10)
+            }
+            Spacer().frame(height: 10)
+            HStack {
+                Spacer().frame(width: 10)
+                HandViewBidding(board: $board, traveller: $traveller, sitting: $sitting, bidAnnounce: $bidAnnounce, showClaim: $showClaim)
+                Spacer().frame(width: 10)
+                HandViewHand(board: $board, traveller: $traveller, sitting: $sitting, player: .player, rotated: $rotated, deal: $deal, trickNumber: $trickNumber)
+                Spacer().frame(width: 10)
+                VStack {
+                    ZStack {
                         Rectangle().fill(.clear)
+                        VStack {
+                            if showClaim || bidAnnounce == "" {
+                                HandViewTrickCount(traveller: $traveller, sitting: $sitting, tricks: $tricks, trickNumber: $trickNumber, showClaim: $showClaim)
+                            } else {
+                                HandViewBidAnnounce(announce: $bidAnnounce)
+                            }
+                            Spacer()
+                            if traveller.contract.level != .passout && tricks.count > 0 {
+                                HandViewPlayerBar(board: $board, traveller: $traveller, from: $from, tricks: $tricks, trickNumber: $trickNumber, visible: $visible, animate: $animate, showClaim: $showClaim, bidAnnounce: $bidAnnounce)
+                                    .frame(height: 50)
+                            }
+                        }.overlay(RoundedRectangle(cornerRadius: 4).stroke(Palette.separator.background,  lineWidth: 2))
                     }
-                    Spacer().frame(width: 10)
                 }
-                Spacer().frame(height: 10)
-                HStack() {
-                    Spacer().frame(width: 10)
-                    HandViewHand(board: $board, traveller: $traveller, sitting: $sitting, player: .lhOpponent, rotated: $rotated, deal: $deal, trickNumber: $trickNumber)
-                    Spacer().frame(width: 10)
-                    VStack(spacing: 0) {
-                        if trickNumber > 0 {
-                            HandViewPlay(board: $board, traveller: $traveller, sitting: $sitting, rotated: $rotated, tricks: $tricks, trickNumber: $trickNumber, visible: $visible, animate: $animate, showClaim: $showClaim)
-                        } else {
-                            HandViewPoints(board: $board, deal: $deal, sitting: $sitting)
-                        }
-                    }.cornerRadius(6)
-                    Spacer().frame(width: 10)
-                    HandViewHand(board: $board, traveller: $traveller, sitting: $sitting, player: .rhOpponent, rotated: $rotated, deal: $deal, trickNumber: $trickNumber)
-                    Spacer().frame(width: 10)
-                }
-                Spacer().frame(height: 10)
-                HStack {
-                    Spacer().frame(width: 10)
-                    HandViewBidding(board: $board, traveller: $traveller, sitting: $sitting, bidAnnounce: $bidAnnounce, showClaim: $showClaim)
-                    Spacer().frame(width: 10)
-                    HandViewHand(board: $board, traveller: $traveller, sitting: $sitting, player: .player, rotated: $rotated, deal: $deal, trickNumber: $trickNumber)
-                    Spacer().frame(width: 10)
-                    VStack {
-                        ZStack {
-                            Rectangle().fill(.clear)
-                            VStack {
-                                if showClaim || bidAnnounce == "" {
-                                    HandViewTrickCount(traveller: $traveller, sitting: $sitting, tricks: $tricks, trickNumber: $trickNumber, showClaim: $showClaim)
-                                } else {
-                                    HandViewBidAnnounce(announce: $bidAnnounce)
-                                }
-                                Spacer()
-                                if traveller.contract.level != .passout && tricks.count > 0 {
-                                    HandViewPlayerBar(board: $board, traveller: $traveller, from: $from, tricks: $tricks, trickNumber: $trickNumber, visible: $visible, animate: $animate, showClaim: $showClaim, bidAnnounce: $bidAnnounce)
-                                        .frame(height: 50)
-                                }
-                            }.overlay(RoundedRectangle(cornerRadius: 4).stroke(Palette.separator.background,  lineWidth: 2))
-                        }
-                    }
-                    Spacer().frame(width: 10)
-                }
-                Spacer().frame(height: 10)
-            }.background(Palette.handTable.background)
+                Spacer().frame(width: 10)
+            }
+            Spacer().frame(height: 10)
         }
+        .background(Palette.handTable.background)
+        .ignoresSafeArea(.keyboard)
         .onChange(of: board.board, initial: true) {
             reflectChange()
         }
@@ -727,12 +727,10 @@ struct HandViewer: View {
         
         var body: some View {
             VStack {
-                //Spacer().frame(height: 4)
                 Centered(deal: $deal, sitting: sitting.partner)
                     .frame(height: 20)
                 Spacer()
                 HStack {
-                    //Spacer().frame(width: 4)
                     Centered(deal: $deal, sitting: sitting.leftOpponent).fixedSize()
                         .frame(width: 20, height: 140).rotationEffect(.degrees(-90))
                     Spacer()
@@ -744,12 +742,10 @@ struct HandViewer: View {
                     Spacer()
                     Centered(deal: $deal, sitting: sitting.rightOpponent).fixedSize()
                         .frame(width: 20, height: 140).rotationEffect(.degrees(90))
-                    //Spacer().frame(width: 10)
                 }
                 Spacer()
                 Centered(deal: $deal, sitting: sitting)
                     .frame(height: 20)
-                //Spacer().frame(height: 4)
             }
         }
         
