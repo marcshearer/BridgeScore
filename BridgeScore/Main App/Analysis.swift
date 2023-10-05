@@ -9,22 +9,32 @@ import Foundation
 
 class AnalysisOverride: ObservableObject, Equatable {
     @Published var board: BoardViewModel
-    @Published var tricksMade: [AnalysisTrickCombination:Int] = [:]
     
     init(board: BoardViewModel) {
         self.board = board
     }
     
     public func set(board: Int, suit: Suit, declarer: Pair, value: Int?) {
-        tricksMade[AnalysisTrickCombination(board: board, suit: suit, declarer: declarer)] = value
+        if let board = Scorecard.current.boards[board], let scorecard = Scorecard.current.scorecard {
+            if board.overrideTricks[declarer] == nil {
+                board.overrideTricks[declarer] = [:]
+            }
+            board.overrideTricks[declarer]![suit] = (value == nil ? nil : OverrideTricksViewModel(scorecard: scorecard, board: board.board, declarer: declarer, suit: suit, made: value!))
+        }
     }
     
     public func value(board: Int, suit: Suit, declarer: Pair) -> Int? {
-        return tricksMade[AnalysisTrickCombination(board: board, suit: suit, declarer: declarer)]
+        if let board = Scorecard.current.boards[board] {
+            return board.overrideTricks[declarer]?[suit]?.made
+        } else {
+            return nil
+        }
     }
 
     static func == (lhs: AnalysisOverride, rhs: AnalysisOverride) -> Bool {
-        lhs.board == rhs.board && lhs.tricksMade == rhs.tricksMade
+        let lhsBoard = Scorecard.current.boards[lhs.board.board]
+        let rhsBoard = Scorecard.current.boards[rhs.board.board]
+        return lhs.board == rhs.board && lhsBoard?.overrideTricks == rhsBoard?.overrideTricks
     }
 }
 

@@ -187,6 +187,7 @@ struct AnalysisViewer: View {
                         Text(" Other table ")
                         Button {
                             handTraveller = traveller
+                            summaryMode = true
                         } label: {
                             HStack {
                                 Spacer()
@@ -1009,10 +1010,13 @@ struct AnalysisTravellerView: View {
             }
             Spacer().frame(height: 4)
         }
-        .onChange(of: board.board, initial: true) {
+       .onChange(of: board.board, initial: true) {
             reflectChange()
         }
-        .onChange(of: sitting, initial: true) {
+        .onChange(of: traveller.rankingNumber, initial: false) {
+            reflectSelectionChange(traveller: TravellerExtension(scorecard: scorecard, traveller: traveller))
+        }
+        .onChange(of: sitting, initial: false) {
             reflectChange()
         }
     }

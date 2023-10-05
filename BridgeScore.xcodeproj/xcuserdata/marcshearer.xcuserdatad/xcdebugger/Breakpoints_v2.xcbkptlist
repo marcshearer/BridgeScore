@@ -3,4 +3,69 @@
    uuid = "F2E722FD-D002-4B6B-BE04-5A64A89F3EA3"
    type = "1"
    version = "2.0">
+   <Breakpoints>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "76E7E56F-0A8F-4206-87D8-F22782A75F00"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "BridgeScore/Main App/Scorecard.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "420"
+            endingLineNumber = "420"
+            landmarkName = "save(board:)"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "76E7E56F-0A8F-4206-87D8-F22782A75F00 - 2171c5fec53564a0"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Bridge_Score.Scorecard.save(board: Bridge_Score.BoardViewModel) -&gt; ()"
+                  moduleName = "Bridge Score"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/marcshearer/Documents/Xcode%20projects/BridgeScore/BridgeScore/Main%20App/Scorecard.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "420"
+                  endingLineNumber = "420"
+                  offsetFromSymbolStart = "1376">
+               </Location>
+               <Location
+                  uuid = "76E7E56F-0A8F-4206-87D8-F22782A75F00 - 2171c5fec53564a0"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Bridge_Score.Scorecard.save(board: Bridge_Score.BoardViewModel) -&gt; ()"
+                  moduleName = "Bridge Score"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/marcshearer/Documents/Xcode%20projects/BridgeScore/BridgeScore/Main%20App/Scorecard.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "420"
+                  endingLineNumber = "420"
+                  offsetFromSymbolStart = "984">
+               </Location>
+               <Location
+                  uuid = "76E7E56F-0A8F-4206-87D8-F22782A75F00 - e9dda972d6b0a112"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 () -&gt; () in Bridge_Score.Scorecard.save(board: Bridge_Score.BoardViewModel) -&gt; ()"
+                  moduleName = "Bridge Score"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/marcshearer/Documents/Xcode%20projects/BridgeScore/BridgeScore/Main%20App/Scorecard.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "422"
+                  endingLineNumber = "422"
+                  offsetFromSymbolStart = "44">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+   </Breakpoints>
 </Bucket>

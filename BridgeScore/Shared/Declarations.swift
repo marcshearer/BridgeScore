@@ -443,7 +443,7 @@ public enum Responsible: Int, EnumPickerType, Identifiable {
     }
 }
 
-public enum Pair: Int, CaseIterable, Identifiable {
+public enum Pair: Int, CaseIterable, Identifiable, Equatable {
     case ns
     case ew
     case unknown

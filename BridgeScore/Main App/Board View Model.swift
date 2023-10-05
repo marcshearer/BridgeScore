@@ -23,12 +23,12 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
     @Published public var hand: String = ""
     @Published public var optimumScore: OptimumScore?
     @Published public var doubleDummy: [Seat:[Suit:DoubleDummyViewModel]] = [:]
-    @Published public var overrideTricks: [Seat:[Suit:OverrideTricksViewModel]] = [:]
+    @Published public var overrideTricks: [Pair:[Suit:OverrideTricksViewModel]] = [:]
     
     // Linked managed objects - should only be referenced in this and the Data classes
     @Published internal var boardMO: BoardMO?
     @Published internal var doubleDummyMO: [Seat:[Suit:DoubleDummyMO]] = [:]
-    @Published internal var overrideTricksMO: [Seat:[Suit:OverrideTricksMO]] = [:]
+    @Published internal var overrideTricksMO: [Pair:[Suit:OverrideTricksMO]] = [:]
     
     @Published private(set) var saveMessage: String = ""
     @Published private(set) var canSave: Bool = true
@@ -83,6 +83,34 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
                             for (suit, doubleDummy) in suitDictionary {
                                 if let mo = doubleDummyMO[declarer]?[suit] {
                                     if doubleDummy.changed(mo) {
+                                        result = true
+                                        break
+                                    }
+                                } else {
+                                    result = true
+                                    break
+                                }
+                            }
+                            if result == true {
+                                break
+                            }
+                        }
+                    }
+                }
+            }
+            if !result {
+                // Check double dummy entries match
+                if overrideTricks.count != overrideTricksMO.count {
+                    result = true
+                } else {
+                    for (declarer, suitDictionary) in overrideTricks {
+                        if suitDictionary.count != overrideTricksMO[declarer]?.count {
+                            result = true
+                            break
+                        } else {
+                            for (suit, overrideTricks) in suitDictionary {
+                                if let mo = overrideTricksMO[declarer]?[suit] {
+                                    if overrideTricks.changed(mo) {
                                         result = true
                                         break
                                     }
@@ -227,7 +255,7 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
         }
     }
     
-    public func forEachOverrideTricks(action: (Seat, Suit, OverrideTricksViewModel)->()) {
+    public func forEachOverrideTricks(action: (Pair, Suit, OverrideTricksViewModel)->()) {
         for (declarer, suitDictionary) in overrideTricks {
             for (suit, overrideTricks) in suitDictionary {
                 action(declarer, suit, overrideTricks)
@@ -235,7 +263,7 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
         }
     }
 
-    public func forEachOverrideTricksMO(action: (Seat, Suit, OverrideTricksMO)->()) {
+    public func forEachOverrideTricksMO(action: (Pair, Suit, OverrideTricksMO)->()) {
         for (declarer, suitDictionary) in overrideTricksMO {
             for (suit, mo) in suitDictionary {
                 action(declarer, suit, mo)

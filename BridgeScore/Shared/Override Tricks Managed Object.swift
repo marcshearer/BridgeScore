@@ -28,8 +28,8 @@ public class OverrideTricksMO: NSManagedObject, ManagedObject, Identifiable {
         set { self.board16 = Int16(newValue)}
     }
     
-    public var declarer: Seat {
-        get { Seat(rawValue: Int(declarer16)) ?? .unknown }
+    public var declarer: Pair {
+        get { Pair(rawValue: Int(declarer16)) ?? .unknown }
         set { self.declarer16 = Int16(newValue.rawValue) }
     }
     

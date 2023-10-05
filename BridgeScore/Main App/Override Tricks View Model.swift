@@ -9,12 +9,12 @@ import Combine
 import SwiftUI
 import CoreData
 
-public class OverrideTricksViewModel : ObservableObject, Identifiable, CustomDebugStringConvertible {
+public class OverrideTricksViewModel : ObservableObject, Identifiable, Equatable, CustomDebugStringConvertible {
 
     // Properties in core data model
     @Published private(set) var scorecard: ScorecardViewModel
     @Published public var board: Int
-    @Published public var declarer: Seat = .unknown
+    @Published public var declarer: Pair = .unknown
     @Published public var suit: Suit = .blank
     @Published public var made: Int = -1
     
@@ -22,7 +22,7 @@ public class OverrideTricksViewModel : ObservableObject, Identifiable, CustomDeb
     private var cancellableSet: Set<AnyCancellable> = []
     
     // Check if view model matches managed object
-    public func changed(_ mo: DoubleDummyMO) -> Bool {
+    public func changed(_ mo: OverrideTricksMO) -> Bool {
         var result = false
         if self.scorecard.scorecardId != mo.scorecardId ||
             self.board != mo.board ||
@@ -34,7 +34,7 @@ public class OverrideTricksViewModel : ObservableObject, Identifiable, CustomDeb
         return result
     }
     
-    public init(scorecard: ScorecardViewModel, board: Int, declarer: Seat, suit: Suit, made: Int) {
+    public init(scorecard: ScorecardViewModel, board: Int, declarer: Pair, suit: Suit, made: Int) {
         self.scorecard = scorecard
         self.board = board
         self.declarer = declarer
@@ -67,6 +67,10 @@ public class OverrideTricksViewModel : ObservableObject, Identifiable, CustomDeb
         mo.declarer = declarer
         mo.suit = suit
         mo.made = made
+    }
+
+    public static func == (lhs: OverrideTricksViewModel, rhs: OverrideTricksViewModel) -> Bool {
+        lhs.scorecard.id == rhs.scorecard.id && lhs.board == rhs.board && lhs.suit == rhs.suit && lhs.declarer == rhs.declarer && lhs.made == rhs.made
     }
         
     public var description: String {
