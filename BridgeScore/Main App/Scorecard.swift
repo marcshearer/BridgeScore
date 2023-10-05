@@ -135,6 +135,24 @@ class Scorecard {
             }
         }
         
+        // Load override tricks
+        let overrideTricksMOs = CoreData.fetch(from: OverrideTricksMO.tableName, filter: scorecardFilter) as! [OverrideTricksMO]
+        
+        for overrideTricksMO in overrideTricksMOs {
+            if let board = boards[overrideTricksMO.board] {
+                // Add to override tricks MO dicionary
+                if board.overrideTricks[overrideTricksMO.declarer] == nil {
+                    board.overrideTricks[overrideTricksMO.declarer] = [:]
+                }
+                board.overrideTricks[overrideTricksMO.declarer]![overrideTricksMO.suit] = OverrideTricksViewModel(scorecard: scorecard, overrideTricksMO: overrideTricksMO)
+                // Add to override tricks dictionary
+                if board.overrideTricksMO[overrideTricksMO.declarer] == nil {
+                    board.overrideTricksMO[overrideTricksMO.declarer] = [:]
+                }
+                board.overrideTricksMO[overrideTricksMO.declarer]![overrideTricksMO.suit] = overrideTricksMO
+            }
+        }
+        
             // Load tables
         let tableMOs = CoreData.fetch(from: TableMO.tableName, filter: scorecardFilter) as! [TableMO]
         

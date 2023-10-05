@@ -113,10 +113,10 @@ struct AnalysisViewer: View {
                             AnalysisWrapper(label: "Notes", height: 75, stopEdit: $stopEdit) {
                                 AnalysisCommentView(board: $board, stopEdit: $stopEdit)
                             }
-                            AnalysisWrapper(label: "Tricks", height: 150, stopEdit: $stopEdit) {
+                            AnalysisWrapper(label: "Tricks Made", height: 150, stopEdit: $stopEdit) {
                                 AnalysisCombinationTricks(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData)
                             }
-                            AnalysisWrapper(label: "Bid Options", height: 150, stopEdit: $stopEdit) {
+                            AnalysisWrapper(label: "Bidding Options", height: 150, stopEdit: $stopEdit) {
                                 AnalysisBiddingOptions(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData, formatInt: $formatInt)
                             }
                             AnalysisWrapper(label: "Suggest", height: (Scorecard.current.scorecard?.type.players == 4 ? 120 : 70), stopEdit: $stopEdit) {
@@ -292,13 +292,13 @@ struct AnalysisViewer: View {
         @Binding var responsiblePicker: Bool
         @State var scrollId: Int?
         @State var changed = false
-        let show = 9 // Must be odd
+        let show = Responsible.validCases.count // Must be odd
 
         var body : some View {
-            AnalysisResponsibleElement(responsible: $board.responsible, changed: $changed)
+            AnalysisResponsibleElement(responsible: $board.responsible, changed: $changed, unknown: "Resp")
             .palette(.bannerShadow)
             .cornerRadius(analysisCornerSize)
-            .frame(width: 80, height: 60)
+            .frame(width: 70, height: 60)
             .onTapGesture {
                 responsiblePicker = true
             }
@@ -310,34 +310,6 @@ struct AnalysisViewer: View {
                 }
             }
             .onChange(of: changed, initial: false) {
-                if changed {
-                    changed = false
-                }
-            }
-        }
-    }
-    
-    struct AnalysisResponsibleElement : View {
-        @Binding var responsible: Responsible
-        @Binding var changed: Bool
-        
-        var body : some View {
-            VStack {
-                if changed { EmptyView() }
-                Spacer()
-                HStack {
-                    Spacer()
-                    Text(responsible.short).font(responsibleTitleFont)
-                    Spacer()
-                }
-                Spacer().frame(height: 2)
-                HStack {
-                    Spacer()
-                    Text(responsible.full).font(responsibleCaptionFont)
-                    Spacer()
-                }
-                Spacer().frame(height: 6)
-            }.onChange(of: changed, initial: false) {
                 if changed {
                     changed = false
                 }
@@ -366,7 +338,7 @@ struct AnalysisViewer: View {
         
         var body : some View {
             let cases = Responsible.validCases.count
-            let blanks = (cases / 2) - 1
+            let blanks = (cases / 2)
             let list = (Array(repeating: .blank, count: blanks) + Responsible.validCases + Array(repeating: .blank, count: blanks)).enumerated().map{AnalysisResponsibleEnumeration(index: $0.0, responsible: $0.1)}
             
             return ScrollView(.horizontal, showsIndicators: false) {
@@ -391,7 +363,7 @@ struct AnalysisViewer: View {
                                 }
                             }
                         }
-                        .frame(width: 80, height: 60)
+                        .frame(width: 70, height: 60)
                     }
                 }
                 .scrollTargetLayout()
@@ -409,9 +381,37 @@ struct AnalysisViewer: View {
                 scrollId = (list.first(where: {$0.responsible == board.responsible}))?.id
             }
             .palette(.bannerShadow)
-            .frame(width: (80 * CGFloat(show)), height: 60)
+            .frame(width: (70 * CGFloat(show)), height: 60)
         }
+    }
+    
+    struct AnalysisResponsibleElement : View {
+        @Binding var responsible: Responsible
+        @Binding var changed: Bool
+        var unknown: String? = nil
         
+        var body : some View {
+            VStack {
+                if changed { EmptyView() }
+                Spacer()
+                HStack {
+                    Spacer()
+                    Text(responsible.short).font(responsibleTitleFont)
+                    Spacer()
+                }
+                Spacer().frame(height: 2)
+                HStack {
+                    Spacer()
+                    Text((responsible == .unknown && unknown != nil ? unknown! : responsible.full)).font(responsibleCaptionFont)
+                    Spacer()
+                }
+                Spacer().frame(height: 6)
+            }.onChange(of: changed, initial: false) {
+                if changed {
+                    changed = false
+                }
+            }
+        }
     }
     
     struct ButtonBar: View{

@@ -23,10 +23,12 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
     @Published public var hand: String = ""
     @Published public var optimumScore: OptimumScore?
     @Published public var doubleDummy: [Seat:[Suit:DoubleDummyViewModel]] = [:]
+    @Published public var overrideTricks: [Seat:[Suit:OverrideTricksViewModel]] = [:]
     
     // Linked managed objects - should only be referenced in this and the Data classes
     @Published internal var boardMO: BoardMO?
     @Published internal var doubleDummyMO: [Seat:[Suit:DoubleDummyMO]] = [:]
+    @Published internal var overrideTricksMO: [Seat:[Suit:OverrideTricksMO]] = [:]
     
     @Published private(set) var saveMessage: String = ""
     @Published private(set) var canSave: Bool = true
@@ -141,6 +143,14 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
                     self.doubleDummy[declarer]![suit] = DoubleDummyViewModel(scorecard: scorecard, doubleDummyMO: mo)
                 }
             }
+            for (declarer, suitDictionary) in overrideTricksMO {
+                for (suit, mo) in suitDictionary {
+                    if self.overrideTricks[declarer] == nil {
+                        self.overrideTricks[declarer] = [:]
+                    }
+                    self.overrideTricks[declarer]![suit] = OverrideTricksViewModel(scorecard: scorecard, overrideTricksMO: mo)
+                }
+            }
         }
     }
     
@@ -211,6 +221,22 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
 
     public func forEachDoubleDummyMO(action: (Seat, Suit, DoubleDummyMO)->()) {
         for (declarer, suitDictionary) in doubleDummyMO {
+            for (suit, mo) in suitDictionary {
+                action(declarer, suit, mo)
+            }
+        }
+    }
+    
+    public func forEachOverrideTricks(action: (Seat, Suit, OverrideTricksViewModel)->()) {
+        for (declarer, suitDictionary) in overrideTricks {
+            for (suit, overrideTricks) in suitDictionary {
+                action(declarer, suit, overrideTricks)
+            }
+        }
+    }
+
+    public func forEachOverrideTricksMO(action: (Seat, Suit, OverrideTricksMO)->()) {
+        for (declarer, suitDictionary) in overrideTricksMO {
             for (suit, mo) in suitDictionary {
                 action(declarer, suit, mo)
             }
