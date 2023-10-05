@@ -58,7 +58,7 @@
     <entity name="OverrideTricks" representedClassName="OverrideTricks" syncable="YES" codeGenerationType="class">
         <attribute name="board16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="declarer16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="made" optional="YES"/>
+        <attribute name="made16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="scorecardId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="suit16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
