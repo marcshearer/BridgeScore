@@ -37,6 +37,7 @@ var inputFont: Font { Font.system(size: (MyApp.format == .tablet ? 16.0 : 14.0))
 var messageFont: Font { Font.system(size: (MyApp.format == .tablet ? 16.0 : 14.0)) }
 var searchFont: Font { Font.system(size: (MyApp.format == .tablet ? 20.0 : 16.0)) }
 var smallFont: Font { Font.system(size: (MyApp.format == .tablet ? 14.0 : 12.0)) }
+var tinyFont: Font { Font.system(size: (MyApp.format == .tablet ? 12.0 : 8.0)) }
 var responsibleTitleFont: Font {  Font.system(size: (MyApp.format == .tablet ? 30.0 : 18.0)) }
 var responsibleCaptionFont: Font {  Font.system(size: (MyApp.format == .tablet ? 12.0 : 8.0)) }
 
@@ -408,7 +409,7 @@ public enum Responsible: Int, EnumPickerType, Identifiable {
         case .teamMinus, .teamPlus:
             return "Team"
         case .opponentPlus, .opponentMinus:
-            return "Opponent"
+            return "Opps"
         case .luckPlus:
             return "Lucky"
         case .luckMinus:
@@ -812,6 +813,10 @@ public enum ContractLevel: Int, ContractEnumType, Equatable, Comparable {
     
     var hasDouble: Bool {
         return hasSuit
+    }
+    
+    var tricks: Int {
+        rawValue + Values.trickOffset
     }
     
     public static func < (lhs: ContractLevel, rhs: ContractLevel) -> Bool {

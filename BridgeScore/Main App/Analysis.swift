@@ -46,7 +46,7 @@ class Analysis {
     private(set) var board: BoardViewModel
     private(set) var traveller: TravellerViewModel
     private(set) var override: AnalysisOverride
-    private var boardTravellers: [TravellerViewModel]
+    private(set) var boardTravellers: [TravellerViewModel]
     private var scoreType: Type
     private var boardScoreType: ScoreType
     
@@ -91,6 +91,10 @@ class Analysis {
             result.made[.override] = overrideValue
         }
         return result
+    }
+    
+    public func madeValue(combination: AnalysisTrickCombination, method: AnalysisAssessmentMethod) -> Int? {
+        return madeValues(combination: combination).made[method]
     }
         
     public func useMethod(suit: Suit, declarer: Pair) -> AnalysisAssessmentMethod? {
@@ -319,7 +323,7 @@ class Analysis {
                 allTricksMade.append(overrideTricksMade)
             }
             for made in Set(allTricksMade) {
-                let points = Scorecard.points(contract: option.contract, vulnerability: Vulnerability(board: traveller.boardNumber), declarer: option.declarer.seats.first!, made: made - Values.trickOffset - option.contract.level.rawValue, seat: sitting)
+                let points = Scorecard.points(contract: option.contract, vulnerability: Vulnerability(board: traveller.boardNumber), declarer: option.declarer.seats.first!, made: made - option.contract.level.tricks, seat: sitting)
                 
                 assessment[made] = (AnalysisAssessment(tricks: made, points: points, score: 0))
             }
@@ -331,6 +335,39 @@ class Analysis {
             }
             option.calculateScores(traveller: traveller, sitting: sitting)
         }
+    }
+    
+    func score(points: Int) -> Float {
+        let otherTravellers = boardTravellers.filter({!($0 == traveller)})
+        var score: Float? = nil
+        switch Scorecard.current.scorecard!.type.boardScoreType {
+        case .percent:
+            // 2 points for every pair beaten, 1 for every pair tied divided by 2 points for every pair
+            var mps = 0
+            for compareTraveller in otherTravellers {
+                let compare = compareTraveller.points(sitting: sitting)
+                if points > compare {
+                    mps += 2
+                } else if points == compare {
+                    mps += 1
+                }
+            }
+            score = Float(mps * 100) / Float((otherTravellers.count * 2))
+        case .aggregate:
+            score = Float(points)
+        case .xImp:
+            // Compare our score with every othre traveller and average
+            score = otherTravellers.map({Float(BridgeImps(points: points - $0.points(sitting: sitting)).imps)}).reduce(0,+) / Float(otherTravellers.count)
+        case .imp:
+            let compare = otherTravellers.map{$0.points(sitting: sitting)}.reduce(0, +) / otherTravellers.count
+            let imps = BridgeImps(points: points - compare)
+            score = Float(imps.imps)
+        case .vp, .acblVp:
+            break
+        case .unknown:
+            break
+        }
+        return score!
     }
     
     private func removeBadOptions () {
@@ -447,12 +484,62 @@ class Analysis {
                     }
                 }
                     // Best
-                if let bestTraveller = suitTravellers.last {
+                if let bestTraveller = suitTravellers.first {
                     assessment[combination]!.made[.best] = Values.trickOffset + bestTraveller.contractLevel + bestTraveller.made
                 }
             }
         }
         return assessment
+    }
+    
+    func compare(combination: AnalysisTrickCombination, method: AnalysisAssessmentMethod, made: Int) -> (String, Int, AnalysisAssessmentMethod?) {
+        var result: (compare: String, with: Int, method: AnalysisAssessmentMethod?) = ("", 0, nil)
+        let invert = (combination.declarer == sitting.pair ? 1 : -1)
+        if combination.suit == traveller.contract.suit && combination.declarer == traveller.declarer.pair {
+            if Scorecard.current.scorecard?.type.players == 4 && boardTravellers.count == 2 {
+                // Head to head - compare to other table if in same suit
+                if let rankingNumber = traveller.rankingNumber[sitting], let otherTraveller = Scorecard.current.travellers(board: board.board, seat: sitting.equivalent, rankingNumber: rankingNumber).first {
+                    if otherTraveller.contract.suit == combination.suit {
+                        result = (compareValues(made, otherTraveller.contract.level.tricks + otherTraveller.made, invert: invert, text: "Other"), otherTraveller.contract.level.tricks + otherTraveller.made, .play)
+                    }
+                }
+            } else {
+                // Not head to head so see how compares with field
+                let combinationTravellers = boardTravellers.filter({$0.contract.suit == combination.suit && $0.declarer.pair == combination.declarer && $0 != traveller})
+                if !combinationTravellers.isEmpty {
+                    let betterTravellers = combinationTravellers.filter({ ($0.contract.level.tricks + $0.made - made) * invert > 0 })
+                    let betterThanPercent = 100 - (Float(betterTravellers.count)/Float(combinationTravellers.count + 1)*100).rounded()
+                    result = ("≥\(betterThanPercent)%", tricksMade[combination]?.made[.median] ?? 0, .median)
+                }
+            }
+            if result.compare == "" {
+                // No luck so far - compare with Double Dummy
+                var ddMade: [Int] = []
+                for index in 0...1 {
+                    ddMade.append(board.doubleDummy[combination.declarer.seats[index]]?[combination.suit]?.made ?? -1)
+                }
+                if ddMade.max() ?? -1 >= 0 {
+                    result = (compareValues(made, ddMade.max()!, invert: invert, text: "DD"), ddMade.max()!, .doubleDummy)
+                }
+            }
+        }
+        return result
+    }
+    
+    func compareValues(_ lhs: Int, _ rhs: Int, invert: Int, text: String) -> String {
+        var result = ""
+        if lhs == rhs {
+            result = "="
+        } else if (lhs - rhs) * invert < -1 {
+            result = "<<"
+        } else if (lhs - rhs) * invert < 0 {
+            result = "<"
+        } else if (lhs - rhs) * invert > 1 {
+            result = ">>"
+        } else {
+            result  = ">"
+        }
+        return result + text
     }
 }
 
@@ -460,6 +547,12 @@ struct AnalysisTrickCombination: Hashable {
     var board: Int
     var suit: Suit
     var declarer: Pair
+    
+    init(board: Int = 0, suit: Suit = .blank, declarer: Pair = .unknown) {
+        self.board = board
+        self.suit = suit
+        self.declarer = declarer
+    }
 }
 enum AnalysisActionType: Int, CaseIterable {
     case noAction
@@ -569,7 +662,12 @@ enum AnalysisAssessmentMethod : Int, CaseIterable, Hashable {
     case override
     
     var string: String {
-        return "\(self)".splitCapitals
+        switch self {
+        case .doubleDummy:
+            return "DD"
+        default:
+            return "\(self)".capitalized
+        }
     }
     
     static var realCases: [AnalysisAssessmentMethod] {
@@ -753,38 +851,9 @@ class AnalysisOption : Identifiable, Equatable, Hashable {
     }
     
     public func calculateScores(traveller: TravellerViewModel, sitting: Seat) {
-        let travellers = Scorecard.current.travellers(board: traveller.board)
-        let otherTravellers = travellers.filter({!($0 == traveller)})
         let pointsList = Set(assessments.map{$0.value.points})
         for points in pointsList {
-            var score: Float? = nil
-            switch Scorecard.current.scorecard!.type.boardScoreType {
-            case .percent:
-                // 2 points for every pair beaten, 1 for every pair tied divided by 2 points for every pair
-                var mps = 0
-                for compareTraveller in otherTravellers {
-                    let compare = compareTraveller.points(sitting: sitting)
-                    if points > compare {
-                        mps += 2
-                    } else if points == compare {
-                        mps += 1
-                    }
-                }
-                score = Float(mps * 100) / Float((otherTravellers.count * 2))
-            case .aggregate:
-                score = Float(points)
-            case .xImp:
-                // Compare our score with every othre traveller and average
-                score = otherTravellers.map({Float(BridgeImps(points: points - $0.points(sitting: sitting)).imps)}).reduce(0,+) / Float(otherTravellers.count)
-            case .imp:
-                let compare = otherTravellers.map{$0.points(sitting: sitting)}.reduce(0, +) / otherTravellers.count
-                let imps = BridgeImps(points: points - compare)
-                score = Float(imps.imps)
-            case .vp, .acblVp:
-                break
-            case .unknown:
-                break
-            }
+            let score = parent.score(points: points)
             for (_, assessment) in assessments.filter({$0.value.points == points}) {
                 assessment.score = score
             }

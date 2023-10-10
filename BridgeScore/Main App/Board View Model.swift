@@ -99,7 +99,7 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
                 }
             }
             if !result {
-                // Check double dummy entries match
+                // Check override tricks entries match
                 if overrideTricks.count != overrideTricksMO.count {
                     result = true
                 } else {
@@ -171,6 +171,7 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
                     self.doubleDummy[declarer]![suit] = DoubleDummyViewModel(scorecard: scorecard, doubleDummyMO: mo)
                 }
             }
+            self.overrideTricks = [:]
             for (declarer, suitDictionary) in overrideTricksMO {
                 for (suit, mo) in suitDictionary {
                     if self.overrideTricks[declarer] == nil {
@@ -199,6 +200,11 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
             forEachDoubleDummy { (declarer, suit, doubleDummy) in
                 if let mo = self.doubleDummyMO[declarer]?[suit] {
                     doubleDummy.updateMO(mo)
+                }
+            }
+            forEachOverrideTricks { (declarer, suit, overrideTricks) in
+                if let mo = self.overrideTricksMO[declarer]?[suit] {
+                    overrideTricks.updateMO(mo)
                 }
             }
         } else {
@@ -236,7 +242,8 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
         self.comment != "" ||
         self.responsible != .unknown ||
         self.optimumScore != nil ||
-        !self.doubleDummy.isEmpty
+        !self.doubleDummy.isEmpty ||
+        !self.overrideTricks.isEmpty
     }
     
     public func forEachDoubleDummy(action: (Seat, Suit, DoubleDummyViewModel)->()) {

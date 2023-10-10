@@ -7,20 +7,51 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "76E7E56F-0A8F-4206-87D8-F22782A75F00"
-            shouldBeEnabled = "Yes"
+            uuid = "364E163F-85CE-496A-96A0-2B6EDD08386F"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "BridgeScore/Main App/Board View Model.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "113"
+            endingLineNumber = "113"
+            landmarkName = "changed"
+            landmarkType = "24">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "FCED9075-7F9D-487A-A16E-A7503A6FCF0B"
+            shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "BridgeScore/Main App/Scorecard.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "420"
-            endingLineNumber = "420"
-            landmarkName = "save(board:)"
+            startingLineNumber = "455"
+            endingLineNumber = "455"
+            landmarkName = "clearImport()"
             landmarkType = "7">
             <Locations>
                <Location
-                  uuid = "76E7E56F-0A8F-4206-87D8-F22782A75F00 - 2171c5fec53564a0"
+                  uuid = "FCED9075-7F9D-487A-A16E-A7503A6FCF0B - 1a28d6aec19f6bb3"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (Bridge_Score.Seat, Bridge_Score.Suit, Bridge_Score.DoubleDummyViewModel) -&gt; () in closure #2 () -&gt; () in Bridge_Score.Scorecard.save(board: Bridge_Score.BoardViewModel) -&gt; ()"
+                  moduleName = "Bridge Score"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/marcshearer/Documents/Xcode%20projects/BridgeScore/BridgeScore/Main%20App/Scorecard.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "455"
+                  endingLineNumber = "455"
+                  offsetFromSymbolStart = "1048">
+               </Location>
+               <Location
+                  uuid = "FCED9075-7F9D-487A-A16E-A7503A6FCF0B - 2171c5fec5356927"
                   shouldBeEnabled = "Yes"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
@@ -30,41 +61,42 @@
                   urlString = "file:///Users/marcshearer/Documents/Xcode%20projects/BridgeScore/BridgeScore/Main%20App/Scorecard.swift"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "420"
-                  endingLineNumber = "420"
-                  offsetFromSymbolStart = "1376">
+                  startingLineNumber = "455"
+                  endingLineNumber = "455"
+                  offsetFromSymbolStart = "1234">
                </Location>
                <Location
-                  uuid = "76E7E56F-0A8F-4206-87D8-F22782A75F00 - 2171c5fec53564a0"
+                  uuid = "FCED9075-7F9D-487A-A16E-A7503A6FCF0B - 6e282e2ce389fe96"
                   shouldBeEnabled = "Yes"
                   ignoreCount = "0"
                   continueAfterRunningActions = "No"
-                  symbolName = "Bridge_Score.Scorecard.save(board: Bridge_Score.BoardViewModel) -&gt; ()"
+                  symbolName = "closure #2 () -&gt; () in Bridge_Score.Scorecard.save(board: Bridge_Score.BoardViewModel) -&gt; ()"
                   moduleName = "Bridge Score"
                   usesParentBreakpointCondition = "Yes"
                   urlString = "file:///Users/marcshearer/Documents/Xcode%20projects/BridgeScore/BridgeScore/Main%20App/Scorecard.swift"
                   startingColumnNumber = "9223372036854775807"
                   endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "420"
-                  endingLineNumber = "420"
-                  offsetFromSymbolStart = "984">
-               </Location>
-               <Location
-                  uuid = "76E7E56F-0A8F-4206-87D8-F22782A75F00 - e9dda972d6b0a112"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "closure #1 () -&gt; () in Bridge_Score.Scorecard.save(board: Bridge_Score.BoardViewModel) -&gt; ()"
-                  moduleName = "Bridge Score"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/marcshearer/Documents/Xcode%20projects/BridgeScore/BridgeScore/Main%20App/Scorecard.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "422"
-                  endingLineNumber = "422"
-                  offsetFromSymbolStart = "44">
+                  startingLineNumber = "457"
+                  endingLineNumber = "457"
+                  offsetFromSymbolStart = "35">
                </Location>
             </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "16563CDA-3120-4859-8CA1-53146022BB72"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "BridgeScore/Main App/Analysis Viewer.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "142"
+            endingLineNumber = "142"
+            landmarkName = "body"
+            landmarkType = "24">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

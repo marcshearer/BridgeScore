@@ -12,6 +12,7 @@ class Palette {
     
     @BackgroundColor(.clear) static var clear
     @BackgroundColor(.banner) static var banner
+    @BackgroundColor(.bannerInput) static var bannerInput
     @BackgroundColor(.bannerButton) static var bannerButton
     @BackgroundColor(.bannerShadow) static var bannerShadow
     @BackgroundColor(.alternateBanner) static var alternateBanner

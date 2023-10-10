@@ -319,6 +319,10 @@ class Scorecard {
         }
     }
     
+    public func removeDoubleDummy(board: Int) {
+        
+    }
+    
     public func addNew() {
         if let scorecard = scorecard {
                 // Fill in any gaps in boards
@@ -346,6 +350,11 @@ class Scorecard {
         removeRankings()
         for boardNumber in 1...(scorecard?.boards ?? 0) {
             removeTravellers(board: boardNumber)
+            if let board = Scorecard.current.boards[boardNumber] {
+                board.doubleDummy = [:]
+                board.overrideTricks = [:]
+                board.save()
+            }
         }
     }
     
@@ -475,7 +484,7 @@ class Scorecard {
                 board.forEachOverrideTricksMO { (declarer, suit, mo) in
                     if board.overrideTricks[declarer]?[suit] == nil {
                         CoreData.context.delete(mo)
-                        board.overrideTricks[declarer]![suit] = nil
+                        board.overrideTricksMO[declarer]![suit] = nil
                     }
                 }
             })

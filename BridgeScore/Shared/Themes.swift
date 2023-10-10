@@ -72,6 +72,7 @@ enum ThemeBackgroundColorName: CaseIterable {
     case clear
     case nearlyClear
     case banner
+    case bannerInput
     case bannerButton
     case bannerShadow
     case alternateBanner
@@ -372,6 +373,7 @@ class Themes {
             background: [
                 .clear                       : ThemeColor(#colorLiteral(red: 0, green: 0, blue: 0, alpha: 0), nil, .lightBackground, .darkBackground),
                 .banner                      : ThemeColor(#colorLiteral(red: 0, green: 0.5152708056, blue: 0.7039544028, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1),  .midInverseBackground, .darkBackground),
+                .bannerInput                 : ThemeColor(#colorLiteral(red: 0.2352941176, green: 0.7490196078, blue: 1, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1),  .lightBackground, .darkBackground),
                 .bannerShadow                : ThemeColor(#colorLiteral(red: 0, green: 0.5529411765, blue: 0.7647058824, alpha: 1), nil, .lightBackground),
                 .bannerButton                : ThemeColor(#colorLiteral(red: 0.8374180198, green: 0.8374378085, blue: 0.8374271393, alpha: 1), nil, .lightBackground),
                 .alternateBanner             : ThemeColor(#colorLiteral(red: 0.8784313725, green: 0.8784313725, blue: 0.8784313725, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1), .midBackground, .darkBackground),
