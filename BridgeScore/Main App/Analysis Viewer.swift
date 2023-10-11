@@ -1050,6 +1050,9 @@ struct AnalysisSuggestionView: View {
     @Binding var sitting: Seat
     @Binding var formatInt: Int
     @ObservedObject var analysisData: AnalysisData
+    let tableWidth: CGFloat = 55
+    let contractWidth: CGFloat = 110
+    let impactWidth: CGFloat = 135
     
     var body: some View {
         ZStack {
@@ -1064,25 +1067,25 @@ struct AnalysisSuggestionView: View {
                     VStack(spacing: 0) {
                         Spacer()
                         HStack(spacing: 0) {
-                            LeadingText("Table").frame(width: 60)
-                            CenteredText("Contract").frame(width: 100)
+                            LeadingText("Table").frame(width: tableWidth)
+                            CenteredText("Contract").frame(width: contractWidth)
                             CenteredText("Description")
-                            CenteredText("Impact").frame(width: 100)
+                            CenteredText("Impact").frame(width: impactWidth)
                         }
                         .foregroundColor(Palette.tile.text).bold()
                         .frame(height: 25)
                         Spacer()
                     }.frame(height: 30)
-                    Suggestion(board: $board, description: "This", analysisData: analysisData, formatInt: $formatInt, otherTable: false)
+                    Suggestion(board: $board, description: "This", analysisData: analysisData, formatInt: $formatInt, otherTable: false, rejected: board.biddingRejected, tableWidth: tableWidth, contractWidth: contractWidth, impactWidth: impactWidth)
                     if Scorecard.current.scorecard?.type.players == 4 {
                         Spacer().frame(height: 10)
-                        Suggestion(board: $board, description: "Other", analysisData: analysisData, formatInt: $formatInt, otherTable: true)
+                        Suggestion(board: $board, description: "Other", analysisData: analysisData, formatInt: $formatInt, otherTable: true, rejected: board.otherBiddingRejected, tableWidth: tableWidth, contractWidth: contractWidth, impactWidth: impactWidth)
                     }
                     Spacer()
                 }
                 Spacer().frame(width: 4)
             }
-        }
+        }.font(inputFont)
     }
     
     struct Suggestion: View {
@@ -1091,17 +1094,21 @@ struct AnalysisSuggestionView: View {
         @ObservedObject var analysisData: AnalysisData
         @Binding var formatInt: Int
         @State var otherTable: Bool
+        @State var rejected: Bool
+        @State var tableWidth: CGFloat
+        @State var contractWidth: CGFloat
+        @State var impactWidth: CGFloat
         
         var body: some View {
             if let bestOption = analysisData.bestOption[otherTable], let useMethod = bestOption.useMethod {
                 VStack {
                     HStack(spacing: 0) {
-                        LeadingText(description).frame(width: 60)
+                        LeadingText(description).frame(width: tableWidth)
                         HStack {
                             Spacer()
                             Text(bestOption.contract.colorCompact + bestOption.value(method: useMethod, format: .made, colorCode: false) + AttributedString("  " + bestOption.declarer.short))
                             Spacer()
-                        }.frame(width: 100)
+                        }.frame(width: contractWidth)
                         HStack {
                             Spacer()
                             Text(bestOption.action.description(otherTable: otherTable))
@@ -1114,8 +1121,17 @@ struct AnalysisSuggestionView: View {
                             let (_, alreadyShown, _) = analysisData.analysis.compare(combination: AnalysisTrickCombination(board: board.board, suit: bestOption.contract.suit, declarer: bestOption.declarer)) ?? ("", nil, nil)
                             let bestOptionDescription = String(bestOption.value(method: useMethod, format: .score, compare: compare, verbose: true, showVariance: true, colorCode: false, alreadyShown: (otherTable ? 0 : alreadyShown)).characters)
                             Text("\(bestOptionDescription ==  "" ? "No change" : bestOptionDescription)")
+                                .foregroundColor(Palette.background.textColor(rejected && bestOptionDescription != "" ? .faint : .normal))
                             Spacer()
-                        }.frame(width: 100)
+                            if bestOptionDescription != "" {
+                                Image(systemName: rejected ? "square" : "checkmark.square")
+                                    .onTapGesture {
+                                        rejected.toggle()
+                                        board.save()
+                                    }
+                            }
+                            Spacer().frame(width: 2)
+                        }.frame(width: impactWidth)
                     }
                 }
             }

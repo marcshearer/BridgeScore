@@ -408,6 +408,19 @@ class Analysis {
     
     private func removeBadOptions () {
         if options.count >= 2 {
+                // Consider removing original linked bid if worse than double
+            for option in options {
+                if option.double && !option.removed {
+                    if let linked = option.linked {
+                        if !linked.removed {
+                            if AnalysisOption.equalOrWorsePoints(linked, option, invert: invert(option)) {
+                                linked.removed(by: option, reason: "Worse than linker")
+                            }
+                        }
+                    }
+                }
+            }
+            
                 // Remove any option which is always equal or worse to something above it (for decision maker)
             for optionIndex in 1..<options.count {
                 let option = options[optionIndex]
@@ -416,11 +429,15 @@ class Analysis {
                     if !compare.removed {
                             // First consider removing the option if it is worse
                         if AnalysisOption.equalOrWorsePoints(option, compare, invert: invert(option), specificMethod: (compare.type == .actual && option.contract.suit == compare.contract.suit && option.declarer == compare.declarer ? .play : nil)) {
-                            option.removed(by: compare, reason: "Earlier better")
+                            if !option.removed {
+                                option.removed(by: compare, reason: "Earlier better")
+                            }
                         } else if option.contract.suit == compare.contract.suit && option.contract.double == .undoubled && compare.contract.double == .undoubled && option.declarer == compare.declarer && option.type == compare.type {
                                 // Different levels for the same thing - allow earlier (lower) option to be removed as well
                             if AnalysisOption.equalOrWorsePoints(compare, option, invert: invert(compare), specificMethod: (compare.type == .actual && option.contract.suit == compare.contract.suit && option.declarer == compare.declarer ? .play : nil)) {
-                                compare.removed(by: option, reason: "Later better")
+                                if !compare.removed {
+                                    compare.removed(by: option, reason: "Later better")
+                                }
                                 break
                             }
                         }
@@ -433,19 +450,6 @@ class Analysis {
                 if let linked = option.linked {
                     if linked.removed {
                         option.removed(by: linked, reason: "Linked gone")
-                    }
-                }
-            }
-            
-                // Now consider removing original linked bid if worse than double
-            for option in options {
-                if option.double && !option.removed {
-                    if let linked = option.linked {
-                        if !linked.removed && linked.type.allowRemove {
-                            if AnalysisOption.equalOrWorsePoints(linked, option, invert: invert(option)) {
-                                linked.removed(by: option, reason: "Worse than linker")
-                            }
-                        }
                     }
                 }
             }

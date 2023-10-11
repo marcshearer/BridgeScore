@@ -22,6 +22,8 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
     @Published public var responsible: Responsible = .unknown
     @Published public var hand: String = ""
     @Published public var optimumScore: OptimumScore?
+    @Published public var biddingRejected: Bool = false
+    @Published public var otherBiddingRejected: Bool = false
     @Published public var doubleDummy: [Seat:[Suit:DoubleDummyViewModel]] = [:]
     @Published public var overrideTricks: [Pair:[Suit:OverrideTricksViewModel]] = [:]
     
@@ -67,7 +69,9 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
                 self.comment != mo.comment ||
                 self.responsible != mo.responsible ||
                 self.hand != mo.hand ||
-                self.optimumScore != mo.optimumScore{
+                self.optimumScore != mo.optimumScore ||
+                self.biddingRejected != mo.biddingRejected ||
+                self.otherBiddingRejected != mo.otherBiddingRejected {
                     result = true
             }
             if !result {
@@ -162,6 +166,8 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
             self.responsible = mo.responsible
             self.hand = mo.hand
             self.optimumScore = mo.optimumScore
+            self.biddingRejected = mo.biddingRejected
+            self.otherBiddingRejected = mo.otherBiddingRejected
             self.doubleDummy = [:]
             for (declarer, suitDictionary) in doubleDummyMO {
                 for (suit, mo) in suitDictionary {
@@ -197,6 +203,8 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
             mo.responsible = responsible
             mo.hand = hand
             mo.optimumScore = optimumScore
+            mo.biddingRejected = biddingRejected
+            mo.otherBiddingRejected = otherBiddingRejected
             forEachDoubleDummy { (declarer, suit, doubleDummy) in
                 if let mo = self.doubleDummyMO[declarer]?[suit] {
                     doubleDummy.updateMO(mo)

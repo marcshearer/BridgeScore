@@ -5,6 +5,7 @@
         <attribute name="name" optional="YES" attributeType="String"/>
     </entity>
     <entity name="Board" representedClassName="BoardMO" syncable="YES">
+        <attribute name="biddingRejected" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="board16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="comment" attributeType="String"/>
         <attribute name="contractDouble16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
@@ -22,6 +23,7 @@
         <attribute name="optimumEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="optimumMade16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="optimumNsPoints16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="otherBiddingRejected" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="responsible16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="scorecardId" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="scoreEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
