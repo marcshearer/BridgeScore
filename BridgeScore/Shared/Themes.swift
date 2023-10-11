@@ -462,8 +462,8 @@ class Themes {
                     
                     let selector = NSSelectorFromString(selectorString)
                     let imp = UIApplication.shared.method(for: selector)
-                    let method = unsafeBitCast(imp, to: setAlternateIconName.self)
-                    method(UIApplication.shared, selector, iconName as NSString?, { _ in })
+                    let newMethod = unsafeBitCast(imp, to: setAlternateIconName.self)
+                    newMethod(UIApplication.shared, selector, iconName as NSString?, { _ in })
                 }
             }
         #endif

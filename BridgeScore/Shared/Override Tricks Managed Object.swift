@@ -18,6 +18,8 @@ public class OverrideTricksMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var declarer16: Int16
     @NSManaged public var suit16: Int16
     @NSManaged public var made16: Int16
+    @NSManaged public var madeEntered: Bool
+    @NSManaged public var rejected: Bool
     
     convenience init() {
         self.init(context: CoreData.context)
@@ -33,9 +35,12 @@ public class OverrideTricksMO: NSManagedObject, ManagedObject, Identifiable {
         set { self.declarer16 = Int16(newValue.rawValue) }
     }
     
-    public var made: Int {
-        get { Int(self.made16) }
-        set { self.made16 = Int16(newValue) }
+    public var made: Int? {
+        get { self.madeEntered ? Int(self.made16) : nil }
+        set {
+            self.made16 = Int16(newValue ?? 0)
+            self.madeEntered = newValue != nil
+        }
     }
     
     public var suit: Suit {

@@ -16,7 +16,8 @@ public class OverrideTricksViewModel : ObservableObject, Identifiable, Equatable
     @Published public var board: Int
     @Published public var declarer: Pair = .unknown
     @Published public var suit: Suit = .blank
-    @Published public var made: Int = -1
+    @Published public var made: Int?
+    @Published public var rejected: Bool
     
     // Auto-cleanup
     private var cancellableSet: Set<AnyCancellable> = []
@@ -28,23 +29,25 @@ public class OverrideTricksViewModel : ObservableObject, Identifiable, Equatable
             self.board != mo.board ||
             self.declarer != mo.declarer ||
             self.suit != mo.suit ||
-            self.made != mo.made {
+            self.made != mo.made ||
+            self.rejected != mo.rejected {
             result = true
         }
         return result
     }
     
-    public init(scorecard: ScorecardViewModel, board: Int, declarer: Pair, suit: Suit, made: Int) {
+    public init(scorecard: ScorecardViewModel, board: Int, declarer: Pair, suit: Suit, made: Int?, rejected: Bool) {
         self.scorecard = scorecard
         self.board = board
         self.declarer = declarer
         self.suit = suit
         self.made = made
+        self.rejected = rejected
         self.setupMappings()
     }
     
     public convenience init(scorecard: ScorecardViewModel, overrideTricksMO: OverrideTricksMO) {
-        self.init(scorecard: scorecard, board: overrideTricksMO.board, declarer: overrideTricksMO.declarer, suit: overrideTricksMO.suit, made: overrideTricksMO.made)
+        self.init(scorecard: scorecard, board: overrideTricksMO.board, declarer: overrideTricksMO.declarer, suit: overrideTricksMO.suit, made: overrideTricksMO.made, rejected: overrideTricksMO.rejected)
         self.revert(overrideTricksMO)
     }
         
@@ -59,6 +62,7 @@ public class OverrideTricksViewModel : ObservableObject, Identifiable, Equatable
         self.declarer = mo.declarer
         self.suit = mo.suit
         self.made = mo.made
+        self.rejected = mo.rejected
     }
     
     public func updateMO(_ mo: OverrideTricksMO) {
@@ -67,10 +71,11 @@ public class OverrideTricksViewModel : ObservableObject, Identifiable, Equatable
         mo.declarer = declarer
         mo.suit = suit
         mo.made = made
+        mo.rejected = rejected
     }
 
     public static func == (lhs: OverrideTricksViewModel, rhs: OverrideTricksViewModel) -> Bool {
-        lhs.scorecard.id == rhs.scorecard.id && lhs.board == rhs.board && lhs.suit == rhs.suit && lhs.declarer == rhs.declarer && lhs.made == rhs.made
+        lhs.scorecard.id == rhs.scorecard.id && lhs.board == rhs.board && lhs.suit == rhs.suit && lhs.declarer == rhs.declarer && lhs.made == rhs.made && lhs.rejected == rhs.rejected
     }
         
     public var description: String {
