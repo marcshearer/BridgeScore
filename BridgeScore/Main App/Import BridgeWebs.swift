@@ -379,12 +379,20 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 }
             case "+":
                 if let string = columns.element(index) {
-                    importedTraveller.nsMps = (Int(string) ?? 0)
-                    importedTraveller.totalMps = (importedTraveller.totalMps ?? 0) + (Int(string) ?? 0)
+                    if scorecard.type.boardScoreType == .percent {
+                        importedTraveller.nsMps = (Int(string) ?? 0)
+                        importedTraveller.totalMps = (importedTraveller.totalMps ?? 0) + (Int(string) ?? 0)
+                    } else {
+                        importedTraveller.nsScore = (Float(string) ?? 0)
+                    }
                 }
             case "-":
                 if let string = columns.element(index) {
-                    importedTraveller.totalMps = (importedTraveller.totalMps ?? 0) + (Int(string) ?? 0)
+                    if scorecard.type.boardScoreType == .percent {
+                        importedTraveller.totalMps = (importedTraveller.totalMps ?? 0) + (Int(string) ?? 0)
+                    } else {
+                        importedTraveller.nsScore = -(Float(string) ?? 0)
+                    }
                 }
             case "ns x":
                 if let string = columns.element(index) {

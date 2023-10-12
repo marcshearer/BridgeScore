@@ -7,10 +7,10 @@
 
 import CoreData
 
-@objc(OverrideTricksMO)
-public class OverrideTricksMO: NSManagedObject, ManagedObject, Identifiable {
+@objc(OverrideMO)
+public class OverrideMO: NSManagedObject, ManagedObject, Identifiable {
     
-    public static let tableName = "OverrideTricks"
+    public static let tableName = "Override"
     
     public var id: (UUID, Int) { (self.scorecardId, self.board) }
     @NSManaged public var scorecardId: UUID

@@ -143,7 +143,7 @@ struct AnalysisViewer: View {
         .onSwipe() { direction in
             nextTraveller(direction == .left ? 1 : -1)
         }
-        .onReceive(publisher) { (_, _, _) in // TODO remove publisher
+        .onReceive(valueChangePublisher) { (_, _, _) in // TODO remove publisher
             updateAnalysisData()
         }
     }
@@ -221,11 +221,11 @@ struct AnalysisViewer: View {
                     }.font(bannerFont).foregroundColor(Palette.banner.text)
                     Spacer()
                 }
+                .background(Palette.banner.background)
+                .cornerRadius(analysisCornerSize)
                 .onTapGesture {
                     stopEdit = true
                 }
-                .background(Palette.banner.background)
-                .cornerRadius(analysisCornerSize)
             }
             .onReceive(Publishers.keyboardHeight) { (keyboardHeight) in
                 keyboardAdjust = keyboardHeight
@@ -301,7 +301,7 @@ struct AnalysisViewer: View {
         @Binding var responsiblePicker: Bool
         @State var scrollId: Int?
         @State var changed = false
-        let show = Responsible.validCases.count // Must be odd
+        let show = (((Responsible.validCases.count - 1) / 2) * 2) + 1 // Must be odd
 
         var body : some View {
             AnalysisResponsibleElement(responsible: $board.responsible, changed: $changed, unknown: "Resp")
@@ -488,7 +488,7 @@ struct AnalysisViewer: View {
     }
 }
 
-let publisher = PassthroughSubject<(Int?, Suit, Pair), Never>()
+let valueChangePublisher = PassthroughSubject<(Int?, Suit, Pair), Never>()
 
 struct AnalysisWrapper <Content> : View where Content : View {
     @State var stopEdit: Binding<Bool>
@@ -562,6 +562,7 @@ struct AnalysisCombinationTricks : View {
     @ObservedObject var analysisData: AnalysisData
     @State var made: Int = 0
     @State var method: AnalysisAssessmentMethod = .override
+    @State var refresh: Bool = true
     
     var body: some View {
         let columns = [GridItem(.fixed(50), spacing: 0), GridItem(.fixed(50), spacing: 0), GridItem(.fixed(80), spacing: 0), GridItem(.flexible(minimum: 100), spacing: 0), GridItem(.fixed(90), spacing: 0), GridItem(.fixed(130), spacing: 0)]
@@ -593,7 +594,7 @@ struct AnalysisCombinationTricks : View {
                                 GridRow {
                                     CenteredAttributedText(combination.suit.colorString)
                                     CenteredText(combination.declarer.short)
-                                    if let (method, made) = analysisData.analysis.useMethodMadeValue(combination: combination) {
+                                    if let (method, made) = analysisData.analysis.useMethodMadeValue(combination: combination, overrideRegardless: true) {
                                         HStack {
                                             Spacer()
                                             Text(method.string)
@@ -603,7 +604,7 @@ struct AnalysisCombinationTricks : View {
                                         if let (compare, _, _) = analysisData.analysis.compare(combination: combination) {
                                             HStack(spacing: 0) {
                                                 Spacer()
-                                                Text(compare)
+                                                Text(refresh ? compare : compare)
                                                 Spacer()
                                             }
                                             AnalysisCombinationReject(board: $board, analysisData: analysisData, combination: combination)
@@ -624,6 +625,8 @@ struct AnalysisCombinationTricks : View {
                     }
                 }
             }
+        }.onReceive(valueChangePublisher) { (_, _, _) in
+            refresh.toggle()
         }
     }
     
@@ -642,24 +645,32 @@ struct AnalysisCombinationTricks : View {
                     Text(impact < 0.5 ? "No change" : scorecard.type.boardScoreType.prefix(score: impact) + impact.toString(places: 0) + scorecard.type.boardScoreType.suffix)
                         .foregroundColor(Palette.background.textColor(rejected ? .faint : .normal))
                     Spacer()
-                    Image(systemName: rejected ? "square" : "checkmark.square").font(inputTitleFont)
-                        .onTapGesture {
-                            analysisData.override.toggleRejected(board: board.board, suit: combination.suit, declarer: combination.declarer)
-                            rejected.toggle()
-                            board.save()
-                        }
-                    Spacer().frame(width: 2)
+                    if impact >= 0.5 {
+                        Image(systemName: rejected ? "square" : "checkmark.square").font(inputTitleFont)
+                            .onTapGesture {
+                                analysisData.override.toggleRejected(board: board.board, suit: combination.suit, declarer: combination.declarer)
+                                updateImpact()
+                                board.save()
+                            }
+                        Spacer().frame(width: 2)
+                    }
                 }
             }
-            .onAppear {
-                if let (_, optionalImpact, _) = analysisData.analysis.compare(combination: combination) {
-                    impact = optionalImpact ?? 0
-                } else {
-                    impact = 0
-                }
-                (_, rejected) = analysisData.override.get(board: board.board, suit: combination.suit, declarer: combination.declarer)
+            .onChange(of: board, initial: true) {
+                updateImpact()
             }
-                
+            .onReceive(valueChangePublisher) { (_, _, _) in
+                updateImpact()
+            }
+        }
+        
+        func updateImpact() {
+            if let (_, optionalImpact, _) = analysisData.analysis.compare(combination: combination) {
+                impact = optionalImpact ?? 0
+            } else {
+                impact = 0
+            }
+            (_, rejected) = analysisData.override.get(board: board.board, suit: combination.suit, declarer: combination.declarer)
         }
     }
 }
@@ -735,7 +746,7 @@ struct overridePopover : View {
                             Spacer().frame(width: 10)
                             VStack {
                                 Spacer().frame(height: 8)
-                                ForEach(AnalysisAssessmentMethod.realCases, id: \.self) { inputMethod in
+                                ForEach(analysisData.analysis.allMethods(includeOverride: false), id: \.self) { inputMethod in
                                     Button {
                                         newMethod = inputMethod
                                     } label: {
@@ -852,7 +863,7 @@ struct overridePopover : View {
                 made = newValue
             }
         }
-        publisher.send((value, combination.suit, combination.declarer))
+        valueChangePublisher.send((value, combination.suit, combination.declarer))
     }
     
     func getValue(combination: AnalysisTrickCombination, method: AnalysisAssessmentMethod = .override) -> Int? {
@@ -871,7 +882,8 @@ struct AnalysisBiddingOptions : View {
     var format: AnalysisOptionFormat { AnalysisOptionFormat(rawValue: formatInt) ?? .score }
     
     var body: some View {
-        let columns = Array(repeating: GridItem(.flexible(minimum: 50), spacing: 0), count: 6)
+        let allMethods = analysisData.analysis.allMethods()
+        let columns = Array(repeating: GridItem(.fixed(CGFloat(305/allMethods.count)), spacing: 0), count: allMethods.count)
         let headerColumns = [GridItem(.fixed(180), spacing: 0)] + columns
         let bodyColumns = [GridItem(.fixed(105), spacing: 0), GridItem(.fixed(40), spacing: 0),GridItem(.fixed(35), spacing: 0)] + columns
         ZStack {
@@ -891,7 +903,7 @@ struct AnalysisBiddingOptions : View {
                                 }.frame(width: 108)
                                 Spacer()
                             }
-                            ForEach(AnalysisAssessmentMethod.allCases, id: \.self) { method in
+                            ForEach(allMethods, id: \.self) { method in
                                 if format == .made {
                                     CenteredText(method.short)
                                 } else {
@@ -914,7 +926,7 @@ struct AnalysisBiddingOptions : View {
                                         LeadingText(doubleString ?? type.string)
                                         LeadingAttributedText(option.contract.colorCompact)
                                         LeadingText(option.declarer.short)
-                                        ForEach(AnalysisAssessmentMethod.allCases, id: \.self) { method in
+                                        ForEach(analysisData.analysis.allMethods(), id: \.self) { method in
                                             HStack {
                                                 Spacer()
                                                 let compare = analysisData.analysis.options.first?.assessments[.play]
@@ -1046,6 +1058,7 @@ struct AnalysisCommentView: View {
 }
 
 struct AnalysisSuggestionView: View {
+    let scorecard = Scorecard.current.scorecard!
     @Binding var board: BoardViewModel
     @Binding var sitting: Seat
     @Binding var formatInt: Int
@@ -1067,7 +1080,9 @@ struct AnalysisSuggestionView: View {
                     VStack(spacing: 0) {
                         Spacer()
                         HStack(spacing: 0) {
-                            LeadingText("Table").frame(width: tableWidth)
+                            if scorecard.type.players == 4 {
+                                LeadingText("Table").frame(width: tableWidth)
+                            }
                             CenteredText("Contract").frame(width: contractWidth)
                             CenteredText("Description")
                             CenteredText("Impact").frame(width: impactWidth)
@@ -1076,10 +1091,10 @@ struct AnalysisSuggestionView: View {
                         .frame(height: 25)
                         Spacer()
                     }.frame(height: 30)
-                    Suggestion(board: $board, description: "This", analysisData: analysisData, formatInt: $formatInt, otherTable: false, rejected: board.biddingRejected, tableWidth: tableWidth, contractWidth: contractWidth, impactWidth: impactWidth)
+                    Suggestion(board: $board, description: "This", analysisData: analysisData, formatInt: $formatInt, otherTable: false, tableWidth: tableWidth, contractWidth: contractWidth, impactWidth: impactWidth)
                     if Scorecard.current.scorecard?.type.players == 4 {
                         Spacer().frame(height: 10)
-                        Suggestion(board: $board, description: "Other", analysisData: analysisData, formatInt: $formatInt, otherTable: true, rejected: board.otherBiddingRejected, tableWidth: tableWidth, contractWidth: contractWidth, impactWidth: impactWidth)
+                        Suggestion(board: $board, description: "Other", analysisData: analysisData, formatInt: $formatInt, otherTable: true, tableWidth: tableWidth, contractWidth: contractWidth, impactWidth: impactWidth)
                     }
                     Spacer()
                 }
@@ -1089,12 +1104,13 @@ struct AnalysisSuggestionView: View {
     }
     
     struct Suggestion: View {
+        let scorecard = Scorecard.current.scorecard!
         @Binding var board: BoardViewModel
         @State var description: String
         @ObservedObject var analysisData: AnalysisData
         @Binding var formatInt: Int
         @State var otherTable: Bool
-        @State var rejected: Bool
+        @State var rejected: Bool = false
         @State var tableWidth: CGFloat
         @State var contractWidth: CGFloat
         @State var impactWidth: CGFloat
@@ -1103,7 +1119,9 @@ struct AnalysisSuggestionView: View {
             if let bestOption = analysisData.bestOption[otherTable], let useMethod = bestOption.useMethod {
                 VStack {
                     HStack(spacing: 0) {
-                        LeadingText(description).frame(width: tableWidth)
+                        if scorecard.type.players == 4 {
+                            LeadingText(description).frame(width: tableWidth)
+                        }
                         HStack {
                             Spacer()
                             Text(bestOption.contract.colorCompact + bestOption.value(method: useMethod, format: .made, colorCode: false) + AttributedString("  " + bestOption.declarer.short))
@@ -1118,8 +1136,9 @@ struct AnalysisSuggestionView: View {
                             Spacer()
                             let options = otherTable ? analysisData.otherAnalysis?.options ?? [] : analysisData.analysis.options
                             let compare = options.first?.assessments[.play]
+                            // Check if already shown some values on the play and subtract them out
                             let (_, alreadyShown, _) = analysisData.analysis.compare(combination: AnalysisTrickCombination(board: board.board, suit: bestOption.contract.suit, declarer: bestOption.declarer)) ?? ("", nil, nil)
-                            let bestOptionDescription = String(bestOption.value(method: useMethod, format: .score, compare: compare, verbose: true, showVariance: true, colorCode: false, alreadyShown: (otherTable ? 0 : alreadyShown)).characters)
+                            let bestOptionDescription = String(bestOption.value(method: useMethod, format: .score, compare: compare, verbose: true, showVariance: true, colorCode: false, alreadyShown: (otherTable ? 0 : alreadyShown), positiveOnly: true).characters)
                             Text("\(bestOptionDescription ==  "" ? "No change" : bestOptionDescription)")
                                 .foregroundColor(Palette.background.textColor(rejected && bestOptionDescription != "" ? .faint : .normal))
                             Spacer()
@@ -1127,11 +1146,25 @@ struct AnalysisSuggestionView: View {
                                 Image(systemName: rejected ? "square" : "checkmark.square")
                                     .onTapGesture {
                                         rejected.toggle()
-                                        board.save()
                                     }
                             }
                             Spacer().frame(width: 2)
                         }.frame(width: impactWidth)
+                    }
+                }
+                .onChange(of: rejected, initial: false) {
+                    if otherTable {
+                        board.otherBiddingRejected = rejected
+                    } else {
+                        board.biddingRejected = rejected
+                    }
+                    board.save()
+                }
+                .onChange(of: board, initial: true) {
+                    if otherTable {
+                        rejected = board.otherBiddingRejected
+                    } else {
+                        rejected = board.biddingRejected
                     }
                 }
             }

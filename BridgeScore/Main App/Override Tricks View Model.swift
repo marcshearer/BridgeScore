@@ -9,7 +9,7 @@ import Combine
 import SwiftUI
 import CoreData
 
-public class OverrideTricksViewModel : ObservableObject, Identifiable, Equatable, CustomDebugStringConvertible {
+public class OverrideViewModel : ObservableObject, Identifiable, Equatable, CustomDebugStringConvertible {
 
     // Properties in core data model
     @Published private(set) var scorecard: ScorecardViewModel
@@ -23,7 +23,7 @@ public class OverrideTricksViewModel : ObservableObject, Identifiable, Equatable
     private var cancellableSet: Set<AnyCancellable> = []
     
     // Check if view model matches managed object
-    public func changed(_ mo: OverrideTricksMO) -> Bool {
+    public func changed(_ mo: OverrideMO) -> Bool {
         var result = false
         if self.scorecard.scorecardId != mo.scorecardId ||
             self.board != mo.board ||
@@ -46,15 +46,15 @@ public class OverrideTricksViewModel : ObservableObject, Identifiable, Equatable
         self.setupMappings()
     }
     
-    public convenience init(scorecard: ScorecardViewModel, overrideTricksMO: OverrideTricksMO) {
-        self.init(scorecard: scorecard, board: overrideTricksMO.board, declarer: overrideTricksMO.declarer, suit: overrideTricksMO.suit, made: overrideTricksMO.made, rejected: overrideTricksMO.rejected)
-        self.revert(overrideTricksMO)
+    public convenience init(scorecard: ScorecardViewModel, overrideMO: OverrideMO) {
+        self.init(scorecard: scorecard, board: overrideMO.board, declarer: overrideMO.declarer, suit: overrideMO.suit, made: overrideMO.made, rejected: overrideMO.rejected)
+        self.revert(overrideMO)
     }
         
     private func setupMappings() {
     }
     
-    private func revert(_ mo: OverrideTricksMO) {
+    private func revert(_ mo: OverrideMO) {
         if let scorecard = MasterData.shared.scorecard(id: mo.scorecardId) {
             self.scorecard = scorecard
         }
@@ -65,7 +65,7 @@ public class OverrideTricksViewModel : ObservableObject, Identifiable, Equatable
         self.rejected = mo.rejected
     }
     
-    public func updateMO(_ mo: OverrideTricksMO) {
+    public func updateMO(_ mo: OverrideMO) {
         mo.scorecardId = scorecard.scorecardId
         mo.board = board
         mo.declarer = declarer
@@ -74,7 +74,7 @@ public class OverrideTricksViewModel : ObservableObject, Identifiable, Equatable
         mo.rejected = rejected
     }
 
-    public static func == (lhs: OverrideTricksViewModel, rhs: OverrideTricksViewModel) -> Bool {
+    public static func == (lhs: OverrideViewModel, rhs: OverrideViewModel) -> Bool {
         lhs.scorecard.id == rhs.scorecard.id && lhs.board == rhs.board && lhs.suit == rhs.suit && lhs.declarer == rhs.declarer && lhs.made == rhs.made && lhs.rejected == rhs.rejected
     }
         

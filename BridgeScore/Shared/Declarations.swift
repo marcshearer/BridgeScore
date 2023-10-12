@@ -176,6 +176,7 @@ public enum Type: Int, CaseIterable {
     case vpPercent = 3
     case vpXImp = 4
     case xImp = 2
+    case butlerImp = 10
     case aggregate = 8
     case vpMatchTeam = 1
     case vpTableTeam = 6
@@ -191,6 +192,8 @@ public enum Type: Int, CaseIterable {
             return "Pairs Match Points as VPs"
         case .xImp:
             return "Pairs Cross-IMPs"
+        case .butlerImp:
+            return "Pairs Butler Imps"
         case .vpXImp:
             return "Pairs Cross-IMPs as VPs"
         case .aggregate:
@@ -214,7 +217,7 @@ public enum Type: Int, CaseIterable {
             return .percent
         case .xImp, .vpXImp:
             return .xImp
-        case .vpMatchTeam, .vpTableTeam, .vpContTableTeam, .acblVpTableTeam:
+        case .vpMatchTeam, .vpTableTeam, .vpContTableTeam, .acblVpTableTeam, .butlerImp:
             return .imp
         case .aggregate:
             return .aggregate
@@ -225,7 +228,7 @@ public enum Type: Int, CaseIterable {
         switch self {
         case.percentIndividual:
             return 1
-        case .percent, .xImp, .vpXImp, .vpPercent, .aggregate:
+        case .percent, .xImp, .butlerImp, .vpXImp, .vpPercent, .aggregate:
             return 2
         case .vpMatchTeam, .vpTableTeam, .vpContTableTeam, .acblVpTableTeam:
             return 4
@@ -244,7 +247,7 @@ public enum Type: Int, CaseIterable {
         switch self {
         case .percent, .xImp, .vpPercent, .vpXImp, .percentIndividual:
             return 2
-        case .vpMatchTeam, .vpTableTeam, .vpContTableTeam, .acblVpTableTeam,.aggregate:
+        case .vpMatchTeam, .vpTableTeam, .vpContTableTeam, .acblVpTableTeam, .aggregate, .butlerImp:
             return 0
         }
     }
@@ -253,7 +256,7 @@ public enum Type: Int, CaseIterable {
         switch self {
         case .percent, .xImp, .vpXImp,  .vpContTableTeam, .percentIndividual:
             return 2
-        case .vpMatchTeam, .vpPercent, .vpTableTeam, .acblVpTableTeam, .aggregate:
+        case .vpMatchTeam, .vpPercent, .vpTableTeam, .acblVpTableTeam, .aggregate, .butlerImp:
             return 0
         }
     }
@@ -262,7 +265,7 @@ public enum Type: Int, CaseIterable {
         switch self {
         case .percent, .xImp, .vpXImp, .vpContTableTeam, .vpMatchTeam, .percentIndividual:
             return 2
-        case .vpPercent, .vpTableTeam, .acblVpTableTeam, .aggregate:
+        case .vpPercent, .vpTableTeam, .acblVpTableTeam, .aggregate, .butlerImp:
             return 0
         }
     }
@@ -271,7 +274,7 @@ public enum Type: Int, CaseIterable {
         switch self {
         case .percent, .percentIndividual:
             return .average
-        case .xImp, .vpMatchTeam, .aggregate:
+        case .xImp, .vpMatchTeam, .aggregate, .butlerImp:
             return .total
         case .vpTableTeam:
             return .discreteVp
@@ -288,7 +291,7 @@ public enum Type: Int, CaseIterable {
         switch self {
         case .percent, .percentIndividual:
             return .average
-        case .xImp, .vpXImp, .vpTableTeam,  .vpContTableTeam, .acblVpTableTeam, .vpPercent, .aggregate:
+        case .xImp, .vpXImp, .vpTableTeam,  .vpContTableTeam, .acblVpTableTeam, .vpPercent, .aggregate, .butlerImp:
             return .total
         case  .vpMatchTeam:
             return .continuousVp
@@ -299,7 +302,7 @@ public enum Type: Int, CaseIterable {
         switch self {
         case .percent, .percentIndividual:
             return "%"
-        case .xImp:
+        case .xImp, .butlerImp:
             return " IMPs"
         case .vpXImp, .vpTableTeam, .vpContTableTeam, .acblVpTableTeam, .vpPercent, .vpMatchTeam:
             if let maxScore = scorecard.maxScore {
@@ -314,7 +317,7 @@ public enum Type: Int, CaseIterable {
     
     public func matchPrefix(scorecard: ScorecardViewModel) -> String {
         switch self {
-        case .xImp, .aggregate:
+        case .xImp, .aggregate, .butlerImp:
             return (scorecard.score ?? 0 > 0 ? "+" : "")
         default:
             return ""
@@ -440,7 +443,8 @@ public enum Responsible: Int, EnumPickerType, Identifiable {
     }
     
     public static var validCases: [Responsible] {
-        allCases.filter({$0 != .blank})
+        let players = Scorecard.current.scorecard?.type.players ?? 2
+        return allCases.filter({$0 != .blank && (players == 4 || ($0 != .teamPlus && $0 != .teamMinus)) && (players > 1 || ($0 != .partnerMinus && $0 != .partnerPlus))})
     }
 }
 

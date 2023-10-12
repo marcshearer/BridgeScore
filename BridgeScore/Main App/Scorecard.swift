@@ -136,20 +136,20 @@ class Scorecard {
         }
         
         // Load override tricks
-        let overrideTricksMOs = CoreData.fetch(from: OverrideTricksMO.tableName, filter: scorecardFilter) as! [OverrideTricksMO]
+        let overrideMOs = CoreData.fetch(from: OverrideMO.tableName, filter: scorecardFilter) as! [OverrideMO]
         
-        for overrideTricksMO in overrideTricksMOs {
-            if let board = boards[overrideTricksMO.board] {
+        for overrideMO in overrideMOs {
+            if let board = boards[overrideMO.board] {
                 // Add to override tricks MO dicionary
-                if board.overrideTricks[overrideTricksMO.declarer] == nil {
-                    board.overrideTricks[overrideTricksMO.declarer] = [:]
+                if board.override[overrideMO.declarer] == nil {
+                    board.override[overrideMO.declarer] = [:]
                 }
-                board.overrideTricks[overrideTricksMO.declarer]![overrideTricksMO.suit] = OverrideTricksViewModel(scorecard: scorecard, overrideTricksMO: overrideTricksMO)
+                board.override[overrideMO.declarer]![overrideMO.suit] = OverrideViewModel(scorecard: scorecard, overrideMO: overrideMO)
                 // Add to override tricks dictionary
-                if board.overrideTricksMO[overrideTricksMO.declarer] == nil {
-                    board.overrideTricksMO[overrideTricksMO.declarer] = [:]
+                if board.overrideMO[overrideMO.declarer] == nil {
+                    board.overrideMO[overrideMO.declarer] = [:]
                 }
-                board.overrideTricksMO[overrideTricksMO.declarer]![overrideTricksMO.suit] = overrideTricksMO
+                board.overrideMO[overrideMO.declarer]![overrideMO.suit] = overrideMO
             }
         }
         
@@ -352,7 +352,7 @@ class Scorecard {
             removeTravellers(board: boardNumber)
             if let board = Scorecard.current.boards[boardNumber] {
                 board.doubleDummy = [:]
-                board.overrideTricks = [:]
+                board.override = [:]
                 board.save()
             }
         }
@@ -366,7 +366,7 @@ class Scorecard {
         assert(board.isNew, "Cannot insert a board which already has a managed object")
         assert(boards[board.board] == nil, "Board already exists and cannot be created")
         assert(board.doubleDummy.isEmpty, "Board double dummies already exist")
-        assert(board.overrideTricks.isEmpty, "Board override tricks already exist")
+        assert(board.override.isEmpty, "Board override tricks already exist")
         CoreData.update(updateLogic: {
             // Add board MO
             board.boardMO = BoardMO()
@@ -382,14 +382,14 @@ class Scorecard {
                 board.doubleDummyMO[declarer]![suit] = mo
             }
             // Add override tricks MOs
-            board.forEachOverrideTricks { (declarer, suit, overrideTricks) in
-                if board.overrideTricks[declarer] == nil {
-                    board.overrideTricks[declarer] = [:]
+            board.forEachOverride { (declarer, suit, override) in
+                if board.override[declarer] == nil {
+                    board.override[declarer] = [:]
                 }
-                let mo = OverrideTricksMO()
-                overrideTricks.updateMO(mo)
+                let mo = OverrideMO()
+                override.updateMO(mo)
                 // Add to double dummy MO dictionary
-                board.overrideTricksMO[declarer]![suit] = mo
+                board.overrideMO[declarer]![suit] = mo
             }
             // Add to board dictionary
             boards[board.board] = board
@@ -408,15 +408,15 @@ class Scorecard {
                 CoreData.context.delete(mo)
             }
             // Delete override tricks MOs
-            board.forEachOverrideTricksMO { (declarer, suit, mo) in
+            board.forEachOverrideMO { (declarer, suit, mo) in
                 CoreData.context.delete(mo)
             }
             // Remove from double dummy dictionaries
             board.doubleDummyMO = [:]
             board.doubleDummy = [:]
             // Remove from override tricks dictionaries
-            board.overrideTricksMO = [:]
-            board.overrideTricks = [:]
+            board.overrideMO = [:]
+            board.override = [:]
             // Remove from boards dictionary
             boards[board.board] = nil
         })
@@ -441,14 +441,14 @@ class Scorecard {
                     board.doubleDummyMO[declarer]![suit] = mo
                 }
                 // Create any override tricks MOs
-                board.forEachOverrideTricks { (declarer, suit, overrideTricks) in
-                    let mo = OverrideTricksMO()
-                    overrideTricks.updateMO(mo)
+                board.forEachOverride { (declarer, suit, override) in
+                    let mo = OverrideMO()
+                    override.updateMO(mo)
                     // Add to double dummy MO dictionary
-                    if board.overrideTricksMO[declarer] == nil {
-                        board.overrideTricksMO[declarer] = [:]
+                    if board.overrideMO[declarer] == nil {
+                        board.overrideMO[declarer] = [:]
                     }
-                    board.overrideTricksMO[declarer]![suit] = mo
+                    board.overrideMO[declarer]![suit] = mo
                 }
             })
         } else if board.changed {
@@ -472,19 +472,19 @@ class Scorecard {
                     }
                 }
                 // Update override tricks MOs
-                board.forEachOverrideTricks { (declarer, suit, overrideTricks) in
-                    let mo = board.overrideTricksMO[declarer]?[suit] ?? OverrideTricksMO()
-                    overrideTricks.updateMO(mo)
-                    if board.overrideTricksMO[declarer] == nil {
-                        board.overrideTricksMO[declarer] = [:]
+                board.forEachOverride { (declarer, suit, override) in
+                    let mo = board.overrideMO[declarer]?[suit] ?? OverrideMO()
+                    override.updateMO(mo)
+                    if board.overrideMO[declarer] == nil {
+                        board.overrideMO[declarer] = [:]
                     }
-                    board.overrideTricksMO[declarer]![suit] = mo
+                    board.overrideMO[declarer]![suit] = mo
                 }
                 // Remove any override tricks MOs which aren't in view model
-                board.forEachOverrideTricksMO { (declarer, suit, mo) in
-                    if board.overrideTricks[declarer]?[suit] == nil {
+                board.forEachOverrideMO { (declarer, suit, mo) in
+                    if board.override[declarer]?[suit] == nil {
                         CoreData.context.delete(mo)
-                        board.overrideTricksMO[declarer]![suit] = nil
+                        board.overrideMO[declarer]![suit] = nil
                     }
                 }
             })

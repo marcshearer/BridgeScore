@@ -57,7 +57,7 @@
         <attribute name="retired" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="sequence16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
-    <entity name="OverrideTricks" representedClassName="OverrideTricksMO" syncable="YES">
+    <entity name="Override" representedClassName="OverrideMO" syncable="YES">
         <attribute name="board16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="declarer16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="made16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>

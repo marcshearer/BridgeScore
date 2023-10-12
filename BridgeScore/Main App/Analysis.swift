@@ -16,34 +16,34 @@ class AnalysisOverride: ObservableObject, Equatable {
     
     public func setValue(board: Int, suit: Suit, declarer: Pair, value: Int?) {
         if let board = Scorecard.current.boards[board], let scorecard = Scorecard.current.scorecard {
-            if board.overrideTricks[declarer] == nil {
-                board.overrideTricks[declarer] = [:]
+            if board.override[declarer] == nil {
+                board.override[declarer] = [:]
             }
-            if let overrideTricks = board.overrideTricks[declarer]![suit] {
-                overrideTricks.made = value
+            if let override = board.override[declarer]![suit] {
+                override.made = value
             } else {
-                board.overrideTricks[declarer]![suit] = (value == nil ? nil : OverrideTricksViewModel(scorecard: scorecard, board: board.board, declarer: declarer, suit: suit, made: value!, rejected: false))
+                board.override[declarer]![suit] = (value == nil ? nil : OverrideViewModel(scorecard: scorecard, board: board.board, declarer: declarer, suit: suit, made: value!, rejected: false))
             }
         }
     }
     
     public func toggleRejected(board: Int, suit: Suit, declarer: Pair) {
         if let board = Scorecard.current.boards[board], let scorecard = Scorecard.current.scorecard {
-            if board.overrideTricks[declarer] == nil {
-                board.overrideTricks[declarer] = [:]
+            if board.override[declarer] == nil {
+                board.override[declarer] = [:]
             }
-            if let overrideTricks = board.overrideTricks[declarer]![suit] {
-                overrideTricks.rejected.toggle()
+            if let override = board.override[declarer]![suit] {
+                override.rejected.toggle()
             } else {
-                board.overrideTricks[declarer]![suit] = OverrideTricksViewModel(scorecard: scorecard, board: board.board, declarer: declarer, suit: suit, made: nil, rejected: true)
+                board.override[declarer]![suit] = OverrideViewModel(scorecard: scorecard, board: board.board, declarer: declarer, suit: suit, made: nil, rejected: false)
             }
         }
     }
     
     public func get(board: Int, suit: Suit, declarer: Pair) -> (Int?, Bool) {
         if let board = Scorecard.current.boards[board] {
-            let overrideTricks = board.overrideTricks[declarer]?[suit]
-            return (overrideTricks?.made, overrideTricks?.rejected ?? false)
+            let override = board.override[declarer]?[suit]
+            return (override?.made, override?.rejected ?? false)
         } else {
             return (nil, false)
         }
@@ -52,7 +52,7 @@ class AnalysisOverride: ObservableObject, Equatable {
     static func == (lhs: AnalysisOverride, rhs: AnalysisOverride) -> Bool {
         let lhsBoard = Scorecard.current.boards[lhs.board.board]
         let rhsBoard = Scorecard.current.boards[rhs.board.board]
-        return lhs.board == rhs.board && lhsBoard?.overrideTricks == rhsBoard?.overrideTricks
+        return lhs.board == rhs.board && lhsBoard?.override == rhsBoard?.override
     }
 }
 
@@ -94,6 +94,11 @@ class Analysis {
         buildOptions()
     }
     
+    public var otherTraveller: TravellerViewModel? {
+        let otherTravellers = boardTravellers.filter({!($0 == traveller)})
+        return otherTravellers.count != 1 ? nil : otherTravellers.first!
+    }
+    
     public func useMethodmadeValues(combinations: [AnalysisTrickCombination]) -> [AnalysisTrickCombination:(method: AnalysisAssessmentMethod, value: Int)] {
         var result: [AnalysisTrickCombination:(method: AnalysisAssessmentMethod, value: Int)] = [:]
         for combination in combinations {
@@ -104,10 +109,36 @@ class Analysis {
         return result
     }
     
-    public func useMethodMadeValue(combination: AnalysisTrickCombination) -> (method: AnalysisAssessmentMethod, value: Int)? {
+    public func useMethodMadeValue(combination: AnalysisTrickCombination, overrideRegardless: Bool = false) -> (method: AnalysisAssessmentMethod, value: Int)? {
         var result: (method: AnalysisAssessmentMethod, value: Int)?
-        if let method = useMethod(suit: combination.suit, declarer: combination.declarer), let made = madeValues(combination: combination).made[method] {
+        if let method = useMethod(suit: combination.suit, declarer: combination.declarer, overrideRegardless: overrideRegardless), let made = madeValues(combination: combination).made[method] {
             result = (method, made)
+        }
+        return result
+    }
+    
+    public func allMethods(includeOverride: Bool = true) -> [AnalysisAssessmentMethod] {
+        var result: [AnalysisAssessmentMethod] = []
+        if let scorecard = Scorecard.current.scorecard {
+            let type = scorecard.type
+            for method in AnalysisAssessmentMethod.allCases {
+                switch method {
+                case .play, .doubleDummy:
+                    result.append(method)
+                case .other:
+                    if type.players == 4 || boardTravellers.count == 2 {
+                        result.append(method)
+                    }
+                case .median, .mode, .best:
+                    if type.players != 4 || boardTravellers.count > 2 {
+                        result.append(method)
+                    }
+                case .override:
+                    if includeOverride {
+                        result.append(method)
+                    }
+                }
+            }
         }
         return result
     }
@@ -130,22 +161,35 @@ class Analysis {
         return madeValues(combination: combination).made[method]
     }
         
-    public func useMethod(suit: Suit, declarer: Pair) -> AnalysisAssessmentMethod? {
+    public func useMethod(suit: Suit, declarer: Pair, overrideRegardless: Bool = false) -> AnalysisAssessmentMethod? {
         var result: AnalysisAssessmentMethod?
-        if traveller.contract.suit == suit {
-            result = .play
-        }
-        let combination = AnalysisTrickCombination(board: board.board, suit: suit, declarer: declarer)
-        let (modeFraction, made) = madeValues(combination: combination)
-        if made[.override] != nil {
-            if made[.play] == nil || (made[.override]! - made[.play]!) * (sitting.pair == declarer ? 1 : -1) > 0 {
-                result = .override
+        var playMade: Int?
+        var playSitting: Pair = sitting.pair
+        if let type = Scorecard.current.scorecard?.type {
+            let headToHead = type.players == 4 && boardTravellers.count == 2
+            if traveller.contract.suit == suit {
+                result = .play
+                playSitting = sitting.pair
+            } else if headToHead && otherTraveller?.contract.suit == suit {
+                result = .other
+                playSitting = sitting.pair.other
             }
-        } else if result == nil && modeFraction >= 0.25 {
-            result = .mode
-        }
-        if result == nil {
-            result = (made[.median] != nil ? .median : .doubleDummy)
+            let combination = AnalysisTrickCombination(board: board.board, suit: suit, declarer: declarer)
+            let (modeFraction, made) = madeValues(combination: combination)
+            if let result = result {
+                playMade = made[result]
+            }
+            if made[.override] != nil {
+                if overrideRegardless || playMade == nil || (made[.override]! - playMade!) * (playSitting == declarer ? 1 : -1) > 0 {
+                    result = .override
+                }
+            } 
+            if !headToHead && result == nil && modeFraction >= 0.25 {
+                result = .mode
+            }
+            if result == nil {
+                result = (!headToHead && (made[.median] != nil) ? .median : .doubleDummy)
+            }
         }
         return result
     }
@@ -354,16 +398,16 @@ class Analysis {
             var assessment: [Int:AnalysisAssessment] = [:]
             let combination = AnalysisTrickCombination(board: board.board, suit: option.contract.suit, declarer: option.declarer)
             var allTricksMade = madeValues(combination: combination).made.map({$0.value})
-            let (overrideTricksMade, _) = override.get(board: board.board, suit: combination.suit, declarer: combination.declarer)
-            if let overrideTricksMade = overrideTricksMade {
-                allTricksMade.append(overrideTricksMade)
+            let (overrideMade, _) = override.get(board: board.board, suit: combination.suit, declarer: combination.declarer)
+            if let overrideMade = overrideMade {
+                allTricksMade.append(overrideMade)
             }
             for made in Set(allTricksMade) {
                 let points = Scorecard.points(contract: option.contract, vulnerability: Vulnerability(board: traveller.boardNumber), declarer: option.declarer.seats.first!, made: made - option.contract.level.tricks, seat: sitting)
                 
                 assessment[made] = (AnalysisAssessment(tricks: made, points: points, score: 0))
             }
-            for method in AnalysisAssessmentMethod.allCases {
+            for method in allMethods() {
                 if let methodTricks = madeValues(combination: combination).made[method] {
                     option.assessments[method] = assessment[methodTricks]
                     option.modeFraction = madeValues(combination: combination).modeFraction
@@ -448,7 +492,7 @@ class Analysis {
                 // Remove linking options if no longer in play
             for option in options {
                 if let linked = option.linked {
-                    if linked.removed {
+                    if linked.removed && linked.removedBy != option {
                         option.removed(by: linked, reason: "Linked gone")
                     }
                 }
@@ -500,6 +544,13 @@ class Analysis {
                     assessment[combination]!.made[.play] = Values.trickOffset + traveller.contractLevel + traveller.made
                 }
                 
+                    // Other table play
+                if let otherTraveller = otherTraveller {
+                    if suit == otherTraveller.contract.suit {
+                        assessment[combination]!.made[.other] = Values.trickOffset + otherTraveller.contractLevel + otherTraveller.made
+                    }
+                }
+                
                     // Double dummy
                 var made: [Int] = []
                 for index in 0...1 {
@@ -524,7 +575,7 @@ class Analysis {
                     }
                 }
                     // Best
-                if let bestTraveller = suitTravellers.first {
+                if let bestTraveller = suitTravellers.last {
                     assessment[combination]!.made[.best] = Values.trickOffset + bestTraveller.contractLevel + bestTraveller.made
                 }
             }
@@ -542,7 +593,7 @@ class Analysis {
             text = data.text
             impact = data.impact
             withMethod = data.withMethod
-        } else if let (method, made) = useMethodMadeValue(combination: combination) {
+        } else if let (method, made) = useMethodMadeValue(combination: combination, overrideRegardless: true) {
             var made = made
             if combination.suit == traveller.contract.suit && combination.declarer == traveller.declarer.pair {
                 if method == .override {
@@ -566,7 +617,7 @@ class Analysis {
                         let combinationTravellers = boardTravellers.filter({$0.contract.suit == combination.suit && $0.declarer.pair == combination.declarer && $0 != traveller})
                         if !combinationTravellers.isEmpty {
                             let betterTravellers = combinationTravellers.filter({ ($0.contract.level.tricks + $0.made - made) * invert > 0 })
-                            let betterThanPercent = 100 - (Float(betterTravellers.count)/Float(combinationTravellers.count + 1)*100).rounded()
+                            let betterThanPercent = 100 - (Float(betterTravellers.count)/Float(combinationTravellers.count)*100).rounded()
                             withMethod = .median
                             withTricks = tricksMade[combination]?.made[.median] ?? 0
                             text = "≥\(betterThanPercent)%"
@@ -724,6 +775,7 @@ enum AnalysisOptionType : Int, CaseIterable, Hashable {
 
 enum AnalysisAssessmentMethod : Int, CaseIterable, Hashable {
     case play
+    case other
     case median
     case mode
     case best
@@ -739,18 +791,16 @@ enum AnalysisAssessmentMethod : Int, CaseIterable, Hashable {
         }
     }
     
-    static var realCases: [AnalysisAssessmentMethod] {
-        AnalysisAssessmentMethod.allCases.filter({$0 != .override})
-    }
-    
     var short: String {
         switch self {
         case .doubleDummy:
             return "DD"
         case .override:
-            return "Man"
+            return "Over"
         case .median:
             return "Med"
+        case .mode:
+            return "Mod"
         default:
             return "\(self)".capitalized
         }
@@ -880,7 +930,7 @@ class AnalysisOption : Identifiable, Equatable, Hashable {
             switch useMethod {
             case .override:
                 return 9
-            case .play, .mode, .median:
+            case .play, .other, .mode, .median:
                 return 6
             case .doubleDummy:
                 return 3
@@ -929,7 +979,7 @@ class AnalysisOption : Identifiable, Equatable, Hashable {
         }
     }
     
-    public func value(method: AnalysisAssessmentMethod, format: AnalysisOptionFormat, compare: AnalysisAssessment? = nil, verbose: Bool = false, showVariance: Bool = false, colorCode: Bool = true, alreadyShown: Float? = nil) -> AttributedString {
+    public func value(method: AnalysisAssessmentMethod, format: AnalysisOptionFormat, compare: AnalysisAssessment? = nil, verbose: Bool = false, showVariance: Bool = false, colorCode: Bool = true, alreadyShown: Float? = nil, positiveOnly: Bool = false) -> AttributedString {
         var result = ""
         var variance: Float = 0.0
         var places = 0
@@ -967,7 +1017,7 @@ class AnalysisOption : Identifiable, Equatable, Hashable {
                 }
             }
             if showVariance {
-                if variance == 0 {
+                if variance == 0 || (positiveOnly && variance < 0){
                     result = ""
                 } else {
                     result = (variance > 0 ? "+" : "") + variance.toString(places: places) + suffix
