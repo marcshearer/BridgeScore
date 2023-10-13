@@ -135,6 +135,23 @@ public enum ScoreType {
         }
     }
     
+    public var significant: Float {
+        switch self {
+        case .percent:
+            return 20.0
+        case .xImp:
+            return 3.0
+        case .imp:
+            return 5.0
+        case .vp, .acblVp:
+            return 2.0
+        case .aggregate:
+            return 100.0
+        case .unknown:
+            return 0.0
+        }
+    }
+    
     public func prefix(score: Float) -> String {
         switch self {
         case .imp, .xImp, .aggregate:

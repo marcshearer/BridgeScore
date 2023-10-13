@@ -23,7 +23,9 @@ import CoreData
     @Published public var section: [Seat:Int] = [:]
     @Published public var lead: String = ""
     @Published public var playData: String = ""
-    
+    @Published public var biddingRejected: Bool = false
+    @Published public var playRejected: Bool = false
+
     // Linked managed objects - should only be referenced in this and the Data classes
     @Published internal var travellerMO: TravellerMO?
     
@@ -57,7 +59,9 @@ import CoreData
                 self.rankingNumber != mo.rankingNumber ||
                 self.section != mo.section ||
                 self.lead != mo.lead ||
-                self.playData != mo.playData {
+                self.playData != mo.playData ||
+                self.biddingRejected == mo.biddingRejected ||
+                self.playRejected == mo.playRejected {
                     result = true
             }
         } else {
@@ -99,6 +103,8 @@ import CoreData
             self.section = mo.section
             self.lead = mo.lead
             self.playData = mo.playData
+            self.biddingRejected = mo.biddingRejected
+            self.playRejected = mo.playRejected
         }
     }
     
@@ -115,6 +121,8 @@ import CoreData
             mo.section = section
             mo.lead = lead
             mo.playData = playData
+            mo.biddingRejected = biddingRejected
+            mo.playRejected = playRejected
         } else {
             fatalError("No managed object")
         }

@@ -26,7 +26,6 @@ class AnalysisData : ObservableObject, Identifiable {
     @Published var override: AnalysisOverride
     @Published var otherAnalysis: Analysis?
     @Published var combinations: [AnalysisTrickCombination] = []
-    @Published var bestOption: [Bool:AnalysisOption] = [:]
     
     init(analysis: Analysis, otherAnalysis: Analysis?) {
         self.analysis = analysis
@@ -38,25 +37,6 @@ class AnalysisData : ObservableObject, Identifiable {
     func update() {
         override = analysis.override
         updateCombinations()
-        updateBestOptions()
-    }
-    
-    func updateBestOptions() {
-        for otherTable in [false, true] {
-            let options = (otherTable ? (otherAnalysis?.options ?? []) : analysis.options).filter({!$0.removed})
-            let sorted = options.sorted(by:{$0.reliability < $1.reliability || ($0.reliability == $1.reliability && ($0.useAssessment?.score ?? -9999.99) < ($1.useAssessment?.score ?? -9999.99))})
-            if var bestOption = sorted.last {
-                // Ignore double if within 1 of making
-                if let tricks = bestOption.useAssessment?.tricks {
-                    if bestOption.double && bestOption.linked != nil && tricks >= bestOption.contract.tricks - 1 {
-                        bestOption = bestOption.linked!
-                    }
-                }
-                self.bestOption[otherTable] = bestOption
-            } else {
-                self.bestOption[otherTable] = nil
-            }
-        }
     }
     
     public func updateCombinations() {
@@ -118,16 +98,19 @@ struct AnalysisViewer: View {
                             .ignoresSafeArea(.keyboard)
                         Spacer().frame(width: 10)
                         VStack {
+                            AnalysisWrapper(label: "Summary", height: 79, teamsHeight: 130, stopEdit: $stopEdit) {
+                                AnalysisSummary(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData)
+                            }
                             AnalysisWrapper(label: "Tricks Made", height: 150, stopEdit: $stopEdit) {
                                 AnalysisCombinationTricks(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData)
+                            }
+                            AnalysisWrapper(label: "Suggest", height: 70, teamsHeight: 90, stopEdit: $stopEdit) {
+                                AnalysisSuggestionView(board: $board, traveller: $traveller, sitting: $sitting, formatInt: $formatInt, analysisData: analysisData)
                             }
                             AnalysisWrapper(label: "Bidding Options", height: 150, stopEdit: $stopEdit) {
                                 AnalysisBiddingOptions(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData, formatInt: $formatInt)
                             }
-                            AnalysisWrapper(label: "Suggest", height: 70, teamsHeight: 90, stopEdit: $stopEdit) {
-                                AnalysisSuggestionView(board: $board, sitting: $sitting, formatInt: $formatInt, analysisData: analysisData)
-                            }
-                            AnalysisWrapper(label: "Travellers", height: 200, teamsHeight: 180, stopEdit: $stopEdit) {
+                            AnalysisWrapper(label: "Travellers", stopEdit: $stopEdit) {
                                 AnalysisTravellerView(board: $board, traveller: $handTraveller, sitting: $sitting, summaryMode: $summaryMode, stopEdit: $stopEdit)
                             }
                         }
@@ -143,7 +126,7 @@ struct AnalysisViewer: View {
         .onSwipe() { direction in
             nextTraveller(direction == .left ? 1 : -1)
         }
-        .onReceive(valueChangePublisher) { (_, _, _) in // TODO remove publisher
+        .onReceive(analysisViewerValueChange) { (_) in
             updateAnalysisData()
         }
     }
@@ -488,16 +471,21 @@ struct AnalysisViewer: View {
     }
 }
 
-let valueChangePublisher = PassthroughSubject<(Int?, Suit, Pair), Never>()
+enum AnalysisSource {
+    case override
+    case rejected
+}
+
+let analysisViewerValueChange = PassthroughSubject<AnalysisSource, Never>()
 
 struct AnalysisWrapper <Content> : View where Content : View {
     @State var stopEdit: Binding<Bool>
     var label: String
-    var height: CGFloat
+    var height: CGFloat?
     var teamsHeight: CGFloat?
     var content: ()->Content
     
-    init(label: String, height: CGFloat, teamsHeight: CGFloat? = nil, stopEdit: Binding<Bool>, @ViewBuilder content: @escaping ()->Content) {
+    init(label: String, height: CGFloat? = nil, teamsHeight: CGFloat? = nil, stopEdit: Binding<Bool>, @ViewBuilder content: @escaping ()->Content) {
         self.label = label
         self.height = height
         self.teamsHeight = teamsHeight
@@ -518,10 +506,16 @@ struct AnalysisWrapper <Content> : View where Content : View {
                                                           topTrailing: 0),
                                        style: .continuous)
                 .foregroundColor(Palette.background.background)
-                .frame(width: 500, height: height)
+                .frame(width: 500)
+                .if(height != nil) { view in
+                    view.frame(height: height)
+                }
                 
                 content()
-                    .frame(width: 500, height: height)
+                    .frame(width: 500)
+                    .if(height != nil) { view in
+                        view.frame(height: height!)
+                    }
                     .font(inputFont).minimumScaleFactor(0.6)
             }
             
@@ -532,7 +526,10 @@ struct AnalysisWrapper <Content> : View where Content : View {
                                                           topTrailing: analysisCornerSize),
                                        style: .continuous)
                 .foregroundColor(Palette.handPlayer.background)
-                .frame(width: 20, height: height)
+                .frame(width: 20)
+                .if(height != nil) { view in
+                    view.frame(height: height!)
+                }
                 
                 HStack(spacing: 0) {
                     Spacer()
@@ -544,7 +541,10 @@ struct AnalysisWrapper <Content> : View where Content : View {
                 }
                 .frame(width: height, height: 20)
                 .fixedSize()
-                .frame(width: 20, height: height)
+                .frame(width: 20)
+                .if(height != nil) { view in
+                    view.frame(height: height!)
+                }
                 .rotationEffect(.degrees(90))
             }
         }
@@ -555,6 +555,127 @@ struct AnalysisWrapper <Content> : View where Content : View {
     }
 }
 
+struct AnalysisSummary : View {
+    let scorecard = Scorecard.current.scorecard!
+    @Binding var board: BoardViewModel
+    @Binding var traveller: TravellerViewModel
+    @Binding var sitting: Seat
+    @ObservedObject var analysisData: AnalysisData
+    
+    var body: some View {
+        let type = scorecard.type
+        let teams = (type.players == 4)
+        ZStack {
+            VStack {
+                UnevenRoundedRectangle(cornerRadii: .init(topLeading: analysisCornerSize), style: .continuous)
+                    .frame(height: 30).foregroundColor(Palette.tile.background)
+                Spacer()
+            }
+            let tableColumns = (teams ? [GridItem(.fixed(60), spacing: 0), GridItem(.fixed(2), spacing: 0)] : [])
+            let columns = tableColumns + [GridItem(.flexible(minimum: 100), spacing: 0), GridItem(.fixed(2), spacing: 0), GridItem(.flexible(minimum: 100), spacing: 0)]
+            VStack {
+                LazyVGrid(columns: columns, spacing: 0) {
+                    GridRow {
+                        if teams {
+                            CenteredText("Table")
+                            Text("")
+                        }
+                        CenteredText("Bidding")
+                        Text("")
+                        CenteredText("Play")
+                    }
+                    .bold()
+                    .frame(height: 30)
+                    .foregroundColor(Palette.tile.text)
+                    ForEach(0..<2) { otherTable in
+                        let otherTable = (otherTable == 1)
+                        if !otherTable || scorecard.type.players == 4 {
+                            GridRow {
+                                if teams {
+                                    CenteredText(otherTable ? "Other" : "This")
+                                    Separator(direction: .vertical, thickness: 2).background(Palette.tile.background)
+                                }
+                                ForEach(0..<2) { phase in
+                                    let phase: AnalysisPhase = (phase == 0 ? .bidding : .play)
+                                    AnalysisSummaryDetail(board: $board, traveller: $traveller, sitting: $sitting, phase: phase, otherTable: otherTable, analysisData: analysisData)
+                                    if phase == .bidding {
+                                        Separator(direction: .vertical, thickness: 2).background(Palette.tile.background)
+                                    }
+                                }
+                                .frame(height: 49)
+                                if !otherTable && teams {
+                                    GridRow {
+                                        ForEach(0..<columns.count) { _ in
+                                            Separator(direction: .horizontal, thickness: 2).background(Palette.tile.background)
+                                        }
+                                    }
+                                    .frame(height: 2)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    struct AnalysisSummaryDetail : View {
+        @Binding var board: BoardViewModel
+        @Binding var traveller: TravellerViewModel
+        @Binding var sitting: Seat
+        @State var phase: AnalysisPhase
+        @State var otherTable: Bool
+        @ObservedObject var analysisData: AnalysisData
+        @State var status: AnalysisSummaryStatus = .ok
+        @State var text: String = ""
+        @State var impact: String = ""
+        @State var rejected: Bool = false
+        
+        var body: some View {
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer().frame(width: 8)
+                    status.image.font(inputTitleFont)
+                    Spacer().frame(width: 10)
+                    HStack {
+                        HStack {
+                            Text(text)
+                            Spacer()
+                        }
+                        if status < .ok {
+                            HStack {
+                                Spacer()
+                                Text(impact)
+                                Spacer()
+                            }
+                            .frame(width: 60)
+                        }
+                        Spacer().frame(width: 8)
+                    }.foregroundColor(Palette.background.textColor(rejected ? .faint : .normal))
+                }
+                Spacer()
+            }
+            .font(inputFont)
+            .minimumScaleFactor(0.6)
+            .onChange(of: board, initial: true) {
+                updateSummary()
+            }
+            .onChange(of: sitting, initial: true) {
+                updateSummary()
+            }
+            .onReceive(analysisViewerValueChange) { (_) in
+                updateSummary()
+            }
+        }
+        func updateSummary() {
+            if let analysis = (otherTable ? analysisData.otherAnalysis : analysisData.analysis) {
+                (status, text, _, impact, rejected) = analysis.summary(phase: phase)
+            }
+        }
+    }
+}
+    
 struct AnalysisCombinationTricks : View {
     @Binding var board: BoardViewModel
     @Binding var traveller: TravellerViewModel
@@ -590,67 +711,113 @@ struct AnalysisCombinationTricks : View {
                     .foregroundColor(Palette.tile.text)
                     ScrollView {
                         ForEach(analysisData.combinations, id: \.self) { combination in
-                            LazyVGrid(columns: columns, spacing: 0) {
-                                GridRow {
-                                    CenteredAttributedText(combination.suit.colorString)
-                                    CenteredText(combination.declarer.short)
-                                    if let (method, made) = analysisData.analysis.useMethodMadeValue(combination: combination, overrideRegardless: true) {
-                                        HStack {
-                                            Spacer()
-                                            Text(method.string)
-                                            Spacer()
-                                        }
-                                        madeView(board: $board, analysisData: analysisData, combination: combination, method: method, made: made)
-                                        if let (compare, _, _) = analysisData.analysis.compare(combination: combination) {
-                                            HStack(spacing: 0) {
-                                                Spacer()
-                                                Text(refresh ? compare : compare)
-                                                Spacer()
-                                            }
-                                            AnalysisCombinationReject(board: $board, analysisData: analysisData, combination: combination)
-                                        } else {
-                                            Text("")
-                                        }
-                                    } else {
-                                        Text("")
-                                        Text("")
-                                        Text("")
-                                        Text("")
-                                    }
-                                }
-                                .foregroundColor(Palette.background.text)
-                            }
+                            AnalysisCombination(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData, columns: columns, combination: combination)
                         }
                         Spacer().frame(height: 4)
                     }
                 }
             }
-        }.onReceive(valueChangePublisher) { (_, _, _) in
+        }
+        .onReceive(analysisViewerValueChange) { (_) in
             refresh.toggle()
+        }
+        .onChange(of: sitting) {
+            refresh.toggle()
+        }
+    }
+    
+    struct AnalysisCombination : View {
+        @Binding var board: BoardViewModel
+        @Binding var traveller: TravellerViewModel
+        @Binding var sitting: Seat
+        @ObservedObject var analysisData: AnalysisData
+        let columns: [GridItem]
+        @State var combination: AnalysisTrickCombination
+        @State var made: Int?
+        @State var method: AnalysisAssessmentMethod?
+        @State var compare: String?
+        
+        var body : some View {
+            LazyVGrid(columns: columns, spacing: 0) {
+                GridRow {
+                    CenteredAttributedText(combination.suit.colorString)
+                    CenteredText(combination.declarer.short)
+                    if let method = method {
+                        HStack {
+                            Spacer()
+                            Text(method.string)
+                            Spacer()
+                        }
+                        madeView(board: $board, sitting: $sitting, analysisData: analysisData, combination: $combination, method: $method, made: $made)
+                        if let compare = compare {
+                            HStack(spacing: 0) {
+                                Spacer()
+                                Text(compare)
+                                Spacer()
+                            }
+                            AnalysisCombinationReject(board: $board, traveller: $traveller, analysisData: analysisData, combination: combination, method: $method)
+                        } else {
+                            Text("")
+                        }
+                    } else {
+                        Text("")
+                        Text("")
+                        Text("")
+                        Text("")
+                    }
+                }
+                .foregroundColor(Palette.background.text)
+            }
+            .onChange(of: board, initial: true) {
+                updateState()
+            }
+            .onChange(of: sitting, initial: false) {
+                updateState()
+            }
+        }
+        
+        func updateState() {
+            if let (method, made) = analysisData.analysis.useMethodMadeValue(combination: combination, overrideRegardless: true) {
+                self.method = method
+                self.made = made
+                if let (compare, _, _) = analysisData.analysis.compare(combination: combination) {
+                    self.compare = compare
+                } else {
+                    compare = nil
+                }
+            } else {
+                self.method = nil
+                self.made = nil
+                self.compare = nil
+            }
         }
     }
     
     struct AnalysisCombinationReject : View {
         let scorecard = Scorecard.current.scorecard!
         @Binding var board: BoardViewModel
+        @Binding var traveller: TravellerViewModel
         @ObservedObject var analysisData: AnalysisData
         @State var combination: AnalysisTrickCombination
+        @Binding var method: AnalysisAssessmentMethod?
         @State var rejected = false
         @State var impact: Float = 0
+        @State var analysis: Analysis?
         
         var body : some View {
             HStack {
                 HStack(spacing: 0) {
                     Spacer()
-                    Text(impact < 0.5 ? "No change" : scorecard.type.boardScoreType.prefix(score: impact) + impact.toString(places: 0) + scorecard.type.boardScoreType.suffix)
+                    Text(impact > -0.5 ? "No change" : scorecard.type.boardScoreType.prefix(score: impact) + impact.toString(places: 0) + scorecard.type.boardScoreType.suffix)
                         .foregroundColor(Palette.background.textColor(rejected ? .faint : .normal))
                     Spacer()
-                    if impact >= 0.5 {
-                        Image(systemName: rejected ? "square" : "checkmark.square").font(inputTitleFont)
+                    if impact <= -0.5 {
+                        Analysis.checkBoxImage(rejected: rejected).font(inputTitleFont)
                             .onTapGesture {
-                                analysisData.override.toggleRejected(board: board.board, suit: combination.suit, declarer: combination.declarer)
+                                rejected.toggle()
+                                analysis?.set(rejected: rejected, phase: .play)
+                                analysisViewerValueChange.send(.rejected)
                                 updateImpact()
-                                board.save()
                             }
                         Spacer().frame(width: 2)
                     }
@@ -659,7 +826,10 @@ struct AnalysisCombinationTricks : View {
             .onChange(of: board, initial: true) {
                 updateImpact()
             }
-            .onReceive(valueChangePublisher) { (_, _, _) in
+            .onChange(of: traveller, initial: false) {
+                updateImpact()
+            }
+            .onReceive(analysisViewerValueChange) { (_) in
                 updateImpact()
             }
         }
@@ -670,44 +840,50 @@ struct AnalysisCombinationTricks : View {
             } else {
                 impact = 0
             }
-            (_, rejected) = analysisData.override.get(board: board.board, suit: combination.suit, declarer: combination.declarer)
+            
+            analysis = (method == .other ? analysisData.otherAnalysis : (method == .play ? analysisData.analysis : nil))
+
+            rejected = analysis?.rejected(phase: .play) ?? false
         }
     }
 }
 
 struct madeView : View {
     @Binding var board: BoardViewModel
+    @Binding var sitting: Seat
     @ObservedObject var analysisData: AnalysisData
-    @State var combination: AnalysisTrickCombination
-    @State var method: AnalysisAssessmentMethod
-    @State var made: Int
+    @Binding var combination: AnalysisTrickCombination
+    @Binding var method: AnalysisAssessmentMethod?
+    @Binding var made: Int?
     @State var showOverride = false
     
     var body: some View {
         HStack(spacing: 0) {
-            HStack {
-                Spacer()
-                Text("\(made)")
-                Spacer()
-            }
-            .frame(width: 40)
-            Spacer().frame(width: 10)
-            Button {
-                showOverride = true
-            } label: {
-                VStack {
-                    HStack {
-                        Spacer().frame(width: 4)
-                        Text("Change").minimumScaleFactor(0.5).font(tinyFont)
-                        Spacer().frame(width: 4)
-                    }
-                    .frame(height: 20)
-                    .palette(.disabledButton)
-                    .cornerRadius(4)
+            if let made = made {
+                HStack {
+                    Spacer()
+                    Text("\(made)")
+                    Spacer()
                 }
-            }
-            .popover(isPresented: $showOverride) {
-                overridePopover(board: $board, analysisData: analysisData, combination: combination, method: $method, made: $made, showOverride: $showOverride)
+                .frame(width: 40)
+                Spacer().frame(width: 10)
+                Button {
+                    showOverride = true
+                } label: {
+                    VStack {
+                        HStack {
+                            Spacer().frame(width: 4)
+                            Text("Change").minimumScaleFactor(0.5).font(tinyFont)
+                            Spacer().frame(width: 4)
+                        }
+                        .frame(height: 20)
+                        .palette(.disabledButton)
+                        .cornerRadius(4)
+                    }
+                }
+                .popover(isPresented: $showOverride) {
+                    overridePopover(board: $board, analysisData: analysisData, combination: combination, method: $method, made: $made, showOverride: $showOverride)
+                }
             }
         }
     }
@@ -718,8 +894,8 @@ struct overridePopover : View {
     @Binding var board: BoardViewModel
     @ObservedObject var analysisData: AnalysisData
     @State var combination: AnalysisTrickCombination
-    @Binding var method: AnalysisAssessmentMethod
-    @Binding var made: Int
+    @Binding var method: AnalysisAssessmentMethod?
+    @Binding var made: Int?
     @Binding var showOverride: Bool
     @State var newMethod: AnalysisAssessmentMethod = .override
     @State var newMade: Int = 0
@@ -814,11 +990,11 @@ struct overridePopover : View {
             }
         }
         .onAppear {
-            newMade = made
-            newMethod = method
+            newMade = made!
+            newMethod = method!
         }
         .onChange(of: newMethod, initial: true) {
-            let newValue = getValue(combination: combination, method: newMethod) ?? made
+            let newValue = getValue(combination: combination, method: newMethod) ?? made!
             if newMethod != .override {
                 newMade = newValue
             }
@@ -863,7 +1039,7 @@ struct overridePopover : View {
                 made = newValue
             }
         }
-        valueChangePublisher.send((value, combination.suit, combination.declarer))
+        analysisViewerValueChange.send(.override)
     }
     
     func getValue(combination: AnalysisTrickCombination, method: AnalysisAssessmentMethod = .override) -> Int? {
@@ -930,7 +1106,7 @@ struct AnalysisBiddingOptions : View {
                                             HStack {
                                                 Spacer()
                                                 let compare = analysisData.analysis.options.first?.assessments[.play]
-                                                Text(option.value(method: method, format: format, compare: compare))
+                                                Text(option.valueString(method: method, format: format, compare: compare))
                                                 if format == .made {
                                                     Spacer()
                                                 } else {
@@ -1060,6 +1236,7 @@ struct AnalysisCommentView: View {
 struct AnalysisSuggestionView: View {
     let scorecard = Scorecard.current.scorecard!
     @Binding var board: BoardViewModel
+    @Binding var traveller: TravellerViewModel
     @Binding var sitting: Seat
     @Binding var formatInt: Int
     @ObservedObject var analysisData: AnalysisData
@@ -1091,10 +1268,10 @@ struct AnalysisSuggestionView: View {
                         .frame(height: 25)
                         Spacer()
                     }.frame(height: 30)
-                    Suggestion(board: $board, description: "This", analysisData: analysisData, formatInt: $formatInt, otherTable: false, tableWidth: tableWidth, contractWidth: contractWidth, impactWidth: impactWidth)
+                    Suggestion(board: $board, traveller: $traveller, description: "This", analysisData: analysisData, formatInt: $formatInt, otherTable: false, tableWidth: tableWidth, contractWidth: contractWidth, impactWidth: impactWidth)
                     if Scorecard.current.scorecard?.type.players == 4 {
                         Spacer().frame(height: 10)
-                        Suggestion(board: $board, description: "Other", analysisData: analysisData, formatInt: $formatInt, otherTable: true, tableWidth: tableWidth, contractWidth: contractWidth, impactWidth: impactWidth)
+                        Suggestion(board: $board, traveller: $traveller, description: "Other", analysisData: analysisData, formatInt: $formatInt, otherTable: true, tableWidth: tableWidth, contractWidth: contractWidth, impactWidth: impactWidth)
                     }
                     Spacer()
                 }
@@ -1106,6 +1283,7 @@ struct AnalysisSuggestionView: View {
     struct Suggestion: View {
         let scorecard = Scorecard.current.scorecard!
         @Binding var board: BoardViewModel
+        @Binding var traveller: TravellerViewModel
         @State var description: String
         @ObservedObject var analysisData: AnalysisData
         @Binding var formatInt: Int
@@ -1116,7 +1294,7 @@ struct AnalysisSuggestionView: View {
         @State var impactWidth: CGFloat
         
         var body: some View {
-            if let bestOption = analysisData.bestOption[otherTable], let useMethod = bestOption.useMethod {
+            if let bestOption = (otherTable ? analysisData.otherAnalysis : analysisData.analysis)?.bestOption, let useMethod = bestOption.useMethod {
                 VStack {
                     HStack(spacing: 0) {
                         if scorecard.type.players == 4 {
@@ -1124,7 +1302,7 @@ struct AnalysisSuggestionView: View {
                         }
                         HStack {
                             Spacer()
-                            Text(bestOption.contract.colorCompact + bestOption.value(method: useMethod, format: .made, colorCode: false) + AttributedString("  " + bestOption.declarer.short))
+                            Text(bestOption.contract.colorCompact + bestOption.valueString(method: useMethod, format: .made, colorCode: false) + AttributedString("  " + bestOption.declarer.short))
                             Spacer()
                         }.frame(width: contractWidth)
                         HStack {
@@ -1137,13 +1315,13 @@ struct AnalysisSuggestionView: View {
                             let options = otherTable ? analysisData.otherAnalysis?.options ?? [] : analysisData.analysis.options
                             let compare = options.first?.assessments[.play]
                             // Check if already shown some values on the play and subtract them out
-                            let (_, alreadyShown, _) = analysisData.analysis.compare(combination: AnalysisTrickCombination(board: board.board, suit: bestOption.contract.suit, declarer: bestOption.declarer)) ?? ("", nil, nil)
-                            let bestOptionDescription = String(bestOption.value(method: useMethod, format: .score, compare: compare, verbose: true, showVariance: true, colorCode: false, alreadyShown: (otherTable ? 0 : alreadyShown), positiveOnly: true).characters)
+                            let (_, alreadyShown, _) = analysisData.analysis.compare(combination: AnalysisTrickCombination(board: board.board, suit: bestOption.contract.suit, declarer: bestOption.declarer), negativeOnly: true) ?? ("", nil, nil)
+                            let bestOptionDescription = String(bestOption.valueString(method: useMethod, format: .score, compare: compare, verbose: true, showVariance: true, colorCode: false, alreadyShown: (otherTable ? 0 : alreadyShown), negativeOnly: true).characters) //
                             Text("\(bestOptionDescription ==  "" ? "No change" : bestOptionDescription)")
                                 .foregroundColor(Palette.background.textColor(rejected && bestOptionDescription != "" ? .faint : .normal))
                             Spacer()
                             if bestOptionDescription != "" {
-                                Image(systemName: rejected ? "square" : "checkmark.square")
+                                Analysis.checkBoxImage(rejected: rejected)
                                     .onTapGesture {
                                         rejected.toggle()
                                     }
@@ -1153,21 +1331,20 @@ struct AnalysisSuggestionView: View {
                     }
                 }
                 .onChange(of: rejected, initial: false) {
-                    if otherTable {
-                        board.otherBiddingRejected = rejected
-                    } else {
-                        board.biddingRejected = rejected
-                    }
-                    board.save()
+                    analysisData.analysis.set(rejected: rejected, phase: .bidding, otherTable: otherTable)
+                    analysisViewerValueChange.send(.rejected)
                 }
                 .onChange(of: board, initial: true) {
-                    if otherTable {
-                        rejected = board.otherBiddingRejected
-                    } else {
-                        rejected = board.biddingRejected
-                    }
+                    updateRejected()
+                }
+                .onChange(of: traveller, initial: false) {
+                    updateRejected()
                 }
             }
+        }
+        
+        func updateRejected() {
+            rejected = analysisData.analysis.rejected(phase: .bidding, otherTable: otherTable)
         }
     }
 }
@@ -1210,8 +1387,14 @@ struct AnalysisTravellerView: View {
                                     CenteredText("By")
                                     CenteredText("Lead")
                                     CenteredText("Made")
-                                    TrailingText(sitting.pair.short)
-                                    TrailingText("\(sitting.pair.short)\(scorecard.type.boardScoreType.suffix)")
+                                    HStack {
+                                        Spacer()
+                                        Text(sitting.pair.short)
+                                    }
+                                    HStack {
+                                        Spacer()
+                                        Text("\(sitting.pair.short)\(scorecard.type.boardScoreType.suffix)")
+                                    }
                                 }
                                 .foregroundColor(Palette.tile.text).bold()
                                 .frame(height: 25)
@@ -1287,8 +1470,14 @@ struct AnalysisTravellerView: View {
                                     CenteredText("By")
                                     CenteredText("Lead")
                                     CenteredText("Made").gridColumnAlignment(.trailing)
-                                    TrailingText(sitting.pair.short).gridColumnAlignment(.trailing)
-                                    TrailingText("\(sitting.pair.short)\(scorecard.type.boardScoreType.suffix)").gridColumnAlignment(.trailing).frame(width: 80)
+                                    HStack {
+                                        Spacer()
+                                        Text(sitting.pair.short).gridColumnAlignment(.trailing)
+                                    }
+                                    HStack {
+                                        Spacer()
+                                        Text("\(sitting.pair.short)\(scorecard.type.boardScoreType.suffix)").gridColumnAlignment(.trailing).frame(width: 80)
+                                    }
                                 }
                                 .foregroundColor(Palette.tile.text).bold()
                                 .frame(height: 25)
@@ -1371,7 +1560,7 @@ struct AnalysisTravellerView: View {
             result.append(TravellerExtension(scorecard: scorecard, traveller: traveller))
         }
         let headToHead = (scorecard.type.players == 4 && travellers.count <= 2)
-        return result.sorted(by: {headToHead ? ($0 == handTraveller) : TravellerExtension.sort($0, $1, sitting: sitting)})
+        return result.sorted(by: {headToHead ? ($0 == traveller) : TravellerExtension.sort($0, $1, sitting: sitting)})
     }
     
     func buildSummary() -> [TravellerSummary] {
@@ -1659,3 +1848,4 @@ struct TrailingAttributedText: View {
         }
     }
 }
+

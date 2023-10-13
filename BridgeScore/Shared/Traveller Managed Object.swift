@@ -36,6 +36,8 @@ public class TravellerMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var westSection16: Int16
     @NSManaged public var lead: String
     @NSManaged public var playData: String
+    @NSManaged public var biddingRejected: Bool
+    @NSManaged public var playRejected: Bool
     
     convenience init() {
         self.init(context: CoreData.context)

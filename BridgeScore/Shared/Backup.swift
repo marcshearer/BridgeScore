@@ -41,6 +41,8 @@ class Backup {
         Backup.shared.backup(RankingMO.entity())
         Backup.shared.backup(TravellerMO.entity())
         Backup.shared.backup(BBONameMO.entity())
+        Backup.shared.backup(OverrideMO.entity())
+        Backup.shared.backup(DoubleDummyMO.entity())
     }
     
     public func restore(dateString: String) {
@@ -55,6 +57,8 @@ class Backup {
         Backup.shared.restore(TravellerMO.entity(), directory: thisBackupUrl)
         Backup.shared.restore(LocationMO.entity(), directory: thisBackupUrl)
         Backup.shared.restore(BBONameMO.entity(), directory: thisBackupUrl)
+        Backup.shared.restore(OverrideMO.entity(), directory: thisBackupUrl)
+        Backup.shared.restore(DoubleDummyMO.entity(), directory: thisBackupUrl)
         MasterData.shared.load()
     }
     

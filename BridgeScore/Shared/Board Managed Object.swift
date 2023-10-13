@@ -35,8 +35,6 @@ public class BoardMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var optimumMade16: Int16
     @NSManaged public var optimumNsPoints16: Int16
     @NSManaged public var optimumEntered: Bool
-    @NSManaged public var biddingRejected: Bool
-    @NSManaged public var otherBiddingRejected: Bool
     
     convenience init() {
         self.init(context: CoreData.context)

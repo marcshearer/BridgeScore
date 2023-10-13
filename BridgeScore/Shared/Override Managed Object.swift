@@ -19,7 +19,6 @@ public class OverrideMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var suit16: Int16
     @NSManaged public var made16: Int16
     @NSManaged public var madeEntered: Bool
-    @NSManaged public var rejected: Bool
     
     convenience init() {
         self.init(context: CoreData.context)

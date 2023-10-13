@@ -80,8 +80,8 @@
 		B26C555727C7EA9200015D0A /* Table with Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26C555627C7EA9200015D0A /* Table with Collection.swift */; };
 		B26C555927C8BCBC00015D0A /* Scroll Picker Popup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26C555827C8BCBC00015D0A /* Scroll Picker Popup View.swift */; };
 		B27CFA4E27CDFE8400B976E0 /* Popup Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = B27CFA4D27CDFE8400B976E0 /* Popup Menu.swift */; };
-		B28D3F5E2ACE6FD60060DAA1 /* Override Tricks Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28D3F5D2ACE6FD60060DAA1 /* Override Tricks Managed Object.swift */; };
-		B28D3F602ACE70850060DAA1 /* Override Tricks View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28D3F5F2ACE70850060DAA1 /* Override Tricks View Model.swift */; };
+		B28D3F5E2ACE6FD60060DAA1 /* Override Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28D3F5D2ACE6FD60060DAA1 /* Override Managed Object.swift */; };
+		B28D3F602ACE70850060DAA1 /* Override View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28D3F5F2ACE70850060DAA1 /* Override View Model.swift */; };
 		B28E2B1E27C6A582002A9EE2 /* Input Float.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28E2B1D27C6A582002A9EE2 /* Input Float.swift */; };
 		B28E4EE827B55F9A0059819C /* Backup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28E4EE727B55F9A0059819C /* Backup.swift */; };
 		B2A2053527AFC2E400C83C88 /* Player Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053427AFC2E400C83C88 /* Player Setup View.swift */; };
@@ -197,8 +197,8 @@
 		B26C555627C7EA9200015D0A /* Table with Collection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Table with Collection.swift"; sourceTree = "<group>"; };
 		B26C555827C8BCBC00015D0A /* Scroll Picker Popup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Scroll Picker Popup View.swift"; path = "../Main App/Scroll Picker Popup View.swift"; sourceTree = "<group>"; };
 		B27CFA4D27CDFE8400B976E0 /* Popup Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Popup Menu.swift"; sourceTree = "<group>"; };
-		B28D3F5D2ACE6FD60060DAA1 /* Override Tricks Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Override Tricks Managed Object.swift"; sourceTree = "<group>"; };
-		B28D3F5F2ACE70850060DAA1 /* Override Tricks View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Override Tricks View Model.swift"; sourceTree = "<group>"; };
+		B28D3F5D2ACE6FD60060DAA1 /* Override Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Override Managed Object.swift"; sourceTree = "<group>"; };
+		B28D3F5F2ACE70850060DAA1 /* Override View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Override View Model.swift"; sourceTree = "<group>"; };
 		B28E2B1D27C6A582002A9EE2 /* Input Float.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Input Float.swift"; sourceTree = "<group>"; };
 		B28E4EE727B55F9A0059819C /* Backup.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Backup.swift; sourceTree = "<group>"; };
 		B28E4EE927B566300059819C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -359,7 +359,7 @@
 				B256D42227EC456B00F47322 /* Ranking Managed Object.swift */,
 				B256D42027EC434100F47322 /* Traveller Managed Object.swift */,
 				B25AE9E42AA7021600F04229 /* Double Dummy Managed Object.swift */,
-				B28D3F5D2ACE6FD60060DAA1 /* Override Tricks Managed Object.swift */,
+				B28D3F5D2ACE6FD60060DAA1 /* Override Managed Object.swift */,
 			);
 			name = "Managed Object Models";
 			sourceTree = "<group>";
@@ -459,7 +459,7 @@
 				B256D42427EC578500F47322 /* Ranking View Model.swift */,
 				B256D42627EC5B1700F47322 /* Traveller View Model.swift */,
 				B25AE9E62AA704BE00F04229 /* Double Dummy View Model.swift */,
-				B28D3F5F2ACE70850060DAA1 /* Override Tricks View Model.swift */,
+				B28D3F5F2ACE70850060DAA1 /* Override View Model.swift */,
 			);
 			name = "View Models";
 			sourceTree = "<group>";
@@ -641,7 +641,7 @@
 				B26BCE512799AD8900B73501 /* My Color.swift in Sources */,
 				B2FCC05127A05BA500A3D9F5 /* Input Toggle.swift in Sources */,
 				B2EB3D79279DB80000D64225 /* Scorecard.swift in Sources */,
-				B28D3F602ACE70850060DAA1 /* Override Tricks View Model.swift in Sources */,
+				B28D3F602ACE70850060DAA1 /* Override View Model.swift in Sources */,
 				B26BCE4D2799AD8900B73501 /* String Extensions.swift in Sources */,
 				B2A2053D27B13F2F00C83C88 /* Keyboard Adaptive.swift in Sources */,
 				B2A5A42627E2582F00754061 /* BBO Name Managed Object.swift in Sources */,
@@ -660,7 +660,7 @@
 				B26BCE632799AED700B73501 /* Image Capture.swift in Sources */,
 				B2EB3D6A279D666800D64225 /* Location Managed Object.swift in Sources */,
 				B26BCE622799AED700B73501 /* Target View Modifiers.swift in Sources */,
-				B28D3F5E2ACE6FD60060DAA1 /* Override Tricks Managed Object.swift in Sources */,
+				B28D3F5E2ACE6FD60060DAA1 /* Override Managed Object.swift in Sources */,
 				B26BCE4F2799AD8900B73501 /* Utility Extension.swift in Sources */,
 				B26BCE522799AD8900B73501 /* Themes.swift in Sources */,
 				B2EB3D71279D717F00D64225 /* Player View Model.swift in Sources */,
