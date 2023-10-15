@@ -91,6 +91,7 @@
 		B2A2053D27B13F2F00C83C88 /* Keyboard Adaptive.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053C27B13F2F00C83C88 /* Keyboard Adaptive.swift */; };
 		B2A5A42627E2582F00754061 /* BBO Name Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A5A42527E2582F00754061 /* BBO Name Managed Object.swift */; };
 		B2A5A42827E3090300754061 /* BBO Name View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A5A42727E3090300754061 /* BBO Name View Model.swift */; };
+		B2A918932ADABF0B00761B66 /* Analysis View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A918922ADABF0B00761B66 /* Analysis View.swift */; };
 		B2AB6ECB2AC2CCA900ED002A /* Analysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AB6ECA2AC2CCA900ED002A /* Analysis.swift */; };
 		B2AF750D27AD14FD00233693 /* Slide In Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AF750C27AD14FD00233693 /* Slide In Menu.swift */; };
 		B2AF750F27AD384900233693 /* Layout Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AF750E27AD384900233693 /* Layout Setup View.swift */; };
@@ -210,6 +211,7 @@
 		B2A5A42427E2420800754061 /* BridgeScore.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BridgeScore.entitlements; sourceTree = "<group>"; };
 		B2A5A42527E2582F00754061 /* BBO Name Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BBO Name Managed Object.swift"; sourceTree = "<group>"; };
 		B2A5A42727E3090300754061 /* BBO Name View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BBO Name View Model.swift"; sourceTree = "<group>"; };
+		B2A918922ADABF0B00761B66 /* Analysis View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Analysis View.swift"; sourceTree = "<group>"; };
 		B2AB6ECA2AC2CCA900ED002A /* Analysis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analysis.swift; sourceTree = "<group>"; };
 		B2AF750C27AD14FD00233693 /* Slide In Menu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Slide In Menu.swift"; sourceTree = "<group>"; };
 		B2AF750E27AD384900233693 /* Layout Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Layout Setup View.swift"; sourceTree = "<group>"; };
@@ -529,6 +531,7 @@
 			isa = PBXGroup;
 			children = (
 				B213998B27D8AA830098E4A4 /* Seat Picker Popup View.swift */,
+				B2A918922ADABF0B00761B66 /* Analysis View.swift */,
 			);
 			name = "Shared Views";
 			sourceTree = "<group>";
@@ -613,6 +616,7 @@
 				B2EEFC782AAB5BE4005A1ECA /* Analysis Viewer.swift in Sources */,
 				B2100D9A27DA488200CC0130 /* Stats View.swift in Sources */,
 				B2C4339027B7B59700796F24 /* Custom View Animations.swift in Sources */,
+				B2A918932ADABF0B00761B66 /* Analysis View.swift in Sources */,
 				B26BCE492799AD8900B73501 /* Palette.swift in Sources */,
 				B2BBC8B827BBF4B100D51A26 /* Table Managed Object.swift in Sources */,
 				B26BCE502799AD8900B73501 /* Other Extensions.swift in Sources */,

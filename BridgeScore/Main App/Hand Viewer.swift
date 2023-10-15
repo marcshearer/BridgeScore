@@ -116,7 +116,7 @@ struct HandViewer: View {
                     if trickNumber > 0 {
                         HandViewPlay(board: $board, traveller: $traveller, sitting: $sitting, rotated: $rotated, tricks: $tricks, trickNumber: $trickNumber, visible: $visible, animate: $animate, showClaim: $showClaim)
                     } else {
-                        HandViewPoints(board: $board, deal: $deal, sitting: $sitting)
+                        HandViewPoints(board: $board, deal: $deal, sitting: $sitting, rotated: $rotated)
                     }
                 }.cornerRadius(6)
                 Spacer().frame(width: 10)
@@ -724,6 +724,7 @@ struct HandViewer: View {
         @Binding var board: BoardViewModel
         @Binding var deal: Deal
         @Binding var sitting: Seat
+        @Binding var rotated: Int
         
         var body: some View {
             VStack {
@@ -735,9 +736,25 @@ struct HandViewer: View {
                         .frame(width: 20, height: 140).rotationEffect(.degrees(-90))
                     Spacer()
                     VStack {
+                        Spacer()
+                        if rotated % 2 == 0 {
+                            Rectangle().frame(width: 2, height: 30).foregroundColor(Palette.handTable.contrastText)
+                        }
                         Spacer().frame(height: 10)
-                        Text("\((deal.hands[sitting]?.hcp ?? 0) + (deal.hands[sitting.partner]?.hcp ?? 0)) HCP").font(defaultFont).foregroundColor(Palette.handTable.contrastText)
+                        HStack {
+                            if rotated % 2 != 0 {
+                                Rectangle().frame(width: 10, height: 2).foregroundColor(Palette.handTable.contrastText)
+                            }
+                            Text("\((deal.hands[sitting]?.hcp ?? 0) + (deal.hands[sitting.partner]?.hcp ?? 0)) HCP").font(defaultFont).foregroundColor(Palette.handTable.contrastText)
+                            if rotated % 2 != 0 {
+                                Rectangle().frame(width: 10, height: 2).foregroundColor(Palette.handTable.contrastText)
+                            }
+                        }
                         Spacer().frame(height: 10)
+                        if rotated % 2 == 0 {
+                            Rectangle().frame(width: 2, height: 30).foregroundColor(Palette.handTable.contrastText)
+                        }
+                        Spacer()
                     }
                     Spacer()
                     Centered(deal: $deal, sitting: sitting.rightOpponent).fixedSize()
@@ -778,7 +795,8 @@ struct HandViewer: View {
         @Binding var visible: [Bool]
         @Binding var animate: Int
         @Binding var showClaim: Bool
-        let interval = 0.2
+        let interval = 0.1
+        let duration = 0.05
         let height = 40.0
         let width = 70.0
         
@@ -854,16 +872,16 @@ struct HandViewer: View {
         
         func animation() {
             let start = sitting.partner.offset(by: rotated).offset(to: tricks[max(0, trickNumber - 1)].lead)
-            withAnimation(.linear(duration: interval)) {
+            withAnimation(.linear(duration: duration).delay(0)) {
                 visible[start % 4] = true
             }
-            withAnimation(.linear(duration: interval).delay(interval)) {
+            withAnimation(.linear(duration: duration).delay(interval)) {
                 visible[(start + 1) % 4] = true
             }
-            withAnimation(.linear(duration: interval).delay(interval * 2)) {
+            withAnimation(.linear(duration: duration).delay(interval * 2)) {
                 visible[(start + 2) % 4] = true
             }
-            withAnimation(.linear(duration: interval).delay(interval * 3)) {
+            withAnimation(.linear(duration: duration).delay(interval * 3)) {
                 visible[(start + 3) % 4] = true
             }
         }

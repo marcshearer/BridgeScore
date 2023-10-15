@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 class AnalysisOverride: ObservableObject, Equatable {
     @Published var board: BoardViewModel
@@ -39,46 +40,77 @@ class AnalysisOverride: ObservableObject, Equatable {
 }
 
 class AnalysisCombinationCompareData {
-    var combination: AnalysisTrickCombination
-    var text: String?
+    var verboseAttributedText: NSAttributedString?
+    var shortAttributedText: NSAttributedString?
     var impact: Float?
     var withMethod: AnalysisAssessmentMethod?
     
-    init(combination: AnalysisTrickCombination) {
-        self.combination = combination
+    var shortText: AttributedString? {
+        shortAttributedText == nil ? nil : AttributedString(shortAttributedText!)
+    }
+
+    var verboseText: AttributedString? {
+        verboseAttributedText == nil ? nil : AttributedString(verboseAttributedText!)
+    }
+
+    init(shortText: NSAttributedString?, verboseText: NSAttributedString?, impact: Float?, withMethod: AnalysisAssessmentMethod?) {
+        self.verboseAttributedText = verboseText
+        self.shortAttributedText = shortText
+        self.impact = impact
+        self.withMethod = withMethod
+    }
+}
+
+class AnalysisSummaryData {
+    var status:AnalysisSummaryStatus
+    var attributedText: NSAttributedString
+    var impact: Float
+    var impactDescription: String
+    
+    var text: AttributedString {
+        AttributedString(attributedText)
+    }
+    
+    init(status: AnalysisSummaryStatus = .ok, text: NSAttributedString = NSAttributedString(""), impact: Float = 0, impactDescription: String = "") {
+        self.status = status
+        self.attributedText = text
+        self.impact = impact
+        self.impactDescription = impactDescription
+    }
+    
+    var values: (AnalysisSummaryStatus, AttributedString, Float, String) {
+        (status, text, impact, impactDescription)
     }
 }
 
 
-
 class Analysis {
     private(set) var options: [AnalysisOption] = []
-    private(set) var rankingNumber: Int
-    private(set) var sitting: Seat
+    private(set) var sitting: Pair
     private(set) var board: BoardViewModel
     private(set) var traveller: TravellerViewModel
     private(set) var override: AnalysisOverride
     private(set) var boardTravellers: [TravellerViewModel]
     private var tricksMade: [AnalysisTrickCombination:(modeFraction: Float, made: [AnalysisAssessmentMethod:Int])] = [:]
-    private var combinationData: [AnalysisTrickCombination:AnalysisCombinationCompareData] = [:]
+    private var combinationCompareData: [AnalysisTrickCombination:AnalysisCombinationCompareData] = [:]
     private var scoreType: Type
     private var boardScoreType: ScoreType
     
-    init(override: AnalysisOverride, board: BoardViewModel, traveller: TravellerViewModel, sitting: Seat) {
+    init(override: AnalysisOverride, board: BoardViewModel, traveller: TravellerViewModel, sitting: Pair) {
         self.override = override
-        self.rankingNumber = traveller.rankingNumber[sitting] ?? -1
         self.sitting = sitting
         self.board = board
         self.traveller = traveller
-        self.boardTravellers = Scorecard.current.travellers(board: board.board).sorted(by: {$0.points(sitting: sitting) < $1.points(sitting: sitting)})
+        self.boardTravellers = Scorecard.current.travellers(board: board.board).sorted(by: {$0.points(sitting: sitting.first) < $1.points(sitting: sitting.first)})
         self.scoreType = Scorecard.current.scorecard!.type
         self.boardScoreType = scoreType.boardScoreType
         buildOptions()
     }
     
     public var otherTraveller: TravellerViewModel? {
-        let otherTravellers = boardTravellers.filter({!($0 == traveller)})
-        return otherTravellers.count != 1 ? nil : otherTravellers.first!
+        let results = boardTravellers.filter({$0.rankingNumber[sitting.other.seats.first!] == traveller.rankingNumber[sitting.first]})
+        assert(results.count <= 1, "Found multiple other travellers")
+        return results.first
     }
     
     public var bestOption: AnalysisOption? {
@@ -164,15 +196,15 @@ class Analysis {
     public func useMethod(suit: Suit, declarer: Pair, overrideRegardless: Bool = false) -> AnalysisAssessmentMethod? {
         var result: AnalysisAssessmentMethod?
         var playMade: Int?
-        var playSitting: Pair = sitting.pair
+        var playSitting = sitting
         if let type = Scorecard.current.scorecard?.type {
             let headToHead = type.players == 4 && boardTravellers.count == 2
             if traveller.contract.suit == suit {
                 result = .play
-                playSitting = sitting.pair
+                playSitting = sitting
             } else if headToHead && otherTraveller?.contract.suit == suit {
                 result = .other
-                playSitting = sitting.pair.other
+                playSitting = sitting.other
             }
             let combination = AnalysisTrickCombination(board: board.board, suit: suit, declarer: declarer)
             let (modeFraction, made) = madeValues(combination: combination)
@@ -199,7 +231,7 @@ class Analysis {
         
         let bids = traveller.bids
         let declarer = traveller.declarer.pair
-        let weDeclared = (declarer == sitting.pair)
+        let weDeclared = (declarer == sitting)
         
         // Find last bid by defenders
         var bidder = declarer
@@ -229,28 +261,29 @@ class Analysis {
                 case .actual:
                     typeOptions.append(AnalysisOption(parent: self, board: board.board, type: type, contract: Contract(copying: traveller.contract), declarer: traveller.declarer.pair))
                 case .otherTable:
-                    if let otherTableTraveller = boardTravellers.filter({$0.rankingNumber[sitting.leftOpponent] == traveller.rankingNumber[sitting]}).first {
-                        let contract = Contract(copying: otherTableTraveller.contract)
-                        if otherTableTraveller.declarer.pair == sitting.pair && (theirBid == nil || contract >+ theirBid!) {
-                            typeOptions.append(AnalysisOption(parent: self, board: board.board, type: type, contract: contract, declarer: otherTableTraveller.declarer.pair))
+                    if let otherTraveller = otherTraveller {
+                        let contract = Contract(copying: otherTraveller.contract)
+                        if otherTraveller.declarer.pair == sitting {
+                            typeOptions.append(contentsOf: bidOverOptions(ourBid: contract, above: theirBid?.undoubled, forceType: .otherTable))
                         }
                     }
                 default:
                     break
                 }
-            
+                
                 if weDeclared {
-                    // Options if we declared
+                        // Options if we declared
                     switch type {
                     case .stopLower:
-                        // Stop in a lower contract below game
+                            // Stop in a lower contract below game
                         if let ourBid = ourBid {
                             if ourBid.level.rawValue > 1 {
                                 for level in 1..<ourBid.level.rawValue {
                                     let tryBid = Contract(copying: ourBid)
+                                    tryBid.double = .undoubled
                                     tryBid.level = ContractLevel(rawValue: level)!
                                     if theirBid == nil || tryBid >+ theirBid! {
-                                        typeOptions.append(AnalysisOption(parent: self, board: board.board, type: type, contract: tryBid, declarer: sitting.pair))
+                                        typeOptions.append(AnalysisOption(parent: self, board: board.board, type: type, contract: tryBid, declarer: sitting))
                                     }
                                 }
                             }
@@ -259,8 +292,8 @@ class Analysis {
                         break
                     }
                 }
-            
-                // Options if bidding or declaring
+                
+                    // Options if bidding or declaring
                 switch type {
                 case .passPrevious:
                         // Pass their last bid
@@ -268,28 +301,28 @@ class Analysis {
                         if weDeclared || theirBid.double == .doubled {
                             let contract = Contract(copying: theirBid)
                             contract.double = .undoubled
-                            typeOptions.append(AnalysisOption(parent: self, board: board.board, type: type, contract: contract, declarer: sitting.pair.other, decisionBy: sitting.pair))
+                            typeOptions.append(AnalysisOption(parent: self, board: board.board, type: type, contract: contract, declarer: sitting.other, decisionBy: sitting))
                         }
                     }
                 case .upToGame:
                         // Bid on to part-score game or slam level
                     if let ourBid = ourBid {
-                        typeOptions.append(contentsOf: bidOverOptions(ourBid: Contract(higher: ourBid, suit: ourBid.suit), above: theirBid))
+                        typeOptions.append(contentsOf: bidOverOptions(ourBid: Contract(higher: ourBid, suit: ourBid.suit), above: theirBid?.undoubled))
                     }
                 case .otherSuit:
-                    // Bid another suit (bid by someone else or double-dummy optimum)
-                    let suitsBidSet = Set(boardTravellers.filter{$0.declarer.pair == sitting.pair}.map{$0.contract.suit}.filter{$0 != ourBid?.suit})
+                        // Bid another suit (bid by someone else or double-dummy optimum)
+                    let suitsBidSet = Set(boardTravellers.filter{$0.declarer.pair == sitting}.map{$0.contract.suit}.filter{$0 != ourBid?.suit})
                     var suitsBid: [Suit] = Array(suitsBidSet)
                     if let optimum = board.optimumScore?.contract, let declarer = board.optimumScore?.declarer {
                         let suit = board.optimumScore!.contract.suit
-                        if !suitsBid.contains(suit) && suit != ourBid?.suit && declarer == sitting.pair && (theirBid == nil || optimum >+ theirBid!) {
+                        if !suitsBid.contains(suit) && suit != ourBid?.suit && declarer == sitting && (theirBid == nil || optimum >+ theirBid!) {
                             suitsBid.append(suit)
                         }
                     }
                     if !suitsBid.isEmpty {
                         for suit in suitsBid {
                             if let aboveBid = theirBid ?? ourBid {
-                                if let bid = Contract(higher: aboveBid, suit: suit) {
+                                if let bid = Contract(higher: aboveBid.undoubled, suit: suit) {
                                     typeOptions.append(contentsOf: bidOverOptions(ourBid: bid, above: nil, forceType: .otherSuit))
                                 }
                             }
@@ -298,22 +331,22 @@ class Analysis {
                 default:
                     break
                 }
-
+                
                 if !typeOptions.isEmpty {
-                    // Add linked options
+                        // Add linked options
                     for option in typeOptions {
                         options.append(option)
                         
                         if !weDeclared {
                             if option.type == .actual && option.contract.double != .undoubled {
-                                // We have doubled them - consider not doubling
+                                    // We have doubled them - consider not doubling
                                 let dontDouble = Contract(copying: option.contract)
                                 dontDouble.double = .undoubled
                                 options.append(AnalysisOption(parent: self, board: board.board, type: .dontDouble, contract: dontDouble, declarer: option.declarer, decisionBy: option.declarer.other, linked: option))
-                            } else if option.declarer == sitting.pair {
-                                // We have over bid
-                                // Add linked options for opps doubling or overbidding
-                                // and us then doubling them or them doubling us
+                            } else if option.declarer == sitting {
+                                    // We have over bid
+                                    // Add linked options for opps doubling or overbidding
+                                    // and us then doubling them or them doubling us
                                 let doubleUs = Contract(copying: option.contract)
                                 doubleUs.double = .doubled
                                 options.append(AnalysisOption(parent: self, board: board.board, type: .double, contract: doubleUs, declarer: option.declarer, decisionBy: option.declarer.other, linked: option, double: true))
@@ -330,7 +363,7 @@ class Analysis {
                         }
                         
                         if option.type == .passPrevious || (!weDeclared && option.type == .actual) {
-                            // If we passed them consider doubling them
+                                // If we passed them consider doubling them
                             let doubleThem = Contract(copying: option.contract)
                             doubleThem.double = .doubled
                             options.append(AnalysisOption(parent: self, board: board.board, type: .passPrevious, contract: doubleThem, declarer: option.declarer, decisionBy: option.declarer.other, linked: option, double: true))
@@ -345,9 +378,11 @@ class Analysis {
     }
     
     public func refreshOptions() {
+        print("Refresh options \(traveller.contract.compact)")
         for option in options {
             option.removed(by: nil)
         }
+        combinationCompareData = [:]
         buildScores()
         removeBadOptions()
     }
@@ -384,7 +419,7 @@ class Analysis {
                         } else {
                             type = .upToGrand
                         }
-                        options.append(AnalysisOption(parent: self, board: board.board, type: type, contract: contract, declarer: sitting.pair))
+                        options.append(AnalysisOption(parent: self, board: board.board, type: type, contract: contract, declarer: sitting))
                     }
                 }
             }
@@ -403,7 +438,7 @@ class Analysis {
                 allTricksMade.append(overrideMade)
             }
             for made in Set(allTricksMade) {
-                let points = Scorecard.points(contract: option.contract, vulnerability: Vulnerability(board: traveller.boardNumber), declarer: option.declarer.seats.first!, made: made - option.contract.level.tricks, seat: sitting)
+                let points = Scorecard.points(contract: option.contract, vulnerability: Vulnerability(board: traveller.boardNumber), declarer: option.declarer.seats.first!, made: made - option.contract.level.tricks, seat: sitting.first)
                 
                 assessment[made] = (AnalysisAssessment(tricks: made, points: points, score: 0))
             }
@@ -413,20 +448,21 @@ class Analysis {
                     option.modeFraction = madeValues(combination: combination).modeFraction
                 }
             }
-            option.calculateScores(traveller: traveller, sitting: sitting)
+            option.calculateScores(traveller: traveller)
         }
     }
     
-    public func score(points: Int, traveller: TravellerViewModel? = nil) -> Float {
+    public func score(points: Int, traveller: TravellerViewModel? = nil, sitting: Pair? = nil) -> Float {
         let traveller = traveller ?? self.traveller
         let otherTravellers = boardTravellers.filter({!($0 == traveller)})
         var score: Float? = nil
+        let sitting = sitting ?? self.sitting
         switch Scorecard.current.scorecard!.type.boardScoreType {
         case .percent:
             // 2 points for every pair beaten, 1 for every pair tied divided by 2 points for every pair
             var mps = 0
             for compareTraveller in otherTravellers {
-                let compare = compareTraveller.points(sitting: sitting)
+                let compare = compareTraveller.points(sitting: sitting.first)
                 if points > compare {
                     mps += 2
                 } else if points == compare {
@@ -438,9 +474,9 @@ class Analysis {
             score = Float(points)
         case .xImp:
             // Compare our score with every othre traveller and average
-            score = otherTravellers.map({Float(BridgeImps(points: points - $0.points(sitting: sitting)).imps)}).reduce(0,+) / Float(otherTravellers.count)
+            score = otherTravellers.map({Float(BridgeImps(points: points - $0.points(sitting: sitting.first)).imps)}).reduce(0,+) / Float(otherTravellers.count)
         case .imp:
-            let compare = otherTravellers.map{$0.points(sitting: sitting)}.reduce(0, +) / otherTravellers.count
+            let compare = otherTravellers.map{$0.points(sitting: sitting.first)}.reduce(0, +) / otherTravellers.count
             let imps = BridgeImps(points: points - compare)
             score = Float(imps.imps)
         case .vp, .acblVp:
@@ -453,7 +489,7 @@ class Analysis {
     
     private func removeBadOptions () {
         if options.count >= 2 {
-                // Consider removing original linked bid if worse than double
+            // Consider removing original linked bid if worse than double
             for option in options {
                 if option.double && !option.removed {
                     if let linked = option.linked {
@@ -466,7 +502,7 @@ class Analysis {
                 }
             }
             
-                // Remove any option which is always equal or worse to something above it (for decision maker)
+            // Remove any option which is always equal or worse to something above it (for decision maker)
             for optionIndex in 1..<options.count {
                 let option = options[optionIndex]
                 for compareIndex in 0..<optionIndex {
@@ -490,7 +526,7 @@ class Analysis {
                 }
             }
             
-                // Remove linking options if no longer in play
+            // Remove linking options if no longer in play
             for option in options {
                 if let linked = option.linked {
                     if linked.removed && linked.removedBy != option {
@@ -499,7 +535,7 @@ class Analysis {
                 }
             }
             
-                // Now consider removing doubled bid if original bid does not make sense if doubled
+            // Now consider removing doubled bid if original bid does not make sense if doubled
             for optionIndex in 1..<options.count {
                 let option = options[optionIndex]
                 if option.double && !option.removed {
@@ -527,7 +563,7 @@ class Analysis {
     }
     
     private func invert(_ option: AnalysisOption) -> Bool {
-        var invert = option.declarer != sitting.pair
+        var invert = option.declarer != sitting
         if option.decisionBy != option.declarer {
             invert.toggle()
         }
@@ -585,14 +621,16 @@ class Analysis {
         return assessment
     }
     
-    public func compare(combination: AnalysisTrickCombination, negativeOnly: Bool = false) -> (String, Float?, AnalysisAssessmentMethod?)? {
-        var text: String?
+    public func compare(combination: AnalysisTrickCombination, positiveOnly: Bool = false, verbose: Bool = false) -> (NSAttributedString, Float?, AnalysisAssessmentMethod?)? {
+        var shortText: NSAttributedString?
+        var verboseText: NSAttributedString?
         var withTricks: Int?
         var withMethod: AnalysisAssessmentMethod?
         var impact: Float?
         var sitting = sitting
-        if let data = combinationData[combination] {
-            text = data.text
+        if let data = combinationCompareData[combination] {
+            shortText = data.shortAttributedText
+            verboseText = data.verboseAttributedText
             impact = data.impact
             withMethod = data.withMethod
         } else if let (method, made) = useMethodMadeValue(combination: combination, overrideRegardless: true) {
@@ -603,26 +641,26 @@ class Analysis {
             } else if let otherTraveller = otherTraveller {
                 if combination.suit == otherTraveller.contract.suit && combination.declarer == otherTraveller.declarer.pair {
                     useTraveller = otherTraveller
-                    sitting = sitting.equivalent
+                    sitting = sitting.other
                 }
             }
             if let useTraveller = useTraveller {
-                let invert = (combination.declarer == sitting.pair ? 1 : -1)
+                let invert = (combination.declarer == sitting ? 1 : -1)
                 if method == .override {
                         // Have overridden = compare to actual play
                     withMethod = .override
                     withTricks = made
-                    made = useTraveller.contract.level.tricks + useTraveller.made
-                    text = compareValues(made, withTricks!, invert: -invert, text: "Play")
+                    made = useTraveller.tricksMade
+                    (shortText, verboseText) = compareValues(made, withTricks!, invert: -invert, shortText: "Play", verboseText: "actual play")
                 } else {
                     if Scorecard.current.scorecard?.type.players == 4 && boardTravellers.count == 2 {
                         if useTraveller == traveller {
                                 // Head to head - compare to other table if in same suit played the same way
                             if let otherTraveller = otherTraveller {
                                 if otherTraveller.contract.suit == combination.suit && otherTraveller.declarer.pair == combination.declarer {
-                                    withMethod = .play
-                                    withTricks = otherTraveller.contract.level.tricks + otherTraveller.made
-                                    text = compareValues(made, withTricks!, invert: invert, text: "Other")
+                                    withMethod = .other
+                                    withTricks = otherTraveller.tricksMade
+                                    (shortText, verboseText) = compareValues(made, withTricks!, invert: invert, shortText: "Other", verboseText: "other table")
                                 }
                             }
                         }
@@ -630,84 +668,105 @@ class Analysis {
                             // Not head to head so see how compares with field
                         let combinationTravellers = boardTravellers.filter({$0.contract.suit == combination.suit && $0.declarer.pair == combination.declarer && $0 != useTraveller})
                         if !combinationTravellers.isEmpty {
-                            let betterTravellers = combinationTravellers.filter({ ($0.contract.level.tricks + $0.made - made) * invert > 0 })
-                            let betterThanPercent = 100 - (Float(betterTravellers.count)/Float(combinationTravellers.count)*100).rounded()
-                            withMethod = .median
-                            withTricks = tricksMade[combination]?.made[.median] ?? 0
-                            text = "≥\(betterThanPercent)%"
+                            if combinationTravellers.count > 0 {
+                                let medianTraveller = combinationTravellers.sorted(by: {$0.tricksMade < $1.tricksMade})[(combinationTravellers.count) / 2]
+                                if made == medianTraveller.tricksMade {
+                                    // Equal median
+                                    shortText = NSAttributedString("=Median")
+                                    verboseText = NSAttributedString("Equal to median for ") + combination.suit.attributedString
+                                } else {
+                                    // Not median
+                                    let better = ((made - medianTraveller.tricksMade) * invert > 0)
+                                    let extremeTravellers = combinationTravellers.filter({ (made - $0.tricksMade) * invert * (better ? 1 : -1) > 0 })
+                                    let extremePercent = (Float(extremeTravellers.count)/Float(combinationTravellers.count)*100)
+                                    withMethod = .median
+                                    withTricks = tricksMade[combination]?.made[.median] ?? 0
+                                    verboseText = NSAttributedString("\(better ? "Better" : "Worse") than \(extremePercent.toString(places: 0))% of field in ") + combination.suit.attributedString + NSAttributedString(" (\(extremeTravellers.count))")
+                                    shortText = NSAttributedString("\(better ? ">" : "<")\(extremePercent.toString(places: 0))%")
+                                }
+                            }
                         }
                     }
-                    if text == nil {
+                    if shortText == nil {
                             // No luck so far - compare with Double Dummy
                         var ddMade: [Int] = []
-                        for index in 0...1 {
-                            ddMade.append(board.doubleDummy[combination.declarer.seats[index]]?[combination.suit]?.made ?? -1)
+                        for seat in combination.declarer.seats {
+                            ddMade.append(board.doubleDummy[seat]?[combination.suit]?.made ?? -1)
                         }
                         if ddMade.max() ?? -1 >= 0 {
                             withMethod = .doubleDummy
                             withTricks = ddMade.max()!
-                            text = compareValues(made, withTricks!, invert: invert, text: "DD")
+                            (shortText, verboseText) = compareValues(made, withTricks!, invert: invert, shortText: "DD", verboseText: "Double Dummy")
                         }
                     }
                 }
                 if let withTricks = withTricks {
-                    let points = Scorecard.points(contract: useTraveller.contract, vulnerability: Vulnerability(board: useTraveller.boardNumber), declarer: useTraveller.declarer, made: made - useTraveller.contract.level.tricks, seat: sitting)
-                    let comparePoints = Scorecard.points(contract: useTraveller.contract, vulnerability: Vulnerability(board: useTraveller.boardNumber), declarer: useTraveller.declarer, made:  withTricks - useTraveller.contract.level.tricks, seat: sitting)
-                    impact = (score(points: points, traveller: useTraveller) - score(points: comparePoints, traveller: useTraveller))
+                    let points = Scorecard.points(contract: useTraveller.contract, vulnerability: Vulnerability(board: useTraveller.boardNumber), declarer: useTraveller.declarer, made: made - useTraveller.contract.level.tricks, seat: sitting.first)
+                    let comparePoints = Scorecard.points(contract: useTraveller.contract, vulnerability: Vulnerability(board: useTraveller.boardNumber), declarer: useTraveller.declarer, made:  withTricks - useTraveller.contract.level.tricks, seat: sitting.first)
+                    impact = (score(points: comparePoints, traveller: useTraveller, sitting: sitting) - score(points: points, traveller: useTraveller, sitting: sitting))
                 }
             }
         }
-        return (text == nil || ((impact ?? 0) > 0 && negativeOnly) ? nil : (text!, impact, withMethod))
-    }
-    
-    private func compareValues(_ lhs: Int, _ rhs: Int, invert: Int, text: String) -> String {
-        var result = ""
-        if lhs == rhs {
-            result = "="
-        } else if (lhs - rhs) * invert < -1 {
-            result = "<<"
-        } else if (lhs - rhs) * invert < 0 {
-            result = "<"
-        } else if (lhs - rhs) * invert > 1 {
-            result = ">>"
+
+        combinationCompareData[combination] = AnalysisCombinationCompareData(shortText: shortText, verboseText: verboseText, impact: impact, withMethod: withMethod)
+        
+        if shortText == nil {
+            return nil
         } else {
-            result  = ">"
+            return (verbose ? verboseText ?? shortText! : shortText!, impact, withMethod)
         }
-        return result + text
     }
     
-    public func summary(phase: AnalysisPhase) -> (AnalysisSummaryStatus, String, Float, String, Bool) {
-        var result: (status: AnalysisSummaryStatus, text: String, impact: Float, impactDescription: String, rejected: Bool) = (.ok, "", 0, "", false)
+    private func compareValues(_ lhs: Int, _ rhs: Int, invert: Int, shortText: String, verboseText: String) -> (NSAttributedString, NSAttributedString) {
+        var result: (short: NSAttributedString, verbose: NSAttributedString) = (NSAttributedString(""), NSAttributedString(""))
+        if lhs == rhs {
+            result = (NSAttributedString("="), NSAttributedString("Equal to "))
+        } else if (lhs - rhs) * invert < -1 {
+            result = (NSAttributedString("<<"), NSAttributedString("Much worse than "))
+        } else if (lhs - rhs) * invert < 0 {
+            result = (NSAttributedString("<"), NSAttributedString("Worse than "))
+        } else if (lhs - rhs) * invert > 1 {
+            result = (NSAttributedString(">>"), NSAttributedString("Much better than "))
+        } else {
+            result  = (NSAttributedString(">"), NSAttributedString("Better than "))
+        }
+        result.short = result.short + NSAttributedString(shortText)
+        result.verbose = result.verbose + NSAttributedString(verboseText)
+        return result
+    }
+    
+    public func summary(phase: AnalysisPhase, otherTable: Bool, verbose: Bool = false) -> AnalysisSummaryData {
+        var result = AnalysisSummaryData()
         
         if let bestOption = bestOption, let useMethod = bestOption.useMethod {
             if phase == .bidding {
                 let playOption = options.first?.assessments[.play]
                 
                     // Check if already shown some values on the play and subtract them out
-                let (_, alreadyShown, _) = compare(combination: AnalysisTrickCombination(board: board.board, suit: bestOption.contract.suit, declarer: bestOption.declarer), negativeOnly: true) ?? ("", nil, nil)
-                
-                if let (impact, impactDescription) = bestOption.value(method: useMethod, format: .score, compare: playOption, verbose: true, showVariance: true, colorCode: false, alreadyShown: alreadyShown, negativeOnly: true) {
+                let (_, alreadyShown, _) = compare(combination: AnalysisTrickCombination(board: board.board, suit: bestOption.contract.suit, declarer: bestOption.declarer), positiveOnly: true) ?? (NSAttributedString(""), nil, nil)
+                if let (impact, impactDescription) = bestOption.value(method: useMethod, format: .score, compare: playOption, verbose: true, showVariance: true, colorCode: false, alreadyShown: alreadyShown, positiveOnly: true) {
                     
                     let rejected = traveller.biddingRejected
                     
-                    result = (.ok, bestOption.action.description(), impact, String(impactDescription.characters), rejected)
+                    result = AnalysisSummaryData(status: (rejected ? .rejected : .ok), text: bestOption.actionDescription(otherTable: otherTable, verbose: verbose), impact: impact, impactDescription: String(impactDescription.characters))
+                    
                 }
             } else {
-                if let (text, impact, _) = compare(combination: AnalysisTrickCombination(board: board.board, suit: bestOption.contract.suit, declarer: bestOption.declarer), negativeOnly: true) {
-                    if let impact = impact {
+                if let (text, impact, _) = compare(combination: AnalysisTrickCombination(board: board.board, suit: traveller.contract.suit, declarer: traveller.declarer.pair), positiveOnly: true, verbose: true) {
                         
-                        let rejected = traveller.playRejected
+                    let rejected = traveller.playRejected
                         
-                        let impactDescription = boardScoreType.prefix(score: impact) + impact.toString(places: 0) + boardScoreType.suffix
+                    let impactDescription = (impact == nil ? "" : impact!.toString(places: 0) + boardScoreType.suffix)
                         
-                        result = (.ok, text, impact, impactDescription, rejected)
-                    }
+                    result = AnalysisSummaryData(status: (rejected ? .rejected : .ok), text: text, impact: impact ?? 0, impactDescription: impactDescription)
                     
                 }
             }
             
-            let significant = boardScoreType.significant
-            result.status = (result.rejected || result.impact == 0 ? .ok : (result.impact < significant ? .veryBad : (result.impact < 0 ? .bad : .good)))
+            if result.status == .ok {
+                let significant = boardScoreType.significant
+                result.status = (result.impact == 0 ? .ok : (result.impact > significant ? .veryBad : (result.impact > 0 ? .bad : .good)))
+            }
             
         }
         return result
@@ -764,6 +823,7 @@ enum AnalysisPhase {
 }
 
 enum AnalysisSummaryStatus: Comparable {
+    case rejected
     case veryBad
     case bad
     case ok
@@ -772,14 +832,41 @@ enum AnalysisSummaryStatus: Comparable {
     var image: some View {
         switch self {
         case .good:
-            Image(systemName: "circle.fill").foregroundColor(.green)
-        case .ok:
-            Image(systemName: "circle").foregroundColor(.black)
+            Image(systemName: "checkmark.circle.fill").foregroundColor(Color(#colorLiteral(red: 0.5, green: 1, blue: 0.5, alpha: 1)))
+        case .ok, .rejected:
+            Image(systemName: "circle").foregroundColor(Palette.background.text)
         case .bad:
-            Image(systemName: "circle.fill").foregroundColor(.yellow)
+            Image(systemName: "x.circle.fill").foregroundColor(.yellow)
         case .veryBad:
-            Image(systemName: "circle.fill").foregroundColor(.red)
+            Image(systemName: "x.circle.fill").foregroundColor(.red)
         }
+    }
+    
+    var uiImage: UIImage {
+        switch self {
+        case .good:
+            UIImage(systemName: "checkmark.circle.fill")!.asTemplate.withTintColor(UIColor(Color(#colorLiteral(red: 0.5, green: 1, blue: 0.5, alpha: 1))))
+        case .ok, .rejected:
+            UIImage(systemName: "circle")!.asTemplate.withTintColor(UIColor(Color(Palette.background.text)))
+        case .bad:
+            UIImage(systemName: "x.circle.fill")!.asTemplate.withTintColor(UIColor(Color(.yellow)))
+        case .veryBad:
+            UIImage(systemName: "x.circle.fill")!.asTemplate.withTintColor(UIColor(Color(.red)))
+        }
+    }
+    
+    var tintColor: UIColor {
+        switch self {
+        case .good:
+            UIColor(Color(#colorLiteral(red: 0.5, green: 1, blue: 0.5, alpha: 1)))
+        case .ok, .rejected:
+            UIColor(Color(Palette.background.text))
+        case .bad:
+            UIColor(Color(.yellow))
+        case .veryBad:
+            UIColor(Color(.red))
+        }
+
     }
 }
 
@@ -810,36 +897,43 @@ enum AnalysisActionType: Int, CaseIterable {
     case dontDouble
     case otherSuit
     
-    func description(otherTable: Bool = false) -> String {
+    func description(otherTable: Bool = false, contract: Contract, otherContract: Contract?, declarer: Bool, verbose: Bool) -> NSAttributedString {
+        let undoubledContract = Contract(copying: contract)
+        undoubledContract.double = .undoubled
+        let undoubled = undoubledContract.attributedCompact
+        let actual = contract.attributedCompact
+        
         return switch self {
         case .noAction:
-            "Stick with actual bidding"
+            verbose ? NSAttributedString("") : NSAttributedString(declarer ? "Stick with " : "Leave opps in ") + actual
         case .otherTable:
-            "Bid as on \(otherTable ? "this table":"the other table")"
+            if otherContract != nil && contract == otherContract {
+                NSAttributedString("Bid ") + actual + NSAttributedString(" as on \(otherTable ? "this table":"the other table")")
+            } else {
+                NSAttributedString("Bid ") + actual + NSAttributedString(" instead")
+            }
         case .bidLower:
-            "Stop bidding at lower level"
+            NSAttributedString("Stop bidding at ") + actual
         case .bidToMake:
-            "Overcall to make"
+            NSAttributedString("Overcall ") + actual + NSAttributedString(" to make")
         case .sacrifice:
-            "Overcall as a sacrifice"
+            NSAttributedString("Overcall ") + actual + NSAttributedString(" as a sacrifice")
         case .upToGame:
-            "Bid on to game"
+            NSAttributedString("Bid ") + actual + NSAttributedString(" game")
         case .upToSlam:
-            "Bid on to slam"
+            NSAttributedString("Bid ") + actual + NSAttributedString(" slam")
         case .upToGrandSlam:
-            "Bid on to grand slam"
+            NSAttributedString("Bid ") + actual + NSAttributedString("grand slam ")
         case .passPrevious:
-            "Pass last bid by opps"
-        case .doublePrevious:
-            "Double last bid by opps"
-        case .doubleThem:
-            "Double last bid by opps"
+            NSAttributedString("Leave opps in ") + actual
+        case .doublePrevious, .doubleThem:
+            NSAttributedString("Double ") + undoubled + NSAttributedString(" bid by opps")
         case .doubleOvercall:
-            "Overcall and then double"
+            NSAttributedString("Overcall and then double ") + undoubled
         case .dontDouble:
-            "Don't double opps"
+            NSAttributedString("Don't double ") + undoubled + (" by opps")
         case .otherSuit:
-            "Bid another suit"
+            NSAttributedString("Bid ") + actual + NSAttributedString(" instead")
         }
     }
 }
@@ -874,9 +968,9 @@ enum AnalysisOptionType : Int, CaseIterable, Hashable {
         return (type == nil ? nil : (type == .passPrevious ? "Last bid*" : "\(type!.string)*"))
     }
     
-    static var declaringCases: [AnalysisOptionType] = [.actual, .otherTable, .passPrevious, .stopLower, .upToGame, .otherSuit]
+    static var declaringCases: [AnalysisOptionType] = [.actual, .upToGame, .otherTable, .passPrevious, .stopLower, .otherSuit]
     
-    static var defendingCases: [AnalysisOptionType] = [.actual, .otherTable, .passPrevious, .bidOver, .upToGame]
+    static var defendingCases: [AnalysisOptionType] = [.actual, .upToGame, .otherTable, .passPrevious, .bidOver]
     
     var formatMatch: Bool {
         switch Scorecard.current.scorecard?.type.players ?? 0 {
@@ -1033,6 +1127,10 @@ class AnalysisOption : Identifiable, Equatable, Hashable {
         return result
     }
     
+    public func actionDescription(otherTable: Bool, verbose: Bool) -> NSAttributedString {
+        action.description(otherTable: otherTable, contract: contract, otherContract: parent.otherTraveller?.contract, declarer: declarer == parent.sitting,verbose: verbose)
+    }
+    
     public var useMethod: AnalysisAssessmentMethod? {
         return parent.useMethod(suit: contract.suit, declarer: declarer)
     }
@@ -1083,13 +1181,15 @@ class AnalysisOption : Identifiable, Equatable, Hashable {
             self.removedBy = nil
         } else if self.type.allowRemove && removedBy == nil {
             self.removedBy = by
+            /*
             if let by = by {
                 print("\((reason ?? "Unknown").padding(toLength: 30, withPad: " ", startingAt: 0)) - \(type.string) \(contract.compact) removed by \(by.type.string) \(by.contract.compact)")
             }
+            */
         }
     }
     
-    public func calculateScores(traveller: TravellerViewModel, sitting: Seat) {
+    public func calculateScores(traveller: TravellerViewModel) {
         let pointsList = Set(assessments.map{$0.value.points})
         for points in pointsList {
             let score = parent.score(points: points)
@@ -1099,12 +1199,12 @@ class AnalysisOption : Identifiable, Equatable, Hashable {
         }
     }
     
-    public func valueString(method: AnalysisAssessmentMethod, format: AnalysisOptionFormat, compare: AnalysisAssessment? = nil, verbose: Bool = false, showVariance: Bool = false, colorCode: Bool = true, alreadyShown: Float? = nil, negativeOnly: Bool = false) -> AttributedString {
-        let (_, result) = value(method: method, format: format, compare: compare, verbose: verbose, showVariance: showVariance, colorCode: colorCode, alreadyShown: alreadyShown, negativeOnly: negativeOnly) ?? (0, "")
+    public func valueString(method: AnalysisAssessmentMethod, format: AnalysisOptionFormat, compare: AnalysisAssessment? = nil, verbose: Bool = false, showVariance: Bool = false, colorCode: Bool = true, alreadyShown: Float? = nil, positiveOnly: Bool = false) -> AttributedString {
+        let (_, result) = value(method: method, format: format, compare: compare, verbose: verbose, showVariance: showVariance, colorCode: colorCode, alreadyShown: alreadyShown, positiveOnly: positiveOnly) ?? (0, "")
         return result
     }
     
-    public func value(method: AnalysisAssessmentMethod, format: AnalysisOptionFormat, compare: AnalysisAssessment? = nil, verbose: Bool = false, showVariance: Bool = false, colorCode: Bool = true, alreadyShown: Float? = nil, negativeOnly: Bool = false) -> (Float, AttributedString)? {
+    public func value(method: AnalysisAssessmentMethod, format: AnalysisOptionFormat, compare: AnalysisAssessment? = nil, verbose: Bool = false, showVariance: Bool = false, colorCode: Bool = true, alreadyShown: Float? = nil, positiveOnly: Bool = false) -> (Float, AttributedString)? {
         var result = ""
         var value: Float?
         var variance: Float = 0.0
@@ -1115,24 +1215,26 @@ class AnalysisOption : Identifiable, Equatable, Hashable {
             switch format{
             case .tricks:
                 value = Float(assessment.tricks)
-                variance = Float(compare.tricks - assessment.tricks)
+                variance = Float(assessment.tricks - compare.tricks)
                 result = "\(assessment.tricks)" + (verbose ? " tricks" : "")
             case .made:
                 value = Float(assessment.tricks)
-                variance = Float(compare.tricks - assessment.tricks)
+                variance = Float(assessment.tricks - compare.tricks)
                 result = "\(Scorecard.madeString(made: assessment.tricks - Values.trickOffset - contract.level.rawValue))"
             case .points:
                 value = Float(assessment.points)
-                variance = Float(compare.points - assessment.points)
+                variance = Float(assessment.points - compare.points)
                 result = String(format: "%+2d", assessment.points)
             case .score:
-                if var score = assessment.score {
-                    if let alreadyShown = alreadyShown {
-                        score -= max(0, alreadyShown)
-                    }
+                if let score = assessment.score {
                     value = score
                     if let compareScore = compare.score {
-                        variance = compareScore - score
+                        variance = score - compareScore
+                        if method == .override {
+                            if let alreadyShown = alreadyShown {
+                                variance -= max(0, alreadyShown)
+                            }
+                        }
                     }
                     let type = Scorecard.current.scorecard!.type
                     places = verbose && !showVariance ? type.boardPlaces : 0
@@ -1147,10 +1249,10 @@ class AnalysisOption : Identifiable, Equatable, Hashable {
                 }
             }
             if showVariance {
-                if variance == 0 || (negativeOnly && variance > 0){
+                if variance == 0 || (positiveOnly && variance < 0){
                     result = ""
                 } else {
-                    result = (variance > 0 ? "+" : "") + variance.toString(places: places) + suffix
+                    result = variance.toString(places: places) + suffix
                 }
                 value = variance
             }

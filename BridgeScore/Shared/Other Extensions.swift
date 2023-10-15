@@ -27,32 +27,36 @@ extension UIView {
         }
     }
     
-    func addSubview(_ parent: UIView, constant: CGFloat = 0, anchored attributes: ConstraintAnchor...) {
+    @discardableResult func addSubview(_ parent: UIView, constant: CGFloat = 0, anchored attributes: ConstraintAnchor...) -> [NSLayoutConstraint] {
         self.addSubview(parent)
-        Constraint.anchor(view: self, control: parent, constant: constant, attributes: attributes)
+        return Constraint.anchor(view: self, control: parent, constant: constant, attributes: attributes)
     }
     
-    func addSubview(_ parent: UIView, constant: CGFloat = 0, anchored attributes: [ConstraintAnchor]?) {
+    @discardableResult func addSubview(_ parent: UIView, constant: CGFloat = 0, anchored attributes: [ConstraintAnchor]?)  -> [NSLayoutConstraint] {
         self.addSubview(parent)
         if let attributes = attributes {
-            Constraint.anchor(view: self, control: parent, constant: constant, attributes: attributes)
+            return Constraint.anchor(view: self, control: parent, constant: constant, attributes: attributes)
+        } else {
+            return []
         }
     }
     
-    func addSubview(_ parent: UIView, leading: CGFloat? = nil, trailing: CGFloat? = nil, top: CGFloat? = nil, bottom: CGFloat? = nil) {
+    @discardableResult func addSubview(_ parent: UIView, leading: CGFloat? = nil, trailing: CGFloat? = nil, top: CGFloat? = nil, bottom: CGFloat? = nil) -> [NSLayoutConstraint] {
+        var constraints: [NSLayoutConstraint] = []
         self.addSubview(parent)
         if let leading = leading {
-            Constraint.anchor(view: self, control: parent, constant: leading, attributes: .leading)
+            constraints.append(contentsOf: Constraint.anchor(view: self, control: parent, constant: leading, attributes: .leading))
         }
         if let trailing = trailing {
-            Constraint.anchor(view: self, control: parent, constant: trailing, attributes: .trailing)
+            constraints.append(contentsOf: Constraint.anchor(view: self, control: parent, constant: trailing, attributes: .trailing))
         }
         if let top = top {
-            Constraint.anchor(view: self, control: parent, constant: top, attributes: .top)
+            constraints.append(contentsOf: Constraint.anchor(view: self, control: parent, constant: top, attributes: .top))
         }
         if let bottom = bottom {
-            Constraint.anchor(view: self, control: parent, constant: bottom, attributes: .bottom)
+            constraints.append(contentsOf: Constraint.anchor(view: self, control: parent, constant: bottom, attributes: .bottom))
         }
+        return constraints
     }
     
     public func addShadow(shadowSize: CGSize = CGSize(width: 4.0, height: 4.0), shadowColor: UIColor? = nil, shadowOpacity: CGFloat = 0.2, shadowRadius: CGFloat? = nil) {
@@ -221,6 +225,15 @@ extension AttributedString {
         self.init(string)
         self.foregroundColor = color
     }
+    
+    public static func + (string: String, attributed: AttributedString) -> AttributedString {
+        AttributedString(string) + attributed
+    }
+
+    public static func + (attributed: AttributedString, string: String) -> AttributedString {
+        attributed + AttributedString(string)
+    }
+
     
 }
 

@@ -45,6 +45,10 @@ import CoreData
         Scorecard.madeString(made: made)
     }
     
+    public var tricksMade: Int {
+        contract.tricks + made
+    }
+    
     // Check if view model matches managed object
     public var changed: Bool {
         var result = false

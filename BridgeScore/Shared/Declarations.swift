@@ -54,6 +54,7 @@ var sectionTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tabl
 var smallCellFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 22.0 : 12.0)) }
 var replaceFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 20.0)) }
 var replaceTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 20.0)) }
+var analysisFont: UIFont { UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 16.0 : 12.0)) }
 
 // Slide in IDs - Need to be declared here as there seem to be multiple instances of views
 let scorecardListViewId = UUID()
@@ -138,13 +139,13 @@ public enum ScoreType {
     public var significant: Float {
         switch self {
         case .percent:
-            return 20.0
+            return 19.5
         case .xImp:
-            return 3.0
+            return 3.5
         case .imp:
-            return 5.0
+            return 3.5
         case .vp, .acblVp:
-            return 2.0
+            return 2.5
         case .aggregate:
             return 100.0
         case .unknown:
@@ -524,6 +525,10 @@ public enum Pair: Int, CaseIterable, Identifiable, Equatable {
         }
     }
     
+    var first: Seat {
+        return seats.first!
+    }
+    
     var sign: Int {
         switch self {
         case .ns:
@@ -762,6 +767,11 @@ enum ColumnType: Int, Codable {
     case responsible = 11
     case vulnerable = 12
     case dealer = 13
+    case teamTable = 14
+    case biddingAnalysis = 15
+    case playAnalysis = 16
+    case commentAvailable = 17
+    case combined = 18
     
     var string: String {
         return "\(self)"
@@ -1078,6 +1088,12 @@ public class Contract: Equatable, Comparable, Hashable {
         }
     }
     
+    public var undoubled: Contract {
+        let contract = Contract(copying: self)
+        contract.double = .undoubled
+        return contract
+    }
+    
     public var compact: String {
         switch level {
         case .blank:
@@ -1100,6 +1116,17 @@ public class Contract: Equatable, Comparable, Hashable {
         }
     }
     
+    public var attributedCompact: NSAttributedString {
+        switch level {
+        case .blank:
+            return NSAttributedString("")
+        case .passout:
+            return NSAttributedString("Pass Out")
+        default:
+            return NSAttributedString(level.short) + suit.attributedString + NSAttributedString(double.short)
+        }
+    }
+    
     public var attributedString: NSAttributedString {
         switch level {
         case .blank:
@@ -1107,7 +1134,7 @@ public class Contract: Equatable, Comparable, Hashable {
         case .passout:
             return NSAttributedString("Pass Out")
         default:
-            return NSAttributedString("\(level.short) ") + suit.attributedString + NSAttributedString(" ") + NSAttributedString(double.bold)
+            return NSAttributedString("\(level.short) ") + suit.attributedString + NSAttributedString(" \(double.bold)")
         }
     }
     

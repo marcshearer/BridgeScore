@@ -52,6 +52,10 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
         return Seat(rawValue: ((board - 1) % 4) + 1) ?? .unknown
     }
     
+    public var tricksMade: Int? {
+        made == nil ? nil : contract.level.tricks + made!
+    }
+    
     // Check if view model matches managed object
     public var changed: Bool {
         var result = false

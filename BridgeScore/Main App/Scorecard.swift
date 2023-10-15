@@ -21,7 +21,7 @@ class Scorecard {
     @Published private(set) var tables: [Int:TableViewModel] = [:]   // Table number
     @Published private(set) var rankingList: [RankingViewModel] = []
     @Published private(set) var travellerList: [TravellerViewModel] = []
-    @Published private(set) var analysisList: [Int:[Int:[Seat:Analysis]]] = [:] // Board number, Ranking number, Sitting
+    @Published private(set) var analysisList: [Int:[Pair:Analysis]] = [:] // Board number, Sitting
     @Published private(set) var overrideList: [Int:AnalysisOverride] = [:] // Board number
     
     public func rankings(table: Int? = nil, section: Int? = nil, way: Pair? = nil, number: Int? = nil, player: (bboName: String, name: String)? = nil) -> [RankingViewModel] {
@@ -73,8 +73,7 @@ class Scorecard {
     }
     
     public func analysis(board: BoardViewModel, traveller: TravellerViewModel, sitting: Seat) -> Analysis {
-        let rankingNumber = traveller.rankingNumber[sitting] ?? -1
-        if let analysis = analysisList[board.board]?[rankingNumber]?[sitting] {
+        if let analysis = analysisList[board.board]?[sitting.pair] {
             return analysis
         } else {
             var override = overrideList[board.board]
@@ -82,14 +81,11 @@ class Scorecard {
                 override = AnalysisOverride(board: board)
                 overrideList[board.board] = override
             }
-            let analysis = Analysis(override: override!, board: board, traveller: traveller, sitting: sitting)
+            let analysis = Analysis(override: override!, board: board, traveller: traveller, sitting: sitting.pair)
             if analysisList[board.board] == nil {
                 analysisList[board.board] = [:]
             }
-            if analysisList[board.board]![rankingNumber] == nil {
-                analysisList[board.board]![rankingNumber] = [:]
-            }
-            analysisList[board.board]![rankingNumber]![sitting] = analysis
+            analysisList[analysis.board.board]![analysis.sitting] = analysis
             return analysis
         }
     }
@@ -835,10 +831,10 @@ class Scorecard {
             if points > 0 {
                 // Made
                 from = 0
-                to = 7 - contract.level.rawValue
+                to = 13 - contract.level.tricks
             } else {
                 // Went off
-                from = -(contract.level.rawValue + 6)
+                from = -(contract.level.tricks)
                 to = -1
             }
             for tricks in from...to {
