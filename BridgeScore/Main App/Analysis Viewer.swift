@@ -893,20 +893,35 @@ struct madeView : View {
                     overridePopover(board: $board, analysisData: analysisData, combination: combination, method: $method, made: $made, showOverride: $showOverride)
                 }
                 Spacer().frame(width: 10)
-                Button {
+                AnalysisSmallButton(label: "Change") {
                     showOverride = true
-                } label: {
-                    VStack {
-                        HStack {
-                            Spacer().frame(width: 4)
-                            Text("Change").minimumScaleFactor(0.5).font(tinyFont)
-                            Spacer().frame(width: 4)
-                        }
-                        .frame(height: 20)
-                        .palette(.disabledButton)
-                        .cornerRadius(4)
-                    }
                 }
+            }
+        }
+    }
+}
+
+struct AnalysisSmallButton : View {
+    @State var prefix: String?
+    @State var label: String
+    @State var action: ()->()
+    
+    var body : some View {
+        Button {
+            action()
+        } label: {
+            VStack {
+                HStack(spacing: 0) {
+                    Spacer().frame(width: 4)
+                    if let prefix = prefix {
+                        Image(systemName: prefix)
+                    }
+                    Text(label).minimumScaleFactor(0.5).font(tinyFont)
+                    Spacer().frame(width: 4)
+                }
+                .frame(height: 20)
+                .palette(.disabledButton)
+                .cornerRadius(4)
             }
         }
     }
@@ -1389,6 +1404,7 @@ struct AnalysisTravellerView: View {
     let scorecard = Scorecard.current.scorecard!
     @Binding var board: BoardViewModel
     @Binding var traveller: TravellerViewModel
+    @State var myTraveller: TravellerExtension!
     @State var handTraveller: TravellerExtension!
     @State var handSummary: TravellerSummary!
     @State var selectedSummary: TravellerSummary?
@@ -1399,10 +1415,10 @@ struct AnalysisTravellerView: View {
     @State var summary: [TravellerSummary] = []
     
     var body: some View {
-        let columns = [GridItem(.flexible(minimum: 90), spacing: 0), GridItem(.fixed(50), spacing: 0), GridItem(.fixed(60), spacing: 0), GridItem(.fixed(70), spacing: 0), GridItem(.fixed(60), spacing: 0), GridItem(.flexible(minimum: 70), spacing: 0)]
-        let summaryColumns = [GridItem(.fixed(30), spacing: 0), GridItem(.fixed(50), spacing: 0)] + columns
-        let detailColumns = [GridItem(.fixed(80), spacing: 0)] + columns
         let headToHead = (scorecard.type.players == 4 && travellers.count <= 2)
+        let columns = [GridItem(.flexible(minimum: headToHead ? 116 : 90), spacing: 0), GridItem(.fixed(40), spacing: 0), GridItem(.fixed(60), spacing: 0), GridItem(.fixed(54), spacing: 0), GridItem(.fixed(headToHead ? 70 : 60), spacing: 0), GridItem(.flexible(minimum: headToHead ? 80 : 70), spacing: 0)]
+        let summaryColumns = [GridItem(.fixed(56), spacing: 0), GridItem(.fixed(50), spacing: 0)] + columns
+        let detailColumns = [GridItem(.fixed(headToHead ? 60 : 106), spacing: 0)] + columns
         
         VStack {
             ZStack {
@@ -1441,15 +1457,14 @@ struct AnalysisTravellerView: View {
                                         GridRow {
                                             if !(handTraveller == summary) {
                                                 HStack {
-                                                    Spacer().frame(width: 10)
-                                                    Image(systemName: "arrow.up.left")
-                                                        .palette(.background)
-                                                        .onTapGesture {
-                                                            if let newTraveller = travellers.first(where: { $0 == summary }) {
-                                                                traveller = newTraveller
-                                                                reflectSelectionChange(traveller: newTraveller)
-                                                            }
+                                                    Spacer()
+                                                    AnalysisSmallButton(label: "Show") {
+                                                        if let newTraveller = travellers.first(where: { $0 == summary }) {
+                                                            traveller = newTraveller
+                                                            reflectSelectionChange(traveller: newTraveller)
                                                         }
+                                                    }
+                                                    .palette(.clear)
                                                     Spacer()
                                                 }
                                             } else {
@@ -1464,8 +1479,11 @@ struct AnalysisTravellerView: View {
                                             TrailingText(summary.scoreString)
                                         }
                                         .frame(height: 25)
-                                        .if(handTraveller == summary) { view in
+                                        .if(myTraveller == summary) { view in
                                             view.palette(.handPlayer, .contrast)
+                                        }
+                                        .if(handTraveller == summary && !(myTraveller == summary)) { view in
+                                            view.palette(.alternate)
                                         }
                                         .foregroundColor(summary.made >= 0 ? Palette.background.text : Palette.background.faintText)
                                         .onTapGesture {
@@ -1486,20 +1504,8 @@ struct AnalysisTravellerView: View {
                                     if headToHead {
                                         LeadingText("Table")
                                     } else {
-                                        Button {
+                                        AnalysisSmallButton(prefix: "chevron.backward.2", label: "Back") {
                                             summaryMode = true
-                                        } label: {
-                                            HStack {
-                                                Spacer()
-                                                Image(systemName: "chevron.backward.2")
-                                                Text("Back")
-                                                Spacer()
-                                            }
-                                            .bold(false)
-                                            .frame(width: 80, height: 18)
-                                            .minimumScaleFactor(0.5)
-                                            .palette(.bannerButton)
-                                            .cornerRadius(4)
                                         }
                                     }
                                     CenteredText("Contract")
@@ -1526,13 +1532,12 @@ struct AnalysisTravellerView: View {
                                                 LeadingText(traveller.rankingNumber == handTraveller.rankingNumber ? "This" : "Other")
                                             } else if traveller.rankingNumber != handTraveller.rankingNumber {
                                                 HStack {
-                                                    Spacer().frame(width: 10)
-                                                    Image(systemName: "arrow.up.left")
-                                                        .palette(.background)
-                                                        .onTapGesture {
-                                                            self.traveller = traveller
-                                                            reflectSelectionChange(traveller: traveller)
-                                                        }
+                                                    Spacer()
+                                                    AnalysisSmallButton(label: "Show") {
+                                                        self.traveller = traveller
+                                                        reflectSelectionChange(traveller: traveller)
+                                                    }
+                                                    .palette(.clear)
                                                     Spacer()
                                                 }
                                             } else {
@@ -1547,7 +1552,10 @@ struct AnalysisTravellerView: View {
                                         }
                                         .frame(height: 25)
                                         .foregroundColor(headToHead || traveller.made >= 0 ? Palette.background.text : Palette.background.faintText)
-                                        .if(!headToHead && traveller.rankingNumber == handTraveller.rankingNumber) { view in
+                                        .if(!headToHead && handTraveller.rankingNumber == traveller.rankingNumber && !(myTraveller.rankingNumber == traveller.rankingNumber)) { view in
+                                            view.palette(.alternate)
+                                        }
+                                        .if(!headToHead && traveller.rankingNumber == myTraveller.rankingNumber) { view in
                                             view.palette(.handPlayer, .contrast)
                                         }
                                         .onTapGesture {
@@ -1567,7 +1575,7 @@ struct AnalysisTravellerView: View {
             }
             Spacer().frame(height: 4)
         }
-       .onChange(of: board.board, initial: true) {
+        .onChange(of: board.board, initial: true) {
             reflectChange()
         }
         .onChange(of: traveller.rankingNumber, initial: false) {
@@ -1582,6 +1590,7 @@ struct AnalysisTravellerView: View {
         summaryMode = true
         travellers = buildTravellers(board: self.board, sitting: self.sitting)
         summary = buildSummary()
+        myTraveller = TravellerExtension(scorecard: scorecard, traveller: traveller)
         reflectSelectionChange(traveller: TravellerExtension(scorecard: scorecard, traveller: traveller))
     }
     
