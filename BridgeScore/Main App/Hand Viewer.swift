@@ -795,8 +795,8 @@ struct HandViewer: View {
         @Binding var visible: [Bool]
         @Binding var animate: Int
         @Binding var showClaim: Bool
-        let interval = 0.1
-        let duration = 0.05
+        let interval = 0.2
+        let duration = 0.1
         let height = 40.0
         let width = 70.0
         

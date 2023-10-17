@@ -476,8 +476,10 @@ struct AnalysisViewer: View {
     
     func updateAnalysisData() {
         analysisData.analysis = Scorecard.current.analysis(board: board, traveller: traveller, sitting: sitting)
+        analysisData.analysis.invalidateCache()
         if let otherTraveller = analysisData.analysis.otherTraveller {
             analysisData.otherAnalysis = Scorecard.current.analysis(board: board, traveller: otherTraveller, sitting: sitting.equivalent)
+            analysisData.otherAnalysis!.invalidateCache()
         } else {
             analysisData.otherAnalysis = nil
         }
@@ -587,8 +589,11 @@ struct AnalysisSummary : View {
                     .frame(height: 30).foregroundColor(Palette.tile.background)
                 Spacer()
             }
-            let tableColumns = (teams ? [GridItem(.fixed(60), spacing: 0), GridItem(.fixed(2), spacing: 0)] : [])
-            let columns = tableColumns + [GridItem(.flexible(minimum: 100), spacing: 0), GridItem(.fixed(2), spacing: 0), GridItem(.flexible(minimum: 100), spacing: 0)]
+            let tableColumns = (teams ? [GridItem(.fixed(60), spacing: 0), 
+                                         GridItem(.fixed(2), spacing: 0)] : [])
+            let columns = tableColumns + [GridItem(.flexible(minimum: 100), spacing: 0), 
+                                          GridItem(.fixed(2), spacing: 0),
+                                          GridItem(.flexible(minimum: 100), spacing: 0)]
             VStack {
                 LazyVGrid(columns: columns, spacing: 0) {
                     GridRow {
@@ -704,7 +709,12 @@ struct AnalysisCombinationTricks : View {
     @State var refresh: Bool = true
     
     var body: some View {
-        let columns = [GridItem(.fixed(50), spacing: 0), GridItem(.fixed(50), spacing: 0), GridItem(.fixed(80), spacing: 0), GridItem(.flexible(minimum: 100), spacing: 0), GridItem(.fixed(90), spacing: 0), GridItem(.fixed(130), spacing: 0)]
+        let columns = [GridItem(.fixed(50), spacing: 0), 
+                       GridItem(.fixed(50), spacing: 0),
+                       GridItem(.fixed(80), spacing: 0),
+                       GridItem(.flexible(minimum: 100), spacing: 0),
+                       GridItem(.fixed(90), spacing: 0),
+                       GridItem(.fixed(130), spacing: 0)]
         
         ZStack {
             VStack {
@@ -1099,7 +1109,9 @@ struct AnalysisBiddingOptions : View {
         let allMethods = analysisData.analysis.allMethods()
         let columns = Array(repeating: GridItem(.fixed(CGFloat(305/allMethods.count)), spacing: 0), count: allMethods.count)
         let headerColumns = [GridItem(.fixed(180), spacing: 0)] + columns
-        let bodyColumns = [GridItem(.fixed(105), spacing: 0), GridItem(.fixed(40), spacing: 0),GridItem(.fixed(35), spacing: 0)] + columns
+        let bodyColumns = [GridItem(.fixed(105), spacing: 0), 
+                           GridItem(.fixed(40), spacing: 0),
+                           GridItem(.fixed(35), spacing: 0)] + columns
         ZStack {
             VStack {
                 UnevenRoundedRectangle(cornerRadii: .init(topLeading: analysisCornerSize), style: .continuous)
@@ -1416,8 +1428,14 @@ struct AnalysisTravellerView: View {
     
     var body: some View {
         let headToHead = (scorecard.type.players == 4 && travellers.count <= 2)
-        let columns = [GridItem(.flexible(minimum: headToHead ? 116 : 90), spacing: 0), GridItem(.fixed(40), spacing: 0), GridItem(.fixed(60), spacing: 0), GridItem(.fixed(54), spacing: 0), GridItem(.fixed(headToHead ? 70 : 60), spacing: 0), GridItem(.flexible(minimum: headToHead ? 80 : 70), spacing: 0)]
-        let summaryColumns = [GridItem(.fixed(56), spacing: 0), GridItem(.fixed(50), spacing: 0)] + columns
+        let columns = [GridItem(.flexible(minimum: headToHead ? 116 : 90), spacing: 0),
+                       GridItem(.fixed(40), spacing: 0),
+                       GridItem(.fixed(60), spacing: 0),
+                       GridItem(.fixed(54), spacing: 0),
+                       GridItem(.fixed(headToHead ? 80 : 60), spacing: 0),
+                       GridItem(.flexible(minimum: 70), spacing: 0)]
+        let summaryColumns = [GridItem(.fixed(56), spacing: 0), 
+                              GridItem(.fixed(50), spacing: 0)] + columns
         let detailColumns = [GridItem(.fixed(headToHead ? 60 : 106), spacing: 0)] + columns
         
         VStack {
@@ -1511,14 +1529,22 @@ struct AnalysisTravellerView: View {
                                     CenteredText("Contract")
                                     CenteredText("By")
                                     CenteredText("Lead")
-                                    CenteredText("Made").gridColumnAlignment(.trailing)
-                                    HStack {
-                                        Spacer()
-                                        Text(sitting.pair.short).gridColumnAlignment(.trailing)
-                                    }
-                                    HStack {
-                                        Spacer()
-                                        Text("\(sitting.pair.short)\(scorecard.type.boardScoreType.suffix)").gridColumnAlignment(.trailing).frame(width: 80)
+                                    Text("Made").gridColumnAlignment(.trailing)
+                                    if headToHead {
+                                        TrailingText("Team Pts")
+                                        HStack {
+                                            Spacer()
+                                            Text("\(scorecard.type.boardScoreType.suffix)")
+                                        }
+                                    } else {
+                                        HStack {
+                                            Spacer()
+                                            Text(sitting.pair.short).gridColumnAlignment(.trailing)
+                                        }
+                                        HStack {
+                                            Spacer()
+                                            Text("\(sitting.pair.short)\(scorecard.type.boardScoreType.suffix)").gridColumnAlignment(.trailing)
+                                        }
                                     }
                                 }
                                 .foregroundColor(Palette.tile.text).bold()
@@ -1528,8 +1554,9 @@ struct AnalysisTravellerView: View {
                                 LazyVGrid(columns: detailColumns, spacing: 3) {
                                     ForEach(travellers.filter({headToHead || $0 == selectedSummary!}), id: \.self) { traveller in
                                         GridRow {
+                                            let myTraveller = (traveller.rankingNumber == handTraveller.rankingNumber)
                                             if headToHead {
-                                                LeadingText(traveller.rankingNumber == handTraveller.rankingNumber ? "This" : "Other")
+                                                LeadingText(myTraveller ? "This" : "Other")
                                             } else if traveller.rankingNumber != handTraveller.rankingNumber {
                                                 HStack {
                                                     Spacer()
@@ -1546,9 +1573,13 @@ struct AnalysisTravellerView: View {
                                             CenteredAttributedText(traveller.contract.colorCompact)
                                             CenteredText(traveller.declarer.short)
                                             CenteredAttributedText(traveller.leadString)
-                                            CenteredText(traveller.tricksMadeString)
-                                            TrailingText(traveller.pointsString(board: board, sitting: sitting))
-                                            TrailingText(traveller.scoreString(sitting: sitting))
+                                            TrailingText(traveller.tricksMadeString)
+                                            TrailingText(traveller.pointsString(board: board, sitting: myTraveller || !headToHead ? sitting : sitting.equivalent))
+                                            if !headToHead || myTraveller {
+                                                TrailingText(traveller.scoreString(sitting: sitting))
+                                            } else {
+                                                Text("")
+                                            }
                                         }
                                         .frame(height: 25)
                                         .foregroundColor(headToHead || traveller.made >= 0 ? Palette.background.text : Palette.background.faintText)

@@ -867,6 +867,12 @@ class Scorecard {
         return result
     }
     
+    public static func commentAvailableText(exists: Bool) -> NSAttributedString {
+        let attachment = NSTextAttachment()
+        attachment.image = UIImage(systemName: exists ? "text.bubble" : "bubble")
+        return NSAttributedString(attachment: attachment)
+    }
+    
     static func bboShowHand(from parentView: UIView, board: BoardViewModel, traveller: TravellerViewModel, completion: (()->())? = nil) {
         
         var playData = ""

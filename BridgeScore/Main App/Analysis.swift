@@ -387,6 +387,10 @@ class Analysis {
         removeBadOptions()
     }
     
+    public func invalidateCache() {
+        combinationCompareData = [:]
+    }
+    
     private func bidOverOptions(ourBid: Contract?, above: Contract?, forceType: AnalysisOptionType? = nil) -> [AnalysisOption] {
         var options: [AnalysisOption] = []
         if let ourBid = ourBid, let ourGameLevel = ContractLevel(rawValue: ourBid.suit.gameTricks) {
@@ -905,7 +909,7 @@ enum AnalysisActionType: Int, CaseIterable {
         
         return switch self {
         case .noAction:
-            verbose ? NSAttributedString("") : NSAttributedString(declarer ? "Stick with " : "Leave opps in ") + actual
+            NSAttributedString(declarer ? "Stick with " : "Leave opps in ") + actual
         case .otherTable:
             if otherContract != nil && contract == otherContract {
                 NSAttributedString("Bid ") + actual + NSAttributedString(" as on \(otherTable ? "this table":"the other table")")
