@@ -670,19 +670,21 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
             label.text = "\(ranking.number)"
         case .players:
             var text = NSAttributedString(string: "")
-            for (index, player) in getPlayers().enumerated() {
-                if index > 0 {
-                    if index % 2 == 0 {
-                        text = text + "\n"
-                    } else {
-                        text = text + " & "
+            for (index, seat) in Seat.paired.enumerated() {
+                if let player = ranking.players[seat] {
+                    if index > 0 {
+                        if index % 2 == 0 {
+                            text = text + "\n"
+                        } else {
+                            text = text + " & "
+                        }
                     }
-                }
-                let name = (MasterData.shared.realName(bboName: player) ?? player)
-                if name == player {
-                    text = text + NSAttributedString(name, color: UIColor(Palette.background.themeText))
-                } else {
-                    text = text + name
+                    let name = (MasterData.shared.realName(bboName: player) ?? player)
+                    if name == player {
+                        text = text + NSAttributedString(name, color: UIColor(Palette.background.themeText))
+                    } else {
+                        text = text + name
+                    }
                 }
             }
             label.attributedText = text
@@ -725,20 +727,17 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         }
     }
     
-    private func getPlayers() -> [String] {
+    @objc private func tapped(_ sender: Any) {
         var players: [String] = []
-        for seat in [Seat.north, .south, .east, .west] {
+        for seat in Seat.paired {
             if let player = ranking.players[seat] {
                 if players.first(where: {$0 == player}) == nil {
                     players.append(player)
                 }
             }
         }
-        return players
-    }
-    
-    @objc private func tapped(_ sender: Any) {
-        tapAction?(getPlayers())
+
+        tapAction?(players)
     }
 }
 

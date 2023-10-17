@@ -143,6 +143,24 @@ import CoreData
         return self.rankingMO == nil
     }
     
+    public func playerNames(board: BoardViewModel? = nil, separator: String = " & ", firstOnly: Bool = false, _ seatPlayers: SeatPlayer...) -> String {
+        var names = ""
+        if let board = board ?? Scorecard.current.boards[1] {
+            if let sitting = board.table?.sitting {
+                for seatPlayer in seatPlayers {
+                    if var name = players[sitting.seatPlayer(seatPlayer)] {
+                        if names != "" {
+                            names += separator
+                        }
+                        let realName = MasterData.shared.realName(bboName: name) ?? name
+                        names += firstOnly ? realName.components(separatedBy: " ").first! : realName
+                    }
+                }
+            }
+        }
+        return names
+    }
+    
     override public var description: String {
         return "Scorecard: \(scorecard.desc), Table: \(table) Section: \(section), Number: \(number)"
     }

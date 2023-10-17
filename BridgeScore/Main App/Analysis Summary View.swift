@@ -1,5 +1,5 @@
 //
-//  Analysis View.swift
+//  Analysis Summary View.swift
 //  BridgeScore
 //
 //  Created by Marc Shearer on 14/10/2023.
@@ -7,14 +7,17 @@
 
 import UIKit
 
-class AnalysisView: UIView {
+class AnalysisSummaryView: UIView {
     private var contentView = UIView()
     private var viewTapped: (()->())?
     private var statusImage = UIImageView()
     private var textLabel = UILabel()
     private var impactLabel = UILabel()
     private var impactWidth: NSLayoutConstraint!
-   private var statusLeading: NSLayoutConstraint?
+    private var statusLeading: NSLayoutConstraint?
+    private var textLeading: NSLayoutConstraint?
+    private var impactLeading: NSLayoutConstraint?
+    private var impactTrailing: NSLayoutConstraint?
     private var statusWidth: NSLayoutConstraint!
     private var tapGesture: UITapGestureRecognizer!
 
@@ -33,7 +36,10 @@ class AnalysisView: UIView {
     
     override func layoutSubviews() {
         super.layoutSubviews()
-        statusLeading?.constant = 8
+        statusLeading?.constant = frame.width < 150 ? 0 : 8
+        textLeading?.constant = frame.width < 150 ? 0 : 8
+        impactLeading?.constant = frame.width < 150 ? 0 : 8
+        impactTrailing?.constant = frame.width < 150 ? 0 : -8
         statusWidth.constant = frame.width < 150 ? 0 : 30
         impactWidth.constant = frame.width < 150 ? 0 : (summary?.impactDescription != "" ? 60 : 0)
     }
@@ -48,14 +54,19 @@ class AnalysisView: UIView {
         statusImage.isHidden = true
         statusImage.image = UIImage()
         statusImage.tintColor = nil
+        statusWidth.constant = 0
+        statusLeading?.constant = 0
 
         textLabel.isHidden = true
         textLabel.attributedText = NSAttributedString("")
         textLabel.layer.opacity = 1
+        textLeading?.constant = 0
 
         impactLabel.isHidden = true
         impactLabel.attributedText = NSAttributedString("")
         impactWidth.constant = 0
+        impactLeading?.constant = 0
+        impactTrailing?.constant = 0
         
         tapGesture.isEnabled = false
     }
@@ -91,7 +102,7 @@ class AnalysisView: UIView {
     
     private func loadAnalysisView() {
         addSubview(contentView, constant: 0, anchored: .all)
-        tapGesture = UITapGestureRecognizer(target: self, action: #selector(AnalysisView.viewTapped(_:)))
+        tapGesture = UITapGestureRecognizer(target: self, action: #selector(AnalysisSummaryView.viewTapped(_:)))
         contentView.addGestureRecognizer(tapGesture)
         
         statusLeading = contentView.addSubview(statusImage, constant: 8, anchored: .leading).first
@@ -101,7 +112,7 @@ class AnalysisView: UIView {
         statusImage.contentMode = .scaleAspectFill
         
         contentView.addSubview(textLabel, constant: 0, anchored: .top, .bottom)
-        Constraint.anchor(view: contentView, control: textLabel, to: statusImage, constant: 8, toAttribute: .trailing, attributes: .leading)
+        textLeading = Constraint.anchor(view: contentView, control: textLabel, to: statusImage, constant: 0, toAttribute: .trailing, attributes: .leading).first
         textLabel.backgroundColor = UIColor.clear
         textLabel.font = analysisFont
         textLabel.minimumScaleFactor = 0.3
@@ -110,8 +121,8 @@ class AnalysisView: UIView {
         textLabel.lineBreakMode = .byWordWrapping
         
         contentView.addSubview(impactLabel, constant: 0, anchored: .top, .bottom)
-        Constraint.anchor(view: contentView, control: impactLabel, to: textLabel, constant: 8, toAttribute: .trailing, attributes: .leading)
-        Constraint.anchor(view: contentView, control: impactLabel, constant: 8, attributes: .trailing)
+        impactLeading = Constraint.anchor(view: contentView, control: impactLabel, to: textLabel, constant: 0, toAttribute: .trailing, attributes: .leading).first
+        impactTrailing = Constraint.anchor(view: contentView, control: impactLabel, constant: 0, attributes: .trailing).first
         impactWidth = Constraint.setWidth(control: impactLabel, width: 0)
         impactLabel.backgroundColor = UIColor.clear
         impactLabel.font = analysisFont.bold

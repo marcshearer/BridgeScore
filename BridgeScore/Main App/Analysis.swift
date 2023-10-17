@@ -655,7 +655,7 @@ class Analysis {
                     withMethod = .override
                     withTricks = made
                     made = useTraveller.tricksMade
-                    (shortText, verboseText) = compareValues(made, withTricks!, invert: -invert, shortText: "Play", verboseText: "actual play")
+                    (shortText, verboseText) = compareValues(made, withTricks!, invert: invert, shortText: "Play", verboseText: "actual play")
                 } else {
                     if Scorecard.current.scorecard?.type.players == 4 && boardTravellers.count == 2 {
                         if useTraveller == traveller {
@@ -927,7 +927,7 @@ enum AnalysisActionType: Int, CaseIterable {
         case .upToSlam:
             NSAttributedString("Bid ") + actual + NSAttributedString(" slam")
         case .upToGrandSlam:
-            NSAttributedString("Bid ") + actual + NSAttributedString("grand slam ")
+            NSAttributedString("Bid ") + actual + NSAttributedString(" grand slam ")
         case .passPrevious:
             NSAttributedString("Leave opps in ") + actual
         case .doublePrevious, .doubleThem:

@@ -30,6 +30,38 @@ enum RowType: Int {
     }
 }
 
+// Scorecard view types
+enum ColumnType: Int, Codable {
+    case table = 0
+    case sitting = 1
+    case tableScore = 2
+    case versus = 3
+    case board = 4
+    case contract = 5
+    case declarer = 6
+    case made = 7
+    case points = 8
+    case score = 9
+    case comment = 10
+    case responsible = 11
+    case vulnerable = 12
+    case dealer = 13
+    case teamTable = 14
+    case analysis1 = 15
+    case analysis2 = 16
+    case commentAvailable = 17
+    case combined = 18
+    
+    var string: String {
+        return "\(self)"
+    }
+}
+
+enum ColumnSize: Codable, Equatable {
+    case fixed([CGFloat])
+    case flexible
+}
+
 enum ViewType {
     case normal
     case detail
@@ -70,7 +102,8 @@ struct ScorecardInputView: View {
     @State private var refreshTableTotals = false
     @State private var deleted = false
     @State private var tableRefresh = false
-    @State private var viewType = ViewType.normal
+    @State private var viewType: ViewType
+    @State private var hideRejected = true
     @State private var importBboScorecard = false
     @State private var importBwScorecard = false
     @State private var importPbnScorecard = false
@@ -99,7 +132,7 @@ struct ScorecardInputView: View {
                 Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .both, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: nil, menuId: id, options: bannerOptions(isNotImported: $isNotImported), disabled: $disableBanner)
                     .disabled(disableBanner)
                 GeometryReader { geometry in
-                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), refreshTableTotals: $refreshTableTotals, viewType: $viewType, inputDetail: $inputDetail, tableRefresh: $tableRefresh, showRankings: $showRankings, disableBanner: $disableBanner, handViewer: $handViewer, handBoard: $handBoard, handTraveller: $handTraveller, handSitting: $handSitting, handView: $handView, analysisViewer: $analysisViewer)
+                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), refreshTableTotals: $refreshTableTotals, viewType: $viewType, hideRejected: $hideRejected, inputDetail: $inputDetail, tableRefresh: $tableRefresh, showRankings: $showRankings, disableBanner: $disableBanner, handViewer: $handViewer, handBoard: $handBoard, handTraveller: $handTraveller, handSitting: $handSitting, handView: $handView, analysisViewer: $analysisViewer)
                         .ignoresSafeArea(edges: .all)
                 }
             }.undoManager(canUndo: $canUndo, canRedo: $canRedo)
@@ -207,7 +240,11 @@ struct ScorecardInputView: View {
         bannerOptions += [
             BannerOption(image: AnyView(Image(systemName: "note.text")), text: "Scorecard details", likeBack: true, menu: true, action: { UndoManager.clearActions() ; inputDetail = true })]
         bannerOptions += [
-            BannerOption(image: AnyView(Image(systemName: "\(viewType == .detail ? "minus" : "plus").magnifyingglass")), text: viewType.otherType.description, likeBack: true, menu: true, action: { toggleView() })]
+            BannerOption(image: AnyView(Image(systemName: "\(viewType == .detail ? "minus" : "plus").magnifyingglass")), text: viewType.otherType.description, likeBack: true, menu: true, action: { viewType = viewType.otherType })]
+        if viewType == .analysis {
+            bannerOptions += [
+                BannerOption(image: AnyView(Image(systemName: hideRejected ? "plus" : "minus")), text: hideRejected ? "Show rejected" : "Hide rejected", likeBack: true, menu: true, action: { hideRejected.toggle() })]
+        }
         if isNotImported.wrappedValue || scorecard.resetNumbers {
             bannerOptions += [
                 BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import PBN file", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importPbnScorecard = true}),
@@ -259,10 +296,6 @@ struct ScorecardInputView: View {
             scorecard.copy(from: master)
         }
     }
-    
-    func toggleView() {
-        viewType = viewType.otherType
-    }
 }
 
 struct BackgroundBlurView: UIViewRepresentable {
@@ -283,6 +316,7 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
     @State var frame: CGRect
     @Binding var refreshTableTotals: Bool
     @Binding var viewType: ViewType
+    @Binding var hideRejected: Bool
     @Binding var inputDetail: Bool
     @Binding var tableRefresh: Bool
     @Binding var showRankings: Bool
@@ -320,6 +354,11 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
         }
         
         uiView.change(viewType: viewType)
+        
+        if uiView.hideRejected != hideRejected {
+            uiView.hideRejected = hideRejected
+            uiView.scorecardMainTableView.reloadData()
+        }
     }
     
     func makeCoordinator() -> Coordinator {
@@ -345,6 +384,7 @@ protocol ScorecardDelegate {
     func scorecardEndEditing(_ force: Bool)
     func setAnalysisCommentBoardNumber(boardNumber: Int)
     var viewType: ViewType {get}
+    var hideRejected: Bool {get}
     var analysisCommentBoardNumber: Int? {get}
     var autoComplete: AutoComplete {get}
     var keyboardHeight: CGFloat {get}
@@ -378,6 +418,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     private var bottomConstraint: NSLayoutConstraint!
     private var forceReload = true
     internal var viewType = ViewType.normal
+    internal var hideRejected = true
     public var inputDetail: Bool
     private var disableBanner: Binding<Bool>
     public var handViewer: Binding<Bool>
@@ -496,8 +537,8 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 boardAnalysisCommentColumns = boardColumns
                 
                 boardColumns += [
-                    ScorecardColumn(type: .biddingAnalysis, heading: "Bidding", size: .flexible),
-                    ScorecardColumn(type: .playAnalysis, heading: "Play", size: .flexible),
+                    ScorecardColumn(type: .analysis1, heading: "Bidding", size: .flexible),
+                    ScorecardColumn(type: .analysis2, heading: "Play", size: .flexible),
                     ScorecardColumn(type: .commentAvailable, heading: "", size: .fixed([40]))]
                 
                 boardAnalysisCommentColumns += [
@@ -1121,8 +1162,8 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     fileprivate var labelSeparator = UIView()
     fileprivate var bottomLabel = UILabel()
     fileprivate var bottomLabelTapGesture: UITapGestureRecognizer!
-    fileprivate var topAnalysis = AnalysisView()
-    fileprivate var bottomAnalysis = AnalysisView()
+    fileprivate var topAnalysis = AnalysisSummaryView()
+    fileprivate var bottomAnalysis = AnalysisSummaryView()
     fileprivate var analysisSeparator = UIView()
     fileprivate var caption = UILabel()
     fileprivate var textField = UITextField()
@@ -1166,6 +1207,13 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 
         endEditingGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputCollectionCell.endEditingTapped))
         self.addGestureRecognizer(endEditingGesture)
+        
+        addSubview(label, constant: 2, anchored: .leading, .trailing)
+        label.textAlignment = .center
+        label.minimumScaleFactor = 0.3
+        label.adjustsFontSizeToFitWidth = true
+        labelTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputCollectionCell.labelTapped(_:)))
+        label.addGestureRecognizer(labelTapGesture)
         
         addSubview(label, constant: 2, anchored: .leading, .trailing)
         label.textAlignment = .center
@@ -1335,6 +1383,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         bottomLabel.isHidden = true
         bottomLabelTapGesture.isEnabled = false
         labelSeparator.isHidden = true
+        labelSeparator.backgroundColor = UIColor(Palette.gridLine)
         labelSeparatorHeight.constant = 0
         topAnalysis.prepareForReuse()
         topAnalysis.isHidden = true
@@ -1354,6 +1403,22 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         switch column.type {
         case .score:
             label.text = scorecard.type.boardScoreType.string
+        case .analysis1:
+            if scorecard.type.players == 4 {
+                if let players = Scorecard.myRanking?.playerNames(separator: " & ", firstOnly: true, .player, .partner) {
+                    label.text = players
+                } else {
+                    label.text = "Our Table"
+                }
+            }
+        case .analysis2:
+            if scorecard.type.players == 4 {
+                if let players = Scorecard.myRanking?.playerNames(separator: " & ", firstOnly: true, .lhOpponent, .rhOpponent) {
+                    label.text = players
+                } else {
+                    label.text = "Other Table"
+                }
+            }
         case .commentAvailable:
             label.attributedText = Scorecard.commentAvailableText(exists: Scorecard.current.boards.map({$0.value.comment != ""}).contains(true))
             labelTapGesture.isEnabled = true
@@ -1377,7 +1442,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         
         var isEnabled = false
         switch column.type {
-        case .board, .table, .vulnerable, .dealer, .points, .teamTable, .biddingAnalysis, .playAnalysis, .commentAvailable:
+        case .board, .table, .vulnerable, .dealer, .points, .teamTable, .analysis1, .analysis2, .commentAvailable:
             isEnabled = false
         case .declarer:
             isEnabled = (table.sitting != .unknown && !Scorecard.current.isImported)
@@ -1485,17 +1550,17 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             responsiblePicker.isHidden = (Scorecard.current.isImported && board.score == nil)
             responsiblePicker.set(board.responsible, color: Palette.gridBoard, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
             responsibleTapGesture.isEnabled = true
-        case .biddingAnalysis:
+        case .analysis1:
             setAnalysis(phase: .bidding, analysisView: topAnalysis, board: board, sitting: table.sitting, otherTable: false)
             if scorecard.type.players == 4 {
-                analysisSeparator.isHidden = false
-                setAnalysis(phase: .bidding, analysisView: bottomAnalysis, analysisViewHeight: bottomAnalysisHeight, board: board, sitting: table.sitting.equivalent, otherTable: true)
+                setAnalysis(phase: .play, analysisView: bottomAnalysis, analysisViewHeight: bottomAnalysisHeight, board: board, sitting: table.sitting, otherTable: false)
             }
-        case .playAnalysis:
-            setAnalysis(phase: .play, analysisView: topAnalysis, board: board, sitting: table.sitting, otherTable: false)
+        case .analysis2:
             if scorecard.type.players == 4 {
-                analysisSeparator.isHidden = false
+                setAnalysis(phase: .bidding, analysisView: topAnalysis, board: board, sitting: table.sitting.equivalent, otherTable: true)
                 setAnalysis(phase: .play, analysisView: bottomAnalysis, analysisViewHeight: bottomAnalysisHeight, board: board, sitting: table.sitting.equivalent, otherTable: true)
+            } else {
+                setAnalysis(phase: .play, analysisView: topAnalysis, board: board, sitting: table.sitting.equivalent, otherTable: false)
             }
         case .teamTable:
             label.isHidden = false
@@ -1607,15 +1672,20 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     }
     
     
-    private func setAnalysis(phase: AnalysisPhase, analysisView: AnalysisView, analysisViewHeight: NSLayoutConstraint? = nil, board: BoardViewModel, sitting: Seat, otherTable: Bool) {
+    private func setAnalysis(phase: AnalysisPhase, analysisView: AnalysisSummaryView, analysisViewHeight: NSLayoutConstraint? = nil, board: BoardViewModel, sitting: Seat, otherTable: Bool) {
         analysisView.isHidden = false
-        if otherTable {
-            analysisView.isHidden = false
+        if analysisView == bottomAnalysis {
+            analysisSeparator.isHidden = false
             analysisViewHeight?.constant = (boardRowHeight - 1 - 2) / 2
         }
         if let (_, traveller, _) = Scorecard.getBoardTraveller(boardNumber: board.board, equivalentSeat: otherTable) {
             let analysis = Scorecard.current.analysis(board: board, traveller: traveller, sitting: sitting)
-            analysisView.set(board: board, summary: analysis.summary(phase: phase, otherTable: otherTable, verbose: true), viewTapped: showHand)
+            let summary = analysis.summary(phase: phase, otherTable: otherTable, verbose: true)
+            if summary.status == .rejected && scorecardDelegate?.hideRejected ?? true {
+                analysisView.prepareForReuse()
+            } else {
+                analysisView.set(board: board, summary: summary, viewTapped: showHand)
+            }
         } else {
             analysisView.prepareForReuse()
         }

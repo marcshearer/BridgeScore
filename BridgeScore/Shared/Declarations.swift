@@ -52,6 +52,7 @@ var pickerCaptionFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tab
 var windowTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 20.0)) }
 var sectionTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 24.0 : 16.0)) }
 var smallCellFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 22.0 : 12.0)) }
+var tinyCellFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 8.0 : 6.0)) }
 var replaceFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 20.0)) }
 var replaceTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 30.0 : 20.0)) }
 var analysisFont: UIFont { UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 16.0 : 12.0)) }
@@ -577,6 +578,10 @@ public enum Seat: Int, EnumPickerType, ContractEnumType, Identifiable {
         }
     }
     
+    public static var paired: [Seat] {
+        [.north, .south, .east, .west]
+    }
+    
     public static func dealer(board: Int) -> Seat {
         return Seat(rawValue: ((board - 1) % 4) + 1) ?? .unknown
     }
@@ -749,38 +754,6 @@ public enum Values {
     public static var trickOffset: Int { 6 }
     public static var smallSlamLevel: ContractLevel { .six }
     public static var grandSlamLevel: ContractLevel { .seven }
-}
-
-// Scorecard view types
-enum ColumnType: Int, Codable {
-    case table = 0
-    case sitting = 1
-    case tableScore = 2
-    case versus = 3
-    case board = 4
-    case contract = 5
-    case declarer = 6
-    case made = 7
-    case points = 8
-    case score = 9
-    case comment = 10
-    case responsible = 11
-    case vulnerable = 12
-    case dealer = 13
-    case teamTable = 14
-    case biddingAnalysis = 15
-    case playAnalysis = 16
-    case commentAvailable = 17
-    case combined = 18
-    
-    var string: String {
-        return "\(self)"
-    }
-}
-
-enum ColumnSize: Codable, Equatable {
-    case fixed([CGFloat])
-    case flexible
 }
 
 enum ContractElement: Int {

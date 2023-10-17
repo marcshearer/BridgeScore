@@ -850,16 +850,13 @@ class Scorecard {
         var result: (BoardViewModel, TravellerViewModel, Seat)?
         if let nextBoard = Scorecard.current.boards[boardNumber] {
             if !Scorecard.current.travellerList.isEmpty {
-                if let scorer = MasterData.shared.scorer {
-                    let rankings = Scorecard.current.rankings(table: nextBoard.tableNumber, player: (bboName:scorer.bboName, name: scorer.name))
-                    if let myRanking = rankings.first {
-                        var seat = nextBoard.table!.sitting
-                        if equivalentSeat {
-                            seat = seat.equivalent
-                        }
-                        if let nextTraveller = Scorecard.current.traveller(board: nextBoard.board, seat: seat, rankingNumber: myRanking.number, section: myRanking.section) {
-                            result = (nextBoard, nextTraveller, seat)
-                        }
+                if let myRanking = myRanking {
+                    var seat = nextBoard.table!.sitting
+                    if equivalentSeat {
+                        seat = seat.equivalent
+                    }
+                    if let nextTraveller = Scorecard.current.traveller(board: nextBoard.board, seat: seat, rankingNumber: myRanking.number, section: myRanking.section) {
+                        result = (nextBoard, nextTraveller, seat)
                     }
                 }
             }
@@ -867,6 +864,17 @@ class Scorecard {
         return result
     }
     
+    public static var myRanking: RankingViewModel? {
+        var result: RankingViewModel?
+        if let scorer = MasterData.shared.scorer {
+            let rankings = Scorecard.current.rankings(player: (bboName:scorer.bboName, name: scorer.name))
+            if let myRanking = rankings.first {
+                result = myRanking
+            }
+        }
+        return result
+    }
+        
     public static func commentAvailableText(exists: Bool) -> NSAttributedString {
         let attachment = NSTextAttachment()
         attachment.image = UIImage(systemName: exists ? "text.bubble" : "bubble")
