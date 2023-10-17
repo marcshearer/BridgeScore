@@ -51,10 +51,6 @@ enum ColumnType: Int, Codable {
     case analysis2 = 16
     case commentAvailable = 17
     case combined = 18
-    
-    var string: String {
-        return "\(self)"
-    }
 }
 
 enum ColumnSize: Codable, Equatable {
@@ -1423,7 +1419,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             label.attributedText = Scorecard.commentAvailableText(exists: Scorecard.current.boards.map({$0.value.comment != ""}).contains(true))
             labelTapGesture.isEnabled = true
             label.isUserInteractionEnabled = true
-            let color = scorecardDelegate.analysisCommentBoardNumber == -1 ? Palette.banner : Palette.background
+            let color = scorecardDelegate.analysisCommentBoardNumber == -1 ? Palette.enabledButton : Palette.background
             label.backgroundColor = UIColor(color.background)
             label.textColor = UIColor(color.text)
         default:
@@ -1560,7 +1556,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 setAnalysis(phase: .bidding, analysisView: topAnalysis, board: board, sitting: table.sitting.equivalent, otherTable: true)
                 setAnalysis(phase: .play, analysisView: bottomAnalysis, analysisViewHeight: bottomAnalysisHeight, board: board, sitting: table.sitting.equivalent, otherTable: true)
             } else {
-                setAnalysis(phase: .play, analysisView: topAnalysis, board: board, sitting: table.sitting.equivalent, otherTable: false)
+                setAnalysis(phase: .play, analysisView: topAnalysis, board: board, sitting: table.sitting, otherTable: false)
             }
         case .teamTable:
             label.isHidden = false
@@ -1580,7 +1576,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             }
         case .commentAvailable:
             label.isHidden = false
-            let color = (scorecardDelegate.analysisCommentBoardNumber == board.board ? Palette.banner : Palette.background)
+            let color = (scorecardDelegate.analysisCommentBoardNumber == board.board ? Palette.enabledButton : Palette.background)
             label.backgroundColor = UIColor(color.background)
             label.textColor = UIColor(color.contrastText)
             label.attributedText = Scorecard.commentAvailableText(exists: board.comment != "")
