@@ -75,10 +75,7 @@ struct InputInt : View {
             }
             .font(inputFont)
         }
-        .onAppear {
-            text = "\(field.wrappedValue)"
-        }
-        .onChange(of: field.wrappedValue) { (field) in
+        .onChange(of: field.wrappedValue, initial: true) { (_, field) in
             text = "\(field)"
         }
         .frame(height: self.height + ((self.inlineTitle ? 0 : self.topSpace) + (title == nil || inlineTitle ? 0 : 30)))

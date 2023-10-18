@@ -481,12 +481,6 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        endEditing(true)
-        setNeedsLayout()
-    }
-    
     override func layoutSubviews() {
         super.layoutSubviews()
         let oldBoardColumns = boardColumns

@@ -97,7 +97,7 @@ struct Input : View {
                                 .autocapitalization(autoCapitalize)
                                 .disableAutocorrection(!autoCorrect)
                                 .foregroundColor(color.text)
-                                .onChange(of: field.wrappedValue) { field in
+                                .onChange(of: field.wrappedValue, initial: false) { (_, field) in
                                     onChange?(field)
                                 }
                         } else {
@@ -107,7 +107,7 @@ struct Input : View {
                                 .autocapitalization(autoCapitalize)
                                 .disableAutocorrection(!autoCorrect)
                                 .foregroundColor(color.text)
-                                .onChange(of: field.wrappedValue) { field in
+                                .onChange(of: field.wrappedValue, initial: false) { (_, field) in
                                     onChange?(field)
                                 }
                         }

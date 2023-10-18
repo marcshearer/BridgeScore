@@ -39,7 +39,7 @@ struct MyScene: Scene {
                 }
             }
         }
-        .onChange(of: scenePhase) { phase in
+        .onChange(of: scenePhase, initial: false) { (_, phase) in
             if phase == .active {
                 if let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
                     #if targetEnvironment(macCatalyst)

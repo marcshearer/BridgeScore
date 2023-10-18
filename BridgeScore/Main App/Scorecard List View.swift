@@ -39,7 +39,7 @@ struct ScorecardListView: View {
                            BannerOption(text: "Locations", action: { linkToLocations = true }),
                            BannerOption(text: "Import BBO Names", action: { ImportBBO.importNames() }),
                            BannerOption(text: "Backup", action: { MessageBox.shared.show("Backing up", cancelText: "Cancel", okText: "Continue", okAction: {Backup.shared.backup() ; MessageBox.shared.hide()})})]
-        if Utility.isSimulator || true {
+        if Utility.isSimulator {
             menuOptions.append(
                            BannerOption(text: "Restore", action: {
                               Backup.shared.restore(dateString: "Latest") }))
@@ -78,19 +78,19 @@ struct ScorecardListView: View {
                                     }
                             }
                         }
-                        .onChange(of: importTapped) { (newValue) in
+                        .onChange(of: importTapped, initial: false) { (_, newValue) in
                             if newValue != .none {
                                 linkAction(importTapped: newValue)
                             }
                             importTapped = .none
                         }
-                        .onChange(of: self.startAt) { (newValue) in
+                        .onChange(of: self.startAt, initial: false) { (_, newValue) in
                             if let newValue = newValue {
                                 scrollViewProxy.scrollTo(newValue, anchor: .top)
                                 startAt = nil
                             }
                         }
-                        .onChange(of: self.closeFilter) { (newValue) in
+                        .onChange(of: self.closeFilter, initial: false) { (_, newValue) in
                             if newValue {
                                 if let scorecard = data.scorecards.first {
                                     self.startAt = scorecard.scorecardId
@@ -121,11 +121,11 @@ struct ScorecardListView: View {
                     }
                 }
             }
-            NavigationLink(destination: LayoutSetupView(), isActive: $linkToLayouts) {EmptyView()}
-            NavigationLink(destination: PlayerSetupView(), isActive: $linkToPlayers) {EmptyView()}
-            NavigationLink(destination: LocationSetupView(), isActive: $linkToLocations) {EmptyView()}
-            NavigationLink(destination: StatsView(), isActive: $linkToStats) {EmptyView()}
-            NavigationLink(destination: ScorecardInputView(scorecard: selected, importScorecard: importScorecard), isActive: $linkToEdit) {EmptyView()}
+            .navigationDestination(isPresented: $linkToLayouts) { LayoutSetupView() }
+            .navigationDestination(isPresented: $linkToPlayers) { PlayerSetupView() }
+            .navigationDestination(isPresented: $linkToLocations) { LocationSetupView() }
+            .navigationDestination(isPresented: $linkToStats) { StatsView() }
+            .navigationDestination(isPresented: $linkToEdit) { ScorecardInputView(scorecard: selected, importScorecard: importScorecard) }
         }
         .sheet(isPresented: $linkToNew, onDismiss: {
             if layoutSelected {

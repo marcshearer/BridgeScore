@@ -70,7 +70,7 @@ struct InputFloat : View {
                                 text.wrappedValue = Float(text.wrappedValue)?.toString(places: places) ?? ""
                                 field = Float(text.wrappedValue)
                             }
-                            .onChange(of: text.wrappedValue) { newValue in
+                            .onChange(of: text.wrappedValue, initial: false) { (_, newValue) in
                                 let filtered = newValue.filter { "0123456789 -,.".contains($0) }
                                 let oldField = field
                                 if filtered != newValue {
@@ -100,7 +100,7 @@ struct InputFloat : View {
                 }
             }
             .font(inputFont)
-            .onChange(of: field) { (field) in
+            .onChange(of: field, initial: false) { (_, field) in
                 let newValue = (field == nil ? "" : field!.toString(places: places))
                 if newValue != wrappedText {
                     wrappedText = newValue

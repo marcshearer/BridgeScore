@@ -148,7 +148,7 @@ import CoreData
         if let board = board ?? Scorecard.current.boards[1] {
             if let sitting = board.table?.sitting {
                 for seatPlayer in seatPlayers {
-                    if var name = players[sitting.seatPlayer(seatPlayer)] {
+                    if let name = players[sitting.seatPlayer(seatPlayer)] {
                         if names != "" {
                             names += separator
                         }

@@ -27,7 +27,7 @@ struct StandardView <Content> : View where Content : View {
         
     var body: some View {
         if navigation {
-            NavigationView {
+            NavigationStack {
                 contentView()
             }
             .navigationViewStyle(IosStackNavigationViewStyle())

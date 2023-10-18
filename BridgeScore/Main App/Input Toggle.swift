@@ -49,7 +49,7 @@ struct InputToggle : View {
                 .if(labelWidth != nil) { (view) in
                     view.frame(width: labelWidth! + 55)
                 }
-                .onChange(of: field) { (value) in
+                .onChange(of: field, initial: false) { (_, value) in
                     onChange?(value)
                 }
                 Spacer()

@@ -98,11 +98,6 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         fatalError("init(coder:) has not been implemented")
     }
     
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        setNeedsLayout()
-    }
-    
     override func layoutSubviews() {
         super.layoutSubviews()
         setFrames()

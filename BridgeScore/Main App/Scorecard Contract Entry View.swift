@@ -76,11 +76,6 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         
     }
     
-    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
-        super.traitCollectionDidChange(previousTraitCollection)
-        self.setNeedsLayout()
-    }
-    
     override func layoutSubviews() {
         super.layoutSubviews()
         

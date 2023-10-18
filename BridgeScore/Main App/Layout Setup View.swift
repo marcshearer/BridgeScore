@@ -231,10 +231,7 @@ struct LayoutDetailView : View {
                     
                     Spacer()
                 }
-                .onChange(of: selected.layoutId) { (layoutId) in
-                    setIndexes()
-                }
-                .onAppear {
+                .onChange(of: selected.layoutId, initial: true) { (_, layoutId) in
                     setIndexes()
                 }
             }
