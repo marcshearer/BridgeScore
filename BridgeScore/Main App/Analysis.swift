@@ -378,7 +378,6 @@ class Analysis {
     }
     
     public func refreshOptions() {
-        print("Refresh options \(traveller.contract.compact)")
         for option in options {
             option.removed(by: nil)
         }

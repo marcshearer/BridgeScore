@@ -56,7 +56,8 @@ enum ColumnType: Int, Codable {
 // Controls that need tap gesture
 enum TapControl {
     case label
-    case textClear
+    case textFieldClear
+    case textViewClear
     case responsible
     case declarer
     case seat
@@ -1159,6 +1160,7 @@ class ScorecardInputBoardTableCell: TableViewCellWithCollectionView {
 class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, EnumPickerDelegate, UITextViewDelegate, UITextFieldDelegate, AutoCompleteDelegate {
     fileprivate var label = UILabel()
     fileprivate var labelSeparator = UIView()
+    fileprivate var labelPadding: [NSLayoutConstraint]!
     fileprivate var bottomLabel = UILabel()
     fileprivate var bottomLabelTapGesture: UITapGestureRecognizer!
     fileprivate var topAnalysis = AnalysisSummaryView()
@@ -1166,7 +1168,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     fileprivate var analysisSeparator = UIView()
     fileprivate var caption = UILabel()
     fileprivate var textField = UITextField()
-    private var textView = UITextView()
+    fileprivate var textView = UITextView()
     private var textClear = UIImageView()
     private var textClearWidth: NSLayoutConstraint!
     private var textClearPadding: [NSLayoutConstraint]!
@@ -1200,7 +1202,8 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         
         self.backgroundColor = UIColor(Palette.gridTable.background)
                         
-        addSubview(label, constant: 2, anchored: .leading, .trailing)
+        addSubview(label)
+        labelPadding = Constraint.anchor(view: self, control: label, constant: 2, attributes: .leading, .trailing)
         label.textAlignment = .center
         label.minimumScaleFactor = 0.3
         label.adjustsFontSizeToFitWidth = true
@@ -1338,6 +1341,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         label.textAlignment = .center
         label.isUserInteractionEnabled = false
         label.numberOfLines = 1
+        labelPadding.forEach { constraint in constraint.constant = 2}
         bottomLabel.backgroundColor = UIColor.clear
         bottomLabel.textColor = UIColor(Palette.background.text)
         bottomLabel.text = ""
@@ -1444,6 +1448,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             }
         }
         
+        self.backgroundColor = UIColor(color.background)
         label.backgroundColor = UIColor(color.background)
         bottomLabel.backgroundColor = UIColor(color.background)
         topAnalysis.backgroundColor = UIColor(color.background)
@@ -1509,14 +1514,29 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         case .points:
             analysisSplitPoints(isEnabled: isEnabled)
         case .comment:
-            textField.isHidden = (Scorecard.current.isImported && board.score == nil)
-            textField.text = board.comment
-            textField.textAlignment = .left
-            textField.autocapitalizationType = .sentences
+            textView.text = board.comment
+            textView.textAlignment = .left
+            textView.autocapitalizationType = .sentences
             textClear.isHidden = board.comment == ""
             textClearWidth.constant = 34
             textClearPadding.forEach { (constraint) in constraint.constant = 8 }
-            set(tap: .textClear)
+            labelPadding.forEach { (constraint) in constraint.constant = 16 }
+            label.textAlignment = .left
+            label.textColor = UIColor(Palette.background.faintText)
+            label.text = "Enter comment"
+            if Scorecard.current.isImported && board.score == nil {
+                textView.isHidden = true
+                label.isHidden = true
+            } else if board.comment == "" && scorecardDelegate.viewType == .analysis {
+                textView.isHidden = true
+                label.isHidden = false
+                label.isUserInteractionEnabled = true
+                set(tap: .label)
+            } else {
+                textView.isHidden = false
+                label.isHidden = true
+                set(tap: .textViewClear)
+            }
         case .responsible:
             responsiblePicker.isHidden = (Scorecard.current.isImported && board.score == nil)
             responsiblePicker.set(board.responsible, color: Palette.gridBoard, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
@@ -1550,7 +1570,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 bottomLabelHeight.constant = (boardRowHeight - 1 - 2) / 2
             }
         case .commentAvailable:
-            label.isHidden = false
+            label.isHidden = (Scorecard.current.isImported && board?.score == nil)
             let color = (scorecardDelegate.analysisCommentBoardNumber == board.board ? Palette.enabledButton : Palette.background)
             label.backgroundColor = UIColor(color.background)
             label.textColor = UIColor(color.contrastText)
@@ -1573,7 +1593,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 textField.keyboardType = .numbersAndPunctuation
                 textField.clearsOnBeginEditing = true
                 textField.text = table.score == nil ? "" : "\(table.score!.toString(places: scorecard.type.tablePlaces))"
-                set(tap: .textClear)
+                set(tap: .textFieldClear)
             } else {
                 label.text = table.score == nil ? "" : "\(scorecard.type.tableScoreType.prefix(score: table.score!))\(table.score!.toString(places: scorecard.type.tablePlaces))"
                 label.isUserInteractionEnabled = true
@@ -1598,7 +1618,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 textClear.isHidden = (!isEnabled || table.versus == "")
                 textClearWidth.constant = 34
                 textClearPadding.forEach { (constraint) in constraint.constant = 8 }
-                set(tap: .textClear)
+                set(tap: .textFieldClear)
             }
         }
         
@@ -1690,8 +1710,8 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             if let newTapControl = newTapControl {
                 execute(on: newTapControl) { (control, selector) in
                     control.addGestureRecognizer(tapGesture)
-                    tapGesture.isEnabled = true
                     tapGesture.addTarget(self, action: selector)
+                    tapGesture.isEnabled = true
                 }
             }
             currentTapControl = newTapControl
@@ -1704,9 +1724,12 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             case .label:
                 control = label
                 selector = #selector(ScorecardInputCollectionCell.labelTapped(_:))
-            case .textClear:
+            case .textViewClear:
                 control = textClear
                 selector = #selector(ScorecardInputCollectionCell.textViewClearPressed)
+            case .textFieldClear:
+                control = textClear
+                selector = #selector(ScorecardInputCollectionCell.textFieldClearPressed)
             case .responsible:
                 control = responsiblePicker
                 selector = #selector(ScorecardInputCollectionCell.responsibleTapped)
@@ -1897,6 +1920,25 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         return true
     }
     
+    @objc internal func textFieldClearPressed(_ textFieldClear: UIView) {
+        scorecardDelegate?.scorecardEndEditing(true)
+        scorecardDelegate?.scorecardChanged(type: rowType, itemNumber: itemNumber)
+        var text: String?
+        switch self.column.type {
+        case .comment:
+            text = board.comment
+        case .versus:
+            text = table.versus
+        default:
+            break
+        }
+        if text != "" {
+            textField.text = ""
+            textField.resignFirstResponder()
+            textFieldChanged(textField)
+        }
+    }
+    
     internal func textViewDidChange(_ textView: UITextView) {
         let text = textView.text ?? ""
         var undoText: String?
@@ -1943,6 +1985,23 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         return true
     }
     
+    func textViewDidEndEditing(_ textView: UITextView) {
+        switch self.column.type {
+        case .comment:
+            board.comment = textView.text
+            if board.comment == "" {
+                textView.isHidden = true
+                label.isHidden = false
+                label.isUserInteractionEnabled = true
+                set(tap: .label)
+            }
+        case .versus:
+            table.versus = textView.text
+        default:
+            break
+        }
+    }
+    
     @objc internal func textViewClearPressed(_ textViewClear: UIView) {
         scorecardDelegate?.scorecardEndEditing(true)
         scorecardDelegate?.scorecardChanged(type: rowType, itemNumber: itemNumber)
@@ -1957,10 +2016,19 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         }
         if text != "" {
             textView.text = ""
+            switch self.column.type {
+            case .comment:
+                if scorecardDelegate?.viewType == .analysis {
+                    textView.isHidden = true
+                    label.isHidden = false
+                    label.isUserInteractionEnabled = true
+                    set(tap: .label)
+                }
+            default:
+                break
+            }
             textView.resignFirstResponder()
-            textField.text = ""
-            textField.resignFirstResponder()
-            textFieldChanged(textField)
+            textViewDidChange(textView)
         }
     }
     
@@ -2051,11 +2119,23 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             case .versus:
                 versusTapped(self)
             case .score:
-                scoreTapped(self)
+                if Scorecard.current.isImported && board?.score != nil {
+                    scoreTapped(self)
+                }
             case .commentAvailable:
-                scorecardDelegate?.setAnalysisCommentBoardNumber(boardNumber: board?.board ?? -1)
+                if Scorecard.current.isImported && board?.score != nil {
+                    scorecardDelegate?.setAnalysisCommentBoardNumber(boardNumber: board?.board ?? -1)
+                }
+            case .comment:
+                if Scorecard.current.isImported && board?.score != nil {
+                    label.isHidden = true
+                    label.isUserInteractionEnabled = false
+                    textView.isHidden = false
+                    set(tap: .textViewClear)
+                    textView.becomeFirstResponder()
+                }
             default:
-                if Scorecard.current.isImported {
+                if Scorecard.current.isImported && board?.score != nil {
                     showHand()
                 }
             }
