@@ -53,6 +53,16 @@ enum ColumnType: Int, Codable {
     case combined = 18
 }
 
+// Controls that need tap gesture
+enum TapControl {
+    case label
+    case textClear
+    case responsible
+    case declarer
+    case seat
+    case made
+}
+
 enum ColumnSize: Codable, Equatable {
     case fixed([CGFloat])
     case flexible
@@ -1148,7 +1158,6 @@ class ScorecardInputBoardTableCell: TableViewCellWithCollectionView {
 
 class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, EnumPickerDelegate, UITextViewDelegate, UITextFieldDelegate, AutoCompleteDelegate {
     fileprivate var label = UILabel()
-    fileprivate var labelTapGesture: UITapGestureRecognizer!
     fileprivate var labelSeparator = UIView()
     fileprivate var bottomLabel = UILabel()
     fileprivate var bottomLabelTapGesture: UITapGestureRecognizer!
@@ -1161,16 +1170,10 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     private var textClear = UIImageView()
     private var textClearWidth: NSLayoutConstraint!
     private var textClearPadding: [NSLayoutConstraint]!
-    private var endEditingGesture: UITapGestureRecognizer!
-    private var textClearTapGesture: UITapGestureRecognizer!
     private var responsiblePicker: EnumPicker<Responsible>!
-    fileprivate var responsibleTapGesture: UITapGestureRecognizer!
     fileprivate var declarerPicker: ScrollPicker!
-    fileprivate var declarerTapGesture: UITapGestureRecognizer!
     fileprivate var seatPicker: EnumPicker<Seat>!
-    fileprivate var seatTapGesture: UITapGestureRecognizer!
     private var madePicker: ScrollPicker!
-    fileprivate var madeTapGesture: UITapGestureRecognizer!
     private var table: TableViewModel!
     private var board: BoardViewModel!
     fileprivate var itemNumber: Int!
@@ -1183,6 +1186,8 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     private var bottomLabelHeight: NSLayoutConstraint!
     private var bottomAnalysisHeight: NSLayoutConstraint!
     private var analysisSeparatorHeight: NSLayoutConstraint!
+    private var currentTapControl: TapControl?
+    private var tapGesture = UITapGestureRecognizer()
     
     private var scorecard: ScorecardViewModel!
     
@@ -1194,23 +1199,11 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         super.init(frame: frame)
         
         self.backgroundColor = UIColor(Palette.gridTable.background)
-                
-        endEditingGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputCollectionCell.endEditingTapped))
-        self.addGestureRecognizer(endEditingGesture)
-        
+                        
         addSubview(label, constant: 2, anchored: .leading, .trailing)
         label.textAlignment = .center
         label.minimumScaleFactor = 0.3
         label.adjustsFontSizeToFitWidth = true
-        labelTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputCollectionCell.labelTapped(_:)))
-        label.addGestureRecognizer(labelTapGesture)
-        
-        addSubview(label, constant: 2, anchored: .leading, .trailing)
-        label.textAlignment = .center
-        label.minimumScaleFactor = 0.3
-        label.adjustsFontSizeToFitWidth = true
-        labelTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputCollectionCell.labelTapped(_:)))
-        label.addGestureRecognizer(labelTapGesture)
         
         addSubview(labelSeparator, constant: 0, anchored: .leading, .trailing)
         labelSeparator.backgroundColor = UIColor(Palette.gridLine)
@@ -1264,37 +1257,27 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         textClear.image = UIImage(systemName: "x.circle.fill")?.asTemplate
         textClear.tintColor = UIColor(Palette.clearText)
         textClear.contentMode = .scaleAspectFit
-        textClearTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputCollectionCell.textViewClearPressed))
-        textClear.addGestureRecognizer(textClearTapGesture)
         textClear.isUserInteractionEnabled = true
         
         addSubview(declarerPicker, top: 16, bottom: 0)
         Constraint.setWidth(control: declarerPicker, width: 60)
         Constraint.anchor(view: self, control: declarerPicker, attributes: .centerX)
         declarerPicker.delegate = self
-        declarerTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputCollectionCell.declarerTapped))
-        declarerPicker.addGestureRecognizer(declarerTapGesture)
         
         addSubview(seatPicker, top: 20, bottom: 4)
         Constraint.setWidth(control: seatPicker, width: 60)
         Constraint.anchor(view: self, control: seatPicker, attributes: .centerX)
         seatPicker.delegate = self
-        seatTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputCollectionCell.seatPickerTapped))
-        seatPicker.addGestureRecognizer(seatTapGesture)
-
+        
         addSubview(madePicker, top: 16, bottom: 0)
         Constraint.setWidth(control: madePicker, width: 60)
         Constraint.anchor(view: self, control: madePicker, attributes: .centerX)
         madePicker.delegate = self
-        madeTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputCollectionCell.madeTapped))
-        madePicker.addGestureRecognizer(madeTapGesture)
         
         addSubview(responsiblePicker, top: 16, bottom: 0)
         Constraint.setWidth(control: responsiblePicker, width: 60)
         Constraint.anchor(view: self, control: responsiblePicker, attributes: .centerX)
         responsiblePicker.delegate = self
-        responsibleTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputCollectionCell.responsibleTapped))
-        responsiblePicker.addGestureRecognizer(responsibleTapGesture)
         
         addSubview(caption, anchored: .leading, .trailing, .top)
         caption.textAlignment = .center
@@ -1329,13 +1312,9 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         caption.isHidden = true
         captionHeight.constant = 0
         declarerPicker.isHidden = true
-        declarerTapGesture.isEnabled = false
         seatPicker.isHidden = true
-        seatTapGesture.isEnabled = false
         responsiblePicker.isHidden = true
-        responsibleTapGesture.isEnabled = false
         madePicker.isHidden = true
-        madeTapGesture.isEnabled = false
         textField.isHidden = true
         textField.textAlignment = .center
         textField.clearsOnBeginEditing = false
@@ -1345,7 +1324,6 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         textField.autocapitalizationType = .none
         textField.autocorrectionType = .no
         textField.isEnabled = true
-        textClearTapGesture.isEnabled = false
         textView.isHidden = true
         textClear.isHidden = true
         textClearWidth.constant = 0
@@ -1360,7 +1338,6 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         label.textAlignment = .center
         label.isUserInteractionEnabled = false
         label.numberOfLines = 1
-        labelTapGesture.isEnabled = false
         bottomLabel.backgroundColor = UIColor.clear
         bottomLabel.textColor = UIColor(Palette.background.text)
         bottomLabel.text = ""
@@ -1400,6 +1377,8 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 } else {
                     label.text = "Our Table"
                 }
+            } else {
+                label.text = column.heading
             }
         case .analysis2:
             if scorecard.type.players == 4 {
@@ -1408,14 +1387,16 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 } else {
                     label.text = "Other Table"
                 }
+            } else {
+                label.text = column.heading
             }
         case .commentAvailable:
             label.attributedText = Scorecard.commentAvailableText(exists: Scorecard.current.boards.map({$0.value.comment != ""}).contains(true))
-            labelTapGesture.isEnabled = true
             label.isUserInteractionEnabled = true
             let color = scorecardDelegate.analysisCommentBoardNumber == -1 ? Palette.enabledButton : Palette.background
             label.backgroundColor = UIColor(color.background)
             label.textColor = UIColor(color.text)
+            set(tap: .label)
         default:
             label.text = column.heading
         }
@@ -1478,31 +1459,31 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             label.font = boardFont
             label.text = "\(board.boardNumber)"
             label.isUserInteractionEnabled = !isEnabled
-            labelTapGesture.isEnabled = true
+            set(tap: .label)
         case .vulnerable:
             label.isHidden = false
             label.font = titleFont.bold
             label.text = board.vulnerability.string
             label.isUserInteractionEnabled = !isEnabled
-            labelTapGesture.isEnabled = true
+            set(tap: .label)
         case .dealer:
             seatPicker.isHidden = false
             seatPicker.set(board.dealer, isEnabled: false, color: color, titleFont: pickerTitleFont)
             seatPicker.isUserInteractionEnabled = !isEnabled
-            seatTapGesture.isEnabled = true
+            set(tap: .label)
         case .combined:
             analysisSplitCombined()
         case .contract:
             label.isHidden = false
             label.attributedText = board.contract.attributedString
             label.isUserInteractionEnabled = true
-            labelTapGesture.isEnabled = true
+            set(tap: .label)
         case .declarer:
             declarerPicker.isHidden = false
             let selected = declarerList.firstIndex(where: {$0.seat == board.declarer}) ?? 0
             declarerPicker.set(selected, list: declarerList.map{$0.entry}, isEnabled: isEnabled, color: color, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
             label.isUserInteractionEnabled = !isEnabled
-            declarerTapGesture.isEnabled = true
+            set(tap: isEnabled ? .declarer : .label)
         case .made:
             madePicker.isHidden = false
             let (list, minValue, maxValue) = madeList
@@ -1516,7 +1497,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             let makingValue = (Values.trickOffset + board.contract.level.rawValue)
             madePicker.set(board.made == nil ? nil : board.made! - minValue, list: list, defaultEntry: ScrollPickerEntry(caption: "Unknown"), defaultValue: min(list.count - 1, makingValue), isEnabled: isEnabled, color: color, titleFont: pickerTitleFont)
             label.isUserInteractionEnabled = !isEnabled
-            madeTapGesture.isEnabled = true
+            set(tap: isEnabled ? .made : .label)
         case .score:
             textField.isHidden = false
             textField.keyboardType = .numbersAndPunctuation
@@ -1524,7 +1505,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             textField.text = board.score == nil ? "" : "\(scorecard.type.boardScoreType.prefix(score: board.score!))\(board.score!.toString(places: scorecard.type.boardPlaces))"
             textField.isEnabled = isEnabled
             label.isUserInteractionEnabled = !isEnabled
-            labelTapGesture.isEnabled = true
+            set(tap: .label)
         case .points:
             analysisSplitPoints(isEnabled: isEnabled)
         case .comment:
@@ -1535,11 +1516,11 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             textClear.isHidden = board.comment == ""
             textClearWidth.constant = 34
             textClearPadding.forEach { (constraint) in constraint.constant = 8 }
-            textClearTapGesture.isEnabled = true
+            set(tap: .textClear)
         case .responsible:
             responsiblePicker.isHidden = (Scorecard.current.isImported && board.score == nil)
             responsiblePicker.set(board.responsible, color: Palette.gridBoard, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
-            responsibleTapGesture.isEnabled = true
+            set(tap: .responsible)
         case .analysis1:
             setAnalysis(phase: .bidding, analysisView: topAnalysis, board: board, sitting: table.sitting, otherTable: false)
             if scorecard.type.players == 4 {
@@ -1556,13 +1537,13 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             label.isHidden = false
             label.font = titleFont
             label.text = "Us"
-            label.isUserInteractionEnabled = !isEnabled
-            labelTapGesture.isEnabled = true
+            label.isUserInteractionEnabled = true
+            set(tap: .label)
             if scorecard.type.players == 4 {
                 bottomLabel.isHidden = false
                 bottomLabel.font = titleFont
                 bottomLabel.text = "Other"
-                bottomLabel.isUserInteractionEnabled = !isEnabled
+                bottomLabel.isUserInteractionEnabled = true
                 bottomLabelTapGesture.isEnabled = true
                 labelSeparator.isHidden = false
                 labelSeparatorHeight.constant = 1
@@ -1574,24 +1555,29 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             label.backgroundColor = UIColor(color.background)
             label.textColor = UIColor(color.contrastText)
             label.attributedText = Scorecard.commentAvailableText(exists: board.comment != "")
-            label.isUserInteractionEnabled = !isEnabled
-            labelTapGesture.isEnabled = true
+            label.isUserInteractionEnabled = true
+            set(tap: .label)
         case .table:
             label.font = boardTitleFont.bold
             label.text = (Scorecard.current.isImported ? "" : "Table \(table.table)")
+            label.isUserInteractionEnabled = true
+            set(tap: .label)
         case .sitting:
-            label.isUserInteractionEnabled = !isEnabled
             seatPicker.isHidden = false
             seatPicker.set(table.sitting, isEnabled: isEnabled, color: color, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
-            seatTapGesture.isEnabled = true
+            label.isUserInteractionEnabled = !isEnabled
+            set(tap: isEnabled ? .seat : nil)
         case .tableScore:
             if scorecard.manualTotals {
                 textField.isHidden = false
                 textField.keyboardType = .numbersAndPunctuation
                 textField.clearsOnBeginEditing = true
                 textField.text = table.score == nil ? "" : "\(table.score!.toString(places: scorecard.type.tablePlaces))"
+                set(tap: .textClear)
             } else {
                 label.text = table.score == nil ? "" : "\(scorecard.type.tableScoreType.prefix(score: table.score!))\(table.score!.toString(places: scorecard.type.tablePlaces))"
+                label.isUserInteractionEnabled = true
+                set(tap: .label)
             }
         case .versus:
             if Scorecard.current.isImported {
@@ -1600,6 +1586,8 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 label.isUserInteractionEnabled = true
                 label.numberOfLines = 2
                 label.font = (scorecard.type.players == 1 ? smallCellFont : cellFont)
+                label.isUserInteractionEnabled = true
+                set(tap: .label)
             } else {
                 textField.isHidden = false
                 textField.text = table.versus
@@ -1610,6 +1598,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 textClear.isHidden = (!isEnabled || table.versus == "")
                 textClearWidth.constant = 34
                 textClearPadding.forEach { (constraint) in constraint.constant = 8 }
+                set(tap: .textClear)
             }
         }
         
@@ -1624,7 +1613,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         label.isHidden = false
         label.attributedText = board.contract.attributedCompact + " " + board.declarer.short + " " + (board.made == nil ? "" : Scorecard.madeString(made: board.made!))
         label.isUserInteractionEnabled = true
-        labelTapGesture.isEnabled = true
+        set(tap: .label)
         if scorecard.type.players == 4 {
             label.font = smallCellFont
             labelSeparator.isHidden = false
@@ -1635,6 +1624,8 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             if let (_, otherTraveller, _) = Scorecard.getBoardTraveller(boardNumber: board.board, equivalentSeat: true) {
                 bottomLabel.attributedText = otherTraveller.contract.attributedCompact + " " + otherTraveller.declarer.short + " " + Scorecard.madeString(made: otherTraveller.made)
             }
+            bottomLabel.isUserInteractionEnabled =  true
+            bottomLabelTapGesture.isEnabled = true
         }
     }
     
@@ -1645,8 +1636,8 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             let points = board.points(seat: table.sitting)
             label.text = (points == nil ? "" : "\(points! > 0 ? "+" : "")\(points!)")
         }
-        label.isUserInteractionEnabled = !isEnabled
-        labelTapGesture.isEnabled = true
+        label.isUserInteractionEnabled = true
+        set(tap: .label)
         if (scorecardDelegate?.viewType ?? .normal) == .analysis && scorecard.type.players == 4 {
             label.font = smallCellFont
             labelSeparator.isHidden = false
@@ -1658,6 +1649,8 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 let points = otherTraveller.points(sitting: table.sitting.equivalent)
                 bottomLabel.text = "\(points > 0 ? "+" : "")\(points)"
             }
+            bottomLabel.isUserInteractionEnabled = true
+            bottomLabelTapGesture.isEnabled = true
         }
     }
     
@@ -1667,6 +1660,10 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         if analysisView == bottomAnalysis {
             analysisSeparator.isHidden = false
             analysisViewHeight?.constant = (boardRowHeight - 1 - 2) / 2
+            bottomLabel.isUserInteractionEnabled = true
+            bottomLabelTapGesture.isEnabled = true
+        } else {
+            set(tap: .label)
         }
         if let (_, traveller, _) = Scorecard.getBoardTraveller(boardNumber: board.board, equivalentSeat: otherTable) {
             let analysis = Scorecard.current.analysis(board: board, traveller: traveller, sitting: sitting)
@@ -1678,6 +1675,52 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             }
         } else {
             analysisView.prepareForReuse()
+        }
+    }
+    
+    func set(tap newTapControl: TapControl?) {
+        if newTapControl != currentTapControl {
+            if let currentTapControl = currentTapControl {
+                execute(on: currentTapControl) { (control, _) in
+                    control.removeGestureRecognizer(tapGesture)
+                    tapGesture.removeTarget(self, action: nil)
+                    tapGesture.isEnabled = false
+                }
+            }
+            if let newTapControl = newTapControl {
+                execute(on: newTapControl) { (control, selector) in
+                    control.addGestureRecognizer(tapGesture)
+                    tapGesture.isEnabled = true
+                    tapGesture.addTarget(self, action: selector)
+                }
+            }
+            currentTapControl = newTapControl
+        }
+        
+        func execute(on tapControl: TapControl, action: (UIView, Selector)->()) {
+            var control: UIView
+            var selector: Selector
+            switch tapControl {
+            case .label:
+                control = label
+                selector = #selector(ScorecardInputCollectionCell.labelTapped(_:))
+            case .textClear:
+                control = textClear
+                selector = #selector(ScorecardInputCollectionCell.textViewClearPressed)
+            case .responsible:
+                control = responsiblePicker
+                selector = #selector(ScorecardInputCollectionCell.responsibleTapped)
+            case .declarer:
+                control = declarerPicker
+                selector = #selector(ScorecardInputCollectionCell.declarerTapped)
+            case .seat:
+                control = seatPicker
+                selector = #selector(ScorecardInputCollectionCell.seatPickerTapped)
+            case .made:
+                control = madePicker
+                selector = #selector(ScorecardInputCollectionCell.madeTapped)
+            }
+            action(control, selector)
         }
     }
     
@@ -1901,6 +1944,8 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     }
     
     @objc internal func textViewClearPressed(_ textViewClear: UIView) {
+        scorecardDelegate?.scorecardEndEditing(true)
+        scorecardDelegate?.scorecardChanged(type: rowType, itemNumber: itemNumber)
         var text: String?
         switch self.column.type {
         case .comment:
@@ -1991,6 +2036,10 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     }
 
     @objc internal func labelTapped(_ sender: UITapGestureRecognizer) {
+        scorecardDelegate?.scorecardEndEditing(true)
+        if let rowType = rowType, let itemNumber = itemNumber {
+            scorecardDelegate?.scorecardChanged(type: rowType, itemNumber: itemNumber)
+        }
         if let column = ColumnType(rawValue: sender.view?.tag ?? -1) {
             switch column {
             case .contract:
@@ -2150,12 +2199,6 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         }
     }
     
-    @objc internal func endEditingTapped(_ sender: UIView) {
-        scorecardDelegate?.scorecardEndEditing(true)
-        if let rowType = rowType, let itemNumber = itemNumber {
-            scorecardDelegate?.scorecardChanged(type: rowType, itemNumber: itemNumber)
-        }
-    }
 }
 
 protocol AutoCompleteDelegate {
