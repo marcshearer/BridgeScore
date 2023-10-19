@@ -175,6 +175,16 @@ public enum ScoreType {
             return ""
         }
     }
+    public var shortSuffix: String {
+        switch self {
+        case .percent:
+            return "%"
+        case .vp, .acblVp:
+            return "VPs"
+        default:
+            return ""
+        }
+    }
     
     init(importScoringType: String?) {
         switch importScoringType {

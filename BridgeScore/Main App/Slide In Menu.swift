@@ -138,7 +138,7 @@ struct SlideInMenuView : View {
                                     }
                                 }
                             }
-                            .frame(height: contentHeight)
+                            .frame(height: max(0, contentHeight))
                             .background(Palette.background.background)
                             .frame(width: values.width)
                             .cornerRadius(20)

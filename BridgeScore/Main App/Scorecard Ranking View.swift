@@ -697,7 +697,7 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
             roundCollectionView.backgroundColor = UIColor(color.background)
             roundCollectionView.reloadData()
         case .score:
-            label.text = ranking.score.toString(places: scorecard.type.matchPlaces, exact: true)
+            label.text = ranking.score.toString(places: min(1, scorecard.type.matchPlaces), exact: true)
             label.textAlignment = .right
         case .nsXImps:
             let nsXImps = ranking.xImps[.ns]

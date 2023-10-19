@@ -204,7 +204,7 @@ struct AnalysisViewer: View {
                             HStack {
                                 Spacer().frame(width: 20)
                                 let score = sitting.pair == .ns ? traveller.nsScore : scorecard.type.invertScore(score: traveller.nsScore)
-                                let places = scorecard.type.boardPlaces
+                                let places = min(1, scorecard.type.boardPlaces)
                                 Text("\(scorecard.type.boardScoreType.prefix(score: score))\(score.toString(places: places))\(scorecard.type.boardScoreType.suffix)")
                                 Spacer().frame(width: 20)
                             }
@@ -1202,7 +1202,13 @@ struct AnalysisCommentView: View {
                                 Spacer().frame(height: 4)
                                 TextEditor(text: $comment)
                                     .onChange(of: comment, initial: false) {
-                                        board.comment = comment
+                                        if comment.contains("\n") {
+                                            board.comment = comment.replacingOccurrences(of: "\n", with: "")
+                                            comment = board.comment
+                                            focused = false
+                                        } else {
+                                            board.comment = comment
+                                        }
                                         showClear = (comment != "")
                                     }
                                     .scrollContentBackground(.hidden)
@@ -1782,7 +1788,7 @@ class TravellerExtension: TravellerViewModel {
     
     func scoreString(sitting: Seat) -> String {
         let score = scorecard.type.invertScore(score: nsScore, pair: sitting.pair)
-        return "\(scorecard.type.boardScoreType.prefix(score: score))\(score.toString(places: scorecard.type.boardPlaces))"
+        return "\(scorecard.type.boardScoreType.prefix(score: score))\(score.toString(places: min(1, scorecard.type.boardPlaces)))"
     }
     
     static func sort(_ first: TravellerExtension, _ second: TravellerExtension, sitting: Seat) -> Bool {

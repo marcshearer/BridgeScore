@@ -87,7 +87,7 @@ struct HandViewer: View {
     @State var deal = Deal()
     @State var tricks: [Trick] = []
     @State var visible = Array(repeating: false, count: 4)
-    @State var animate = 0
+    @State var animationChanged = 0
     @State var showClaim = false
     
     var body: some View {
@@ -98,7 +98,7 @@ struct HandViewer: View {
                 Spacer().frame(width: 10)
                 HandViewBoardDetails(board:$board, traveller: $traveller)
                 Spacer().frame(width: 10)
-                HandViewHand(board: $board, traveller: $traveller, sitting: $sitting, player: .partner, rotated: $rotated, deal: $deal, trickNumber: $trickNumber)
+                HandViewHand(board: $board, traveller: $traveller, sitting: $sitting, player: .partner, rotated: $rotated, deal: $deal, trickNumber: $trickNumber, visible: $visible)
                 Spacer().frame(width: 10)
                 if board.doubleDummy.count != 0 || board.optimumScore != nil {
                     HandViewOptimum(board: $board, sitting: $sitting)
@@ -110,17 +110,17 @@ struct HandViewer: View {
             Spacer().frame(height: 10)
             HStack() {
                 Spacer().frame(width: 10)
-                HandViewHand(board: $board, traveller: $traveller, sitting: $sitting, player: .lhOpponent, rotated: $rotated, deal: $deal, trickNumber: $trickNumber)
+                HandViewHand(board: $board, traveller: $traveller, sitting: $sitting, player: .lhOpponent, rotated: $rotated, deal: $deal, trickNumber: $trickNumber, visible: $visible)
                 Spacer().frame(width: 10)
                 VStack(spacing: 0) {
                     if trickNumber > 0 {
-                        HandViewPlay(board: $board, traveller: $traveller, sitting: $sitting, rotated: $rotated, tricks: $tricks, trickNumber: $trickNumber, visible: $visible, animate: $animate, showClaim: $showClaim)
+                        HandViewPlay(board: $board, traveller: $traveller, sitting: $sitting, rotated: $rotated, tricks: $tricks, trickNumber: $trickNumber, visible: $visible, animationChanged: $animationChanged, showClaim: $showClaim)
                     } else {
                         HandViewPoints(board: $board, deal: $deal, sitting: $sitting, rotated: $rotated)
                     }
                 }.cornerRadius(6)
                 Spacer().frame(width: 10)
-                HandViewHand(board: $board, traveller: $traveller, sitting: $sitting, player: .rhOpponent, rotated: $rotated, deal: $deal, trickNumber: $trickNumber)
+                HandViewHand(board: $board, traveller: $traveller, sitting: $sitting, player: .rhOpponent, rotated: $rotated, deal: $deal, trickNumber: $trickNumber, visible: $visible)
                 Spacer().frame(width: 10)
             }
             Spacer().frame(height: 10)
@@ -128,7 +128,7 @@ struct HandViewer: View {
                 Spacer().frame(width: 10)
                 HandViewBidding(board: $board, traveller: $traveller, sitting: $sitting, bidAnnounce: $bidAnnounce, showClaim: $showClaim)
                 Spacer().frame(width: 10)
-                HandViewHand(board: $board, traveller: $traveller, sitting: $sitting, player: .player, rotated: $rotated, deal: $deal, trickNumber: $trickNumber)
+                HandViewHand(board: $board, traveller: $traveller, sitting: $sitting, player: .player, rotated: $rotated, deal: $deal, trickNumber: $trickNumber, visible: $visible)
                 Spacer().frame(width: 10)
                 VStack {
                     ZStack {
@@ -141,7 +141,7 @@ struct HandViewer: View {
                             }
                             Spacer()
                             if traveller.contract.level != .passout && tricks.count > 0 {
-                                HandViewPlayerBar(board: $board, traveller: $traveller, from: $from, tricks: $tricks, trickNumber: $trickNumber, visible: $visible, animate: $animate, showClaim: $showClaim, bidAnnounce: $bidAnnounce)
+                                HandViewPlayerBar(board: $board, traveller: $traveller, from: $from, tricks: $tricks, trickNumber: $trickNumber, visible: $visible, animationChanged: $animationChanged, showClaim: $showClaim, bidAnnounce: $bidAnnounce)
                                     .frame(height: 50)
                             }
                         }.overlay(RoundedRectangle(cornerRadius: 4).stroke(Palette.separator.background,  lineWidth: 2))
@@ -281,85 +281,6 @@ struct HandViewer: View {
             }
         }
     }
-        
-    struct HandViewPlayerBar: View {
-        @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
-        @Binding var board: BoardViewModel
-        @Binding var traveller: TravellerViewModel
-        @State var from: Binding<UIView>
-        @Binding var tricks: [Trick]
-        @Binding var trickNumber: Int
-        @Binding var visible: [Bool]
-        @Binding var animate: Int
-        @Binding var showClaim: Bool
-        @Binding var bidAnnounce: String
-        @State var sliderValue = 0.0
-        
-        var body: some View {
-            VStack {
-                Spacer()
-                HStack {
-                    Spacer()
-                    HandViewPlayerButton(name: "backward.frame", disabled: {trickNumber <= 0}) {
-                        bidAnnounce = ""
-                        showClaim = false
-                        for index in 0..<visible.count {
-                            visible[index] = false
-                        }
-                        trickNumber -= 1
-                        Utility.executeAfter(delay: 0.01) {
-                            animate += 1
-                        }
-                    }
-                    Spacer().frame(width: 6)
-                    Slider(value: $sliderValue, in: 0...Double(tricks.count), step: 1.0, onEditingChanged: { editing in
-                        if !editing {
-                            if trickNumber != Int(sliderValue) {
-                                trickNumber = Int(sliderValue)
-                                bidAnnounce = ""
-                                for index in 0..<visible.count {
-                                    visible[index] = false
-                                }
-                                showClaim = (trickNumber >= tricks.count || (trickNumber == tricks.count - 1 && tricks[trickNumber - 1].cards.count < 3))
-                                Utility.executeAfter(delay: 0.01) {
-                                    animate += 1
-                                }
-                            }
-                        }
-                    })
-                    Spacer().frame(width: 6)
-                    HandViewPlayerButton(name: "forward.frame", disabled: {trickNumber >= tricks.count}) {
-                        bidAnnounce = ""
-                        for index in 0..<visible.count {
-                            visible[index] = false
-                        }
-                        trickNumber += 1
-                        showClaim = (trickNumber >= tricks.count || (trickNumber == tricks.count - 1 && tricks[trickNumber - 1].cards.count < 3))
-                        Utility.executeAfter(delay: 0.01) {
-                            animate += 1
-                        }
-                    }
-                    Spacer()
-                }
-                Spacer()
-            }
-            .onChange(of: trickNumber, initial: false) {
-                sliderValue = Double(trickNumber)
-            }
-        }
-        
-        private func HandViewPlayerButton(name: String, disabled: (()->(Bool))? = { false }, action: @escaping ()->()) -> some View {
-            
-            VStack {
-                let enabled = !(disabled?() ?? false)
-                Button {
-                    action()
-                } label: {
-                    Image(systemName: name).font(.title).foregroundColor((enabled ? Palette.listButton : Palette.disabledButton).background)
-                }.disabled(!enabled)
-            }
-        }
-    }
     
     struct HandViewBoardDetails: View {
         @Binding var board: BoardViewModel
@@ -485,6 +406,7 @@ struct HandViewer: View {
         @Binding var rotated: Int
         @Binding var deal: Deal
         @Binding var trickNumber: Int
+        @Binding var visible: [Bool]
         
         var body: some View {
             ZStack {
@@ -501,7 +423,7 @@ struct HandViewer: View {
                         }
                     }
                     ForEach((Suit.realSuits).reversed(), id: \.self) { suit in
-                        HandViewSuit(board: $board, traveller: $traveller, suit: suit, deal: $deal, sitting: $sitting, rotated: $rotated, player: player, trickNumber: $trickNumber)
+                        HandViewSuit(board: $board, traveller: $traveller, suit: suit, deal: $deal, sitting: $sitting, rotated: $rotated, player: player, trickNumber: $trickNumber, visible: $visible)
                     }
                     Spacer()
                     
@@ -540,6 +462,7 @@ struct HandViewer: View {
         @Binding var rotated: Int
         @State var player: SeatPlayer
         @Binding var trickNumber: Int
+        @Binding var visible: [Bool]
         
         var body: some View {
             VStack {
@@ -549,9 +472,9 @@ struct HandViewer: View {
                     Text(suit.colorString).font(.title2).minimumScaleFactor(0.2).frame(minWidth: 24)
                     Spacer().frame(width: 1)
                     if let cards = deal.hands[sitting.seatPlayer(player).offset(by: rotated)]?.xrefSuit[suit]?.cards {
-                        if cards.reduce(false, {$0 || trickNumber < ($1.data as! Int)}) {
+                        if cards.reduce(false, {$0 || visible($1)}) {
                             ForEach(0..<cards.count, id: \.self) { index in
-                                if trickNumber < cards[index].data as! Int {
+                                if visible(cards[index]) {
                                     Text(cards[index].rankString).font(.title2).minimumScaleFactor(0.2)
                                 }
                             }
@@ -562,6 +485,10 @@ struct HandViewer: View {
                     Spacer()
                 }
             }
+        }
+        func visible(_ card: Card) -> Bool {
+            let cardTrick = card.data as! Int
+            return trickNumber < cardTrick || (trickNumber == cardTrick && !visible[player.rawValue])
         }
     }
     
@@ -785,6 +712,87 @@ struct HandViewer: View {
         }
     }
     
+    struct HandViewPlayerBar: View {
+        @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
+        @Binding var board: BoardViewModel
+        @Binding var traveller: TravellerViewModel
+        @State var from: Binding<UIView>
+        @Binding var tricks: [Trick]
+        @Binding var trickNumber: Int
+        @Binding var visible: [Bool]
+        @Binding var animationChanged: Int
+        @Binding var showClaim: Bool
+        @Binding var bidAnnounce: String
+        @State var sliderValue = 0.0
+        
+        var body: some View {
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    HandViewPlayerButton(name: "backward.frame", disabled: {trickNumber <= 0}) {
+                        bidAnnounce = ""
+                        showClaim = false
+                        set(visible: true)
+                        trickNumber -= 1
+                    }
+                    Spacer().frame(width: 6)
+                    
+                    Slider(value: $sliderValue, in: 0...Double(tricks.count), step: 1.0, onEditingChanged: { editing in
+                        if !editing {
+                            if trickNumber != Int(sliderValue) {
+                                trickNumber = Int(sliderValue)
+                                set(visible: trickNumber > 0)
+                                bidAnnounce = ""
+                                showClaim = claimIsShown
+                            }
+                        }
+                    })
+                    
+                    Spacer().frame(width: 6)
+                    HandViewPlayerButton(name: "forward.frame", disabled: {trickNumber >= tricks.count}) {
+                        bidAnnounce = ""
+                        showClaim = claimIsShown
+                        set(visible: false)
+                        trickNumber += 1
+                        Utility.mainThread {
+                            animationChanged += 1
+                        }
+                    }
+                    Spacer()
+                }
+                Spacer()
+            }
+            .onChange(of: trickNumber, initial: false) {
+                if sliderValue != Double(trickNumber) {
+                    sliderValue = Double(trickNumber)
+                }
+            }
+        }
+        
+        private var claimIsShown: Bool {
+            return (trickNumber >= tricks.count || (trickNumber == tricks.count - 1 && tricks[trickNumber].cards.count < 3))
+        }
+        
+        private func set(visible value: Bool) {
+            for index in 0..<visible.count {
+                visible[index] = value
+            }
+        }
+        
+        private func HandViewPlayerButton(name: String, disabled: (()->(Bool))? = { false }, action: @escaping ()->()) -> some View {
+            
+            VStack {
+                let enabled = !(disabled?() ?? false)
+                Button {
+                    action()
+                } label: {
+                    Image(systemName: name).font(.title).foregroundColor((enabled ? Palette.listButton : Palette.disabledButton).background)
+                }.disabled(!enabled)
+            }
+        }
+    }
+    
     struct HandViewPlay : View {
         @Binding var board: BoardViewModel
         @Binding var traveller: TravellerViewModel
@@ -793,7 +801,7 @@ struct HandViewer: View {
         @Binding var tricks: [Trick]
         @Binding var trickNumber: Int
         @Binding var visible: [Bool]
-        @Binding var animate: Int
+        @Binding var animationChanged: Int
         @Binding var showClaim: Bool
         let interval = 0.2
         let duration = 0.1
@@ -807,7 +815,7 @@ struct HandViewer: View {
                 VStack {
                     Spacer()
                     HStack(spacing: 0) {
-                        if visible[0] {
+                        if visible[SeatPlayer.partner.rawValue] {
                             let cardNumber = trick.lead.offset(to: sitting.partner.offset(by: rotated))
                             if cardNumber < trick.cards.count {
                                 HStack(spacing: 0) {
@@ -822,7 +830,7 @@ struct HandViewer: View {
                     HStack {
                         Spacer().frame(width: 10)
                         HStack(spacing: 0) {
-                            if visible[3] {
+                            if visible[SeatPlayer.lhOpponent.rawValue] {
                                 let cardNumber = trick.lead.offset(to: sitting.leftOpponent.offset(by: rotated))
                                 if cardNumber < trick.cards.count {
                                     HStack(spacing: 0) {
@@ -835,7 +843,7 @@ struct HandViewer: View {
                         }.frame(width: width, height: height)
                         Spacer()
                         HStack(spacing: 0) {
-                            if visible[1] {
+                            if visible[SeatPlayer.rhOpponent.rawValue] {
                                 let cardNumber = trick.lead.offset(to: sitting.rightOpponent.offset(by: rotated))
                                 if cardNumber < trick.cards.count {
                                     HStack(spacing: 0) {
@@ -851,7 +859,7 @@ struct HandViewer: View {
                     Spacer().frame(height: 20)
                     HStack {
                         HStack(spacing: 0) {
-                            if visible[2] {
+                            if visible[SeatPlayer.player.rawValue] {
                                 let cardNumber = trick.lead.offset(to: sitting.offset(by: rotated))
                                 if cardNumber < trick.cards.count {
                                     HStack(spacing: 0) {
@@ -865,17 +873,21 @@ struct HandViewer: View {
                     }
                     Spacer()
                 }.font(.title2).bold()
-            }.onChange(of: animate, initial: true) {
+            }
+            .onChange(of: animationChanged, initial: false) {
                 animation()
             }
         }
         
         func animation() {
-            let start = sitting.partner.offset(by: rotated).offset(to: tricks[max(0, trickNumber - 1)].lead)
-            withAnimation(.linear(duration: duration).delay(0)) {
+            let start = sitting.offset(by: rotated).offset(to: tricks[max(0, trickNumber - 1)].lead)
+            for index in 0..<visible.count {
+                visible[index] = false
+            }
+            withAnimation(.linear(duration: duration).delay(interval * 0)) {
                 visible[start % 4] = true
             }
-            withAnimation(.linear(duration: duration).delay(interval)) {
+            withAnimation(.linear(duration: duration).delay(interval * 1)) {
                 visible[(start + 1) % 4] = true
             }
             withAnimation(.linear(duration: duration).delay(interval * 2)) {

@@ -1242,11 +1242,8 @@ class AnalysisOption : Identifiable, Equatable, Hashable {
                     let type = Scorecard.current.scorecard!.type
                     places = verbose && !showVariance ? type.boardPlaces : 0
                     result = type.boardScoreType.prefix(score: score) + score.toString(places: places)
-                    suffix = type.boardScoreType.suffix
-                    if suffix.count == 1 || verbose {
-                        // Only short suffices!
-                        result += suffix
-                    }
+                    suffix = type.boardScoreType.shortSuffix
+                    result += suffix
                 } else {
                     result = "N/A"
                 }

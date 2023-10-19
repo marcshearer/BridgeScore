@@ -613,7 +613,7 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
                 label.text = ""
             } else {
                 let score = (sitting.pair == .ns ? traveller.nsScore : scorecard.type.invertScore(score: traveller.nsScore))
-                label.text = score.toString(places: scorecard.type.matchPlaces)
+                label.text = score.toString(places: min(1, min(1, scorecard.type.boardPlaces)))
             }
         case .xImps:
             let xImps = traveller.nsXImps * (sitting.pair == .ns ? 1 : -1)
