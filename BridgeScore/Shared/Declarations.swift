@@ -24,7 +24,7 @@ var bannerHeight: CGFloat { isLandscape ? (MyApp.format == .tablet ? 60.0 : 50.0
 var alternateBannerHeight: CGFloat { MyApp.format == .tablet ? 50.0 : 35.0 }
 var minimumBannerHeight: CGFloat { MyApp.format == .tablet ? 40.0 : 20.0 }
 var bannerBottom: CGFloat { (MyApp.format == .tablet ? 30.0 : (isLandscape ? 5.0 : 10.0)) }
-var slideInMenuRowHeight: CGFloat { MyApp.target == .iOS ? 50 : 25 }
+var slideInMenuRowHeight: CGFloat { MyApp.target == .iOS ? 50 : 40 }
 
 // Fonts (Font)
 var bannerFont: Font { Font.system(size: (MyApp.format == .tablet ? 32.0 : 24.0)) }

@@ -22,8 +22,9 @@ struct PickerInputSimple : View {
                 Text(title)
                 Spacer().frame(width: 5)
                 Menu {
-                    ForEach(0..<(values.count)) { (index) in
-                        Button(values[index]) {
+                    ForEach(values, id: \.self) { value in
+                        Button(value) {
+                            let index = values.firstIndex(where: {$0 == value})!
                             onChange?(index)
                             field = index
                         }

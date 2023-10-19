@@ -1920,4 +1920,3 @@ struct TrailingAttributedText: View {
         }
     }
 }
-

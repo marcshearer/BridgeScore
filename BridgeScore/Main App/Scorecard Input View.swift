@@ -164,6 +164,9 @@ struct ScorecardInputView: View {
             }
         }) {
             ImportBBOScorecard(scorecard: scorecard) {
+                if Scorecard.current.isImported {
+                    viewType = .analysis
+                }
                 saveScorecard()
             }
         }
@@ -175,6 +178,9 @@ struct ScorecardInputView: View {
             }
         }) {
             ImportBridgeWebsScorecard(scorecard: scorecard) {
+                if Scorecard.current.isImported {
+                    viewType = .analysis
+                }
                 saveScorecard()
             }
         }
@@ -186,6 +192,9 @@ struct ScorecardInputView: View {
             }
         }) {
             ImportPBNScorecard(scorecard: scorecard) {
+                if Scorecard.current.isImported {
+                    viewType = .analysis
+                }
                 saveScorecard()
             }
         }
@@ -1521,9 +1530,11 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             textClearWidth.constant = 34
             textClearPadding.forEach { (constraint) in constraint.constant = 8 }
             labelPadding.forEach { (constraint) in constraint.constant = 16 }
-            label.textAlignment = .left
-            label.textColor = UIColor(Palette.background.faintText)
-            label.text = "Enter comment"
+            if scorecardDelegate.viewType == .analysis {
+                label.textAlignment = .left
+                label.textColor = UIColor(Palette.background.faintText)
+                label.text = "Enter comment"
+            }
             if Scorecard.current.isImported && board.score == nil {
                 textView.isHidden = true
                 label.isHidden = true
@@ -1989,7 +2000,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         switch self.column.type {
         case .comment:
             board.comment = textView.text
-            if board.comment == "" {
+            if board.comment == "" && scorecardDelegate?.viewType == .analysis {
                 textView.isHidden = true
                 label.isHidden = false
                 label.isUserInteractionEnabled = true

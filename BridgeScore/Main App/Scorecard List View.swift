@@ -131,6 +131,7 @@ struct ScorecardListView: View {
             if layoutSelected {
                 self.selected.reset(from: layout)
                 Scorecard.current.load(scorecard: selected)
+                importScorecard = .none
                 linkToEdit = true
             }
         }) {

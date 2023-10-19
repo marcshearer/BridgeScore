@@ -654,7 +654,7 @@ class Analysis {
                     withMethod = .override
                     withTricks = made
                     made = useTraveller.tricksMade
-                    (shortText, verboseText) = compareValues(made, withTricks!, invert: invert, shortText: "Play", verboseText: "actual play")
+                    (shortText, verboseText) = compareValues(made, withTricks!, invert: invert, shortText: "Manual", verboseText: "manual override")
                 } else {
                     if Scorecard.current.scorecard?.type.players == 4 && boardTravellers.count == 2 {
                         if useTraveller == traveller {
@@ -1047,10 +1047,10 @@ class AnalysisAssessment : Hashable {
 }
 
 enum AnalysisOptionFormat: Int, CaseIterable, Identifiable {
-    case tricks
-    case made
-    case points
-    case score
+    case tricks = 0
+    case made = 1
+    case points = 2
+    case score = 3
     
     public var id: Self { self }
     
