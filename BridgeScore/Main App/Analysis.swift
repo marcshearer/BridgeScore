@@ -430,7 +430,8 @@ class Analysis {
         return options
     }
     
-    private func buildScores(){
+    private func buildScores() {
+        print("Building scores")
         for option in options {
             option.assessments = [:]
             var assessment: [Int:AnalysisAssessment] = [:]
@@ -1150,7 +1151,7 @@ class AnalysisOption : Identifiable, Equatable, Hashable {
         if let useMethod = parent.useMethod(suit: contract.suit, declarer: declarer) {
             switch useMethod {
             case .override:
-                return 9
+                return 6
             case .play, .other, .mode, .median:
                 return 6
             case .doubleDummy:
