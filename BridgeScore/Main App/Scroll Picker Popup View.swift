@@ -152,7 +152,7 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         backgroundView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
         let cancelSelector = #selector(ScrollPickerPopupView.cancelPressed(_:))
         let tapGesture = UITapGestureRecognizer(target: self, action: cancelSelector)
-        backgroundView.addGestureRecognizer(tapGesture)
+        backgroundView.addGestureRecognizer(tapGesture, identifier: "Scroll picker popup")
         backgroundView.isUserInteractionEnabled = true
         
         // Content
@@ -178,7 +178,7 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         clearLabel.font = titleFont.bold
         clearLabel.textAlignment = .center
         let clearTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScrollPickerPopupView.clearTapped(_:)))
-        clearLabel.addGestureRecognizer(clearTapGesture)
+        clearLabel.addGestureRecognizer(clearTapGesture, identifier: "Scroll picker popup (clear)")
         clearLabel.isUserInteractionEnabled = true
         
         contentView.isHidden = true

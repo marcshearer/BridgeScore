@@ -1388,7 +1388,6 @@ struct AnalysisSuggestionView: View {
             }
             .onChange(of: rejected, initial: false) {
                 if rejected != analysisData.analysis.rejected(phase: .bidding, otherTable: otherTable) {
-                    print("Rejected changed \(option!.contract.compact) \(rejected) \(analysisData.analysis.rejected(phase: .bidding))")
                     analysisData.analysis.set(rejected: rejected, phase: .bidding, otherTable: otherTable)
                     analysisViewerValueChange.send(.rejected)
                 }

@@ -431,7 +431,6 @@ class Analysis {
     }
     
     private func buildScores() {
-        print("Building scores")
         for option in options {
             option.assessments = [:]
             var assessment: [Int:AnalysisAssessment] = [:]

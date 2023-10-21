@@ -109,6 +109,30 @@ extension UIView {
     public func removeRoundCorners() {
         self.layer.mask = nil
     }
+    
+    func addGestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, identifier: String) {
+        self.addGestureRecognizer(gestureRecognizer)
+        gestureRecognizer.name = identifier
+    }
+    
+    func identifyGestureRecognizers(isEnabled: Bool?) -> [String] {
+        return identifyViewGestureRecognizers(view: self, isEnabled: isEnabled)
+    }
+    
+    func identifyViewGestureRecognizers(view: UIView, isEnabled: Bool?) -> [String] {
+        var results: [String] = []
+        if let gestureRecognizers = gestureRecognizers {
+            for recognizer in gestureRecognizers {
+                if isEnabled == nil || isEnabled == recognizer.isEnabled {
+                    results.append(recognizer.name ?? "Unknown")
+                }
+            }
+        }
+        for view in subviews {
+            results.append(contentsOf: view.identifyViewGestureRecognizers(view: view, isEnabled: isEnabled))
+        }
+        return results
+    }
 }
 #endif
 extension CGPoint {

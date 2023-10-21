@@ -136,17 +136,17 @@ class Constraint {
         return constraint
     }
     
-    /// Creates NS Layout Constraints in an easier way
-    /// - Parameters:
-    ///   - view: Containing view
-    ///   - control: First control (in view)
-    ///   - to: Optional second control (in view)
-    ///   - multiplier: Constraint multiplier value
-    ///   - constant: Constraint constant value
-    ///   - toAttribute: Attribute on 'to' control if different
-    ///   - priority: Constraint priority
-    ///   - attributes: list of attributes (.leading, .trailing etc)
-    /// - Returns: Array of contraints created (discardable)
+        /// Creates NS Layout Constraints in an easier way
+        /// - Parameters:
+        ///   - view: Containing view
+        ///   - control: First control (in view)
+        ///   - to: Optional second control (in view)
+        ///   - multiplier: Constraint multiplier value
+        ///   - constant: Constraint constant value
+        ///   - toAttribute: Attribute on 'to' control if different
+        ///   - priority: Constraint priority
+        ///   - attributes: list of attributes (.leading, .trailing etc)
+        /// - Returns: Array of contraints created (discardable)
     @discardableResult public static func anchor(view: UIView, control: UIView, to: UIView? = nil, multiplier: CGFloat = 1.0, constant: CGFloat = 0.0, toAttribute: ConstraintAnchor? = nil, priority: UILayoutPriority = .required, attributes: ConstraintAnchor...) -> [NSLayoutConstraint] {
         
         Constraint.anchor(view: view, control: control, to: to, multiplier: multiplier, constant: constant, toAttribute: toAttribute, priority: priority, attributes: attributes)
@@ -169,12 +169,13 @@ class Constraint {
             let sign: CGFloat = (attribute == .trailing || attribute == .bottom ? -1.0 : 1.0)
             let constraint = NSLayoutConstraint(item: control, attribute: attribute.constraint, relatedBy: .equal, toItem: to, attribute: toAttribute.constraint, multiplier: multiplier, constant: constant * sign)
             constraint.priority = priority
+            constraint.identifier = (attribute == toAttribute ? "\(attribute)" : nil)
             view.addConstraint(constraint)
             constraints.append(constraint)
         }
         return constraints
     }
-    
+        
     func layoutGuide(_ view: UIView?, anchor: ConstraintAnchor) -> Any? {
         if anchor.safe {
             return view?.safeAreaInsets
@@ -182,7 +183,7 @@ class Constraint {
             return view
         }
     }
-
+    
     @discardableResult public static func proportionalWidth(view: UIView, control: UIView, to: UIView? = nil, multiplier: CGFloat = 1.0, priority: UILayoutPriority = .required) -> NSLayoutConstraint {
         let to = to ?? view
         let constraint = NSLayoutConstraint(item: control, attribute: .width, relatedBy: .equal, toItem: to, attribute: .width, multiplier: multiplier, constant: 0.0)
@@ -190,7 +191,7 @@ class Constraint {
         view.addConstraint(constraint)
         return constraint
     }
-
+    
     @discardableResult public static func proportionalHeight(view: UIView, control: UIView, to: UIView? = nil, multiplier: CGFloat = 1.0, priority: UILayoutPriority = .required) -> NSLayoutConstraint{
         let to = to ?? view
         let constraint = NSLayoutConstraint(item: control, attribute: .height, relatedBy: .equal, toItem: to, attribute: .height, multiplier: multiplier, constant: 0.0)
@@ -218,7 +219,13 @@ class Constraint {
     }
     
     @discardableResult static internal func addGridLine(_ view: UIView, size: CGFloat = 2, color: UIColor = UIColor(Palette.gridLine), sides: ConstraintAnchor...) -> [ConstraintAnchor:NSLayoutConstraint] {
+        var views: [UIView] = []
+        return  addGridLineReturned(view, size: size, color: color, views: &views, sides: sides)
+    }
+
+    @discardableResult static internal func addGridLineReturned(_ view: UIView, size: CGFloat = 2, color: UIColor = UIColor(Palette.gridLine), views: inout [UIView], sides: [ConstraintAnchor]) -> [ConstraintAnchor:NSLayoutConstraint] {
         var sizeConstraints: [ConstraintAnchor:NSLayoutConstraint] = [:]
+        views = []
         for side in sides {
             let line = UIView()
             let anchors: [ConstraintAnchor] = [.leading, .trailing, .top, .bottom].filter{$0 != side.opposite}
@@ -229,8 +236,23 @@ class Constraint {
                 sizeConstraints[side] = Constraint.setHeight(control: line, height: size)
             }
             line.backgroundColor = color
+            views.append(line)
             view.bringSubviewToFront(line)
         }
         return sizeConstraints
+    }
+}
+
+extension NSLayoutConstraint {
+    
+    func setIndent(in view: UIView? = nil, constant newValue: CGFloat) {
+        let adjusted = (identifier == ".trailing" || identifier == ".bottom" ? -newValue : newValue)
+        if let viewWidth = view?.frame.width {
+            if adjusted <= viewWidth {
+                constant = adjusted
+            }
+        } else {
+            constant = adjusted
+        }
     }
 }

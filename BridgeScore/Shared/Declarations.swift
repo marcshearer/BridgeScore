@@ -669,7 +669,11 @@ public enum Seat: Int, EnumPickerType, ContractEnumType, Identifiable {
     public func player(sitting: Seat) -> String {
         switch self {
         case sitting:
-            return "Self"
+            if sitting == .unknown {
+                return "Unknown"
+            } else {
+                return "Self"
+            }
         case sitting.partner:
             return "Partner"
         case sitting.leftOpponent:
@@ -677,7 +681,7 @@ public enum Seat: Int, EnumPickerType, ContractEnumType, Identifiable {
         case sitting.rightOpponent:
             return "Right"
         default:
-            return self.string
+            return "Unknown"
         }
     }
 }
@@ -884,6 +888,23 @@ public enum Suit: Int, ContractEnumType, Equatable, Comparable {
         }
     }
     
+    var words: String {
+        switch self {
+        case .blank:
+            return ""
+        case .clubs:
+            return "Clubs"
+        case .diamonds:
+            return "Diamonds"
+        case .hearts:
+            return "Hearts"
+        case .spades:
+            return "Spades"
+        case .noTrumps:
+            return "No Trumps"
+        }
+    }
+    
     var colorString: AttributedString {
         return AttributedString(self.string, color: self.color)
     }
@@ -904,9 +925,9 @@ public enum Suit: Int, ContractEnumType, Equatable, Comparable {
             }
         }
     }
-    
+
     var short: String {
-        return "\(self)".left(1).uppercased()
+        return (self == .noTrumps ? "NT": "\(self)".left(1).uppercased())
     }
     
     var button: String {

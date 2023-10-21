@@ -173,7 +173,7 @@ class ScrollPickerCell: UICollectionViewCell {
         self.addSubview(background, anchored: .top, .bottom)
         leadingSpace = Constraint.anchor(view: self, control: background, attributes: .leading).first!
         trailingSpace = Constraint.anchor(view: self, control: background, attributes: .trailing).first!
-
+        
         title = UILabel(frame: frame)
         title.font = pickerTitleFont
         title.minimumScaleFactor = 0.3
@@ -188,9 +188,17 @@ class ScrollPickerCell: UICollectionViewCell {
         bottomPaddingHeight = Constraint.anchor(view: self, control: caption, constant: 0, attributes: .bottom).first!
         centerPaddingHeight = Constraint.anchor(view: self, control: caption, to: title, constant: 0, toAttribute: .bottom, attributes: .top).first!
         captionHeightConstraint = Constraint.setHeight(control: caption, height: 0)
-        
-        tapGesture = UITapGestureRecognizer(target: self, action: #selector(ScrollPickerCell.tapped(_:)))
-        background.addGestureRecognizer(tapGesture)
+    }
+    
+    func addTapGesture(tapAction: ((Int)->())?) {
+        if tapAction != nil {
+            if tapGesture == nil {
+                tapGesture = UITapGestureRecognizer(target: self, action: #selector(ScrollPickerCell.tapped(_:)))
+                background.addGestureRecognizer(tapGesture, identifier: "ScrollPicker")
+            }
+        }
+        self.tapAction = tapAction
+        tapGesture?.isEnabled = true
     }
 
     required init?(coder: NSCoder) {
@@ -227,13 +235,14 @@ class ScrollPickerCell: UICollectionViewCell {
         caption.textAlignment = .center
         captionHeightConstraint.constant = 0
         tapAction = nil
+        tapGesture?.isEnabled = false
     }
     
     public func set(titleText: String, captionText: String? = nil, tag: Int = 0, color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil, clearBackground: Bool = true, topPadding: CGFloat = 0, bottomPadding: CGFloat = 0, leadingSpace: CGFloat = 0, trailingSpace: CGFloat = 0, borderWidth: CGFloat = 0, cornerRadius: CGFloat? = nil, tapAction: ((Int)->())? = nil) {
         
         background.backgroundColor = (clearBackground ? UIColor.clear : UIColor(color?.background ?? Color.clear))
         self.tag = tag
-        self.tapAction = tapAction
+        self.addTapGesture(tapAction: tapAction)
         self.isUserInteractionEnabled = (tapAction != nil)
         background.layer.borderWidth = borderWidth
         background.layer.borderColor = UIColor(Palette.gridLine).cgColor

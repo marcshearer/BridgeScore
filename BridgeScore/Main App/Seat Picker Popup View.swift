@@ -120,7 +120,7 @@ class DeclarerPickerPopupView: UIView, UICollectionViewDataSource, UICollectionV
         backgroundView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
         let cancelSelector = #selector(DeclarerPickerPopupView.cancelTapped(_:))
         let tapGesture = UITapGestureRecognizer(target: self, action: cancelSelector)
-        backgroundView.addGestureRecognizer(tapGesture)
+        backgroundView.addGestureRecognizer(tapGesture, identifier: "Seat picker")
         backgroundView.isUserInteractionEnabled = true
         
         // Content

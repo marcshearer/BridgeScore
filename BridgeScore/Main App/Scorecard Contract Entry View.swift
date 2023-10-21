@@ -12,10 +12,11 @@ fileprivate enum ContractCollection: Int {
     case suit = 2
     case double = 3
     case declarer = 4
+    case sitting = 5
     
     var buttonWidth: CGFloat {
         switch self {
-        case .level, .suit, .double:
+        case .level, .suit, .double, .sitting:
             return MyApp.format == .phone ? 40 : 60
         case .declarer:
             return MyApp.format == .phone ? 50 : 80
@@ -44,8 +45,10 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
     private var levelCollectionView: UICollectionView!
     private var suitCollectionView: UICollectionView!
     private var doubleCollectionView: UICollectionView!
+    private var sittingCollectionView: UICollectionView!
     private var declarerCollectionView: UICollectionView!
     private var declarerLabel = UILabel()
+    private var sittingLabel = UILabel()
     private var passOutButton = UILabel()
     private var cancelButton = UILabel()
     private var clearButton = UILabel()
@@ -53,15 +56,20 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
     private var contract = Contract()
     private var canClear = false
     private var sitting: Seat!
+    private var inputSitting: Bool!
     private var declarer: Seat?
-    private var completion: ((Contract?, Seat?)->())?
+    private var completion: ((Contract?, Seat?, Seat?)->())?
     private var heightConstraint: NSLayoutConstraint!
     private var widthConstraint: NSLayoutConstraint!
+    private var declarerLabelToViewConstraint: NSLayoutConstraint!
+    private var declarerLabelToSittingConstraint: NSLayoutConstraint!
+    private var declarerCollectionTopConstraint: NSLayoutConstraint!
     private var declarerWidth: NSLayoutConstraint!
     private var declarerHeight: NSLayoutConstraint!
     private var portraitConstraints: [NSLayoutConstraint]!
     private var landscapeConstraints: [NSLayoutConstraint]!
     private var declarerList: [(seat: Seat, entry: ScrollPickerEntry)]!
+    private var seatList: [(seat: Seat, entry: ScrollPickerEntry)]!
     private var lastLandscape: Bool?
     private var contractLeadingSpaceConstraints: [NSLayoutConstraint] = []
     private var contractTopSpaceConstraints: [NSLayoutConstraint] = []
@@ -73,7 +81,6 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
     override init(frame: CGRect) {
         super.init(frame:frame)
         loadContractEntryView()
-        
     }
     
     override func layoutSubviews() {
@@ -93,12 +100,12 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         if isLandscape != lastLandscape {
             if MyApp.format != .phone {
                 backgroundView.frame = sourceView?.frame ?? CGRect()
-                heightConstraint.constant = (sitting == .unknown || isLandscape ? 450 : 700)
-                widthConstraint.constant = (sitting == .unknown || !isLandscape ? 540 : 940)
+                heightConstraint.constant = (isLandscape ? 450 : (inputSitting ? 800 : 700))
+                widthConstraint.constant = (!isLandscape ? 540 : 940)
             }
                  
-            declarerHeight.constant = (sitting == .unknown || isLandscape ? 0 : 320)
-            declarerWidth.constant = (sitting == .unknown || !isLandscape ? 0 : 400)
+            declarerHeight.constant = (isLandscape ? 0 : (inputSitting ? 420 : 320))
+            declarerWidth.constant = (!isLandscape ? 0 : 400)
             
             // Need to deactivate all constraints before activating relevant ones
             for pass in 1...2 {
@@ -129,6 +136,8 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
                 return Suit.validCases.count
             case .double:
                 return ContractDouble.allCases.count
+            case .sitting:
+                return seatList?.count ?? 0
             case .declarer:
                 return declarerList?.count ?? 0
             }
@@ -171,6 +180,16 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
                 let cell = ScorecardContractEntryCollectionCell<ContractDouble>.dequeue(collectionView, for: indexPath)
                 cell.set(value: double, selected: (double == contract.double && contract.level != .passout), font: smallCellFont, tapAction: doubleTapped)
                 return cell
+            case .sitting:
+                let seat = seatList[indexPath.row].seat
+                let cell = ScrollPickerCell.dequeue(collectionView, for: indexPath)
+                let selected = (seat == sitting)
+                let color = (selected ? Palette.contractSelected : Palette.contractUnselected)
+                let entry = seatList[indexPath.item].entry
+                cell.set(titleText: entry.title, captionText: entry.caption, tag: indexPath.item, color: color, clearBackground: false, trailingSpace: buttonSpaceX, cornerRadius: 10) { (value) in
+                    self.sittingTapped(seat: self.seatList[value].seat)
+                }
+                return cell
             case .declarer:
                 let declarer = declarerList[indexPath.row].seat
                 let cell = ScrollPickerCell.dequeue(collectionView, for: indexPath)
@@ -178,9 +197,9 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
                 let color = (selected ? Palette.contractSelected : Palette.contractUnselected)
                 let entry = declarerList[indexPath.item].entry
                 let leadingSpace = ((collection == .declarer && (indexPath.item == 0 || indexPath.item == Seat.allCases.count - 1)) ? collection.buttonWidth + buttonSpaceX : 0)
-                cell.set(titleText: entry.title, captionText: entry.caption, tag: indexPath.item, color: color, clearBackground: false, leadingSpace: leadingSpace, trailingSpace: leadingSpace + buttonSpaceX, cornerRadius: 10, tapAction: { (value) in
+                cell.set(titleText: entry.title, captionText: (sitting == .unknown ? "" : entry.caption), tag: indexPath.item, color: color, clearBackground: false, leadingSpace: leadingSpace, trailingSpace: leadingSpace + buttonSpaceX, cornerRadius: 10) { (value) in
                     self.declarerTapped(declarer: self.declarerList[value].seat)
-                })
+                }
                 return cell
             }
         } else {
@@ -231,6 +250,20 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         }
     }
     
+    private func sittingTapped(seat: Seat) {
+        if sitting != seat {
+            let offset = sitting?.offset(to: seat) ?? 0
+            sitting = seat
+            if declarer != nil {
+                declarer = declarer!.offset(by: offset)
+            }
+            updateDeclarerList()
+            sittingCollectionView.reloadData()
+            declarerCollectionView.reloadData()
+            updateButtons()
+        }
+    }
+    
     private func declarerTapped(declarer: Seat) {
         if declarer != self.declarer || contract.level == .passout {
             if contract.level == .passout {
@@ -258,27 +291,28 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
     }
     
     @objc private func cancelPressed(_ sender: UILabel) {
-        self.completion?(nil, nil)
+        self.completion?(nil, nil, nil)
         hide()
     }
     
     @objc private func selectPressed(_ sender: UILabel) {
-        self.completion?(Contract(copying: contract), declarer)
+        self.completion?(Contract(copying: contract), declarer, (!inputSitting ? nil : sitting))
         hide()
     }
     
     @objc private func clearPressed(_ sender: UILabel) {
-        self.completion?(Contract(), .unknown)
+        self.completion?(Contract(), .unknown, (!inputSitting ? nil : sitting))
         hide()
     }
     
     // MARK: - Show / Hide ============================================================================ -
     
-    public func show(from sourceView: UIView, contract: Contract, sitting: Seat, declarer: Seat, hideBackground: Bool = true, completion: @escaping (Contract?, Seat?)->()) {
+    public func show(from sourceView: UIView, contract: Contract, sitting: Seat, declarer: Seat, hideBackground: Bool = true, completion: @escaping (Contract?, Seat?, Seat?)->()) {
         self.sourceView = sourceView
         self.contract = Contract(copying: contract)
         self.canClear = contract.canClear
         self.sitting = sitting
+        self.inputSitting = (sitting == .unknown)
         self.declarer = declarer
         self.completion = completion
         self.frame = sourceView.frame
@@ -288,8 +322,21 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
             sourceView.addSubview(self)
         }
         sourceView.bringSubviewToFront(self)
-        declarerList = Scorecard.orderedDeclarerList(sitting: sitting)
-        declarerView.isHidden = (sitting == .unknown)
+        updateDeclarerList()
+        seatList = Seat.validCases.map{($0, ScrollPickerEntry(title: $0.short, caption: $0.string))}
+        if inputSitting {
+            declarerLabelToSittingConstraint.isActive = true
+            declarerLabelToViewConstraint.isActive = false
+            declarerCollectionTopConstraint.constant = 10
+            sittingLabel.isHidden = false
+            sittingCollectionView.isHidden = false
+        } else {
+            declarerLabelToSittingConstraint.isActive = false
+            declarerLabelToViewConstraint.isActive = true
+            declarerCollectionTopConstraint.constant = 70
+            sittingLabel.isHidden = true
+            sittingCollectionView.isHidden = true
+        }
         setNeedsLayout()
         layoutIfNeeded()
         layoutSubviews()
@@ -300,6 +347,10 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         doubleCollectionView.reloadData()
         declarerCollectionView.reloadData()
         updateButtons()
+    }
+    
+    func updateDeclarerList() {
+        declarerList = Scorecard.orderedDeclarerList(sitting: sitting)
     }
     
     public func hide() {
@@ -316,7 +367,8 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         suitCollectionView = UICollectionView(frame: frame, collectionViewLayout: UICollectionViewFlowLayout())
         doubleCollectionView = UICollectionView(frame: frame, collectionViewLayout: UICollectionViewFlowLayout())
         declarerCollectionView = UICollectionView(frame: frame, collectionViewLayout: UICollectionViewFlowLayout())
-
+        sittingCollectionView = UICollectionView(frame: frame, collectionViewLayout: UICollectionViewFlowLayout())
+        
         // Background
         addSubview(backgroundView)
         backgroundView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
@@ -378,8 +430,8 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         // Select button
         selectButton.accessibilityIdentifier = "select"
         loadActionButton(button: selectButton, xOffset: (actionButtonWidth + buttonSpaceX), text: "Confirm", action: #selector(ScorecardContractEntryView.selectPressed(_:)))
-        
-        // Declarer
+                
+        // Declarer view
         declarerView.accessibilityIdentifier = "declarerView"
         contentView.addSubview(declarerView, anchored: .safeTrailing)
         contentView.sendSubviewToBack(declarerView)
@@ -407,14 +459,32 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         portraitConstraints.append(contentsOf: Constraint.anchor(view: declarerView, control: declarerSeparator, constant: 10, attributes: .leading, .trailing))
         portraitConstraints.append(Constraint.setHeight(control: declarerSeparator, height: 1))
 
-        declarerView.addSubview(declarerLabel, leading: 40, top: 10)
+        // Sitting
+        declarerView.addSubview(sittingLabel, leading: 20, top: 10)
+        Constraint.setHeight(control: sittingLabel, height: actionButtonHeight)
+        sittingLabel.font = sectionTitleFont.bold
+        sittingLabel.textAlignment = .left
+        sittingLabel.textColor = UIColor(Palette.background.text)
+        sittingLabel.text = "Sitting"
+        sittingLabel.sizeToFit()
+        loadCollection(collectionView: sittingCollectionView, to: declarerView, elements: Seat.validCases.count, tag: ContractCollection.sitting.rawValue, collection: .sitting, type: Seat.unknown)
+        Constraint.anchor(view: declarerView, control: sittingCollectionView, to: sittingLabel, constant: 20, toAttribute: .trailing, attributes: .leading)
+        Constraint.anchor(view: declarerView, control: sittingCollectionView, to: sittingLabel, constant: 10, attributes: .top)
+
+        
+        // Declarer picker
+        declarerView.addSubview(declarerLabel, leading: 20)
+        declarerLabelToViewConstraint = Constraint.anchor(view: declarerView, control: declarerLabel, constant: 10, attributes: .top).first!
+        declarerLabelToViewConstraint.isActive = false
+        declarerLabelToSittingConstraint = Constraint.anchor(view: declarerView, control: declarerLabel, to: sittingCollectionView, constant: 20, toAttribute: .bottom, attributes: .top).first!
+        declarerLabelToSittingConstraint.isActive = false
         Constraint.setHeight(control: declarerLabel, height: actionButtonHeight)
-        Constraint.setWidth(control: declarerLabel, width: actionButtonWidth)
         declarerLabel.font = sectionTitleFont.bold
         declarerLabel.textAlignment = .left
         declarerLabel.textColor = UIColor(Palette.background.text)
         declarerLabel.text = "Declarer"
-        loadCollection(collectionView: declarerCollectionView, to: declarerView, elements: Seat.allCases.count, tag: ContractCollection.declarer.rawValue, across: 3, down: 3, collection: .declarer, type: Seat.unknown, anchored: .centerX, .centerY)
+        loadCollection(collectionView: declarerCollectionView, to: declarerView, yOffset: 20, from: declarerLabel, elements: Seat.allCases.count, tag: ContractCollection.declarer.rawValue, across: 3, down: 3, collection: .declarer, type: Seat.unknown, xAnchor: .centerX)
+        declarerCollectionTopConstraint = Constraint.anchor(view: declarerView, control: declarerCollectionView, to: declarerLabel, constant: 0, attributes: .top).first!
         
         // Avoid warnings
         portraitConstraints.forEach{ $0.isActive = false}
@@ -438,13 +508,15 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         button.isUserInteractionEnabled = true
     }
     
-    private func loadCollection<EnumType>(collectionView: UICollectionView, to view: UIView? = nil, xOffset: CGFloat = 0, yOffset: CGFloat = 0, additionalYOffset: CGFloat = 0, from toView: UIView? = nil, elements: Int, tag: Int, across: Int? = nil, down: Int? = nil, collection: ContractCollection, type: EnumType, anchored: ConstraintAnchor...) where EnumType: ContractEnumType {
+    private func loadCollection<EnumType>(collectionView: UICollectionView, to view: UIView? = nil, xOffset: CGFloat = 0, yOffset: CGFloat = 0, additionalYOffset: CGFloat = 0, from toView: UIView? = nil, elements: Int, tag: Int, across: Int? = nil, down: Int? = nil, collection: ContractCollection, type: EnumType, xAnchor: ConstraintAnchor? = nil) where EnumType: ContractEnumType {
         let across = across ?? elements
         let down = down ?? 1
         let view = view ?? contentView
-        if anchored.count != 0 {
-            // Declarer collection
-            view.addSubview(collectionView, anchored: anchored)
+
+        if view == declarerView {
+            // Sitting / Declarer
+            let anchors = xAnchor != nil ? [xAnchor!] : nil
+            view.addSubview(collectionView, constant: xOffset, anchored: anchors)
         } else {
             // Other collections
             view.addSubview(collectionView)
@@ -460,7 +532,7 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         collectionView.dataSource = self
         collectionView.delegate = self
         collectionView.backgroundColor = UIColor.clear
-        if collection == .declarer {
+        if collection == .declarer || collection == .sitting {
             ScrollPickerCell.register(collectionView)
         } else {
             ScorecardContractEntryCollectionCell.register(collectionView, type: type)
