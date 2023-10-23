@@ -74,6 +74,7 @@ class AnalysisData : ObservableObject, Identifiable {
 }
 
 struct AnalysisViewer: View {
+    @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     let scorecard = Scorecard.current.scorecard!
     @State var board: BoardViewModel
     @State var traveller: TravellerViewModel
@@ -89,16 +90,24 @@ struct AnalysisViewer: View {
     @State var stopEdit = false
     @State var formatInt: Int
     @State var responsiblePicker = false
+    @State var frame: CGRect
+    @State var initialYOffset: CGFloat
+    @State var yOffset: CGFloat
+    @Binding var dismissView: Bool
     
-    init(board: BoardViewModel, traveller: TravellerViewModel, sitting: Seat, from: UIView) {
+    init(board: BoardViewModel, traveller: TravellerViewModel, sitting: Seat, frame: CGRect, initialYOffset: CGFloat, dismissView: Binding<Bool>, from: UIView) {
         self._analysisData = StateObject(wrappedValue: AnalysisData(analysis: Scorecard.current.analysis(board: board, traveller: traveller, sitting: sitting), otherAnalysis: nil))
-        self.board = board
-        self.traveller = traveller
-        self.handTraveller = traveller
-        self.initialSitting = sitting
-        self.sitting = sitting
-        self.from = from
+        _board = State(initialValue: board)
+        _traveller = State(initialValue: traveller)
+        _handTraveller = State(initialValue: traveller)
+        _initialSitting = State(initialValue: sitting)
+        _sitting = State(initialValue: sitting)
+        _frame = State(initialValue: frame)
+        _from = State(initialValue: from)
+        _yOffset = State(initialValue: initialYOffset)
+        _initialYOffset = State(initialValue: initialYOffset)
         _formatInt = State(initialValue: UserDefault.analysisOptionFormat.int)
+        _dismissView = dismissView
     }
 
     var body: some View {
@@ -106,12 +115,12 @@ struct AnalysisViewer: View {
             HStack {
                 Spacer().layoutPriority(999)
                 VStack {
-                    AnalysisBanner(nextTraveller: nextTraveller, updateOptions: updateAnalysisData, board: $board, traveller: $traveller, handTraveller: $handTraveller, sitting: $sitting, rotated: $rotated, initialSitting: $initialSitting, bidAnnounce: $bidAnnounce, summaryMode: $summaryMode, stopEdit: $stopEdit, responsiblePicker: $responsiblePicker)
+                    AnalysisBanner(nextTraveller: nextTraveller, updateOptions: updateAnalysisData, board: $board, traveller: $traveller, handTraveller: $handTraveller, sitting: $sitting, rotated: $rotated, initialSitting: $initialSitting, bidAnnounce: $bidAnnounce, summaryMode: $summaryMode, stopEdit: $stopEdit, responsiblePicker: $responsiblePicker, dismissView: $dismissView)
                     GeometryReader { bodyGeometry in
                         VStack(spacing: 0) {
                             HStack(spacing: 0) {
                                 Spacer().frame(width: 8)
-                                let handWidth = bodyGeometry.size.height * 0.7
+                                let handWidth = bodyGeometry.size.height * 0.8
                                 HandViewer(board: $board, traveller: $handTraveller, sitting: $sitting, rotated: $rotated, from: from, bidAnnounce: $bidAnnounce, stopEdit: $stopEdit)
                                     .cornerRadius(analysisCornerSize)
                                     .ignoresSafeArea(.keyboard)
@@ -143,12 +152,19 @@ struct AnalysisViewer: View {
                 }
                 .background(Palette.windowBackground.background)
                 .cornerRadius(10)
-                .frame(width: 1134)
+                .frame(width: frame.width)
                 .onTapGesture {
                     stopEdit = true
                 }
                 Spacer().layoutPriority(999)
             }
+            .offset(x: frame.minX, y: yOffset)
+            .onAppear {
+                withAnimation(.linear(duration: 0.25)) {
+                    yOffset = frame.minY
+                }
+            }
+            .frame(width: frame.width, height: frame.height)
             .onChange(of: board.board, initial: true) {
                 updateAnalysisData()
             }
@@ -157,6 +173,17 @@ struct AnalysisViewer: View {
             }
             .onReceive(analysisViewerValueChange) { (source) in
                 updateAnalysisData()
+            }
+            .onChange(of: dismissView) {
+                if dismissView == true {
+                    dismissView = false
+                    withAnimation(.linear(duration: 0.25)) {
+                        yOffset = initialYOffset
+                    }
+                    Utility.executeAfter(delay: 0.25) {
+                        presentationMode.wrappedValue.dismiss()
+                    }
+                }
             }
         }
     }
@@ -177,6 +204,7 @@ struct AnalysisViewer: View {
         @Binding var stopEdit: Bool
         @Binding var responsiblePicker: Bool
         @State var keyboardAdjust: CGFloat = 0
+        @Binding var dismissView: Bool
         
         var body : some View {
             VStack {
@@ -236,7 +264,7 @@ struct AnalysisViewer: View {
                                 .opacity(0.7)
                             }
                             Spacer().frame(width: 50)
-                            ButtonBar(nextTraveller: nextTraveller, otherTable: otherTable, save: save, board: $board, traveller: $handTraveller, sitting: $sitting, initialSitting: initialSitting, bidAnnounce: $bidAnnounce, summaryMode: $summaryMode)
+                            ButtonBar(nextTraveller: nextTraveller, otherTable: otherTable, save: save, board: $board, traveller: $handTraveller, sitting: $sitting, initialSitting: initialSitting, bidAnnounce: $bidAnnounce, summaryMode: $summaryMode, dismissView: $dismissView)
                             Spacer().frame(width: 20)
                         }.font(bannerFont).foregroundColor(Palette.banner.text)
                         Spacer()
@@ -456,6 +484,7 @@ struct AnalysisViewer: View {
         @State var initialSitting: Seat
         @Binding var bidAnnounce: String
         @Binding var summaryMode: Bool
+        @Binding var dismissView: Bool
         
         var body: some View {
             let boards = Scorecard.current.boards.count
@@ -487,7 +516,7 @@ struct AnalysisViewer: View {
                 Spacer().frame(width: 20)
                 Button {
                     save()
-                    presentationMode.wrappedValue.dismiss()
+                    dismissView = true
                 } label: {
                     Image(systemName: "xmark")
                 }

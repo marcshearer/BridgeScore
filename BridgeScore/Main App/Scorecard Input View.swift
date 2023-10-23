@@ -137,6 +137,7 @@ struct ScorecardInputView: View {
     @State private var handSitting = Seat.unknown
     @State private var handView: UIView!
     @State private var analysisViewer = false
+    @State private var dismissView = false
     
     init(scorecard: ScorecardViewModel, importScorecard: ImportSource = .none) {
         _scorecard = ObservedObject(initialValue: scorecard)
@@ -227,24 +228,33 @@ struct ScorecardInputView: View {
             UndoManager.clearActions()
             disableBanner = false
             tableRefresh = true
-        }) {
+        }, content: {
             if let handBoard = handBoard {
                 if let handTraveller = handTraveller {
                     ZStack{
                         Color.black.opacity(0.4)
-                        AnalysisViewer(board: handBoard, traveller: handTraveller, sitting: handSitting, from: handView)
-                            .frame(width: UIScreen.main.bounds.width - 60, height: UIScreen.main.bounds.size.height - 40 )
+                        let backgroundView = UIView(frame: handView.superview!.superview!.frame)
+                        let width = min(1134, backgroundView.frame.width) // Allow for safe area
+                        let height = min(794, (backgroundView.frame.height))
+                        let frame = CGRect(x: (backgroundView.frame.width - width) / 2,
+                                           y: ((backgroundView.frame.height - height) / 2),
+                                           width: width,
+                                           height: height)
+                        AnalysisViewer(board: handBoard, traveller: handTraveller, sitting: handSitting, frame: frame, initialYOffset: backgroundView.frame.height + 100, dismissView: $dismissView, from: handView)
                             .cornerRadius(8)
                         Spacer()
                     }
-                    .background(BackgroundBlurView(opacity: 0.3))
+                    .background(BackgroundBlurView(opacity: 0.0))
                     .edgesIgnoringSafeArea(.all)
                     .presentationDetents([.height(800)])
                     .onTapGesture {
-                        analysisViewer = false
+                        dismissView = true
                     }
                 }
             }
+        })
+        .transaction { transaction in
+            transaction.disablesAnimations = true
         }
         .onAppear {
             Scorecard.updateScores(scorecard: scorecard)
@@ -348,7 +358,9 @@ struct BackgroundBlurView: UIViewRepresentable {
     func updateUIView(_ uiView: UIView, context: Context) {}
 }
 
-struct ScorecardInputUIViewWrapper: UIViewRepresentable {
+struct ScorecardInputUIViewWrapper: UIViewControllerRepresentable {
+    typealias UIViewControllerType = ScorecardInputUIViewController
+    
     @ObservedObject var  scorecard: ScorecardViewModel
     @State var frame: CGRect
     @Binding var refreshTableTotals: Bool
@@ -364,37 +376,39 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
     @Binding var handSitting: Seat
     @Binding var handView: UIView?
     @Binding var analysisViewer: Bool
-
-    func makeUIView(context: Context) -> ScorecardInputUIView {
+    
+    func makeUIViewController(context: Context) -> ScorecardInputUIViewController {
         
-        let inputView = ScorecardInputUIView(frame: frame, scorecard: scorecard, inputDetail: inputDetail, disableBanner: $disableBanner, handViewer: $handViewer, handBoard: $handBoard, handTraveller: $handTraveller, handSitting: $handSitting, handView: $handView, analysisViewer: $analysisViewer)
+        let inputViewController = ScorecardInputUIViewController(frame: frame, scorecard: scorecard, inputDetail: inputDetail, disableBanner: $disableBanner, handViewer: $handViewer, handBoard: $handBoard, handTraveller: $handTraveller, handSitting: $handSitting, handView: $handView, analysisViewer: $analysisViewer)
         UndoManager.clearActions()
-       
-        return inputView
+        
+        return inputViewController
     }
-
-    func updateUIView(_ uiView: ScorecardInputUIView, context: Context) {
+    
+    func updateUIViewController(_ uiViewController: ScorecardInputUIViewController, context: Context) {
         
-        uiView.inputDetail = inputDetail
+        uiViewController.inputDetail = inputDetail
         
-        if refreshTableTotals {
-            uiView.refreshTableTotals()
-            refreshTableTotals = false
-        }
-        
-        if tableRefresh {
-            uiView.tableRefresh()
-        }
-        
-        if showRankings {
-            uiView.showRankings()
-        }
-        
-        uiView.change(viewType: viewType)
-        
-        if uiView.hideRejected != hideRejected {
-            uiView.hideRejected = hideRejected
-            uiView.tableRefresh()
+        if let uiView = uiViewController.view as? ScorecardInputUIView {
+            if refreshTableTotals {
+                uiView.refreshTableTotals()
+                refreshTableTotals = false
+            }
+            
+            if tableRefresh {
+                uiView.tableRefresh()
+            }
+            
+            if showRankings {
+                uiView.showRankings()
+            }
+            
+            uiView.change(viewType: viewType)
+            
+            if uiView.hideRejected != hideRejected {
+                uiView.hideRejected = hideRejected
+                uiView.tableRefresh()
+            }
         }
     }
     
@@ -444,6 +458,47 @@ fileprivate var titleRowHeight: CGFloat { MyApp.format == .phone ? (isLandscape 
 fileprivate var boardRowHeight: CGFloat { MyApp.format == .phone ? (isLandscape ? 50 : 70) : 90 }
 fileprivate var tableRowHeight: CGFloat { MyApp.format == .phone ? (isLandscape ? 60 : 60) : 80 }
 
+class ScorecardInputUIViewController: UIViewController {
+    private var scorecard: ScorecardViewModel!
+    private var titleView: ScorecardInputTableTitleView!
+    public var inputDetail = false
+    private var disableBanner: Binding<Bool>
+    public var handViewer: Binding<Bool>
+    public var handBoard: Binding<BoardViewModel?>
+    public var handTraveller: Binding<TravellerViewModel?>
+    public var handSitting: Binding<Seat>
+    public var handView: Binding<UIView?>
+    public var analysisViewer: Binding<Bool>
+    private var frame: CGRect!
+    private var uiView: ScorecardInputUIView?
+    
+    init(frame: CGRect, scorecard: ScorecardViewModel, inputDetail: Bool, disableBanner: Binding<Bool>, handViewer: Binding<Bool>, handBoard: Binding<BoardViewModel?>, handTraveller: Binding<TravellerViewModel?>, handSitting: Binding<Seat>, handView: Binding<UIView?>, analysisViewer: Binding<Bool>) {
+        self.frame = frame
+        self.scorecard = scorecard
+        self.inputDetail = inputDetail
+        self.disableBanner = disableBanner
+        self.handViewer = handViewer
+        self.handBoard = handBoard
+        self.handTraveller = handTraveller
+        self.handSitting = handSitting
+        self.handView = handView
+        self.analysisViewer = analysisViewer
+        self.uiView = nil
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    override func loadView() {
+        view = ScorecardInputUIView(viewController: self, frame: frame, scorecard: scorecard, inputDetail: inputDetail, disableBanner: disableBanner, handViewer: handViewer, handBoard: handBoard, handTraveller: handTraveller, handSitting: handSitting, handView: handView, analysisViewer: analysisViewer)
+    }
+    
+    let x = UIViewController()
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+}
+
+
 class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, UITableViewDelegate, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, UIScrollViewDelegate {
     
     private var scorecard: ScorecardViewModel
@@ -464,7 +519,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     private var disableBanner: Binding<Bool>
     public var handViewer: Binding<Bool>
     public var handBoard: Binding<BoardViewModel?>
-    public var handTravelller: Binding<TravellerViewModel?>
+    public var handTraveller: Binding<TravellerViewModel?>
     public var handSitting: Binding<Seat>
     public var handView: Binding<UIView?>
     public var analysisViewer: Binding<Bool>
@@ -473,18 +528,21 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     private var orientation: UIDeviceOrientation?
     internal var analysisCommentBoardNumber: Int?
     internal var inputControlInset: CGFloat = 0
+    private var viewController: UIViewController!
+    private var maskBackgroundView: UIView!
     
     var boardColumns: [ScorecardColumn] = []
     var boardAnalysisCommentColumns: [ScorecardColumn] = []
     var tableColumns: [ScorecardColumn] = []
     
-    init(frame: CGRect, scorecard: ScorecardViewModel, inputDetail: Bool, disableBanner: Binding<Bool>, handViewer: Binding<Bool>, handBoard: Binding<BoardViewModel?>, handTraveller: Binding<TravellerViewModel?>, handSitting: Binding<Seat>, handView: Binding<UIView?>, analysisViewer: Binding<Bool>) {
+    init(viewController: UIViewController, frame: CGRect, scorecard: ScorecardViewModel, inputDetail: Bool, disableBanner: Binding<Bool>, handViewer: Binding<Bool>, handBoard: Binding<BoardViewModel?>, handTraveller: Binding<TravellerViewModel?>, handSitting: Binding<Seat>, handView: Binding<UIView?>, analysisViewer: Binding<Bool>) {
+        self.viewController = viewController
         self.scorecard = scorecard
         self.inputDetail = inputDetail
         self.disableBanner = disableBanner
         self.handViewer = handViewer
         self.handBoard = handBoard
-        self.handTravelller = handTraveller
+        self.handTraveller = handTraveller
         self.handSitting = handSitting
         self.handView = handView
         self.analysisViewer = analysisViewer
@@ -517,7 +575,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         
         // Setup auto-complete view
         self.addSubview(autoComplete)
-        
+                
         subscription = Publishers.keyboardHeight.sink { (keyboardHeight) in
             self.keyboardMoved(keyboardHeight)
         }
@@ -634,6 +692,19 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         rankings.show(from: superview!.superview!, frame: self.superview!.superview!.frame) {
             self.disableBanner.wrappedValue = false
         }
+    }
+    
+    public func showMaskBackground() {
+        if maskBackgroundView == nil {
+            maskBackgroundView = UIView(frame: superview!.superview!.frame)
+            maskBackgroundView?.backgroundColor = UIColor(Palette.maskBackground)
+            superview!.superview!.addSubview(maskBackgroundView, anchored: .all)
+        }
+        maskBackgroundView.isHidden = false
+    }
+    
+    public func hidMaskBackground() {
+        maskBackgroundView.isHidden = true
     }
     
     // MARK: - Scorecard delegates
@@ -826,7 +897,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
             if let (board, traveller, _) = Scorecard.getBoardTraveller(boardNumber: board.board) {
                 disableBanner.wrappedValue = true
                 handBoard.wrappedValue = board
-                handTravelller.wrappedValue = traveller
+                handTraveller.wrappedValue = traveller
                 handSitting.wrappedValue = sitting
                 handView.wrappedValue = self
                 if viewType == .analysis {
@@ -2560,6 +2631,14 @@ extension Array where Element == ScorecardColumn {
             result.append(element.copy)
         }
         return result
+    }
+    
+}
+
+class AnalysisViewController: UIHostingController<AnalysisViewer>, UIAdaptivePresentationControllerDelegate {
+    
+    public func adaptivePresentationStyle(for controller: UIPresentationController, traitCollection: UITraitCollection) -> UIModalPresentationStyle {
+        return .overFullScreen
     }
     
 }
