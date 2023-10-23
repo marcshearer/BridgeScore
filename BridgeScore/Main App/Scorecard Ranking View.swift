@@ -277,8 +277,9 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
     
     // MARK: - Show / Hide ============================================================================ -
     
-    public func show(from sourceView: UIView, completion: (()->())? = nil) {
+    public func show(from sourceView: UIView, frame: CGRect, completion: (()->())? = nil) {
         self.sourceView = sourceView
+        self.frame = frame
         self.completion = completion
         sourceView.addSubview(self)
         sourceView.bringSubviewToFront(self)
@@ -287,16 +288,21 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         setNeedsLayout()
         layoutIfNeeded()
         layoutSubviews()
+        
         contentView.isHidden = false
+        contentView.frame = contentView.frame.offsetBy(dy: self.frame.height + 100)
+        Utility.animate(parent: self, duration: 0.25, layout: true) { [self] in
+            contentView.frame = contentView.frame.offsetBy(dy: -(self.frame.height + 100))
+        }
     }
     
     private func setFrames() {
-        if backgroundView.frame != UIScreen.main.bounds || orientation != UIDevice.current.orientation {
-            backgroundView.frame = UIScreen.main.bounds
+        if backgroundView.frame != self.frame || orientation != UIDevice.current.orientation {
+            backgroundView.frame = self.frame
             frame = backgroundView.frame
-            let width = backgroundView.frame.width * 0.90
+            let width = min(1000, backgroundView.frame.width * 0.90)
             let padding = bannerHeight + safeAreaInsets.top + safeAreaInsets.bottom
-            let height = (backgroundView.frame.height - padding) * 0.95
+            let height = min(750,(backgroundView.frame.height - padding) * 0.95)
             contentView.frame = CGRect(x: backgroundView.frame.midX - (width / 2), y: ((bannerHeight + safeAreaInsets.top) / 2) + backgroundView.frame.midY - (height / 2), width: width, height: height)
             orientation = UIDevice.current.orientation
             setNeedsLayout()
@@ -305,7 +311,13 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
     
     public func hide() {
         self.completion?()
-        removeFromSuperview()
+        backgroundView.backgroundColor = .clear
+        Utility.animate(parent: self, duration: 0.25, layout: true, completion: { [self] in
+            contentView.frame = contentView.frame.offsetBy(dy: -(self.frame.height + 100))
+            removeFromSuperview()
+        }, animations: { [self] in
+            contentView.frame = contentView.frame.offsetBy(dy: self.frame.height + 100)
+        })
     }
     
   // MARK: - View Setup ======================================================================== -

@@ -72,14 +72,17 @@ enum ThemeBackgroundColorName: CaseIterable {
     case clear
     case nearlyClear
     case banner
+    case windowBanner
     case bannerInput
     case bannerButton
     case bannerShadow
+    case windowBannerShadow
     case alternateBanner
     case alternateBannerButton
     case destructiveButton
     case background
     case alternate
+    case windowBackground
     case tile
     case contrastTile
     case highlightTile
@@ -373,14 +376,17 @@ class Themes {
             background: [
                 .clear                       : ThemeColor(#colorLiteral(red: 0, green: 0, blue: 0, alpha: 0), nil, .lightBackground, .darkBackground),
                 .banner                      : ThemeColor(#colorLiteral(red: 0, green: 0.5152708056, blue: 0.7039544028, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1),  .midInverseBackground, .darkBackground),
+                .windowBanner                : ThemeColor(#colorLiteral(red: 0, green: 0.5882352941, blue: 0.8039215686, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1),  .midInverseBackground, .darkBackground),
                 .bannerInput                 : ThemeColor(#colorLiteral(red: 0.2352941176, green: 0.7490196078, blue: 1, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1),  .lightBackground, .darkBackground),
                 .bannerShadow                : ThemeColor(#colorLiteral(red: 0, green: 0.5529411765, blue: 0.7647058824, alpha: 1), nil, .lightBackground),
+                .windowBannerShadow          : ThemeColor(#colorLiteral(red: 0, green: 0.5152708056, blue: 0.7039544028, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1),  .midInverseBackground, .darkBackground),
                 .bannerButton                : ThemeColor(#colorLiteral(red: 0.8374180198, green: 0.8374378085, blue: 0.8374271393, alpha: 1), nil, .lightBackground),
                 .alternateBanner             : ThemeColor(#colorLiteral(red: 0.8784313725, green: 0.8784313725, blue: 0.8784313725, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1), .midBackground, .darkBackground),
                 .alternateBannerButton       : ThemeColor(#colorLiteral(red: 0, green: 0.5152708056, blue: 0.7039544028, alpha: 1), #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1), .darkBackground, .darkBackground),
                 .destructiveButton           : ThemeColor(#colorLiteral(red: 0.9981788993, green: 0.2295429707, blue: 0.1891850233, alpha: 1), nil, .darkBackground),
                 .background                  : ThemeColor(#colorLiteral(red: 0.999904573, green: 1, blue: 0.9998808503, alpha: 1), #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1), .lightBackground, .darkBackground),
                 .alternate                   : ThemeColor(#colorLiteral(red: 0.8784313725, green: 0.8784313725, blue: 0.8784313725, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1), .midBackground, .darkBackground),
+                .windowBackground            : ThemeColor(#colorLiteral(red: 0.3686274886, green: 0.3686274886, blue: 0.3686274886, alpha: 1), #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1), .lightBackground, .darkBackground),
                 .contrastTile                : ThemeColor(#colorLiteral(red: 0, green: 0.5690457821, blue: 0.5746168494, alpha: 1), #colorLiteral(red: 0.4756349325, green: 0.4756467342, blue: 0.4756404161, alpha: 1), .darkBackground, .darkBackground),
                 .tile                        : ThemeColor(#colorLiteral(red: 0.5, green: 0.8086761682, blue: 0.8080882377, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1), .midBackground, .darkBackground),
                 .highlightTile               : ThemeColor(#colorLiteral(red: 0.9981788993, green: 0.2295429707, blue: 0.1891850233, alpha: 1), nil, .midBackground, .darkBackground),

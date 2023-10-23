@@ -12,6 +12,8 @@ class Palette {
     
     @BackgroundColor(.clear) static var clear
     @BackgroundColor(.banner) static var banner
+    @BackgroundColor(.windowBanner) static var windowBanner
+    @BackgroundColor(.windowBannerShadow) static var windowBannerShadow
     @BackgroundColor(.bannerInput) static var bannerInput
     @BackgroundColor(.bannerButton) static var bannerButton
     @BackgroundColor(.bannerShadow) static var bannerShadow
@@ -20,6 +22,7 @@ class Palette {
     @BackgroundColor(.destructiveButton) static var destructiveButton
     @BackgroundColor(.background) static var background
     @BackgroundColor(.alternate) static var alternate
+    @BackgroundColor(.windowBackground) static var windowBackground
     @BackgroundColor(.tile) static var tile
     @BackgroundColor(.contrastTile) static var contrastTile
     @BackgroundColor(.highlightTile) static var highlightTile

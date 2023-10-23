@@ -213,10 +213,10 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
     
     // MARK: - Show / Hide ============================================================================ -
     
-    public func show(from sourceView: ScorecardInputUIView, boardNumber: Int, sitting: Seat, completion: (()->())? = nil) {
+    public func show(from sourceView: ScorecardInputUIView, frame: CGRect, boardNumber: Int, sitting: Seat, completion: (()->())? = nil) {
         self.sourceView = sourceView
         self.completion = completion
-        self.frame = sourceView.frame
+        self.frame = frame
         self.boardNumber = boardNumber
         self.sitting = sitting
         sourceView.superview!.superview!.addSubview(self)
@@ -224,26 +224,37 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
         self.bringSubviewToFront(contentView)
         setFrames()
         setupValues()
-        contentView.isHidden = false
         setNeedsLayout()
         layoutIfNeeded()
         layoutSubviews()
+        
+        contentView.isHidden = false
+        contentView.frame = contentView.frame.offsetBy(dy: self.frame.height + 100)
+        Utility.animate(parent: self, duration: 0.25, layout: true) { [self] in
+            contentView.frame = contentView.frame.offsetBy(dy: -(self.frame.height + 100))
+        }
     }
     
     private func setFrames() {
-        if backgroundView.frame != UIScreen.main.bounds {
-            backgroundView.frame = UIScreen.main.bounds
+        if backgroundView.frame != self.frame {
+            backgroundView.frame = self.frame
             self.frame = backgroundView.frame
-            let width = backgroundView.frame.width * (MyApp.format == .phone && isLandscape ? 0.90 : 0.95) // Allow for safe area
+            let width = min(1000, backgroundView.frame.width * (MyApp.format == .phone && isLandscape ? 0.90 : 0.95)) // Allow for safe area
             let padding = bannerHeight + safeAreaInsets.top + safeAreaInsets.bottom
-            let height = (backgroundView.frame.height - padding) * 0.95
+            let height = min(750, (backgroundView.frame.height - padding) * 0.95)
             contentView.frame = CGRect(x: backgroundView.frame.midX - (width / 2), y: ((bannerHeight + safeAreaInsets.top) / 2) + backgroundView.frame.midY - (height / 2), width: width, height: height)
         }
     }
     
     public func hide() {
         self.completion?()
-        removeFromSuperview()
+        backgroundView.backgroundColor = .clear
+        Utility.animate(parent: self, duration: 0.25, layout: true, completion: { [self] in
+            contentView.frame = contentView.frame.offsetBy(dy: -(self.frame.height + 100))
+            removeFromSuperview()
+        }, animations: { [self] in
+            contentView.frame = contentView.frame.offsetBy(dy: self.frame.height + 100)
+        })
     }
     
   // MARK: - View Setup ======================================================================== -

@@ -240,6 +240,9 @@ struct ScorecardInputView: View {
                     .background(BackgroundBlurView(opacity: 0.3))
                     .edgesIgnoringSafeArea(.all)
                     .presentationDetents([.height(800)])
+                    .onTapGesture {
+                        analysisViewer = false
+                    }
                 }
             }
         }
@@ -628,7 +631,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     
     public func showRankings() {
         let rankings = ScorecardRankingView(frame: CGRect())
-        rankings.show(from: superview!.superview!) {
+        rankings.show(from: superview!.superview!, frame: self.superview!.superview!.frame) {
             self.disableBanner.wrappedValue = false
         }
     }
@@ -812,7 +815,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         if !Scorecard.current.travellerList.isEmpty {
             let showTraverllerView = ScorecardTravellerView(frame: CGRect())
             disableBanner.wrappedValue = true
-            showTraverllerView.show(from: self, boardNumber: board.board, sitting: sitting) {
+            showTraverllerView.show(from: self, frame: self.superview!.superview!.frame, boardNumber: board.board, sitting: sitting) {
                 self.disableBanner.wrappedValue = false
             }
         }
