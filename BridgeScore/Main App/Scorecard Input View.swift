@@ -9,7 +9,7 @@ import UIKit
 import SwiftUI
 import Combine
 
-class ScorecardColumn: Codable, Equatable {
+public class ScorecardColumn: Codable, Equatable {
     var type: ColumnType
     var heading: String
     var size: ColumnSize
@@ -17,16 +17,21 @@ class ScorecardColumn: Codable, Equatable {
     var omit: Bool
     var width: CGFloat?
     
-    init(type: ColumnType, heading: String, size: ColumnSize, phoneSize: ColumnSize? = nil, omit: Bool = false) {
+    init(type: ColumnType, heading: String, size: ColumnSize, phoneSize: ColumnSize? = nil, omit: Bool = false, width: CGFloat? = nil) {
         self.type = type
         self.heading = heading
         self.size = size
         self.phoneSize = phoneSize ?? size
         self.omit = omit
+        self.width = width
     }
     
-    static func == (lhs: ScorecardColumn, rhs: ScorecardColumn) -> Bool {
-        return lhs.type == rhs.type && lhs.heading == rhs.heading && lhs.size == rhs.size && lhs.phoneSize == rhs.phoneSize && lhs.width == rhs.width
+    public static func == (lhs: ScorecardColumn, rhs: ScorecardColumn) -> Bool {
+        return lhs.type == rhs.type && lhs.heading == rhs.heading && lhs.size == rhs.size && lhs.phoneSize == rhs.phoneSize && lhs.omit == rhs.omit && lhs.width == rhs.width
+    }
+    
+    var copy: ScorecardColumn {
+        ScorecardColumn(type: type, heading: heading, size: size, phoneSize: phoneSize, omit: omit, width: width)
     }
 }
 
@@ -230,9 +235,11 @@ struct ScorecardInputView: View {
                         AnalysisViewer(board: handBoard, traveller: handTraveller, sitting: handSitting, from: handView)
                             .frame(width: UIScreen.main.bounds.width - 60, height: UIScreen.main.bounds.size.height - 40 )
                             .cornerRadius(8)
+                        Spacer()
                     }
-                    .background(BackgroundBlurView())
+                    .background(BackgroundBlurView(opacity: 0.3))
                     .edgesIgnoringSafeArea(.all)
+                    .presentationDetents([.height(800)])
                 }
             }
         }
@@ -325,11 +332,12 @@ struct ScorecardInputView: View {
 }
 
 struct BackgroundBlurView: UIViewRepresentable {
+    @State var opacity: CGFloat = 0.2
     
     func makeUIView(context: Context) -> UIView {
-        let view = UIVisualEffectView(effect: UIBlurEffect(style: .light))
+        let view = UIVisualEffectView()
         DispatchQueue.main.async {
-            view.superview?.superview?.backgroundColor = .black.withAlphaComponent(0.4)
+            view.superview?.superview?.backgroundColor = .black.withAlphaComponent(opacity)
         }
         return view
     }
@@ -383,7 +391,7 @@ struct ScorecardInputUIViewWrapper: UIViewRepresentable {
         
         if uiView.hideRejected != hideRejected {
             uiView.hideRejected = hideRejected
-            uiView.scorecardMainTableView.reloadData()
+            uiView.tableRefresh()
         }
     }
     
@@ -518,16 +526,15 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     
     override func layoutSubviews() {
         super.layoutSubviews()
-        let oldBoardColumns = boardColumns
-        let oldBoardAnalysisCommentColumns = boardAnalysisCommentColumns
-        let oldTableColumns = tableColumns
+        let oldBoardColumns = boardColumns.copy
+        let oldBoardAnalysisCommentColumns = boardAnalysisCommentColumns.copy
+        let oldTableColumns = tableColumns.copy
         setupSizes(columns: &boardColumns)
         setupSizes(columns: &boardAnalysisCommentColumns)
         setupSizes(columns: &tableColumns)
         titleHeightConstraint.constant = titleRowHeight
         if boardColumns != oldBoardColumns || boardAnalysisCommentColumns != oldBoardAnalysisCommentColumns || tableColumns != oldTableColumns || orientation != UIDevice.current.orientation || forceReload {
-            mainTableView.reloadData()
-            titleView.collectionView.reloadData()
+            tableRefresh()
             orientation = UIDevice.current.orientation
             forceReload = false
         }
@@ -540,6 +547,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     }
     
     public func tableRefresh() {
+        titleView.collectionView.reloadData()
         mainTableView.reloadData()
     }
     
@@ -902,8 +910,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         if let oldBoardNumber = oldBoardNumber {
             // Close up previously selected row
             if oldBoardNumber == -1 {
-                mainTableView.reloadData()
-                titleView.collectionView.reloadData()
+                tableRefresh()
             } else {
                 let oldSection = (oldBoardNumber - 1) / scorecard.boardsTable
                 let oldRow = (oldBoardNumber - 1) % scorecard.boardsTable
@@ -913,8 +920,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         if let newBoardNumber = self.analysisCommentBoardNumber {
             // Open up new selected row(s)
             if newBoardNumber == -1 {
-                mainTableView.reloadData()
-                titleView.collectionView.reloadData()
+                tableRefresh()
             } else {
                 let section = (newBoardNumber - 1) / scorecard.boardsTable
                 let row = (newBoardNumber - 1) % scorecard.boardsTable
@@ -1772,16 +1778,13 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             bottomLabel.isUserInteractionEnabled = true
             bottomLabelTapGesture.isEnabled = true
         } else {
+            label.isUserInteractionEnabled = true
             set(tap: .label)
         }
         if let (_, traveller, _) = Scorecard.getBoardTraveller(boardNumber: board.board, equivalentSeat: otherTable) {
             let analysis = Scorecard.current.analysis(board: board, traveller: traveller, sitting: sitting)
             let summary = analysis.summary(phase: phase, otherTable: otherTable, verbose: true)
-            if summary.status == .rejected && scorecardDelegate?.hideRejected ?? true {
-                analysisView.prepareForReuse()
-            } else {
-                analysisView.set(board: board, summary: summary, viewTapped: showHand)
-            }
+            analysisView.set(board: board, summary: summary, viewTapped: showHand)
         } else {
             analysisView.prepareForReuse()
         }
@@ -2544,4 +2547,16 @@ class AutoCompleteCell: UITableViewCell {
         desc.font = cellFont
         descWidth.constant = (description == "" ? 0 : self.frame.width / 2)
     }
+}
+
+extension Array where Element == ScorecardColumn {
+    
+    public var copy: [ScorecardColumn] {
+        var result: [ScorecardColumn] = []
+        self.forEach { element in
+            result.append(element.copy)
+        }
+        return result
+    }
+    
 }

@@ -100,50 +100,59 @@ struct AnalysisViewer: View {
         self.from = from
         _formatInt = State(initialValue: UserDefault.analysisOptionFormat.int)
     }
-    
+
     var body: some View {
-        HStack {
-            VStack {
-                Spacer().frame(height: 15)
-                AnalysisBanner(nextTraveller: nextTraveller, updateOptions: updateAnalysisData, board: $board, traveller: $traveller, handTraveller: $handTraveller, sitting: $sitting, rotated: $rotated, initialSitting: $initialSitting, bidAnnounce: $bidAnnounce, summaryMode: $summaryMode, stopEdit: $stopEdit, responsiblePicker: $responsiblePicker)
+        GeometryReader { viewGeometry in
+            HStack {
+                Spacer().layoutPriority(999)
                 VStack {
-                    Spacer().frame(height: 8)
-                    HStack {
-                        HandViewer(board: $board, traveller: $handTraveller, sitting: $sitting, rotated: $rotated, from: from, bidAnnounce: $bidAnnounce, stopEdit: $stopEdit)
-                            .cornerRadius(analysisCornerSize)
-                            .ignoresSafeArea(.keyboard)
-                        Spacer().frame(width: 10)
+                    AnalysisBanner(nextTraveller: nextTraveller, updateOptions: updateAnalysisData, board: $board, traveller: $traveller, handTraveller: $handTraveller, sitting: $sitting, rotated: $rotated, initialSitting: $initialSitting, bidAnnounce: $bidAnnounce, summaryMode: $summaryMode, stopEdit: $stopEdit, responsiblePicker: $responsiblePicker)
+                    GeometryReader { bodyGeometry in
                         VStack {
-                            AnalysisWrapper(label: "Summary", height: 88, teamsHeight: 149, stopEdit: $stopEdit) {
-                                AnalysisSummary(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData)
-                            }
-                            AnalysisWrapper(label: "Tricks Made", height: 130, stopEdit: $stopEdit) {
-                                AnalysisCombinationTricks(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData)
-                            }
-                            AnalysisWrapper(label: "Suggest", height: 70, teamsHeight: 90, stopEdit: $stopEdit) {
-                                AnalysisSuggestionView(board: $board, traveller: $traveller, sitting: $sitting, formatInt: $formatInt, analysisData: analysisData)
-                            }
-                            AnalysisWrapper(label: "Bidding Options", height: 150, stopEdit: $stopEdit) {
-                                AnalysisBiddingOptions(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData, formatInt: $formatInt)
-                            }
-                            AnalysisWrapper(label: "Travellers", stopEdit: $stopEdit) {
-                                AnalysisTravellerView(board: $board, traveller: $handTraveller, sitting: $sitting, summaryMode: $summaryMode, stopEdit: $stopEdit)
+                            Spacer().frame(height: 8)
+                            HStack(spacing: 0) {
+                                let handWidth = bodyGeometry.size.height * 0.7
+                                HandViewer(board: $board, traveller: $handTraveller, sitting: $sitting, rotated: $rotated, from: from, bidAnnounce: $bidAnnounce, stopEdit: $stopEdit)
+                                    .cornerRadius(analysisCornerSize)
+                                    .ignoresSafeArea(.keyboard)
+                                    .frame(width: handWidth)
+                                Spacer().frame(width: 10)
+                                VStack {
+                                    AnalysisWrapper(label: "Summary", height: 88, teamsHeight: 149, stopEdit: $stopEdit) {
+                                        AnalysisSummary(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData)
+                                    }
+                                    AnalysisWrapper(label: "Tricks Made", height: 130, stopEdit: $stopEdit) {
+                                        AnalysisCombinationTricks(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData)
+                                    }
+                                    AnalysisWrapper(label: "Suggest", height: 70, teamsHeight: 90, stopEdit: $stopEdit) {
+                                        AnalysisSuggestionView(board: $board, traveller: $traveller, sitting: $sitting, formatInt: $formatInt, analysisData: analysisData)
+                                    }
+                                    AnalysisWrapper(label: "Bidding Options", height: 150, stopEdit: $stopEdit) {
+                                        AnalysisBiddingOptions(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData, formatInt: $formatInt)
+                                    }
+                                    AnalysisWrapper(label: "Travellers", stopEdit: $stopEdit) {
+                                        AnalysisTravellerView(board: $board, traveller: $handTraveller, sitting: $sitting, summaryMode: $summaryMode, stopEdit: $stopEdit)
+                                    }
+                                }
+                                .frame(width: bodyGeometry.size.width - 18.5 - handWidth)
                             }
                         }
                     }
                 }
-                Spacer().frame(height: 10)
+                .background(BackgroundBlurView(opacity: 0.4))
+                .cornerRadius(analysisCornerSize)
+                .frame(width: 1134)
+                Spacer().layoutPriority(999)
             }
-        }
-        .background(.clear)
-        .onChange(of: board.board, initial: true) {
-            updateAnalysisData()
-        }
-        .onSwipe() { direction in
-            nextTraveller(direction == .left ? 1 : -1)
-        }
-        .onReceive(analysisViewerValueChange) { (source) in
-            updateAnalysisData()
+            .onChange(of: board.board, initial: true) {
+                updateAnalysisData()
+            }
+            .onSwipe() { direction in
+                nextTraveller(direction == .left ? 1 : -1)
+            }
+            .onReceive(analysisViewerValueChange) { (source) in
+                updateAnalysisData()
+            }
         }
     }
     
@@ -524,13 +533,11 @@ struct AnalysisWrapper <Content> : View where Content : View {
                                                           topTrailing: 0),
                                        style: .continuous)
                 .foregroundColor(Palette.background.background)
-                .frame(width: 500)
                 .if(height != nil) { view in
                     view.frame(height: height)
                 }
                 
                 content()
-                    .frame(width: 500)
                     .if(height != nil) { view in
                         view.frame(height: height!)
                     }

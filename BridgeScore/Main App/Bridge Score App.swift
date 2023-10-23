@@ -37,6 +37,15 @@ struct MyScene: Scene {
                 .onAppear() {
                     MyApp.format = (min(geometry.size.width, geometry.size.height) < 600 ? .phone : .tablet)
                 }
+                .onReceive(NotificationCenter.default.publisher(for: UIScene.willConnectNotification)) { _ in
+                    #if targetEnvironment(macCatalyst)
+                        // prevent window in macOS from being resized down
+                        UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.forEach { windowScene in
+                            windowScene.sizeRestrictions?.minimumSize = CGSize(width: 1150, height: 880)
+                            windowScene.sizeRestrictions?.allowsFullScreen = false
+                        }
+                    #endif
+                }
             }
         }
         .onChange(of: scenePhase, initial: false) { (_, phase) in
@@ -57,9 +66,16 @@ struct MyScene: Scene {
 class AppDelegate: UIResponder, UIApplicationDelegate {
         
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
-                
+        
         return true
     }
+    
+    func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
+        
+        let sceneConfig = UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)
+        sceneConfig.delegateClass = MySceneDelegate.self
+        return sceneConfig
+      }
     
     override func buildMenu(with builder: UIMenuBuilder) {
         super.buildMenu(with: builder)
@@ -70,4 +86,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             builder.remove(menu: .view)
         }
     }
+}
+
+class MySceneDelegate: NSObject, UIWindowSceneDelegate {
+    
+    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
+        
+    }
+    
 }
