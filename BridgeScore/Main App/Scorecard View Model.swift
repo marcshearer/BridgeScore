@@ -128,7 +128,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     
     public func reset(from: LayoutViewModel? = nil) {
         self.scorecardId = UUID()
-        let layout = from ?? MasterData.shared.layouts.first!
+        let layout = from ?? MasterData.shared.layouts.first ?? LayoutViewModel()
         self.desc = layout.scorecardDesc
         self.location = layout.location
         self.partner = layout.partner

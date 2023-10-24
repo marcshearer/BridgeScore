@@ -89,6 +89,8 @@
 		B2A2053927B01D0000C83C88 /* Location Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053827B01D0000C83C88 /* Location Setup View.swift */; };
 		B2A2053B27B108C700C83C88 /* Input Integer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053A27B108C700C83C88 /* Input Integer.swift */; };
 		B2A2053D27B13F2F00C83C88 /* Keyboard Adaptive.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053C27B13F2F00C83C88 /* Keyboard Adaptive.swift */; };
+		B2A4282C2AE78D10000A97AA /* Database Utilties.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A4282B2AE78D10000A97AA /* Database Utilties.swift */; };
+		B2A4282E2AE790BB000A97AA /* iCloud.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A4282D2AE790BB000A97AA /* iCloud.swift */; };
 		B2A5A42627E2582F00754061 /* BBO Name Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A5A42527E2582F00754061 /* BBO Name Managed Object.swift */; };
 		B2A5A42827E3090300754061 /* BBO Name View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A5A42727E3090300754061 /* BBO Name View Model.swift */; };
 		B2A918932ADABF0B00761B66 /* Analysis Summary View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A918922ADABF0B00761B66 /* Analysis Summary View.swift */; };
@@ -208,6 +210,8 @@
 		B2A2053827B01D0000C83C88 /* Location Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Location Setup View.swift"; sourceTree = "<group>"; };
 		B2A2053A27B108C700C83C88 /* Input Integer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Input Integer.swift"; sourceTree = "<group>"; };
 		B2A2053C27B13F2F00C83C88 /* Keyboard Adaptive.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Keyboard Adaptive.swift"; sourceTree = "<group>"; };
+		B2A4282B2AE78D10000A97AA /* Database Utilties.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Database Utilties.swift"; sourceTree = "<group>"; };
+		B2A4282D2AE790BB000A97AA /* iCloud.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = iCloud.swift; sourceTree = "<group>"; };
 		B2A5A42427E2420800754061 /* BridgeScore.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = BridgeScore.entitlements; sourceTree = "<group>"; };
 		B2A5A42527E2582F00754061 /* BBO Name Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BBO Name Managed Object.swift"; sourceTree = "<group>"; };
 		B2A5A42727E3090300754061 /* BBO Name View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BBO Name View Model.swift"; sourceTree = "<group>"; };
@@ -388,6 +392,7 @@
 				B2C4338F27B7B59700796F24 /* Custom View Animations.swift */,
 				B2100D9727DA449D00CC0130 /* Graph View Class.swift */,
 				B24BC3A227F42EEA00576D50 /* Flags.swift */,
+				B2A4282D2AE790BB000A97AA /* iCloud.swift */,
 			);
 			name = Libraries;
 			sourceTree = "<group>";
@@ -428,6 +433,7 @@
 			isa = PBXGroup;
 			children = (
 				B204175727CE58CD00A3EFA8 /* Debug Utilities.swift */,
+				B2A4282B2AE78D10000A97AA /* Database Utilties.swift */,
 			);
 			name = Utilities;
 			sourceTree = "<group>";
@@ -678,6 +684,7 @@
 				B2633A0E27AC3A460081B258 /* Layout List View.swift in Sources */,
 				B2A2053727AFC41500C83C88 /* Toolbar View.swift in Sources */,
 				B213998C27D8AA830098E4A4 /* Seat Picker Popup View.swift in Sources */,
+				B2A4282E2AE790BB000A97AA /* iCloud.swift in Sources */,
 				B26BCE76279BEBA500B73501 /* Scorecard Managed Object.swift in Sources */,
 				B26BCE662799AED700B73501 /* Banner.swift in Sources */,
 				B203F96A27F30BD900DA748A /* Scorecard Web View.swift in Sources */,
@@ -706,6 +713,7 @@
 				B2CC509927BE21060050F22C /* Scroll Picker.swift in Sources */,
 				B2EB3D7B279DCBCB00D64225 /* Default Data.swift in Sources */,
 				B256D42927ECB15700F47322 /* BBO Name Replace View.swift in Sources */,
+				B2A4282C2AE78D10000A97AA /* Database Utilties.swift in Sources */,
 				B26BCE302799AB6700B73501 /* MyApp.swift in Sources */,
 				B26C555927C8BCBC00015D0A /* Scroll Picker Popup View.swift in Sources */,
 				B26BCE362799AD1700B73501 /* Config.swift in Sources */,

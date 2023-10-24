@@ -26,7 +26,9 @@ struct PlayerSetupView: View {
             .undoManager(canUndo: $canUndo, canRedo: $canRedo)
         }
         .onAppear {
-            selected.copy(from: MasterData.shared.players.first!)
+            if let player = MasterData.shared.players.first {
+                selected.copy(from: player)
+            }
         }
         .onDisappear {
             save(player: selected)

@@ -245,7 +245,7 @@ class StatsGraphUIView: UIView, GraphDetailDelegate {
         addSubview(errorLabel, anchored: .centerX, .centerY)
         Constraint.setWidth(control: errorLabel, width: 500)
         Constraint.setHeight(control: errorLabel, height: 50)
-        errorLabel.font = UIFont.systemFont(ofSize: (MyApp.format == .tablet ? 40.0 : 20.0))
+        errorLabel.font = UIFont.systemFont(ofSize: (MyApp.format != .phone ? 40.0 : 20.0))
         errorLabel.backgroundColor = UIColor.clear
         errorLabel.textColor = UIColor(Palette.background.faintText)
         errorLabel.textAlignment = .center

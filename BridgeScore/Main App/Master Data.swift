@@ -23,6 +23,8 @@ class MasterData: ObservableObject {
         /// **Builds in-memory mirror of layouts, scorecards, players and locations with pointers to managed objects**
         /// Note that this infers that there will only ever be 1 instance of the app accessing the database
     
+        let createDefaultData = false
+        
         // Read current data
         let layoutMOs = CoreData.fetch(from: LayoutMO.tableName, sort: (key: #keyPath(LayoutMO.sequence16), direction: .ascending)) as! [LayoutMO]
         let playerMOs = CoreData.fetch(from: PlayerMO.tableName, sort: (key: #keyPath(PlayerMO.sequence16), direction: .ascending)) as! [PlayerMO]
@@ -35,7 +37,7 @@ class MasterData: ObservableObject {
         for playerMO in playerMOs {
             players.append(PlayerViewModel(playerMO: playerMO))
         }
-        if players.count == 0 {
+        if players.count == 0 && createDefaultData {
             // No players - create defaults
             for player in DefaultData.players {
                 self.insert(player: player)
@@ -47,7 +49,7 @@ class MasterData: ObservableObject {
         for locationMO in locationMOs {
             locations.append(LocationViewModel(locationMO: locationMO))
         }
-        if locations.count == 0 {
+        if locations.count == 0 && createDefaultData {
             // No locations - create defaults
             for location in DefaultData.locations {
                 self.insert(location: location)
@@ -59,7 +61,7 @@ class MasterData: ObservableObject {
         for layoutMO in layoutMOs {
             self.layouts.append(LayoutViewModel(layoutMO: layoutMO))
         }
-        if layouts.count == 0 {
+        if layouts.count == 0 && createDefaultData {
             // No layouts - create defaults
             let layouts = DefaultData.layouts(players: players, locations: locations)
             for layout in layouts {

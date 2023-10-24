@@ -33,6 +33,23 @@ class MyApp {
         }
     }
     
+    public static let cloudContainer = CKContainer.init(identifier: iCloudIdentifier)
+    public static let publicDatabase = cloudContainer.publicCloudDatabase
+    public static let privateDatabase = cloudContainer.privateCloudDatabase
+    
+    static let databaseTables: [NSEntityDescription] = [
+        ScorecardMO.entity(),
+        BoardMO.entity(),
+        TableMO.entity(),
+        LayoutMO.entity(),
+        PlayerMO.entity(),
+        LocationMO.entity(),
+        RankingMO.entity(),
+        TravellerMO.entity(),
+        BBONameMO.entity(),
+        OverrideMO.entity(),
+        DoubleDummyMO.entity()]
+    
     static let shared = MyApp()
     
     static let defaults = UserDefaults(suiteName: appGroup)!
@@ -61,10 +78,11 @@ class MyApp {
         Version.current.load()
         // Remove comment (CAREFULLY) if you want to clear the iCloud DB
         // DatabaseUtilities.initialiseAllCloud() {
-            // Remove (CAREFULLY) if you want to clear the Core Data DB
-            //DatabaseUtilities.initialiseAllCoreData()
-            self.setupDatabase()
-            // self.setupPreviewData()
+        // Remove (CAREFULLY) if you want to clear the Core Data DB
+        // And always set a trap on this line
+        // DatabaseUtilities.initialiseAllCoreData()
+        self.setupDatabase()
+        // self.setupPreviewData()
         //}
               
         #if canImport(UIKit)

@@ -14,6 +14,8 @@ Maybe remove file sharing in Info.plist once can backup from Mac
 Check imports if no network
 Archive imported files
 Need more resilience in import and pass error message back up the stack
+Allow sharing of a scorecard with another player
+Allow import for a different player
 
 Enhancements
 ============

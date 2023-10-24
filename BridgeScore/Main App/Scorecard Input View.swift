@@ -1858,7 +1858,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         if let (_, traveller, _) = Scorecard.getBoardTraveller(boardNumber: board.board, equivalentSeat: otherTable) {
             let analysis = Scorecard.current.analysis(board: board, traveller: traveller, sitting: sitting)
             let summary = analysis.summary(phase: phase, otherTable: otherTable, verbose: true)
-            analysisView.set(board: board, summary: summary, viewTapped: showHand)
+            analysisView.set(board: board, summary: summary, hideRejected: scorecardDelegate?.hideRejected ?? true, viewTapped: showHand)
         } else {
             analysisView.prepareForReuse()
         }

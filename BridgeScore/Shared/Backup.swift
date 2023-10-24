@@ -32,33 +32,17 @@ class Backup {
         _ = (try! fileManager.createDirectory(at: thisBackupUrl, withIntermediateDirectories: true))
         _ = (try! fileManager.createDirectory(at: assetsBackupUrl, withIntermediateDirectories: true))
 
-        Backup.shared.backup(ScorecardMO.entity())
-        Backup.shared.backup(BoardMO.entity())
-        Backup.shared.backup(TableMO.entity())
-        Backup.shared.backup(LayoutMO.entity())
-        Backup.shared.backup(PlayerMO.entity())
-        Backup.shared.backup(LocationMO.entity())
-        Backup.shared.backup(RankingMO.entity())
-        Backup.shared.backup(TravellerMO.entity())
-        Backup.shared.backup(BBONameMO.entity())
-        Backup.shared.backup(OverrideMO.entity())
-        Backup.shared.backup(DoubleDummyMO.entity())
+        for entity in MyApp.databaseTables {
+            Backup.shared.backup(entity)
+        }
     }
     
     public func restore(dateString: String) {
         let thisBackupUrl = databaseBackupsUrl.appendingPathComponent(dateString)
-        
-        Backup.shared.restore(ScorecardMO.entity(), directory: thisBackupUrl)
-        Backup.shared.restore(BoardMO.entity(), directory: thisBackupUrl)
-        Backup.shared.restore(TableMO.entity(), directory: thisBackupUrl)
-        Backup.shared.restore(LayoutMO.entity(), directory: thisBackupUrl)
-        Backup.shared.restore(PlayerMO.entity(), directory: thisBackupUrl)
-        Backup.shared.restore(RankingMO.entity(), directory: thisBackupUrl)
-        Backup.shared.restore(TravellerMO.entity(), directory: thisBackupUrl)
-        Backup.shared.restore(LocationMO.entity(), directory: thisBackupUrl)
-        Backup.shared.restore(BBONameMO.entity(), directory: thisBackupUrl)
-        Backup.shared.restore(OverrideMO.entity(), directory: thisBackupUrl)
-        Backup.shared.restore(DoubleDummyMO.entity(), directory: thisBackupUrl)
+
+        for entity in MyApp.databaseTables {
+            Backup.shared.restore(entity, directory: thisBackupUrl)
+        }
         MasterData.shared.load()
     }
     
@@ -109,20 +93,29 @@ class Backup {
         let fileContents = try! Data(contentsOf: fileURL, options: [])
         let fileDictionary = try! JSONSerialization.jsonObject(with: fileContents, options: []) as! [String:Any?]
         let contents = fileDictionary[groupName] as! [[String:Any?]]
+        let tableKeys = entity.propertiesByName.keys
+        var ignoredKeys: [String:Int] = [:]
         
         for record in contents {
             let keys = record[elementName] as! [String:Any]
             
             let record = NSManagedObject(entity: entity, insertInto: CoreData.context)
             for (keyName, _) in keys {
-                if let actualValue = self.value(forKey: keyName, keys: keys, assetsDirectory: assetsDirectory) {
-                    record.setValue(actualValue, forKey: keyName)
+                if tableKeys.contains(keyName) {
+                    if let actualValue = self.value(forKey: keyName, keys: keys, assetsDirectory: assetsDirectory) {
+                        record.setValue(actualValue, forKey: keyName)
+                    } else {
+                        fatalError("Error in \(recordType) - Invalid key value for \(keyName)")
+                    }
                 } else {
-                    fatalError("Error in \(recordType) - Invalid key value for \(keyName)")
+                    ignoredKeys[keyName] = (ignoredKeys[keyName] ?? 0) + 1
                 }
             }
         }
         try! CoreData.context.save()
+        for (keyName, count) in ignoredKeys {
+            print("Missing attribute \(keyName) in table \(recordType) ignored \(count) times")
+        }
     }
     
     private func initialise(recordType: String) {

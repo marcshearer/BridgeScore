@@ -143,8 +143,7 @@ struct AnalysisViewer: View {
                                         AnalysisTravellerView(board: $board, traveller: $handTraveller, sitting: $sitting, summaryMode: $summaryMode, stopEdit: $stopEdit)
                                     }
                                 }
-                                .frame(width: bodyGeometry.size.width - (MyApp.target == .macOS ? 24 : 32) - handWidth)
-                                // Have to vary this as rotation behaves differently on 2 platforms
+                                .frame(width: bodyGeometry.size.width - 24 - handWidth)
                             }
                             Spacer().frame(height: 8)
                         }
@@ -160,7 +159,7 @@ struct AnalysisViewer: View {
             }
             .offset(x: frame.minX, y: yOffset)
             .onAppear {
-                withAnimation(.linear(duration: 0.25)) {
+                withAnimation(.linear(duration: 0.25).delay(0.1)) {
                     yOffset = frame.minY
                 }
             }
@@ -180,7 +179,7 @@ struct AnalysisViewer: View {
                     withAnimation(.linear(duration: 0.25)) {
                         yOffset = initialYOffset
                     }
-                    Utility.executeAfter(delay: 0.25) {
+                    Utility.executeAfter(delay: 0.1) {
                         presentationMode.wrappedValue.dismiss()
                     }
                 }
