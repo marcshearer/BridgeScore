@@ -7,6 +7,29 @@
 import SwiftUI
 
 struct InputFloat : View {
+    var title: String?
+    @Binding var field: Float?
+    var message: Binding<String>?
+    var topSpace: CGFloat = 0
+    var leadingSpace: CGFloat = 0
+    var height: CGFloat = 40
+    var width: CGFloat?
+    var places: Int = 2
+    var maxCharacters: Int
+    var inlineTitle: Bool = true
+    var inlineTitleWidth: CGFloat = 150
+    var onChange: ((Float?)->())?
+
+    var body : some View {
+        #if targetEnvironment(macCatalyst)
+        InputNumberMac(title: title, field: $field, message: message, topSpace: topSpace, leadingSpace: leadingSpace, height: height, width: width, places: places, negative: true, maxCharacters: maxCharacters, inlineTitle: inlineTitle, inlineTitleWidth: inlineTitleWidth, onChange: onChange)
+        #else
+        InputFloatIOS(title: title, field: $field, message: message, topSpace: topSpace, leadingSpace: leadingSpace, height: height, width: width, places: places, inlineTitle: inlineTitle, inlineTitleWidth: inlineTitleWidth, onChange: onChange)
+        #endif
+    }
+}
+
+struct InputFloatIOS : View {
     
     var title: String?
     @Binding var field: Float?

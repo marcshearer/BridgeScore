@@ -27,6 +27,7 @@ struct PickerInput : View {
     var animation: ViewAnimation = .slideLeft
     var inlineTitle: Bool = true
     var inlineTitleWidth: CGFloat = 150
+    var disabled: Bool = false
     var onChange: ((Int?)->())?
     
     var body: some View {
@@ -55,6 +56,7 @@ struct PickerInputAdditional<Additional>: View where Additional: Equatable  {
     var animation: ViewAnimation = .slideLeft
     var inlineTitle: Bool = true
     var inlineTitleWidth: CGFloat = 150
+    var disabled: Bool = false
     var additionalBinding: Binding<Additional>? = nil
     var setAdditional: ((Binding<Additional>?, Additional)->())? = nil
     var onChange: ((Int?)->())?

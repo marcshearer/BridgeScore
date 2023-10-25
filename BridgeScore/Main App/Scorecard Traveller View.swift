@@ -129,7 +129,6 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
             sourceView.handBoard.wrappedValue = board
             sourceView.handTraveller.wrappedValue = traveller
             sourceView.handSitting.wrappedValue = sitting
-            sourceView.handView.wrappedValue = self
             sourceView.handViewer.wrappedValue = true
         }
     }

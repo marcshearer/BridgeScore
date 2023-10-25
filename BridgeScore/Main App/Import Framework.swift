@@ -30,6 +30,19 @@ public enum ImportSource: Int, Equatable, CaseIterable {
             return "Import PBN file"
         }
     }
+    
+    var from: String {
+        switch self {
+        case .none:
+            return ""
+        case .bbo:
+            return "BBO"
+        case .bridgeWebs:
+            return "BridgeWebs"
+        case .pbn:
+            return "PBN file"
+        }
+    }
 }
 
 enum ImportFormat {

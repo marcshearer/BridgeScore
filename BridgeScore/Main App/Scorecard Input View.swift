@@ -135,7 +135,7 @@ struct ScorecardInputView: View {
     @State private var handBoard: BoardViewModel? = nil
     @State private var handTraveller: TravellerViewModel? = nil
     @State private var handSitting = Seat.unknown
-    @State private var handView: UIView!
+    @State private var uiView: UIView!
     @State private var analysisViewer = false
     @State private var dismissView = false
     
@@ -155,14 +155,17 @@ struct ScorecardInputView: View {
                 Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .both, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: nil, menuId: id, options: bannerOptions(isNotImported: $isNotImported), disabled: $disableBanner)
                     .disabled(disableBanner)
                 GeometryReader { geometry in
-                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), refreshTableTotals: $refreshTableTotals, viewType: $viewType, hideRejected: $hideRejected, inputDetail: $inputDetail, tableRefresh: $tableRefresh, showRankings: $showRankings, disableBanner: $disableBanner, handViewer: $handViewer, handBoard: $handBoard, handTraveller: $handTraveller, handSitting: $handSitting, handView: $handView, analysisViewer: $analysisViewer)
+                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), refreshTableTotals: $refreshTableTotals, viewType: $viewType, hideRejected: $hideRejected, inputDetail: $inputDetail, tableRefresh: $tableRefresh, showRankings: $showRankings, disableBanner: $disableBanner, handViewer: $handViewer, handBoard: $handBoard, handTraveller: $handTraveller, handSitting: $handSitting, uiView: $uiView, analysisViewer: $analysisViewer)
                         .ignoresSafeArea(edges: .all)
                 }
             }.undoManager(canUndo: $canUndo, canRedo: $canRedo)
         }
+        .onChange(of: uiView) {
+            // Seem to need this to trigger refresh
+        }
         .onChange(of: tableRefresh, initial: false) { tableRefresh = false}
         .onChange(of: showRankings, initial: false) { showRankings = false}
-        .sheet(isPresented: $inputDetail, onDismiss: {
+        .fullScreenCover(isPresented: $inputDetail, onDismiss: {
             UndoManager.clearActions()
             if deleted {
                 presentationMode.wrappedValue.dismiss()
@@ -170,7 +173,24 @@ struct ScorecardInputView: View {
                 refreshTableTotals = true
             }
         }) {
-            ScorecardDetailView(scorecard: scorecard, deleted: $deleted, tableRefresh: $tableRefresh, title: "Details")
+            ZStack {
+                let title = "Details" + (Scorecard.current.isImported ? " - Imported from \(Scorecard.current.scorecard!.importSource.from)" : "")
+                let backgroundView = UIView(frame: uiView.superview!.superview!.frame)
+                let width = min(704, backgroundView.frame.width) // Allow for safe area
+                let height = min(784, (backgroundView.frame.height))
+                let frame = CGRect(x: (backgroundView.frame.width - width) / 2,
+                                   y: ((backgroundView.frame.height - height) / 2),
+                                   width: width,
+                                   height: height)
+                
+                Color.black.opacity(0.4)
+                ScorecardDetailView(scorecard: scorecard, deleted: $deleted, tableRefresh: $tableRefresh, title: title, frame: frame, initialYOffset: backgroundView.frame.height + 100, dismissView: $dismissView)
+                    .cornerRadius(8)
+                    .debugPrint("\(backgroundView.frame)")
+                Spacer()
+            }
+            .background(BackgroundBlurView(opacity: 0.0))
+            .edgesIgnoringSafeArea(.all)
         }
         .sheet(isPresented: $importBboScorecard, onDismiss: {
             UndoManager.clearActions()
@@ -220,7 +240,7 @@ struct ScorecardInputView: View {
         }) {
             if let handBoard = handBoard {
                 if let handTraveller = handTraveller {
-                    HandViewerForm(board: handBoard, traveller: handTraveller, sitting: handSitting, from: handView)
+                    HandViewerForm(board: handBoard, traveller: handTraveller, sitting: handSitting, from: uiView)
                 }
             }
         }
@@ -233,20 +253,19 @@ struct ScorecardInputView: View {
                 if let handTraveller = handTraveller {
                     ZStack{
                         Color.black.opacity(0.4)
-                        let backgroundView = UIView(frame: handView.superview!.superview!.frame)
+                        let backgroundView = UIView(frame: uiView.superview!.superview!.frame)
                         let width = min(1134, backgroundView.frame.width) // Allow for safe area
                         let height = min(794, (backgroundView.frame.height))
                         let frame = CGRect(x: (backgroundView.frame.width - width) / 2,
                                            y: ((backgroundView.frame.height - height) / 2),
                                            width: width,
                                            height: height)
-                        AnalysisViewer(board: handBoard, traveller: handTraveller, sitting: handSitting, frame: frame, initialYOffset: backgroundView.frame.height + 100, dismissView: $dismissView, from: handView)
+                        AnalysisViewer(board: handBoard, traveller: handTraveller, sitting: handSitting, frame: frame, initialYOffset: backgroundView.frame.height + 100, dismissView: $dismissView, from: uiView)
                             .cornerRadius(8)
                         Spacer()
                     }
                     .background(BackgroundBlurView(opacity: 0.0))
                     .edgesIgnoringSafeArea(.all)
-                    .presentationDetents([.height(800)])
                     .onTapGesture {
                         dismissView = true
                     }
@@ -374,13 +393,14 @@ struct ScorecardInputUIViewWrapper: UIViewControllerRepresentable {
     @Binding var handBoard: BoardViewModel?
     @Binding var handTraveller: TravellerViewModel?
     @Binding var handSitting: Seat
-    @Binding var handView: UIView?
+    @Binding var uiView: UIView?
     @Binding var analysisViewer: Bool
     
     func makeUIViewController(context: Context) -> ScorecardInputUIViewController {
         
-        let inputViewController = ScorecardInputUIViewController(frame: frame, scorecard: scorecard, inputDetail: inputDetail, disableBanner: $disableBanner, handViewer: $handViewer, handBoard: $handBoard, handTraveller: $handTraveller, handSitting: $handSitting, handView: $handView, analysisViewer: $analysisViewer)
+        let inputViewController = ScorecardInputUIViewController(frame: frame, scorecard: scorecard, inputDetail: inputDetail, disableBanner: $disableBanner, handViewer: $handViewer, handBoard: $handBoard, handTraveller: $handTraveller, handSitting: $handSitting, analysisViewer: $analysisViewer)
         UndoManager.clearActions()
+        inputViewController.delegate = context.coordinator
         
         return inputViewController
     }
@@ -389,34 +409,43 @@ struct ScorecardInputUIViewWrapper: UIViewControllerRepresentable {
         
         uiViewController.inputDetail = inputDetail
         
-        if let uiView = uiViewController.view as? ScorecardInputUIView {
+        if let inputView = uiViewController.view as? ScorecardInputUIView {
             if refreshTableTotals {
-                uiView.refreshTableTotals()
+                inputView.refreshTableTotals()
                 refreshTableTotals = false
             }
             
             if tableRefresh {
-                uiView.tableRefresh()
+                inputView.tableRefresh()
             }
             
             if showRankings {
-                uiView.showRankings()
+                inputView.showRankings()
             }
             
-            uiView.change(viewType: viewType)
+            inputView.change(viewType: viewType)
             
-            if uiView.hideRejected != hideRejected {
-                uiView.hideRejected = hideRejected
-                uiView.tableRefresh()
+            if inputView.hideRejected != hideRejected {
+                inputView.hideRejected = hideRejected
+                inputView.tableRefresh()
             }
         }
     }
     
     func makeCoordinator() -> Coordinator {
-        Coordinator()
+        Coordinator(self)
     }
     
-    class Coordinator: NSObject {
+    class Coordinator: NSObject, ScorecardInputViewControllerDelegate {
+        var parent: ScorecardInputUIViewWrapper
+        
+        init(_ parent: ScorecardInputUIViewWrapper) {
+            self.parent = parent
+        }
+        
+        func updateView(view: UIView?) {
+            self.parent.uiView = view
+        }
     }
 }
 
@@ -458,6 +487,10 @@ fileprivate var titleRowHeight: CGFloat { MyApp.format == .phone ? (isLandscape 
 fileprivate var boardRowHeight: CGFloat { MyApp.format == .phone ? (isLandscape ? 50 : 70) : 90 }
 fileprivate var tableRowHeight: CGFloat { MyApp.format == .phone ? (isLandscape ? 60 : 60) : 80 }
 
+protocol ScorecardInputViewControllerDelegate {
+    func updateView(view: UIView?)
+}
+
 class ScorecardInputUIViewController: UIViewController {
     private var scorecard: ScorecardViewModel!
     private var titleView: ScorecardInputTableTitleView!
@@ -467,12 +500,11 @@ class ScorecardInputUIViewController: UIViewController {
     public var handBoard: Binding<BoardViewModel?>
     public var handTraveller: Binding<TravellerViewModel?>
     public var handSitting: Binding<Seat>
-    public var handView: Binding<UIView?>
     public var analysisViewer: Binding<Bool>
     private var frame: CGRect!
-    private var uiView: ScorecardInputUIView?
+    public var delegate: ScorecardInputViewControllerDelegate?
     
-    init(frame: CGRect, scorecard: ScorecardViewModel, inputDetail: Bool, disableBanner: Binding<Bool>, handViewer: Binding<Bool>, handBoard: Binding<BoardViewModel?>, handTraveller: Binding<TravellerViewModel?>, handSitting: Binding<Seat>, handView: Binding<UIView?>, analysisViewer: Binding<Bool>) {
+    init(frame: CGRect, scorecard: ScorecardViewModel, inputDetail: Bool, disableBanner: Binding<Bool>, handViewer: Binding<Bool>, handBoard: Binding<BoardViewModel?>, handTraveller: Binding<TravellerViewModel?>, handSitting: Binding<Seat>, analysisViewer: Binding<Bool>) {
         self.frame = frame
         self.scorecard = scorecard
         self.inputDetail = inputDetail
@@ -481,14 +513,17 @@ class ScorecardInputUIViewController: UIViewController {
         self.handBoard = handBoard
         self.handTraveller = handTraveller
         self.handSitting = handSitting
-        self.handView = handView
         self.analysisViewer = analysisViewer
-        self.uiView = nil
         super.init(nibName: nil, bundle: nil)
     }
     
     override func loadView() {
-        view = ScorecardInputUIView(viewController: self, frame: frame, scorecard: scorecard, inputDetail: inputDetail, disableBanner: disableBanner, handViewer: handViewer, handBoard: handBoard, handTraveller: handTraveller, handSitting: handSitting, handView: handView, analysisViewer: analysisViewer)
+        view = ScorecardInputUIView(viewController: self, frame: frame, scorecard: scorecard, inputDetail: inputDetail, disableBanner: disableBanner, handViewer: handViewer, handBoard: handBoard, handTraveller: handTraveller, handSitting: handSitting, analysisViewer: analysisViewer)
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        delegate?.updateView(view: view)
     }
     
     let x = UIViewController()
@@ -521,7 +556,6 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     public var handBoard: Binding<BoardViewModel?>
     public var handTraveller: Binding<TravellerViewModel?>
     public var handSitting: Binding<Seat>
-    public var handView: Binding<UIView?>
     public var analysisViewer: Binding<Bool>
     private var ignoreKeyboard = false
     private var titleHeightConstraint: NSLayoutConstraint!
@@ -535,7 +569,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     var boardAnalysisCommentColumns: [ScorecardColumn] = []
     var tableColumns: [ScorecardColumn] = []
     
-    init(viewController: UIViewController, frame: CGRect, scorecard: ScorecardViewModel, inputDetail: Bool, disableBanner: Binding<Bool>, handViewer: Binding<Bool>, handBoard: Binding<BoardViewModel?>, handTraveller: Binding<TravellerViewModel?>, handSitting: Binding<Seat>, handView: Binding<UIView?>, analysisViewer: Binding<Bool>) {
+    init(viewController: UIViewController, frame: CGRect, scorecard: ScorecardViewModel, inputDetail: Bool, disableBanner: Binding<Bool>, handViewer: Binding<Bool>, handBoard: Binding<BoardViewModel?>, handTraveller: Binding<TravellerViewModel?>, handSitting: Binding<Seat>, analysisViewer: Binding<Bool>) {
         self.viewController = viewController
         self.scorecard = scorecard
         self.inputDetail = inputDetail
@@ -544,12 +578,11 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         self.handBoard = handBoard
         self.handTraveller = handTraveller
         self.handSitting = handSitting
-        self.handView = handView
         self.analysisViewer = analysisViewer
         self.contractEntryView = ScorecardContractEntryView(frame: CGRect())
         self.scrollPickerPopupView = ScrollPickerPopupView(frame: CGRect())
         self.declarerPickerPopupView = DeclarerPickerPopupView(frame: CGRect())
-
+        
         super.init(frame: frame)
     
         // Set up view
@@ -899,7 +932,6 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 handBoard.wrappedValue = board
                 handTraveller.wrappedValue = traveller
                 handSitting.wrappedValue = sitting
-                handView.wrappedValue = self
                 if viewType == .analysis {
                     handViewer.wrappedValue = false
                     analysisViewer.wrappedValue = true
@@ -961,7 +993,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 // Update contract and/or declarer
                 if let item = self.getBoardColumns(boardNumber: boardNumber).firstIndex(where: {$0.type == .score}) {
                     if let cell = tableCell.collectionView.cellForItem(at: IndexPath(item: item, section: 0)) as? ScorecardInputCollectionCell {
-                        cell.textField.becomeFirstResponder()
+                        cell.textView.becomeFirstResponder()
                     }
                 }
             }
@@ -1200,8 +1232,10 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                               .replacingOccurrences(of: "L", with: "1")
                               .replacingOccurrences(of: "Z", with: "2")
                               .replacingOccurrences(of: "S", with: "5")
+                              .replacingOccurrences(of: "B", with: "8")
                               .replacingOccurrences(of: "_", with: "-")
-        return Float(numericText)
+        let filteredText = numericText.filter { "0123456789-.".contains($0) }
+        return Float(filteredText)
     }
     
     private func getBoardColumns(boardNumber: Int) -> [ScorecardColumn] {
@@ -1302,6 +1336,9 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     fileprivate var caption = UILabel()
     fileprivate var textField = UITextField()
     fileprivate var textView = UITextView()
+    private var textViewCenterYConstraints: [NSLayoutConstraint] = []
+    private var textViewHeightConstraint: NSLayoutConstraint!
+    private var textViewBorderConstraints: [NSLayoutConstraint] = []
     private var textClear = UIImageView()
     private var textClearWidth: NSLayoutConstraint!
     private var textClearPadding: [NSLayoutConstraint]!
@@ -1382,7 +1419,12 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         textField.adjustsFontSizeToFitWidth = true
         textField.returnKeyType = .done
                
-        addSubview(textView, constant: inputControlInset, anchored: .leading, .top, .bottom)
+        addSubview(textView, constant: inputControlInset, anchored: .leading)
+        textViewCenterYConstraints = Constraint.anchor(view: self, control: textView, attributes: .centerY)
+        textViewCenterYConstraints.forEach { constraint in constraint.isActive = false}
+        textViewHeightConstraint = Constraint.setHeight(control: textView, height: tableRowHeight / 2)
+        textViewHeightConstraint.isActive = false
+        textViewBorderConstraints = Constraint.anchor(view: self, control: textView, attributes: .top, .bottom)
         textView.textAlignment = .left
         textView.autocapitalizationType = .none
         textView.autocorrectionType = .no
@@ -1467,14 +1509,17 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         textField.autocorrectionType = .no
         textField.isEnabled = true
         textView.isHidden = true
+        textField.text = ""
         textClear.isHidden = true
         textClearWidth.constant = 0
         textClearPadding.forEach { (constraint) in constraint.setIndent(in: self, constant: 0) }
-        textField.text = ""
         textView.text = ""
         textView.font = cellFont
         textView.textContainer.maximumNumberOfLines = 0
         textView.textContainer.lineBreakMode = .byWordWrapping
+        textViewCenterYConstraints.forEach { constraint in constraint.isActive = false ; constraint.constant = 0}
+        textViewHeightConstraint.isActive = false
+        textViewBorderConstraints.forEach { constraint in constraint.isActive = true}
         label.backgroundColor = UIColor.clear
         label.textColor = UIColor(Palette.background.text)
         label.text = ""
@@ -1655,11 +1700,14 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 }
             } else {
                 label.isHidden = true
-                textField.isHidden = false
-                textField.keyboardType = .numbersAndPunctuation
-                textField.clearsOnBeginEditing = true
-                textField.text = board.score == nil ? "" : "\(board.score!.toString(places: scorecard.type.boardPlaces))"
-                textField.isEnabled = isEnabled
+                textViewBorderConstraints.forEach { constraint in constraint.isActive = false}
+                textViewCenterYConstraints.forEach { constraint in constraint.isActive = true}
+                textViewHeightConstraint.isActive = true
+                textView.textAlignment = .center
+                textView.isHidden = false
+                textView.keyboardType = .numbersAndPunctuation
+                textView.text = board.score == nil ? "" : "\(board.score!.toString(places: scorecard.type.boardPlaces))"
+                textView.isUserInteractionEnabled = isEnabled
             }
             label.isUserInteractionEnabled = !isEnabled
             set(tap: .label)
@@ -1740,10 +1788,13 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             set(tap: isEnabled ? .seat : nil)
         case .tableScore:
             if scorecard.manualTotals {
-                textField.isHidden = false
-                textField.keyboardType = .numbersAndPunctuation
-                textField.clearsOnBeginEditing = true
-                textField.text = table.score == nil ? "" : "\(table.score!.toString(places: scorecard.type.tablePlaces))"
+                textViewBorderConstraints.forEach { constraint in constraint.isActive = false}
+                textViewCenterYConstraints.forEach { constraint in constraint.isActive = true}
+                textViewHeightConstraint.isActive = true
+                textView.textAlignment = .center
+                textView.isHidden = false
+                textView.keyboardType = .numbersAndPunctuation
+                textView.text = table.score == nil ? "" : "\(table.score!.toString(places: scorecard.type.tablePlaces))"
                 set(tap: .textFieldClear)
             } else {
                 label.text = table.score == nil ? "" : "\(scorecard.type.tableScoreType.prefix(score: table.score!))\(table.score!.toString(places: min(1, scorecard.type.tablePlaces)))\(scorecard.type.tableScoreType.suffix)"
@@ -1755,21 +1806,26 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 label.isHidden = false
                 label.text = importedVersus
                 label.isUserInteractionEnabled = true
-                label.numberOfLines = 2
+                label.numberOfLines = 1
                 label.font = (scorecard.type.players == 1 ? smallCellFont : cellFont)
-                label.isUserInteractionEnabled = true
                 set(tap: .label)
             } else {
-                textField.isHidden = false
-                textField.text = table.versus
-                textField.textAlignment = (isEnabled ? .left : .center)
-                textField.autocapitalizationType = .words
-                textField.isEnabled = isEnabled
-                textField.font = (scorecard.type.players == 1 ? smallCellFont : cellFont)
-                textClear.isHidden = (!isEnabled || table.versus == "")
+                textViewBorderConstraints.forEach { constraint in constraint.isActive = false}
+                textViewCenterYConstraints.forEach { constraint in constraint.isActive = true ; constraint.constant = (captionHeight?.constant ?? 0) + 10
+                }
+                textViewHeightConstraint.isActive = true
+                textView.isHidden = false
+                textView.text = table.versus
+                textView.textAlignment = (isEnabled ? .left : .center)
+                textView.autocapitalizationType = .words
+                textView.isUserInteractionEnabled = isEnabled
+                textView.font = (scorecard.type.players == 1 ? smallCellFont : cellFont)
+                textView.textContainer.maximumNumberOfLines = 1
+                textView.textContainer.lineBreakMode = .byTruncatingTail
+                textView.isHidden = (!isEnabled && table.versus == "")
                 textClearWidth.constant = 34
                 textClearPadding.forEach { (constraint) in constraint.setIndent(in: self, constant: 8) }
-                set(tap: .textFieldClear)
+                set(tap: .textViewClear)
             }
         }
         
@@ -2030,6 +2086,22 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         scorecardDelegate?.autoComplete.isHidden = true
     }
     
+    internal func textFieldDidBeginEditing(_ textField: UITextField) {
+        var clear = false
+        switch column.type {
+        case .score:
+            clear = board.score != nil
+        case .tableScore:
+            clear = table.score != nil
+        default:
+            break
+        }
+        if clear {
+            // Record automatic clear on entry in undo
+            textFieldChanged(textField)
+        }
+    }
+    
     internal func textFieldDidEndEditing(_ textField: UITextField) {
         let text = textField.text ?? ""
         var places: Int?
@@ -2051,22 +2123,6 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         }
         scorecardDelegate?.autoComplete.isHidden = true
         textField.resignFirstResponder()
-    }
-    
-    internal func textFieldDidBeginEditing(_ textField: UITextField) {
-        // Record automatic clear on entry in undo
-        var clear = false
-        switch column.type {
-        case .score:
-            clear = board.score != nil
-        case .tableScore:
-            clear = table.score != nil
-        default:
-            break
-        }
-        if clear {
-            textFieldChanged(textField)
-        }
     }
     
     internal func textFieldShouldReturn(_ textField: UITextField) -> Bool {
@@ -2110,6 +2166,10 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             undoText = board.comment
         case .versus:
             undoText = table.versus
+        case .score:
+            undoText = board.score == nil ? "" : "\(board.score!)"
+        case .tableScore:
+            undoText = table.score == nil ? "" : "\(table.score!)"
         default:
             break
         }
@@ -2132,6 +2192,27 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                     }
                 case .versus:
                     table.versus = text
+                case .score, .tableScore:
+                    var places = 0
+                    switch column.type {
+                    case .score:
+                        places = scorecard.type.boardPlaces
+                    case.tableScore:
+                        places = scorecard.type.tablePlaces
+                    default:
+                        break
+                    }
+                    let trailingDecimal = (places > 0 && textView.text.rtrim().right(1) == "." ? ("." + textView.text.components(separatedBy: ".").last!) : "")
+                    let score = ScorecardInputUIView.numericValue(text)
+                    textView.text = (score?.toString(places: places) ?? "") + trailingDecimal
+                    switch column.type {
+                    case .score:
+                        board.score = score
+                    case.tableScore:
+                        table.score = score
+                    default:
+                        break
+                    }
                 default:
                     break
                 }
@@ -2157,22 +2238,57 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     }
     
     internal func textViewDidBeginEditing(_ textView: UITextView) {
+        var clear = false
         switch column.type {
-        case .comment:
+        case .comment, .versus:
             textView.textContainer.maximumNumberOfLines = 0
+        case .score:
+            clear = board.score != nil
+        case .tableScore:
+            clear = table.score != nil
         default:
             break
+        }
+        if clear {
+            // Record automatic clear on entry in undo
+            textViewDidChange(textView)
         }
     }
     
     func textViewDidEndEditing(_ textView: UITextView) {
+        let text = textView.text ?? ""
+        var places: Int?
+        
         switch self.column.type {
         case .comment:
             textView.textContainer.maximumNumberOfLines = 2
             board.comment = textView.text
             enableCommentControls()
         case .versus:
+            textView.textContainer.maximumNumberOfLines = 1
             table.versus = textView.text
+        case .score:
+            places = scorecard.type.boardPlaces
+        case .tableScore:
+            places = scorecard.type.tablePlaces
+        default:
+            break
+        }
+        if let places = places {
+            let score = ScorecardInputUIView.numericValue(text)
+            let newText = score == nil ? nil : "\(score!.toString(places: places))"
+            if newText != textField.text {
+                textView.text = newText ?? ""
+                textViewDidChange(textView)
+            }
+        }
+        scorecardDelegate?.autoComplete.isHidden = true
+        textView.resignFirstResponder()
+        switch column.type {
+        case .score:
+            if textView.text != "" {
+                scorecardDelegate?.scorecardSelectScore(boardNumber: board.board + 1)
+            }
         default:
             break
         }

@@ -44,7 +44,7 @@ extension View {
 struct BottomSpacer : ViewModifier {
         
     func body(content: Content) -> some View { content
-        .frame(height: (MyApp.target == .iOS ? 0 : 16))
+        .frame(height: (MyApp.target == .iOS ? 0 : 0))
     }
 }
 

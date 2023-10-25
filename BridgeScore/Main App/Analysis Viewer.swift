@@ -164,12 +164,6 @@ struct AnalysisViewer: View {
                 }
             }
             .frame(width: frame.width, height: frame.height)
-            .onChange(of: board.board, initial: true) {
-                updateAnalysisData()
-            }
-            .onSwipe() { direction in
-                nextTraveller(direction == .left ? 1 : -1)
-            }
             .onReceive(analysisViewerValueChange) { (source) in
                 updateAnalysisData()
             }
@@ -184,6 +178,13 @@ struct AnalysisViewer: View {
                     }
                 }
             }
+            .onChange(of: board.board, initial: true) {
+                updateAnalysisData()
+            }
+            .onSwipe() { direction in
+                nextTraveller(direction == .left ? 1 : -1)
+            }
+
         }
     }
     

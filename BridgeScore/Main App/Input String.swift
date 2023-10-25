@@ -32,7 +32,7 @@ struct Input : View {
     var message: Binding<String>?
     var topSpace: CGFloat = 0
     var leadingSpace: CGFloat = 0
-    var height: CGFloat = 45
+    var height: CGFloat = 50
     var width: CGFloat?
     var color: PaletteColor = Palette.input
     var keyboardType: KeyboardType = .default
@@ -43,6 +43,7 @@ struct Input : View {
     var inlineTitle: Bool = true
     var inlineTitleWidth: CGFloat = 150
     var onChange: ((String)->())?
+    @FocusState var focused: Bool
     @State private var refresh = false
     
     var body: some View {
@@ -57,6 +58,7 @@ struct Input : View {
                     InputTitle(title: title, message: message, topSpace: topSpace, width: (width == nil ? nil : width! + leadingSpace + 16 + (clearText ? 20 : 0)))
                     Spacer().frame(width: clearText ? 20 : 0)
                 }
+                .frame(height: 22)
                 Spacer().frame(height: 8)
             } else if let message = message?.wrappedValue {
                 HStack {
@@ -66,6 +68,7 @@ struct Input : View {
                         .font(messageFont)
                     Spacer().frame(width: 16)
                 }
+                .frame(height: 16)
             } else {
                 Spacer().frame(height: topSpace)
             }
@@ -76,9 +79,8 @@ struct Input : View {
                         Spacer().frame(width: 8)
                         VStack(spacing: 0) {
                             Spacer()
-                                .frame(height: 13)
                             Text(title!)
-                            Spacer()
+                            Spacer().frame(height: 14)
                         }
                         Spacer()
                     }
@@ -86,38 +88,47 @@ struct Input : View {
                 }
                 Spacer().frame(width: 10)
                 HStack {
-                    Spacer().frame(width: 9
-                    )
-                    UndoWrapper(field) { field in
-                        if multiLine {
-                            TextEditor(text: field)
-                                .lineLimit(1)
-                                .padding(.all, 1)
-                                .keyboardType(self.keyboardType)
-                                .autocapitalization(autoCapitalize)
-                                .disableAutocorrection(!autoCorrect)
-                                .foregroundColor(color.text)
-                                .onChange(of: field.wrappedValue, initial: false) { (_, field) in
-                                    onChange?(field)
-                                }
-                        } else {
-                            TextField("", text: field)
-                                .padding(.all, 1)
-                                .keyboardType(self.keyboardType)
-                                .autocapitalization(autoCapitalize)
-                                .disableAutocorrection(!autoCorrect)
-                                .foregroundColor(color.text)
-                                .onChange(of: field.wrappedValue, initial: false) { (_, field) in
-                                    onChange?(field)
-                                }
+                    Spacer().frame(width: 4)
+                    VStack(spacing: 0) {
+                        Spacer()
+                        UndoWrapper(field) { field in
+                            if multiLine {
+                                TextEditor(text: field)
+                                    .lineLimit(1)
+                                    .padding(.all, 1)
+                                    .keyboardType(self.keyboardType)
+                                    .autocapitalization(autoCapitalize)
+                                    .disableAutocorrection(!autoCorrect)
+                                    .foregroundColor(color.text)
+                                    .onChange(of: field.wrappedValue, initial: false) { (_, field) in
+                                        onChange?(field)
+                                    }
+                            } else {
+                                TextEditor(text: field)
+                                    .onChange(of: field.wrappedValue, initial: false) {
+                                        if field.wrappedValue.contains("\n") {
+                                            field.wrappedValue = field.wrappedValue.replacingOccurrences(of: "\n", with: "")
+                                            focused = false
+                                        }
+                                    }
+                                    .focused($focused)
+                                    .padding(.all, 1)
+                                    .keyboardType(self.keyboardType)
+                                    .autocapitalization(autoCapitalize)
+                                    .disableAutocorrection(!autoCorrect)
+                                    .foregroundColor(color.text)
+                                    .onChange(of: field.wrappedValue, initial: false) { (_, field) in
+                                        onChange?(field)
+                                    }
+                            }
                         }
+                        Spacer().frame(height: 0)
                     }
                 }
+                .background(color.background)
                 .if(width != nil) { (view) in
                     view.frame(width: width)
                 }
-                .background(color.background)
-                .cornerRadius(12)
 
                 if width == nil {
                     Spacer()
@@ -140,7 +151,7 @@ struct Input : View {
             
             .font(inputFont)
         }
-        .frame(height: self.height + self.topSpace + (title == nil || inlineTitle ? 0 : 30))
+        .frame(height: self.height + self.topSpace + (title != nil && !inlineTitle ? 30 : (message != nil ? 16 : 0)))
         .if(width != nil) { (view) in
             view.frame(width: width! + leadingSpace + 16 + (clearText ? 20 : 0))
         }

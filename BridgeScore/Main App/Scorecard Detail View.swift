@@ -17,12 +17,27 @@ struct ScorecardDetailView: View {
     @State var title = "New Scorecard"
     @State private var canUndo = false
     @State private var canRedo = false
+    @State var frame: CGRect
+    @State var initialYOffset: CGFloat
+    @State var yOffset: CGFloat = 0
+    @Binding var dismissView: Bool
     private let undoManagerObserver = NotificationCenter.default.publisher(for: .NSUndoManagerDidOpenUndoGroup)
     private let undoObserver = NotificationCenter.default.publisher(for: .NSUndoManagerDidRedoChange)
     private let redoObserver = NotificationCenter.default.publisher(for: .NSUndoManagerDidUndoChange)
 
+    init(scorecard: ScorecardViewModel, deleted: Binding<Bool>, tableRefresh: Binding<Bool>, title: String, frame: CGRect, initialYOffset: CGFloat, dismissView: Binding<Bool>) {
+        self.scorecard = scorecard
+        _deleted = deleted
+        _tableRefresh = tableRefresh
+        _title = State(initialValue: title)
+        _frame = State(initialValue: frame)
+        _initialYOffset = State(initialValue: initialYOffset)
+        _yOffset = State(initialValue: initialYOffset)
+        _dismissView = dismissView
+    }
+    
     var body: some View {
-        StandardView("Detail", slideInId: id) {
+        PopupStandardView("Detail", slideInId: id) {
             VStack(spacing: 0) {
                 
                 Banner(title: $title, alternateStyle: true, back: true, backText: "Done", backAction: backAction, optionMode: .buttons, options: UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo))
@@ -31,8 +46,9 @@ struct ScorecardDetailView: View {
                     
                     ScorecardDetailsView(id: id, scorecard: scorecard, tableRefresh: $tableRefresh)
                 }
-                .background(Palette.alternate.background)
             }
+            .background(Palette.alternate.background)
+            .cornerRadius(10)
             .undoManager(canUndo: $canUndo, canRedo: $canRedo)
             .keyboardAdaptive
             .onSwipe { (direction) in
@@ -42,6 +58,24 @@ struct ScorecardDetailView: View {
                     }
                 }
             }
+            .offset(x: frame.minX, y: yOffset)
+            .onAppear {
+                withAnimation(.linear(duration: 0.25).delay(0.1)) {
+                    yOffset = frame.minY
+                }
+            }
+            .onChange(of: dismissView) {
+                if dismissView == true {
+                    dismissView = false
+                    withAnimation(.linear(duration: 0.25)) {
+                        yOffset = initialYOffset
+                    }
+                    Utility.executeAfter(delay: 0.25) {
+                        presentationMode.wrappedValue.dismiss()
+                    }
+                }
+            }
+            .frame(width: frame.width, height: frame.height)
         }
         .interactiveDismissDisabled()
     }
@@ -53,7 +87,7 @@ struct ScorecardDetailView: View {
                     scorecard.remove()
                     UserDefault.currentUnsaved.set(false)
                     deleted = true
-                    presentationMode.wrappedValue.dismiss()
+                    dismissView = true
                 })
             })
             return false
@@ -69,7 +103,8 @@ struct ScorecardDetailView: View {
                 master.insert()
                 scorecard.copy(from: master)
             }
-            return true
+            dismissView = true
+            return false
         }
     }
 }
@@ -102,30 +137,29 @@ struct ScorecardDetailsView: View {
                     
                     Input(title: "Description", field: $scorecard.desc, message: $scorecard.descMessage)
                                         
-                    Separator()
+                    Separator(thickness: 1)
                     
-                    PickerInput(id: id, title: "Location", field: $locationIndex, values: {locations.map{$0.name}})
+                    PickerInput(id: id, title: "Location", field: $locationIndex, values: {locations.map{$0.name}}, disabled: Scorecard.current.isImported)
                     { index in
                         if let index = index {
                             scorecard.location = locations[index]
                         }
                     }
                     
-                    Separator()
-                    
+                    Separator(thickness: 1)
+
                     if scorecard.type.players > 1 {
-                        PickerInput(id: id, title: "Partner", field: $playerIndex, values: {players.map{$0.name}})
+                        PickerInput(id: id, title: "Partner", field: $playerIndex, values: {players.map{$0.name}}, disabled: Scorecard.current.isImported)
                         { index in
                             if let index = index {
                                 scorecard.partner = players[index]
                             }
                         }
-                        .disabled(Scorecard.current.isImported)
                         
-                        Separator()
+                        Separator(thickness: 1)
                     }
                     
-                    DatePickerInput(title: "Date", field: $scorecard.date, to: Date())
+                    DatePickerInput(title: "Date", field: $scorecard.date, to: Date(), textType: Scorecard.current.isImported ? .normal : .theme)
                         .disabled(Scorecard.current.isImported)
                 }
             }
@@ -133,12 +167,12 @@ struct ScorecardDetailsView: View {
             InsetView(title: "Results") {
                 VStack(spacing: 0) {
                     HStack {
-                        InputFloat(title: scorecard.type.matchScoreType.string, field: $scorecard.score, width: 60, places: scorecard.type.matchPlaces)
+                        InputFloat(title: scorecard.type.matchScoreType.string, field: $scorecard.score, width: 100, places: scorecard.type.matchPlaces, maxCharacters: 7)
                             .disabled(!scorecard.manualTotals || Scorecard.current.isImported)
                         
                         if scorecard.manualTotals && !Scorecard.current.isImported {
                             Text(" / ")
-                            InputFloat(field: $scorecard.maxScore, width: 60, places: scorecard.type.matchPlaces)
+                            InputFloat(field: $scorecard.maxScore, width: 100, places: scorecard.type.matchPlaces, maxCharacters: 7)
                         } else {
                             Text(scorecard.type.matchSuffix(scorecard: scorecard))
                         }
@@ -146,23 +180,23 @@ struct ScorecardDetailsView: View {
                         Spacer()
                     }
                     
-                    Separator()
-                    
+                    Separator(thickness: 1)
+
                     HStack {
                         
-                        InputInt(title: "Position", field: $scorecard.position, width: 40)
+                        InputInt(title: "Position", field: $scorecard.position, width: 65, maxCharacters: 5)
                             .disabled(Scorecard.current.isImported)
                         
                         Text(" of ")
                         
-                        InputInt(field: $scorecard.entry, topSpace: 0, leadingSpace: 0, width: 40, inlineTitle: false)
+                        InputInt(field: $scorecard.entry, leadingSpace: 0, width: 65, maxCharacters: 5, inlineTitle: false)
                             .disabled(Scorecard.current.isImported)
                         
                         Spacer()
                     }
                     
-                    Separator()
-                
+                    Separator(thickness: 1)
+
                     Input(title: "Comments", field: $scorecard.comment)
                 }
             }
@@ -170,7 +204,7 @@ struct ScorecardDetailsView: View {
             InsetView(title: "Options") {
                 VStack(spacing: 0) {
                     
-                    PickerInputAdditional(id: id, title: "Scoring", field: $typeIndex, values: {types.map{$0.string}}, additionalBinding: $scorecard.score, onChange:
+                    PickerInputAdditional(id: id, title: "Scoring", field: $typeIndex, values: {types.map{$0.string}}, disabled: Scorecard.current.isImported, additionalBinding: $scorecard.score, onChange:
                     { (index) in
                         if let index = index {
                             if scorecard.type != types[index] {
@@ -179,40 +213,37 @@ struct ScorecardDetailsView: View {
                             }
                         }
                     })
-                    .disabled(Scorecard.current.isImported)
                     
-                    Separator()
-                    
-                    PickerInput(id: id, title: "Total calculation", field: $manualTotalsIndex, values: { TotalCalculation.allCases.map{$0.string}})
+                    Separator(thickness: 1)
+
+                    PickerInput(id: id, title: "Total calculation", field: $manualTotalsIndex, values: { TotalCalculation.allCases.map{$0.string}}, disabled: Scorecard.current.isImported)
                     { (index) in
                         if let index = index {
                             scorecard.manualTotals = (index == TotalCalculation.manual.rawValue)
                         }
                     }
-                    .disabled(Scorecard.current.isImported)
                     
-                    Separator()
-                    
+                    Separator(thickness: 1)
+
                     StepperInputAdditional(title: "Boards", field: $scorecard.boardsTable, label: { value in "\(value) boards per round" }, isEnabled: !Scorecard.current.isImported, minValue: $minValue, additionalBinding: $scorecard.boards, onChange: { (newValue) in
                             setBoards(boardsTable: newValue)
                             tableRefresh = true
                         })
                     
-                    Separator()
-                    
+                    Separator(thickness: 1)
+
                     StepperInput(title: "Tables", field: $scorecard.boards, label: boardsLabel, isEnabled: !Scorecard.current.isImported, minValue: $scorecard.boardsTable, increment: $scorecard.boardsTable, onChange:  { (newValue) in
                         tableRefresh = true
                     })
                     .disabled(Scorecard.current.isImported)
                     
-                    Separator()
-                    
-                    PickerInput(id: id, title: "Board Numbers", field: $resetBoardNumberIndex, values: { ResetBoardNumber.allCases.map{$0.string}})
+                    Separator(thickness: 1)
+
+                    PickerInput(id: id, title: "Board Numbers", field: $resetBoardNumberIndex, values: { ResetBoardNumber.allCases.map{$0.string}}, disabled: Scorecard.current.isImported)
                     { (index) in
                         scorecard.resetNumbers = (index == ResetBoardNumber.perTable.rawValue)
                         tableRefresh = true
                     }
-                    .disabled(Scorecard.current.isImported)
                     
                     Spacer().frame(height: 16)
                     

@@ -87,6 +87,7 @@ class MyApp {
               
         #if canImport(UIKit)
         UITextView.appearance().backgroundColor = .clear
+        UITextView.appearance().borderStyle = .none
         UISegmentedControl.appearance().selectedSegmentTintColor = UIColor(Palette.tile.background)
         #endif
         #endif
@@ -132,4 +133,3 @@ class MyApp {
 enum BridgeScoreError: Error {
     case invalidData
 }
-

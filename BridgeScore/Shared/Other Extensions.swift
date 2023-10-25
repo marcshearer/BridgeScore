@@ -422,6 +422,7 @@ extension Float {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         formatter.maximumFractionDigits = places
+        formatter.usesGroupingSeparator = false
         if exact {
             formatter.minimumFractionDigits = places
         }

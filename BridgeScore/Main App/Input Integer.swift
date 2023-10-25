@@ -8,6 +8,46 @@
 import SwiftUI
 
 struct InputInt : View {
+    var title: String?
+    var field: Binding<Int>
+    var message: Binding<String>?
+    var topSpace: CGFloat = 5
+    var leadingSpace: CGFloat = 0
+    var height: CGFloat = 44
+    var width: CGFloat?
+    var maxCharacters: Int
+    var inlineTitle: Bool = true
+    var inlineTitleWidth: CGFloat = 150
+    var onChange: ((Int)->())?
+    #if targetEnvironment(macCatalyst)
+    @State private var wrappedFloat: Float? = 0.0
+    var floatField: Binding<Float?> {
+        Binding {
+            wrappedFloat
+        } set: { (newValue) in
+            wrappedFloat = newValue
+        }
+    }
+    #endif
+
+    var body : some View {
+        #if targetEnvironment(macCatalyst)
+        InputNumberMac(title: title, field: floatField, message: message, topSpace: topSpace, leadingSpace: leadingSpace, height: height, width: width, places: 0, negative: true, maxCharacters: maxCharacters, inlineTitle: inlineTitle, inlineTitleWidth: inlineTitleWidth, onChange: { newValue in
+            onChange?(Int(floatField.wrappedValue ?? 0))
+        })
+            .onChange(of: floatField.wrappedValue, initial: false) { (_, newValue) in
+                field.wrappedValue = Int(floatField.wrappedValue ?? 0)
+            }
+            .onAppear {
+                floatField.wrappedValue = Float(field.wrappedValue)
+            }
+        #else
+        InputIntIOS(title: title, field: field, message: message, topSpace: topSpace, leadingSpace: leadingSpace, height: height, width: width, inlineTitle: inlineTitle, inlineTitleWidth: inlineTitleWidth, onChange: onChange)
+        #endif
+    }
+}
+
+struct InputIntIOS : View {
     
     var title: String?
     var field: Binding<Int>
