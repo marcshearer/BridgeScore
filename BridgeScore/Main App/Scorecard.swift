@@ -735,7 +735,7 @@ class Scorecard {
             if lastRanking?.section != ranking.section {
                 newGrouping = true
             }
-            if lastRanking?.way != ranking.way {
+            if lastRanking?.way != ranking.way && scorecard?.type.players != 4 {
                 newGrouping = true
             }
             action(ranking, newGrouping, newGrouping ? nil : lastRanking)

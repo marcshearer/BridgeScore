@@ -406,6 +406,27 @@ class ImportedScorecard: NSObject {
     
     func rebuildRankingTotals() {
         // Note this works on the main data structures after the import rather than the imported layer
+        if scorecard.type.players == 4 {
+            // First rebuild cross imps on each traveller
+            for (boardNumber, _) in Scorecard.current.boards {
+                let boardTravellers = Scorecard.current.travellers(board: boardNumber)
+                for traveller in boardTravellers {
+                    let otherTravellers = boardTravellers.filter{!($0 == traveller)}
+                    let points = traveller.points(sitting: .north)
+                    let nsXImps = otherTravellers.map({Float(BridgeImps(points: points - $0.points(sitting: .north)).imps)}).reduce(0,+) / Float(otherTravellers.count)
+                    traveller.nsXImps = nsXImps
+                    traveller.save()
+                }
+            }
+            // Now put the total back on the ranking
+            for ranking in Scorecard.current.rankingList {
+                for pair in Pair.validCases {
+                    let xImps = Scorecard.current.travellers(seat: pair.first, rankingNumber: ranking.number, section: ranking.section).map{$0.nsXImps * Float(pair.sign)}.reduce(0,+)
+                    ranking.xImps[pair] = xImps
+                    ranking.save()
+                }
+            }
+        }
         for ranking in Scorecard.current.rankingList {
             var tableScores: Float = 0
             var tablesPlayed = 0

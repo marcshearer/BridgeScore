@@ -23,7 +23,7 @@ class BBONameReplaceView: UIView, UITableViewDataSource, UITableViewDelegate {
     private var buttonPanelHeight: CGFloat = 100
     private var buttonHeight: CGFloat = 50
     private var buttonWidth: CGFloat = 160
-    private let rowHeight: CGFloat = 40
+    private let rowHeight: CGFloat = 55
     
     override init(frame: CGRect) {
         super.init(frame:frame)
@@ -161,9 +161,9 @@ class BBONameReplaceView: UIView, UITableViewDataSource, UITableViewDelegate {
     }
 }
 
-class BBONameReplaceCell: UITableViewCell, UITextFieldDelegate {
+class BBONameReplaceCell: UITableViewCell, UITextViewDelegate {
     private var bboNameLabel: UILabel!
-    private var realNameTextField: UITextField!
+    private var realNameTextView: UITextView!
     private var bboName: BBONameViewModel!
     private static let identifier = "BBO Name Replace Cell"
     
@@ -176,15 +176,13 @@ class BBONameReplaceCell: UITableViewCell, UITextFieldDelegate {
         contentView.addSubview(bboNameLabel, leading: 16, top: 0, bottom: 0)
         Constraint.setWidth(control: bboNameLabel, width: 200)
 
-        realNameTextField = UITextField()
-        realNameTextField.isEnabled = true
-        realNameTextField.isUserInteractionEnabled = true
-        realNameTextField.autocapitalizationType = .words
-        realNameTextField.autocorrectionType = .no
-        realNameTextField.delegate = self
-        realNameTextField.addTarget(self, action: #selector(BBONameReplaceCell.textFieldChanged), for: .editingChanged)
-        contentView.addSubview(realNameTextField, trailing: 16, top: 0, bottom: 0)
-        Constraint.anchor(view: contentView, control: bboNameLabel, to: realNameTextField, constant: 16, toAttribute: .leading, attributes: .trailing)
+        realNameTextView = UITextView()
+        realNameTextView.isUserInteractionEnabled = true
+        realNameTextView.autocapitalizationType = .words
+        realNameTextView.autocorrectionType = .no
+        realNameTextView.delegate = self
+        contentView.addSubview(realNameTextView, trailing: 16, top: 0, bottom: 0)
+        Constraint.anchor(view: contentView, control: bboNameLabel, to: realNameTextView, constant: 16, toAttribute: .leading, attributes: .trailing)
     }
     
     required init?(coder: NSCoder) {
@@ -192,14 +190,14 @@ class BBONameReplaceCell: UITableViewCell, UITextFieldDelegate {
     }
     
     @objc func getFocus(_ sender: Any) {
-        realNameTextField.becomeFirstResponder()
+        realNameTextView.becomeFirstResponder()
     }
     
-    @objc private func textFieldChanged(_ textField: UITextField) {
-        bboName.name = textField.text!
+    internal func textViewDidChange(_ textView: UITextView) {
+        bboName.name = textView.text!
     }
     
-    internal func textFieldDidEndEditing(_ textField: UITextField) {
+    internal func textViewDidEndEditing(_ textView: UITextView) {
         if Scorecard.current.scorecard?.importSource == .bbo {
             bboName.save()
         }
@@ -223,7 +221,7 @@ class BBONameReplaceCell: UITableViewCell, UITextFieldDelegate {
         self.isUserInteractionEnabled = false
         self.bboName = nil
         bboNameLabel.text = ""
-        realNameTextField.text = ""
+        realNameTextView.text = ""
     }
     
     public func set(bboName: BBONameViewModel?, first: Bool) {
@@ -232,26 +230,26 @@ class BBONameReplaceCell: UITableViewCell, UITextFieldDelegate {
         if let bboName = bboName {
             // Real row
             bboNameLabel.text = bboName.bboName
-            realNameTextField.text = bboName.name
-            realNameTextField.isEnabled = true
+            realNameTextView.text = bboName.name
+            realNameTextView.isUserInteractionEnabled = true
             backgroundColor = UIColor(Palette.background.background)
             bboNameLabel.textColor = UIColor(Palette.background.text)
-            realNameTextField.textColor = UIColor(Palette.background.text)
+            realNameTextView.textColor = UIColor(Palette.background.text)
             bboNameLabel.font = replaceTitleFont.bold
-            realNameTextField.font = replaceFont
+            realNameTextView.font = replaceFont
             if first {
-                realNameTextField.becomeFirstResponder()
+                realNameTextView.becomeFirstResponder()
             }
         } else {
             // Titles
             bboNameLabel.text = (Scorecard.current.scorecard?.importSource == .bbo ? "BBO Name" : "Current Name")
-            realNameTextField.text = "Real Name"
-            realNameTextField.isEnabled = false
+            realNameTextView.text = "Real Name"
+            realNameTextView.isUserInteractionEnabled = false
             backgroundColor = UIColor(Palette.alternate.background)
             bboNameLabel.textColor = UIColor(Palette.alternate.text)
-            realNameTextField.textColor = UIColor(Palette.alternate.text)
+            realNameTextView.textColor = UIColor(Palette.alternate.text)
             bboNameLabel.font = replaceTitleFont.bold
-            realNameTextField.font = replaceTitleFont.bold
+            realNameTextView.font = replaceTitleFont.bold
         }
     }
 }

@@ -469,6 +469,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 ranking.players[.west] = ranking.players[.south]
             }
         }
+        // Update scorecard type
         switch format {
         case .individual, .pairs:
             type = type ?? .percent

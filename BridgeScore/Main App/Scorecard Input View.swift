@@ -165,6 +165,7 @@ struct ScorecardInputView: View {
         }
         .onChange(of: tableRefresh, initial: false) { tableRefresh = false}
         .onChange(of: showRankings, initial: false) { showRankings = false}
+        .onChange(of: refreshTableTotals, initial: false) { refreshTableTotals = false}
         .fullScreenCover(isPresented: $inputDetail, onDismiss: {
             UndoManager.clearActions()
             if deleted {
@@ -324,7 +325,7 @@ struct ScorecardInputView: View {
             bannerOptions += [
                 BannerOption(image: AnyView(Image(systemName: "lock.open.fill")), text: "Remove import details", likeBack: true, menu: true, action: {
                     UndoManager.clearActions()
-                    MessageBox.shared.show("This will remove imported rankings and travellers and unlock the scorecard for editing. Are you sure you want to do this?", cancelText: "Cancel", okText: "Remove", okDestructive: true, okAction: {
+                    MessageBox.shared.show("This will remove imported rankings and travellers and any analysis and unlock the scorecard for editing. Are you sure you want to do this?", cancelText: "Cancel", okText: "Remove", okDestructive: true, okAction: {
                         MessageBox.shared.show("Clearing import...", okText: nil)
                         Utility.executeAfter(delay: 0.1) {
                             if let context = CoreData.context {
@@ -332,6 +333,7 @@ struct ScorecardInputView: View {
                                     Scorecard.current.clearImport()
                                 }
                                 isNotImported.wrappedValue = true
+                                viewType = (viewType == .analysis ? .normal : viewType)
                                 tableRefresh = true
                                 MessageBox.shared.hide()
                             }
@@ -412,7 +414,6 @@ struct ScorecardInputUIViewWrapper: UIViewControllerRepresentable {
         if let inputView = uiViewController.view as? ScorecardInputUIView {
             if refreshTableTotals {
                 inputView.refreshTableTotals()
-                refreshTableTotals = false
             }
             
             if tableRefresh {
@@ -654,9 +655,9 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 boardColumns = [
                     ScorecardColumn(type: .board, heading: "Board", size: .fixed([70]), phoneSize: .fixed([40])),
                     ScorecardColumn(type: .teamTable, heading: "Team", size: .fixed([60]), omit: !teams || phone),
-                    ScorecardColumn(type: .combined, heading: "Contract", size: .fixed([140]), phoneSize: .fixed([90])),
-                    ScorecardColumn(type: .points, heading: "Points", size: .fixed([100]), omit: phone),
-                    ScorecardColumn(type: .score, heading: "Score", size: .fixed([100]), phoneSize: .fixed([70])),
+                    ScorecardColumn(type: .combined, heading: "Contract", size: .fixed([(teams ? 100 : 120)]), phoneSize: .fixed([90])),
+                    ScorecardColumn(type: .points, heading: "Points", size: .fixed([(teams ? 70 : 90)]), omit: phone),
+                    ScorecardColumn(type: .score, heading: "Score", size: .fixed([(teams ? 70 : 90)]), phoneSize: .fixed([70])),
                     ScorecardColumn(type: .responsible, heading: "Resp", size: .fixed([70]), omit: phone)]
                 boardAnalysisCommentColumns = boardColumns
                 
@@ -671,13 +672,13 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 
                 tableColumns = [
                     ScorecardColumn(type: .table, heading: "", size: .fixed([70, teams ? 60 : 0]), phoneSize: .fixed([40])),
-                    ScorecardColumn(type: .sitting, heading: "Sitting", size: .fixed([140]), phoneSize: .fixed([90])),
-                    ScorecardColumn(type: .tableScore, heading: "", size: .fixed([100, 100]), phoneSize: .fixed([70])),
+                    ScorecardColumn(type: .sitting, heading: "Sitting", size: .fixed([(teams ? 100 : 120)]), phoneSize: .fixed([90])),
+                    ScorecardColumn(type: .tableScore, heading: "", size: .fixed([(teams ? 70 : 90), (teams ? 70 : 90)]), phoneSize: .fixed([70])),
                     ScorecardColumn(type: .versus, heading: "Versus", size: .flexible)]
             } else if viewType == .detail {
                 boardColumns = [
                     ScorecardColumn(type: .board, heading: "Board", size: .fixed([70]), phoneSize: .fixed([40])),
-                    ScorecardColumn(type: .vulnerable, heading: "Vul", size: .fixed([20])),
+                    ScorecardColumn(type: .vulnerable, heading: "Vul", size: .fixed([30])),
                     ScorecardColumn(type: .dealer, heading: "Dealer", size: .fixed([50]), phoneSize: .fixed([40])),
                     ScorecardColumn(type: .contract, heading: "Contract", size: .fixed([95]), phoneSize: .fixed([60])),
                     ScorecardColumn(type: .declarer, heading: "By", size: .fixed([70]), phoneSize: .fixed([50])),
@@ -1778,7 +1779,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             set(tap: .label)
         case .table:
             label.font = boardTitleFont.bold
-            label.text = (Scorecard.current.isImported ? "" : "Table \(table.table)")
+            label.text = (scorecard.resetNumbers ? "Stanza \(table.table)" : (Scorecard.current.isImported ? "" : "Table \(table.table)"))
             label.isUserInteractionEnabled = true
             set(tap: .label)
         case .sitting:
@@ -1875,6 +1876,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     }
     
     private func analysisSplitPoints(isEnabled: Bool) {
+        label.isHidden = false
         if board.declarer == .unknown {
             label.text = ""
         } else {

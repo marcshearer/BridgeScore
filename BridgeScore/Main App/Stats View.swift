@@ -138,16 +138,9 @@ struct StatsFilterView: View {
                                 Rectangle()
                                     .foregroundColor(Palette.input.background)
                                     .cornerRadius(20)
-                                if filterValues.searchText.isEmpty {
-                                    HStack {
-                                        Spacer()
-                                        Text("Search words")
-                                            .foregroundColor(Palette.input.faintText)
-                                        Spacer()
-                                    }
-                                }
                                 HStack {
-                                    Input(field: $filterValues.searchText, height: 40, color: Palette.clear, clearText: (filterValues.searchText != "")) { (searchText) in
+                                    Spacer().frame(width: 20)
+                                    Input(field: $filterValues.searchText, placeHolder: "Search words", height: 40, color: Palette.clear, clearText: (filterValues.searchText != "")) { (searchText) in
                                             filterValues.save()
                                     }
                                     .foregroundColor(Palette.input.text)

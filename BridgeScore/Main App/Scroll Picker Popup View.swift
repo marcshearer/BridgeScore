@@ -9,10 +9,15 @@ import UIKit
 
 class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, CustomCollectionViewLayoutDelegate {
        
-    private var backgroundView = UIView()
-    private var contentView = UIView()
-    private var clearLabel = UILabel()
+    private var backgroundView: UIView!
+    private var sourceView: UIView!
+    private var contentView: UIView!
+    private var clearLabel: UILabel!
     private var valuesCollectionView: UICollectionView!
+    #if targetEnvironment(macCatalyst)
+    private var panGestureRecognizer: UIPanGestureRecognizer!
+    private var panStart: CGFloat = 0
+    #endif
     private var selected: Int?
     private var defaultValue: Int?
     private var values: [ScrollPickerEntry]!
@@ -27,7 +32,7 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
     private let focusThickness: CGFloat = 5
     private let clearHeight: CGFloat = 30
     private let clearPadding: CGFloat = 5
-
+    
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         loadScrollPickerPopupView()
@@ -82,8 +87,30 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
     
     func changed(_ collectionView: UICollectionView?, itemAtCenter: Int, forceScroll: Bool, animation: ViewAnimation) {
         selected = itemAtCenter - extra
-        collectionView?.reloadData()
+        //collectionView?.reloadData()
     }
+    
+    // MARK: - Pan Gesture handlers
+    
+    #if targetEnvironment(macCatalyst)
+    @objc private func panned(_ collectionView: UICollectionView) {
+        let translation = panGestureRecognizer.translation(in: valuesCollectionView!)
+        switch panGestureRecognizer.state {
+        case .began:
+            panStart = valuesCollectionView.contentOffset.x
+        case .changed:
+            valuesCollectionView.setContentOffset(CGPoint(x: max(0, min(CGFloat(values.count - 1) * buttonSize.width, panStart - translation.x)), y: 0), animated: false)
+        case .ended:
+            let buttons = Int(((panStart - translation.x) / buttonSize.width).rounded())
+            let newSelected = max(0, min(values.count - 1, buttons))
+            print(values[newSelected].title)
+            valuesCollectionView.setContentOffset(CGPoint(x: CGFloat(newSelected) * buttonSize.width, y: 0), animated: true)
+            changed(collectionView, itemAtCenter: newSelected + extra, forceScroll: false, animation: .none)
+        default:
+            break
+        }
+    }
+    #endif
     
     // MARK: - Tap handlers ============================================================================ -
     
@@ -113,6 +140,7 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         self.topPadding = topPadding
         self.bottomPadding = bottomPadding
         self.completion = completion
+        self.sourceView = sourceView
         self.frame = sourceView.frame
         backgroundView.frame = sourceView.frame
         let valuesVisible = maxValues
@@ -148,14 +176,25 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         valuesCollectionView.contentInsetAdjustmentBehavior = .never
 
         // Background
+        backgroundView = UIView()
         addSubview(backgroundView)
         backgroundView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
         let cancelSelector = #selector(ScrollPickerPopupView.cancelPressed(_:))
         let tapGesture = UITapGestureRecognizer(target: self, action: cancelSelector)
         backgroundView.addGestureRecognizer(tapGesture, identifier: "Scroll picker popup")
         backgroundView.isUserInteractionEnabled = true
+
+        #if targetEnvironment(macCatalyst)
+        // Mac catalyst pan gesture
+        panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(ScrollPickerPopupView.panned(_:)))
+        valuesCollectionView.addGestureRecognizer(panGestureRecognizer)
+        panGestureRecognizer.minimumNumberOfTouches = 1
+        panGestureRecognizer.maximumNumberOfTouches = 1
+        panGestureRecognizer.isEnabled = true
+        #endif
         
         // Content
+        contentView = UIView()
         backgroundView.addSubview(contentView)
         contentView.backgroundColor = UIColor.clear
         contentView.addShadow()
@@ -169,6 +208,7 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         Constraint.anchor(view: contentView, control: focusWindow, constant: clearHeight + clearPadding, attributes: .bottom)
         focusWidthConstraint = Constraint.setWidth(control: focusWindow, width: 0)
         
+        clearLabel = UILabel()
         contentView.addSubview(clearLabel, anchored: .bottom, .centerX)
         Constraint.setHeight(control: clearLabel, height: clearHeight)
         clearLabelWidthConstraint = Constraint.setWidth(control: clearLabel, width: 0)

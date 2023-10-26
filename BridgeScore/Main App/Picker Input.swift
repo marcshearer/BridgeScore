@@ -31,7 +31,7 @@ struct PickerInput : View {
     var onChange: ((Int?)->())?
     
     var body: some View {
-        PickerInputAdditional<Int>(id: id, title: title, field: field, values: values, popupTitle: popupTitle, placeholder: placeholder, topSpace: topSpace, leadingSpace: leadingSpace, width: width, height: height, maxLabelWidth: maxLabelWidth, centered: centered, color: color, selectedColor: selectedColor, font: font, cornerRadius: cornerRadius, animation: animation, inlineTitle: inlineTitle, inlineTitleWidth: inlineTitleWidth, setAdditional: { (_, _) in}, onChange: onChange)
+        PickerInputAdditional<Int>(id: id, title: title, field: field, values: values, popupTitle: popupTitle, placeholder: placeholder, topSpace: topSpace, leadingSpace: leadingSpace, width: width, height: height, maxLabelWidth: maxLabelWidth, centered: centered, color: color, selectedColor: selectedColor, font: font, cornerRadius: cornerRadius, animation: animation, inlineTitle: inlineTitle, inlineTitleWidth: inlineTitleWidth, disabled: disabled, setAdditional: { (_, _) in}, onChange: onChange)
     }
 }
 
@@ -99,14 +99,14 @@ struct PickerInputAdditional<Additional>: View where Additional: Equatable  {
                                         Spacer().frame(width: 2)
                                     }
                                     Text(field.wrappedValue != nil && field.wrappedValue! < values.count && field.wrappedValue! >= 0 ? values[field.wrappedValue!] : placeholder)
-                                        .foregroundColor(placeholder == "" ? color.themeText : color.text)
+                                        .foregroundColor(!disabled && placeholder == "" ? color.themeText : color.text)
                                         .font(font)
                                         .frame(maxHeight: height)
                                         .minimumScaleFactor(0.7)
                                     if !centered {
                                         Spacer()
                                         Image(systemName: "chevron.right")
-                                            .foregroundColor(color.themeText)
+                                            .foregroundColor(disabled ? color.text : color.themeText)
                                         Spacer().frame(width: 16)
                                     } else {
                                         Spacer()
@@ -114,6 +114,7 @@ struct PickerInputAdditional<Additional>: View where Additional: Equatable  {
                                 }
                                 .background(color.background)
                             }
+                            .disabled(disabled)
                         }
                     }
                 }

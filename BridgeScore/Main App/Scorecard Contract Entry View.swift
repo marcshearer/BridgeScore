@@ -252,11 +252,13 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
     
     private func sittingTapped(seat: Seat) {
         if sitting != seat {
-            let offset = sitting?.offset(to: seat) ?? 0
-            sitting = seat
-            if declarer != nil {
-                declarer = declarer!.offset(by: offset)
+            let offset = sitting?.offset(to: seat)
+            if (declarer ?? .unknown) != .unknown && (sitting ?? .unknown) != .unknown {
+                declarer = declarer!.offset(by: offset!)
+            } else {
+                declarer = .unknown
             }
+            sitting = seat
             updateDeclarerList()
             sittingCollectionView.reloadData()
             declarerCollectionView.reloadData()

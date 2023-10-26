@@ -30,6 +30,7 @@ struct Input : View {
     var title: String?
     var field: Binding<String>
     var message: Binding<String>?
+    var placeHolder: String? = nil
     var topSpace: CGFloat = 0
     var leadingSpace: CGFloat = 0
     var height: CGFloat = 50
@@ -49,7 +50,6 @@ struct Input : View {
     var body: some View {
         
         VStack(spacing: 0) {
-            
             // Just to trigger view refresh
             if refresh { EmptyView() }
             
@@ -72,57 +72,61 @@ struct Input : View {
             } else {
                 Spacer().frame(height: topSpace)
             }
-            HStack {
+            HStack(spacing: 0) {
                 Spacer().frame(width: leadingSpace)
                 if title != nil && inlineTitle {
                     HStack {
                         Spacer().frame(width: 8)
                         VStack(spacing: 0) {
-                            Spacer()
                             Text(title!)
-                            Spacer().frame(height: 14)
+                                .frame(height: height - 8)
+                            Spacer().frame(height: 8)
                         }
                         Spacer()
                     }
-                    .frame(width: inlineTitleWidth)
+                    .frame(width: inlineTitleWidth, height: height)
+                    Spacer().frame(width: 14)
                 }
-                Spacer().frame(width: 10)
                 HStack {
-                    Spacer().frame(width: 4)
-                    VStack(spacing: 0) {
-                        Spacer()
-                        UndoWrapper(field) { field in
-                            if multiLine {
+                    ZStack {
+                        if field.wrappedValue == "" {
+                            if let placeHolder = placeHolder {
+                                VStack(spacing: 0) {
+                                    HStack {
+                                        Spacer().frame(width: 5)
+                                        Text(placeHolder)
+                                            .foregroundColor(Palette.input.faintText)
+                                        Spacer()
+                                    }
+                                    .frame(height: height)
+                                }
+                                .frame(height: height).layoutPriority(999)
+                            }
+                        }
+                        VStack(spacing: 0) {
+                            Spacer().frame(height: 4)
+                            UndoWrapper(field) { field in
                                 TextEditor(text: field)
-                                    .lineLimit(1)
-                                    .padding(.all, 1)
+                                    .scrollContentBackground(.hidden)
+                                    .frame(height: height - 4)
+                                    .focused($focused)
+                                    .if(multiLine) { view in
+                                        view.lineLimit(1)
+                                    }
                                     .keyboardType(self.keyboardType)
                                     .autocapitalization(autoCapitalize)
                                     .disableAutocorrection(!autoCorrect)
                                     .foregroundColor(color.text)
-                                    .onChange(of: field.wrappedValue, initial: false) { (_, field) in
-                                        onChange?(field)
-                                    }
-                            } else {
-                                TextEditor(text: field)
                                     .onChange(of: field.wrappedValue, initial: false) {
                                         if field.wrappedValue.contains("\n") {
                                             field.wrappedValue = field.wrappedValue.replacingOccurrences(of: "\n", with: "")
                                             focused = false
                                         }
-                                    }
-                                    .focused($focused)
-                                    .padding(.all, 1)
-                                    .keyboardType(self.keyboardType)
-                                    .autocapitalization(autoCapitalize)
-                                    .disableAutocorrection(!autoCorrect)
-                                    .foregroundColor(color.text)
-                                    .onChange(of: field.wrappedValue, initial: false) { (_, field) in
-                                        onChange?(field)
+                                        onChange?(field.wrappedValue)
                                     }
                             }
                         }
-                        Spacer().frame(height: 0)
+                        .frame(height: height).layoutPriority(999)
                     }
                 }
                 .background(color.background)

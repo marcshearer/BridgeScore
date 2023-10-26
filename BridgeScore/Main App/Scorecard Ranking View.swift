@@ -300,9 +300,10 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         if backgroundView.frame != self.frame || orientation != UIDevice.current.orientation {
             backgroundView.frame = self.frame
             frame = backgroundView.frame
-            let width = min(1000, backgroundView.frame.width * 0.90)
+            let size = backgroundView.frame
+            let width = (size.width * 0.80) < 1000 ? (size.width * 0.98) : (size.width * 0.80)
             let padding = bannerHeight + safeAreaInsets.top + safeAreaInsets.bottom
-            let height = min(750,(backgroundView.frame.height - padding) * 0.95)
+            let height = ((size.height - padding) * 0.90 < 750 ? (size.height - padding) * 0.98 : (size.height - padding) * 0.90)
             contentView.frame = CGRect(x: backgroundView.frame.midX - (width / 2), y: ((bannerHeight + safeAreaInsets.top) / 2) + backgroundView.frame.midY - (height / 2), width: width, height: height)
             orientation = UIDevice.current.orientation
             setNeedsLayout()

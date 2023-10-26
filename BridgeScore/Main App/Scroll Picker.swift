@@ -27,9 +27,13 @@ struct ScrollPickerEntry: Equatable {
 }
 
 class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, UICollectionViewDataSource, CustomCollectionViewLayoutDelegate {
-     
+    
     private var collectionView: UICollectionView!
     private var collectionViewLayout: UICollectionViewLayout!
+#if targetEnvironment(macCatalyst)
+    private var panGestureRecognizer: UIPanGestureRecognizer!
+    private var panStart: CGFloat = 0
+#endif
     private var color: PaletteColor?
     private var clearBackground = true
     public var list: [ScrollPickerEntry]
@@ -64,6 +68,15 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
         collectionView.backgroundColor = UIColor.clear
         ScrollPickerCell.register(collectionView)
         self.addSubview(collectionView, anchored: .all)
+        
+        #if targetEnvironment(macCatalyst)
+        // Mac catalyst pan gesture
+        panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(ScrollPicker.panned(_:)))
+        collectionView.addGestureRecognizer(panGestureRecognizer)
+        panGestureRecognizer.minimumNumberOfTouches = 1
+        panGestureRecognizer.maximumNumberOfTouches = 1
+        panGestureRecognizer.isEnabled = true
+        #endif
     }
     
     public func set(_ selected: Int?, list: [String], defaultEntry: String? = nil, defaultValue: Int? = nil, isEnabled: Bool = true, color: PaletteColor? = nil, titleFont: UIFont?, captionFont: UIFont? = nil, clearBackground: Bool = true) {
@@ -100,7 +113,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
                 reload = true
             }
         }
-
+        
         if let list = list {
             if list != self.list {
                 self.list = list
@@ -116,7 +129,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
             collectionView.reloadData()
             collectionView.alpha = 0
         }
-
+        
         Utility.mainThread {
             self.collectionView.scrollToItem(at: IndexPath(item: self.selected ?? self.defaultValue ?? 0, section: 0), at: .centeredHorizontally, animated: false)
             self.collectionView.alpha = 1
@@ -126,7 +139,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
+    
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         list.count
     }
@@ -149,7 +162,29 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
             collectionView?.reloadData()
         }
     }
+    
+        // MARK: - Pan Gesture handlers
+    
+    #if targetEnvironment(macCatalyst)
+    @objc private func panned(_ sender: UIView) {
+        let translation = panGestureRecognizer.translation(in: self.superview!.superview!)
+        switch panGestureRecognizer.state {
+        case .began:
+            panStart = collectionView.contentOffset.x
+        case .changed:
+            collectionView.setContentOffset(CGPoint(x: max(0, min(CGFloat(list.count - 1) * frame.width, panStart - translation.x)), y: 0), animated: false)
+        case .ended:
+            let buttons = Int((translation.x / frame.width).rounded())
+            let newSelected = max(0, min(list.count - 1, (selected ?? defaultValue ?? 0) - buttons))
+            collectionView.setContentOffset(CGPoint(x: CGFloat(newSelected) * frame.width, y: 0), animated: true)
+            changed(collectionView, itemAtCenter: newSelected, forceScroll: false, animation: .none)
+        default:
+            break
+        }
+    }
+    #endif
 }
+
 
 class ScrollPickerCell: UICollectionViewCell {
     private var background: UIView!
