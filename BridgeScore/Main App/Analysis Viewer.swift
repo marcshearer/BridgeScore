@@ -1249,8 +1249,8 @@ struct AnalysisCommentView: View {
                                 Spacer().frame(height: 4)
                                 TextEditor(text: $comment)
                                     .onChange(of: comment, initial: false) {
-                                        if comment.contains("\n") {
-                                            board.comment = comment.replacingOccurrences(of: "\n", with: "")
+                                        if comment.contains("\n") || comment.contains("\n") {
+                                            board.comment = comment.replacingOccurrences(of: "\n", with: "").replacingOccurrences(of: "\t", with: "")
                                             comment = board.comment
                                             focused = false
                                         } else {

@@ -8,22 +8,23 @@
 import UIKit
 
 class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, CustomCollectionViewLayoutDelegate {
-       
+    
     private var backgroundView: UIView!
     private var sourceView: UIView!
     private var contentView: UIView!
     private var clearLabel: UILabel!
     private var valuesCollectionView: UICollectionView!
-    #if targetEnvironment(macCatalyst)
+#if targetEnvironment(macCatalyst)
     private var panGestureRecognizer: UIPanGestureRecognizer!
     private var panStart: CGFloat = 0
-    #endif
+#endif
     private var selected: Int?
+    private var selectedOnEntry: Int?
     private var defaultValue: Int?
     private var values: [ScrollPickerEntry]!
     private var maxValues = 5
     private var buttonSize: CGSize!
-    private var completion: ((Int?)->())?
+    private var completion: ((Int?, KeyAction?)->())?
     private var focusWidthConstraint: NSLayoutConstraint!
     private var clearLabelWidthConstraint: NSLayoutConstraint!
     private var topPadding: CGFloat = 0
@@ -32,6 +33,7 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
     private let focusThickness: CGFloat = 5
     private let clearHeight: CGFloat = 30
     private let clearPadding: CGFloat = 5
+    private var accumulatedCharacters = ""
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
@@ -47,8 +49,8 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         super.layoutSubviews()
         clearLabel.roundCorners(cornerRadius: clearHeight / 2)
     }
-       
-    // MARK: - CollectionView Delegates ================================================================ -
+    
+        // MARK: - CollectionView Delegates ================================================================ -
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return values.count + Int(maxValues / 2) * 2
@@ -87,12 +89,12 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
     
     func changed(_ collectionView: UICollectionView?, itemAtCenter: Int, forceScroll: Bool, animation: ViewAnimation) {
         selected = itemAtCenter - extra
-        //collectionView?.reloadData()
+            //collectionView?.reloadData()
     }
     
-    // MARK: - Pan Gesture handlers
+        // MARK: - Pan Gesture handlers
     
-    #if targetEnvironment(macCatalyst)
+#if targetEnvironment(macCatalyst)
     @objc private func panned(_ collectionView: UICollectionView) {
         let translation = panGestureRecognizer.translation(in: valuesCollectionView!)
         switch panGestureRecognizer.state {
@@ -103,38 +105,38 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         case .ended:
             let buttons = Int(((panStart - translation.x) / buttonSize.width).rounded())
             let newSelected = max(0, min(values.count - 1, buttons))
-            print(values[newSelected].title)
             valuesCollectionView.setContentOffset(CGPoint(x: CGFloat(newSelected) * buttonSize.width, y: 0), animated: true)
             changed(collectionView, itemAtCenter: newSelected + extra, forceScroll: false, animation: .none)
         default:
             break
         }
     }
-    #endif
+#endif
     
-    // MARK: - Tap handlers ============================================================================ -
+        // MARK: - Tap handlers ============================================================================ -
     
     private func valueTapped(value: Int) {
-        completion?(value)
+        completion?(value, nil)
         hide()
     }
     
     @objc private func cancelPressed(_ sender: Any) {
-        completion?(selected)
+        completion?(selected, nil)
         hide()
     }
     
     @objc private func clearTapped(_ sender: Any) {
-        completion?(nil)
+        completion?(nil, nil)
         hide()
     }
     
-    // MARK: - Show / Hide ============================================================================ -
+        // MARK: - Show / Hide ============================================================================ -
     
-    public func show(from sourceView: UIView, values: [ScrollPickerEntry], maxValues: Int = 5, selected: Int?, defaultValue: Int?, frame: CGRect, hideBackground: Bool = true, topPadding: CGFloat = 0, bottomPadding: CGFloat = 0, completion: @escaping (Int?)->()) {
+    public func show(from sourceView: UIView, values: [ScrollPickerEntry], maxValues: Int = 5, selected: Int?, defaultValue: Int?, frame: CGRect, hideBackground: Bool = true, topPadding: CGFloat = 0, bottomPadding: CGFloat = 0, completion: @escaping (Int?, KeyAction?)->()) {
         self.values = values
         self.maxValues = maxValues
         self.selected = selected
+        self.selectedOnEntry = selected
         self.defaultValue = defaultValue
         self.buttonSize = frame.size
         self.topPadding = topPadding
@@ -155,18 +157,26 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         sourceView.bringSubviewToFront(self)
         backgroundView.isHidden = !hideBackground
         valuesCollectionView.reloadData()
-        if let selected = self.selected ?? defaultValue {
-            valuesCollectionView.scrollToItem(at: IndexPath(item: selected + Int(maxValues / 2), section: 0), at: .centeredHorizontally, animated: false)
+        if let value = self.selected ?? defaultValue {
+            set(value)
         }
-        self.contentView.isHidden = false
+        contentView.isHidden = false
+        accumulatedCharacters = ""
+        let firstResponder = FirstResponderLabel(view: self)
+        addSubview(firstResponder)
+        firstResponder.becomeFirstResponder()
     }
     
-    public func hide() {
-        self.contentView.isHidden = true
-        removeFromSuperview()
+    private func set(_ value: Int) {
+        selected = value
+        valuesCollectionView.scrollToItem(at: IndexPath(item: value + Int(maxValues / 2), section: 0), at: .centeredHorizontally, animated: false)
     }
     
-  // MARK: - View Setup ======================================================================== -
+    public func hide(keyAction: KeyAction? = nil) {
+        self.removeFromSuperview()
+    }
+    
+        // MARK: - View Setup ======================================================================== -
     
     private func loadScrollPickerPopupView() {
         
@@ -174,8 +184,8 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         layout.delegate = self
         valuesCollectionView = UICollectionView(frame: frame, collectionViewLayout: layout)
         valuesCollectionView.contentInsetAdjustmentBehavior = .never
-
-        // Background
+        
+            // Background
         backgroundView = UIView()
         addSubview(backgroundView)
         backgroundView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
@@ -183,22 +193,22 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         let tapGesture = UITapGestureRecognizer(target: self, action: cancelSelector)
         backgroundView.addGestureRecognizer(tapGesture, identifier: "Scroll picker popup")
         backgroundView.isUserInteractionEnabled = true
-
-        #if targetEnvironment(macCatalyst)
-        // Mac catalyst pan gesture
+        
+#if targetEnvironment(macCatalyst)
+            // Mac catalyst pan gesture
         panGestureRecognizer = UIPanGestureRecognizer(target: self, action: #selector(ScrollPickerPopupView.panned(_:)))
         valuesCollectionView.addGestureRecognizer(panGestureRecognizer)
         panGestureRecognizer.minimumNumberOfTouches = 1
         panGestureRecognizer.maximumNumberOfTouches = 1
         panGestureRecognizer.isEnabled = true
-        #endif
+#endif
         
-        // Content
+            // Content
         contentView = UIView()
         backgroundView.addSubview(contentView)
         contentView.backgroundColor = UIColor.clear
         contentView.addShadow()
-                        
+        
         loadCollection(collectionView: valuesCollectionView)
         
         let focusWindow = UILabel()
@@ -232,5 +242,42 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         collectionView.backgroundColor = UIColor.clear
         collectionView.showsHorizontalScrollIndicator = false
         ScrollPickerCell.register(collectionView)
+    }
+    
+    override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        if !processPressedKeys(presses, with: event, allowCharacters: true, action: { (keyAction, _) in
+            switch keyAction {
+            case .previous, .next, .left, .right, .up, .down, .escape, .characters:
+                true
+            default:
+                false
+            }
+        }) {
+            super.pressesBegan(presses, with: event)
+        }
+    }
+    
+    override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        
+        if !processPressedKeys(presses, with: event, allowCharacters: true, action: { (keyAction, characters) in
+
+            ScrollPicker.processKeys(keyAction: keyAction, characters: characters, accumulatedCharacters: accumulatedCharacters, selected: selected, values: values.map({$0.title}), completion: { [self] (characters, newSelected, keyAction) in
+                
+                accumulatedCharacters = characters
+                
+                if let newSelected = newSelected {
+                    set(newSelected)
+                } else if let selectedOnEntry = selectedOnEntry {
+                    set(selectedOnEntry)
+                }
+                
+                if keyAction != .characters {
+                    completion?(selected, keyAction)
+                    hide()
+                }
+            })
+        }) {
+            super.pressesEnded(presses, with: event)
+        }
     }
 }

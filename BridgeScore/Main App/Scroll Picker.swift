@@ -26,7 +26,7 @@ struct ScrollPickerEntry: Equatable {
     }
 }
 
-class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, UICollectionViewDataSource, CustomCollectionViewLayoutDelegate {
+class  ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, UICollectionViewDataSource, CustomCollectionViewLayoutDelegate {
     
     private var collectionView: UICollectionView!
     private var collectionViewLayout: UICollectionViewLayout!
@@ -43,6 +43,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
     private var captionFont: UIFont
     private(set) var selected: Int?
     public var delegate: ScrollPickerDelegate?
+    private var accumulatedCharacters: String = ""
     
     convenience init(frame: CGRect, list: [String], defaultEntry: String? = nil, color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil) {
         self.init(frame: frame, list: list.map{ScrollPickerEntry(title: $0)}, defaultEntry: defaultEntry == nil ? nil : ScrollPickerEntry(title: defaultEntry!), color: color, titleFont: titleFont, captionFont: captionFont)
@@ -94,7 +95,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
             self.clearBackground = clearBackground
             reload = true
         }
-        
+                
         if let color = color {
             if color != self.color {
                 self.color = color
@@ -122,16 +123,26 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
         }
         self.isUserInteractionEnabled = isEnabled
         self.selected = selected
+        self.accumulatedCharacters = ""
         if let defaultValue = defaultValue {
             self.defaultValue = defaultValue
         }
+        
         if reload {
             collectionView.reloadData()
             collectionView.alpha = 0
         }
         
-        Utility.mainThread {
-            self.collectionView.scrollToItem(at: IndexPath(item: self.selected ?? self.defaultValue ?? 0, section: 0), at: .centeredHorizontally, animated: false)
+        Utility.mainThread { [self] in
+            set(selected ?? defaultValue ?? 0)
+        }
+    }
+    
+    func set(_ selected: Int?) {
+        self.selected = selected
+        if let selected = selected {
+            self.collectionView.scrollToItem(at: IndexPath(item: selected, section: 0), at: .centeredHorizontally, animated: false)
+            self.delegate?.scrollPickerDidChange(self, to: selected)
             self.collectionView.alpha = 1
         }
     }
@@ -183,6 +194,95 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
         }
     }
     #endif
+    
+    public func processKeys(keyAction: KeyAction, characters: String) -> Bool {
+        if keyAction == .characters && characters.trim() == "" {
+            // Blank pressed - just popup window rather than blanking picker
+            false
+        } else {
+            ScrollPicker.processKeys(keyAction: keyAction, characters: characters, accumulatedCharacters: accumulatedCharacters, selected: selected, values: list.map({ $0.title}), completion: { [self] (characters, newSelected, keyAction) in
+                
+                accumulatedCharacters = characters
+                
+                if let newSelected = newSelected {
+                    if newSelected != selected {
+                        set(newSelected)
+                    }
+                }
+            })
+        }
+    }
+    
+    static public func processKeys(keyAction: KeyAction, characters: String, accumulatedCharacters: String, selected: Int?, values: [String], crossPattern: Bool = false, completion: (String, Int?, KeyAction?)->()) -> Bool {
+        var result = true
+        var accumulatedCharacters = accumulatedCharacters
+        switch keyAction {
+        case .previous, .next:
+            completion("", selected, keyAction)
+        case .left:
+            if crossPattern {
+                if selected != 0 && selected != values.count - 1 {
+                    completion("", max(1, selected! - 1), .characters)
+                } else {
+                    completion("", (values.count / 2) - 1, .characters)
+                }
+            } else {
+                completion("", max(0,selected! - 1), .characters)
+            }
+        case .right:
+            if crossPattern {
+                if selected != 0 && selected != values.count - 1 {
+                    completion("", min(values.count - 2, selected! + 1), .characters)
+                } else {
+                    completion("", (values.count / 2) + 1, .characters)
+                }
+            } else {
+                completion("", max(0,selected! - 1), .characters)
+            }
+        case .up:
+            if crossPattern {
+                let newSelected = (selected == values.count - 1 ? values.count / 2 : 0)
+                completion("", newSelected, .characters)
+            } else {
+                completion("", selected, keyAction)
+            }
+        case .down:
+            if crossPattern {
+                let newSelected = (selected == 0 ? values.count / 2 : values.count - 1)
+                completion("", newSelected, .characters)
+            } else {
+                completion("", selected, keyAction)
+            }
+        case .escape:
+            completion("", nil, nil)
+        case .characters:
+            accumulatedCharacters += characters.trim()
+            if characters == " " {
+                if let blankIndex = values.firstIndex(where: {$0.trim() == ""}) {
+                    if selected == blankIndex {
+                        completion("", selected, nil)
+                    } else {
+                        completion("", blankIndex, .characters)
+                    }
+                } else {
+                    completion("", selected, .characters)
+                }
+            } else if let index = values.firstIndex(where: {$0.lowercased() == accumulatedCharacters.lowercased()}) {
+                completion("", index, .characters)
+            } else if let index = values.firstIndex(where: {$0.lowercased().starts(with: accumulatedCharacters.lowercased())}) {
+                completion(accumulatedCharacters, index, .characters)
+            } else if let index = values.firstIndex(where: {$0.lowercased().starts(with: characters.lowercased())}) {
+                completion(characters, index, .characters)
+            } else {
+                // Invalid characters - Exit
+                completion("", selected, nil)
+                result = false
+            }
+        default:
+            result = false
+        }
+        return result
+    }
 }
 
 

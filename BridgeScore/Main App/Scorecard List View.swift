@@ -141,7 +141,7 @@ struct ScorecardListView: View {
     
     private func linkAction(importTapped: ImportSource = .none) {
         Scorecard.current.load(scorecard: self.selected)
-        if !Scorecard.current.isSensitive {
+        if true || !Scorecard.current.isSensitive { // TODO Reinstate password control?
             importScorecard = importTapped
             linkToEdit = true
         } else {

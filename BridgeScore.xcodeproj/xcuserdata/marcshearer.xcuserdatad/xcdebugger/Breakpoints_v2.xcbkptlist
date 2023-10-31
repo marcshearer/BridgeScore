@@ -7,17 +7,49 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "103D79A8-C143-4896-9B9E-6D3DE3EFA854"
-            shouldBeEnabled = "No"
+            uuid = "D847BAB8-E30D-4479-982A-58BE31D85FDF"
+            shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "BridgeScore/Main App/Database Utilties.swift"
+            filePath = "BridgeScore/Main App/Scroll Picker.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "49"
-            endingLineNumber = "49"
-            landmarkName = "initialiseCoreData(tables:completion:index:)"
+            startingLineNumber = "171"
+            endingLineNumber = "171"
+            landmarkName = "changed(_:itemAtCenter:forceScroll:animation:)"
             landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "D847BAB8-E30D-4479-982A-58BE31D85FDF - b5e7bd322f0c5901"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 () -&gt; () in Bridge_Score.ScrollPicker.changed(_: Swift.Optional&lt;__C.UICollectionView&gt;, itemAtCenter: Swift.Int, forceScroll: Swift.Bool, animation: Bridge_Score.ViewAnimation) -&gt; ()"
+                  moduleName = "Bridge Score"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/marcshearer/Documents/Xcode%20projects/BridgeScore/BridgeScore/Main%20App/Scroll%20Picker.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "171"
+                  endingLineNumber = "171"
+                  offsetFromSymbolStart = "329">
+               </Location>
+               <Location
+                  uuid = "D847BAB8-E30D-4479-982A-58BE31D85FDF - b5e7bd322f0c5901"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 () -&gt; () in Bridge_Score.ScrollPicker.changed(_: Swift.Optional&lt;__C.UICollectionView&gt;, itemAtCenter: Swift.Int, forceScroll: Swift.Bool, animation: Bridge_Score.ViewAnimation) -&gt; ()"
+                  moduleName = "Bridge Score"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/marcshearer/Documents/Xcode%20projects/BridgeScore/BridgeScore/Main%20App/Scroll%20Picker.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "171"
+                  endingLineNumber = "171"
+                  offsetFromSymbolStart = "111">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

@@ -70,9 +70,8 @@ enum ColumnType: Int, Codable {
 
 // Controls that need tap gesture
 enum TapControl {
+    case noTap
     case label
-    case textFieldClear
-    case textViewClear
     case responsible
     case declarer
     case seat
@@ -457,11 +456,11 @@ protocol ScorecardDelegate {
     func scorecardBBONamesReplace(values: [String])
     func scorecardShowTraveller(scorecard: ScorecardViewModel, board: BoardViewModel, sitting: Seat)
     func scorecardShowHand(scorecard: ScorecardViewModel, board: BoardViewModel, sitting: Seat)
-    func scorecardScrollPickerPopup(values: [ScrollPickerEntry], maxValues: Int, selected: Int?, defaultValue: Int?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Int?)->())
-    func scorecardDeclarerPickerPopup(values: [(Seat, ScrollPickerEntry)], selected: Seat?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Seat?)->())
+    func scorecardScrollPickerPopup(values: [ScrollPickerEntry], maxValues: Int, selected: Int?, defaultValue: Int?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Int?, KeyAction?)->())
+    func scorecardDeclarerPickerPopup(values: [(Seat, ScrollPickerEntry)], selected: Seat?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Seat?, KeyAction?)->())
     func scorecardGetDeclarers(tableNumber: Int) -> [Seat]
     func scorecardUpdateDeclarers(tableNumber: Int, to: [Seat]?)
-    func scorecardSelectScore(boardNumber: Int)
+    @discardableResult func scorecardSelect(rowType: RowType, itemNumber: Int, columnType: ColumnType?, action: KeyAction?) -> Bool
     func scorecardEndEditing(_ force: Bool)
     func setAnalysisCommentBoardNumber(boardNumber: Int)
     var viewType: ViewType {get}
@@ -470,6 +469,7 @@ protocol ScorecardDelegate {
     var autoComplete: AutoComplete {get}
     var keyboardHeight: CGFloat {get}
     var inputControlInset: CGFloat {get}
+    var focusCell: ScorecardInputCollectionCell? {get set}
 }
 
 extension ScorecardDelegate {
@@ -479,7 +479,7 @@ extension ScorecardDelegate {
     func scorecardChanged(type: RowType, itemNumber: Int, column: ColumnType?) {
         scorecardChanged(type: type, itemNumber: itemNumber, column: column, refresh: false)
     }
-    func scorecardScrollPickerPopup(values: [String], maxValues: Int, selected: Int?, defaultValue: Int?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Int?)->()) {
+    func scorecardScrollPickerPopup(values: [String], maxValues: Int, selected: Int?, defaultValue: Int?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Int?, KeyAction?)->()) {
         scorecardScrollPickerPopup(values: values.map{ScrollPickerEntry(title: $0, caption: nil)}, maxValues: maxValues, selected: selected, defaultValue: defaultValue, frame: frame, in: container, topPadding: topPadding, bottomPadding: bottomPadding, completion: completion)
     }
 }
@@ -516,6 +516,10 @@ class ScorecardInputUIViewController: UIViewController {
         self.handSitting = handSitting
         self.analysisViewer = analysisViewer
         super.init(nibName: nil, bundle: nil)
+    }
+    
+    override func shouldUpdateFocus(in context: UIFocusUpdateContext) -> Bool {
+        return false
     }
     
     override func loadView() {
@@ -565,6 +569,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     internal var inputControlInset: CGFloat = 0
     private var viewController: UIViewController!
     private var maskBackgroundView: UIView!
+    internal var focusCell: ScorecardInputCollectionCell?
     
     var boardColumns: [ScorecardColumn] = []
     var boardAnalysisCommentColumns: [ScorecardColumn] = []
@@ -595,6 +600,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         titleHeightConstraint = Constraint.setHeight(control: titleView, height: titleRowHeight)
         
         self.addSubview(self.mainTableView, anchored: .leading, .trailing)
+        mainTableView.allowsFocus = false
         Constraint.anchor(view: self, control: titleView, to: mainTableView, toAttribute: .top, attributes: .bottom)
         bottomConstraint = Constraint.anchor(view: self, control: mainTableView, attributes: .bottom).first!
                                 
@@ -634,7 +640,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
             forceReload = false
         }
     }
-
+    
     public func refreshTableTotals() {
         for table in 1...scorecard.tables {
             updateTableCell(section: table - 1, columnType: .tableScore)
@@ -944,13 +950,13 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         }
     }
     
-    func scorecardScrollPickerPopup(values: [ScrollPickerEntry], maxValues: Int, selected: Int?, defaultValue: Int?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Int?)->()) {
-        scrollPickerPopupView.show(from: self, values: values, maxValues: maxValues, selected: selected, defaultValue: defaultValue, frame: container.convert(frame, to: self), topPadding: topPadding, bottomPadding: bottomPadding) { (selected) in
-            completion(selected)
+    func scorecardScrollPickerPopup(values: [ScrollPickerEntry], maxValues: Int, selected: Int?, defaultValue: Int?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Int?, KeyAction?)->()) {
+        scrollPickerPopupView.show(from: self, values: values, maxValues: maxValues, selected: selected, defaultValue: defaultValue, frame: container.convert(frame, to: self), topPadding: topPadding, bottomPadding: bottomPadding) { (selected, keyAction) in
+            completion(selected, keyAction)
         }
     }
     
-    func scorecardDeclarerPickerPopup(values: [(Seat, ScrollPickerEntry)], selected: Seat?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Seat?)->()) {
+    func scorecardDeclarerPickerPopup(values: [(Seat, ScrollPickerEntry)], selected: Seat?, frame: CGRect, in container: UIView, topPadding: CGFloat, bottomPadding: CGFloat, completion: @escaping (Seat?, KeyAction?)->()) {
         var frame = container.convert(frame, to: self)
         let freeSpace = self.mainTableView.frame.maxY - frame.maxY
         let offset = mainTableView.contentOffset
@@ -960,9 +966,9 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
             mainTableView.contentOffset = offset.offsetBy(dy: adjustY)
             frame = frame.offsetBy(dy: -adjustY)
         }
-        declarerPickerPopupView.show(from: self, values: values, selected: selected, frame: frame, topPadding: topPadding, bottomPadding: bottomPadding) { (selected) in
-            self.mainTableView.contentOffset = offset
-            completion(selected)
+        declarerPickerPopupView.show(from: self, values: values, selected: selected, frame: frame, topPadding: topPadding, bottomPadding: bottomPadding) { [self] (selected, keyAction) in
+            mainTableView.contentOffset = offset
+            completion(selected, keyAction)
         }
     }
     
@@ -986,19 +992,153 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         }
     }
     
-    func scorecardSelectScore(boardNumber: Int) {
-        if boardNumber <= scorecard.boards {
-            let section = (boardNumber - 1) / self.scorecard.boardsTable
-            let row = (boardNumber - 1) % self.scorecard.boardsTable
-            if let tableCell = self.mainTableView.cellForRow(at: IndexPath(row: row, section: section)) as? ScorecardInputBoardTableCell {
-                // Update contract and/or declarer
-                if let item = self.getBoardColumns(boardNumber: boardNumber).firstIndex(where: {$0.type == .score}) {
-                    if let cell = tableCell.collectionView.cellForItem(at: IndexPath(item: item, section: 0)) as? ScorecardInputCollectionCell {
-                        cell.textView.becomeFirstResponder()
+    @discardableResult func scorecardSelect(rowType: RowType, itemNumber: Int, columnType: ColumnType?, action: KeyAction?) -> Bool {
+        var newItemNumber = itemNumber
+        var newColumnNumber: Int?
+        var columnNumber: Int?
+        var result = false
+        
+        let section = rowType == .table ? itemNumber - 1 : (itemNumber - 1) / self.scorecard.boardsTable
+        let row = rowType == .table ? nil : (itemNumber - 1) % self.scorecard.boardsTable
+        if columnType == nil {
+            columnNumber = (action == .previous ? getColumns(rowType: rowType, itemNumber: itemNumber).count : -1)
+        } else {
+            columnNumber = getColumnNumber(rowType: rowType, itemNumber: itemNumber, type: columnType!) ?? -1
+        }
+        if let collectionView = rowCollectionView(rowType: rowType, section: section, row: row) {
+            if let columnNumber = columnNumber {
+                switch action {
+                case .up:
+                    if let (newRowType, newItemNumber) = previousRow(rowType: rowType, itemNumber: itemNumber) {
+                        return scorecardSelect(rowType: newRowType, itemNumber: newItemNumber, columnType: columnType, action: nil)
                     }
+                case .down:
+                    if let (newRowType, newItemNumber) = nextRow(rowType: rowType, itemNumber: itemNumber) {
+                        return scorecardSelect(rowType: newRowType, itemNumber: newItemNumber, columnType: columnType, action: nil)
+                    }
+                case .left, .previous:
+                    newColumnNumber = nextRowCell(collectionView: collectionView, columnNumber: columnNumber, increment: -1)
+                    if newColumnNumber == nil {
+                        if let (newRowType, newItemNumber) = previousRow(rowType: rowType, itemNumber: itemNumber) {
+                            return scorecardSelect(rowType: newRowType, itemNumber: newItemNumber, columnType: nil, action: action)
+                        }
+                    }
+                case .right, .next:
+                    newColumnNumber = nextRowCell(collectionView: collectionView, columnNumber: columnNumber, increment: +1)
+                    if newColumnNumber == nil {
+                        if let (newRowType, newItemNumber ) = nextRow(rowType: rowType, itemNumber: itemNumber) {
+                            return scorecardSelect(rowType: newRowType, itemNumber: newItemNumber, columnType: nil, action: action)
+                        }
+                    }
+                case nil:
+                    // Trying to get same column (or first if not found)
+                    if columnNumber < 0 {
+                        newColumnNumber = nextRowCell(collectionView: collectionView, columnNumber: columnNumber, increment: +1)
+                    } else {
+                        newColumnNumber = columnNumber
+                    }
+                default:
+                    break
                 }
             }
         }
+        if let columnNumber = columnNumber, let newColumnNumber = newColumnNumber {
+            if newItemNumber != itemNumber || newColumnNumber != columnNumber || action == nil {
+                let newSection = rowType == .table ? newItemNumber - 1 : (newItemNumber - 1) / self.scorecard.boardsTable
+                let newRow = rowType == .table ? nil : (newItemNumber - 1) % self.scorecard.boardsTable
+                if let cell = cell(rowType: rowType, section: newSection, row: newRow, column: newColumnNumber) {
+                    cell.getFocus()
+                    result = true
+                }
+                
+            }
+        }
+        return result
+    }
+    
+    func previousRow(rowType: RowType, itemNumber: Int) -> (rowType: RowType, itemNumber: Int)? {
+        if rowType == .board {
+            let tableNumber = ((itemNumber - 1) / scorecard.boardsTable) + 1
+            let boardNumber =  ((itemNumber - 1) % self.scorecard.boardsTable) + 1
+            if boardNumber > 1 {
+                // Just previous board
+                return (rowType: rowType, itemNumber - 1)
+            } else {
+                // First board - return table
+                return (rowType: .table, itemNumber: tableNumber)
+            }
+        } else {
+            if itemNumber > 1 {
+                // Return last board in previous table
+                return (rowType: .board, itemNumber: (itemNumber - 1) * scorecard.boardsTable)
+            } else {
+                // Can't go back from first table
+                return nil
+            }
+        }
+    }
+    
+    func nextRow(rowType: RowType, itemNumber: Int) -> (rowType: RowType, itemNumber: Int)? {
+        if rowType == .board {
+            let tableNumber = ((itemNumber - 1) / scorecard.boardsTable) + 1
+            let boardNumber =  ((itemNumber - 1) % self.scorecard.boardsTable) + 1
+            if boardNumber < scorecard.boardsTable {
+                // Just next board
+                return (rowType: rowType, itemNumber: itemNumber + 1)
+            } else if tableNumber < scorecard.tables {
+                // Next table
+                return (rowType: .table, itemNumber: tableNumber + 1)
+            } else {
+                // Can't go forward from last board in last table
+                return nil
+            }
+        } else {
+            // Return first board for this table
+            return (rowType: .board, itemNumber: ((itemNumber - 1) * scorecard.boardsTable) + 1)
+        }
+    }
+    
+    func nextRowCell(collectionView: UICollectionView, columnNumber: Int, increment: Int) -> Int? {
+        var cell: ScorecardInputCollectionCell?
+        var newColumnNumber = columnNumber
+        repeat {
+            newColumnNumber += increment
+            cell = rowCell(collectionView: collectionView, item: newColumnNumber)
+            if let cell = cell {
+                if cell.canGetFocus {
+                    break
+                }
+            }
+        } while cell != nil
+        return cell == nil ? nil : newColumnNumber
+    }
+    
+    func getColumns(rowType: RowType, itemNumber: Int) -> [ScorecardColumn] {
+        return (rowType == .table ? tableColumns : getBoardColumns(boardNumber: itemNumber))
+    }
+    
+    func getColumnNumber(rowType: RowType, itemNumber: Int, type: ColumnType) -> Int? {
+        return getColumns(rowType: rowType, itemNumber: itemNumber).firstIndex(where: {$0.type == type})
+    }
+    
+    func rowCollectionView(rowType: RowType, section: Int, row: Int? = nil) -> UICollectionView? {
+        if rowType == .table {
+            return (mainTableView.headerView(forSection: section) as? ScorecardInputTableSectionHeaderView)?.collectionView
+        } else {
+            return (mainTableView.cellForRow(at: IndexPath(row: row!, section: section)) as? ScorecardInputBoardTableCell)?.collectionView
+        }
+    }
+    
+    func rowCell(collectionView: UICollectionView, item: Int) -> ScorecardInputCollectionCell? {
+        return collectionView.cellForItem(at: IndexPath(item: item, section: 0)) as? ScorecardInputCollectionCell
+    }
+    
+    func cell(rowType: RowType, section: Int, row: Int? = nil, column: Int) -> ScorecardInputCollectionCell? {
+        var result: ScorecardInputCollectionCell?
+        if let collectionView = rowCollectionView(rowType: rowType, section: section, row: row) {
+            result = rowCell(collectionView: collectionView, item: column)
+        }
+        return result
     }
     
     func scorecardEndEditing(_ force: Bool) {
@@ -1053,6 +1193,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         let view = ScorecardInputTableSectionHeaderView.dequeue(self, tableView: tableView, tag: RowType.table.tagOffset + section + 1)
+        view.collectionView.allowsFocus = false
         return view
     }
     
@@ -1062,6 +1203,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = ScorecardInputBoardTableCell.dequeue(self, tableView: tableView, for: indexPath, tag: RowType.board.tagOffset + (indexPath.section * scorecard.boardsTable) + indexPath.row + 1)
+        cell.collectionView.allowsFocus = false
         return cell
     }
     
@@ -1109,7 +1251,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
         return 0
     }
-    
+        
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         if let type = RowType(rawValue: collectionView.tag / tagMultiplier) {
             switch type {
@@ -1326,6 +1468,7 @@ class ScorecardInputBoardTableCell: TableViewCellWithCollectionView {
 
 class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, EnumPickerDelegate, UITextViewDelegate, UITextFieldDelegate, AutoCompleteDelegate {
     fileprivate var label = UILabel()
+    fileprivate var firstResponderLabel: FirstResponderLabel!
     fileprivate var labelSeparator = UIView()
     fileprivate var labelHorizontalPadding: [NSLayoutConstraint]!
     fileprivate var labelTopPadding: [NSLayoutConstraint]!
@@ -1335,14 +1478,18 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     fileprivate var bottomAnalysis = AnalysisSummaryView()
     fileprivate var analysisSeparator = UIView()
     fileprivate var caption = UILabel()
-    fileprivate var textField = UITextField()
-    fileprivate var textView = UITextView()
+    fileprivate var textField =  ScorecardInputTextField()
+    fileprivate var textView = ScorecardInputTextView()
     private var textViewCenterYConstraints: [NSLayoutConstraint] = []
     private var textViewHeightConstraint: NSLayoutConstraint!
     private var textViewBorderConstraints: [NSLayoutConstraint] = []
+    private var textFieldCenterYConstraints: [NSLayoutConstraint] = []
+    private var textFieldHeightConstraint: NSLayoutConstraint!
+    private var textFieldBorderConstraints: [NSLayoutConstraint] = []
     private var textClear = UIImageView()
     private var textClearWidth: NSLayoutConstraint!
     private var textClearPadding: [NSLayoutConstraint]!
+    private var textClearTapGesture: UITapGestureRecognizer!
     private var responsiblePicker: EnumPicker<Responsible>!
     fileprivate var declarerPicker: ScrollPicker!
     fileprivate var seatPicker: EnumPicker<Seat>!
@@ -1351,7 +1498,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     private var board: BoardViewModel!
     fileprivate var itemNumber: Int!
     fileprivate var rowType: RowType!
-    private var column: ScorecardColumn!
+    fileprivate var column: ScorecardColumn!
     private var scorecardDelegate: ScorecardDelegate?
     private static let identifier = "Grid Collection Cell"
     private var captionHeight: NSLayoutConstraint!
@@ -1362,8 +1509,9 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     private var currentTapControl: TapControl?
     private var tapGesture = UITapGestureRecognizer()
     public let inputControlInset: CGFloat = 8
-
+    
     public var gridLineViews: [UIView] = []
+    public var focusLineViews: [UIView] = []
     
     private var scorecard: ScorecardViewModel!
     
@@ -1371,17 +1519,20 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         
         responsiblePicker = EnumPicker(frame: frame)
         declarerPicker = ScrollPicker(frame: frame)
-        seatPicker = EnumPicker(frame: frame)
+        seatPicker = EnumPicker(frame: frame, allCases: true)
         madePicker = ScrollPicker(frame: frame)
         super.init(frame: frame)
         
         self.backgroundColor = UIColor(Palette.gridTable.background)
                         
         addSubview(label)
-        labelHorizontalPadding = Constraint.anchor(view: self, control: label, constant: 2, attributes: .leading, .trailing)
+        labelHorizontalPadding = Constraint.anchor(view: self, control: label, constant: 2, attributes: .leading)
         label.textAlignment = .center
         label.minimumScaleFactor = 0.3
         label.adjustsFontSizeToFitWidth = true
+        
+        firstResponderLabel = FirstResponderLabel(from: self)
+        addSubview(firstResponderLabel)
         
         addSubview(labelSeparator, constant: 0, anchored: .leading, .trailing)
         labelSeparator.backgroundColor = UIColor(Palette.gridLine)
@@ -1408,7 +1559,13 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         Constraint.anchor(view: self, control: bottomAnalysis, to: analysisSeparator, constant: 0, toAttribute: .bottom, attributes: .top)
         bottomAnalysisHeight = Constraint.setHeight(control: bottomAnalysis, height: 0)
         
-        addSubview(textField, constant: inputControlInset, anchored: .leading, .top, .bottom)
+        textField = ScorecardInputTextField(from: self)
+        addSubview(textField, constant: inputControlInset, anchored: .leading)
+        textFieldCenterYConstraints = Constraint.anchor(view: self, control: textField, attributes: .centerY)
+        textFieldCenterYConstraints.forEach { constraint in constraint.isActive = false}
+        textFieldHeightConstraint = Constraint.setHeight(control: textField, height: tableRowHeight / 2)
+        textFieldHeightConstraint.isActive = false
+        textFieldBorderConstraints = Constraint.anchor(view: self, control: textField, attributes: .top, .bottom)
         textField.textAlignment = .center
         textField.autocapitalizationType = .none
         textField.autocorrectionType = .no
@@ -1420,6 +1577,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         textField.adjustsFontSizeToFitWidth = true
         textField.returnKeyType = .done
                
+        textView = ScorecardInputTextView(from: self)
         addSubview(textView, constant: inputControlInset, anchored: .leading)
         textViewCenterYConstraints = Constraint.anchor(view: self, control: textView, attributes: .centerY)
         textViewCenterYConstraints.forEach { constraint in constraint.isActive = false}
@@ -1434,14 +1592,18 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         textView.backgroundColor = UIColor.clear
         textView.textContainerInset = .zero
         
-        addSubview(textClear, constant: inputControlInset, anchored: .trailing, .top, .bottom)
+        addSubview(textClear, constant: inputControlInset, anchored: .top, .bottom)
         textClearWidth = Constraint.setWidth(control: textClear, width: 0)
-        textClearPadding = Constraint.anchor(view: self, control: textField, to: textClear, constant: inputControlInset, toAttribute: .leading, attributes: .trailing)
-        textClearPadding.append(contentsOf: Constraint.anchor(view: self, control: textView, to: textClear, constant: 8, toAttribute: .leading, attributes: .trailing))
+        textClearPadding = Constraint.anchor(view: self, control: textClear, constant: 0, attributes: .trailing)
+        textClearPadding.append(contentsOf : Constraint.anchor(view: self, control: textClear, to: textField, constant: 0, toAttribute: .trailing, attributes: .leading))
+        textClearPadding.append(contentsOf: Constraint.anchor(view: self, control: textClear, to: textView, constant: 0, toAttribute: .trailing, attributes: .leading))
+        textClearPadding.append(contentsOf: Constraint.anchor(view: self, control: textClear, to: label, constant: 0, toAttribute: .trailing, attributes: .leading))
         textClear.image = UIImage(systemName: "x.circle.fill")?.asTemplate
         textClear.tintColor = UIColor(Palette.clearText)
         textClear.contentMode = .scaleAspectFit
         textClear.isUserInteractionEnabled = true
+        textClearTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputCollectionCell.clearTapped(_:)))
+        textClear.addGestureRecognizer(textClearTapGesture, identifier: "Text clear")
         
         addSubview(declarerPicker, top: 16, bottom: 0)
         Constraint.setWidth(control: declarerPicker, width: 60)
@@ -1473,6 +1635,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         labelTopPadding = Constraint.anchor(view: self, control: label, to: caption, constant: 0, toAttribute: .bottom, attributes: .top)
         
         Constraint.addGridLineReturned(self, views: &gridLineViews, sides: [.leading, .trailing, .top, .bottom])
+        Constraint.addGridLineReturned(self, size: 3, color: .black, views: &focusLineViews, sides: [.leading, .trailing, .top, .bottom])
     }
     
     required init?(coder: NSCoder) {
@@ -1505,6 +1668,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         textField.clearsOnBeginEditing = false
         textField.clearButtonMode = .never
         textField.font = cellFont
+        setTextInput(centered: false)
         textField.keyboardType = .default
         textField.autocapitalizationType = .none
         textField.autocorrectionType = .no
@@ -1513,14 +1677,12 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         textField.text = ""
         textClear.isHidden = true
         textClearWidth.constant = 0
-        textClearPadding.forEach { (constraint) in constraint.setIndent(in: self, constant: 0) }
+        textClearPadding.forEach { (constraint) in constraint.constant = 0 }
+        textClearTapGesture.isEnabled = false
         textView.text = ""
         textView.font = cellFont
         textView.textContainer.maximumNumberOfLines = 0
         textView.textContainer.lineBreakMode = .byWordWrapping
-        textViewCenterYConstraints.forEach { constraint in constraint.isActive = false ; constraint.constant = 0}
-        textViewHeightConstraint.isActive = false
-        textViewBorderConstraints.forEach { constraint in constraint.isActive = true}
         label.backgroundColor = UIColor.clear
         label.textColor = UIColor(Palette.background.text)
         label.text = ""
@@ -1550,6 +1712,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         bottomAnalysis.prepareForReuse()
         bottomAnalysisHeight.constant = 0
         bottomAnalysis.isHidden = true
+        focusLineViews.forEach { line in line.isHidden = true }
     }
     
     func setTitle(scorecard: ScorecardViewModel, column: ScorecardColumn) {
@@ -1557,6 +1720,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         self.column = column
         self.rowType = .boardTitle
         self.itemNumber = 0
+        self.isUserInteractionEnabled = false
         label.tag = column.type.rawValue
         label.backgroundColor = UIColor(Palette.gridTitle.background)
         label.textColor = UIColor(Palette.gridTitle.text)
@@ -1585,6 +1749,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 label.text = column.heading
             }
         case .commentAvailable:
+            self.isUserInteractionEnabled = true
             label.attributedText = Scorecard.commentAvailableText(exists: Scorecard.current.boards.map({$0.value.comment != ""}).contains(true))
             label.isUserInteractionEnabled = true
             let color = scorecardDelegate?.analysisCommentBoardNumber == -1 ? Palette.enabledButton : Palette.background
@@ -1596,6 +1761,31 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         }
     }
     
+    var isEnabled : Bool {
+        if rowType == .boardTitle {
+            false
+        } else {
+            switch column.type {
+            case .board, .table, .vulnerable, .dealer, .points, .teamTable, .analysis1, .analysis2, .commentAvailable:
+                false
+            case .declarer:
+                (table?.sitting ?? .unknown != .unknown && !Scorecard.current.isImported)
+            case .made:
+                board.contract.suit.valid && !Scorecard.current.isImported
+            case .score, .versus, .sitting, .contract:
+                !Scorecard.current.isImported
+            case .responsible, .comment:
+                true
+            default:
+                false
+            }
+        }
+    }
+    
+    override var description : String {
+        "\(rowType!) \(itemNumber!): \(column.type)"
+    }
+    
     func set(scorecard: ScorecardViewModel, table: TableViewModel, board: BoardViewModel! = nil, itemNumber: Int, rowType: RowType, column: ScorecardColumn) {
         self.scorecard = scorecard
         self.board = board
@@ -1603,23 +1793,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         self.itemNumber = itemNumber
         self.rowType = rowType
         self.column = column
-        
-        var isEnabled = false
-        switch column.type {
-        case .board, .table, .vulnerable, .dealer, .points, .teamTable, .analysis1, .analysis2, .commentAvailable:
-            isEnabled = false
-        case .declarer:
-            isEnabled = (table.sitting != .unknown && !Scorecard.current.isImported)
-        case .made:
-            isEnabled = board.contract.suit.valid && !Scorecard.current.isImported
-        case .score, .versus, .sitting, .contract:
-            isEnabled = !Scorecard.current.isImported
-        case .responsible, .comment:
-            isEnabled = true
-        default:
-            break
-        }
-        
+
         var color: PaletteColor
         if rowType == .board {
             if Scorecard.current.isImported && board?.score == nil {
@@ -1701,42 +1875,19 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 }
             } else {
                 label.isHidden = true
-                textViewBorderConstraints.forEach { constraint in constraint.isActive = false}
-                textViewCenterYConstraints.forEach { constraint in constraint.isActive = true}
-                textViewHeightConstraint.isActive = true
-                textView.textAlignment = .center
-                textView.isHidden = false
-                textView.keyboardType = .numbersAndPunctuation
-                textView.text = board.score == nil ? "" : "\(board.score!.toString(places: scorecard.type.boardPlaces))"
-                textView.isUserInteractionEnabled = isEnabled
+                setTextInput(centered: true)
+                    textControl?.textAlignment = .center
+                    textControl?.isHidden = false
+                    textControl?.keyboardType = .numbersAndPunctuation
+                    textControl?.textValue = board.score == nil ? "" : "\(board.score!.toString(places: scorecard.type.boardPlaces))"
+                    textControl?.isUserInteractionEnabled = isEnabled
             }
             label.isUserInteractionEnabled = !isEnabled
             set(tap: .label)
         case .points:
             analysisSplitPoints(isEnabled: isEnabled)
         case .comment:
-            textView.text = board.comment
-            textView.textAlignment = .left
-            textView.autocapitalizationType = .sentences
-            textClear.isHidden = board.comment == ""
-            textClearWidth.constant = 34
-            textClearPadding.forEach { (constraint) in constraint.setIndent(in: self, constant: 8) }
-            textView.textContainer.maximumNumberOfLines = 2
-            textView.textContainer.lineBreakMode = .byTruncatingTail
-            textView.adjustsFontForContentSizeCategory = true
-            textView.font = cellFont
-            if scorecardDelegate?.viewType == .analysis {
-                textView.font = smallCellFont
-                label.textAlignment = .left
-                labelHorizontalPadding.forEach { (constraint) in constraint.setIndent(in: self, constant: 14) }
-                labelTopPadding.forEach { (constraint) in constraint.setIndent(in: self, constant: 8) }
-                label.sizeToFit()
-                bottomLabelHeight.isActive = false
-                label.textColor = UIColor(Palette.background.faintText)
-                label.font = smallCellFont
-                label.text = "Enter comment"
-            }
-            enableCommentControls()
+            setTextInputString(value: board.comment, font: scorecardDelegate?.viewType == .analysis ? smallCellFont : cellFont, centered: scorecardDelegate?.viewType != .analysis)
         case .responsible:
             responsiblePicker.isHidden = (Scorecard.current.isImported && board.score == nil)
             responsiblePicker.set(board.responsible, color: Palette.gridBoard, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
@@ -1789,45 +1940,19 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             set(tap: isEnabled ? .seat : nil)
         case .tableScore:
             if scorecard.manualTotals {
-                textViewBorderConstraints.forEach { constraint in constraint.isActive = false}
-                textViewCenterYConstraints.forEach { constraint in constraint.isActive = true}
-                textViewHeightConstraint.isActive = true
-                textView.textAlignment = .center
-                textView.isHidden = false
-                textView.keyboardType = .numbersAndPunctuation
-                textView.text = table.score == nil ? "" : "\(table.score!.toString(places: scorecard.type.tablePlaces))"
-                set(tap: .textFieldClear)
+                setTextInput(centered: true)
+                textControl?.textAlignment = .center
+                textControl?.isHidden = false
+                textControl?.keyboardType = .numbersAndPunctuation
+                textControl?.textValue = table.score == nil ? "" : "\(table.score!.toString(places: scorecard.type.tablePlaces))"
+                set(tap: .noTap)
             } else {
                 label.text = table.score == nil ? "" : "\(scorecard.type.tableScoreType.prefix(score: table.score!))\(table.score!.toString(places: min(1, scorecard.type.tablePlaces)))\(scorecard.type.tableScoreType.suffix)"
                 label.isUserInteractionEnabled = true
                 set(tap: .label)
             }
         case .versus:
-            if Scorecard.current.isImported {
-                label.isHidden = false
-                label.text = importedVersus
-                label.isUserInteractionEnabled = true
-                label.numberOfLines = 1
-                label.font = (scorecard.type.players == 1 ? smallCellFont : cellFont)
-                set(tap: .label)
-            } else {
-                textViewBorderConstraints.forEach { constraint in constraint.isActive = false}
-                textViewCenterYConstraints.forEach { constraint in constraint.isActive = true ; constraint.constant = (captionHeight?.constant ?? 0) + 10
-                }
-                textViewHeightConstraint.isActive = true
-                textView.isHidden = false
-                textView.text = table.versus
-                textView.textAlignment = (isEnabled ? .left : .center)
-                textView.autocapitalizationType = .words
-                textView.isUserInteractionEnabled = isEnabled
-                textView.font = (scorecard.type.players == 1 ? smallCellFont : cellFont)
-                textView.textContainer.maximumNumberOfLines = 1
-                textView.textContainer.lineBreakMode = .byTruncatingTail
-                textView.isHidden = (!isEnabled && table.versus == "")
-                textClearWidth.constant = 34
-                textClearPadding.forEach { (constraint) in constraint.setIndent(in: self, constant: 8) }
-                set(tap: .textViewClear)
-            }
+            setTextInputString(value: table.versus, offset: (captionHeight?.constant ?? 0) + 10)
         }
         
         if rowType == .table && column.heading != "" {
@@ -1857,22 +1982,69 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         }
     }
     
-    private func enableCommentControls() {
+    private func setTextInputString(value: String, font: UIFont = cellFont, centered: Bool = true, offset: CGFloat = 0) {
+        textControl?.textValue = value
+        textControl?.textAlignment = .left
+        textControl?.autocapitalizationType = .sentences
+        textControl?.adjustsFontForContentSizeCategory = true
+        textControl?.font = cellFont
+        textClear.isHidden = (value == "")
+        textClearTapGesture.isEnabled = true
+        textClearWidth.constant = 34
+        textClearPadding.forEach { (constraint) in constraint.setIndent(in: self, constant: inputControlInset * 2) }
+        label.numberOfLines = 0
+        label.text = value
+        labelHorizontalPadding.forEach { (constraint) in constraint.setIndent(in: self, constant: 14) }
+        labelTopPadding.forEach { (constraint) in constraint.setIndent(in: self, constant: 8) }
+        label.sizeToFit()
+        bottomLabelHeight.isActive = false
+        setTextInput(centered: false, offset: offset)
+        label.textAlignment = (centered ? .center : .left)
+        setTextInputStringLabel(value: value)
+        enableTextInputStringControls()
+    }
+    
+    private func setTextInputStringLabel(value: String?) {
+        label.textColor = UIColor((value ?? "") == "" ? Palette.background.faintText : Palette.background.text)
+        label.text = ((value ?? "") == "" && scorecardDelegate?.viewType == .analysis ? "Enter Comment" : (textControl?.textValue ?? ""))
+    }
+    
+    private func textInputStringLabelTapped() {
+        if !(Scorecard.current.isImported && board?.score == nil) {
+            label.isHidden = true
+            label.isUserInteractionEnabled = false
+            set(tap: .noTap)
+            textControl?.isHidden = false
+            _ = textControl?.becomeFirstResponder()
+        }
+    }
+    
+    private func enableTextInputStringControls(forceEditing: Bool? = nil) {
         let imported = Scorecard.current.isImported
-        let sitout = imported && board.score == nil
-        let editing = textView.isFirstResponder
-        let analysisMode = scorecardDelegate?.viewType == .analysis
-        let blank = (board.comment == "")
+        let sitout = imported && board != nil && board.score == nil
+        let editing = forceEditing ?? (textControl?.isFirstResponder ?? false)
 
-        let useLabel = sitout || (analysisMode && blank && !editing)
+        let useLabel = sitout || !editing
         
-        textView.isHidden = useLabel
+        textControl?.isHidden = useLabel
         label.isHidden = !useLabel
+        
         bottomLabel.isHidden = !useLabel
         label.isUserInteractionEnabled = useLabel
         bottomLabel.isUserInteractionEnabled = useLabel
         bottomLabelTapGesture.isEnabled = useLabel
-        set(tap: useLabel ? .label : .textViewClear)
+        if useLabel {
+            set(tap: useLabel ? .label : .none)
+        }
+    }
+    
+    private func setTextInput(centered: Bool, offset: CGFloat = 0) {
+        textFieldBorderConstraints.forEach { constraint in constraint.isActive = !centered}
+        textFieldCenterYConstraints.forEach { constraint in constraint.isActive = centered ; constraint.constant = offset}
+        textFieldHeightConstraint.isActive = centered
+        textViewBorderConstraints.forEach { constraint in constraint.isActive = !centered}
+        textViewCenterYConstraints.forEach { constraint in constraint.isActive = centered ; constraint.constant = offset}
+        textViewHeightConstraint.isActive = centered
     }
     
     private func analysisSplitPoints(isEnabled: Bool) {
@@ -1942,18 +2114,12 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         }
         
         func execute(on tapControl: TapControl, action: (UIView, Selector)->()) {
-            var control: UIView
-            var selector: Selector
+            var control: UIView?
+            var selector: Selector?
             switch tapControl {
             case .label:
                 control = label
                 selector = #selector(ScorecardInputCollectionCell.labelTapped(_:))
-            case .textViewClear:
-                control = textClear
-                selector = #selector(ScorecardInputCollectionCell.textViewClearPressed)
-            case .textFieldClear:
-                control = textClear
-                selector = #selector(ScorecardInputCollectionCell.textFieldClearPressed)
             case .responsible:
                 control = responsiblePicker
                 selector = #selector(ScorecardInputCollectionCell.responsibleTapped)
@@ -1966,8 +2132,12 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             case .made:
                 control = madePicker
                 selector = #selector(ScorecardInputCollectionCell.madeTapped)
+            default:
+                break
             }
-            action(control, selector)
+            if let control = control, let selector = selector {
+                action(control, selector)
+            }
         }
     }
     
@@ -2021,7 +2191,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         
     // MARK: - Control change handlers ===================================================================== -
         
-    @objc private func textFieldChanged(_ textField: UITextField) {
+    @objc fileprivate func textFieldChanged(_ textField: UITextField) {
         let text = textField.text ?? ""
         var undoText: String?
         let rowType = rowType!
@@ -2051,6 +2221,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 case .comment:
                     board.comment = text
                     textClear.isHidden = (text == "")
+                    setTextInputStringLabel(value: textField.text)
                 case .versus:
                     table.versus = text
                     textClear.isHidden = (text == "")
@@ -2065,6 +2236,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             }
         }
     }
+    
     internal func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         if column.type == .versus || column.type == .comment {
             if range.location + range.length == NSString(utf8String: textField.text!)!.length {
@@ -2075,15 +2247,9 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         return true
     }
     
-    internal func replace(with text: String, textField: UITextField? = nil, textView: UITextView? = nil, at range: NSRange) {
-        if let textField = textField {
-            textField.text = (textField.text! as NSString).replacingCharacters(in: range, with: text)
-            textFieldChanged(textField)
-        }
-        if let textView = textView {
-            textView.text = (textView.text! as NSString).replacingCharacters(in: range, with: text)
-            textViewDidChange(textView)
-        }
+    internal func replace(with text: String, textInput: ScorecardInputTextInput, at range: NSRange) {
+        textInput.textValue = (textInput.textValue as NSString).replacingCharacters(in: range, with: text)
+        textInput.textChanged(textInput)
         scorecardDelegate?.autoComplete.delegate = nil
         scorecardDelegate?.autoComplete.isHidden = true
     }
@@ -2098,6 +2264,8 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         default:
             break
         }
+        let position = textField.endOfDocument
+        textField.selectedTextRange = textField.textRange(from: position, to: position)
         if clear {
             // Record automatic clear on entry in undo
             textFieldChanged(textField)
@@ -2131,30 +2299,15 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         textField.resignFirstResponder()
         switch column.type {
         case .score:
-            scorecardDelegate?.scorecardSelectScore(boardNumber: board.board + 1)
+            if textField.text != "" {
+                if board.board < scorecard.boards {
+                    scorecardDelegate?.scorecardSelect(rowType: .board, itemNumber: board.board + 1, columnType: .score, action: nil)
+                }
+            }
         default:
             break
         }
         return true
-    }
-    
-    @objc internal func textFieldClearPressed(_ textFieldClear: UIView) {
-        scorecardDelegate?.scorecardEndEditing(true)
-        scorecardDelegate?.scorecardChanged(type: rowType, itemNumber: itemNumber)
-        var text: String?
-        switch self.column.type {
-        case .comment:
-            text = board.comment
-        case .versus:
-            text = table.versus
-        default:
-            break
-        }
-        if text != "" {
-            textField.text = ""
-            textField.resignFirstResponder()
-            textFieldChanged(textField)
-        }
     }
     
     internal func textViewDidChange(_ textView: UITextView) {
@@ -2188,7 +2341,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                     let wasBlank = board.comment == ""
                     let isBlank = text == ""
                     board.comment = text
-                    enableCommentControls()
+                    enableTextInputStringControls()
                     if wasBlank != isBlank {
                         scorecardDelegate?.scorecardChanged(type: .board, itemNumber: itemNumber, column: .comment, refresh: true)
                     }
@@ -2228,6 +2381,9 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         if text == "\n" {
             textView.resignFirstResponder()
             return false
+        } else if text == "\t" {
+            keyPressed(keyAction: .next)
+            return false
         } else {
             if column.type == .versus || column.type == .comment {
                 if range.location + range.length == NSString(utf8String: textView.text!)!.length {
@@ -2265,7 +2421,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         case .comment:
             textView.textContainer.maximumNumberOfLines = 2
             board.comment = textView.text
-            enableCommentControls()
+            enableTextInputStringControls()
         case .versus:
             textView.textContainer.maximumNumberOfLines = 1
             table.versus = textView.text
@@ -2279,7 +2435,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         if let places = places {
             let score = ScorecardInputUIView.numericValue(text)
             let newText = score == nil ? nil : "\(score!.toString(places: places))"
-            if newText != textField.text {
+            if newText != textView.text {
                 textView.text = newText ?? ""
                 textViewDidChange(textView)
             }
@@ -2289,14 +2445,16 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         switch column.type {
         case .score:
             if textView.text != "" {
-                scorecardDelegate?.scorecardSelectScore(boardNumber: board.board + 1)
+                if board.board < scorecard.boards {
+                    scorecardDelegate?.scorecardSelect(rowType: .board, itemNumber: board.board + 1, columnType: .score, action: nil)
+                }
             }
         default:
             break
         }
     }
     
-    @objc internal func textViewClearPressed(_ textViewClear: UIView) {
+    @objc internal func clearTapped(_ textFieldClear: UIView) {
         scorecardDelegate?.scorecardEndEditing(true)
         scorecardDelegate?.scorecardChanged(type: rowType, itemNumber: itemNumber)
         var text: String?
@@ -2309,23 +2467,22 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             break
         }
         if text != "" {
-            textView.text = ""
             switch self.column.type {
             case .comment:
-                enableCommentControls()
+                enableTextInputStringControls()
             default:
                 break
             }
-            textView.resignFirstResponder()
-            textViewDidChange(textView)
+            textControl?.textValue = ""
+            textControl?.textChanged(textControl!)
         }
     }
     
-    private func textAutoComplete(text: String, textView: UITextView? = nil, textField: UITextField? = nil) {
+   private func textAutoComplete(text: String, textView: UITextView? = nil, textField: UITextField? = nil) {
         if let autoComplete = scorecardDelegate?.autoComplete {
             if let last = autoComplete.last(text: text, columnType: column.type) {
                 autoComplete.delegate = self
-                let listSize = autoComplete.set(text: last, textField: textField, textView: textView, at: NSRange(location: NSString(utf8String: text)!.length - NSString(utf8String: last)!.length, length: last.length), columnType: column.type)
+                let listSize = autoComplete.set(text: last, textInput: textControl, at: NSRange(location: NSString(utf8String: text)!.length - NSString(utf8String: last)!.length, length: last.length), columnType: column.type)
                 if listSize == 0 {
                     autoComplete.isHidden = true
                 } else {
@@ -2434,12 +2591,12 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                     scorecardDelegate?.setAnalysisCommentBoardNumber(boardNumber: board?.board ?? -1)
                 }
             case .comment:
-                if Scorecard.current.isImported && board?.score != nil {
+                if !(Scorecard.current.isImported && board?.score == nil) {
                     label.isHidden = true
                     label.isUserInteractionEnabled = false
-                    textView.isHidden = false
-                    set(tap: .textViewClear)
-                    textView.becomeFirstResponder()
+                    textControl?.isHidden = false
+                    getFocus()
+                    set(tap: .noTap)
                 }
             default:
                 if Scorecard.current.isImported && board?.score != nil {
@@ -2480,6 +2637,14 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             if !values.isEmpty {
                 scorecardDelegate?.scorecardBBONamesReplace(values: values)
             }
+        } else {
+            if !Scorecard.current.isImported {
+                label.isHidden = true
+                label.isUserInteractionEnabled = false
+                textField.isHidden = false
+                set(tap: .noTap)
+                textField.becomeFirstResponder()
+            }
         }
     }
     
@@ -2487,10 +2652,15 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         scorecardDelegate?.scorecardEndEditing(true)
         scorecardDelegate?.scorecardChanged(type: rowType, itemNumber: itemNumber)
         if table.sitting != .unknown {
-            scorecardDelegate?.scorecardDeclarerPickerPopup(values: orderedDeclarerList, selected: board.declarer, frame: self.frame, in: self.superview!, topPadding: 20, bottomPadding: 4) { (selected) in
-                if let index = self.declarerList.firstIndex(where: {$0.seat == selected}) {
-                    self.declarerPicker.set(index)
-                    self.scrollPickerDidChange(to: index)
+            scorecardDelegate?.scorecardDeclarerPickerPopup(values: orderedDeclarerList, selected: board.declarer, frame: self.frame, in: self.superview!, topPadding: 20, bottomPadding: 4) { [ self] (selected, keyAction) in
+                if let index = declarerList.firstIndex(where: {$0.seat == selected}) {
+                    declarerPicker.set(index)
+                    scrollPickerDidChange(to: index)
+                    if let keyAction = keyAction {
+                        keyPressed(keyAction: keyAction)
+                    } else {
+                        getFocus()
+                    }
                 }
             }
         }
@@ -2503,10 +2673,15 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         let space = (frame.width - width) / 2
         if !Scorecard.current.isImported {
             let selected = Seat.allCases.firstIndex(where: {$0 == table.sitting}) ?? 0
-            scorecardDelegate?.scorecardScrollPickerPopup(values: Seat.allCases.map{ScrollPickerEntry(title: $0.short, caption: $0.string)}, maxValues: 9, selected: selected, defaultValue: nil, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 20, bottomPadding: 4) { (selected) in
+            scorecardDelegate?.scorecardScrollPickerPopup(values: Seat.allCases.map{ScrollPickerEntry(title: $0.short, caption: $0.string)}, maxValues: 9, selected: selected, defaultValue: nil, frame: CGRect(x: frame.minX + space, y: frame.minY, width: width, height: frame.height), in: superview!, topPadding: 20, bottomPadding: 4) { [self] (selected, keyAction) in
                 let seat = Seat.allCases[selected!]
-                self.seatPicker.set(seat)
-                self.enumPickerDidChange(to: seat)
+                seatPicker.set(seat)
+                enumPickerDidChange(to: seat)
+                if let keyAction = keyAction {
+                    keyPressed(keyAction: keyAction)
+                } else {
+                    getFocus()
+                }
             }
         }
     }
@@ -2519,9 +2694,14 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         let space = (frame.width - width) / 2
         let makingValue = (Values.trickOffset + board.contract.level.rawValue)
         let selected = board.made == nil ? nil : board.made! + makingValue
-        scorecardDelegate?.scorecardScrollPickerPopup(values: madeList, maxValues: 9, selected: selected, defaultValue: makingValue, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 16, bottomPadding: 0) { (selected) in
-            self.madePicker.set(selected, reload: self.board.made == nil || selected == nil)
-            self.scrollPickerDidChange(self.madePicker, to: selected)
+        scorecardDelegate?.scorecardScrollPickerPopup(values: madeList, maxValues: 9, selected: selected, defaultValue: makingValue, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 16, bottomPadding: 0) { [self] (selected, keyAction) in
+            madePicker.set(selected, reload: board.made == nil || selected == nil)
+            scrollPickerDidChange(madePicker, to: selected)
+            if let keyAction = keyAction {
+                keyPressed(keyAction: keyAction)
+            } else {
+                getFocus()
+            }
         }
     }
     
@@ -2531,10 +2711,15 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         let width: CGFloat = 70
         let space = (frame.width - width) / 2
         let selected = Responsible.validCases.firstIndex(of: board.responsible)
-        scorecardDelegate?.scorecardScrollPickerPopup(values: Responsible.validCases.map{ScrollPickerEntry(title: $0.short, caption: $0.full)}, maxValues: 13, selected: selected, defaultValue: nil, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 16, bottomPadding: 0) { (selected) in
+        scorecardDelegate?.scorecardScrollPickerPopup(values: Responsible.validCases.map{ScrollPickerEntry(title: $0.short, caption: $0.full)}, maxValues: 13, selected: selected, defaultValue: nil, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 16, bottomPadding: 0) { [self] (selected, keyAction) in
             let responsible = Responsible.validCases[selected!]
-            self.responsiblePicker.set(responsible)
-            self.enumPickerDidChange(to: responsible)
+            responsiblePicker.set(responsible)
+            enumPickerDidChange(to: responsible)
+            if let keyAction = keyAction {
+                keyPressed(keyAction: keyAction)
+            } else {
+                getFocus()
+            }
         }
     }
     
@@ -2588,29 +2773,196 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         }
     }
     
+    var canGetFocus: Bool {
+        return isEnabled
+    }
+    
+    @discardableResult func getFocus(becomeFirstResponder: Bool = true) -> Bool {
+        var result = false
+        if isEnabled {
+            let currentFocusCell = scorecardDelegate?.focusCell
+            if currentFocusCell != self {
+                currentFocusCell?.loseFocus()
+            }
+            scorecardDelegate?.focusCell = self
+            focusLineViews.forEach { line in
+                line.isHidden = false
+            }
+            if becomeFirstResponder {
+                switch column.type {
+                case .comment, .versus:
+                    enableTextInputStringControls(forceEditing: true)
+                default: break
+                }
+                result = responderControl?.becomeFirstResponder() ?? false
+            } else {
+                result = true
+            }
+        }
+        return result
+    }
+    
+    @discardableResult func loseFocus(resignFirstResponder: Bool = true) -> Bool {
+        var result = true
+        focusLineViews.forEach { line in
+            line.isHidden = true
+        }
+        switch column?.type {
+        case .comment, .versus:
+            enableTextInputStringControls(forceEditing: false)
+        case .responsible:
+            break
+        default: break
+        }
+        if resignFirstResponder {
+            result = responderControl?.resignFirstResponder() ?? false
+        }
+        if let column = column {
+            switch column.type {
+            case .comment:
+                enableTextInputStringControls()
+            default:
+                break
+            }
+        }
+        scorecardDelegate?.focusCell = nil
+
+        return result
+    }
+    
+    var responderControl: UIView? {
+        switch column!.type {
+        case .contract:
+            firstResponderLabel
+        case .declarer:
+            firstResponderLabel
+        case .made:
+            firstResponderLabel
+        case .score:
+            textControl
+        case .comment:
+            textControl
+        case .responsible:
+            firstResponderLabel
+        case .analysis1:
+            firstResponderLabel
+        case .analysis2:
+            firstResponderLabel
+        case .commentAvailable:
+            textControl
+        case .combined:
+            firstResponderLabel
+        case .sitting:
+            firstResponderLabel
+        case .tableScore:
+            textControl
+        case .versus:
+            textControl
+        default:
+            nil
+        }
+    }
+    
+    var textControl: ScorecardInputTextInput? {
+        switch column?.type {
+        case .score:
+            textField
+        case .comment:
+            textField
+        case .tableScore:
+            textField
+        case .versus:
+            textField
+        default:
+            nil
+        }
+    }
+    
+    override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        if !processPressedKeys(presses, with: event, allowCharacters: true, action: { (keyAction, _) in
+            switch keyAction {
+            case .next, .previous, .characters:
+                true
+            case .left, .right:
+                switch column.type {
+                case .contract:
+                    true
+                case .declarer:
+                    true
+                case .made:
+                    true
+                case .responsible:
+                    true
+                case .sitting:
+                    true
+                default:
+                    false
+                }
+            default:
+                false
+            }
+        }) {
+            super.pressesBegan(presses, with: event)
+        }
+    }
+    
+    override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        if !processPressedKeys(presses, with: event, allowCharacters: true, action: keyPressed) {
+            super.pressesEnded(presses, with: event)
+        }
+    }
+    
+    @discardableResult func keyPressed(keyAction: KeyAction?, characters: String = "") -> Bool {
+        var handled = false
+        
+        while true {
+            if keyAction == nil { break }
+            handled = true
+            
+            switch keyAction {
+            case .next, .previous, .up, .down:
+                scorecardDelegate?.scorecardSelect(rowType: rowType, itemNumber: itemNumber, columnType: column.type, action: keyAction)
+            case .characters, .left, .right:
+                switch column.type {
+                case .contract:
+                    contractTapped(self)
+                case .declarer:
+                    if !declarerPicker.processKeys(keyAction: keyAction!, characters: characters) {
+                        declarerTapped(self)
+                    }
+                case .made:
+                    if !madePicker.processKeys(keyAction: keyAction!, characters: characters) {
+                        madeTapped(self)
+                    }
+                case .responsible:
+                    if !responsiblePicker.processKeys(keyAction: keyAction!, characters: characters) {
+                        responsibleTapped(self)
+                    }
+                case .sitting:
+                    if !seatPicker.processKeys(keyAction: keyAction!, characters: characters) {
+                        seatPickerTapped(self)
+                    }
+                default:
+                    handled = false
+                }
+            default:
+                handled = false
+            }
+            break
+        }
+        return handled
+    }
 }
 
 protocol AutoCompleteDelegate {
-    func replace(with: String, textField: UITextField?, textView: UITextView?, at range: NSRange)
-}
-
-extension AutoCompleteDelegate {
-    func replace(with: String, textField: UITextField?, at range: NSRange) {
-        replace(with: with, textField: textField, textView: nil, at: range)
-    }
-    
-    func replace(with: String, textView: UITextView?, at range: NSRange) {
-        replace(with: with, textField: nil, textView: textView, at: range)
-    }
-
+    func replace(with: String, textInput: ScorecardInputTextInput, at range: NSRange)
 }
 
 class AutoComplete: UIView, UITableViewDataSource, UITableViewDelegate {
     var tableView = UITableView()
     var text: String = ""
     var nameList: [(replace: String, with: String, description: String)] = []
-    var textField: UITextField?
-    var textView: UITextView?
+    var textInput: ScorecardInputTextInput?
     var columnType: ColumnType!
     var range: NSRange!
     var delegate: AutoCompleteDelegate?
@@ -2629,10 +2981,9 @@ class AutoComplete: UIView, UITableViewDataSource, UITableViewDelegate {
         fatalError("init(coder:) has not been implemented")
     }
        
-    public func set(text: String, textField: UITextField? = nil, textView: UITextView? = nil, at range: NSRange, columnType: ColumnType) -> Int {
+    public func set(text: String, textInput: ScorecardInputTextInput?, at range: NSRange, columnType: ColumnType) -> Int {
         self.text = text
-        self.textField = textField
-        self.textView = textView
+        self.textInput = textInput
         self.columnType = columnType
         self.range = range
         if self.text == "" {
@@ -2691,14 +3042,16 @@ class AutoComplete: UIView, UITableViewDataSource, UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        var with = nameList[indexPath.row].with
-        switch columnType {
-        case .versus:
-            with += (range.location == 0 ? " & " : "")
-        default:
-            break
+        if let textInput = textInput {
+            var with = nameList[indexPath.row].with
+            switch columnType {
+            case .versus:
+                with += (range.location == 0 ? " & " : "")
+            default:
+                break
+            }
+            delegate?.replace(with: with, textInput: textInput, at: range)
         }
-        delegate?.replace(with: with, textField: textField, textView: textView, at: range)
     }
 }
 
@@ -2759,4 +3112,247 @@ class AnalysisViewController: UIHostingController<AnalysisViewer>, UIAdaptivePre
         return .overFullScreen
     }
     
+}
+
+enum KeyAction {
+    case previous
+    case next
+    case up
+    case down
+    case left
+    case right
+    case characters
+    case escape
+    case cancel
+    case save
+    case other
+    
+    init(keyCode: UIKeyboardHIDUsage, modifierFlags: UIKeyModifierFlags) {
+        let shift = modifierFlags.contains(.shift)
+        let other = modifierFlags.contains(.control) || modifierFlags.contains(.alternate) || modifierFlags.contains(.command)
+        if other {
+            self = .other
+        } else if shift {
+            if keyCode == .keyboardTab {
+                self = .previous
+            } else  {
+                self = .other
+            }
+        } else {
+            if keyCode == .keyboardTab {
+                self = .next
+            } else if keyCode == .keyboardUpArrow  {
+                self = .up
+            } else if keyCode == .keyboardDownArrow {
+                self = .down
+            } else if keyCode == .keyboardLeftArrow  {
+                self = .left
+            } else if keyCode == .keyboardRightArrow {
+                self = .right
+            } else if keyCode == .keyboardEscape {
+                self = .escape
+            } else {
+                self = .other
+            }
+        }
+    }
+    
+    var leftRight: Bool {
+        self == .left || self == .right
+    }
+}
+
+
+protocol ScorecardInputResponder {
+    var isFirstResponder: Bool {get}
+    var canBecomeFirstResponder: Bool {get}
+    func becomeFirstResponder() -> Bool
+    func resignFirstResponder() -> Bool
+}
+
+protocol ScorecardInputTextInput : UIView, UITextInput, ScorecardInputResponder {
+    var textValue: String! {get set}
+    var textAlignment: NSTextAlignment {get set}
+    var autocapitalizationType: UITextAutocapitalizationType {get set}
+    var isHidden: Bool {get set}
+    var adjustsFontForContentSizeCategory: Bool {get set}
+    var font: UIFont? {get set}
+    var autocorrectionType: UITextAutocorrectionType {get set}
+    var backgroundColor: UIColor? {get set}
+    var textColor: UIColor? {get set}
+    var adjustsFontSizeToFitWidth: Bool {get set}
+    var returnKeyType: UIReturnKeyType {get set}
+    var keyboardType: UIKeyboardType {get set}
+    var isUserInteractionEnabled: Bool {get set}
+    var isFirstResponder: Bool {get}
+    var canBecomeFirstResponder: Bool {get}
+    func textChanged(_ control: ScorecardInputTextInput)
+    func becomeFirstResponder() -> Bool
+    func resignFirstResponder() -> Bool
+}
+
+class ScorecardInputTextView : UITextView, ScorecardInputTextInput {
+    
+    var textValue: String! {
+        get { text }
+        set { text = newValue}
+    }
+    
+    var adjustsFontSizeToFitWidth: Bool {
+        get { adjustsFontForContentSizeCategory }
+        set { adjustsFontForContentSizeCategory = newValue}
+    }
+    
+    let parent: ScorecardInputCollectionCell?
+    
+    init(from parent: ScorecardInputCollectionCell? = nil) {
+        self.parent = parent
+        super.init(frame: CGRect(), textContainer: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func textChanged(_ control: ScorecardInputTextInput) {
+        control.textChanged(control)
+    }
+    
+    @discardableResult override func becomeFirstResponder() -> Bool {
+        parent?.getFocus(becomeFirstResponder: false)
+        return super.becomeFirstResponder()
+    }
+    
+    @discardableResult override func resignFirstResponder() -> Bool {
+        parent?.loseFocus(resignFirstResponder: false)
+        return super.resignFirstResponder()
+    }
+
+    override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        if !processPressedKeys(presses, with: event, action: { (keyAction, _) in
+            keyAction == .previous || keyAction == .next
+        }) {
+            super.pressesBegan(presses, with: event)
+        }
+    }
+    
+    override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        if !processPressedKeys(presses, with: event, action: parent!.keyPressed) {
+            super.pressesEnded(presses, with: event)
+        }
+    }
+}
+
+class ScorecardInputTextField : UITextField, ScorecardInputTextInput {
+    var textValue: String! {
+        get { text }
+        set { text = newValue}
+    }
+    
+    let parent: ScorecardInputCollectionCell?
+    
+    init(from parent: ScorecardInputCollectionCell? = nil) {
+        self.parent = parent
+        super.init(frame: CGRect())
+    }
+    
+    override var canBecomeFocused : Bool { false }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    func textChanged(_ control: ScorecardInputTextInput) {
+        parent?.textFieldChanged(self)
+    }
+    
+    @discardableResult override func becomeFirstResponder() -> Bool {
+        parent?.getFocus(becomeFirstResponder: false)
+        return super.becomeFirstResponder()
+    }
+    
+    @discardableResult override func resignFirstResponder() -> Bool {
+        let result = super.resignFirstResponder()
+        parent?.loseFocus(resignFirstResponder: false)
+        return result
+    }
+
+    override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        if !processPressedKeys(presses, with: event, action: { (keyAction, _) in
+            keyAction == .previous || keyAction == .next
+        }) {
+            super.pressesBegan(presses, with: event)
+        }
+    }
+    
+    override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        if !processPressedKeys(presses, with: event, action: parent!.keyPressed) {
+            super.pressesEnded(presses, with: event)
+        }
+    }
+}
+
+class FirstResponderLabel: UILabel {
+    var parent: ScorecardInputCollectionCell?
+    var view: UIView?
+    
+    init(from parent: ScorecardInputCollectionCell? = nil, view: UIView? = nil) {
+        self.parent = parent
+        self.view = view
+        super.init(frame: CGRect())
+        self.backgroundColor = UIColor.clear
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override var canBecomeFirstResponder: Bool {
+        true
+    }
+    
+    @discardableResult override func becomeFirstResponder() -> Bool {
+        parent?.getFocus(becomeFirstResponder: false)
+        return super.becomeFirstResponder()
+    }
+    
+    @discardableResult override func resignFirstResponder() -> Bool {
+        parent?.loseFocus(resignFirstResponder: false)
+        return super.resignFirstResponder()
+    }
+    
+    override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        (parent ?? view)?.pressesBegan(presses, with: event)
+    }
+    
+    override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        (parent ?? view)?.pressesEnded(presses, with: event)
+    }
+}
+
+extension UIView {
+    func processPressedKeys(_ presses: Set<UIPress>, with event: UIPressesEvent?, allowCharacters: Bool = false, action: (KeyAction, String)->(Bool)) -> Bool {
+        for press in presses {
+            if let key = press.key {
+                var keyAction = KeyAction(keyCode: key.keyCode, modifierFlags: key.modifierFlags)
+                // Look in events for shift-Tab
+                if let event = event {
+                    for keyPress in event.allPresses.map({$0.key?.keyCode}) {
+                        if let keyPress = keyPress {
+                            if keyPress == .keyboardTab && key.modifierFlags.contains(.shift){
+                                keyAction = .previous
+                            }
+                        }
+                    }
+                }
+                if keyAction == .other && allowCharacters && key.characters != "" {
+                    keyAction = .characters
+                }
+                if action(keyAction, key.characters) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
 }

@@ -13,11 +13,13 @@ class DeclarerPickerPopupView: UIView, UICollectionViewDataSource, UICollectionV
     private var contentView = UIView()
     private var valuesCollectionView: UICollectionView!
     private var selected: Seat?
+    private var selectedOnEntry: Seat?
     private var values: [(seat: Seat, entry: ScrollPickerEntry)]!
     private var buttonSize: CGSize!
-    private var completion: ((Seat?)->())?
+    private var completion: ((Seat?, KeyAction?)->())?
     private var topPadding: CGFloat = 0
     private var bottomPadding: CGFloat = 0
+    private var accumulatedCharacters: String = ""
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
@@ -62,28 +64,30 @@ class DeclarerPickerPopupView: UIView, UICollectionViewDataSource, UICollectionV
     // MARK: - Tap handlers ============================================================================ -
     
     private func valueTapped(item: Int) {
-        completion?(values[item].seat)
+        completion?(values[item].seat, nil)
         hide()
     }
     
     @objc private func cancelTapped(_ sender: Any) {
-        completion?(selected)
+        completion?(selected, nil)
         hide()
     }
     
     @objc private func clearTapped(_ sender: Any) {
-        completion?(nil)
+        completion?(nil, nil)
         hide()
     }
     
     // MARK: - Show / Hide ============================================================================ -
     
-    public func show(from sourceView: UIView, values: [(Seat, ScrollPickerEntry)], selected: Seat?, frame: CGRect, hideBackground: Bool = true, topPadding: CGFloat = 0, bottomPadding: CGFloat = 0, completion: @escaping (Seat?)->()) {
+    public func show(from sourceView: UIView, values: [(Seat, ScrollPickerEntry)], selected: Seat?, frame: CGRect, hideBackground: Bool = true, topPadding: CGFloat = 0, bottomPadding: CGFloat = 0, completion: @escaping (Seat?, KeyAction?)->()) {
         self.values = values
         self.selected = selected
+        self.selectedOnEntry = selected
         self.buttonSize = frame.size
         self.topPadding = topPadding
         self.bottomPadding = bottomPadding
+        self.accumulatedCharacters = ""
         self.completion = completion
         self.frame = sourceView.frame
         backgroundView.frame = sourceView.frame
@@ -99,6 +103,17 @@ class DeclarerPickerPopupView: UIView, UICollectionViewDataSource, UICollectionV
         backgroundView.isHidden = !hideBackground
         valuesCollectionView.reloadData()
         self.contentView.isHidden = false
+        let firstResponder = FirstResponderLabel(view: self)
+        addSubview(firstResponder)
+        firstResponder.becomeFirstResponder()
+
+    }
+    
+    private func set(_ selected: Seat?) {
+        if let selected = selected {
+            self.selected = selected
+            valuesCollectionView.reloadData()
+        }
     }
         
     public func hide() {
@@ -142,4 +157,53 @@ class DeclarerPickerPopupView: UIView, UICollectionViewDataSource, UICollectionV
         collectionView.isScrollEnabled = false
         ScrollPickerCell.register(collectionView)
     }
+    
+    override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        if !processPressedKeys(presses, with: event, allowCharacters: true, action: { (keyAction, _) in
+            switch keyAction {
+            case .previous, .next, .left, .right, .up, .down, .escape, .characters:
+                true
+            default:
+                false
+            }
+        }) {
+            super.pressesBegan(presses, with: event)
+        }
+    }
+    
+    override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        
+        if !processPressedKeys(presses, with: event, allowCharacters: true, action: { [self] (keyAction, characters) in
+
+            if let selectedIndex = values.firstIndex(where: {$0.seat == selected}) {
+                ScrollPicker.processKeys(keyAction: keyAction, characters: characters, accumulatedCharacters: accumulatedCharacters, selected: selectedIndex, values: values.map({$0.entry.title}), crossPattern: true, completion: { [self] (characters, newSelected, keyAction) in
+                    
+                    accumulatedCharacters = characters
+                    
+                    if let newSelected = newSelected {
+                        let newSelectedValues = values[newSelected]
+                        if newSelectedValues.seat != selected {
+                            set(newSelectedValues.seat)
+                        } else if newSelectedValues.seat == .unknown {
+                            // Hitting blank on blank - hide
+                            completion?(.unknown, nil)
+                            hide()
+                        }
+                    } else if let selectedOnEntry = selectedOnEntry {
+                        set(selectedOnEntry)
+                    }
+                    
+                    if keyAction != .characters {
+                        completion?(selected, keyAction)
+                        hide()
+                    }
+                })
+            } else {
+                false
+            }
+        }) {
+            super.pressesEnded(presses, with: event)
+        }
+    }
+
 }
