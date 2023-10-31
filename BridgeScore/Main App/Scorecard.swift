@@ -850,7 +850,7 @@ class Scorecard {
         var result: (BoardViewModel, TravellerViewModel, Seat)?
         if let nextBoard = Scorecard.current.boards[boardNumber] {
             if !Scorecard.current.travellerList.isEmpty {
-                if let myRanking = myRanking {
+                if let myRanking = myRanking(table: nextBoard.table?.table) {
                     var seat = nextBoard.table!.sitting
                     if equivalentSeat {
                         seat = seat.equivalent
@@ -864,10 +864,10 @@ class Scorecard {
         return result
     }
     
-    public static var myRanking: RankingViewModel? {
+    public static func myRanking(table: Int?) -> RankingViewModel? {
         var result: RankingViewModel?
         if let scorer = MasterData.shared.scorer {
-            let rankings = Scorecard.current.rankings(player: (bboName:scorer.bboName, name: scorer.name))
+            let rankings = Scorecard.current.rankings(table: table ?? 1, player: (bboName:scorer.bboName, name: scorer.name))
             if let myRanking = rankings.first {
                 result = myRanking
             }

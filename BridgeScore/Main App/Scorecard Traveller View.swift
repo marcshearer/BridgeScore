@@ -262,10 +262,10 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
         travellerColumns = [
             TravellerColumn(type: .players, heading: "Players", size: .flexible),
             TravellerColumn(type: .contract, heading: "Contract", size: .fixed([60])),
-            TravellerColumn(type: .declarer, heading: "By", size: .fixed([40]))]
+            TravellerColumn(type: .declarer, heading: "By", size: .fixed([30]))]
         if MyApp.format != .phone || isLandscape {
             travellerColumns += [
-            TravellerColumn(type: .lead, heading: "Lead", size: .fixed([50]))]
+            TravellerColumn(type: .lead, heading: "Lead", size: .fixed([40]))]
         }
         travellerColumns += [
             TravellerColumn(type: .made, heading: "Made", size: .fixed([40]))]
@@ -276,7 +276,7 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
         travellerColumns += [
             TravellerColumn(type: .score, heading: "Score", size: .fixed([60]))]
         
-        if values.first(where: {$0.nsXImps != 0}) != nil && isLandscape && MyApp.format != .phone {
+        if values.first(where: {$0.nsXImps != 0}) != nil && isLandscape && values.count > 2 && MyApp.format != .phone {
             travellerColumns += [
                 TravellerColumn(type: .xImps, heading: "XImps", size: .fixed([60]))
             ]
@@ -590,9 +590,10 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
             let otherNames = names[sitting.leftOpponent.pair.seats.first!]! + " & " + names[sitting.rightOpponent.pair.seats.last!]!
             label.attributedText = (sameNames + "\n" + otherNames)
             label.textAlignment = .left
-            label.lineBreakMode = .byWordWrapping
-            label.numberOfLines = 4
+            label.numberOfLines = 0
+            label.lineBreakMode = .byTruncatingTail
             label.isUserInteractionEnabled = true
+            label.minimumScaleFactor = 0.5
         case .contract:
             let contract = traveller.contract
             label.attributedText = NSAttributedString("\(contract.level.short) ") + NSAttributedString(contract.suit.string, color: UIColor(contract.suit.color)) + NSAttributedString(" \(contract.double.bold)")

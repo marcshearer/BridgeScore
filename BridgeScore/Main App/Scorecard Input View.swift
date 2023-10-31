@@ -1730,7 +1730,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             label.text = scorecard.type.boardScoreType.string
         case .analysis1:
             if scorecard.type.players == 4 {
-                if let players = Scorecard.myRanking?.playerNames(separator: " & ", firstOnly: true, .player, .partner) {
+                if let players = Scorecard.myRanking(table: 1)?.playerNames(separator: " & ", firstOnly: true, .player, .partner) {
                     label.text = players
                 } else {
                     label.text = "Our Table"
@@ -1740,7 +1740,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             }
         case .analysis2:
             if scorecard.type.players == 4 {
-                if let players = Scorecard.myRanking?.playerNames(separator: " & ", firstOnly: true, .lhOpponent, .rhOpponent) {
+                if let players = Scorecard.myRanking(table: 1)?.playerNames(separator: " & ", firstOnly: true, .lhOpponent, .rhOpponent) {
                     label.text = players
                 } else {
                     label.text = "Other Table"
@@ -1952,7 +1952,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 set(tap: .label)
             }
         case .versus:
-            setTextInputString(value: table.versus, offset: (captionHeight?.constant ?? 0) + 10)
+            setTextInputString(value: (Scorecard.current.isImported ? importedVersus : table.versus), offset: (captionHeight?.constant ?? 0) + 10)
         }
         
         if rowType == .table && column.heading != "" {
