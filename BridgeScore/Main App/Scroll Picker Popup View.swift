@@ -265,15 +265,22 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
                 
                 accumulatedCharacters = characters
                 
-                if let newSelected = newSelected {
-                    set(newSelected)
-                } else if let selectedOnEntry = selectedOnEntry {
-                    set(selectedOnEntry)
-                }
-                
-                if keyAction != .characters {
-                    completion?(selected, keyAction)
-                    hide()
+                if keyAction == .characters && characters.trim() == "" && (values.first(where: {$0.title == ""}) == nil) && self.defaultValue != nil {
+                    // Space pressed, blank is not valid and there is a clear button - 'tap' it
+                    self.clearTapped(self)
+                    
+                } else {
+    
+                    if let newSelected = newSelected {
+                        set(newSelected)
+                    } else if let selectedOnEntry = selectedOnEntry {
+                        set(selectedOnEntry)
+                    }
+                    
+                    if keyAction != .characters && !(keyAction?.arrowKey ?? false) {
+                        completion?(selected, keyAction)
+                        hide()
+                    }
                 }
             })
         }) {

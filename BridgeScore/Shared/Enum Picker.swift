@@ -57,22 +57,29 @@ class EnumPicker<EnumType> : UIView, ScrollPickerDelegate where EnumType : EnumP
     }
     
     public func processKeys(keyAction: KeyAction, characters: String) -> Bool {
-        if let selected = list.firstIndex(where: {$0 == selected}) {
-            ScrollPicker.processKeys(keyAction: keyAction, characters: characters, accumulatedCharacters: accumulatedCharacters, selected: selected, values: list.map({ $0.short}), completion: { [self] (characters, newSelected, keyAction) in
-                
-                accumulatedCharacters = characters
-                
-                if let newSelected = newSelected {
-                    if newSelected != selected {
-                        set(list[newSelected])
-                        scrollPickerDidChange(self.scrollPicker, to: newSelected)
-                    }
-                } else if let selectedOnEntry = selectedOnEntry {
-                    set(selectedOnEntry)
-                }
-            })
-        } else {
+        if keyAction == .characters && characters.trim() == "" {
+            // Blank pressed - just popup window rather than blanking picker
             false
+        } else {
+            if let selected = list.firstIndex(where: {$0 == selected}) {
+                ScrollPicker.processKeys(keyAction: keyAction, characters: characters, accumulatedCharacters: accumulatedCharacters, selected: selected, values: list.map({ $0.short}), completion: { [self] (characters, newSelected, keyAction) in
+                    
+                    accumulatedCharacters = characters
+                    
+                    if let newSelected = newSelected {
+                        if newSelected != selected {
+                            set(list[newSelected])
+                            scrollPickerDidChange(self.scrollPicker, to: newSelected)
+                        }
+                    } else if let selectedOnEntry = selectedOnEntry {
+                        if keyAction == .escape {
+                            set(selectedOnEntry)
+                        }
+                    }
+                })
+            } else {
+                false
+            }
         }
     }
 }

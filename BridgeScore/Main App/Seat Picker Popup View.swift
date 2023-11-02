@@ -193,7 +193,7 @@ class DeclarerPickerPopupView: UIView, UICollectionViewDataSource, UICollectionV
                         set(selectedOnEntry)
                     }
                     
-                    if keyAction != .characters {
+                    if keyAction != .characters && !(keyAction?.arrowKey ?? false) {
                         completion?(selected, keyAction)
                         hide()
                     }

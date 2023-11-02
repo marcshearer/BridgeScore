@@ -26,7 +26,7 @@ struct ScrollPickerEntry: Equatable {
     }
 }
 
-class  ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, UICollectionViewDataSource, CustomCollectionViewLayoutDelegate {
+class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, UICollectionViewDataSource, CustomCollectionViewLayoutDelegate {
     
     private var collectionView: UICollectionView!
     private var collectionViewLayout: UICollectionViewLayout!
@@ -42,6 +42,7 @@ class  ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegate
     private var titleFont: UIFont
     private var captionFont: UIFont
     private(set) var selected: Int?
+    private var selectedOnEntry: Int?
     public var delegate: ScrollPickerDelegate?
     private var accumulatedCharacters: String = ""
     
@@ -123,6 +124,7 @@ class  ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegate
         }
         self.isUserInteractionEnabled = isEnabled
         self.selected = selected
+        self.selectedOnEntry = selected
         self.accumulatedCharacters = ""
         if let defaultValue = defaultValue {
             self.defaultValue = defaultValue
@@ -134,17 +136,15 @@ class  ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegate
         }
         
         Utility.mainThread { [self] in
-            set(selected ?? defaultValue ?? 0)
+            set(selected)
         }
     }
     
     func set(_ selected: Int?) {
         self.selected = selected
-        if let selected = selected {
-            self.collectionView.scrollToItem(at: IndexPath(item: selected, section: 0), at: .centeredHorizontally, animated: false)
-            self.delegate?.scrollPickerDidChange(self, to: selected)
-            self.collectionView.alpha = 1
-        }
+        self.collectionView.scrollToItem(at: IndexPath(item: selected ?? 0, section: 0), at: .centeredHorizontally, animated: false)
+        self.delegate?.scrollPickerDidChange(self, to: selected ?? -1)
+        self.collectionView.alpha = 1
     }
     
     required init?(coder: NSCoder) {
@@ -161,7 +161,7 @@ class  ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegate
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = ScrollPickerCell.dequeue(collectionView, for: indexPath)
-        let item = (selected == nil && indexPath.item == (defaultValue ?? 0) && defaultEntry != nil ? defaultEntry! : list[indexPath.item])
+        let item = (selected == nil && defaultEntry != nil ? defaultEntry! : list[indexPath.item])
         cell.set(titleText: item.title, captionText: item.caption ?? "", color: color, titleFont: titleFont, captionFont: captionFont, clearBackground: clearBackground)
         return cell
     }
@@ -174,7 +174,7 @@ class  ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegate
         }
     }
     
-        // MARK: - Pan Gesture handlers
+    // MARK: - Pan Gesture handlers
     
     #if targetEnvironment(macCatalyst)
     @objc private func panned(_ sender: UIView) {
@@ -200,20 +200,24 @@ class  ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegate
             // Blank pressed - just popup window rather than blanking picker
             false
         } else {
-            ScrollPicker.processKeys(keyAction: keyAction, characters: characters, accumulatedCharacters: accumulatedCharacters, selected: selected, values: list.map({ $0.title}), completion: { [self] (characters, newSelected, keyAction) in
+            ScrollPicker.processKeys(keyAction: keyAction, characters: characters, accumulatedCharacters: accumulatedCharacters, selected: selected, defaultValue: defaultValue, values: list.map({ $0.title}), completion: { [self] (characters, newSelected, keyAction) in
                 
                 accumulatedCharacters = characters
                 
                 if let newSelected = newSelected {
                     if newSelected != selected {
                         set(newSelected)
+                    } else if let selectedOnEntry = selectedOnEntry {
+                        if keyAction == .escape {
+                            set(selectedOnEntry)
+                        }
                     }
                 }
             })
         }
     }
     
-    static public func processKeys(keyAction: KeyAction, characters: String, accumulatedCharacters: String, selected: Int?, values: [String], crossPattern: Bool = false, completion: (String, Int?, KeyAction?)->()) -> Bool {
+    static public func processKeys(keyAction: KeyAction, characters: String, accumulatedCharacters: String, selected: Int?, defaultValue: Int? = nil, values: [String], crossPattern: Bool = false, completion: (String, Int?, KeyAction?)->()) -> Bool {
         var result = true
         var accumulatedCharacters = accumulatedCharacters
         switch keyAction {
@@ -222,34 +226,34 @@ class  ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegate
         case .left:
             if crossPattern {
                 if selected != 0 && selected != values.count - 1 {
-                    completion("", max(1, selected! - 1), .characters)
+                    completion("", max(1, (selected ?? defaultValue ?? 0) - 1), keyAction)
                 } else {
-                    completion("", (values.count / 2) - 1, .characters)
+                    completion("", (values.count / 2) - 1, keyAction)
                 }
             } else {
-                completion("", max(0,selected! - 1), .characters)
+                completion("", max(0,(selected ?? defaultValue ?? 0) - 1), keyAction)
             }
         case .right:
             if crossPattern {
                 if selected != 0 && selected != values.count - 1 {
-                    completion("", min(values.count - 2, selected! + 1), .characters)
+                    completion("", min(values.count - 2, (selected ?? defaultValue ?? 0) + 1), keyAction)
                 } else {
-                    completion("", (values.count / 2) + 1, .characters)
+                    completion("", (values.count / 2) + 1, keyAction)
                 }
             } else {
-                completion("", max(0,selected! - 1), .characters)
+                completion("", min(values.count - 1, (selected ?? defaultValue ?? 0) + 1), keyAction)
             }
         case .up:
             if crossPattern {
                 let newSelected = (selected == values.count - 1 ? values.count / 2 : 0)
-                completion("", newSelected, .characters)
+                completion("", newSelected, keyAction)
             } else {
                 completion("", selected, keyAction)
             }
         case .down:
             if crossPattern {
                 let newSelected = (selected == 0 ? values.count / 2 : values.count - 1)
-                completion("", newSelected, .characters)
+                completion("", newSelected, keyAction)
             } else {
                 completion("", selected, keyAction)
             }
