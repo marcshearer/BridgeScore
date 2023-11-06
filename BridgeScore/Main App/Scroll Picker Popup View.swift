@@ -247,7 +247,7 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
     override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
         if !processPressedKeys(presses, with: event, allowCharacters: true, action: { (keyAction, _) in
             switch keyAction {
-            case .previous, .next, .left, .right, .up, .down, .escape, .characters:
+            case .previous, .next, .left, .right, .up, .down, .escape, .enter, .backspace, .delete, .characters:
                 true
             default:
                 false

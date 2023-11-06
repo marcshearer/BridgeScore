@@ -571,7 +571,7 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
     override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
         if !processPressedKeys(presses, with: event, allowCharacters: true, action: { (keyAction, _) in
             switch keyAction {
-            case .previous, .next, .up, .down, .escape, .enter, .backspace, .delete, .characters:
+            case .previous, .next, .escape, .enter, .backspace, .delete, .characters:
                 true
             default:
                 false
@@ -586,7 +586,7 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
         if !processPressedKeys(presses, with: event, allowCharacters: true, action: { [self] (keyAction, characters) in
             var result = true
             switch keyAction {
-            case .previous, .next, .up, .down:
+            case .previous, .next:
                 if selectButton.isEnabled {
                     self.completion?(Contract(copying: contract), (inputDeclarer ? declarer : nil), (inputSitting ? sitting : nil), keyAction)
                     hide()

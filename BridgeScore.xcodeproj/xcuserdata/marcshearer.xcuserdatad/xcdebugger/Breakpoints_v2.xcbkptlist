@@ -14,8 +14,8 @@
             filePath = "BridgeScore/Main App/Scorecard Input View.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2945"
-            endingLineNumber = "2945"
+            startingLineNumber = "2976"
+            endingLineNumber = "2976"
             landmarkName = "getFocus(becomeFirstResponder:)"
             landmarkType = "7">
          </BreakpointContent>

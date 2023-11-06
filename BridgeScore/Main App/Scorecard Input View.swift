@@ -1095,7 +1095,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                     if let (newRowType, newItemNumber) = nextRow(rowType: rowType, itemNumber: itemNumber) {
                         return scorecardSelect(rowType: newRowType, itemNumber: newItemNumber, columnType: columnType, originalColumnType: originalColumnType, action: .next, originalAction: originalAction, initialOffset: -1)
                     }
-                case .previous:
+                case .previous, .backspace:
                     newColumnNumber = nextRowCell(collectionView: collectionView, columnNumber: adjustedColumnNumber, increment: -1)
                     if newColumnNumber == nil && action != originalAction {
                         // Trying to find column in row - try going the other way
@@ -1587,6 +1587,7 @@ class ScorecardInputBoardTableCell: TableViewCellWithCollectionView {
 // MARK: - Board Collection View Cell ================================================================ -
 
 class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, EnumPickerDelegate, UITextViewDelegate, UITextFieldDelegate, AutoCompleteDelegate {
+    
     fileprivate var indexPath: IndexPath!
     fileprivate var label = UILabel()
     fileprivate var firstResponderLabel: FirstResponderLabel!
@@ -1982,7 +1983,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         case .declarer:
             declarerPicker.isHidden = false
             let selected = (table.sitting == .unknown ? 0 : declarerList.firstIndex(where: { $0.seat == board.declarer}) ?? 0)
-            declarerPicker.set(selected, list: declarerList.map{$0.entry}, isEnabled: isEnabled, color: color, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
+            declarerPicker.set(selected, list: declarerList.map{$0.entry}, defaultValue: 0, isEnabled: isEnabled, color: color, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
             label.isUserInteractionEnabled = !isEnabled
             set(tap: isEnabled ? .declarer : .label)
         case .made:
@@ -2022,7 +2023,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             setTextInputString(value: board.comment, font: scorecardDelegate?.scorecardViewType == .analysis ? smallCellFont : cellFont, centered: scorecardDelegate?.scorecardViewType != .analysis)
         case .responsible:
             responsiblePicker.isHidden = (Scorecard.current.isImported && board.score == nil)
-            responsiblePicker.set(board.responsible, color: Palette.gridBoard, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
+            responsiblePicker.set(board.responsible, defaultValue: .unknown, color: Palette.gridBoard, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
             set(tap: .responsible)
         case .analysis1:
             setAnalysis(phase: .bidding, analysisView: topAnalysis, board: board, sitting: table.sitting, otherTable: false)
@@ -2067,7 +2068,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             set(tap: .label)
         case .sitting:
             seatPicker.isHidden = false
-            seatPicker.set(table.sitting, isEnabled: isEnabled, color: color, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
+            seatPicker.set(table.sitting, defaultValue: .unknown, isEnabled: isEnabled, color: color, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
             label.isUserInteractionEnabled = !isEnabled
             set(tap: isEnabled ? .seat : nil)
         case .tableScore:
@@ -2272,7 +2273,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 selector = #selector(ScorecardInputCollectionCell.declarerTapped)
             case .seat:
                 control = seatPicker
-                selector = #selector(ScorecardInputCollectionCell.seatPickerTapped)
+                selector = #selector(ScorecardInputCollectionCell.seatTapped)
             case .made:
                 control = madePicker
                 selector = #selector(ScorecardInputCollectionCell.madeTapped)
@@ -2645,7 +2646,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         }
     }
     
-    internal func enumPickerDidChange(to value: Any) {
+    internal func enumPickerDidChange(to value: Any, allowPopup: Bool = false) {
         var undoValue: Any?
         let rowType = rowType!
         let columnType = column.type
@@ -2686,6 +2687,18 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 break
             }
             scorecardDelegate?.scorecardChanged(type: rowType, itemNumber: itemNumber, column: columnType)
+        }
+        switch columnType {
+        case .responsible:
+            if allowPopup {
+                responsibleTapped(self)
+            }
+        case .sitting:
+            if allowPopup {
+                seatTapped(self)
+            }
+        default:
+            break
         }
     }
     
@@ -2820,7 +2833,9 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                     declarerPicker.setValue(index)
                     scrollPickerDidChange(to: index)
                     if let keyAction = keyAction {
-                        keyPressed(keyAction: keyAction)
+                        if keyAction == .escape || keyAction == .enter || !keyPressed(keyAction: keyAction) {
+                            getFocus()
+                        }
                     } else {
                         getFocus()
                     }
@@ -2829,7 +2844,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         }
     }
 
-    @objc internal func seatPickerTapped(_ sender: UIView) {
+    @objc internal func seatTapped(_ sender: UIView) {
         scorecardDelegate?.scorecardEndEditing(true)
         scorecardDelegate?.scorecardChanged(type: rowType, itemNumber: itemNumber)
         let width: CGFloat = (MyApp.format == .phone ? 50 : 70)
@@ -2841,7 +2856,9 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 seatPicker.set(seat)
                 enumPickerDidChange(to: seat)
                 if let keyAction = keyAction {
-                    keyPressed(keyAction: keyAction)
+                    if keyAction == .escape || keyAction == .enter || !keyPressed(keyAction: keyAction) {
+                        getFocus()
+                    }
                 } else {
                     getFocus()
                 }
@@ -2861,7 +2878,9 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             madePicker.set(selected, reload: board.made == nil || selected == nil)
             scrollPickerDidChange(madePicker, to: selected)
             if let keyAction = keyAction {
-                keyPressed(keyAction: keyAction)
+                if keyAction == .escape || keyAction == .enter || !keyPressed(keyAction: keyAction) {
+                    getFocus()
+                }
             } else {
                 getFocus()
             }
@@ -2879,7 +2898,9 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             responsiblePicker.set(responsible)
             enumPickerDidChange(to: responsible)
             if let keyAction = keyAction {
-                keyPressed(keyAction: keyAction)
+                if keyAction == .escape || keyAction == .enter || !keyPressed(keyAction: keyAction) {
+                    getFocus()
+                }
             } else {
                 getFocus()
             }
@@ -2892,7 +2913,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         }
     }
     
-    @nonobjc internal func scrollPickerDidChange(_ picker: ScrollPicker? = nil, to value: Int?) {
+@nonobjc internal func scrollPickerDidChange(_ picker: ScrollPicker? = nil, to value: Int?, allowPopup: Bool = false) {
         var undoValue: Int?
         var found = true
         let rowType = rowType!
@@ -2932,6 +2953,16 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                     break
                 }
                 scorecardDelegate?.scorecardChanged(type: rowType, itemNumber: itemNumber, column: columnType)
+            }
+        }
+        if allowPopup {
+            switch columnType {
+            case .declarer:
+                declarerTapped(self)
+            case .made:
+                madeTapped(self)
+            default:
+                break
             }
         }
     }
@@ -2974,7 +3005,11 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         case .comment, .versus:
             enableTextInputStringControls(forceEditing: false)
         case .responsible:
-            break
+            responsiblePicker.loseFocus()
+        case .made:
+            madePicker.loseFocus()
+        case .sitting:
+            seatPicker.loseFocus()
         default: break
         }
         if resignFirstResponder {
@@ -3071,58 +3106,57 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         var handled = false
         
         while true {
-            if keyAction == nil { break }
-            handled = false
-            switch column.type {
-            case .declarer:
-                if declarerPicker.processKeys(keyAction: keyAction!, characters: characters) {
-                    handled = true
-                }
-            case .made:
-                if !madePicker.processKeys(keyAction: keyAction!, characters: characters) {
-                    handled = true
-                }
-            case .responsible:
-                if !responsiblePicker.processKeys(keyAction: keyAction!, characters: characters) {
-                    handled = true
-                }
-            case .sitting:
-                if !seatPicker.processKeys(keyAction: keyAction!, characters: characters) {
-                    handled = true
-                }
-            default:
+            if let keyAction = keyAction {
                 handled = false
-            }
-            switch keyAction {
-            case .next, .previous, .up, .down:
-                scorecardDelegate?.scorecardSelectNext(rowType: rowType, itemNumber: itemNumber, columnType: column.type, action: keyAction!)
-                handled = true
-            case .characters, .left, .right, .delete, .backspace, .escape, .enter:
-                if !handled {
-                    switch column.type {
-                    case .contract:
-                        if keyAction != .left && keyAction != .right && keyAction != .escape {
+                switch column.type {
+                case .declarer:
+                    if declarerPicker.processKeys(keyAction: keyAction, characters: characters) {
+                        handled = !keyAction.movementKey
+                    }
+                case .made:
+                    if madePicker.processKeys(keyAction: keyAction, characters: characters) {
+                        handled = !keyAction.movementKey
+                    }
+                case .responsible:
+                    if responsiblePicker.processKeys(keyAction: keyAction, characters: characters) {
+                        handled = !keyAction.movementKey
+                    }
+                case .sitting:
+                    if seatPicker.processKeys(keyAction: keyAction, characters: characters) {
+                        handled = !keyAction.movementKey
+                    }
+                default:
+                    handled = false
+                }
+                switch keyAction {
+                case .next, .previous, .up, .down, .backspace:
+                    scorecardDelegate?.scorecardSelectNext(rowType: rowType, itemNumber: itemNumber, columnType: column.type, action: keyAction)
+                    handled = true
+                case .characters, .enter:
+                    if !handled {
+                        switch column.type {
+                        case .contract:
                             contractTapped(self)
                             handled = true
+                        case .declarer:
+                            declarerTapped(self)
+                            handled = true
+                        case .made:
+                            madeTapped(self)
+                            handled = true
+                        case .responsible:
+                            responsibleTapped(self)
+                            handled = true
+                        case .sitting:
+                            seatTapped(self)
+                            handled = true
+                        default:
+                            break
                         }
-                    case .declarer:
-                        declarerTapped(self)
-                        handled = true
-                    case .made:
-                        madeTapped(self)
-                        handled = true
-                    case .responsible:
-                        responsibleTapped(self)
-                        handled = true
-                    case .sitting:
-                        seatPickerTapped(self)
-                        handled = true
-                    default:
-                        break
                     }
+                default:
+                    break
                 }
-            default:
-                break
             }
             break
         }
@@ -3341,12 +3375,24 @@ enum KeyAction {
         }
     }
     
+    var leftRightKey: Bool {
+        self == .left || self == .right
+    }
+    
+    var upDownKey: Bool {
+        self == .up || self == .down
+    }
+    
     var arrowKey: Bool {
-        self == .left || self == .right || self == .up || self == .down
+        leftRightKey || upDownKey
     }
     
     var navigationKey: Bool {
         self == .previous || self == .next
+    }
+    
+    var movementKey: Bool {
+        navigationKey || upDownKey || self == .backspace
     }
 }
 

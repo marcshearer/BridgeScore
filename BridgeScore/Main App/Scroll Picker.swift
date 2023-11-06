@@ -9,7 +9,13 @@ import UIKit
 import SwiftUI
 
 protocol ScrollPickerDelegate {
-    func scrollPickerDidChange(_ scrollPicker: ScrollPicker?, to: Int?)
+    func scrollPickerDidChange(_ scrollPicker: ScrollPicker?, to: Int?, allowPopup: Bool)
+}
+
+extension ScrollPickerDelegate {
+    func scrollPickerDidChange(_ scrollPicker: ScrollPicker?, to: Int?) {
+        scrollPickerDidChange(scrollPicker, to: to, allowPopup: false)
+    }
 }
 
 struct ScrollPickerEntry: Equatable {
@@ -30,6 +36,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
     
     private var collectionView: UICollectionView!
     private var collectionViewLayout: UICollectionViewLayout!
+    private var accumulatedView: ScrollPickerCell!
 #if targetEnvironment(macCatalyst)
     private var panGestureRecognizer: UIPanGestureRecognizer!
     private var panStart: CGFloat = 0
@@ -70,6 +77,8 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
         collectionView.backgroundColor = UIColor.clear
         ScrollPickerCell.register(collectionView)
         self.addSubview(collectionView, anchored: .all)
+        accumulatedView = ScrollPickerCell()
+        self.addSubview(accumulatedView, anchored: .all)
         
         #if targetEnvironment(macCatalyst)
         // Mac catalyst pan gesture
@@ -135,18 +144,30 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
             collectionView.alpha = 0
         }
         
+        accumulatedView.prepareForReuse()
+        accumulatedView.set(titleText: "", captionText: "", color: color, titleFont: titleFont, captionFont: captionFont, clearBackground: clearBackground)
+        
         Utility.mainThread { [self] in
             setValue(selected, force: true)
         }
     }
     
     public func setValue(_ selected: Int?, force: Bool = false) {
+        accumulatedCharacters = ""
+        updateAccumulatedView()
         if self.selected != selected || force {
             self.selected = selected
-            self.collectionView.scrollToItem(at: IndexPath(item: selected ?? 0, section: 0), at: .centeredHorizontally, animated: false)
-            self.delegate?.scrollPickerDidChange(self, to: selected ?? -1)
+            collectionView.scrollToItem(at: IndexPath(item: selected ?? 0, section: 0), at: .centeredHorizontally, animated: false)
+            delegate?.scrollPickerDidChange(self, to: selected ?? -1)
         }
         self.collectionView.alpha = 1
+    }
+    
+    private func updateAccumulatedView() {
+        let show = accumulatedCharacters != ""
+        accumulatedView.isHidden = !show
+        collectionView.isHidden = show
+        accumulatedView.set(titleText: accumulatedCharacters.capitalized)
     }
     
     required init?(coder: NSCoder) {
@@ -196,30 +217,48 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
     }
     #endif
     
+    public func loseFocus() {
+        delegate?.scrollPickerDidChange(self, to: selected, allowPopup: false)
+        set(selected)
+    }
+    
     public func processKeys(keyAction: KeyAction, characters: String) -> Bool {
         if keyAction == .characters && characters.trim() == "" {
-            // Blank pressed - just popup window rather than blanking picker
-            false
+            // Blank pressed - just save current and popup window rather than blanking picker
+            delegate?.scrollPickerDidChange(self, to: selected, allowPopup: true)
+            set(selected)
+            return false
         } else {
-            ScrollPicker.processKeys(keyAction: keyAction, characters: characters, accumulatedCharacters: accumulatedCharacters, selected: selected, defaultValue: defaultValue, values: list.map({ $0.title}), completion: { [self] (characters, newSelected, keyAction) in
+            return ScrollPicker.processKeys(keyAction: keyAction, characters: characters, accumulatedCharacters: accumulatedCharacters, selected: selected, defaultValue: defaultValue, values: list.map({ $0.title}), completion: { [self] (characters, newSelected, keyAction) in
                 
                 accumulatedCharacters = characters
-                
-                if newSelected != selected {
-                    if let newSelected = newSelected {
-                        setValue(newSelected)
+                if accumulatedCharacters != "" && keyAction == .characters && newSelected == nil {
+                    updateAccumulatedView()
+                } else {
+                    accumulatedCharacters = ""
+                    updateAccumulatedView()
+                    
+                    if newSelected != selected {
+                        if let newSelected = newSelected {
+                            setValue(newSelected)
+                        }
                     }
-                }
-                switch keyAction {
-                case .previous, .next, .up, .down, .enter:
-                    delegate?.scrollPickerDidChange(self, to: selected)
-                    set(selected)
-                case .escape:
-                    if let selectedOnEntry = selectedOnEntry {
-                        setValue(selectedOnEntry)
+                    switch keyAction {
+                    case .previous, .next, .up, .down, .enter:
+                        delegate?.scrollPickerDidChange(self, to: selected, allowPopup: keyAction == .enter)
+                        set(selected)
+                    case .escape:
+                        if let selectedOnEntry = selectedOnEntry {
+                            setValue(selectedOnEntry)
+                        }
+                    case .delete, .backspace:
+                        if let defaultValue = defaultValue {
+                            delegate?.scrollPickerDidChange(self, to: defaultValue)
+                            set(defaultValue)
+                        }
+                    default:
+                        break
                     }
-                default:
-                    break
                 }
             })
         }
@@ -229,7 +268,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
         var result = true
         var accumulatedCharacters = accumulatedCharacters
         switch keyAction {
-        case .previous, .next:
+        case .previous, .next, .enter, .backspace, .delete:
             completion("", selected, keyAction)
         case .left:
             if crossPattern {
@@ -266,7 +305,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
                 completion("", selected, keyAction)
             }
         case .escape:
-            completion("", nil, .escape)
+            completion("", nil, keyAction)
         case .characters:
             accumulatedCharacters += characters.trim()
             if characters == " " {
@@ -281,14 +320,10 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
                 }
             } else if let index = values.firstIndex(where: {$0.lowercased() == accumulatedCharacters.lowercased()}) {
                 completion("", index, .characters)
-            } else if let index = values.firstIndex(where: {$0.lowercased().starts(with: accumulatedCharacters.lowercased())}) {
-                completion(accumulatedCharacters, index, .characters)
-            } else if let index = values.firstIndex(where: {$0.lowercased().starts(with: characters.lowercased())}) {
-                completion(characters, index, .characters)
-            } else {
-                // Invalid characters - Exit
-                completion("", selected, nil)
-                result = false
+            } else if values.firstIndex(where: {$0.lowercased().starts(with: accumulatedCharacters.lowercased())}) != nil {
+                completion(accumulatedCharacters, nil, .characters)
+            } else if values.firstIndex(where: {$0.lowercased().starts(with: characters.lowercased())}) != nil  {
+                completion(characters, nil, .characters)
             }
         default:
             result = false

@@ -13,7 +13,7 @@ protocol ObsoleteContractPickerDelegate {
     func contractDidChange(to: Contract)
 }
 
-class ObsoleteContractPicker: UIView, ScrollPickerDelegate {
+class ObsoleteContractPicker: UIView, ObsoleteScrollPickerDelegate {
     
     private var levelPicker: ScrollPicker
     private var suitPicker: ScrollPicker

@@ -1061,9 +1061,9 @@ public enum ContractDouble: Int, ContractEnumType, Equatable, Comparable {
         case .undoubled:
             return "-"
         case .doubled:
-            return "X"
+            return "􀑇"
         case .redoubled:
-            return "XX"
+            return "􀑇􀑇"
         }
     }
     
