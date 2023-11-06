@@ -1045,15 +1045,21 @@ public enum ContractDouble: Int, ContractEnumType, Equatable, Comparable {
         }
     }
     
-    var bold: String {
+    var bold: NSAttributedString {
         switch self {
         case .undoubled:
-            return ""
+            NSAttributedString(string: "")
         case .doubled:
-            return "✱"
+            ContractDouble.symbol
         case .redoubled:
-            return "✱✱"
+            ContractDouble.symbol + ContractDouble.symbol
         }
+    }
+    
+    static var symbol: NSAttributedString {
+        let attachment = NSTextAttachment()
+        attachment.image = UIImage(systemName: "staroflife.fill")
+        return NSAttributedString(attachment: attachment)
     }
     
     var button: String {
@@ -1160,7 +1166,7 @@ public class Contract: Equatable, Comparable, Hashable {
         case .passout:
             return NSAttributedString("Pass Out")
         default:
-            return NSAttributedString("\(level.short) ") + suit.attributedString + NSAttributedString(" \(double.bold)")
+            return NSAttributedString("\(level.short) ") + suit.attributedString + double.bold
         }
     }
     
