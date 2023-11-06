@@ -801,6 +801,17 @@ public enum ContractLevel: Int, ContractEnumType, Equatable, Comparable {
     case six = 6
     case seven = 7
     
+    init(character: String) {
+        self = .blank
+        if let rawValue = Int(character) {
+            if let level = ContractLevel(rawValue: rawValue) {
+                self = level
+            }
+        } else if character.left(1).uppercased() == "P" {
+            self = .passout
+        }
+    }
+    
     var string: String {
         switch self {
         case .blank:
@@ -824,16 +835,16 @@ public enum ContractLevel: Int, ContractEnumType, Equatable, Comparable {
         return string
     }
     
-    var valid: Bool {
+    var isValid: Bool {
         return self != .blank && self != .passout
     }
     
     static var validCases: [ContractLevel] {
-        return ContractLevel.allCases.filter({$0.valid})
+        return ContractLevel.allCases.filter({$0.isValid})
     }
     
     var hasSuit: Bool {
-        return valid
+        return isValid
     }
     
     var hasDouble: Bool {
@@ -934,27 +945,31 @@ public enum Suit: Int, ContractEnumType, Equatable, Comparable {
     }
 
     var short: String {
-        return (self == .noTrumps ? "NT": "\(self)".left(1).uppercased())
+        return (self == .noTrumps ? "NT" : character)
+    }
+    
+    var character: String {
+        return ("\(self)".left(1).uppercased())
     }
     
     var button: String {
         return string
     }
     
-    var valid: Bool {
+    var isValid: Bool {
         return self != .blank
     }
     
     static var validCases: [Suit] {
-        return Suit.allCases.filter({$0.valid})
+        return Suit.allCases.filter({$0.isValid})
     }
     
     static var realSuits: [Suit] {
-        return Suit.allCases.filter({$0.valid && $0 != .noTrumps})
+        return Suit.allCases.filter({$0.isValid && $0 != .noTrumps})
     }
     
     var hasDouble: Bool {
-        return self.valid
+        return self.isValid
     }
     
     var firstTrick: Int {
@@ -1225,6 +1240,10 @@ public class Contract: Equatable, Comparable, Hashable {
         hasher.combine(level)
         hasher.combine(suit)
         hasher.combine(double)
+    }
+    
+    var isValid: Bool {
+        level.isValid && (level == .passout || suit.isValid)
     }
     
     static public func == (lhs: Contract, rhs: Contract) -> Bool {

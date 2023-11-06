@@ -107,7 +107,7 @@
 		B2C4339027B7B59700796F24 /* Custom View Animations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C4338F27B7B59700796F24 /* Custom View Animations.swift */; };
 		B2CC509927BE21060050F22C /* Scroll Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CC509827BE21060050F22C /* Scroll Picker.swift */; };
 		B2CC509E27BE22210050F22C /* Enum Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CC509D27BE22210050F22C /* Enum Picker.swift */; };
-		B2CC50A027BE22900050F22C /* Contract Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CC509F27BE22900050F22C /* Contract Picker.swift */; };
+		B2CC50A027BE22900050F22C /* Obsolete Contract Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CC509F27BE22900050F22C /* Obsolete Contract Picker.swift */; };
 		B2DADE5127E7A06E009F7572 /* Import BBO.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2DADE5027E7A06E009F7572 /* Import BBO.swift */; };
 		B2E1B76827DC71E300204CAC /* User Defaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E1B76727DC71E300204CAC /* User Defaults.swift */; };
 		B2EB3D66279D54D500D64225 /* Board Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D65279D54D500D64225 /* Board Managed Object.swift */; };
@@ -122,6 +122,7 @@
 		B2EB3D7B279DCBCB00D64225 /* Default Data.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D7A279DCBCB00D64225 /* Default Data.swift */; };
 		B2EEFC782AAB5BE4005A1ECA /* Analysis Viewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EEFC772AAB5BE4005A1ECA /* Analysis Viewer.swift */; };
 		B2F3C3A42AA1E72200A58E89 /* Card Class.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2F3C3A32AA1E72200A58E89 /* Card Class.swift */; };
+		B2FC6CFE2AF6BD2900B53A68 /* Contract Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2FC6CFD2AF6BD2900B53A68 /* Contract Picker.swift */; };
 		B2FCC05127A05BA500A3D9F5 /* Input Toggle.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2FCC05027A05BA500A3D9F5 /* Input Toggle.swift */; };
 /* End PBXBuildFile section */
 
@@ -230,7 +231,7 @@
 		B2C4338F27B7B59700796F24 /* Custom View Animations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Custom View Animations.swift"; sourceTree = "<group>"; };
 		B2CC509827BE21060050F22C /* Scroll Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Scroll Picker.swift"; path = "../Main App/Scroll Picker.swift"; sourceTree = "<group>"; };
 		B2CC509D27BE22210050F22C /* Enum Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Enum Picker.swift"; sourceTree = "<group>"; };
-		B2CC509F27BE22900050F22C /* Contract Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contract Picker.swift"; sourceTree = "<group>"; };
+		B2CC509F27BE22900050F22C /* Obsolete Contract Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Obsolete Contract Picker.swift"; sourceTree = "<group>"; };
 		B2DADE5027E7A06E009F7572 /* Import BBO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Import BBO.swift"; sourceTree = "<group>"; };
 		B2E1B76727DC71E300204CAC /* User Defaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "User Defaults.swift"; sourceTree = "<group>"; };
 		B2EB3D65279D54D500D64225 /* Board Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Board Managed Object.swift"; sourceTree = "<group>"; };
@@ -245,6 +246,7 @@
 		B2EB3D7A279DCBCB00D64225 /* Default Data.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Default Data.swift"; sourceTree = "<group>"; };
 		B2EEFC772AAB5BE4005A1ECA /* Analysis Viewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Analysis Viewer.swift"; sourceTree = "<group>"; };
 		B2F3C3A32AA1E72200A58E89 /* Card Class.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Card Class.swift"; sourceTree = "<group>"; };
+		B2FC6CFD2AF6BD2900B53A68 /* Contract Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contract Picker.swift"; sourceTree = "<group>"; };
 		B2FCC05027A05BA500A3D9F5 /* Input Toggle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Input Toggle.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -262,7 +264,7 @@
 		B240141627CB4FF900C3117F /* Obsolete Views */ = {
 			isa = PBXGroup;
 			children = (
-				B2CC509F27BE22900050F22C /* Contract Picker.swift */,
+				B2CC509F27BE22900050F22C /* Obsolete Contract Picker.swift */,
 				B2276D5727A5A2C90025DA80 /* Scorecard Canvas View.swift */,
 			);
 			name = "Obsolete Views";
@@ -541,6 +543,7 @@
 			children = (
 				B213998B27D8AA830098E4A4 /* Seat Picker Popup View.swift */,
 				B2A918922ADABF0B00761B66 /* Analysis Summary View.swift */,
+				B2FC6CFD2AF6BD2900B53A68 /* Contract Picker.swift */,
 			);
 			name = "Shared Views";
 			sourceTree = "<group>";
@@ -684,6 +687,7 @@
 				B26BCE3A2799AD6D00B73501 /* Core Data.swift in Sources */,
 				B26BCE562799AE6400B73501 /* Preview Data.swift in Sources */,
 				B2100D9827DA449D00CC0130 /* Graph View Class.swift in Sources */,
+				B2FC6CFE2AF6BD2900B53A68 /* Contract Picker.swift in Sources */,
 				B256D42327EC456B00F47322 /* Ranking Managed Object.swift in Sources */,
 				B2633A0E27AC3A460081B258 /* Layout List View.swift in Sources */,
 				B2A2053727AFC41500C83C88 /* Toolbar View.swift in Sources */,
@@ -704,7 +708,7 @@
 				B26BCE72279B188600B73501 /* BridgeScore.xcdatamodeld in Sources */,
 				B26BCE642799AED700B73501 /* Message Box.swift in Sources */,
 				B26BCE652799AED700B73501 /* Picker Input.swift in Sources */,
-				B2CC50A027BE22900050F22C /* Contract Picker.swift in Sources */,
+				B2CC50A027BE22900050F22C /* Obsolete Contract Picker.swift in Sources */,
 				B204175827CE58CD00A3EFA8 /* Debug Utilities.swift in Sources */,
 				B24BC3A327F42EEA00576D50 /* Flags.swift in Sources */,
 				B217314427D026050096DAE8 /* Undo Handler.swift in Sources */,

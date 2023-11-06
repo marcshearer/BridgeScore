@@ -9,11 +9,11 @@ import UIKit
 
 // MARK: - Note this is not used - replaced by bidding box ======================== -
 
-protocol ContractPickerDelegate {
+protocol ObsoleteContractPickerDelegate {
     func contractDidChange(to: Contract)
 }
 
-class ContractPicker: UIView, ScrollPickerDelegate {
+class ObsoleteContractPicker: UIView, ScrollPickerDelegate {
     
     private var levelPicker: ScrollPicker
     private var suitPicker: ScrollPicker
@@ -24,7 +24,7 @@ class ContractPicker: UIView, ScrollPickerDelegate {
     private var doubleList = ContractDouble.allCases
     private var color: PaletteColor?
     private var font: UIFont?
-    public var delegate: ContractPickerDelegate?
+    public var delegate: ObsoleteContractPickerDelegate?
     
     init(frame: CGRect, contract: Contract = Contract(), color: PaletteColor? = nil, font: UIFont? = nil) {
         self.contract = contract

@@ -81,7 +81,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
         #endif
     }
     
-    public func set(_ selected: Int?, list: [String], defaultEntry: String? = nil, defaultValue: Int? = nil, isEnabled: Bool = true, color: PaletteColor? = nil, titleFont: UIFont?, captionFont: UIFont? = nil, clearBackground: Bool = true) {
+    public func set(_ selected: Int?, list: [String], defaultEntry: String? = nil, defaultValue: Int? = nil, isEnabled: Bool = true, color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil, clearBackground: Bool = true) {
         set(selected, list: list.map{ScrollPickerEntry(title: $0)}, defaultEntry: defaultEntry == nil ? nil : ScrollPickerEntry(title: defaultEntry!), defaultValue: defaultValue, isEnabled: isEnabled, color: color, titleFont: titleFont, captionFont: captionFont, clearBackground: clearBackground)
     }
     
@@ -136,14 +136,16 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
         }
         
         Utility.mainThread { [self] in
-            set(selected)
+            setValue(selected, force: true)
         }
     }
     
-    func set(_ selected: Int?) {
-        self.selected = selected
-        self.collectionView.scrollToItem(at: IndexPath(item: selected ?? 0, section: 0), at: .centeredHorizontally, animated: false)
-        self.delegate?.scrollPickerDidChange(self, to: selected ?? -1)
+    public func setValue(_ selected: Int?, force: Bool = false) {
+        if self.selected != selected || force {
+            self.selected = selected
+            self.collectionView.scrollToItem(at: IndexPath(item: selected ?? 0, section: 0), at: .centeredHorizontally, animated: false)
+            self.delegate?.scrollPickerDidChange(self, to: selected ?? -1)
+        }
         self.collectionView.alpha = 1
     }
     
@@ -169,7 +171,6 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
     internal func changed(_ collectionView: UICollectionView?, itemAtCenter: Int, forceScroll: Bool, animation: ViewAnimation) {
         Utility.mainThread {
             self.selected = max(0, min(self.list.count - 1, itemAtCenter))
-            self.delegate?.scrollPickerDidChange(self, to: self.selected!)
             collectionView?.reloadData()
         }
     }
@@ -204,14 +205,21 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
                 
                 accumulatedCharacters = characters
                 
-                if let newSelected = newSelected {
-                    if newSelected != selected {
-                        set(newSelected)
-                    } else if let selectedOnEntry = selectedOnEntry {
-                        if keyAction == .escape {
-                            set(selectedOnEntry)
-                        }
+                if newSelected != selected {
+                    if let newSelected = newSelected {
+                        setValue(newSelected)
                     }
+                }
+                switch keyAction {
+                case .previous, .next, .up, .down, .enter:
+                    delegate?.scrollPickerDidChange(self, to: selected)
+                    set(selected)
+                case .escape:
+                    if let selectedOnEntry = selectedOnEntry {
+                        setValue(selectedOnEntry)
+                    }
+                default:
+                    break
                 }
             })
         }
@@ -258,7 +266,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
                 completion("", selected, keyAction)
             }
         case .escape:
-            completion("", nil, nil)
+            completion("", nil, .escape)
         case .characters:
             accumulatedCharacters += characters.trim()
             if characters == " " {

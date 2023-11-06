@@ -15,15 +15,25 @@ public class ScorecardColumn: Codable, Equatable {
     var size: ColumnSize
     var phoneSize: ColumnSize
     var omit: Bool
+    var minX: CGFloat?
     var width: CGFloat?
     
-    init(type: ColumnType, heading: String, size: ColumnSize, phoneSize: ColumnSize? = nil, omit: Bool = false, width: CGFloat? = nil) {
+    init(type: ColumnType, heading: String, size: ColumnSize, phoneSize: ColumnSize? = nil, omit: Bool = false, minX: CGFloat? = nil, width: CGFloat? = nil) {
         self.type = type
         self.heading = heading
         self.size = size
         self.phoneSize = phoneSize ?? size
         self.omit = omit
+        self.minX = minX
         self.width = width
+    }
+    
+    public var maxX: CGFloat? {
+        if let minX = minX, let width = width {
+            minX + width
+        } else {
+            nil
+        }
     }
     
     public static func == (lhs: ScorecardColumn, rhs: ScorecardColumn) -> Bool {
@@ -31,7 +41,7 @@ public class ScorecardColumn: Codable, Equatable {
     }
     
     var copy: ScorecardColumn {
-        ScorecardColumn(type: type, heading: heading, size: size, phoneSize: phoneSize, omit: omit, width: width)
+        ScorecardColumn(type: type, heading: heading, size: size, phoneSize: phoneSize, omit: omit, minX: minX, width: width)
     }
 }
 
@@ -42,6 +52,17 @@ enum RowType: Int {
     
     var tagOffset: Int {
         return self.rawValue * tagMultiplier
+    }
+    
+    var other: RowType {
+        switch self {
+        case .table:
+            .board
+        case .board:
+            .table
+        default:
+            self
+        }
     }
 }
 
@@ -76,6 +97,7 @@ enum TapControl {
     case declarer
     case seat
     case made
+    case contract
 }
 
 enum ColumnSize: Codable, Equatable {
@@ -186,7 +208,6 @@ struct ScorecardInputView: View {
                 Color.black.opacity(0.4)
                 ScorecardDetailView(scorecard: scorecard, deleted: $deleted, tableRefresh: $tableRefresh, title: title, frame: frame, initialYOffset: backgroundView.frame.height + 100, dismissView: $dismissView)
                     .cornerRadius(8)
-                    .debugPrint("\(backgroundView.frame)")
                 Spacer()
             }
             .background(BackgroundBlurView(opacity: 0.0))
@@ -452,7 +473,7 @@ struct ScorecardInputUIViewWrapper: UIViewControllerRepresentable {
 protocol ScorecardDelegate {
     func scorecardChanged(type: RowType, itemNumber: Int, column: ColumnType?, refresh: Bool)
     func scorecardCell(rowType: RowType, itemNumber: Int, columnType: ColumnType) -> ScorecardInputCollectionCell?
-    func scorecardContractEntry(board: BoardViewModel, table: TableViewModel)
+    func scorecardContractEntry(board: BoardViewModel, table: TableViewModel, contract:Contract?)
     func scorecardBBONamesReplace(values: [String])
     func scorecardShowTraveller(scorecard: ScorecardViewModel, board: BoardViewModel, sitting: Seat)
     func scorecardShowHand(scorecard: ScorecardViewModel, board: BoardViewModel, sitting: Seat)
@@ -574,7 +595,6 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     internal var focusTable: Int?
     internal var focusBoard: Int?
     internal var focusColumnType: ColumnType?
-    private var scrollCompletion: (()->())?
     
     var boardColumns: [ScorecardColumn] = []
     var boardAnalysisCommentColumns: [ScorecardColumn] = []
@@ -900,17 +920,16 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         }
     }
     
-    func scorecardContractEntry(board: BoardViewModel, table: TableViewModel) {
+    func scorecardContractEntry(board: BoardViewModel, table: TableViewModel, contract: Contract?) {
         contractEntryView = ScorecardContractEntryView(frame: CGRect())
         let section = (board.board - 1) / self.scorecard.boardsTable
-        let row = (board.board - 1) % self.scorecard.boardsTable
         disableBanner.wrappedValue = true
-        contractEntryView.show(from: superview!.superview!, contract: board.contract, sitting: table.sitting, declarer: board.declarer) { (contract, declarer, sitting) in
+        contractEntryView.show(from: superview!.superview!, contract: contract ?? board.contract, sitting: table.sitting, declarer: board.declarer) { [self] (contract, declarer, sitting, keyAction) in
             if let sitting = sitting {
                 if sitting != table.sitting {
-                    if let tableCell = self.mainTableView.headerView(forSection: section) as? ScorecardInputTableSectionHeaderView {
+                    if let tableCell = mainTableView.headerView(forSection: section) as? ScorecardInputTableSectionHeaderView {
                         // Update sitting
-                        if let item = self.tableColumns.firstIndex(where: {$0.type == .sitting}) {
+                        if let item = tableColumns.firstIndex(where: {$0.type == .sitting}) {
                             if let cell = tableCell.collectionView.cellForItem(at: IndexPath(item: item, section: 0)) as? ScorecardInputCollectionCell {
                                 cell.seatPicker.set(sitting)
                                 cell.enumPickerDidChange(to: sitting)
@@ -919,20 +938,25 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                     }
                 }
             }
-            if let contract = contract {
-                if contract != board.contract || declarer != board.declarer {
-                    if let tableCell = self.mainTableView.cellForRow(at: IndexPath(row: row, section: section)) as? ScorecardInputBoardTableCell {
-                            // Update contract and/or declarer
-                        if let item = self.getBoardColumns(boardNumber: board.board).firstIndex(where: {$0.type == .contract}) {
-                            if let cell = tableCell.collectionView.cellForItem(at: IndexPath(item: item, section: 0)) as? ScorecardInputCollectionCell {
-                                cell.label.attributedText = contract.attributedString
-                                cell.contractDidChange(to: contract, declarer: declarer)
-                            }
+            
+            if let columnNumber = getColumnNumber(rowType: .board, itemNumber: board.board, type: .contract) {
+                if let cell = cell(rowType: .board, section: table.table - 1, row: board.board - 1, column: columnNumber) {
+                    if let contract = contract {
+                        if contract != board.contract || declarer != board.declarer {
+                            cell.contractPicker.set(contract: contract)
+                            cell.contractDidChange(to: contract, declarer: declarer)
                         }
+                    }
+                    if let keyAction = keyAction {
+                        if !cell.keyPressed(keyAction: keyAction) {
+                            cell.getFocus()
+                        }
+                    } else {
+                        cell.getFocus()
                     }
                 }
             }
-            self.disableBanner.wrappedValue = false
+            disableBanner.wrappedValue = false
         }
     }
     
@@ -1022,10 +1046,10 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     
     internal func scorecardSelectNext(rowType: RowType, itemNumber: Int, columnType: ColumnType?, action: KeyAction) {
         
-        scorecardSelect(rowType: rowType, itemNumber: itemNumber, columnType: columnType, action: action)
+        scorecardSelect(rowType: rowType, itemNumber: itemNumber, columnType: columnType, originalColumnType: columnType, action: action, originalAction: action)
     }
     
-    private func scorecardSelect(rowType: RowType, itemNumber: Int, columnType: ColumnType?, action: KeyAction, initialOffset: Int? = nil, scrolling: Bool = true) {
+    @discardableResult private func scorecardSelect(rowType: RowType, itemNumber: Int, columnType: ColumnType?, originalColumnType: ColumnType?, action: KeyAction, originalAction: KeyAction, initialOffset: Int? = nil, scrolling: Bool = true) -> Bool? {
         
         let newItemNumber = itemNumber
         var newColumnNumber: Int?
@@ -1035,59 +1059,70 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         let row = (rowType == .table ? nil : (itemNumber - 1) % scorecard.boardsTable)
             
         if scrolling {
-                // Make sure this row is in view
-            let visiblePaths = mainTableView.indexPathsForVisibleRows
-            var atPosition: UITableView.ScrollPosition? = nil
+            // Make sure this row is in view
             // Scroll row into view if necessary
-            var tableIndexPath = IndexPath(row: row ?? 0, section: section)
-            let previousIndexPath = IndexPath(row: max(0, tableIndexPath.row - 1), section: tableIndexPath.section)
-            if previousIndexPath <= visiblePaths?.first ?? IndexPath(row: Int.max, section: Int.max) {
-                tableIndexPath = previousIndexPath
-                atPosition = .top
-            } else if tableIndexPath >= visiblePaths?.last ?? IndexPath(row: 0, section: 0) {
-                atPosition = .bottom
-            }
+            let tableIndexPath = IndexPath(row: row ?? 0, section: section)
+            let frame = mainTableView.rectForRow(at: tableIndexPath)
+            let atPosition = moveTo(cellFrame: frame)
             if let atPosition = atPosition {
-                Utility.animate(parent: self, duration: 0.5, completion: { [self] in
-                    scorecardSelect(rowType: rowType, itemNumber: itemNumber, columnType: columnType, action: action, scrolling: false)
+                Utility.animate(parent: self, duration: 0.1, completion: { [self] in
+                    scorecardSelect(rowType: rowType, itemNumber: itemNumber, columnType: columnType, originalColumnType: originalColumnType, action: action, originalAction: originalAction, initialOffset: initialOffset, scrolling: false)
                 }, animations: { [self] in
-                    mainTableView.scrollToRow(at: tableIndexPath, at: atPosition, animated: false)
+                    print("Scrolling to \(atPosition == .top ? "top" : "bottom") \(mainTableView.contentOffset)")
+                    mainTableView.scrollToRow(at: (mainTableView.contentOffset.y < 0 ? IndexPath(row: 0, section: 0) : tableIndexPath), at: atPosition, animated: false)
                 })
-                return
+                return nil
             }
         }
             
         if let columnType = columnType {
             // Column might not exist in this row type
-            columnNumber = getColumnNumber(rowType: rowType, itemNumber: itemNumber, type: columnType)
+            columnNumber = getColumnNumber(rowType: rowType, itemNumber: itemNumber, type: columnType, findNearest: true)
         }
         if columnNumber == nil {
+            // Didn't exist in row or positioning off the ends of row
             columnNumber = (action == .previous ? getColumns(rowType: rowType, itemNumber: itemNumber).count - 1 : 0)
         }
         if let collectionView = rowCollectionView(rowType: rowType, section: section, row: row) {
-            if var columnNumber = columnNumber {
-                columnNumber += (initialOffset ?? 0)
+            if let columnNumber = columnNumber {
+                let adjustedColumnNumber = columnNumber + (initialOffset ?? 0)
                 switch action {
                 case .up:
                     if let (newRowType, newItemNumber) = previousRow(rowType: rowType, itemNumber: itemNumber) {
-                        scorecardSelect(rowType: newRowType, itemNumber: newItemNumber, columnType: columnType, action: .previous, initialOffset: +1)
+                        return scorecardSelect(rowType: newRowType, itemNumber: newItemNumber, columnType: columnType, originalColumnType: originalColumnType, action: .next, originalAction: originalAction, initialOffset: -1)
                     }
                 case .down:
                     if let (newRowType, newItemNumber) = nextRow(rowType: rowType, itemNumber: itemNumber) {
-                        return scorecardSelect(rowType: newRowType, itemNumber: newItemNumber, columnType: columnType, action: .next, initialOffset: -1)
+                        return scorecardSelect(rowType: newRowType, itemNumber: newItemNumber, columnType: columnType, originalColumnType: originalColumnType, action: .next, originalAction: originalAction, initialOffset: -1)
                     }
                 case .previous:
-                    newColumnNumber = nextRowCell(collectionView: collectionView, columnNumber: columnNumber, increment: -1)
+                    newColumnNumber = nextRowCell(collectionView: collectionView, columnNumber: adjustedColumnNumber, increment: -1)
+                    if newColumnNumber == nil && action != originalAction {
+                        // Trying to find column in row - try going the other way
+                        newColumnNumber = nextRowCell(collectionView: collectionView, columnNumber: columnNumber - 1, increment: +1)
+                        if newColumnNumber == nil {
+                            // No editable columns in row - carry on in original direction
+                            return scorecardSelect(rowType: rowType, itemNumber: itemNumber, columnType: originalColumnType, originalColumnType: originalColumnType, action: originalAction, originalAction: originalAction)
+                        }
+                    }
                     if newColumnNumber == nil {
                         if let (newRowType, newItemNumber) = previousRow(rowType: rowType, itemNumber: itemNumber) {
-                            scorecardSelect(rowType: newRowType, itemNumber: newItemNumber, columnType: nil, action: action, initialOffset: +1)
+                            return scorecardSelect(rowType: newRowType, itemNumber: newItemNumber, columnType: nil, originalColumnType: originalColumnType, action: action, originalAction: originalAction, initialOffset: +1)
                         }
                     }
                 case .next:
-                    newColumnNumber = nextRowCell(collectionView: collectionView, columnNumber: columnNumber, increment: +1)
+                    newColumnNumber = nextRowCell(collectionView: collectionView, columnNumber: adjustedColumnNumber, increment: +1)
+                    if newColumnNumber == nil && action != originalAction {
+                        // Trying to find column in row - try going the other way
+                        newColumnNumber = nextRowCell(collectionView: collectionView, columnNumber: columnNumber + 1, increment: -1)
+                        if newColumnNumber == nil {
+                            // No editable columns in row - carry on in original direction
+                            return scorecardSelect(rowType: rowType, itemNumber: itemNumber, columnType: originalColumnType, originalColumnType: originalColumnType, action: originalAction, originalAction: originalAction)
+                        }
+                    }
                     if newColumnNumber == nil {
                         if let (newRowType, newItemNumber ) = nextRow(rowType: rowType, itemNumber: itemNumber) {
-                            scorecardSelect(rowType: newRowType, itemNumber: newItemNumber, columnType: nil, action: action, initialOffset: -1)
+                            return scorecardSelect(rowType: newRowType, itemNumber: newItemNumber, columnType: nil, originalColumnType: originalColumnType, action: action, originalAction: originalAction, initialOffset: -1)
                         }
                     }
                 default:
@@ -1103,20 +1138,28 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                         // Get focus for cell when scrolling finished
                     cell.getFocus()
                 }
-
             }
         }
-    }
-    
-    func scrollViewDidEndScrollingAnimation(_ scrollView: UIScrollView) {
-        scrollCompletion?()
-        scrollCompletion = nil
+        return true
     }
                                              
-    func indexPath(rowType: RowType, itemNumber: Int, first: Bool) -> IndexPath {
-        let section = (rowType == .table ? itemNumber - 1 : (itemNumber - 1) / scorecard.boardsTable)
-        let row = (rowType == .table ? (first ? 0 : scorecard.boardsTable - 1) : (itemNumber - 1) % scorecard.boardsTable)
-        return IndexPath(row: row, section: section)
+    func moveTo(cellFrame: CGRect) -> UITableView.ScrollPosition? {
+        let mainHeight = mainTableView.frame.height
+        let offset = mainTableView.contentOffset.y
+        let minY = cellFrame.minY
+        let maxY = cellFrame.maxY
+        var result: UITableView.ScrollPosition?
+        
+        print("offset \(offset) offset+header \(offset + tableRowHeight) cell \(minY)")
+        if offset != 0 && (offset + tableRowHeight > minY || offset < 0) {
+            print("top")
+            result = .top
+        } else if offset + mainHeight < maxY {
+            print("bottom")
+            result = .bottom
+        }
+        
+        return result
     }
     
     func previousRow(rowType: RowType, itemNumber: Int) -> (rowType: RowType, itemNumber: Int)? {
@@ -1180,8 +1223,19 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         return (rowType == .table ? tableColumns : getBoardColumns(boardNumber: itemNumber))
     }
     
-    func getColumnNumber(rowType: RowType, itemNumber: Int, type: ColumnType) -> Int? {
-        return getColumns(rowType: rowType, itemNumber: itemNumber).firstIndex(where: {$0.type == type})
+    func getColumnNumber(rowType: RowType, itemNumber: Int, type: ColumnType, findNearest: Bool = false) -> Int? {
+        let columns = getColumns(rowType: rowType, itemNumber: itemNumber)
+        var result = columns.firstIndex(where: {$0.type == type})
+        if result == nil && findNearest {
+            let otherItemNumber = (rowType == .board ? ((itemNumber - 1) / scorecard.boardsTable) + 1 : ((itemNumber - 1) * scorecard.boardsTable) + 1)
+            let otherColumns = getColumns(rowType: rowType.other, itemNumber: otherItemNumber)
+            if let otherColumn = otherColumns.first(where: {$0.type == type}) {
+                if let (index, _) = columns.enumerated().reversed().first(where: {($0.1.minX ?? 0) <= (otherColumn.minX ?? 0)}) {
+                    result = index
+                }
+            }
+        }
+        return result
     }
     
     func rowCollectionView(rowType: RowType, section: Int, row: Int? = nil) -> UICollectionView? {
@@ -1414,6 +1468,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
             let availableSize = frame.width - safeAreaInsets.left - safeAreaInsets.right
             let fixedSize = fixedWidth * factor
             let flexibleSize = (availableSize - fixedSize) / CGFloat(flexible)
+            var minX: CGFloat = 0
             
             var remainingWidth = availableSize
             for column in columns {
@@ -1425,6 +1480,8 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                         column.width = flexibleSize
                     }
                     remainingWidth -= column.width!
+                    column.minX = minX
+                    minX += column.width!
                 }
             }
             columns.last!.width! += remainingWidth
@@ -1533,11 +1590,13 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     fileprivate var indexPath: IndexPath!
     fileprivate var label = UILabel()
     fileprivate var firstResponderLabel: FirstResponderLabel!
+    fileprivate var contractPicker: ContractPicker!
     fileprivate var labelSeparator = UIView()
     fileprivate var labelHorizontalPadding: [NSLayoutConstraint]!
     fileprivate var labelTopPadding: [NSLayoutConstraint]!
     fileprivate var bottomLabel = UILabel()
     fileprivate var bottomLabelTapGesture: UITapGestureRecognizer!
+    fileprivate var bottomContractPicker: ContractPicker!
     fileprivate var topAnalysis = AnalysisSummaryView()
     fileprivate var bottomAnalysis = AnalysisSummaryView()
     fileprivate var analysisSeparator = UIView()
@@ -1669,6 +1728,9 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         textClearTapGesture = UITapGestureRecognizer(target: self, action: #selector(ScorecardInputCollectionCell.clearTapped(_:)))
         textClear.addGestureRecognizer(textClearTapGesture, identifier: "Text clear")
         
+        contractPicker = ContractPicker(from: self)
+        addSubview(contractPicker, anchored: .all)
+        
         addSubview(declarerPicker, top: 16, bottom: 0)
         Constraint.setWidth(control: declarerPicker, width: 60)
         Constraint.anchor(view: self, control: declarerPicker, attributes: .centerX)
@@ -1769,6 +1831,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         bottomLabelHeight.isActive = true
         bottomLabel.isHidden = true
         bottomLabelTapGesture.isEnabled = false
+        contractPicker.prepareForReuse()
         labelSeparator.isHidden = true
         labelSeparator.backgroundColor = UIColor(Palette.gridLine)
         labelSeparatorHeight.constant = 0
@@ -1836,7 +1899,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             case .declarer:
                 (table?.sitting ?? .unknown != .unknown && !Scorecard.current.isImported)
             case .made:
-                board.contract.suit.valid && !Scorecard.current.isImported
+                board.contract.isValid && !Scorecard.current.isImported
             case .score, .versus, .sitting, .contract:
                 !Scorecard.current.isImported
             case .responsible, .comment:
@@ -1912,10 +1975,10 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         case .combined:
             analysisSplitCombined()
         case .contract:
-            label.isHidden = false
-            label.attributedText = board.contract.attributedString
-            label.isUserInteractionEnabled = true
-            set(tap: .label)
+            contractPicker.isHidden = false
+            contractPicker.set(contract: board.contract, completion: contractPickerChanged)
+            contractPicker.isUserInteractionEnabled = true
+            set(tap: .contract)
         case .declarer:
             declarerPicker.isHidden = false
             let selected = (table.sitting == .unknown ? 0 : declarerList.firstIndex(where: { $0.seat == board.declarer}) ?? 0)
@@ -2213,6 +2276,9 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             case .made:
                 control = madePicker
                 selector = #selector(ScorecardInputCollectionCell.madeTapped)
+            case .contract:
+                control = contractPicker
+                selector = #selector(ScorecardInputCollectionCell.contractTapped)
             default:
                 break
             }
@@ -2623,6 +2689,24 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         }
     }
     
+    internal func contractPickerChanged(contract: Contract?, keyAction: KeyAction?, characters: String?) {
+        if let contract = contract {
+            if contract != board.contract {
+                contractDidChange(to: contract)
+                contractPicker.set(contract: board.contract)
+            }
+        }
+        if let keyAction = keyAction {
+            if keyAction == .enter || (keyAction == .characters && characters?.trim() == "") {
+                contractTapped(self)
+            } else {
+                keyPressed(keyAction: keyAction)
+            }
+        } else {
+            getFocus()
+        }
+    }
+    
     internal func contractDidChange(to value: Contract, made: Int? = nil, declarer: Seat? = nil) {
         if let board = board {
             let undoValue = board.contract
@@ -2636,7 +2720,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             if value != undoValue || made != undoMade || declarer != undoDeclarer {
                 UndoManager.registerUndo(withTarget: label) { (label) in
                     if let cell = self.scorecardDelegate?.scorecardCell(rowType: rowType, itemNumber: itemNumber, columnType: columnType) {
-                        cell.label.attributedText = NSAttributedString(undoValue.colorString)
+                        cell.contractPicker.set(contract: undoValue)
                         cell.board.made = made
                         cell.board.declarer = declarer
                         cell.contractDidChange(to: undoValue, made: undoMade, declarer: undoDeclarer)
@@ -2655,12 +2739,6 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         if let rowType = rowType, let itemNumber = itemNumber, let column = ColumnType(rawValue: sender.view?.tag ?? -1) {
             scorecardDelegate?.scorecardChanged(type: rowType, itemNumber: itemNumber)
             switch column {
-            case .contract:
-                if !Scorecard.current.isImported {
-                    contractTapped(self)
-                } else {
-                    showHand()
-                }
             case .versus:
                 versusTapped(self)
             case .score:
@@ -2690,7 +2768,11 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     @objc internal func contractTapped(_ sender: UIView) {
         scorecardDelegate?.scorecardEndEditing(true)
         scorecardDelegate?.scorecardChanged(type: .board, itemNumber: itemNumber)
-        scorecardDelegate?.scorecardContractEntry(board: board, table: table)
+        if !Scorecard.current.isImported {
+            scorecardDelegate?.scorecardContractEntry(board: board, table: table, contract: contractPicker.contract)
+        } else {
+            showHand()
+        }
     }
     
     @objc internal func scoreTapped(_ sender: UIView) {
@@ -2735,7 +2817,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         if table.sitting != .unknown {
             scorecardDelegate?.scorecardDeclarerPickerPopup(values: orderedDeclarerList, selected: board.declarer, frame: self.frame, in: self.superview!, topPadding: 20, bottomPadding: 4) { [ self] (selected, keyAction) in
                 if let index = declarerList.firstIndex(where: {$0.seat == selected}) {
-                    declarerPicker.set(index)
+                    declarerPicker.setValue(index)
                     scrollPickerDidChange(to: index)
                     if let keyAction = keyAction {
                         keyPressed(keyAction: keyAction)
@@ -2837,7 +2919,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                         default:
                             break
                         }
-                        picker?.set(undoValue)
+                        picker?.setValue(undoValue)
                         cell.scrollPickerDidChange(picker, to: undoValue)
                     }
                 }
@@ -2860,7 +2942,6 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     
     @discardableResult func getFocus(becomeFirstResponder: Bool = true) -> Bool {
         var result = false
-        print("setfocus \(description)")
         if isEnabled {
             let currentFocusCell = scorecardDelegate?.scorecardFocusCell
             if currentFocusCell != self {
@@ -2915,7 +2996,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     var responderControl: UIView? {
         switch column!.type {
         case .contract:
-            firstResponderLabel
+            contractPicker
         case .declarer:
             firstResponderLabel
         case .made:
@@ -2965,17 +3046,9 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             switch keyAction {
             case .next, .previous, .characters:
                 true
-            case .left, .right:
+            case .left, .right, .escape, .enter, .backspace, .delete:
                 switch column.type {
-                case .contract:
-                    true
-                case .declarer:
-                    true
-                case .made:
-                    true
-                case .responsible:
-                    true
-                case .sitting:
+                case .contract, .declarer, .made, .responsible, .sitting:
                     true
                 default:
                     false
@@ -2994,41 +3067,62 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         }
     }
     
-    @discardableResult func keyPressed(keyAction: KeyAction?, characters: String = "") -> Bool {
+    @discardableResult public func keyPressed(keyAction: KeyAction?, characters: String = "") -> Bool {
         var handled = false
         
         while true {
             if keyAction == nil { break }
-            handled = true
-            
-            switch keyAction {
-            case .next, .previous, .up, .down:
-                scorecardDelegate?.scorecardSelectNext(rowType: rowType, itemNumber: itemNumber, columnType: column.type, action: keyAction!)
-            case .characters, .left, .right:
-                switch column.type {
-                case .contract:
-                    contractTapped(self)
-                case .declarer:
-                    if !declarerPicker.processKeys(keyAction: keyAction!, characters: characters) {
-                        declarerTapped(self)
-                    }
-                case .made:
-                    if !madePicker.processKeys(keyAction: keyAction!, characters: characters) {
-                        madeTapped(self)
-                    }
-                case .responsible:
-                    if !responsiblePicker.processKeys(keyAction: keyAction!, characters: characters) {
-                        responsibleTapped(self)
-                    }
-                case .sitting:
-                    if !seatPicker.processKeys(keyAction: keyAction!, characters: characters) {
-                        seatPickerTapped(self)
-                    }
-                default:
-                    handled = false
+            handled = false
+            switch column.type {
+            case .declarer:
+                if declarerPicker.processKeys(keyAction: keyAction!, characters: characters) {
+                    handled = true
+                }
+            case .made:
+                if !madePicker.processKeys(keyAction: keyAction!, characters: characters) {
+                    handled = true
+                }
+            case .responsible:
+                if !responsiblePicker.processKeys(keyAction: keyAction!, characters: characters) {
+                    handled = true
+                }
+            case .sitting:
+                if !seatPicker.processKeys(keyAction: keyAction!, characters: characters) {
+                    handled = true
                 }
             default:
                 handled = false
+            }
+            switch keyAction {
+            case .next, .previous, .up, .down:
+                scorecardDelegate?.scorecardSelectNext(rowType: rowType, itemNumber: itemNumber, columnType: column.type, action: keyAction!)
+                handled = true
+            case .characters, .left, .right, .delete, .backspace, .escape, .enter:
+                if !handled {
+                    switch column.type {
+                    case .contract:
+                        if keyAction != .left && keyAction != .right && keyAction != .escape {
+                            contractTapped(self)
+                            handled = true
+                        }
+                    case .declarer:
+                        declarerTapped(self)
+                        handled = true
+                    case .made:
+                        madeTapped(self)
+                        handled = true
+                    case .responsible:
+                        responsibleTapped(self)
+                        handled = true
+                    case .sitting:
+                        seatPickerTapped(self)
+                        handled = true
+                    default:
+                        break
+                    }
+                }
+            default:
+                break
             }
             break
         }
@@ -3204,7 +3298,10 @@ enum KeyAction {
     case left
     case right
     case characters
+    case enter
     case escape
+    case backspace
+    case delete
     case save
     case other
     
@@ -3232,6 +3329,12 @@ enum KeyAction {
                 self = .right
             } else if keyCode == .keyboardEscape {
                 self = .escape
+            } else if keyCode == .keyboardReturn || keyCode == .keyboardReturnOrEnter {
+                self = .enter
+            } else if keyCode == .keyboardDeleteOrBackspace {
+                self = .backspace
+            } else if keyCode == .keyboardDeleteForward {
+                self = .delete
             } else {
                 self = .other
             }
@@ -3304,13 +3407,11 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput {
     }
     
     @discardableResult override func becomeFirstResponder() -> Bool {
-        print("becomeFirst TextView \(parent?.description ?? "")")
         parent?.getFocus(becomeFirstResponder: false)
         return super.becomeFirstResponder()
     }
     
     @discardableResult override func resignFirstResponder() -> Bool {
-        print("resignFirst TextView \(parent?.description ?? "")")
         parent?.loseFocus(resignFirstResponder: false)
         return super.resignFirstResponder()
     }
@@ -3354,13 +3455,11 @@ class ScorecardInputTextField : UITextField, ScorecardInputTextInput {
     }
     
     @discardableResult override func becomeFirstResponder() -> Bool {
-        print("becomeFirst TextValue \(parent?.description ?? "")")
         parent?.getFocus(becomeFirstResponder: false)
         return super.becomeFirstResponder()
     }
     
     @discardableResult override func resignFirstResponder() -> Bool {
-        print("resignFirst TextValue \(parent?.description ?? "")")
         let result = super.resignFirstResponder()
         parent?.loseFocus(resignFirstResponder: false)
         return result
@@ -3401,13 +3500,11 @@ class FirstResponderLabel: UILabel {
     }
     
     @discardableResult override func becomeFirstResponder() -> Bool {
-        print("becomeFirst FirstResponder \(parent?.description ?? "")")
         parent?.getFocus(becomeFirstResponder: false)
         return super.becomeFirstResponder()
     }
     
     @discardableResult override func resignFirstResponder() -> Bool {
-        print("resignFirst FirstResponder \(parent?.description ?? "")")
         parent?.loseFocus(resignFirstResponder: false)
         return super.resignFirstResponder()
     }

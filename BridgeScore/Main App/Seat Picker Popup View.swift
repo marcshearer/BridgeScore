@@ -20,6 +20,7 @@ class DeclarerPickerPopupView: UIView, UICollectionViewDataSource, UICollectionV
     private var topPadding: CGFloat = 0
     private var bottomPadding: CGFloat = 0
     private var accumulatedCharacters: String = ""
+    private var firstResponder: FirstResponderLabel!
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
@@ -103,10 +104,8 @@ class DeclarerPickerPopupView: UIView, UICollectionViewDataSource, UICollectionV
         backgroundView.isHidden = !hideBackground
         valuesCollectionView.reloadData()
         self.contentView.isHidden = false
-        let firstResponder = FirstResponderLabel(view: self)
-        addSubview(firstResponder)
+        
         firstResponder.becomeFirstResponder()
-
     }
     
     private func set(_ selected: Seat?) {
@@ -146,6 +145,10 @@ class DeclarerPickerPopupView: UIView, UICollectionViewDataSource, UICollectionV
         loadCollection(collectionView: valuesCollectionView)
         
         contentView.isHidden = true
+        
+        // First Responder
+        firstResponder = FirstResponderLabel(view: self)
+        addSubview(firstResponder)
     }
     
     func loadCollection(collectionView: UICollectionView) {

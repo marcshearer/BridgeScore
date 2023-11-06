@@ -1,5 +1,5 @@
 //
-//  Contract Picker View.swift
+//  Contract Picker.swift
 //  BridgeScore
 //
 //  Created by Marc Shearer on 04/11/2023.
@@ -7,13 +7,14 @@
 
 import UIKit
 
-class ContractEntryView: UILabel {
-    var parent: ScorecardInputCollectionCell
-    var contract: Contract!
-    var contractOnEntry: Contract!
+class ContractPicker: UILabel {
+    private var parent: ScorecardInputCollectionCell
+    private(set) var contract: Contract!
+    private var contractOnEntry: Contract!
     private var suitCharacters: String
     private var levelCharacters: String
     private var doubleCharacters: String
+    private var completion: ((Contract?, KeyAction?, String?)->())?
     
     init(from parent: ScorecardInputCollectionCell) {
         self.parent = parent
@@ -28,13 +29,27 @@ class ContractEntryView: UILabel {
         for suit in Suit.validCases {
             suitCharacters += suit.character
         }
-        self.backgroundColor = UIColor.clear
+        backgroundColor = UIColor.clear
     }
     
-    public func set(contract: Contract) {
+    public func prepareForReuse() {
+        isUserInteractionEnabled = false
+        contract = nil
+        contractOnEntry = nil
+        font = cellFont
+        attributedText = NSAttributedString(string: "")
+        textAlignment = .center
+        minimumScaleFactor = 0.3
+        adjustsFontSizeToFitWidth = true
+    }
+    
+    public func set(contract: Contract, completion: ((Contract?, KeyAction?, String?)->())? = nil) {
         attributedText = contract.attributedString
-        self.contract.copy(from: contract)
-        self.contractOnEntry = contract
+        if let completion = completion {
+            self.completion = completion
+        }
+        self.contractOnEntry = Contract(copying: contract)
+        self.contract = Contract(copying: contract)
     }
     
     required init?(coder: NSCoder) {
@@ -51,6 +66,12 @@ class ContractEntryView: UILabel {
     }
     
     @discardableResult override func resignFirstResponder() -> Bool {
+        if contract.isValid {
+            completion?(Contract(copying: contract), .save, nil)
+        } else {
+            contract.copy(from: contractOnEntry)
+            attributedText = contract.attributedString
+        }
         parent.loseFocus(resignFirstResponder: false)
         return super.resignFirstResponder()
     }
@@ -58,7 +79,7 @@ class ContractEntryView: UILabel {
     override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
         if !processPressedKeys(presses, with: event, allowCharacters: true, action: { (keyAction, _) in
             switch keyAction {
-            case .previous, .next, .up, .down, .escape, .enter, .characters:
+            case .previous, .next, .up, .down, .escape, .enter, .backspace, .delete, .characters:
                 true
             default:
                 false
@@ -74,16 +95,22 @@ class ContractEntryView: UILabel {
             var result = true
             switch keyAction {
             case .previous, .next, .up, .down:
-                if !contract.level.valid || !contract.suit.valid {
-                    set(contract: contractOnEntry)
-                    parent.keyPressed(keyAction: keyAction)
+                var newContract: Contract?
+                if contract.isValid {
+                    newContract = Contract(copying: contract)
+                } else {
+                    contract.copy(from: contractOnEntry)
                 }
-            case .escape:
-                set(contract: contractOnEntry)
+                completion?(newContract, keyAction, nil)
             case .enter:
-                if !contract.level.valid || !contract.suit.valid {
-                    contractOnEntry.copy(from: contract)
-                }
+                completion?(nil, keyAction, nil)
+            case .escape:
+                contract.copy(from: contractOnEntry)
+            case .delete, .backspace:
+                contract.level = .blank
+                completion?(contract, keyAction == .backspace ? .previous : nil, nil)
+            case .left, .right:
+                break
             case .characters:
                 if characters.trim().left(1).uppercased() == "P" {
                     contract.level = .passout
@@ -94,13 +121,14 @@ class ContractEntryView: UILabel {
                 } else if doubleCharacters.contains(characters.uppercased()) {
                     let current = contract.double
                     contract.double = ContractDouble(rawValue: (current.rawValue + 1) % ContractDouble.allCases.count)!
-                } else if characters.trim() == "" && contract.canClear {
-                    contract.level = .blank
+                } else if characters.trim() == "" {
+                    completion?(nil, keyAction, characters)
                 }
             default:
                 result = false
                 break
             }
+            attributedText = contract.attributedString
             return result
         }) {
             super.pressesEnded(presses, with: event)
