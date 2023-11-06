@@ -3203,7 +3203,13 @@ class AutoComplete: UIView, UITableViewDataSource, UITableViewDelegate {
             case .versus:
                 nameList = MasterData.shared.bboNames.filter({$0.bboName.lowercased().starts(with: self.text.lowercased())}).map{($0.bboName, $0.name, $0.name)}
             case .comment:
-                nameList = Suit.validCases.filter({$0.short.uppercased().starts(with: self.text.uppercased())}).filter({$0.string != self.text}).map{($0.string, $0.string, "")}
+                var list: [(replace: String, with: String, description: String)] = []
+                for rank in CardRank.allCases {
+                    list.append(contentsOf: Suit.realSuits.map({(rank.short + $0.short.uppercased(), rank.short + $0.string, "\(rank.string) \(rank.rawValue > 7 ? "of" : "") \($0.words)")}))
+                }
+                list.append(contentsOf: Suit.realSuits.map({($0.short.uppercased(), $0.string, $0.words)}))
+                list.append(contentsOf: Suit.realSuits.map({("1" + $0.short.uppercased(), "1" + $0.string, "1 " + $0.singular)}))
+                nameList = list.filter({$0.replace.starts(with: self.text.uppercased())}).filter({$0.with != self.text}).map({($0.with, $0.with, $0.description)})
             default:
                 nameList = []
             }
@@ -3228,7 +3234,7 @@ class AutoComplete: UIView, UITableViewDataSource, UITableViewDelegate {
         var result = ""
         for index in (0..<text.length).reversed() {
             let char = text.mid(index, 1)
-            if char.rangeOfCharacter(from: CharacterSet.letters) != nil {
+            if char.rangeOfCharacter(from: CharacterSet.alphanumerics) != nil {
                 result = char + result
             } else {
                 break

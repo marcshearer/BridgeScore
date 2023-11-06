@@ -923,6 +923,23 @@ public enum Suit: Int, ContractEnumType, Equatable, Comparable {
         }
     }
     
+    var singular: String {
+        switch self {
+        case .blank:
+            return ""
+        case .clubs:
+            return "Club"
+        case .diamonds:
+            return "Diamond"
+        case .hearts:
+            return "Heart"
+        case .spades:
+            return "Spade"
+        case .noTrumps:
+            return "No Trump"
+        }
+    }
+    
     var colorString: AttributedString {
         return AttributedString(self.string, color: self.color)
     }

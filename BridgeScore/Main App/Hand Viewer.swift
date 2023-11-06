@@ -755,7 +755,7 @@ struct HandViewer: View {
                         showClaim = claimIsShown
                         set(visible: false)
                         trickNumber += 1
-                        Utility.mainThread {
+                        Utility.executeAfter(delay: 0.1) {
                             animationChanged += 1
                         }
                     }
