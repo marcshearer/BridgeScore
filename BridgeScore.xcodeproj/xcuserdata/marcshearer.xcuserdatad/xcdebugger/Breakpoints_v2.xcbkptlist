@@ -7,17 +7,81 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "3190D5CD-DED0-4708-B10E-1272A79BA01B"
-            shouldBeEnabled = "No"
+            uuid = "63086C89-4B9F-4404-9CDD-B9054D8906B1"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "BridgeScore/Main App/Text Input Wrappers.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "99"
+            endingLineNumber = "99"
+            landmarkName = "pressesEnded(_:with:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "23C812D1-5907-4857-A370-FAD39E9ED2BA"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "BridgeScore/Shared/First Responder Label.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "44"
+            endingLineNumber = "44"
+            landmarkName = "pressesEnded(_:with:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "5654852C-E301-4327-B1FC-8D65175AB0EA"
+            shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "BridgeScore/Main App/Scorecard Input View.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "2976"
-            endingLineNumber = "2976"
-            landmarkName = "getFocus(becomeFirstResponder:)"
+            startingLineNumber = "3148"
+            endingLineNumber = "3148"
+            landmarkName = "keyPressed(keyAction:characters:)"
             landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "5654852C-E301-4327-B1FC-8D65175AB0EA - 4e3616f500cbbb1c"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Bridge_Score.ScorecardInputCollectionCell.keyPressed(keyAction: Swift.Optional&lt;Bridge_Score.KeyAction&gt;, characters: Swift.String) -&gt; Swift.Bool"
+                  moduleName = "Bridge Score"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/marcshearer/Documents/Xcode%20projects/BridgeScore/BridgeScore/Main%20App/Scorecard%20Input%20View.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "3148"
+                  endingLineNumber = "3148"
+                  offsetFromSymbolStart = "162">
+               </Location>
+               <Location
+                  uuid = "5654852C-E301-4327-B1FC-8D65175AB0EA - 4e3616f500cbbb1c"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "Bridge_Score.ScorecardInputCollectionCell.keyPressed(keyAction: Swift.Optional&lt;Bridge_Score.KeyAction&gt;, characters: Swift.String) -&gt; Swift.Bool"
+                  moduleName = "Bridge Score"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/marcshearer/Documents/Xcode%20projects/BridgeScore/BridgeScore/Main%20App/Scorecard%20Input%20View.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "3148"
+                  endingLineNumber = "3148"
+                  offsetFromSymbolStart = "181">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

@@ -36,7 +36,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
     
     private var collectionView: UICollectionView!
     private var collectionViewLayout: UICollectionViewLayout!
-    private var accumulatedView: ScrollPickerCell!
+    private var accumulatedView: ScrollPickerView!
 #if targetEnvironment(macCatalyst)
     private var panGestureRecognizer: UIPanGestureRecognizer!
     private var panStart: CGFloat = 0
@@ -77,7 +77,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
         collectionView.backgroundColor = UIColor.clear
         ScrollPickerCell.register(collectionView)
         self.addSubview(collectionView, anchored: .all)
-        accumulatedView = ScrollPickerCell()
+        accumulatedView = ScrollPickerView()
         self.addSubview(accumulatedView, anchored: .all)
         
         #if targetEnvironment(macCatalyst)
@@ -333,11 +333,10 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
 }
 
 
-class ScrollPickerCell: UICollectionViewCell {
+class ScrollPickerView: UIView {
     private var background: UIView!
     private var title: UILabel!
     private var caption: UILabel!
-    private static let identifier = "ScrollPickerCell"
     private var captionHeightConstraint: NSLayoutConstraint!
     private var tapAction: ((Int)->())?
     private var tapGesture: UITapGestureRecognizer!
@@ -375,7 +374,7 @@ class ScrollPickerCell: UICollectionViewCell {
     func addTapGesture(tapAction: ((Int)->())?) {
         if tapAction != nil {
             if tapGesture == nil {
-                tapGesture = UITapGestureRecognizer(target: self, action: #selector(ScrollPickerCell.tapped(_:)))
+                tapGesture = UITapGestureRecognizer(target: self, action: #selector(ScrollPickerView.tapped(_:)))
                 background.addGestureRecognizer(tapGesture, identifier: "ScrollPicker")
             }
         }
@@ -386,16 +385,7 @@ class ScrollPickerCell: UICollectionViewCell {
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
-    public class func register(_ collectionView: UICollectionView) {
-        collectionView.register(ScrollPickerCell.self, forCellWithReuseIdentifier: identifier)
-    }
-    
-    public class func dequeue(_ collectionView: UICollectionView, for indexPath: IndexPath) -> ScrollPickerCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: identifier, for: indexPath) as! ScrollPickerCell
-        return cell
-    }
-    
+
     override func layoutSubviews() {
         super.layoutSubviews()
         if let cornerRadius = cornerRadius {
@@ -403,7 +393,7 @@ class ScrollPickerCell: UICollectionViewCell {
         }
     }
     
-    internal override func prepareForReuse() {
+    internal func prepareForReuse() {
         self.backgroundColor = UIColor.clear
         background.backgroundColor = UIColor.clear
         self.isUserInteractionEnabled = false
@@ -454,5 +444,37 @@ class ScrollPickerCell: UICollectionViewCell {
     
     @objc private func tapped(_ sender: UIView) {
         tapAction?(tag)
+    }
+}
+
+class ScrollPickerCell: UICollectionViewCell {
+    private static let identifier = "ScrollPickerCell"
+    private var view: ScrollPickerView!
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        view = ScrollPickerView(frame: frame)
+        self.addSubview(view, anchored: .all)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    public class func register(_ collectionView: UICollectionView) {
+        collectionView.register(ScrollPickerCell.self, forCellWithReuseIdentifier: identifier)
+    }
+    
+    public class func dequeue(_ collectionView: UICollectionView, for indexPath: IndexPath) -> ScrollPickerCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: identifier, for: indexPath) as! ScrollPickerCell
+        return cell
+    }
+    
+    public func set(titleText: String, captionText: String? = nil, tag: Int = 0, color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil, clearBackground: Bool = true, topPadding: CGFloat = 0, bottomPadding: CGFloat = 0, leadingSpace: CGFloat = 0, trailingSpace: CGFloat = 0, borderWidth: CGFloat = 0, cornerRadius: CGFloat? = nil, tapAction: ((Int)->())? = nil) {
+        view.set(titleText: titleText, captionText: captionText, tag: tag, color: color, titleFont: titleFont, captionFont: captionFont, clearBackground: clearBackground, topPadding: topPadding, bottomPadding: bottomPadding, leadingSpace: leadingSpace, trailingSpace: trailingSpace, borderWidth: borderWidth, cornerRadius: cornerRadius, tapAction: tapAction)
+    }
+    
+    internal override func prepareForReuse() {
+        view.prepareForReuse()
     }
 }

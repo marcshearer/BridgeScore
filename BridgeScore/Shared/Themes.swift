@@ -96,6 +96,7 @@ enum ThemeBackgroundColorName: CaseIterable {
     case gridTable
     case gridTableDisabled
     case autoComplete
+    case autoCompleteSelected
     case contractSelected
     case contractUnselected
     case contractDisabled
@@ -401,6 +402,7 @@ class Themes {
                 .gridTable                   : ThemeColor(#colorLiteral(red: 0.8616076436, green: 0.8620930367, blue: 0.8620918949, alpha: 1), #colorLiteral(red: 0.5741485357, green: 0.5741624236, blue: 0.574154973, alpha: 1), .lightBackground, .lightBackground),
                 .gridTableDisabled           : ThemeColor(#colorLiteral(red: 0.8616076436, green: 0.8620930367, blue: 0.8620918949, alpha: 1), #colorLiteral(red: 0.5741485357, green: 0.5741624236, blue: 0.574154973, alpha: 1), .lightBackground, .lightBackground),
                 .autoComplete                : ThemeColor(#colorLiteral(red: 0.9188528073, green: 0.9193390308, blue: 1, alpha: 1), #colorLiteral(red: 0.5741485357, green: 0.5741624236, blue: 0.574154973, alpha: 1), .lightBackground, .lightBackground),
+                .autoCompleteSelected        : ThemeColor(#colorLiteral(red: 0, green: 0.3921568627, blue: 0.7058823529, alpha: 1), #colorLiteral(red: 0.5741485357, green: 0.5741624236, blue: 0.574154973, alpha: 1), .darkBackground,  .lightBackground),
                 .contractSelected            : ThemeColor(#colorLiteral(red: 0.0166248735, green: 0.4766505957, blue: 0.9990670085, alpha: 1), nil, .darkBackground),
                 .contractUnselected          : ThemeColor(#colorLiteral(red: 0.4705882353, green: 0.7058823529, blue: 0.7843137255, alpha: 1), nil, .lightBackground),
                 .contractDisabled            : ThemeColor(#colorLiteral(red: 0.6096856772, green: 1, blue: 1, alpha: 1), nil, .lightBackground),

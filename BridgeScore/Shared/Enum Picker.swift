@@ -29,7 +29,7 @@ protocol EnumPickerType : CaseIterable, Equatable {
 
 class EnumPicker<EnumType> : UIView, ScrollPickerDelegate where EnumType : EnumPickerType {
     private var scrollPicker: ScrollPicker
-    private var accumulatedView: ScrollPickerCell!
+    private var accumulatedView: ScrollPickerView!
     private var list: [EnumType]
     private var entryList: [ScrollPickerEntry]
     private(set) var selected: EnumType!
@@ -45,7 +45,7 @@ class EnumPicker<EnumType> : UIView, ScrollPickerDelegate where EnumType : EnumP
         super.init(frame: frame)
         scrollPicker.delegate = self
         addSubview(scrollPicker, anchored: .all)
-        accumulatedView = ScrollPickerCell()
+        accumulatedView = ScrollPickerView()
         self.addSubview(accumulatedView, anchored: .all)
     }
     

@@ -133,6 +133,31 @@ extension UIView {
         }
         return results
     }
+    
+    func processPressedKeys(_ presses: Set<UIPress>, with event: UIPressesEvent?, allowCharacters: Bool = false, action: (KeyAction, String)->(Bool)) -> Bool {
+        for press in presses {
+            if let key = press.key {
+                var keyAction = KeyAction(keyCode: key.keyCode, modifierFlags: key.modifierFlags)
+                    // Look in events for shift-Tab
+                if let event = event {
+                    for keyPress in event.allPresses.map({$0.key?.keyCode}) {
+                        if let keyPress = keyPress {
+                            if keyPress == .keyboardTab && key.modifierFlags.contains(.shift){
+                                keyAction = .previous
+                            }
+                        }
+                    }
+                }
+                if keyAction == .other && allowCharacters && key.characters != "" {
+                    keyAction = .characters
+                }
+                if action(keyAction, key.characters) {
+                    return true
+                }
+            }
+        }
+        return false
+    }
 }
 #endif
 extension CGPoint {

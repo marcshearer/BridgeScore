@@ -21,6 +21,10 @@
 		B21E6F6D27C511DA00DBDCC2 /* Bridge Calculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21E6F6C27C511DA00DBDCC2 /* Bridge Calculations.swift */; };
 		B2203EB52AE8CCFC00FA27C8 /* input Number Mac.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2203EB42AE8CCFC00FA27C8 /* input Number Mac.swift */; };
 		B2276D5A27A692A40025DA80 /* Constraint.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2276D5927A692A40025DA80 /* Constraint.swift */; };
+		B22D1C2F2AFA2B8300C8897F /* Text Input Wrappers.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22D1C2E2AFA2B8300C8897F /* Text Input Wrappers.swift */; };
+		B22D1C312AFA2C0400C8897F /* First Responder Label.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22D1C302AFA2C0400C8897F /* First Responder Label.swift */; };
+		B22D1C332AFA2C6200C8897F /* Key Action Enumeration.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22D1C322AFA2C6200C8897F /* Key Action Enumeration.swift */; };
+		B22D1C352AFA2DB200C8897F /* Auto Complete.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22D1C342AFA2DB200C8897F /* Auto Complete.swift */; };
 		B22D40A227A2CF3E002F2470 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B22D40A127A2CF3E002F2470 /* Assets.xcassets */; };
 		B22F55452A9CF33F0058443D /* Hand Viewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22F55442A9CF33F0058443D /* Hand Viewer.swift */; };
 		B23ADBEE27B1CC68001B6B38 /* Notes.txt in Resources */ = {isa = PBXBuildFile; fileRef = B23ADBED27B1CC68001B6B38 /* Notes.txt */; };
@@ -141,6 +145,10 @@
 		B2203EB42AE8CCFC00FA27C8 /* input Number Mac.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "input Number Mac.swift"; sourceTree = "<group>"; };
 		B2276D5727A5A2C90025DA80 /* Scorecard Canvas View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Canvas View.swift"; sourceTree = "<group>"; };
 		B2276D5927A692A40025DA80 /* Constraint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constraint.swift; sourceTree = "<group>"; };
+		B22D1C2E2AFA2B8300C8897F /* Text Input Wrappers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Text Input Wrappers.swift"; path = "../Main App/Text Input Wrappers.swift"; sourceTree = "<group>"; };
+		B22D1C302AFA2C0400C8897F /* First Responder Label.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "First Responder Label.swift"; sourceTree = "<group>"; };
+		B22D1C322AFA2C6200C8897F /* Key Action Enumeration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Key Action Enumeration.swift"; sourceTree = "<group>"; };
+		B22D1C342AFA2DB200C8897F /* Auto Complete.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Auto Complete.swift"; sourceTree = "<group>"; };
 		B22D40A127A2CF3E002F2470 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B22F55442A9CF33F0058443D /* Hand Viewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Hand Viewer.swift"; sourceTree = "<group>"; };
 		B23ADBED27B1CC68001B6B38 /* Notes.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Notes.txt; sourceTree = "<group>"; };
@@ -533,6 +541,10 @@
 				B26C555827C8BCBC00015D0A /* Scroll Picker Popup View.swift */,
 				B2CC509D27BE22210050F22C /* Enum Picker.swift */,
 				B26C555627C7EA9200015D0A /* Table with Collection.swift */,
+				B22D1C2E2AFA2B8300C8897F /* Text Input Wrappers.swift */,
+				B22D1C302AFA2C0400C8897F /* First Responder Label.swift */,
+				B22D1C322AFA2C6200C8897F /* Key Action Enumeration.swift */,
+				B22D1C342AFA2DB200C8897F /* Auto Complete.swift */,
 			);
 			name = "Reusable UIKit Components";
 			sourceTree = "<group>";
@@ -641,6 +653,7 @@
 				B2BBC8BA27BBF6BC00D51A26 /* Table View Model.swift in Sources */,
 				B25AE9E52AA7021600F04229 /* Double Dummy Managed Object.swift in Sources */,
 				B2EB3D75279D73E100D64225 /* Board View Model.swift in Sources */,
+				B22D1C312AFA2C0400C8897F /* First Responder Label.swift in Sources */,
 				B256D42127EC434100F47322 /* Traveller Managed Object.swift in Sources */,
 				B2E1B76827DC71E300204CAC /* User Defaults.swift in Sources */,
 				B24EAE8E27DDE95C001B3E64 /* Multi Select Picker Input.swift in Sources */,
@@ -681,6 +694,7 @@
 				B26BCE522799AD8900B73501 /* Themes.swift in Sources */,
 				B2EB3D71279D717F00D64225 /* Player View Model.swift in Sources */,
 				B28E2B1E27C6A582002A9EE2 /* Input Float.swift in Sources */,
+				B22D1C2F2AFA2B8300C8897F /* Text Input Wrappers.swift in Sources */,
 				B26BCE382799AD5800B73501 /* Version.swift in Sources */,
 				B25F653C27F0507600FDD6B1 /* Scorecard Traveller View.swift in Sources */,
 				B26BCE3A2799AD6D00B73501 /* Core Data.swift in Sources */,
@@ -713,6 +727,7 @@
 				B250412E2ABD9A0E00C58CAD /* Picker Input Simple.swift in Sources */,
 				B2AB6ECB2AC2CCA900ED002A /* Analysis.swift in Sources */,
 				B2C4338C27B6646700796F24 /* Scorecard Input View.swift in Sources */,
+				B22D1C332AFA2C6200C8897F /* Key Action Enumeration.swift in Sources */,
 				B26BCE4E2799AD8900B73501 /* Link Presentation.swift in Sources */,
 				B26BCE74279B236F00B73501 /* Layout Managed Object.swift in Sources */,
 				B22F55452A9CF33F0058443D /* Hand Viewer.swift in Sources */,
@@ -724,6 +739,7 @@
 				B26C555927C8BCBC00015D0A /* Scroll Picker Popup View.swift in Sources */,
 				B26BCE362799AD1700B73501 /* Config.swift in Sources */,
 				B2AF750F27AD384900233693 /* Layout Setup View.swift in Sources */,
+				B22D1C352AFA2DB200C8897F /* Auto Complete.swift in Sources */,
 				B28E4EE827B55F9A0059819C /* Backup.swift in Sources */,
 				B26BCE6B2799AED700B73501 /* Input Title.swift in Sources */,
 				B2BAD9BB27F75895008D0160 /* Import Framework.swift in Sources */,

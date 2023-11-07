@@ -1,0 +1,199 @@
+//
+//  Auto Complete View.swift
+//  BridgeScore
+//
+//  Created by Marc Shearer on 07/11/2023.
+//
+
+import UIKit
+
+protocol AutoCompleteDelegate {
+    func replace(with: String, textInput: ScorecardInputTextInput, positionAt: NSRange)
+}
+
+enum AutoCompleteConsider {
+    case lastWord
+    case trailingAlpha
+    case trailingAlphaNumeric
+}
+
+class AutoComplete: UIView, UITableViewDataSource, UITableViewDelegate {
+    var tableView = UITableView()
+    var text: String = ""
+    var list: [(replace: String, with: String, description: String)] = []
+    var filteredList: [(replace: String, with: String, description: String)] = []
+    var textInput: ScorecardInputTextInput?
+    var consider: AutoCompleteConsider!
+    var range: NSRange!
+    var match: String?
+    var selectedRow: Int?
+    var adjustReplace: ((String, Bool, Bool)->String)?
+    var delegate: AutoCompleteDelegate?
+    var isActive: Bool = false {
+        didSet {
+            isHidden = !isActive
+        }
+    }
+    
+    init() {
+        super.init(frame: CGRect(origin: CGPoint.zero, size: CGSize(width: 100, height: 100)))
+        self.isHidden = true
+        addSubview(tableView, leading: 2, trailing: 2, top: 2, bottom: 2)
+        AutoCompleteCell.register(tableView)
+        tableView.dataSource = self
+        tableView.delegate = self
+        tableView.separatorStyle = .none
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    public func set(list: [(replace: String, with: String, description: String)], consider: AutoCompleteConsider = .lastWord, adjustReplace: ((String, Bool, Bool)->String)? = nil) {
+        self.list = list
+        self.consider = consider
+        self.adjustReplace = adjustReplace
+    }
+    
+    public func set(text: String, textInput: ScorecardInputTextInput?, at range: NSRange) -> Int {
+        self.textInput = textInput
+        self.text = text
+        self.range = range
+        let string: NSString = NSString(string: text)
+        
+        match = ""
+        filteredList = []
+        
+        // Check cursor at end of string or at a space
+        if ((range.location + range.length) == string.length) || (string.substring(with: NSRange(location: range.location + range.length, length: 1))) == " " {
+            let previous = string.substring(with: NSRange(location: 0, length: range.location + range.length)) as String
+            switch consider! {
+            case .lastWord:
+                match = previous.components(separatedBy: " ").last
+            case .trailingAlpha, .trailingAlphaNumeric:
+                match = trailingCharacters(text: previous, consider: consider)
+            }
+            if let match = match {
+                if match.length > 0 {
+                    filteredList = list.filter({$0.replace.lowercased().starts(with: match.lowercased())}).filter({$0.with != match})
+                }
+            }
+        }
+        
+        isActive = !filteredList.isEmpty
+        selectedRow = 0
+        
+        tableView.reloadData()
+        return filteredList.count
+    }
+    
+    func trailingCharacters(text: String, consider: AutoCompleteConsider) -> String? {
+        var result = ""
+        let characterSet: CharacterSet = (consider == .trailingAlpha ? .letters : .alphanumerics)
+        for index in (0..<text.length).reversed() {
+            let char = text.mid(index, 1)
+            if char.rangeOfCharacter(from: characterSet) != nil {
+                result = char + result
+            } else {
+                break
+            }
+        }
+        return result
+    }
+    
+    public func keyPressed(keyAction: KeyAction) -> Bool {
+        var handled = false
+        switch keyAction {
+        case .up:
+            if (selectedRow ?? 0) > 0 {
+                selectedRow = (selectedRow ?? 0) - 1
+                // tableView.reloadRows(at: [IndexPath(row: selectedRow!, section: 0)], with: .automatic)
+                handled = true
+            }
+        case .down:
+            if (selectedRow ?? Int.max) < filteredList.count - 1 {
+                selectedRow = (selectedRow ?? 0) + 1
+                // tableView.reloadRows(at: [IndexPath(row: selectedRow!, section: 0)], with: .automatic)
+                handled = true
+            }
+        case .enter:
+            if let selectedRow = selectedRow {
+                tableView(tableView, didSelectRowAt: IndexPath(row: selectedRow, section: 0))
+                handled = true
+            }
+        default:
+            break
+        }
+        return handled
+    }
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return filteredList.count
+    }
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 40
+    }
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = AutoCompleteCell.dequeue(tableView: tableView, for: indexPath)
+        cell.set(text: filteredList[indexPath.row].replace, description: filteredList[indexPath.row].description, selected: indexPath.row == selectedRow)
+        return cell
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if let textInput = textInput {
+            if let match = match {
+                let textLength = NSString(string: text).length
+                let matchLength = NSString(string: match).length
+                var with = filteredList[indexPath.row].with
+                with = adjustReplace?(with, range.location - matchLength == 0, range.location + range.length == textLength) ?? with
+                let withLength = NSString(string: with).length
+                let result = NSString(string: text).replacingCharacters(in: NSRange(location: range.location - matchLength, length: matchLength), with: with)
+                delegate?.replace(with: result, textInput: textInput, positionAt: NSRange(location: range.location - matchLength + withLength, length: 0))
+            }
+        }
+    }
+}
+
+class AutoCompleteCell: UITableViewCell {
+    private var label = UILabel()
+    private var desc = UILabel()
+    static public var cellIdentifier = "Auto Complete Cell"
+    private var descWidth: NSLayoutConstraint!
+    
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        addSubview(label, leading: 8, top: 0, bottom: 0)
+        addSubview(desc, trailing: 8, top: 0, bottom: 0)
+        Constraint.anchor(view: self, control: label, to: desc, constant: 8, toAttribute: .leading, attributes: .trailing)
+        descWidth = Constraint.setWidth(control: desc, width: 0)
+        
+        self.backgroundColor = UIColor(Palette.autoComplete.background)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+ 
+    public class func register(_ tableView: UITableView, forTitle: Bool = false) {
+        tableView.register(AutoCompleteCell.self, forCellReuseIdentifier: cellIdentifier)
+    }
+    
+    public class func dequeue(tableView: UITableView, for indexPath: IndexPath) -> AutoCompleteCell {
+        return tableView.dequeueReusableCell(withIdentifier: cellIdentifier, for: indexPath) as! AutoCompleteCell
+    }
+    
+    public func set(text: String, description: String = "", selected: Bool) {
+        label.text = text
+        desc.text = description
+        label.font = cellFont
+        let color = selected ? Palette.autoCompleteSelected : Palette.autoComplete
+        label.backgroundColor = UIColor(color.background)
+        label.textColor = UIColor(color.textColor(.normal))
+        desc.backgroundColor = UIColor(color.background)
+        desc.textColor = UIColor(color.textColor(.contrast))
+        desc.font = cellFont
+        descWidth.constant = (description == "" ? 0 : self.frame.width / 2)
+    }
+}
