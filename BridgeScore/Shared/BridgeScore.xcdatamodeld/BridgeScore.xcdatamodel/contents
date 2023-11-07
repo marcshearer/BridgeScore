@@ -95,6 +95,7 @@
         <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="desc" optional="YES" attributeType="String"/>
         <attribute name="entry16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="importNext16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="importSource16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="locationId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="manualTotals" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>

@@ -343,6 +343,7 @@ class Scorecard {
     
     public func clearImport() {
         scorecard?.importSource = .none
+        scorecard?.importNext = 1
         removeRankings()
         for boardNumber in 1...(scorecard?.boards ?? 0) {
             removeTravellers(board: boardNumber)

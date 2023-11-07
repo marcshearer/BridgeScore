@@ -331,7 +331,7 @@ struct ScorecardInputView: View {
             bannerOptions += [
                 BannerOption(image: AnyView(Image(systemName: hideRejected ? "plus" : "minus")), text: hideRejected ? "Show rejected" : "Hide rejected", likeBack: true, menu: true, action: { hideRejected.toggle() })]
         }
-        if isNotImported.wrappedValue || scorecard.resetNumbers {
+        if isNotImported.wrappedValue || (scorecard.resetNumbers && scorecard.importNext <= scorecard.tables) {
             bannerOptions += [
                 BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import PBN file", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importPbnScorecard = true}),
                 BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import BBO files", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importBboScorecard = true})]

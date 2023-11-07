@@ -30,6 +30,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     @Published public var position: Int = 0
     @Published public var entry: Int = 0
     @Published public var importSource: ImportSource = .none
+    @Published public var importNext: Int = 0
     
     public var tables: Int { get { boards / max(1, boardsTable) } }
     
@@ -63,7 +64,8 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
                 self.maxScore != mo.maxScore ||
                 self.position != mo.position ||
                 self.entry != mo.entry ||
-                self.importSource != mo.importSource
+                self.importSource != mo.importSource ||
+                self.importNext != mo.importNext
             {
                     result = true
             }
@@ -144,6 +146,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.position = 0
         self.entry = 0
         self.importSource = .none
+        self.importNext = 1
         self.scorecardMO = nil
     }
     
@@ -164,6 +167,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.position = from.position
         self.entry = from.entry
         self.importSource = from.importSource
+        self.importNext = from.importNext
         self.scorecardMO = from.scorecardMO
     }
     
@@ -189,6 +193,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             self.position = mo.position
             self.entry = mo.entry
             self.importSource = mo.importSource
+            self.importNext = mo.importNext
         }
     }
     
@@ -210,6 +215,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             mo.position = self.position
             mo.entry = self.entry
             mo.importSource = self.importSource
+            mo.importNext = self.importNext
         } else {
             fatalError("No managed object")
         }
@@ -288,6 +294,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         UserDefault.currentPosition.set(self.position)
         UserDefault.currentEntry.set(self.entry)
         UserDefault.currentImportSource.set(self.importSource)
+        UserDefault.currentImportNext.set(self.importNext)
     }
     
     public func restoreCurrent() {
@@ -315,5 +322,6 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.maxScore = maxScore == "" ? nil : Float(maxScore)
         self.position = UserDefault.currentPosition.int
         self.importSource = UserDefault.currentImportSource.importSource ?? .none
+        self.importNext = UserDefault.currentImportNext.int
     }
 }

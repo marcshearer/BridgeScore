@@ -663,23 +663,37 @@ struct HandViewer: View {
                         .frame(width: 20, height: 140).rotationEffect(.degrees(-90))
                     Spacer()
                     VStack {
+                        let isRotated = (rotated % 2 != 0)
                         Spacer()
-                        if rotated % 2 == 0 {
-                            Rectangle().frame(width: 2, height: 30).foregroundColor(Palette.handTable.contrastText)
+                        if !isRotated {
+                            Rectangle().frame(width: 2, height: 30)
                         }
                         Spacer().frame(height: 10)
                         HStack {
-                            if rotated % 2 != 0 {
-                                Rectangle().frame(width: 10, height: 2).foregroundColor(Palette.handTable.contrastText)
+                            if isRotated {
+                                Rectangle().frame(width: 20, height: 2)
                             }
-                            Text("\((deal.hands[sitting]?.hcp ?? 0) + (deal.hands[sitting.partner]?.hcp ?? 0)) HCP").font(defaultFont).foregroundColor(Palette.handTable.contrastText)
-                            if rotated % 2 != 0 {
-                                Rectangle().frame(width: 10, height: 2).foregroundColor(Palette.handTable.contrastText)
+                            HStack {
+                                let hcp = (deal.hands[sitting]?.hcp ?? 0) + (deal.hands[sitting.partner]?.hcp ?? 0)
+                                Spacer()
+                                if isRotated {
+                                    VStack {
+                                        Text("\(hcp)")
+                                        Text("HCP")
+                                    }
+                                } else {
+                                    Text("\(hcp) HCP")
+                                }
+                                Spacer()
+                            }
+                                .font(defaultFont)
+                            if isRotated {
+                                Rectangle().frame(width: 20, height: 2)
                             }
                         }
                         Spacer().frame(height: 10)
-                        if rotated % 2 == 0 {
-                            Rectangle().frame(width: 2, height: 30).foregroundColor(Palette.handTable.contrastText)
+                        if !isRotated {
+                            Rectangle().frame(width: 2, height: 30)
                         }
                         Spacer()
                     }
@@ -691,6 +705,7 @@ struct HandViewer: View {
                 Centered(deal: $deal, sitting: sitting)
                     .frame(height: 20)
             }
+            .foregroundColor(Palette.handTable.contrastText)
         }
         
         struct Centered: View {
@@ -708,6 +723,7 @@ struct HandViewer: View {
                     }
                 }
                 .minimumScaleFactor(0.75)
+                .foregroundColor(Palette.handTable.text)
             }
         }
     }

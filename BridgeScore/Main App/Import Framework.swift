@@ -555,7 +555,7 @@ class ImportedScorecard: NSObject {
                 InsetView(title: "Import Settings") {
                     VStack(spacing: 0) {
                 
-                        StepperInput(title: "Import for table", field: importedScorecard.table, label: stepperLabel, minValue: Binding.constant(1), maxValue: Binding.constant(scorecard.tables))
+                        StepperInput(title: "Import for table", field: importedScorecard.table, label: stepperLabel, minValue: Binding.constant(scorecard.importNext), maxValue: Binding.constant(scorecard.tables))
                         
                         Spacer().frame(height: 16)
                     }
@@ -624,7 +624,8 @@ class ImportedScorecard: NSObject {
                     .frame(width: 120, height: 40)
                     .cornerRadius(10)
                     .onTapGesture {
-                        Utility.mainThread {
+                        Utility.mainThread { [self] in
+                            scorecard.importNext += 1
                             completion()
                         }
                     }
