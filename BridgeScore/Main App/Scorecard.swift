@@ -214,9 +214,6 @@ class Scorecard {
                 default:
                     break
                 }
-                if lastEntity != nil {
-                    print("Save \(lastEntity!) \(lastItemNumber)")
-                }
             }
             lastEntity = entity
             lastItemNumber = itemNumber

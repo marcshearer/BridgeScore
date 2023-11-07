@@ -106,16 +106,21 @@ class AutoComplete: UIView, UITableViewDataSource, UITableViewDelegate {
         switch keyAction {
         case .up:
             if (selectedRow ?? 0) > 0 {
-                selectedRow = (selectedRow ?? 0) - 1
-                // tableView.reloadRows(at: [IndexPath(row: selectedRow!, section: 0)], with: .automatic)
-                handled = true
+                let oldSelectedRow = selectedRow
+                selectedRow = selectedRow! - 1
+                tableView.reloadRows(at: [IndexPath(row: selectedRow!, section: 0), IndexPath(row: oldSelectedRow!, section: 0)], with: .automatic)
+                tableView.scrollToRow(at: IndexPath(row: selectedRow!, section: 0), at: .none, animated: true)
             }
+            handled = true
+
         case .down:
             if (selectedRow ?? Int.max) < filteredList.count - 1 {
-                selectedRow = (selectedRow ?? 0) + 1
-                // tableView.reloadRows(at: [IndexPath(row: selectedRow!, section: 0)], with: .automatic)
-                handled = true
+                let oldSelectedRow = selectedRow
+                selectedRow = selectedRow! + 1
+                tableView.reloadRows(at: [IndexPath(row: selectedRow!, section: 0), IndexPath(row: oldSelectedRow!, section: 0)], with: .automatic)
+                tableView.scrollToRow(at: IndexPath(row: selectedRow!, section: 0), at: .none, animated: true)
             }
+            handled = true
         case .enter:
             if let selectedRow = selectedRow {
                 tableView(tableView, didSelectRowAt: IndexPath(row: selectedRow, section: 0))
@@ -157,6 +162,7 @@ class AutoComplete: UIView, UITableViewDataSource, UITableViewDelegate {
 }
 
 class AutoCompleteCell: UITableViewCell {
+    private var spacer = UILabel()
     private var label = UILabel()
     private var desc = UILabel()
     static public var cellIdentifier = "Auto Complete Cell"
@@ -164,9 +170,12 @@ class AutoCompleteCell: UITableViewCell {
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        addSubview(label, leading: 8, top: 0, bottom: 0)
-        addSubview(desc, trailing: 8, top: 0, bottom: 0)
-        Constraint.anchor(view: self, control: label, to: desc, constant: 8, toAttribute: .leading, attributes: .trailing)
+        addSubview(spacer, leading: 0, top: 0, bottom: 0)
+        Constraint.setWidth(control: spacer, width: 8)
+        addSubview(label, top: 0, bottom: 0)
+        addSubview(desc, trailing: 0, top: 0, bottom: 0)
+        Constraint.anchor(view: self, control: spacer, to: label, constant: 0, toAttribute: .leading, attributes: .trailing)
+        Constraint.anchor(view: self, control: label, to: desc, constant: 0, toAttribute: .leading, attributes: .trailing)
         descWidth = Constraint.setWidth(control: desc, width: 0)
         
         self.backgroundColor = UIColor(Palette.autoComplete.background)
@@ -189,6 +198,7 @@ class AutoCompleteCell: UITableViewCell {
         desc.text = description
         label.font = cellFont
         let color = selected ? Palette.autoCompleteSelected : Palette.autoComplete
+        spacer.backgroundColor = UIColor(color.background)
         label.backgroundColor = UIColor(color.background)
         label.textColor = UIColor(color.textColor(.normal))
         desc.backgroundColor = UIColor(color.background)

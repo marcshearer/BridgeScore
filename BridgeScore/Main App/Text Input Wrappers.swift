@@ -135,10 +135,10 @@ class ScorecardInputTextField : UITextField, ScorecardInputTextInput {
         textInputDelegate?.loseFocus(resignFirstResponder: false)
         return result
     }
-/*
+
     override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
         if !processPressedKeys(presses, with: event, action: { (keyAction, _) in
-            keyAction.navigationKey
+            keyAction.navigationKey || keyAction.upDownKey || keyAction == .enter
         }) {
             super.pressesBegan(presses, with: event)
         }
@@ -151,5 +151,4 @@ class ScorecardInputTextField : UITextField, ScorecardInputTextInput {
             }
         }
     }
- */
 }

@@ -2401,10 +2401,11 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         }
         if let undoText = undoText {
             if text != undoText {
-                UndoManager.registerUndo(withTarget: self) { (_) in
+                UndoManager.registerUndo(withTarget: self) { [self] (_) in
                     if let cell = self.scorecardDelegate?.scorecardCell(rowType: rowType, itemNumber: itemNumber, columnType: columnType) {
                         cell.textField.text = undoText
                         cell.textFieldChanged(cell.textField)
+                        cell.enableTextInputStringControls()
                     }
                 }
                 switch columnType {
@@ -2485,18 +2486,22 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     }
     
     internal func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        textField.resignFirstResponder()
-        switch column.type {
-        case .score:
-            if textField.text != "" {
-                if board.board < scorecard.boards {
-                    scorecardDelegate?.scorecardSelectNext(rowType: .board, itemNumber: board.board, columnType: .score, action: .down)
+        if keyPressed(keyAction: .enter) {
+            return false
+        } else {
+            textField.resignFirstResponder()
+            switch column.type {
+            case .score:
+                if textField.text != "" {
+                    if board.board < scorecard.boards {
+                        scorecardDelegate?.scorecardSelectNext(rowType: .board, itemNumber: board.board, columnType: .score, action: .down)
+                    }
                 }
+            default:
+                break
             }
-        default:
-            break
+            return true
         }
-        return true
     }
     
     internal func textViewDidChange(_ textView: UITextView) {
@@ -2523,6 +2528,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                     if let cell = self.scorecardDelegate?.scorecardCell(rowType: rowType, itemNumber: itemNumber, columnType: columnType) {
                         cell.textView.text = undoText
                         cell.textViewDidChange(cell.textView)
+                        cell.enableTextInputStringControls()
                     }
                 }
                 switch column.type {
@@ -2568,7 +2574,9 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     
     func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
         if text == "\n" {
-            textView.resignFirstResponder()
+            if !keyPressed(keyAction: .enter) {
+                textView.resignFirstResponder()
+            }
             return false
         } else if text == "\t" {
             keyPressed(keyAction: .next)
@@ -2651,14 +2659,14 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             break
         }
         if text != "" {
+            textControl?.textValue = ""
+            textControl?.textChanged(textControl!)
             switch self.column.type {
-            case .comment:
+            case .comment, .versus:
                 enableTextInputStringControls()
             default:
                 break
             }
-            textControl?.textValue = ""
-            textControl?.textChanged(textControl!)
         }
     }
     
@@ -3165,7 +3173,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                     if seatPicker.processKeys(keyAction: keyAction, characters: characters) {
                         handled = !keyAction.movementKey
                     }
-                case .versus:
+                case .versus, .comment:
                     if let autoComplete = scorecardDelegate?.scorecardAutoComplete[column.type] {
                         if autoComplete.isActive {
                             if keyAction.upDownKey || keyAction == .enter {
@@ -3173,7 +3181,6 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                             }
                         }
                     }
-                    handled = false
                 default:
                     handled = false
                 }
