@@ -7,12 +7,14 @@
 
 import UIKit
 
-class FirstResponderLabel: UILabel {
-    var parent: ScorecardInputCollectionCell?
+class FirstResponderLabel: UILabel, ScorecardResponder {
+    var responderDelegate: ScorecardResponderDelegate?
     var view: UIView?
     
-    init(from parent: ScorecardInputCollectionCell? = nil, view: UIView? = nil) {
-        self.parent = parent
+    public var updateFocus: Bool = false
+    
+    init(from responderDelegate: ScorecardResponderDelegate? = nil, view: UIView? = nil) {
+        self.responderDelegate = responderDelegate
         self.view = view
         super.init(frame: CGRect())
         self.backgroundColor = UIColor.clear
@@ -27,21 +29,34 @@ class FirstResponderLabel: UILabel {
     }
     
     @discardableResult override func becomeFirstResponder() -> Bool {
-        parent?.getFocus(becomeFirstResponder: false)
+        if updateFocus {
+            responderDelegate?.getFocus()
+        }
         return super.becomeFirstResponder()
     }
     
     @discardableResult override func resignFirstResponder() -> Bool {
-        parent?.loseFocus(resignFirstResponder: false)
-        return super.resignFirstResponder()
+        let result = super.resignFirstResponder()
+        if updateFocus {
+            responderDelegate?.resignedFirstResponder(from: self)
+        }
+        return result
     }
     
     override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-        (parent ?? view)?.pressesBegan(presses, with: event)
+        if let responderDelegate = responderDelegate {
+            responderDelegate.pressesBegan(presses, with: event)
+        } else {
+            view?.pressesBegan(presses, with: event)
+        }
     }
     
     override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
-        (parent ?? view)?.pressesEnded(presses, with: event)
+        if let responderDelegate = responderDelegate {
+            responderDelegate.pressesEnded(presses, with: event)
+        } else {
+            view?.pressesEnded(presses, with: event)
+        }
     }
 }
 

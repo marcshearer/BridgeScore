@@ -77,4 +77,8 @@ enum KeyAction {
     var movementKey: Bool {
         navigationKey || upDownKey || self == .backspace
     }
+    
+    var deletionKey: Bool {
+        self == .backspace || self == .delete
+    }
 }

@@ -655,7 +655,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
             switch columnType {
             case .versus:
                 let nameList = MasterData.shared.bboNames.map{($0.bboName, $0.name, $0.name)}
-                autoComplete.set(list: nameList, consider: .lastWord, adjustReplace: versusAdjustReplace)
+                autoComplete.set(list: nameList, consider: .lastWord, adjustReplace: versusAdjustReplace, mustStart: false, searchDescription: true)
             case .comment:
                 var list:[(String, String, String)] = []
                 for rank in CardRank.allCases {
@@ -1634,6 +1634,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     fileprivate var caption = UILabel()
     fileprivate var textField =  ScorecardInputTextField()
     fileprivate var textView = ScorecardInputTextView()
+    private var textInputActive: Bool = false
     private var textViewCenterYConstraint: NSLayoutConstraint!
     private var textViewHeightConstraint: NSLayoutConstraint!
     private var textViewTopBorderConstraint: NSLayoutConstraint!
@@ -1837,6 +1838,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         textField.isEnabled = true
         textView.isHidden = true
         textField.text = ""
+        textInputActive = false
         textClear.isHidden = true
         textClearWidth.constant = 0
         textClearPadding.forEach { (constraint) in constraint.constant = 0 }
@@ -2179,11 +2181,8 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     
     private func textInputStringLabelTapped() {
         if !(Scorecard.current.isImported && board?.score == nil) {
-            label.isHidden = true
-            label.isUserInteractionEnabled = false
-            set(tap: .noTap)
-            textControl?.isHidden = false
-            _ = textControl?.becomeFirstResponder()
+            enableTextInputStringControls(forceEditing: true)
+            getFocus()
         }
     }
     
@@ -2194,14 +2193,13 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
 
         let useLabel = sitout || !editing
         
+        textInputActive = !useLabel
         textControl?.isHidden = useLabel
         
         self.setTextInputStringLabel(value: textControl?.textValue)
         label.isHidden = !useLabel
         label.isUserInteractionEnabled = useLabel
-        if useLabel {
-            set(tap: useLabel ? .label : .none)
-        }
+        set(tap: useLabel ? .label : .none)
         
         bottomLabel.isHidden = !useLabel
         bottomLabel.isUserInteractionEnabled = useLabel
@@ -2482,14 +2480,12 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             }
         }
         scorecardDelegate?.scorecardAutoComplete[column.type]?.isActive = false
-        textField.resignFirstResponder()
     }
     
     internal func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         if keyPressed(keyAction: .enter) {
             return false
         } else {
-            textField.resignFirstResponder()
             switch column.type {
             case .score:
                 if textField.text != "" {
@@ -2497,9 +2493,12 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                         scorecardDelegate?.scorecardSelectNext(rowType: .board, itemNumber: board.board, columnType: .score, action: .down)
                     }
                 }
+                return true
             default:
                 break
             }
+            enableTextInputStringControls(forceEditing: false)
+            getFocus()
             return true
         }
     }
@@ -2575,7 +2574,8 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
         if text == "\n" {
             if !keyPressed(keyAction: .enter) {
-                textView.resignFirstResponder()
+                enableTextInputStringControls(forceEditing: false)
+                getFocus()
             }
             return false
         } else if text == "\t" {
@@ -2633,7 +2633,6 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             }
         }
         scorecardDelegate?.scorecardAutoComplete[column.type]?.isActive = false
-        textView.resignFirstResponder()
         switch column.type {
         case .score:
             if textView.text != "" {
@@ -2809,11 +2808,8 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 }
             case .comment:
                 if !(Scorecard.current.isImported && board?.score == nil) {
-                    label.isHidden = true
-                    label.isUserInteractionEnabled = false
-                    textControl?.isHidden = false
+                    enableTextInputStringControls(forceEditing: true)
                     getFocus()
-                    set(tap: .noTap)
                 }
             default:
                 if Scorecard.current.isImported && board?.score != nil {
@@ -2860,11 +2856,8 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             }
         } else {
             if !Scorecard.current.isImported {
-                label.isHidden = true
-                label.isUserInteractionEnabled = false
-                textField.isHidden = false
-                set(tap: .noTap)
-                textField.becomeFirstResponder()
+                enableTextInputStringControls(forceEditing: true)
+                getFocus()
             }
         }
     }
@@ -3016,7 +3009,8 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         return isEnabled
     }
     
-    @discardableResult func getFocus(becomeFirstResponder: Bool = true) -> Bool {
+    @discardableResult func getFocus() -> Bool {
+        print("Getting \(description)")
         var result = false
         if isEnabled {
             let currentFocusCell = scorecardDelegate?.scorecardFocusCell
@@ -3027,28 +3021,21 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 }
             }
             scorecardDelegate?.scorecardFocusCell = self
-            focusLineViews.forEach { line in
-                line.isHidden = false
-            }
-            if becomeFirstResponder {
-                switch column.type {
-                case .comment, .versus:
-                    enableTextInputStringControls(forceEditing: true)
-                default: break
-                }
-                result = responderControl?.becomeFirstResponder() ?? false
-            } else {
-                result = true
-            }
+            focusLineViews.forEach { line in line.isHidden = false }
+            responderControls.forEach { control in control?.updateFocus = false }
+            result = responderControl?.becomeFirstResponder() ?? false
+            responderControls.forEach { control in control?.updateFocus = true }
         }
         return result
     }
     
-    @discardableResult func loseFocus(resignFirstResponder: Bool = true) -> Bool {
-        var result = true
-        focusLineViews.forEach { line in
-            line.isHidden = true
-        }
+    @discardableResult func loseFocus() -> Bool {
+        print("Resigning \(description)")
+        
+        // Remove focus halo
+        focusLineViews.forEach { line in line.isHidden = true }
+        
+        // Carry out any control specific pre-amble
         switch column?.type {
         case .comment, .versus:
             enableTextInputStringControls(forceEditing: false)
@@ -3060,24 +3047,43 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             seatPicker.loseFocus()
         default: break
         }
-        if resignFirstResponder {
-            result = responderControl?.resignFirstResponder() ?? false
-        }
-        if let column = column {
-            switch column.type {
-            case .comment:
-                enableTextInputStringControls()
-            default:
-                break
-            }
-        }
+        
+        // Resign first responder
+        responderControl?.updateFocus = false
+        let result = responderControl?.resignFirstResponder() ?? false
+        responderControl?.updateFocus = true
+        
+        // Set the focused cell to nil
         scorecardDelegate?.scorecardFocusCell = nil
 
         return result
     }
     
-    var responderControl: UIView? {
-        switch column!.type {
+    func resignedFirstResponder(from responder: ScorecardResponder) {
+        // Main action takes place when another cell gets focus and hence this cell loses focus
+        // Just adjust text input controls if necessary
+        switch column?.type {
+        case .comment, .versus:
+            if responder == textResponder! {
+                // Switch to label
+                enableTextInputStringControls(forceEditing: false)
+                getFocus()
+            }
+        default:
+            break
+        }
+    }
+    
+    var responderControls: [ScorecardResponder?] {
+        if let textControl = textControl {
+            [textControl, firstResponderLabel]
+        } else {
+            [responderControl]
+        }
+    }
+    
+    var responderControl: ScorecardResponder? {
+        switch column?.type {
         case .contract:
             contractPicker
         case .declarer:
@@ -3085,9 +3091,9 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         case .made:
             firstResponderLabel
         case .score:
-            textControl
+            textResponder
         case .comment:
-            textControl
+            textResponder
         case .responsible:
             firstResponderLabel
         case .analysis1:
@@ -3095,17 +3101,25 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         case .analysis2:
             firstResponderLabel
         case .commentAvailable:
-            textControl
+            firstResponderLabel
         case .combined:
             firstResponderLabel
         case .sitting:
             firstResponderLabel
         case .tableScore:
-            textControl
+            textResponder
         case .versus:
-            textControl
+            textResponder
         default:
             nil
+        }
+    }
+    
+    var textResponder: ScorecardResponder? {
+        if textInputActive {
+            textControl
+        } else {
+            firstResponderLabel
         }
     }
     
@@ -3131,7 +3145,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 true
             case .left, .right, .escape, .enter, .backspace, .delete:
                 switch column.type {
-                case .contract, .declarer, .made, .responsible, .sitting:
+                case .contract, .declarer, .made, .responsible, .sitting, .score, .comment, .tableScore, .versus:
                     true
                 default:
                     false
@@ -3152,7 +3166,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     
     @discardableResult public func keyPressed(keyAction: KeyAction?, characters: String = "") -> Bool {
         var handled = false
-        
+        print("Key pressed \(description)")
         while true {
             if let keyAction = keyAction {
                 handled = false
@@ -3180,9 +3194,22 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                                 handled = autoComplete.keyPressed(keyAction: keyAction)
                             }
                         }
+                    } 
+                    if !handled {
+                        var switchModeKey: Bool
+                        if textInputActive {
+                            switchModeKey = keyAction == .enter || keyAction == .escape
+                        } else {
+                            switchModeKey = keyAction == .enter || keyAction == .characters || keyAction.leftRightKey || keyAction.deletionKey
+                        }
+                        if switchModeKey {
+                            enableTextInputStringControls(forceEditing: !textInputActive)
+                            getFocus()
+                            handled = true
+                        }
                     }
                 default:
-                    handled = false
+                   handled = false
                 }
                 if !handled {
                     switch keyAction {
@@ -3229,4 +3256,8 @@ extension Array where Element == ScorecardColumn {
         }
         return result
     }
+}
+
+protocol ScorecardResponder: UIView {
+    var updateFocus: Bool {get set}
 }

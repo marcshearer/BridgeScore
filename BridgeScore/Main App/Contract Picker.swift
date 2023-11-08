@@ -7,17 +7,18 @@
 
 import UIKit
 
-class ContractPicker: UILabel {
-    private var parent: ScorecardInputCollectionCell
+class ContractPicker: UILabel, ScorecardResponder {
+    private var responderDelegate: ScorecardResponderDelegate
     private(set) var contract: Contract!
     private var contractOnEntry: Contract!
     private var suitCharacters: String
     private var levelCharacters: String
     private var doubleCharacters: String
     private var completion: ((Contract?, KeyAction?, String?)->())?
+    var updateFocus: Bool = true
     
-    init(from parent: ScorecardInputCollectionCell) {
-        self.parent = parent
+    init(from responderDelegate: ScorecardResponderDelegate) {
+        self.responderDelegate = responderDelegate
         levelCharacters = ""
         suitCharacters = ""
         doubleCharacters = "*X"
@@ -61,7 +62,9 @@ class ContractPicker: UILabel {
     }
     
     @discardableResult override func becomeFirstResponder() -> Bool {
-        parent.getFocus(becomeFirstResponder: false)
+        if updateFocus {
+            responderDelegate.getFocus()
+        }
         return super.becomeFirstResponder()
     }
     
@@ -72,8 +75,11 @@ class ContractPicker: UILabel {
             contract.copy(from: contractOnEntry)
             attributedText = contract.attributedString
         }
-        parent.loseFocus(resignFirstResponder: false)
-        return super.resignFirstResponder()
+        let result = super.resignFirstResponder()
+        if updateFocus {
+            responderDelegate.resignedFirstResponder(from: self)
+        }
+        return result
     }
     
     override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {

@@ -17,13 +17,36 @@ enum AutoCompleteConsider {
     case trailingAlphaNumeric
 }
 
+class AutoCompleteElement: Hashable {
+    var replace: String
+    var with: String
+    var description: String
+    
+    init(element: (replace: String, with: String, description: String)) {
+        replace = element.replace
+        with = element.with
+        description = element.description
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(replace)
+        hasher.combine(with)
+    }
+    
+    static func == (lhs: AutoCompleteElement, rhs: AutoCompleteElement) -> Bool {
+        lhs.replace == rhs.replace && lhs.with == rhs.with
+    }
+}
+
 class AutoComplete: UIView, UITableViewDataSource, UITableViewDelegate {
     var tableView = UITableView()
     var text: String = ""
-    var list: [(replace: String, with: String, description: String)] = []
-    var filteredList: [(replace: String, with: String, description: String)] = []
+    var list: [AutoCompleteElement] = []
+    var filteredList: [AutoCompleteElement] = []
     var textInput: ScorecardInputTextInput?
     var consider: AutoCompleteConsider!
+    var mustStart: Bool = false
+    var searchDescription: Bool = true
     var range: NSRange!
     var match: String?
     var selectedRow: Int?
@@ -49,10 +72,12 @@ class AutoComplete: UIView, UITableViewDataSource, UITableViewDelegate {
         fatalError("init(coder:) has not been implemented")
     }
     
-    public func set(list: [(replace: String, with: String, description: String)], consider: AutoCompleteConsider = .lastWord, adjustReplace: ((String, Bool, Bool)->String)? = nil) {
-        self.list = list
+    public func set(list: [(replace: String, with: String, description: String)], consider: AutoCompleteConsider = .lastWord, adjustReplace: ((String, Bool, Bool)->String)? = nil, mustStart: Bool = true, searchDescription: Bool = false) {
+        self.list = list.map({AutoCompleteElement(element: $0)})
         self.consider = consider
         self.adjustReplace = adjustReplace
+        self.mustStart = mustStart
+        self.searchDescription = searchDescription
     }
     
     public func set(text: String, textInput: ScorecardInputTextInput?, at range: NSRange) -> Int {
@@ -64,19 +89,21 @@ class AutoComplete: UIView, UITableViewDataSource, UITableViewDelegate {
         match = ""
         filteredList = []
         
-        // Check cursor at end of string or at a space
-        if ((range.location + range.length) == string.length) || (string.substring(with: NSRange(location: range.location + range.length, length: 1))) == " " {
-            let previous = string.substring(with: NSRange(location: 0, length: range.location + range.length)) as String
-            switch consider! {
-            case .lastWord:
-                match = previous.components(separatedBy: " ").last
-            case .trailingAlpha, .trailingAlphaNumeric:
-                match = trailingCharacters(text: previous, consider: consider)
-            }
-            if let match = match {
-                if match.length > 0 {
-                    filteredList = list.filter({$0.replace.lowercased().starts(with: match.lowercased())}).filter({$0.with != match})
+        let previous = string.substring(with: NSRange(location: 0, length: range.location + range.length)) as String
+        switch consider! {
+        case .lastWord:
+            match = previous.components(separatedBy: " ").last
+        case .trailingAlpha, .trailingAlphaNumeric:
+            match = trailingCharacters(text: previous, consider: consider)
+        }
+        if let match = match {
+            if match.length > 0 {
+                for description in 0...(searchDescription ? 1 : 0) {
+                    filteredList = filteredList + list.filter({(description == 1 ? $0.description : $0.with).lowercased().matches(match.lowercased(), mustStart ? .starts : .contains)}).filter({$0.with != match})
                 }
+            }
+            if searchDescription {
+                filteredList = Array(Set(filteredList))
             }
         }
         
@@ -205,5 +232,22 @@ class AutoCompleteCell: UITableViewCell {
         desc.textColor = UIColor(color.textColor(.contrast))
         desc.font = cellFont
         descWidth.constant = (description == "" ? 0 : self.frame.width / 2)
+    }
+}
+
+extension String {
+    
+    enum StartsOrContainsMode {
+        case starts
+        case contains
+    }
+    
+    func matches(_ value: String, _ mode: StartsOrContainsMode) -> Bool {
+        switch mode {
+        case .starts:
+            self.starts(with: value)
+        case .contains:
+            self.contains(value)
+        }
     }
 }

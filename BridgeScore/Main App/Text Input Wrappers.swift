@@ -14,20 +14,25 @@ protocol ScorecardInputResponder {
     func resignFirstResponder() -> Bool
 }
 
-protocol ScorecardInputDelegate {
-    @discardableResult func getFocus(becomeFirstResponder: Bool) -> Bool
-    @discardableResult func loseFocus(resignFirstResponder: Bool) -> Bool
+protocol ScorecardResponderDelegate {
+    @discardableResult func getFocus() -> Bool
+    func resignedFirstResponder(from: ScorecardResponder)
     @discardableResult func keyPressed(keyAction: KeyAction?, characters: String) -> Bool
-    func textFieldChanged(_ textField: UITextField)
+    func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?)
+    func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?)
 }
-
-extension ScorecardInputDelegate {
+ 
+extension ScorecardResponderDelegate {
     @discardableResult func keyPressed(keyAction: KeyAction?) -> Bool {
         keyPressed(keyAction: keyAction, characters: "")
     }
 }
 
-protocol ScorecardInputTextInput : UIView, UITextInput, ScorecardInputResponder {
+protocol ScorecardInputDelegate: ScorecardResponderDelegate {
+    func textFieldChanged(_ textField: UITextField)
+}
+
+protocol ScorecardInputTextInput : ScorecardResponder, UITextInput, ScorecardInputResponder {
     var textValue: String! {get set}
     var textAlignment: NSTextAlignment {get set}
     var autocapitalizationType: UITextAutocapitalizationType {get set}
@@ -55,6 +60,8 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
         set { text = newValue}
     }
     
+    public var updateFocus: Bool = true
+    
     let textInputDelegate: ScorecardInputDelegate?
     
     public var adjustsFontSizeToFitWidth: Bool {
@@ -76,13 +83,18 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
     }
     
     @discardableResult override func becomeFirstResponder() -> Bool {
-        textInputDelegate?.getFocus(becomeFirstResponder: false)
+        if updateFocus {
+            textInputDelegate?.getFocus()
+        }
         return super.becomeFirstResponder()
     }
     
     @discardableResult override func resignFirstResponder() -> Bool {
-        textInputDelegate?.loseFocus(resignFirstResponder: false)
-        return super.resignFirstResponder()
+        let result = super.resignFirstResponder()
+        if updateFocus {
+            textInputDelegate?.resignedFirstResponder(from: self)
+        }
+        return result
     }
 
     override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
@@ -108,6 +120,8 @@ class ScorecardInputTextField : UITextField, ScorecardInputTextInput {
         set { text = newValue}
     }
     
+    public var updateFocus = true
+    
     let textInputDelegate: ScorecardInputDelegate?
     
     init(delegate: ScorecardInputDelegate? = nil) {
@@ -126,13 +140,17 @@ class ScorecardInputTextField : UITextField, ScorecardInputTextInput {
     }
     
     @discardableResult override func becomeFirstResponder() -> Bool {
-        textInputDelegate?.getFocus(becomeFirstResponder: false)
+        if updateFocus {
+            textInputDelegate?.getFocus()
+        }
         return super.becomeFirstResponder()
     }
     
     @discardableResult override func resignFirstResponder() -> Bool {
         let result = super.resignFirstResponder()
-        textInputDelegate?.loseFocus(resignFirstResponder: false)
+        if updateFocus {
+            textInputDelegate?.resignedFirstResponder(from: self)
+        }
         return result
     }
 
