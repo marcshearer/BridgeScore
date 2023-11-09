@@ -2838,8 +2838,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         return isEnabled
     }
     
-    @discardableResult func getFocus() -> Bool {
-        print("Getting \(description)")
+    @discardableResult func getFocus(becomeFirstResponder: Bool = true) -> Bool {
         var result = false
         if isEnabled {
             let currentFocusCell = scorecardDelegate?.scorecardFocusCell
@@ -2850,18 +2849,18 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 }
             }
             scorecardDelegate?.scorecardFocusCell = self
-            textControl?.forceFirstResponder = true
+            textControl?.forceFirstResponder = becomeFirstResponder
             focusLineViews.forEach { line in line.isHidden = false }
-            responderControls.forEach { control in control?.updateFocus = false }
-            result = responderControl?.becomeFirstResponder() ?? false
-            responderControls.forEach { control in control?.updateFocus = true }
+            if becomeFirstResponder {
+                responderControls.forEach { control in control?.updateFocus = false }
+                result = responderControl?.becomeFirstResponder() ?? false
+                responderControls.forEach { control in control?.updateFocus = true }
+            }
         }
         return result
     }
     
     @discardableResult func loseFocus() -> Bool {
-        print("Resigning \(description)")
-        
         // Remove focus halo
         focusLineViews.forEach { line in line.isHidden = true }
         
@@ -2891,7 +2890,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         // Main action takes place when another cell gets focus and hence this cell loses focus
         if let textControl = textControl {
             if textControl == responder {
-                getFocus()
+                getFocus(becomeFirstResponder: MyApp.target == .macOS)
             }
         }
     }

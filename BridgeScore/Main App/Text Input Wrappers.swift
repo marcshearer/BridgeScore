@@ -15,7 +15,7 @@ protocol ScorecardInputResponder {
 }
 
 protocol ScorecardResponderDelegate {
-    @discardableResult func getFocus() -> Bool
+    @discardableResult func getFocus(becomeFirstResponder: Bool) -> Bool
     func resignedFirstResponder(from: ScorecardResponder)
     @discardableResult func keyPressed(keyAction: KeyAction?, characters: String) -> Bool
     func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?)
@@ -26,6 +26,9 @@ protocol ScorecardResponderDelegate {
 extension ScorecardResponderDelegate {
     @discardableResult func keyPressed(keyAction: KeyAction?) -> Bool {
         keyPressed(keyAction: keyAction, characters: "")
+    }
+    func getFocus() -> Bool {
+        getFocus(becomeFirstResponder: true)
     }
 }
 
