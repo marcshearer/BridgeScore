@@ -170,6 +170,10 @@ public enum ScoreType {
         }
     }
     
+    public var unsigned: Bool {
+        self != .imp && self != .xImp && self != .aggregate
+    }
+    
     public var suffix: String {
         switch self {
         case .percent:

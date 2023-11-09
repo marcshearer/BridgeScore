@@ -1833,57 +1833,24 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         seatPicker.isHidden = true
         responsiblePicker.isHidden = true
         madePicker.isHidden = true
-        textField.isHidden = true
-        textField.textAlignment = .center
-        textField.clearsOnBeginEditing = false
-        textField.clearButtonMode = .never
         textField.font = cellFont
         setTextInput(centered: false)
-        textField.keyboardType = .default
-        textField.autocapitalizationType = .none
-        textField.autocorrectionType = .no
-        textField.isUserInteractionEnabled = false
         textField.prepareForReuse()
-        textView.isHidden = true
         textView.font = cellFont
-        textView.textContainer.maximumNumberOfLines = 0
-        textView.textContainer.lineBreakMode = .byWordWrapping
-        textView.isUserInteractionEnabled = false
         textView.prepareForReuse()
         textClear.isHidden = true
         textClearWidth.constant = 0
         textClearPadding.forEach { (constraint) in constraint.constant = 0 }
         textClearTapGesture.isEnabled = false
-        label.backgroundColor = UIColor.clear
-        label.textColor = UIColor(Palette.background.text)
-        label.text = ""
-        label.font = cellFont
-        label.textAlignment = .center
-        label.isUserInteractionEnabled = false
-        label.numberOfLines = 1
+        prepareLabelForReuse(label: label)
+        label.isHidden = false
         labelHorizontalPadding.forEach { constraint in constraint.setIndent(in: self, constant: 2)}
         labelTopPadding.forEach { constraint in constraint.setIndent(in: self, constant: 2)}
-        bottomLabel.backgroundColor = UIColor.clear
-        bottomLabel.textColor = UIColor(Palette.background.text)
-        bottomLabel.text = ""
-        bottomLabel.font = cellFont
-        bottomLabel.textAlignment = .center
-        bottomLabel.isUserInteractionEnabled = false
-        bottomLabel.numberOfLines = 1
-        bottomLabel.lineBreakMode = .byWordWrapping
+        prepareLabelForReuse(label: bottomLabel)
         bottomLabelHeight.constant = 0
         bottomLabelHeight.isActive = true
-        bottomLabel.isHidden = true
         bottomLabelTapGesture.isEnabled = false
-        firstResponderLabel.text = ""
-        firstResponderLabel.isHidden = false
-        firstResponderLabel.backgroundColor = UIColor.clear
-        firstResponderLabel.textColor = UIColor(Palette.background.text)
-        firstResponderLabel.font = cellFont
-        firstResponderLabel.textAlignment = .center
-        firstResponderLabel.isUserInteractionEnabled = false
-        firstResponderLabel.numberOfLines = 1
-        firstResponderLabel.isHidden = true
+        prepareLabelForReuse(label: firstResponderLabel)
         contractPicker.prepareForReuse()
         contractPicker.isHidden = true
         labelSeparator.isHidden = true
@@ -1895,6 +1862,17 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         bottomAnalysisHeight.constant = 0
         bottomAnalysis.isHidden = true
         focusLineViews.forEach { line in line.isHidden = true }
+    }
+    
+    func prepareLabelForReuse(label: UILabel) {
+        label.backgroundColor = UIColor.clear
+        label.textColor = UIColor(Palette.background.text)
+        label.text = ""
+        label.font = cellFont
+        label.textAlignment = .center
+        label.isUserInteractionEnabled = false
+        label.numberOfLines = 1
+        label.isHidden = true
     }
     
     func setTitle(scorecard: ScorecardViewModel, column: ScorecardColumn) {
@@ -2055,21 +2033,11 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             label.isUserInteractionEnabled = !isEnabled
             set(tap: isEnabled ? .made : .label)
         case .score:
-            if Scorecard.current.isImported {
-                label.isHidden = false
-                if let score = board?.score {
-                    label.text = "\(scorecard.type.boardScoreType.prefix(score: score))\(score.toString(places: min(1, scorecard.type.boardPlaces)))\(scorecard.type.boardScoreType.shortSuffix)"
-                }
-            } else {
-                label.isHidden = true
-                setTextInput(centered: true)
-                textControl?.textAlignment = .center
-                textControl?.isHidden = false
-                textControl?.keyboardType = .numbersAndPunctuation
-                textControl?.textValue = board.score == nil ? "" : "\(board.score!.toString(places: scorecard.type.boardPlaces))"
-                textControl?.isUserInteractionEnabled = isEnabled
-                textControl?.isActive = true
-            }
+            label.isHidden = true
+            textControl?.set(text: board.score == nil ? "" : "\(board.score!.toString(places: scorecard.type.boardPlaces))", numeric: true, unsigned: scorecard.type.boardScoreType.unsigned, decimalPlaces: scorecard.type.boardPlaces, useLabel: true, formattedText: formattedScore)
+            setTextInput(centered: true)
+            textControl?.textAlignment = .center
+            textControl?.isUserInteractionEnabled = isEnabled
             firstResponderLabel.isUserInteractionEnabled = true
             set(tap: .textInput)
         case .points:
@@ -2127,19 +2095,11 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             label.isUserInteractionEnabled = !isEnabled
             set(tap: isEnabled ? .seat : nil)
         case .tableScore:
-            if scorecard.manualTotals {
-                setTextInput(centered: true)
-                textControl?.textAlignment = .center
-                textControl?.isHidden = false
-                textControl?.keyboardType = .numbersAndPunctuation
-                textControl?.textValue = table.score == nil ? "" : "\(table.score!.toString(places: scorecard.type.tablePlaces))"
-                textControl?.isActive = true
-                set(tap: .noTap)
-            } else {
-                label.text = table.score == nil ? "" : "\(scorecard.type.tableScoreType.prefix(score: table.score!))\(table.score!.toString(places: min(1, scorecard.type.tablePlaces)))\(scorecard.type.tableScoreType.suffix)"
-                label.isUserInteractionEnabled = true
-                set(tap: .label)
-            }
+            textControl?.set(text: table.score == nil ? "" : "\(table.score!.toString(places: scorecard.type.tablePlaces))", numeric: true, unsigned: scorecard.type.boardScoreType.unsigned, decimalPlaces: scorecard.type.boardPlaces, useLabel: true, formattedText: formattedTableScore)
+            setTextInput(centered: true)
+            textControl?.textAlignment = .center
+            textControl?.isUserInteractionEnabled = scorecard.manualTotals
+            set(tap: .textInput)
         case .versus:
             setTextInputString(value: (Scorecard.current.isImported ? importedVersus : table.versus), offset: 16)
         }
@@ -2148,6 +2108,22 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             caption.isHidden = false
             captionHeight.constant = 24
             caption.text = (column.type == .tableScore ? scorecard.type.boardScoreType.string : column.heading)
+        }
+    }
+    
+    private func formattedScore() -> String {
+        if let score = board?.score {
+            return "\(scorecard.type.boardScoreType.prefix(score: score))\(score.toString(places: min(1, scorecard.type.boardPlaces)))\(scorecard.type.boardScoreType.shortSuffix)"
+        } else {
+            return ""
+        }
+    }
+    
+    private func formattedTableScore() -> String {
+        if let score = table.score {
+            return "\(scorecard.type.tableScoreType.prefix(score: score))\(score.toString(places: min(1, scorecard.type.tablePlaces)))\(scorecard.type.tableScoreType.suffix)"
+        } else {
+            return ""
         }
     }
     
@@ -2172,14 +2148,12 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     }
     
     private func setTextInputString(value: String, font: UIFont = cellFont, centered: Bool = true, offset: CGFloat = 0) {
-        textControl?.textValue = value
+        textControl?.set(text: value, useLabel: true, formattedText: nil)
         textControl?.textAlignment = .left
         textControl?.autocapitalizationType = .sentences
         textControl?.adjustsFontForContentSizeCategory = true
         textControl?.isUserInteractionEnabled = true
         textControl?.font = cellFont
-        textControl?.isActive = true
-        textControl?.useLabel = true
         textClear.isHidden = (value == "")
         textClearTapGesture.isEnabled = true
         textClearWidth.constant = 34
@@ -2915,6 +2889,11 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     
     func resignedFirstResponder(from responder: ScorecardResponder) {
         // Main action takes place when another cell gets focus and hence this cell loses focus
+        if let textControl = textControl {
+            if textControl == responder {
+                getFocus()
+            }
+        }
     }
     
     var responderControls: [ScorecardResponder?] {
@@ -2990,7 +2969,14 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             switch keyAction {
             case .next, .previous, .characters:
                 true
-            case .left, .right, .escape, .enter, .backspace, .delete:
+            case .left, .right:
+                switch column.type {
+                case .contract, .declarer, .made, .responsible, .sitting:
+                    true
+                default:
+                    false
+                }
+            case .escape, .enter, .backspace, .delete:
                 switch column.type {
                 case .contract, .declarer, .made, .responsible, .sitting, .score, .comment, .tableScore, .versus:
                     true
