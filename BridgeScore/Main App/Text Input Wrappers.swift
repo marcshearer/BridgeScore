@@ -54,6 +54,9 @@ protocol ScorecardInputTextInput : ScorecardResponder, UITextInput, ScorecardInp
     var canBecomeFirstResponder: Bool {get}
     var showLabel: Bool {get}
     var forceFirstResponder: Bool {get set}
+    var isActive: Bool {get}
+    var isNumeric: Bool {get}
+    var useLabel: Bool {get}
     func becomeFirstResponder() -> Bool
     func resignFirstResponder() -> Bool
     func prepareForReuse()
@@ -86,9 +89,10 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
     public var textValue: String! { get { text } set { text = newValue} }
     override var isUserInteractionEnabled: Bool { didSet { enableControls() } }
     private var firstResponder: Bool = false { didSet { enableControls() } }
-    private var isActive: Bool = false { didSet { enableControls() } }
-    private var useLabel: Bool = false { didSet { enableControls() } }
+    private(set) var isActive: Bool = false { didSet { enableControls() } }
+    private(set) var useLabel: Bool = false { didSet { enableControls() } }
     public var showLabel: Bool { (label != nil) && useLabel && (!isUserInteractionEnabled || (!firstResponder && !forceFirstResponder)) }
+    public var isNumeric: Bool { numeric }
 
     let textInputDelegate: ScorecardInputDelegate?
     
@@ -253,15 +257,16 @@ class ScorecardInputTextField : UITextField, ScorecardInputTextInput, UITextFiel
     private var label: FirstResponderLabel?
     private var validCharacters: String = ""
     private var formattedText: (()->String)? = nil
-    
+
     var textValue: String! { get { text } set { text = newValue} }
     override var text: String? { didSet { label?.text = text } }
     override var isUserInteractionEnabled: Bool { didSet { enableControls() } }
     private var firstResponder: Bool = false { didSet { enableControls() } }
-    private var isActive: Bool = false { didSet { enableControls() } }
-    private var useLabel: Bool = false { didSet { enableControls() } }
+    private(set) var isActive: Bool = false { didSet { enableControls() } }
+    private(set) var useLabel: Bool = false { didSet { enableControls() } }
     public var showLabel: Bool { (label != nil) && useLabel && (!isUserInteractionEnabled || (!firstResponder && !forceFirstResponder)) }
-    
+    public var isNumeric: Bool { numeric }
+
     let textInputDelegate: ScorecardInputDelegate?
     
     init(delegate: ScorecardInputDelegate? = nil, label: FirstResponderLabel? = nil) {

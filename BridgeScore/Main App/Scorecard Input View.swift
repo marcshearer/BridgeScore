@@ -2387,7 +2387,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     }
     
     func inputTextShouldChangeCharacters(_ textInput: ScorecardInputTextInput, in range: NSRange, replacementString string: String) -> Bool {
-        if column.type == .versus || column.type == .comment {
+        if scorecardDelegate?.scorecardAutoComplete[column.type] != nil {
             textAutoComplete(replacing: textInput.textValue!, range: range, with: string)
         }
         return true
@@ -2938,7 +2938,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     }
     
     var textInputString: Bool {
-        column?.type == .comment || column?.type == .versus
+        (textControl?.isActive ?? false) && !(textControl?.isNumeric ?? true)
     }
     
     var textResponder: ScorecardResponder? {
@@ -3020,29 +3020,34 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                     if seatPicker.processKeys(keyAction: keyAction, characters: characters) {
                         handled = !keyAction.movementKey
                     }
-                case .versus, .comment:
+                default:
+                    break
+                }
+                if !handled {
                     if let autoComplete = scorecardDelegate?.scorecardAutoComplete[column.type] {
                         if autoComplete.isActive {
                             if keyAction.upDownKey || keyAction == .enter {
                                 handled = autoComplete.keyPressed(keyAction: keyAction)
                             }
                         }
-                    } 
-                    if !handled {
-                        if textControl?.showLabel ?? true {
-                            if keyAction == .enter || keyAction == .characters || keyAction.leftRightKey || keyAction.deletionKey {
-                                textControl?.forceFirstResponder = true
-                                getFocus()
-                                handled = true
-                            }
-                        } else {
-                            if keyAction == .enter {
-                                handled = true
+                    }
+                }
+                if !handled {
+                    if let textControl = textControl {
+                        if textControl.isActive && textControl.useLabel {
+                            if textControl.showLabel {
+                                if keyAction == .enter || keyAction == .characters || keyAction.leftRightKey || keyAction.deletionKey {
+                                    textControl.forceFirstResponder = true
+                                    getFocus()
+                                    handled = true
+                                }
+                            } else {
+                                if keyAction == .enter {
+                                    handled = true
+                                }
                             }
                         }
                     }
-                default:
-                   handled = false
                 }
                 if !handled {
                     switch keyAction {
