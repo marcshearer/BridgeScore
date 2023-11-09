@@ -50,19 +50,19 @@ public class TableViewCellWithCollectionView: UITableViewCell {
            
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        self.layout = UICollectionViewFlowLayout()
-        self.collectionView = UICollectionView(frame: self.frame, collectionViewLayout: layout)
-        self.contentView.addSubview(collectionView, anchored: .all)
-        self.contentView.bringSubviewToFront(self.collectionView)
+        layout = UICollectionViewFlowLayout()
+        collectionView = UICollectionView(frame: self.frame, collectionViewLayout: layout)
+        collectionView.showsVerticalScrollIndicator = false
+        collectionView.showsHorizontalScrollIndicator = false
+        contentView.addSubview(collectionView, anchored: .all)
+        contentView.bringSubviewToFront(self.collectionView)
     }
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
     
-    public func setCollectionViewDataSourceDelegate
-    <D: UICollectionViewDataSource & UICollectionViewDelegate>
-    (_ dataSourceDelegate: D, tag: Int) {
+    public func setCollectionViewDataSourceDelegate<D: UICollectionViewDataSource & UICollectionViewDelegate>(_ dataSourceDelegate: D, tag: Int) {
         TableViewCellWithCollectionView.setCollectionViewDataSourceDelegate(dataSourceDelegate, collectionView: collectionView, tag: tag)
     }
     

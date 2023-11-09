@@ -99,7 +99,7 @@ class AutoComplete: UIView, UITableViewDataSource, UITableViewDelegate {
         if let match = match {
             if match.length > 0 {
                 for description in 0...(searchDescription ? 1 : 0) {
-                    filteredList = filteredList + list.filter({(description == 1 ? $0.description : $0.with).lowercased().matches(match.lowercased(), mustStart ? .starts : .contains)}).filter({$0.with != match})
+                    filteredList = filteredList + list.filter({(description == 1 ? $0.description : $0.replace).lowercased().matches(match.lowercased(), mustStart ? .starts : .contains)}).filter({$0.with != match})
                 }
             }
             if searchDescription {
