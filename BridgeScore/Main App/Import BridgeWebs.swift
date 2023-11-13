@@ -277,8 +277,14 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 if let components = columns.element(index)?.components(separatedBy: ":") {
                     if importedRanking.number == nil || importedRanking.way != nil {
                         // Don't overwrite if filled from team and don't have a pair direction
-                        importedRanking.number = Int(components.first!)
-                        format = .pairs
+                        let (number, way) = splitPairId(id: components.first!)
+                        if number != nil {
+                            importedRanking.number = number
+                            format = .pairs
+                            if way != nil {
+                                importedRanking.way = way
+                            }
+                        }
                     }
                 }
             case "team":
@@ -296,13 +302,15 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                     importedRanking.way = (bwValue == 1 ? .ns : (bwValue == 2 ? .ew : .unknown))
                 }
             case "name1":
-                importedRanking.players[.north] = columns.element(index)
+                let sitting = importedRanking.way?.seats.first ?? .north
+                importedRanking.players[sitting] = columns.element(index)
             case "name2":
+                let sitting = importedRanking.way?.seats.first?.partner ?? .south
                 let name2 = columns.element(index) ?? ""
                 if name2 == "" {
                     format = .individual
                 } else {
-                    importedRanking.players[.south] = name2
+                    importedRanking.players[sitting] = name2
                 }
             default:
                 break
@@ -322,10 +330,11 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
             case "ns", "ew":
                 let pair = Pair(string: heading.uppercased())
                 if let string = columns.element(index) {
-                    // Strip out :1 and :2 from teams
-                    let component = string.components(separatedBy: ":")
-                    for seat in pair.seats {
-                        importedTraveller.ranking[seat] = Int(component[0])
+                    let (number, _) = splitPairId(id: string)
+                    if number != nil {
+                        for seat in pair.seats {
+                            importedTraveller.ranking[seat] = number
+                        }
                     }
                 }
             case "n", "s", "e", "w":
@@ -428,8 +437,8 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
     
     func initComplete() {
         boardCount = boardNumber
-        updateWays()
         combineRankings()
+        updateWays()
         boardCount = travellers.count
         scoreTravellers()
         recalculateTravellers()
@@ -448,8 +457,8 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                     if let matchIndex = rankings.firstIndex(where: {$0.number == ranking.number}) {
                         if matchIndex < index {
                                 // Add to previous ranking
-                            rankings[matchIndex].players[.east] = ranking.players[.north]
-                            rankings[matchIndex].players[.west] = ranking.players[.south]
+                            rankings[matchIndex].players[.east] = ranking.players[.east] ?? ranking.players[.north]
+                            rankings[matchIndex].players[.west] = ranking.players[.west] ?? ranking.players[.south]
                             remove.append(index)
                             format = .teams
                         }
@@ -476,6 +485,25 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         case .teams:
             type = .imp
         }
+    }
+    
+    private func splitPairId(id: String) -> (Int?, Pair?) {
+        var way: Pair?
+        var number: Int?
+        number = Int(id)
+        var components = id.components(separatedBy: ":")
+        if components.count == 1 {
+            if number == nil && id.length >= 2 && "ANSBEW".contains(id.right(1)) {
+                    // Pair is in format 1A, 2B etc
+                components[0] = id.left(id.length - 1)
+                components.append(id.right(1))
+            }
+        }
+        number = Int(components[0])
+        if components.count >= 2 {
+            way = ("ANS".contains(components[1]) ? .ns : .ew)
+        }
+        return (number, way)
     }
     
     private func updateWays() {
@@ -560,8 +588,10 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 switch string.lowercased() {
                 case "s":
                     players = 2
+                    format = .pairs
                 case "4", "8":
                     players = 4
+                    format = .teams
                 default:
                     players = 2
                 }
