@@ -991,7 +991,8 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
             }
             
             if let columnNumber = getColumnNumber(rowType: .board, itemNumber: board.board, type: .contract) {
-                if let cell = cell(rowType: .board, section: table.table - 1, row: board.board - 1, column: columnNumber) {
+                let row = (board.board - 1) % scorecard.boardsTable
+                if let cell = cell(rowType: .board, section: table.table - 1, row: row, column: columnNumber) {
                     if let contract = contract {
                         if contract != board.contract || declarer != board.declarer {
                             cell.contractPicker.set(contract: contract)
