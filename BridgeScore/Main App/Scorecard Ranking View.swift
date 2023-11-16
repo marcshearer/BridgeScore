@@ -798,7 +798,9 @@ class ScorecardRankingRoundCollectionCell: UICollectionViewCell {
                     seats = [ranking.way.seats.first!]
                 }
             }
-            else { seats = [.north] }
+            else {
+                seats = [.north]
+            }
             let tableScore = table.score(ranking: ranking, seats: seats)
             label.text = tableScore == nil ? "-" : tableScore!.toString(places: 0)
             label.textAlignment = .center

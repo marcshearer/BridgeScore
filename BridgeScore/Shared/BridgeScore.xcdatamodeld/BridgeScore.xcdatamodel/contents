@@ -88,6 +88,15 @@
         <attribute name="way16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="west" optional="YES" attributeType="String"/>
     </entity>
+    <entity name="RankingTable" representedClassName="RankingTableMO" syncable="YES">
+        <attribute name="nsScoreEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="nsScoreValue" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="number16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="scorecardId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="section16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="table16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="way16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
     <entity name="Scorecard" representedClassName="ScorecardMO" syncable="YES">
         <attribute name="boards16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="boardsTable16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>

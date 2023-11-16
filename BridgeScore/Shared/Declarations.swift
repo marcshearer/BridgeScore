@@ -105,6 +105,7 @@ public enum AggregateType {
     case discreteVp
     case acblDiscreteVp
     case percentVp
+    case contPercentVp
     
     public func scoreType(subsidiaryScoreType: ScoreType) -> ScoreType {
         switch self {
@@ -112,7 +113,7 @@ public enum AggregateType {
             return subsidiaryScoreType
         case .total:
             return subsidiaryScoreType
-        case .continuousVp, .discreteVp, .acblDiscreteVp, .percentVp:
+        case .continuousVp, .discreteVp, .acblDiscreteVp, .percentVp, .contPercentVp:
             return .vp
         }
     }
@@ -214,6 +215,7 @@ public enum ScoreType {
 public enum Type: Int, CaseIterable {
     case percent = 0
     case vpPercent = 3
+    case vpContPercent = 11
     case vpXImp = 4
     case xImp = 2
     case butlerImp = 10
@@ -227,9 +229,11 @@ public enum Type: Int, CaseIterable {
     public var string: String {
         switch self {
         case .percent:
-            return "Pairs Match Points"
+            return "Pairs MPs"
         case .vpPercent:
-            return "Pairs Match Points as VPs"
+            return "Pairs MPs as VPs (Disc)"
+        case .vpContPercent:
+            return "Pairs MPs as VPs (Cont)"
         case .xImp:
             return "Pairs Cross-IMPs"
         case .butlerImp:
@@ -253,7 +257,7 @@ public enum Type: Int, CaseIterable {
     
     public var boardScoreType: ScoreType {
         switch self {
-        case .percent, .vpPercent, .percentIndividual:
+        case .percent, .vpPercent, .vpContPercent, .percentIndividual:
             return .percent
         case .xImp, .vpXImp:
             return .xImp
@@ -268,7 +272,7 @@ public enum Type: Int, CaseIterable {
         switch self {
         case.percentIndividual:
             return 1
-        case .percent, .xImp, .butlerImp, .vpXImp, .vpPercent, .aggregate:
+        case .percent, .xImp, .butlerImp, .vpXImp, .vpPercent, .vpContPercent, .aggregate:
             return 2
         case .vpMatchTeam, .vpTableTeam, .vpContTableTeam, .acblVpTableTeam:
             return 4
@@ -285,7 +289,7 @@ public enum Type: Int, CaseIterable {
     
     public var boardPlaces: Int {
         switch self {
-        case .percent, .xImp, .vpPercent, .vpXImp, .percentIndividual:
+        case .percent, .xImp, .vpPercent, .vpContPercent, .vpXImp, .percentIndividual:
             return 2
         case .vpMatchTeam, .vpTableTeam, .vpContTableTeam, .acblVpTableTeam, .aggregate, .butlerImp:
             return 0
@@ -294,7 +298,7 @@ public enum Type: Int, CaseIterable {
 
     public var tablePlaces: Int {
         switch self {
-        case .percent, .xImp, .vpXImp,  .vpContTableTeam, .percentIndividual:
+        case .percent, .xImp, .vpXImp, .vpContPercent, .vpContTableTeam, .percentIndividual:
             return 2
         case .vpMatchTeam, .vpPercent, .vpTableTeam, .acblVpTableTeam, .aggregate, .butlerImp:
             return 0
@@ -303,7 +307,7 @@ public enum Type: Int, CaseIterable {
     
     public var matchPlaces: Int {
         switch self {
-        case .percent, .xImp, .vpXImp, .vpContTableTeam, .vpMatchTeam, .percentIndividual:
+        case .percent, .xImp, .vpXImp, .vpContPercent, .vpContTableTeam, .vpMatchTeam, .percentIndividual:
             return 2
         case .vpPercent, .vpTableTeam, .acblVpTableTeam, .aggregate, .butlerImp:
             return 0
@@ -324,6 +328,8 @@ public enum Type: Int, CaseIterable {
             return .continuousVp
         case .vpPercent:
             return .percentVp
+        case .vpContPercent:
+            return .contPercentVp
         }
     }
     
@@ -331,7 +337,7 @@ public enum Type: Int, CaseIterable {
         switch self {
         case .percent, .percentIndividual:
             return .average
-        case .xImp, .vpXImp, .vpTableTeam,  .vpContTableTeam, .acblVpTableTeam, .vpPercent, .aggregate, .butlerImp:
+        case .xImp, .vpXImp, .vpTableTeam,  .vpContTableTeam, .acblVpTableTeam, .vpPercent, .vpContPercent, .aggregate, .butlerImp:
             return .total
         case  .vpMatchTeam:
             return .continuousVp
@@ -344,7 +350,7 @@ public enum Type: Int, CaseIterable {
             return "%"
         case .xImp, .butlerImp:
             return " IMPs"
-        case .vpXImp, .vpTableTeam, .vpContTableTeam, .acblVpTableTeam, .vpPercent, .vpMatchTeam:
+        case .vpXImp, .vpTableTeam, .vpContTableTeam, .acblVpTableTeam, .vpPercent, .vpContPercent, .vpMatchTeam:
             if let maxScore = scorecard.maxScore {
                 return " / \(maxScore.toString(places: matchPlaces))"
             } else {
@@ -368,7 +374,7 @@ public enum Type: Int, CaseIterable {
         switch self {
         case .percent, .percentIndividual:
             return 100
-        case .vpXImp, .vpTableTeam, .acblVpTableTeam, .vpPercent:
+        case .vpXImp, .vpTableTeam, .acblVpTableTeam, .vpPercent, .vpContPercent:
             return Float(tables * 20)
         case .vpMatchTeam:
             return 20
@@ -377,14 +383,29 @@ public enum Type: Int, CaseIterable {
         }
     }
     
-    public func invertScore(score: Float, pair: Pair = .ew) -> Float {
+    public func invertScore(score: Float, pair: Pair = .ew, type: ScoreType? = nil) -> Float {
         if pair == .ns {
             return score
         } else {
-            return (self.boardScoreType == .percent ? 100 - score : (score == 0 ? 0 : -score))
+            switch type ?? self.boardScoreType {
+            case .vp, .acblVp:
+                return (20 - score)
+            case .percent:
+                return 100 - score
+            default:
+                return (score == 0 ? 0 : -score)
+            }
         }
     }
     
+    public func invertTableScore(score: Float, pair: Pair = .ew) -> Float {
+        return invertScore(score: score, pair: pair, type: boardScoreType)
+    }
+    
+    public func invertMatchScore(score: Float, pair: Pair = .ew) -> Float {
+        return invertScore(score: score, pair: pair, type: matchScoreType)
+    }
+
     public var description: String {
         switch players {
         case 1:
@@ -636,6 +657,12 @@ public enum Seat: Int, EnumPickerType, ContractEnumType, Identifiable {
     
     func offset(by offset: Int) -> Seat {
         return Seat(rawValue: (((self.rawValue + offset - 1) % 4) + 1))!
+    }
+    
+    func offsetNsEw(by offset: Int) -> Seat {
+        let seats: [Seat] = [.north, .south, .east, .west]
+        let current = seats.firstIndex(where: {$0 == self})!
+        return seats[(current + offset) % 4]
     }
     
     func offset(to seat: Seat) -> Int {

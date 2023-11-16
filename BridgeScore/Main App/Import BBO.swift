@@ -11,16 +11,13 @@ import CoreMedia
 
 class ImportBBO {
     
-    fileprivate static let documentsUrl:URL = FileManager.default.urls(for: FileManager.SearchPathDirectory.documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).last! as URL
-    fileprivate static let importsURL = documentsUrl.appendingPathComponent("imports")
-  
     public class func importNames() {
         
         let entity = BBONameMO.entity()
         let recordType = entity.name!
         let elementName = recordType
         let groupName = "data"
-        let fileURL = importsURL.appendingPathComponent("BBOName.json")
+        let fileURL = ImportedScorecard.importsURL.appendingPathComponent("BBOName.json")
         if let fileContents = try? Data(contentsOf: fileURL, options: []) {
             if let fileDictionary = try? JSONSerialization.jsonObject(with: fileContents, options: []) as? [String:Any?] {
                 if let contents = fileDictionary[groupName] as? [[String:Any?]] {
@@ -102,7 +99,7 @@ struct ImportBBOScorecard: View {
         VStack(spacing: 0) {
             Banner(title: Binding.constant("Choose file to import"), backImage: Banner.crossImage)
             Spacer().frame(height: 16)
-            if let files = try? FileManager.default.contentsOfDirectory(at: ImportBBO.importsURL, includingPropertiesForKeys: nil).filter({$0.relativeString.right(4) == ".csv"}) {
+            if let files = try? FileManager.default.contentsOfDirectory(at: ImportedScorecard.importsURL, includingPropertiesForKeys: nil).filter({$0.relativeString.right(4) == ".csv"}) {
                 let fileData: [(path: URL, number: Int?, text: String, date: Date?)] = decompose(files)
                 if fileData.isEmpty {
                     Spacer()

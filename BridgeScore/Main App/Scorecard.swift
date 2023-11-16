@@ -20,6 +20,7 @@ class Scorecard {
     @Published private(set) var boards: [Int:BoardViewModel] = [:]   // Board number
     @Published private(set) var tables: [Int:TableViewModel] = [:]   // Table number
     @Published private(set) var rankingList: [RankingViewModel] = []
+    @Published private(set) var rankingTableList: [RankingTableViewModel] = []
     @Published private(set) var travellerList: [TravellerViewModel] = []
     @Published private(set) var analysisList: [Int:[Pair:Analysis]] = [:] // Board number, Sitting
     @Published private(set) var overrideList: [Int:AnalysisOverride] = [:] // Board number
@@ -48,6 +49,11 @@ class Scorecard {
     
     public func ranking(table: Int, section: Int, way: Pair, number: Int) -> RankingViewModel? {
         let resultList = rankingList.filter({(!(scorecard?.resetNumbers ?? false) || $0.table == table) && $0.section == section && ($0.way == .unknown || $0.way == way) && $0.number == number})
+        return resultList.count == 1 ? resultList.first : nil
+    }
+    
+    public func rankingTable(number: Int, section: Int, way: Pair, table: Int) -> RankingTableViewModel? {
+        let resultList = rankingTableList.filter({$0.table == table && $0.section == section && ($0.way == .unknown || $0.way == way) && $0.number == number})
         return resultList.count == 1 ? resultList.first : nil
     }
     
@@ -105,7 +111,7 @@ class Scorecard {
     public func load(scorecard: ScorecardViewModel) {
         let scorecardFilter = NSPredicate(format: "scorecardId = %@", scorecard.scorecardId as NSUUID)
         
-            // Load boards
+        // Load boards
         let boardMOs = CoreData.fetch(from: BoardMO.tableName, filter: scorecardFilter) as! [BoardMO]
         
         boards = [:]
@@ -149,7 +155,7 @@ class Scorecard {
             }
         }
         
-            // Load tables
+        // Load tables
         let tableMOs = CoreData.fetch(from: TableMO.tableName, filter: scorecardFilter) as! [TableMO]
         
         tables = [:]
@@ -157,7 +163,7 @@ class Scorecard {
             tables[tableMO.table] = TableViewModel(scorecard: scorecard, tableMO: tableMO)
         }
         
-            // Load rankings
+        // Load rankings
         let rankingMOs = CoreData.fetch(from: RankingMO.tableName, filter: scorecardFilter) as! [RankingMO]
         
         rankingList = []
@@ -165,7 +171,15 @@ class Scorecard {
             rankingList.append(RankingViewModel(scorecard: scorecard, rankingMO: rankingMO))
         }
         
-            // Load travellers
+        // Load ranking table MOs
+        let rankingTableMOs = CoreData.fetch(from: RankingTableMO.tableName, filter: scorecardFilter) as! [RankingTableMO]
+        
+        rankingTableList = []
+        for rankingTableMO in rankingTableMOs {
+            rankingTableList.append(RankingTableViewModel(scorecard: scorecard, rankingTableMO: rankingTableMO))
+        }
+        
+        // Load travellers
         let travellerMOs = CoreData.fetch(from: TravellerMO.tableName, filter: scorecardFilter) as! [TravellerMO]
         
         travellerList = []
@@ -255,8 +269,13 @@ class Scorecard {
         }
         
         for (ranking) in rankingList {
-                // Save any existing travellers
+            // Save any existing rankings
             save(ranking: ranking)
+        }
+        
+        for (rankingTable) in rankingTableList {
+            // Save any existing ranking tables
+            save(rankingTable: rankingTable)
         }
         
         var removeList = IndexSet()
@@ -289,6 +308,8 @@ class Scorecard {
         
         removeRankings()
         
+        removeRankingTables()
+        
         for traveller in travellerList {
             if !traveller.isNew {
                 remove(traveller: traveller)
@@ -302,6 +323,14 @@ class Scorecard {
         for ranking in rankings(table: table).reversed() {
             if !ranking.isNew {
                 remove(ranking: ranking)
+            }
+        }
+    }
+    
+    public func removeRankingTables(table: Int? = nil) {
+        for rankingTable in rankingTableList.filter({table == nil || $0.table == table}).reversed() {
+            if !rankingTable.isNew {
+                remove(rankingTable: rankingTable)
             }
         }
     }
@@ -321,14 +350,14 @@ class Scorecard {
     
     public func addNew() {
         if let scorecard = scorecard {
-                // Fill in any gaps in boards
+            // Fill in any gaps in boards
             for boardNumber in 1...scorecard.boards {
                 if boards[boardNumber] == nil {
                     boards[boardNumber] = BoardViewModel(scorecard: scorecard, board: boardNumber)
                 }
             }
             
-                // Fill in any gaps in tables
+            // Fill in any gaps in tables
             for tableNumber in 1...scorecard.tables {
                 if tables[tableNumber] == nil {
                     tables[tableNumber] = TableViewModel(scorecard: scorecard, table: tableNumber)
@@ -348,7 +377,7 @@ class Scorecard {
         for boardNumber in 1...(scorecard?.boards ?? 0) {
             removeTravellers(board: boardNumber)
             if let board = Scorecard.current.boards[boardNumber] {
-                board.doubleDummy = [:]
+                // board.doubleDummy = [:]
                 board.override = [:]
                 board.save()
             }
@@ -564,6 +593,44 @@ class Scorecard {
         }
     }
     
+    // MARK: - Ranking Tables =================================================================== -
+    
+    public func insert(rankingTable: RankingTableViewModel) {
+        assert(rankingTable.scorecard == scorecard, "Ranking table is not in current scorecard")
+        assert(rankingTable.isNew, "Cannot insert a ranking table which already has a managed object")
+        assert(self.rankingTable(number: rankingTable.number, section: rankingTable.section, way: rankingTable.way, table: rankingTable.table) == nil, "Ranking table already exists and cannot be created")
+        CoreData.update(updateLogic: {
+            rankingTable.rankingTableMO = RankingTableMO()
+            rankingTable.updateMO()
+            rankingTableList.append(rankingTable)
+        })
+    }
+    
+    public func remove(rankingTable: RankingTableViewModel) {
+        assert(rankingTable.scorecard == scorecard, "Ranking table is not in current scorecard")
+        assert(!rankingTable.isNew, "Cannot remove a ranking table which doesn't already have a managed object")
+        assert(self.rankingTable(number: rankingTable.number, section: rankingTable.section, way: rankingTable.way, table: rankingTable.table) != nil, "Ranking table does not exist and cannot be deleted")
+        CoreData.update(updateLogic: {
+            CoreData.context.delete(rankingTable.rankingTableMO!)
+            rankingTableList.removeAll(where: {$0.table == rankingTable.table && $0.section == rankingTable.section && $0.way == rankingTable.way && $0.number == rankingTable.number})
+        })
+    }
+    
+    public func save(rankingTable: RankingTableViewModel) {
+        assert(rankingTable.scorecard == scorecard, "Ranking table is not in current scorecard")
+        assert(self.rankingTable(number: rankingTable.number, section: rankingTable.section, way: rankingTable.way, table: rankingTable.table) != nil, "Ranking table does not exist and cannot be updated")
+        if rankingTable.isNew {
+            CoreData.update(updateLogic: {
+                rankingTable.rankingTableMO = RankingTableMO()
+                rankingTable.updateMO()
+            })
+        } else if rankingTable.changed {
+            CoreData.update(updateLogic: {
+                rankingTable.updateMO()
+            })
+        }
+    }
+    
     // MARK: - Travellers ======================================================================== -
     
     public func insert(traveller: TravellerViewModel) {
@@ -628,32 +695,50 @@ class Scorecard {
         var total: Float = 0
         var count: Int = 0
         if let table = Scorecard.current.tables[tableNumber] {
-            for index in 1...boards {
-                let boardNumber = ((tableNumber - 1) * boards) + index
-                if let board = Scorecard.current.boards[boardNumber] {
-                    if let score = board.score {
-                        count += 1
-                        total += score
+            // First check if any imported table scores since likely to be more precies
+            var tableScore: Float?
+            if let myRanking = myRanking(table: tableNumber),
+                    let rankingTable = Scorecard.current.rankingTableList.first(where: {matchRanking(ranking: myRanking, tableNumber: tableNumber, rankingTable: $0)}),
+                    let score = rankingTable.nsScore {
+                tableScore = score
+            }
+            if let tableScore = tableScore {
+                if !scorecard.manualTotals {
+                    table.score = tableScore
+                    changed = true
+                }
+            } else {
+                for index in 1...boards {
+                    let boardNumber = ((tableNumber - 1) * boards) + index
+                    if let board = Scorecard.current.boards[boardNumber] {
+                        if let score = board.score {
+                            count += 1
+                            total += score
+                        }
                     }
                 }
-            }
-            
-            var newScore = table.score
-            let type = scorecard.type
-            let places = type.tablePlaces
-            if !scorecard.manualTotals {
-                if count == 0 {
-                    newScore = nil
-                } else {
-                    newScore = Scorecard.aggregate(total: total, count: count, boards: count, subsidiaryPlaces: type.boardPlaces, places: places, type: type.tableAggregate)
+                
+                var newScore = table.score
+                let type = scorecard.type
+                let places = type.tablePlaces
+                if !scorecard.manualTotals {
+                    if count == 0 {
+                        newScore = nil
+                    } else {
+                        newScore = Scorecard.aggregate(total: total, count: count, boards: count, subsidiaryPlaces: type.boardPlaces, places: places, type: type.tableAggregate)
+                    }
                 }
-            }
-            if newScore != table.score {
-                table.score = newScore
-                changed = true
+                if newScore != table.score {
+                    table.score = newScore
+                    changed = true
+                }
             }
         }
         return changed
+    }
+    
+    static func matchRanking(ranking: RankingViewModel, tableNumber: Int, rankingTable: RankingTableViewModel) -> Bool {
+        rankingTable.number == ranking.number && rankingTable.section == ranking.section && (ranking.way == .unknown || rankingTable.way == ranking.way) && rankingTable.table == tableNumber
     }
     
     @discardableResult static func updateTotalScore(scorecard: ScorecardViewModel) -> Bool {
@@ -715,6 +800,10 @@ class Scorecard {
         case .percentVp:
             if let vps = BridgeMatchPoints(average).vp(boards: boards) {
                 result = Float(vps)
+            }
+        case .contPercentVp:
+            if let vps = BridgeMatchPoints(average).continuousVp(boards: boards) {
+                result = vps
             }
         }
         return result

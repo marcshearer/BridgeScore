@@ -38,7 +38,7 @@ class BridgeImps {
         
         let blitz = 15 * sqrt(Float(boards))
         let vp = min(Float(maxVp), (Float(maxVp) / 2) * (1 + ((1 - powf(r, Float(imps) / blitz))/(1 - r))))
-        return round(vp, places: places)
+        return BridgeImps.round(vp, places: places)
     }
     
     public func vp(boards: Int, maxVp: Int = 20, places: Int) -> Float {
@@ -57,7 +57,7 @@ class BridgeImps {
             repeat {
                 let adjust = 1 / powf(Float(10), Float(places))
                 let tolerance = 1 / powf(Float(10), Float(places + 1))
-                let secondDiff = [0, 0] + diff(diff(vp))
+                let secondDiff = [0, 0] + BridgeImps.diff(BridgeImps.diff(vp))
                 index = secondDiff.firstIndex(where: {$0 >= tolerance})
                 if let index = index {
                     vp[index - 1] += adjust
@@ -77,7 +77,8 @@ class BridgeImps {
         return vp
     }
     
-    public func discreteVp(boards: Int, maxVp: Int = 20) -> Int {    let midVp = maxVp / 2
+    public func discreteVp(boards: Int, maxVp: Int = 20) -> Int {    
+        let midVp = maxVp / 2
         let positive = abs(imps)
         
         var bounds: [Int] = []
@@ -91,7 +92,7 @@ class BridgeImps {
             if (bounds[2] - bounds[1]) < ((2 * bounds[1]) + 1) {
                 index = 2
             } else {
-                let secondDiff = [0, 0] + diff(diff(bounds.map{Float($0)}))
+                let secondDiff = [0, 0] + BridgeImps.diff(BridgeImps.diff(bounds.map{Float($0)}))
                 index = secondDiff.firstIndex(where: {$0 <= -tolerance})
             }
             if let index = index {
@@ -102,14 +103,14 @@ class BridgeImps {
         return midVp + (bounds.firstIndex(where: {positive <= $0}) ?? midVp) * imps.sign
     }
         
-    public func round(_ value: Float, places: Int = 0) -> Float {
+    public static func round(_ value: Float, places: Int = 0) -> Float {
         let scale: Float = powf(10, Float(places))
         var large = value * scale
         large.round()
         return large / scale
     }
 
-    private func diff(_ array: [Float]) -> [Float] {
+    public static func diff(_ array: [Float]) -> [Float] {
         var result: [Float] = []
         for index in 1...array.count-1 {
             result.append(array[index] - array[index - 1])
@@ -129,7 +130,9 @@ class BridgeImps {
 }
 
 class BridgeMatchPoints {
+    let r: Float = 0.236068
     private(set) var percent: Float
+    var imps: Int = 0
        
     init(_ percent: Float) {
         self.percent = percent
@@ -140,7 +143,21 @@ class BridgeMatchPoints {
         let positive = (percent > 50 ? percent : 100 - percent)
         if let element = mpsToVps.first(where: {$0.from <= boards && $0.to >= boards}) {
             let increment = element.cutoffs.firstIndex(where: {$0 > positive}) ?? 10
-            vp = 10 + increment * (percent < 50 ? -1 : 1)
+            vp = 10 + (increment * (percent < 50 ? -1 : 1))
+        }
+        return vp
+    }
+    
+    public func continuousVp(boards: Int) -> Float? {
+        // Note this is not a good implementation - unable to find any formula / tables for this method
+        var vp: Float?
+        let positive = (percent > 50 ? percent : 100 - percent)
+        if let element = mpsToVps.first(where: {$0.from <= boards && $0.to >= boards}) {
+            let increment = element.cutoffs.firstIndex(where: {$0 > positive}) ?? 10
+            let above = Float(increment == 10 ? element.cutoffs[9] + 3 : element.cutoffs[increment])
+            let below = Float(increment == 0 ? 50 : element.cutoffs[increment - 1])
+            let scaled = max(0,(above - Float(positive))) / (above - below)
+            vp = Float(10) + (min(10, (Float(increment) + 0.6 - Utility.round(scaled, places: 2))) * Float(percent < 50 ? -1 : 1))
         }
         return vp
     }

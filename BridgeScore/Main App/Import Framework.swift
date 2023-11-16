@@ -13,6 +13,7 @@ public enum ImportSource: Int, Equatable, CaseIterable {
     case bbo = 1
     case bridgeWebs = 2
     case pbn = 3
+    case usebio = 4
     
     static var validCases: [ImportSource] {
         return ImportSource.allCases.filter({$0 != .none})
@@ -28,6 +29,8 @@ public enum ImportSource: Int, Equatable, CaseIterable {
             return "Import from BridgeWebs"
         case .pbn:
             return "Import PBN file"
+        case .usebio:
+            return "Import Usebio file"
         }
     }
     
@@ -41,6 +44,8 @@ public enum ImportSource: Int, Equatable, CaseIterable {
             return "BridgeWebs"
         case .pbn:
             return "PBN file"
+        case .usebio:
+            return "Usebio file"
         }
     }
 }
@@ -70,6 +75,7 @@ class ImportedScorecard: NSObject {
     var partner: PlayerViewModel?
     var type: ScoreType?
     var rankings: [ImportedRanking] = []
+    var rankingTables: [ImportedRankingTable] = []
     var myRanking: ImportedRanking?
     var myRankingSeat: Seat?
     var myName: String!
@@ -86,6 +92,9 @@ class ImportedScorecard: NSObject {
     var vulnerability: Vulnerability?
     var doubleDummyTricks: [Seat:[Suit:Int]] = [:]
     var identifySelf = false
+    
+    public static let documentsUrl: URL = FileManager.default.urls(for: FileManager.SearchPathDirectory.documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).last! as URL
+    public static let importsURL = documentsUrl.appendingPathComponent("imports")
     
     // MARK: - Import to main data structures =================================================================== -
         
@@ -129,11 +138,13 @@ class ImportedScorecard: NSObject {
                     if scorecard.resetNumbers {
                         importTable(tableNumber: table, boardOffset: (table - 1) * scorecard.boardsTable)
                         importRankings(table: table)
+                        importRankingTables(table: table)
                     } else {
                         for tableNumber in 1...scorecard.tables {
                             importTable(tableNumber: tableNumber)
                         }
                         importRankings()
+                        importRankingTables()
                     }
                 }
                 rebuildRankingTotals()
@@ -249,6 +260,19 @@ class ImportedScorecard: NSObject {
         }
     }
     
+    func importRankingTables(table: Int? = nil) {
+        Scorecard.current.removeRankingTables(table: table)
+        if let scorecard = scorecard {
+            for importedRankingTable in rankingTables {
+                if let number = importedRankingTable.number, let way = importedRankingTable.way, let table = importedRankingTable.table, let score = importedRankingTable.score {
+                    let rankingTable = RankingTableViewModel(scorecard: scorecard, number: number, section: importedRankingTable.section, way: way, table: table)
+                    rankingTable.nsScore = score
+                    Scorecard.current.insert(rankingTable: rankingTable)
+                }
+            }
+        }
+    }
+    
     func importTravellers(boardNumber: Int, boardOffset: Int = 0) {
         Scorecard.current.removeTravellers(board: boardNumber)
         if let scorecard = scorecard, let importedTravellers = travellers[boardNumber - boardOffset] {
@@ -268,6 +292,62 @@ class ImportedScorecard: NSObject {
                     Scorecard.current.insert(traveller: traveller)
                 }
             }
+        }
+    }
+    
+    // MARK: - Shared file list routine
+    
+    static func fileList(scorecard: ScorecardViewModel, suffix: String, selected: URL?, decompose: ([URL]) -> [(URL, Int?, String, Date?)], completion: @escaping (URL)->()) -> some View {
+        return VStack(spacing: 0) {
+            Banner(title: Binding.constant("Choose file to import"), backImage: Banner.crossImage)
+            Spacer().frame(height: 16)
+            if let files = try? FileManager.default.contentsOfDirectory(at: ImportedScorecard.importsURL, includingPropertiesForKeys: nil).filter({$0.relativeString.uppercased().right(4) == "." + suffix.uppercased()}) {
+                let fileData: [(path: URL, number: Int?, text: String, date: Date?)] = decompose(files)
+                if fileData.isEmpty {
+                    Spacer()
+                    HStack {
+                        Spacer()
+                        Text("No import files found for this date")
+                            .font(defaultFont)
+                        Spacer()
+                    }
+                    Spacer()
+                }
+                ForEach(fileData.indices, id: \.self) { (index) in
+                    VStack {
+                        Spacer().frame(height: 8)
+                        HStack {
+                            Spacer().frame(width: 16)
+                            HStack {
+                                Text(fileData[index].date?.toString(format: "EEE d MMM yyyy", localized: false) ?? "")
+                                Spacer()
+                            }
+                            .frame(width: 190)
+                            Spacer().frame(width: 16)
+                            Text((fileData[index].text).replacingOccurrences(of: "_", with: " "))
+                            Spacer()
+                            Spacer().frame(width: 16)
+                        }
+                        .font(.title2)
+                        .minimumScaleFactor(0.5)
+                        
+                        Spacer().frame(height: 8)
+                    }
+                    .background((fileData[index].path == selected ? Palette.alternate : Palette.background).background)
+                    .onTapGesture {
+                        completion(fileData[index].path)
+                    }
+                }
+            }
+            Spacer()
+        }
+        
+        func fileName(_ path: String) -> String {
+            let components = path.components(separatedBy: "/")
+            var subComponents = components.last!.components(separatedBy: ".")
+            subComponents.removeLast()
+            let text = subComponents.joined(separator: ".")
+            return text
         }
     }
     
@@ -406,56 +486,60 @@ class ImportedScorecard: NSObject {
     
     func rebuildRankingTotals() {
         // Note this works on the main data structures after the import rather than the imported layer
-        if scorecard.type.players == 4 {
-            // First rebuild cross imps on each traveller
-            for (boardNumber, _) in Scorecard.current.boards {
-                let boardTravellers = Scorecard.current.travellers(board: boardNumber)
-                for traveller in boardTravellers {
-                    let otherTravellers = boardTravellers.filter{!($0 == traveller)}
-                    let points = traveller.points(sitting: .north)
-                    let nsXImps = otherTravellers.map({Float(BridgeImps(points: points - $0.points(sitting: .north)).imps)}).reduce(0,+) / Float(otherTravellers.count)
-                    traveller.nsXImps = nsXImps
-                    traveller.save()
+        if scorecard.type == .vpContPercent {
+            // Don't re-score since don't have accurate formula / tables for this method
+        } else {
+            if scorecard.type.players == 4 {
+                    // First rebuild cross imps on each traveller
+                for (boardNumber, _) in Scorecard.current.boards {
+                    let boardTravellers = Scorecard.current.travellers(board: boardNumber)
+                    for traveller in boardTravellers {
+                        let otherTravellers = boardTravellers.filter{!($0 == traveller)}
+                        let points = traveller.points(sitting: .north)
+                        let nsXImps = otherTravellers.map({Float(BridgeImps(points: points - $0.points(sitting: .north)).imps)}).reduce(0,+) / Float(otherTravellers.count)
+                        traveller.nsXImps = nsXImps
+                        traveller.save()
+                    }
                 }
-            }
-            // Now put the total back on the ranking
-            for ranking in Scorecard.current.rankingList {
-                for pair in Pair.validCases {
-                    let xImps = Scorecard.current.travellers(seat: pair.first, rankingNumber: ranking.number, section: ranking.section).map{$0.nsXImps * Float(pair.sign)}.reduce(0,+)
-                    ranking.xImps[pair] = xImps
-                    ranking.save()
-                }
-            }
-        }
-        for ranking in Scorecard.current.rankingList {
-            var tableScores: Float = 0
-            var tablesPlayed = 0
-            for tableNumber in 1...scorecard.tables {
-                if let table = Scorecard.current.tables[tableNumber] {
-                    if !scorecard.resetNumbers || ranking.table == tableNumber {
-                        let players = scorecard.type.players
-                        var seats:[Seat] = []
-                            // Need to pick up this person in all seats if individual
-                            // North or East if pairs, and North only if teams since 1 of team will have sat north
-                        if players == 1 { seats = Seat.validCases }
-                        else if players == 2 {
-                            if ranking.way == .unknown {
-                                seats = [.north, .east]
-                            } else {
-                                seats = [ranking.way.seats.first!]
-                            }
-                        } else { seats = [.north] }
-                        if let tableScore = table.score(ranking: ranking, seats: seats) {
-                            tableScores += tableScore
-                            tablesPlayed += 1
-                        }
+                    // Now put the total back on the ranking
+                for ranking in Scorecard.current.rankingList {
+                    for pair in Pair.validCases {
+                        let xImps = Scorecard.current.travellers(seat: pair.first, rankingNumber: ranking.number, section: ranking.section).map{$0.nsXImps * Float(pair.sign)}.reduce(0,+)
+                        ranking.xImps[pair] = xImps
+                        ranking.save()
                     }
                 }
             }
-            if scorecard.resetNumbers {
-                ranking.score = Scorecard.aggregate(total: tableScores, count: 1, boards: scorecard.boardsTable, subsidiaryPlaces: scorecard.type.boardPlaces, places: scorecard.type.tablePlaces, type: scorecard.type.tableAggregate) ?? 0
-            } else {
-                ranking.score = Scorecard.aggregate(total: tableScores, count: tablesPlayed, boards: scorecard.boards, subsidiaryPlaces: scorecard.type.tablePlaces, places: scorecard.type.matchPlaces, type: scorecard.type.matchAggregate) ?? 0
+            for ranking in Scorecard.current.rankingList {
+                var tableScores: Float = 0
+                var tablesPlayed = 0
+                for tableNumber in 1...scorecard.tables {
+                    if let table = Scorecard.current.tables[tableNumber] {
+                        if !scorecard.resetNumbers || ranking.table == tableNumber {
+                            let players = scorecard.type.players
+                            var seats:[Seat] = []
+                                // Need to pick up this person in all seats if individual
+                                // North or East if pairs, and North only if teams since 1 of team will have sat north
+                            if players == 1 { seats = Seat.validCases }
+                            else if players == 2 {
+                                if ranking.way == .unknown {
+                                    seats = [.north, .east]
+                                } else {
+                                    seats = [ranking.way.seats.first!]
+                                }
+                            } else { seats = [.north] }
+                            if let tableScore = table.score(ranking: ranking, seats: seats) {
+                                tableScores += tableScore
+                                tablesPlayed += 1
+                            }
+                        }
+                    }
+                }
+                if scorecard.resetNumbers {
+                    ranking.score = Scorecard.aggregate(total: tableScores, count: 1, boards: scorecard.boardsTable, subsidiaryPlaces: scorecard.type.boardPlaces, places: scorecard.type.tablePlaces, type: scorecard.type.tableAggregate) ?? 0
+                } else {
+                    ranking.score = Scorecard.aggregate(total: tableScores, count: tablesPlayed, boards: scorecard.boards, subsidiaryPlaces: scorecard.type.tablePlaces, places: scorecard.type.matchPlaces, type: scorecard.type.matchAggregate) ?? 0
+                }
             }
         }
         
@@ -672,6 +756,24 @@ class ImportedRanking : Identifiable, Equatable {
     
     static func == (lhs: ImportedRanking, rhs: ImportedRanking) -> Bool {
         return lhs.id == rhs.id
+    }
+}
+
+class ImportedRankingTable : Identifiable {
+    public var id = UUID()
+    public var number: Int?
+    public var section: Int = 1
+    public var way: Pair? = .unknown
+    public var table: Int?
+    public var score: Float?
+    
+    convenience init(number: Int, section: Int, way: Pair, table: Int, score: Float?) {
+        self.init()
+        self.number = number
+        self.section = section
+        self.way = way
+        self.table = table
+        self.score = score
     }
 }
 

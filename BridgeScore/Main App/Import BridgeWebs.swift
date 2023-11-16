@@ -280,6 +280,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                         let (number, way) = splitPairId(id: components.first!)
                         if number != nil {
                             importedRanking.number = number
+                            importedRanking.full = components.first!
                             format = .pairs
                             if way != nil {
                                 importedRanking.way = way

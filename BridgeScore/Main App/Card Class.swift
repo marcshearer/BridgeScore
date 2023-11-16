@@ -38,6 +38,18 @@ class Card : CustomStringConvertible, CustomDebugStringConvertible, Hashable {
         hasher.combine(self.rank)
     }
     
+    convenience init(string: String) {
+        if string.count >= 2 {
+            if "SHDC".contains(string.left(1)) {
+                self.init(rankString: string.right(string.count - 1), suitString: string.left(1))
+            } else {
+                self.init(rankString: string.left(string.count - 1), suitString: string.right(1))
+            }
+        } else {
+            self.init(fromNumber: 0)
+        }
+    }
+    
     convenience init(rankString: String, suitString: String) {
         let rankList = "23456789TJQKA"
         var rank: Int

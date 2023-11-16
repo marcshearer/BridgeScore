@@ -11,9 +11,6 @@ import CoreMedia
 
 class ImportPBN {
     
-    fileprivate static let documentsUrl:URL = FileManager.default.urls(for: FileManager.SearchPathDirectory.documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).last! as URL
-    fileprivate static let importsURL = documentsUrl.appendingPathComponent("imports")
-      
     public class func importScorecard(fileURL: URL, scorecard: ScorecardViewModel) -> ImportedPBNScorecard? {
         
         if let contents = try? String(contentsOf: fileURL) {
@@ -32,7 +29,7 @@ class ImportPBN {
     }
     
     public static func parse(_ line: String) -> (key: String, value: String) {
-        let line = line.ltrim().rtrim()
+        let line = line.trim()
         if line.left(1) == "[" && line.right(1) == "]" {
             let components = line.mid(1, line.count - 2).components(separatedBy: "\"")
             if components.count == 3 {
@@ -54,7 +51,7 @@ struct ImportPBNScorecard: View {
     var body: some View {
         StandardView("Detail") {
             if selected == nil {
-                ImportPBNScorecard.fileList(scorecard: scorecard, selected: selected) { selected in
+                ImportedScorecard.fileList(scorecard: scorecard, suffix: "pbn", selected: selected, decompose: decompose) { selected in
                     if MasterData.shared.scorer != nil {
                         self.selected = selected
                         if let imported = ImportPBN.importScorecard(fileURL: selected, scorecard: scorecard) {
@@ -95,86 +92,32 @@ struct ImportPBNScorecard: View {
             .background(BackgroundBlurView())
         }
     }
+    
+    func decompose(_ paths: [URL]) -> [(URL, Int?, String, Date?)] {
+        var result: [(path: URL, number: Int?, text: String, date: Date?)] = []
         
-    static func fileList(scorecard: ScorecardViewModel, selected: URL?, completion: @escaping (URL)->()) -> some View {
-        return VStack(spacing: 0) {
-            Banner(title: Binding.constant("Choose file to import"), backImage: Banner.crossImage)
-            Spacer().frame(height: 16)
-            if let files = try? FileManager.default.contentsOfDirectory(at: ImportPBN.importsURL, includingPropertiesForKeys: nil).filter({$0.relativeString.right(4) == ".pbn"}) {
-                let fileData: [(path: URL, number: Int?, text: String, date: Date?)] = decompose(files)
-                if fileData.isEmpty {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        Text("No import files found for this date")
-                            .font(defaultFont)
-                        Spacer()
-                    }
-                    Spacer()
-                }
-                ForEach(fileData.indices, id: \.self) { (index) in
-                    VStack {
-                        Spacer().frame(height: 8)
-                        HStack {
-                            Spacer().frame(width: 16)
-                            HStack {
-                                Text(fileData[index].date?.toString(format: "EEE d MMM yyyy", localized: false) ?? "")
-                                Spacer()
-                            }
-                            .frame(width: 190)
-                            Spacer().frame(width: 16)
-                            Text((fileData[index].text).replacingOccurrences(of: "_", with: " "))
-                            Spacer()
-                            Spacer().frame(width: 16)
-                        }
-                        .font(.title2)
-                        .minimumScaleFactor(0.5)
-                        
-                        Spacer().frame(height: 8)
-                    }
-                    .background((fileData[index].path == selected ? Palette.alternate : Palette.background).background)
-                    .onTapGesture {
-                        completion(fileData[index].path)
-                    }
-                }
-            }
-            Spacer()
-        }
-        
-        func decompose(_ paths: [URL]) -> [(URL, Int?, String, Date?)] {
-            var result: [(path: URL, number: Int?, text: String, date: Date?)] = []
+        for path in paths {
+            var text: String?
+            var date: Date?
             
-            for path in paths {
-                var text: String?
-                var date: Date?
-                
-                if let contents = try? String(contentsOf: path) {
-                    let lines = contents.replacingOccurrences(of: "\r\n", with: "\n").components(separatedBy: "\n")
-                    if let line = lines.filter({$0.starts(with: "[Event ")}).first {
-                        text = ImportPBN.parse(line).value
-                    }
-                    if let line = lines.filter({$0.starts(with: "[Date ")}).first {
-                        let dateString = ImportPBN.parse(line).value
-                        if dateString != "" {
-                            date = Date(from: dateString.replacingOccurrences(of: ".", with: "/"), format: "yyyy/MM/dd")
-                        }
-                    }
+            if let contents = try? String(contentsOf: path) {
+                let lines = contents.replacingOccurrences(of: "\r\n", with: "\n").components(separatedBy: "\n")
+                if let line = lines.filter({$0.starts(with: "[Event ")}).first {
+                    text = ImportPBN.parse(line).value
                 }
-                if let text = text, let date = date {
-                    result.append((path, 1, text, date))
+                if let line = lines.filter({$0.starts(with: "[Date ")}).first {
+                    let dateString = ImportPBN.parse(line).value
+                    if dateString != "" {
+                        date = Date(from: dateString.replacingOccurrences(of: ".", with: "/"), format: "yyyy/MM/dd")
+                    }
                 }
             }
-            let baseDate = Date(timeIntervalSinceReferenceDate: 0)
-            return result.filter({Date.startOfDay(from: $0.date ?? baseDate) == Date.startOfDay(from: scorecard.date)}).sorted(by: {($0.number ?? 0) > ($1.number ?? 0)})
+            if let text = text, let date = date {
+                result.append((path, 1, text, date))
+            }
         }
-        
-        func fileName(_ path: String) -> String {
-            let components = path.components(separatedBy: "/")
-            var subComponents = components.last!.components(separatedBy: ".")
-            subComponents.removeLast()
-            let text = subComponents.joined(separator: ".")
-            return text
-        }
+        let baseDate = Date(timeIntervalSinceReferenceDate: 0)
+        return result.filter({Date.startOfDay(from: $0.date ?? baseDate) == Date.startOfDay(from: scorecard.date)}).sorted(by: {($0.number ?? 0) > ($1.number ?? 0)})
     }
 }
 

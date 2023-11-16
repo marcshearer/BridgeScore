@@ -102,6 +102,9 @@
 		B2AB6ECB2AC2CCA900ED002A /* Analysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AB6ECA2AC2CCA900ED002A /* Analysis.swift */; };
 		B2AF750D27AD14FD00233693 /* Slide In Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AF750C27AD14FD00233693 /* Slide In Menu.swift */; };
 		B2AF750F27AD384900233693 /* Layout Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AF750E27AD384900233693 /* Layout Setup View.swift */; };
+		B2B1D5892B026C87007A2977 /* Import Usebio.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2B1D5882B026C87007A2977 /* Import Usebio.swift */; };
+		B2B1D58B2B04C29F007A2977 /* Ranking Table Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2B1D58A2B04C29F007A2977 /* Ranking Table Managed Object.swift */; };
+		B2B1D58D2B04C3DB007A2977 /* Ranking Table View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2B1D58C2B04C3DB007A2977 /* Ranking Table View Model.swift */; };
 		B2BAD9BB27F75895008D0160 /* Import Framework.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2BAD9BA27F75895008D0160 /* Import Framework.swift */; };
 		B2BBC8B827BBF4B100D51A26 /* Table Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2BBC8B727BBF4B100D51A26 /* Table Managed Object.swift */; };
 		B2BBC8BA27BBF6BC00D51A26 /* Table View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2BBC8B927BBF6BC00D51A26 /* Table View Model.swift */; };
@@ -229,6 +232,9 @@
 		B2AB6ECA2AC2CCA900ED002A /* Analysis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analysis.swift; sourceTree = "<group>"; };
 		B2AF750C27AD14FD00233693 /* Slide In Menu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Slide In Menu.swift"; sourceTree = "<group>"; };
 		B2AF750E27AD384900233693 /* Layout Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Layout Setup View.swift"; sourceTree = "<group>"; };
+		B2B1D5882B026C87007A2977 /* Import Usebio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Import Usebio.swift"; sourceTree = "<group>"; };
+		B2B1D58A2B04C29F007A2977 /* Ranking Table Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Ranking Table Managed Object.swift"; sourceTree = "<group>"; };
+		B2B1D58C2B04C3DB007A2977 /* Ranking Table View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Ranking Table View Model.swift"; sourceTree = "<group>"; };
 		B2BAD9BA27F75895008D0160 /* Import Framework.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Import Framework.swift"; sourceTree = "<group>"; };
 		B2BBC8B727BBF4B100D51A26 /* Table Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Table Managed Object.swift"; sourceTree = "<group>"; };
 		B2BBC8B927BBF6BC00D51A26 /* Table View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Table View Model.swift"; sourceTree = "<group>"; };
@@ -374,6 +380,7 @@
 				B2EB3D69279D666800D64225 /* Location Managed Object.swift */,
 				B2A5A42527E2582F00754061 /* BBO Name Managed Object.swift */,
 				B256D42227EC456B00F47322 /* Ranking Managed Object.swift */,
+				B2B1D58A2B04C29F007A2977 /* Ranking Table Managed Object.swift */,
 				B256D42027EC434100F47322 /* Traveller Managed Object.swift */,
 				B25AE9E42AA7021600F04229 /* Double Dummy Managed Object.swift */,
 				B28D3F5D2ACE6FD60060DAA1 /* Override Managed Object.swift */,
@@ -477,6 +484,7 @@
 				B2EB3D72279D734700D64225 /* Location View Model.swift */,
 				B2A5A42727E3090300754061 /* BBO Name View Model.swift */,
 				B256D42427EC578500F47322 /* Ranking View Model.swift */,
+				B2B1D58C2B04C3DB007A2977 /* Ranking Table View Model.swift */,
 				B256D42627EC5B1700F47322 /* Traveller View Model.swift */,
 				B25AE9E62AA704BE00F04229 /* Double Dummy View Model.swift */,
 				B28D3F5F2ACE70850060DAA1 /* Override View Model.swift */,
@@ -530,6 +538,7 @@
 				B2DADE5027E7A06E009F7572 /* Import BBO.swift */,
 				B24BC3C927F5A07800576D50 /* Import BridgeWebs.swift */,
 				B213A33C2AB8616700EA098F /* import PBN.swift */,
+				B2B1D5882B026C87007A2977 /* Import Usebio.swift */,
 			);
 			name = Imports;
 			sourceTree = "<group>";
@@ -674,6 +683,7 @@
 				B26BCE4D2799AD8900B73501 /* String Extensions.swift in Sources */,
 				B2A2053D27B13F2F00C83C88 /* Keyboard Adaptive.swift in Sources */,
 				B2A5A42627E2582F00754061 /* BBO Name Managed Object.swift in Sources */,
+				B2B1D58B2B04C29F007A2977 /* Ranking Table Managed Object.swift in Sources */,
 				B26BCE482799AD8900B73501 /* Day Number.swift in Sources */,
 				B213A33D2AB8616700EA098F /* import PBN.swift in Sources */,
 				B26BCE6F279AEB6C00B73501 /* Scorecard List View.swift in Sources */,
@@ -710,6 +720,7 @@
 				B26BCE662799AED700B73501 /* Banner.swift in Sources */,
 				B203F96A27F30BD900DA748A /* Scorecard Web View.swift in Sources */,
 				B2A2053927B01D0000C83C88 /* Location Setup View.swift in Sources */,
+				B2B1D5892B026C87007A2977 /* Import Usebio.swift in Sources */,
 				B23ADBF427B28D68001B6B38 /* Local Authentication.swift in Sources */,
 				B2A5A42827E3090300754061 /* BBO Name View Model.swift in Sources */,
 				B26BCE6A2799AED700B73501 /* Standard View.swift in Sources */,
@@ -723,6 +734,7 @@
 				B26BCE652799AED700B73501 /* Picker Input.swift in Sources */,
 				B204175827CE58CD00A3EFA8 /* Debug Utilities.swift in Sources */,
 				B24BC3A327F42EEA00576D50 /* Flags.swift in Sources */,
+				B2B1D58D2B04C3DB007A2977 /* Ranking Table View Model.swift in Sources */,
 				B217314427D026050096DAE8 /* Undo Handler.swift in Sources */,
 				B250412E2ABD9A0E00C58CAD /* Picker Input Simple.swift in Sources */,
 				B2AB6ECB2AC2CCA900ED002A /* Analysis.swift in Sources */,

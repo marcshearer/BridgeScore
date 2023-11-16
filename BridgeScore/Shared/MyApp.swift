@@ -45,6 +45,7 @@ class MyApp {
         PlayerMO.entity(),
         LocationMO.entity(),
         RankingMO.entity(),
+        RankingTableMO.entity(),
         TravellerMO.entity(),
         BBONameMO.entity(),
         OverrideMO.entity(),

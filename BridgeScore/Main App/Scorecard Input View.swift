@@ -162,6 +162,7 @@ struct ScorecardInputView: View {
     @State private var importBboScorecard = false
     @State private var importBwScorecard = false
     @State private var importPbnScorecard = false
+    @State private var importUsebioScorecard = false
     @State private var showRankings = false
     @State private var disableBanner = false
     @State private var handViewer = false
@@ -267,6 +268,20 @@ struct ScorecardInputView: View {
                 saveScorecard()
             }
         }
+        .sheet(isPresented: $importUsebioScorecard, onDismiss: {
+            UndoManager.clearActions()
+            if scorecard.importSource != .none {
+                isNotImported = false
+                tableRefresh = true
+            }
+        }) {
+            ImportUsebioScorecard(scorecard: scorecard) {
+                if Scorecard.current.isImported {
+                    viewType = .analysis
+                }
+                saveScorecard()
+            }
+        }
         .sheet(isPresented: $handViewer, onDismiss: {
             UndoManager.clearActions()
             disableBanner = false
@@ -346,6 +361,7 @@ struct ScorecardInputView: View {
         if isNotImported.wrappedValue || (scorecard.resetNumbers && scorecard.importNext <= scorecard.tables) {
             bannerOptions += [
                 BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import PBN file", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importPbnScorecard = true}),
+                BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import Usebio file", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importUsebioScorecard = true}),
                 BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import BBO files", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importBboScorecard = true})]
             if scorecard.location?.bridgeWebsId != "" {
                 bannerOptions += [
