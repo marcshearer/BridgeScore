@@ -11,19 +11,19 @@ import CoreMedia
 
 class ImportUsebio {
     
-    public class func importScorecard(fileURL: URL, scorecard: ScorecardViewModel, completion: @escaping (ImportedUsebioScorecard?)->()) {
+    public class func importScorecard(fileURL: URL, scorecard: ScorecardViewModel, completion: @escaping (ImportedUsebioScorecard?, String?)->()) {
         
         if let data = try? Data(contentsOf: fileURL) {
             let importedScorecard = ImportedUsebioScorecard(data: data, scorecard: scorecard)
-            importedScorecard.parse { (success) in
-                if success {
-                    completion(importedScorecard)
+            importedScorecard.parse { (error) in
+                if error == nil {
+                    completion(importedScorecard, nil)
                 } else {
-                    completion(nil)
+                    completion(nil, error)
                 }
             }
         } else {
-            completion(nil)
+            completion(nil, nil)
         }
     }
     
@@ -46,19 +46,20 @@ struct ImportUsebioScorecard: View {
     @State private var selected: URL? = nil
     @State private var importedUsebioScorecard: ImportedUsebioScorecard!
     @State private var identifySelf = false
+    @State private var importing: Bool = false
     
     var body: some View {
         StandardView("Detail") {
             if selected == nil {
                 ImportedScorecard.fileList(scorecard: scorecard, suffix: "xml", selected: selected, decompose: decompose) { selected in
                     if MasterData.shared.scorer != nil {
-                        ImportUsebio.importScorecard(fileURL: selected, scorecard: scorecard) { (imported) in
+                        ImportUsebio.importScorecard(fileURL: selected, scorecard: scorecard) { (imported, error) in
                             if let imported = imported {
                                 self.selected = selected
                                 importedUsebioScorecard = imported
                                 identifySelf = imported.identifySelf
                             } else {
-                                MessageBox.shared.show("Unable to import scorecard", okAction: {
+                                MessageBox.shared.show(error ?? "Unable to import scorecard", okAction: {
                                     presentationMode.wrappedValue.dismiss()
                                 })
                             }
@@ -69,15 +70,32 @@ struct ImportUsebioScorecard: View {
                         })
                     }
                 }
-            } else {
+            } else if !importing {
                 let importedScorecard = Binding.constant(importedUsebioScorecard as ImportedScorecard)
                 importedUsebioScorecard.confirmDetails(importedScorecard: importedScorecard, onError: {
                     presentationMode.wrappedValue.dismiss()
                 }, completion: {
-                    importedUsebioScorecard.importScorecard()
-                    completion?()
-                    presentationMode.wrappedValue.dismiss()
+                    importing = true
                 })
+            } else {
+                importingFile
+            }
+        }
+    }
+    
+    var importingFile: some View {
+        VStack(spacing: 0) {
+            Banner(title: Binding.constant("Import Usebio File"), backImage: Banner.crossImage)
+            Spacer()
+            Text("Importing file...")
+                .font(defaultFont)
+            Spacer()
+        }
+        .onAppear {
+            Utility.executeAfter(delay: 0.1) {
+                importedUsebioScorecard.importScorecard()
+                completion?()
+                presentationMode.wrappedValue.dismiss()
             }
         }
     }
@@ -153,7 +171,7 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
     private var currentRanking: ImportedUsebioRanking!
     private var currentMatch: ImportedUsebioRankingTable!
     private var currentBoard: ImportedUsebioBoard!
-    private var completion: ((Bool)->())?
+    private var completion: ((String?)->())?
     
     init(data: Data, filterSessionId: String? = nil, scorecard: ScorecardViewModel? = nil) {
         super.init()
@@ -189,7 +207,7 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
         
     }
     
-    public func parse(completion: ((Bool)->())? = nil) {
+    public func parse(completion: ((String?)->())? = nil) {
         self.completion = completion
         root = Node(name: "MAIN", process: processMain)
         current = root
@@ -205,7 +223,7 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
             recalculateTravellers()
             validate()
         }
-        completion?(error == nil)
+        completion?(error)
     }
     
     // MARK: Processors

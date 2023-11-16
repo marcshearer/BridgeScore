@@ -47,6 +47,7 @@ struct ImportPBNScorecard: View {
     @State private var selected: URL? = nil
     @State private var importedPBNScorecard: ImportedPBNScorecard = ImportedPBNScorecard()
     @State private var identifySelf = false
+    @State private var importing = false
     
     var body: some View {
         StandardView("Detail") {
@@ -68,15 +69,15 @@ struct ImportPBNScorecard: View {
                         })
                     }
                 }
-            } else {
+            } else if !importing {
                 let importedScorecard = Binding.constant(importedPBNScorecard as ImportedScorecard)
                 importedPBNScorecard.confirmDetails(importedScorecard: importedScorecard, onError: {
                     presentationMode.wrappedValue.dismiss()
                 }, completion: {
-                    importedPBNScorecard.importScorecard()
-                    completion?()
-                    presentationMode.wrappedValue.dismiss()
+                    importing = true
                 })
+            } else {
+                importingFile
             }
         }
         .fullScreenCover(isPresented: $identifySelf, onDismiss: {
@@ -90,6 +91,23 @@ struct ImportPBNScorecard: View {
             }
             .cornerRadius(16)
             .background(BackgroundBlurView())
+        }
+    }
+    
+    var importingFile: some View {
+        VStack(spacing: 0) {
+            Banner(title: Binding.constant("Import PBN File"), backImage: Banner.crossImage)
+            Spacer()
+            Text("Importing file...")
+                .font(defaultFont)
+            Spacer()
+        }
+        .onAppear {
+            Utility.executeAfter(delay: 0.1) {
+                importedPBNScorecard.importScorecard()
+                completion?()
+                presentationMode.wrappedValue.dismiss()
+            }
         }
     }
     
