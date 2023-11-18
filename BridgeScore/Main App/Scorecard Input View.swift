@@ -333,6 +333,8 @@ struct ScorecardInputView: View {
                 importBwScorecard = true
             case .pbn:
                 importPbnScorecard = true
+            case .usebio:
+                importUsebioScorecard = true
             default:
                 break
             }

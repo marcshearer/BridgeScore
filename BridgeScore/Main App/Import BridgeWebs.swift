@@ -390,8 +390,10 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
             case "+":
                 if let string = columns.element(index) {
                     if scorecard.type.boardScoreType == .percent {
-                        importedTraveller.nsMps = (Int(string) ?? 0)
-                        importedTraveller.totalMps = (importedTraveller.totalMps ?? 0) + (Int(string) ?? 0)
+                        if let value = Int(string) {
+                            importedTraveller.nsMps = value
+                            importedTraveller.totalMps = (importedTraveller.totalMps ?? 0) + value
+                        }
                     } else {
                         importedTraveller.nsScore = (Float(string) ?? 0)
                     }
@@ -399,7 +401,9 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
             case "-":
                 if let string = columns.element(index) {
                     if scorecard.type.boardScoreType == .percent {
-                        importedTraveller.totalMps = (importedTraveller.totalMps ?? 0) + (Int(string) ?? 0)
+                        if let value = Int(string) {
+                            importedTraveller.totalMps = (importedTraveller.totalMps ?? 0) + value
+                        }
                     } else {
                         importedTraveller.nsScore = -(Float(string) ?? 0)
                     }
@@ -472,11 +476,16 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         }
         for ranking in rankings {
             if format == .individual {
-                ranking.players[.south] = ranking.players[.north]
+                for seat in Seat.validCases {
+                    for otherSeat in Seat.validCases {
+                        ranking.players[seat] = ranking.players[otherSeat] ?? ranking.players[seat]
+                    }
+                }
             }
             if format != .teams {
-                ranking.players[.east] = ranking.players[.north]
-                ranking.players[.west] = ranking.players[.south]
+                for seat in Seat.validCases {
+                    ranking.players[seat] = ranking.players[seat] ?? ranking.players[seat.equivalent]
+                }
             }
         }
         // Update scorecard type
