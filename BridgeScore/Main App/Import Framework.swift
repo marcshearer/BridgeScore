@@ -72,6 +72,7 @@ class ImportedScorecard: NSObject {
     var title: String?
     var boardCount: Int?
     var date: Date?
+    var location: LocationViewModel?
     var partner: PlayerViewModel?
     var type: ScoreType?
     var rankings: [ImportedRanking] = []
@@ -110,6 +111,11 @@ class ImportedScorecard: NSObject {
         // Update partner
         if let partner = partner {
             scorecard?.partner = partner
+        }
+        
+        // Update location
+        if let location = location {
+            scorecard?.location = location
         }
         
         // Clear manual totals
@@ -623,23 +629,22 @@ class ImportedScorecard: NSObject {
         checkBoardsPerTable(name: myName)
     }
     
-    public func confirmDetails(importedScorecard: Binding<ImportedScorecard>, onError: @escaping ()->(), completion: @escaping ()->()) -> some View {
+    public func confirmDetails(importedScorecard: Binding<ImportedScorecard>, nextTable: Binding<Int>? = nil, suffix: String = "", onError: @escaping ()->(), completion: @escaping ()->()) -> some View {
         @OptionalStringBinding(importedScorecard.wrappedValue.title) var titleBinding
         @OptionalStringBinding(Utility.dateString(importedScorecard.wrappedValue.date, format: "EEEE d MMMM yyyy")) var dateBinding
         @OptionalStringBinding(importedScorecard.wrappedValue.partner?.name) var partnerBinding
         @OptionalStringBinding("\(importedScorecard.wrappedValue.boardCount ?? 0)") var boardCountBinding
         @OptionalStringBinding("\(importedScorecard.wrappedValue.boardsTable ?? 0)") var boardsTableBinding
 
-        
         return VStack(spacing: 0) {
-            Banner(title: Binding.constant("Confirm Import Details"), backImage: Banner.crossImage)
+            Banner(title: Binding.constant("Confirm Import Details\(suffix)"), backImage: Banner.crossImage)
             Spacer().frame(height: 16)
             
-            if scorecard.tables > 1 && scorecard.resetNumbers {
+            if nextTable != nil {
                 InsetView(title: "Import Settings") {
                     VStack(spacing: 0) {
                 
-                        StepperInput(title: "Import for table", field: importedScorecard.table, label: stepperLabel, minValue: Binding.constant(scorecard.importNext), maxValue: Binding.constant(scorecard.tables))
+                        StepperInput(title: "Import for stanza", field: importedScorecard.table, label: stepperLabel, minValue: nextTable, maxValue: Binding.constant(scorecard.tables))
                         
                         Spacer().frame(height: 16)
                     }
@@ -708,8 +713,7 @@ class ImportedScorecard: NSObject {
                     .frame(width: 120, height: 40)
                     .cornerRadius(10)
                     .onTapGesture {
-                        Utility.mainThread { [self] in
-                            scorecard.importNext += 1
+                        Utility.mainThread {
                             completion()
                         }
                     }
@@ -729,7 +733,7 @@ class ImportedScorecard: NSObject {
     }
     
     private func stepperLabel(value: Int) -> String {
-        return "Table \(value) of \(scorecard.tables)"
+        return "Stanza \(value) of \(scorecard.tables)"
     }
 }
 
@@ -810,5 +814,24 @@ class ImportedBoard {
     
     init(boardNumber: Int) {
         self.boardNumber = boardNumber
+    }
+}
+
+class ImportFileData {
+    var fileName: String
+    var number: Int?
+    var text: String
+    var date: Date?
+    var fileType: String?
+    var contents: String?
+    var associated: String?
+    
+    init(_ fileName: String, _ number: Int? = nil, _ text: String, _ date: Date?, _ fileType: String?, contents: String? = nil) {
+        self.fileName = fileName
+        self.number = number
+        self.text = text
+        self.date = date
+        self.fileType = fileType
+        self.contents = contents
     }
 }

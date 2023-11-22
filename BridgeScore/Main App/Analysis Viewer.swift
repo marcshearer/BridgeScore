@@ -674,7 +674,7 @@ struct AnalysisSummary : View {
                                 .frame(height: 58)
                                 if !otherTable && teams {
                                     GridRow {
-                                        ForEach(0..<columns.count) { _ in
+                                        ForEach(columns.indices, id: \.self) { _ in
                                             Separator(direction: .horizontal, thickness: 3).background(Palette.tile.background)
                                         }
                                     }

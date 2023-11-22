@@ -7,15 +7,30 @@
 
 import CoreData
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct FileNameElement: Hashable {
-    var file: String
     var desc: String
+    var locationId: String?
+    var event: String
+    var date: Date? {
+        Date(from: event.left(8), format: "yyyyMMdd")
+    }
+    var location: LocationViewModel? {
+        MasterData.shared.locations.first(where: {$0.bridgeWebsId == locationId})
+    }
+    
+    init(event: String, desc: String, locationId: String? = nil) {
+        self.event = event
+        self.desc = desc
+        self.locationId = locationId
+    }
 }
 
 struct ImportBridgeWebsScorecard: View {
     enum Phase {
         case getList
+        case dropZone
         case select
         case getFile
         case confirm
@@ -26,6 +41,7 @@ struct ImportBridgeWebsScorecard: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     @ObservedObject var scorecard: ScorecardViewModel
     var completion: (()->())? = nil
+    private let uttypes = [UTType.data]
     @State private var available: [Data]? = nil
     @State private var downloadComplete = false
     @State private var downloadError = false
@@ -36,12 +52,16 @@ struct ImportBridgeWebsScorecard: View {
     @State private var phase: Phase = .getList
     @State private var errorMessage: String? = nil
     @State private var selected: FileNameElement? = nil
-
+    @State private var dropZoneEntered = false
+    @State private var droppedText: [String] = []
+    
     var body: some View {
         StandardView("Detail") {
             switch phase {
             case .getList:
                 downloadingList
+            case .dropZone:
+                dropZone
             case .select:
                 showFileList
             case .getFile:
@@ -72,9 +92,58 @@ struct ImportBridgeWebsScorecard: View {
         .onAppear {
             if scorecard.location?.bridgeWebsId ?? "" == "" {
                 errorMessage = "This location does not have a BridgeWebs Id set up."
-                phase = .error
+                phase = .dropZone
             } else {
                 getList()
+            }
+        }
+    }
+    
+    var dropZone: some View {
+        VStack(spacing: 0) {
+            Banner(title: Binding.constant("Download BridgeWebs Files"), backImage: Banner.crossImage)
+            HStack {
+                Spacer().frame(width: 50)
+                VStack {
+                    Spacer().frame(height: 50)
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 30, style: .continuous)
+                            .foregroundColor(dropZoneEntered ? Palette.contrastTile.background : Palette.background.background)
+                        HStack {
+                            Spacer().frame(width: 50)
+                            Spacer()
+                            VStack {
+                                Spacer()
+                                Text(errorMessage ?? "Error").font(bannerFont)
+                                    .multilineTextAlignment(.center)
+                                Spacer().frame(height: 50)
+                                Text("Drop Results URL Here").font(bannerFont)
+                                    .multilineTextAlignment(.center)
+                                Spacer()
+                            }
+                            Spacer()
+                            Spacer().frame(width: 50)
+                        }
+                        .overlay(RoundedRectangle(cornerRadius: 30)
+                            .strokeBorder(style: StrokeStyle(lineWidth: 5, dash: [10, 5]))
+                            .foregroundColor(Palette.gridLine))
+                    }
+                    .onDrop(of: uttypes, delegate: ScorecardDropText(dropZoneEntered: $dropZoneEntered, droppedText: $droppedText))
+                    Spacer().frame(height: 50)
+                }
+                Spacer().frame(width: 50)
+            }
+            .onChange(of: droppedText.count, initial: false) {
+                if !droppedText.isEmpty {
+                    for text in droppedText {
+                        if let file = parseURL(text: text) {
+                            selected = file
+                            phase = .getFile
+                            downloadFile(file: selected!)
+                        }
+                    }
+                    droppedText = []
+                }
             }
         }
     }
@@ -99,7 +168,7 @@ struct ImportBridgeWebsScorecard: View {
                 .onTapGesture {
                     selected = file
                     phase = .getFile
-                    downloadFile(filename: selected!.file, title: selected!.desc)
+                    downloadFile(file: selected!)
                 }
             }
             Spacer()
@@ -151,6 +220,26 @@ struct ImportBridgeWebsScorecard: View {
         }
     }
     
+    private func parseURL(text: String) -> FileNameElement? {
+        var result: FileNameElement?
+        let match = "https://www.bridgewebs.com"
+        var event: String?
+        var locationId: String?
+        if text.left(match.length).lowercased() == "https://www.bridgewebs.com" {
+            let components = text.components(separatedBy: "&")
+            if let eventComponent = components.first(where: {$0.lowercased().starts(with: "event=")}) {
+                event = eventComponent.components(separatedBy: "=").last
+            }
+            if let locationComponent = components.first(where: {$0.lowercased().starts(with: "club=")}) {
+                locationId = locationComponent.components(separatedBy: "=").last
+            }
+            if let event = event {
+                result = FileNameElement(event: event, desc: "Dropped URL", locationId: locationId)
+            }
+        }
+        return result
+    }
+    
     private func getList(_ urlString: String? = nil) {
         let urlString = urlString ?? "https://www.bridgewebs.com/cgi-bin/bwop/bw.cgi?club=\(scorecard.location!.bridgeWebsId)&pid=display_past"
         
@@ -170,9 +259,9 @@ struct ImportBridgeWebsScorecard: View {
                     switch fileList.count {
                     case 0:
                         errorMessage = "No files available for this location on this date"
-                        phase = .error
+                        phase = .dropZone
                     case 1:
-                        downloadFile(filename: fileList[0].file, title: fileList[0].desc)
+                        downloadFile(file: fileList[0])
                         phase = .getFile
                     default:
                         phase = .select
@@ -183,8 +272,8 @@ struct ImportBridgeWebsScorecard: View {
         task.resume()
     }
     
-    private func downloadFile(filename: String, title: String) {
-        let urlString = "https://www.bridgewebs.com/cgi-bin/bwop/bw.cgi?xml=1&club=\(scorecard.location!.bridgeWebsId)&pid=xml_results_travs&msec=1&mod=Results&ekey=\(filename)"
+    private func downloadFile(file: FileNameElement) {
+        let urlString = "https://www.bridgewebs.com/cgi-bin/bwop/bw.cgi?xml=1&club=\(file.locationId ?? scorecard.location!.bridgeWebsId)&pid=xml_results_travs&msec=1&mod=Results&ekey=\(file.event)"
         
         let url = URL(string: urlString)!
 
@@ -192,7 +281,7 @@ struct ImportBridgeWebsScorecard: View {
             if error != nil {
                 downloadError = true
             } else if let data = data {
-                parser = ImportedBridgeWebsScorecard(scorecard: scorecard, title: title, data: data, completion: completion)
+                parser = ImportedBridgeWebsScorecard(scorecard: scorecard, title: file.desc, data: data, date: file.date, location: file.location, completion: completion)
             }
         }
         task.resume()
@@ -245,7 +334,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
     private var boardNumber: Int!
     private var tag: String?
 
-    init(scorecard: ScorecardViewModel, title: String, data: Data, completion: @escaping (ImportedBridgeWebsScorecard?, String?)->()) {
+    init(scorecard: ScorecardViewModel, title: String, data: Data, date: Date?, location: LocationViewModel?, completion: @escaping (ImportedBridgeWebsScorecard?, String?)->()) {
         self.namesElement = false
         self.completion = completion
         super.init()
@@ -254,7 +343,8 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         let scorer = MasterData.shared.scorer
         myName = scorer!.name.lowercased()
         self.title = title
-        self.date = scorecard.date
+        self.date = date ?? scorecard.date
+        self.location = location ?? scorecard.location
         self.type = scorecard.type.boardScoreType
         let string = String(decoding: data, as: UTF8.self)
         let replacedQuote = string.replacingOccurrences(of: "&#39;", with: replacingSingleQuote)
@@ -692,8 +782,8 @@ class ImportBridgeWebsListParser {
             let start = line.position(find)! + find.length
             let string = line.right(line.length - start)
             if let end = string.position(",") {
-                let filename = string.left(end - 1).replacingOccurrences(of: "\'", with: "").ltrim().rtrim()
-                let fileDate = filename.left(8)
+                let event = string.left(end - 1).replacingOccurrences(of: "\'", with: "").ltrim().rtrim()
+                let fileDate = event.left(8)
                 if fileDate == dateString {
                     if let data = line.data(using: .utf8) {
                         if let desc = try? NSAttributedString(data: data, options: [
@@ -701,7 +791,7 @@ class ImportBridgeWebsListParser {
                             .characterEncoding: String.Encoding.utf8.rawValue],
                                                               documentAttributes: nil).string {
                             
-                            list.append(FileNameElement(file: filename, desc: desc))
+                            list.append(FileNameElement(event: event, desc: desc))
                         }
                     }
                 } else if fileDate < dateString {

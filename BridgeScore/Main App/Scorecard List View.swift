@@ -6,11 +6,14 @@
 //
 
 import SwiftUI
+import UniformTypeIdentifiers
+import AudioToolbox
 
-struct ScorecardListView: View {
+struct ScorecardListView: View, DropDelegate {
     @Environment(\.verticalSizeClass) var sizeClass
     private let id = scorecardListViewId
     private let inputId = UUID()
+    private let uttypes = [UTType.fileURL]
     @StateObject private var selected = ScorecardViewModel(scorecardId: nullUUID)
     @StateObject private var filterValues = ScorecardFilterValues(.list)
     @ObservedObject private var data = MasterData.shared
@@ -29,6 +32,16 @@ struct ScorecardListView: View {
     @State private var closeFilter = false
     @State private var importScorecard: ImportSource = .none
     @State private var importTapped: ImportSource = .none
+    @State private var dropEntered: Bool = false
+    @State private var tileColor = Palette.contrastTile
+    var dropColor: Binding<PaletteColor> {
+        Binding {
+            tileColor
+        } set: { (newValue) in
+            tileColor = newValue
+        }
+        
+    }
 
     var body: some View {
         let scorecards = MasterData.shared.scorecards.filter({filterValues.filter($0)})
@@ -53,12 +66,15 @@ struct ScorecardListView: View {
                 Banner(title: $title, back: false, optionMode: .menu, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: "Setup", menuId: id, options: menuOptions)
                 Spacer().frame(height: 8)
                 
-                ListTileView(color: Palette.contrastTile) {
+                ListTileView(color: dropColor) {
                     HStack {
                         Image(systemName: "plus.square")
                         Text("New Scorecard")
                     }
                 }
+                /*.onDrop(of: uttypes, delegate: self)
+                    In case you ever need to drop import files on this list
+                */
                 .onTapGesture {
                     self.linkToNew = true
                 }
@@ -153,6 +169,39 @@ struct ScorecardListView: View {
             }
         }
     }
+    
+    // MARK: - Drop delegates
+    
+    func validateDrop(info: DropInfo) -> Bool {
+        return true
+    }
+    
+    func dropEntered(info: DropInfo) {
+        dropColor.wrappedValue = Palette.enabledButton
+    }
+    
+    func dropExited(info: DropInfo) {
+        dropColor.wrappedValue = Palette.contrastTile
+    }
+    
+    func performDrop(info: DropInfo) -> Bool {
+        var dropped: [(filename: String, conteents: String)] = []
+        for item in info.itemProviders(for: [UTType.data]) {
+            if let filename = item.suggestedName {
+                item.loadItem(forTypeIdentifier: UTType.data.identifier) { (url, error) in
+                    if let url = url as? URL {
+                        if let data = try? Data(contentsOf: url), let contents = String(data: data, encoding: .utf8) {
+                            dropped.append((filename, contents))
+                        }
+                    }
+                }
+            }
+        }
+        
+        dropColor.wrappedValue = Palette.contrastTile
+        AudioServicesPlaySystemSound(SystemSoundID(1304))
+        return true
+    }
 }
 
 struct ScorecardSummaryView: View {
@@ -176,7 +225,7 @@ struct ScorecardSummaryView: View {
     
     var normalView: some View {
         let color = (highlighted ? Palette.highlightTile : Palette.tile)
-        return ListTileView(color: color) {
+        return ListTileView(color: Binding.constant(color)) {
             GeometryReader { geometry in
                 HStack {
                     VStack {
@@ -216,7 +265,7 @@ struct ScorecardSummaryView: View {
     
     var portraitPhoneView: some View {
         let color = (highlighted ? Palette.highlightTile : Palette.tile)
-        return ListTileView(color: color, height: 120) {
+        return ListTileView(color: Binding.constant(color), height: 120) {
             VStack {
                 Spacer().frame(height: 4)
                 HStack {

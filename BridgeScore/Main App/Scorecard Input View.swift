@@ -361,15 +361,20 @@ struct ScorecardInputView: View {
                 BannerOption(image: AnyView(Image(systemName: hideRejected ? "plus" : "minus")), text: hideRejected ? "Show rejected" : "Hide rejected", likeBack: true, menu: true, action: { hideRejected.toggle() })]
         }
         if isNotImported.wrappedValue || (scorecard.resetNumbers && scorecard.importNext <= scorecard.tables) {
-            bannerOptions += [
-                BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import PBN file", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importPbnScorecard = true}),
-                BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import Usebio file", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importUsebioScorecard = true}),
-                BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import BBO files", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importBboScorecard = true})]
-            if scorecard.location?.bridgeWebsId != "" {
+            let importMatch = (!isNotImported.wrappedValue ? scorecard.importSource : nil)
+            if importMatch == nil || importMatch == .pbn {
+                bannerOptions += [BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import PBN file", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importPbnScorecard = true})]
+            }
+            if importMatch == nil || importMatch == .usebio {
+                bannerOptions += [BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import Usebio file", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importUsebioScorecard = true})]
+            }
+            if importMatch == nil || importMatch == .bbo {
+                bannerOptions += [BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import BBO files", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importBboScorecard = true})]
+            }
+            if scorecard.location?.bridgeWebsId != "" && (importMatch == nil || importMatch == .bridgeWebs) {
                 bannerOptions += [
                     BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import from BridgeWebs", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importBwScorecard = true})]
             }
-               
         }
         if !isNotImported.wrappedValue {
             bannerOptions += [

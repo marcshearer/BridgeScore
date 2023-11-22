@@ -98,3 +98,11 @@ extension String {
         wrappedValue = Binding { optional ?? "" } set: { (_) in }
     }
 }
+
+@propertyWrapper public final class OptionalIntBinding {
+    public var wrappedValue: Binding<Int>
+    
+    public init(_ optional: Int?) {
+        wrappedValue = Binding { optional ?? 0 } set: { (_) in }
+    }
+}

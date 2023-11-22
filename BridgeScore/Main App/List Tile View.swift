@@ -8,12 +8,12 @@
 import SwiftUI
 
 struct ListTileView <Content> : View where Content : View {
-    var color: PaletteColor
+    var color: Binding<PaletteColor>
     var font: Font
     var content: Content
     var height: CGFloat = 92
     
-    init(color: PaletteColor = Palette.tile, font: Font = .largeTitle, height: CGFloat = 92, @ViewBuilder content: ()->Content) {
+    init(color: Binding<PaletteColor>, font: Font = .largeTitle, height: CGFloat = 92, @ViewBuilder content: ()->Content) {
         self.color = color
         self.font = font
         self.height = height
@@ -31,13 +31,13 @@ struct ListTileView <Content> : View where Content : View {
                     Spacer()
                 }
                 .frame(height: height - 12)
-                .background(color.background)
+                .background(color.wrappedValue.background)
                 .cornerRadius(16)
             Spacer().frame(width: 16)
             }
             Spacer().frame(height: 8)
         }
-        .foregroundColor(color.text)
+        .foregroundColor(color.wrappedValue.text)
         .font(font)
     }
 }

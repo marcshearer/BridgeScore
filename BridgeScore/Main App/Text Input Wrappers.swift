@@ -27,7 +27,7 @@ extension ScorecardResponderDelegate {
     @discardableResult func keyPressed(keyAction: KeyAction?) -> Bool {
         keyPressed(keyAction: keyAction, characters: "")
     }
-    func getFocus() -> Bool {
+    @discardableResult func getFocus() -> Bool {
         getFocus(becomeFirstResponder: true)
     }
 }

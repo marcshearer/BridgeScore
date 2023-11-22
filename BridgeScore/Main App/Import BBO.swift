@@ -8,6 +8,8 @@
 import CoreData
 import SwiftUI
 import CoreMedia
+import UniformTypeIdentifiers
+import AudioToolbox
 
 class ImportBBO {
     
@@ -53,8 +55,8 @@ class ImportBBO {
         }
     }
     
-    public class func importScorecard(fileURL: URL, scorecard: ScorecardViewModel) -> ImportedBBOScorecard? {
-        
+    public class func createImportedScorecardFrom(fileURL: URL, scorecard: ScorecardViewModel) -> ImportedBBOScorecard? {
+        // Version for lookup of directory
         if let contents = try? String(contentsOf: fileURL) {
             let lines = contents.replacingOccurrences(of: "\r\n", with: "\n").components(separatedBy: "\n")
             let imported = ImportedBBOScorecard(lines: lines, scorecard: scorecard)
@@ -69,38 +71,154 @@ class ImportBBO {
             return nil
         }
     }
+    
+    public class func createImportedScorecardFrom(droppedFiles fileData: [ImportFileData], scorecard: ScorecardViewModel) -> [ImportedBBOScorecard] {
+        // Version for drop of files
+        var result: [ImportedBBOScorecard] = []
+        for file in fileData {
+            if let contents = file.contents {
+                let lines = contents.replacingOccurrences(of: "\r\n", with: "\n").components(separatedBy: "\n")
+                let imported = ImportedBBOScorecard(lines: lines, scorecard: scorecard)
+                imported.date = file.date
+                if let pbnData = file.associated {
+                    let lines = pbnData.replacingOccurrences(of: "\r\n", with: "\n").components(separatedBy: "\n")
+                    imported.importOptimum(lines: lines, scorecard: scorecard)
+                }
+                result.append(imported)
+            }
+        }
+        return result
+    }
 }
 
 struct ImportBBOScorecard: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     @ObservedObject var scorecard: ScorecardViewModel
     var completion: (()->())? = nil
-    @State private var selected: URL? = nil
-    @State private var importedBBOScorecard: ImportedBBOScorecard = ImportedBBOScorecard()
+    private let uttypes = [UTType.data]
+    @State private var selected: String? = nil
+    @State private var importedBBOScorecards: [ImportedBBOScorecard] = []
+    @State private var importSequence = 0
+    @State private var dropZoneEntered = false
+    @State private var droppedFiles: [(filename: String, contents: String)] = []
+    private var nextTable: Binding<Int> {
+        Binding {
+            scorecard.importNext
+        } set: { (newValue) in
+            scorecard.importNext = newValue
+        }
+    }
     
     var body: some View {
         StandardView("Detail") {
             if selected == nil {
-                fileList
+                if MyApp.target == .macOS {
+                    dropZone
+                } else {
+                    fileList
+                }
             } else {
-                let importedScorecard = Binding.constant(importedBBOScorecard as ImportedScorecard)
-                importedBBOScorecard.confirmDetails(importedScorecard: importedScorecard, onError: {
-                    presentationMode.wrappedValue.dismiss()
-                }, completion: {
-                    importedBBOScorecard.importScorecard()
-                    completion?()
-                    presentationMode.wrappedValue.dismiss()
-                })
+                if importSequence < importedBBOScorecards.count {
+                    let importedBBOScorecard = importedBBOScorecards[importSequence]
+                    let importedScorecard = Binding.constant(importedBBOScorecard as ImportedScorecard)
+                    let suffix = (scorecard.resetNumbers && scorecard.tables > 1 && importedBBOScorecards.count > 1 ? " (\(importSequence + 1) of \(importedBBOScorecards.count))" : "")
+                    importedBBOScorecard.confirmDetails(importedScorecard: importedScorecard, nextTable: nextTable, suffix: suffix, onError: {
+                        presentationMode.wrappedValue.dismiss()
+                    }, completion: {
+                        importedBBOScorecard.importScorecard()
+                        if scorecard.tables > 1 && scorecard.resetNumbers {
+                            scorecard.importNext += 1
+                        }
+                        if importSequence >= importedBBOScorecards.count - 1 {
+                            completion?()
+                            presentationMode.wrappedValue.dismiss()
+                        } else {
+                            // Get ready for next stanza
+                            importSequence += 1
+                            importedBBOScorecards[importSequence].table = scorecard.importNext
+                            nextTable.wrappedValue = scorecard.importNext
+                        }
+                    })
+                }
             }
         }
     }
-        
+    
+    var dropZone: some View {
+        VStack(spacing: 0) {
+            Banner(title: Binding.constant("Drop BBO Files"), backImage: Banner.crossImage)
+            HStack {
+                Spacer().frame(width: 50)
+                VStack {
+                    Spacer().frame(height: 50)
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 30, style: .continuous)
+                            .foregroundColor(dropZoneEntered ? Palette.contrastTile.background : Palette.background.background)
+                        HStack {
+                            Spacer().frame(width: 50)
+                            Spacer()
+                            VStack {
+                                Spacer()
+                                Text("Drop \(scorecard.resetNumbers ? "(multiple) " : "")CSV and PBN Import Files Here").font(bannerFont)
+                                    .multilineTextAlignment(.center)
+                                Spacer()
+                            }
+                            Spacer()
+                            Spacer().frame(width: 50)
+                        }
+                        .overlay(RoundedRectangle(cornerRadius: 30)
+                            .strokeBorder(style: StrokeStyle(lineWidth: 5, dash: [10, 5]))
+                            .foregroundColor(Palette.gridLine))
+                    }
+                    .onDrop(of: uttypes, delegate: ScorecardDropFiles(dropZoneEntered: $dropZoneEntered, droppedFiles: $droppedFiles))
+                    Spacer().frame(height: 50)
+                }
+                Spacer().frame(width: 50)
+            }
+            .onChange(of: droppedFiles.count, initial: false) {
+                if !droppedFiles.isEmpty {
+                    if checkImport() {
+                        let fileData = processDroppedFiles()
+                        let imported = ImportBBO.createImportedScorecardFrom(droppedFiles: fileData, scorecard: scorecard)
+                        if !imported.isEmpty {
+                            importSequence = 0
+                            importedBBOScorecards = imported
+                            selected = droppedFiles.first!.filename
+                        }
+                    }
+                    droppedFiles = []
+                }
+            }
+        }
+    }
+    
+    func processDroppedFiles() -> [ImportFileData] {
+        let fileData = decompose(droppedFiles.map{URL(string: $0.filename)!})
+        for (index, file) in fileData.enumerated() {
+            // Add content
+            file.contents = droppedFiles[index].contents
+        }
+        // Now combine pbn content
+        let csvFileData = fileData.filter({$0.fileType?.lowercased() == "csv"})
+        for file in csvFileData {
+            if let number = file.number, let date = file.date {
+                if let pbnFile = fileData.first(where: {$0.number == number && $0.text == file.text && $0.date == date && $0.fileType?.lowercased() == "pbn"}) {
+                    file.associated = pbnFile.contents
+                }
+            }
+        }
+        return csvFileData
+    }
+    
+    
     var fileList: some View {
         VStack(spacing: 0) {
             Banner(title: Binding.constant("Choose file to import"), backImage: Banner.crossImage)
             Spacer().frame(height: 16)
             if let files = try? FileManager.default.contentsOfDirectory(at: ImportedScorecard.importsURL, includingPropertiesForKeys: nil).filter({$0.relativeString.right(4) == ".csv"}) {
-                let fileData: [(path: URL, number: Int?, text: String, date: Date?)] = decompose(files)
+                let baseDate = Date(timeIntervalSinceReferenceDate: 0)
+                let unfiltered: [ImportFileData] = decompose(files)
+                let fileData = unfiltered.filter({Date.startOfDay(from: $0.date ?? baseDate) == Date.startOfDay(from: scorecard.date)}).sorted(by: {($0.number ?? 0) > ($1.number ?? 0)})
                 if fileData.isEmpty {
                     Spacer()
                     HStack {
@@ -128,30 +246,17 @@ struct ImportBBOScorecard: View {
                         }
                         .font(.title2)
                         .minimumScaleFactor(0.5)
-                                 
+                        
                         Spacer().frame(height: 8)
                     }
-                    .background((fileData[index].path == selected ? Palette.alternate : Palette.background).background)
+                    .background((fileData[index].fileName == selected ? Palette.alternate : Palette.background).background)
                     .onTapGesture {
-                        selected = fileData[index].path
-                        if let scorer = MasterData.shared.scorer {
-                            if scorer.bboName == "" {
-                                MessageBox.shared.show("In order to import a scorecard the player defined as yourself must have a BBO name", okAction: {
-                                    presentationMode.wrappedValue.dismiss()
-                                })
-                            } else if scorecard.partner?.bboName ?? "" == "" {
-                                MessageBox.shared.show("In order to import a scorecard your partner must have a BBO name", okAction: {
-                                    presentationMode.wrappedValue.dismiss()
-                                })
-                            } else {
-                                if let imported = ImportBBO.importScorecard(fileURL: selected!, scorecard: scorecard) {
-                                    importedBBOScorecard = imported
-                                }
+                        selected = fileData[index].fileName
+                        if checkImport() {
+                            if let imported = ImportBBO.createImportedScorecardFrom(fileURL: URL(string: selected!)!, scorecard: scorecard) {
+                                importSequence = 0
+                                importedBBOScorecards = [imported]
                             }
-                        } else {
-                            MessageBox.shared.show("In order to import a scorecard a player must be defined as yourself", okAction: {
-                                presentationMode.wrappedValue.dismiss()
-                            })
                         }
                     }
                 }
@@ -160,11 +265,34 @@ struct ImportBBOScorecard: View {
         }
     }
     
-    func decompose(_ paths: [URL]) -> [(URL, Int?, String, Date?)] {
-        var result: [(path: URL, number: Int?, text: String, date: Date?)] = []
+    func checkImport() -> Bool {
+        var result = false
+        if let scorer = MasterData.shared.scorer {
+            if scorer.bboName == "" {
+                MessageBox.shared.show("In order to import a scorecard the player defined as yourself must have a BBO name", okAction: {
+                    presentationMode.wrappedValue.dismiss()
+                })
+            } else if scorecard.partner?.bboName ?? "" == "" {
+                MessageBox.shared.show("In order to import a scorecard your partner must have a BBO name", okAction: {
+                    presentationMode.wrappedValue.dismiss()
+                })
+            } else {
+                result = true
+            }
+        } else {
+            MessageBox.shared.show("In order to import a scorecard a player must be defined as yourself", okAction: {
+                presentationMode.wrappedValue.dismiss()
+            })
+        }
+        return result
+    }
+    
+    func decompose(_ paths: [URL]) -> [ImportFileData] {
+        var result: [ImportFileData] = []
         
         for path in paths {
-            var components = fileName(path.relativeString).components(separatedBy: "_")
+            let (name, fileType) = fileName(path.relativeString)
+            var components = name.components(separatedBy: "_")
             var number: Int?
             number = Int(components.first!)
             if number != nil {
@@ -175,18 +303,18 @@ struct ImportBBOScorecard: View {
             if date != nil {
                 components.removeLast()
             }
-            result.append((path, number, components.joined(separator: " "), date))
+            result.append(ImportFileData(path.absoluteString, number, components.joined(separator: " "), date, fileType))
         }
-        let baseDate = Date(timeIntervalSinceReferenceDate: 0)
-        return result.filter({Date.startOfDay(from: $0.date ?? baseDate) == Date.startOfDay(from: scorecard.date)}).sorted(by: {($0.number ?? 0) > ($1.number ?? 0)})
+        return result
     }
     
-    func fileName(_ path: String) -> String {
+    func fileName(_ path: String) -> (String, String?) {
         let components = path.components(separatedBy: "/")
         var subComponents = components.last!.components(separatedBy: ".")
+        let fileType = ((subComponents.last ?? "") == ""  ? nil : subComponents.last!)
         subComponents.removeLast()
         let text = subComponents.joined(separator: ".")
-        return text
+        return (text,fileType)
     }
 }
 
@@ -203,13 +331,13 @@ class ImportedBBOScorecard: ImportedScorecard {
     private(set) var bboId: String?
     private(set) var bboUrl: String?
     private var translateNumber: [Int:Int] = [:]
-
+    
     private var phase: Phase = .heading
     private var rankingHeadings: [String] = []
     private var travellerHeadings: [String] = []
     private var section: Int = 1
     
-  // MARK: - Initialise from import file ============================================================ -
+    // MARK: - Initialise from import file ============================================================ -
     
     init(lines: [String] = [], scorecard: ScorecardViewModel? = nil) {
         super.init()
@@ -324,7 +452,7 @@ class ImportedBBOScorecard: ImportedScorecard {
                     importedRanking.score = Float(string)
                 }
             case "section":
-                // Use section from class
+                    // Use section from class
                 importedRanking.section = section
             case "bbo pts":
                 if let string = columns.element(index) {
@@ -339,7 +467,7 @@ class ImportedBBOScorecard: ImportedScorecard {
     
     private func initTraveller(_ columns: [String]) {
         let importedTraveller = ImportedTraveller()
-
+        
         for (index, heading) in travellerHeadings.enumerated() {
             switch heading.lowercased() {
             case "#board":
@@ -363,8 +491,8 @@ class ImportedBBOScorecard: ImportedScorecard {
                 if let string = columns.element(index),
                    let rankingNumber = Int(string),
                    let ranking = rankings.first(where: {$0.number == rankingNumber}) {
-                        importedTraveller.ranking[seat] = ranking.number
-                        importedTraveller.section[seat] = ranking.section
+                    importedTraveller.ranking[seat] = ranking.number
+                    importedTraveller.section[seat] = ranking.section
                 } else {
                     fatalError()
                 }
@@ -407,7 +535,7 @@ class ImportedBBOScorecard: ImportedScorecard {
                     }
                 }
             case "section":
-                // Ignore - set above from player name
+                    // Ignore - set above from player name
                 break
             case "playdata":
                 importedTraveller.playData = columns.element(index)
@@ -415,7 +543,7 @@ class ImportedBBOScorecard: ImportedScorecard {
                 break
             }
         }
-       
+        
         if let board = importedTraveller.board {
             if travellers[board] == nil {
                 travellers[board] = []
@@ -464,7 +592,7 @@ class ImportedBBOScorecard: ImportedScorecard {
     }
     
     private func combineRankings() {
-        // Teams pairs as separate lines
+            // Teams pairs as separate lines
         var remove: [Int] = []
         for (index, bboRanking) in rankings.enumerated() {
             if bboRanking.ranking == nil && index > 0 {
@@ -504,7 +632,7 @@ class ImportedBBOScorecard: ImportedScorecard {
         type = (type == .xImp && format == .teams ? .imp : type)
     }
     
-    // MARK: - Utility routines ==================================================================== -
+        // MARK: - Utility routines ==================================================================== -
     
     private func columns(_ line: String) -> [String] {
         var quoted = false

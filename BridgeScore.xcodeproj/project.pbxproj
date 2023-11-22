@@ -84,6 +84,7 @@
 		B26BCE76279BEBA500B73501 /* Scorecard Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */; };
 		B26C555727C7EA9200015D0A /* Table with Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26C555627C7EA9200015D0A /* Table with Collection.swift */; };
 		B26C555927C8BCBC00015D0A /* Scroll Picker Popup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26C555827C8BCBC00015D0A /* Scroll Picker Popup View.swift */; };
+		B273C1442B0BC2120061CF04 /* Scorecard Drop Delegates.swift in Sources */ = {isa = PBXBuildFile; fileRef = B273C1432B0BC2120061CF04 /* Scorecard Drop Delegates.swift */; };
 		B27CFA4E27CDFE8400B976E0 /* Popup Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = B27CFA4D27CDFE8400B976E0 /* Popup Menu.swift */; };
 		B28D3F5E2ACE6FD60060DAA1 /* Override Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28D3F5D2ACE6FD60060DAA1 /* Override Managed Object.swift */; };
 		B28D3F602ACE70850060DAA1 /* Override View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28D3F5F2ACE70850060DAA1 /* Override View Model.swift */; };
@@ -212,6 +213,7 @@
 		B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Managed Object.swift"; sourceTree = "<group>"; };
 		B26C555627C7EA9200015D0A /* Table with Collection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Table with Collection.swift"; sourceTree = "<group>"; };
 		B26C555827C8BCBC00015D0A /* Scroll Picker Popup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Scroll Picker Popup View.swift"; path = "../Main App/Scroll Picker Popup View.swift"; sourceTree = "<group>"; };
+		B273C1432B0BC2120061CF04 /* Scorecard Drop Delegates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Drop Delegates.swift"; sourceTree = "<group>"; };
 		B27CFA4D27CDFE8400B976E0 /* Popup Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Popup Menu.swift"; sourceTree = "<group>"; };
 		B28D3F5D2ACE6FD60060DAA1 /* Override Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Override Managed Object.swift"; sourceTree = "<group>"; };
 		B28D3F5F2ACE70850060DAA1 /* Override View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Override View Model.swift"; sourceTree = "<group>"; };
@@ -564,6 +566,7 @@
 				B213998B27D8AA830098E4A4 /* Seat Picker Popup View.swift */,
 				B2A918922ADABF0B00761B66 /* Analysis Summary View.swift */,
 				B2FC6CFD2AF6BD2900B53A68 /* Contract Picker.swift */,
+				B273C1432B0BC2120061CF04 /* Scorecard Drop Delegates.swift */,
 			);
 			name = "Shared Views";
 			sourceTree = "<group>";
@@ -725,6 +728,7 @@
 				B2A5A42827E3090300754061 /* BBO Name View Model.swift in Sources */,
 				B26BCE6A2799AED700B73501 /* Standard View.swift in Sources */,
 				B26C555727C7EA9200015D0A /* Table with Collection.swift in Sources */,
+				B273C1442B0BC2120061CF04 /* Scorecard Drop Delegates.swift in Sources */,
 				B2EB3D77279D73FC00D64225 /* Scorecard View Model.swift in Sources */,
 				B21CC0BE27A01293001AECC1 /* Date Picker Input.swift in Sources */,
 				B21E6F6D27C511DA00DBDCC2 /* Bridge Calculations.swift in Sources */,
@@ -896,7 +900,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BridgeScore/Shared/Info.plist;
-				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.card-games";
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "This app requires access to Face ID to avoid unauthenticated access to  scorecard details";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -914,7 +918,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = MarcShearer.BridgeScore;
 				PRODUCT_NAME = "Bridge Score";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -936,7 +942,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BridgeScore/Shared/Info.plist;
-				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.card-games";
 				INFOPLIST_KEY_LSSupportsOpeningDocumentsInPlace = YES;
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "This app requires access to Face ID to avoid unauthenticated access to  scorecard details";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -954,7 +960,9 @@
 				PRODUCT_BUNDLE_IDENTIFIER = MarcShearer.BridgeScore;
 				PRODUCT_NAME = "Bridge Score";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";

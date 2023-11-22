@@ -156,6 +156,7 @@ struct Banner: View {
         Text(title)
             .font((alternateStyle ? alternateBannerFont : bannerFont)).bold()
             .foregroundColor(bannerColor.text)
+            .minimumScaleFactor(0.7)
     }
     
     var menu: some View {
