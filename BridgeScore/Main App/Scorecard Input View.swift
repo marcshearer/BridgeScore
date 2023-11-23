@@ -813,9 +813,10 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     internal var scorecardFocusCell: ScorecardInputCollectionCell? {
         get {
             if let rowType = focusRowType, let table = focusTable, let columnType = focusColumnType, let column = getColumnNumber(rowType: rowType, itemNumber: (rowType == .board ? (focusBoard ?? 0) : table), type: columnType) {
-                cell(rowType: rowType, section: table - 1, row: (focusBoard == nil ? nil : focusBoard! - 1), column: column)
+                let row = (focusBoard == nil ? nil : (focusBoard! - 1) % scorecard.boardsTable)
+                return cell(rowType: rowType, section: table - 1, row: row, column: column)
             } else {
-                nil
+                return nil
             }
         }
         set(cell) {
@@ -2865,6 +2866,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     @discardableResult func getFocus(becomeFirstResponder: Bool = true) -> Bool {
         var result = false
         if isEnabled {
+            print("Get \(description)")
             let currentFocusCell = scorecardDelegate?.scorecardFocusCell
             if currentFocusCell != self {
                 currentFocusCell?.loseFocus()
@@ -2886,6 +2888,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     
     @discardableResult func loseFocus() -> Bool {
         // Remove focus halo
+        print("Lose \(description)")
         focusLineViews.forEach { line in line.isHidden = true }
         
         // Carry out any control specific pre-amble
