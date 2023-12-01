@@ -17,6 +17,7 @@ public class PlayerMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var sequence16: Int16
     @NSManaged public var name: String
     @NSManaged public var bboName: String
+    @NSManaged public var email: String
     @NSManaged public var isSelf: Bool
     @NSManaged public var retired: Bool
 

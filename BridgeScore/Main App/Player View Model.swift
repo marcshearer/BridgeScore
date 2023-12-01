@@ -16,6 +16,7 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
     @Published public var sequence: Int
     @Published public var name: String
     @Published public var bboName: String
+    @Published public var email: String
     @Published public var isSelf: Bool
     @Published public var retired: Bool
     
@@ -24,6 +25,7 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
     
     @Published public var nameMessage: String = ""
     @Published public var bboNameMessage: String = ""
+    @Published public var emailMessage: String = ""
     @Published public var isSelfMessage: String = ""
     @Published private(set) var saveMessage: String = ""
     @Published private(set) var canSave: Bool = false
@@ -46,6 +48,7 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
                 self.sequence != mo.sequence ||
                 self.name != mo.name ||
                 self.bboName != mo.bboName ||
+                self.email != mo.email ||
                 self.isSelf != mo.isSelf ||
                 self.retired != mo.retired {
                     result = true
@@ -61,6 +64,7 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
         self.sequence = Int.max
         self.name = ""
         self.bboName = ""
+        self.email = ""
         self.isSelf = false
         self.retired = false
         self.setupMappings()
@@ -93,6 +97,14 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
         .assign(to: \.bboNameMessage, on: self)
         .store(in: &cancellableSet)
         
+        $email
+            .receive(on: RunLoop.main)
+            .map { (email) in
+                return (email != "" && !self.isValidEmail(email) ? "Invalid email address" : (self.emailExists(email) ? "This email address already exists on another player. Email address must be unique" : ""))
+            }
+        .assign(to: \.emailMessage, on: self)
+        .store(in: &cancellableSet)
+        
         $isSelf
             .receive(on: RunLoop.main)
             .map { (isSelf) in
@@ -102,10 +114,10 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
         .assign(to: \.isSelfMessage, on: self)
         .store(in: &cancellableSet)
         
-        Publishers.CombineLatest3($nameMessage, $bboNameMessage, $isSelfMessage)
+        Publishers.CombineLatest4($nameMessage, $bboNameMessage, $emailMessage, $isSelfMessage)
             .receive(on: RunLoop.main)
-            .map { (nameMessage, bboNameMessage, isSelfMessage) in
-                return (nameMessage != "" ? nameMessage : (bboNameMessage != "" ? bboNameMessage : isSelfMessage))
+            .map { (nameMessage, bboNameMessage, emailMessage, isSelfMessage) in
+                return (nameMessage != "" ? nameMessage : (bboNameMessage != "" ? bboNameMessage : (emailMessage != "" ? emailMessage : isSelfMessage)))
             }
         .assign(to: \.saveMessage, on: self)
         .store(in: &cancellableSet)
@@ -126,6 +138,7 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
             self.sequence = mo.sequence
             self.name = mo.name
             self.bboName = mo.bboName
+            self.email = mo.email
             self.isSelf = mo.isSelf
             self.retired = mo.retired
         }
@@ -136,6 +149,7 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
         self.sequence = from.sequence
         self.name = from.name
         self.bboName = from.bboName
+        self.email = from.email
         self.isSelf = from.isSelf
         self.retired = from.retired
         self.playerMO = from.playerMO
@@ -145,6 +159,7 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
         playerMO!.playerId = self.playerId
         playerMO!.sequence = self.sequence
         playerMO!.bboName = self.bboName
+        playerMO!.email = self.email
         playerMO!.isSelf = self.isSelf
         playerMO!.retired = self.retired
         playerMO!.name = self.name
@@ -178,8 +193,18 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
         return bboName != "" && !MasterData.shared.players.filter({$0.bboName.lowercased() == bboName.lowercased() && $0.playerId != self.playerId}).isEmpty
     }
     
+    private func emailExists(_ bboName: String) -> Bool {
+        return email != "" && !MasterData.shared.players.filter({$0.email.lowercased() == email.lowercased() && $0.playerId != self.playerId}).isEmpty
+    }
+    
     public var otherIsSelf: Bool {
         return !MasterData.shared.players.filter({$0.isSelf && $0.playerId != self.playerId}).isEmpty
+    }
+    
+    private func isValidEmail(_ email: String) -> Bool {
+        let emailRegEx = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
+        let emailPred = NSPredicate(format:"SELF MATCHES %@", emailRegEx)
+        return emailPred.evaluate(with: email)
     }
     
     public var description: String {

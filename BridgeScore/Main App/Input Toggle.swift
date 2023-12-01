@@ -55,9 +55,9 @@ struct InputToggle : View {
                 Spacer()
             }
             .if(width != nil) { view in
-                view.frame(width: width! + leadingSpace + 16)
+                view.frame(width: width! + (inlineTitle ? inlineTitleWidth + 12 : 0) + (labelWidth != nil ? labelWidth! + 55 : 0) + leadingSpace)
             }
         }
-        .frame(height: self.height + self.topSpace + (title == nil ? 0 : 30))
+        .frame(height: self.height + self.topSpace + (title == nil || inlineTitle ? 0 : 30))
     }
 }

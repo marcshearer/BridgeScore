@@ -361,7 +361,7 @@ class ScorecardInputTextField : UITextField, ScorecardInputTextInput, UITextFiel
             let filtered = newText.filter({validCharacters.contains($0)})
             if filtered != newText {
                 result = false
-            } else if Float(filtered) == nil {
+            } else if filtered != "" && Float(filtered) == nil {
                 result = false
             }
         }

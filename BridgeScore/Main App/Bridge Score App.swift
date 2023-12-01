@@ -96,4 +96,11 @@ class SceneDelegate: NSObject, UIWindowSceneDelegate, ObservableObject {
         self.window = windowScene.keyWindow
     }
     
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        if let url = URLContexts.first?.url,
+           url.scheme == "file" && url.pathExtension == "bsjson",
+           let data = try? Data(contentsOf: url) {
+            let data = String(data: data, encoding: .utf8)
+        }
+    }
 }

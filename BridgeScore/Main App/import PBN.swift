@@ -93,7 +93,73 @@ struct ImportPBNScorecard: View {
             .background(BackgroundBlurView())
         }
     }
+/*
+    var dropZone: some View {
+        VStack(spacing: 0) {
+            Banner(title: Binding.constant("Drop PBN Files"), backImage: Banner.crossImage)
+            HStack {
+                Spacer().frame(width: 50)
+                VStack {
+                    Spacer().frame(height: 50)
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 30, style: .continuous)
+                            .foregroundColor(dropZoneEntered ? Palette.contrastTile.background : Palette.background.background)
+                        HStack {
+                            Spacer().frame(width: 50)
+                            Spacer()
+                            VStack {
+                                Spacer()
+                                Text("Drop PBN (and CSV) Import Files Here").font(bannerFont)
+                                    .multilineTextAlignment(.center)
+                                Spacer()
+                            }
+                            Spacer()
+                            Spacer().frame(width: 50)
+                        }
+                        .overlay(RoundedRectangle(cornerRadius: 30)
+                            .strokeBorder(style: StrokeStyle(lineWidth: 5, dash: [10, 5]))
+                            .foregroundColor(Palette.gridLine))
+                    }
+                    .onDrop(of: uttypes, delegate: ScorecardDropFiles(dropZoneEntered: $dropZoneEntered, droppedFiles: $droppedFiles))
+                    Spacer().frame(height: 50)
+                }
+                Spacer().frame(width: 50)
+            }
+            .onChange(of: droppedFiles.count, initial: false) {
+                if !droppedFiles.isEmpty {
+                    if checkImport() {
+                        let fileData = processDroppedFiles()
+                        let imported = ImportBBO.createImportedScorecardFrom(droppedFiles: fileData, scorecard: scorecard)
+                        if !imported.isEmpty {
+                            importSequence = 0
+                            importedBBOScorecards = imported
+                            selected = droppedFiles.first!.filename
+                        }
+                    }
+                    droppedFiles = []
+                }
+            }
+        }
+    }
     
+    func processDroppedFiles() -> [ImportFileData] {
+        let fileData = decompose(droppedFiles.map{URL(string: $0.filename)!})
+        for (index, file) in fileData.enumerated() {
+            // Add content
+            file.contents = droppedFiles[index].contents
+        }
+        // Now combine pbn content
+        let csvFileData = fileData.filter({$0.fileType?.lowercased() == "pbn"})
+        for file in csvFileData {
+            if let number = file.number, let date = file.date {
+                if let pbnFile = fileData.first(where: {file.count == 2 || ($0.number == number && $0.text == file.text && $0.date == date) && $0.fileType?.lowercased() == "csv"}) {
+                    file.associated = pbnFile.contents
+                }
+            }
+        }
+        return csvFileData
+    }
+ */
     var importingFile: some View {
         VStack(spacing: 0) {
             Banner(title: Binding.constant("Import PBN File"), backImage: Banner.crossImage)

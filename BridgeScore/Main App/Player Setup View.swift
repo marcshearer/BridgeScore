@@ -155,6 +155,10 @@ struct PlayerDetailView : View {
                             
                             Separator()
                             
+                            Input(title: "Email address", field: $selected.email, message: $selected.emailMessage, keyboardType: .emailAddress, autoCapitalize: .none, autoCorrect: false)
+                            
+                            Separator()
+                            
                             if !selected.otherIsSelf {
                                 InputToggle(title: "Is yourself?", field: $selected.isSelf)
                             }

@@ -163,6 +163,7 @@ struct ScorecardInputView: View {
     @State private var importBwScorecard = false
     @State private var importPbnScorecard = false
     @State private var importUsebioScorecard = false
+    @State private var shareScorecard = false
     @State private var showRankings = false
     @State private var disableBanner = false
     @State private var handViewer = false
@@ -182,10 +183,10 @@ struct ScorecardInputView: View {
     var body: some View {
         StandardView("Input", slideInId: id) {
             VStack(spacing: 0) {
-                    // Just to trigger view refresh
+                // Just to trigger view refresh
                 if refreshTableTotals { EmptyView() }
                 
-                    // Banner
+                // Banner
                 Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .both, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: nil, menuId: id, options: bannerOptions(isNotImported: $isNotImported), disabled: $disableBanner)
                     .disabled(disableBanner)
                 GeometryReader { geometry in
@@ -282,6 +283,23 @@ struct ScorecardInputView: View {
                 saveScorecard()
             }
         }
+        .fullScreenCover(isPresented: $shareScorecard, onDismiss: {
+        }) {
+            let backgroundView = UIView(frame: uiView.superview!.superview!.frame)
+            let width = min(704, backgroundView.frame.width) // Allow for safe area
+            let height = min(520, (backgroundView.frame.height))
+            let frame = CGRect(x: (backgroundView.frame.width - width) / 2,
+                               y: ((backgroundView.frame.height - height) / 2),
+                               width: width,
+                               height: height)
+            ZStack {
+                Color.black.opacity(0.4)
+                ShareScorecardView(scorecard: scorecard, frame: frame, initialYOffset: backgroundView.frame.height + 100)
+                Spacer()
+            }
+            .background(BackgroundBlurView(opacity: 0.0))
+            .edgesIgnoringSafeArea(.all)
+        }
         .sheet(isPresented: $handViewer, onDismiss: {
             UndoManager.clearActions()
             disableBanner = false
@@ -360,6 +378,8 @@ struct ScorecardInputView: View {
             bannerOptions += [
                 BannerOption(image: AnyView(Image(systemName: hideRejected ? "plus" : "minus")), text: hideRejected ? "Show rejected" : "Hide rejected", likeBack: true, menu: true, action: { hideRejected.toggle() })]
         }
+        bannerOptions += [
+            BannerOption(image: AnyView(Image(systemName: "square.and.arrow.up")), text: "Share scorecard", likeBack: true, menu: true, action: { shareScorecard = true })]
         if isNotImported.wrappedValue || (scorecard.resetNumbers && scorecard.importNext <= scorecard.tables) {
             let importMatch = (!isNotImported.wrappedValue ? scorecard.importSource : nil)
             if importMatch == nil || importMatch == .pbn {
@@ -2184,7 +2204,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         textClearWidth.constant = 34
         textClearPadding.forEach { (constraint) in constraint.setIndent(in: self, constant: inputControlInset * 2) }
         firstResponderLabel.textAlignment = (centered ? .center : .left)
-        set(tap: .label)
+        set(tap: .textInput)
     }
     
     private func textInputStringLabelTapped() {
@@ -2866,7 +2886,6 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     @discardableResult func getFocus(becomeFirstResponder: Bool = true) -> Bool {
         var result = false
         if isEnabled {
-            print("Get \(description)")
             let currentFocusCell = scorecardDelegate?.scorecardFocusCell
             if currentFocusCell != self {
                 currentFocusCell?.loseFocus()
@@ -2888,7 +2907,6 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     
     @discardableResult func loseFocus() -> Bool {
         // Remove focus halo
-        print("Lose \(description)")
         focusLineViews.forEach { line in line.isHidden = true }
         
         // Carry out any control specific pre-amble
