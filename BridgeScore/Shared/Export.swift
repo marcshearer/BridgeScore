@@ -9,7 +9,7 @@ import CoreData
 
 class Export {
     
-    static public func export(scorecard: ScorecardViewModel, playerName: String, includeComment: Bool, includeResponsible: Bool) -> String? {
+    static public func export(scorecard: ScorecardViewModel, playerName: String, includeComment: Bool, includeResponsible: Bool, rotateTo: SeatPlayer?) -> String? {
         var exportData: String? = ""
         exportData! += "{\"parameters\":{"
         exportData! += "\"scorerName\":\"\(playerName)\""
@@ -30,7 +30,7 @@ class Export {
         exportData! += "\n{\"data\":["
         for entity in MyApp.databaseTables {
             if entity.attributesByName.contains(where: {$0.key == "scorecardId"}) {
-                if let data = Export.exportTable(scorecard: scorecard, entity: entity, includeComment: includeComment, includeResponsible: includeResponsible) {
+                if let data = Export.exportTable(scorecard: scorecard, entity: entity, includeComment: includeComment, includeResponsible: includeResponsible, rotateTo: rotateTo) {
                     exportData! += data
                 } else {
                     exportData = nil
@@ -44,7 +44,7 @@ class Export {
         return exportData
     }
     
-    static private func exportTable(scorecard: ScorecardViewModel, entity: NSEntityDescription, includeComment: Bool, includeResponsible: Bool) -> String? {
+    static private func exportTable(scorecard: ScorecardViewModel, entity: NSEntityDescription, includeComment: Bool, includeResponsible: Bool, rotateTo: SeatPlayer?) -> String? {
         var tableData: String? = ""
         let recordType = entity.name!
         let predicate = NSPredicate(format: "scorecardId = %@", scorecard.scorecardId as NSUUID)
@@ -53,7 +53,7 @@ class Export {
             tableData! += "\n{\"\(recordType)s\":["
             for record in recordList {
                 tableData! += "\n{\"\(recordType)\":"
-                if let data = Export.exportRecord(scorecard: scorecard, record: record, includeComment: includeComment, includeResponsible: includeResponsible) {
+                if let data = Export.exportRecord(scorecard: scorecard, record: record, includeComment: includeComment, includeResponsible: includeResponsible, rotateTo: rotateTo) {
                     tableData! += data
                 } else {
                     tableData = nil
@@ -68,7 +68,7 @@ class Export {
         return tableData
     }
     
-    static private func exportRecord(scorecard: ScorecardViewModel, record: NSManagedObject, includeComment: Bool, includeResponsible: Bool) -> String? {
+    static private func exportRecord(scorecard: ScorecardViewModel, record: NSManagedObject, includeComment: Bool, includeResponsible: Bool, rotateTo: SeatPlayer?) -> String? {
         var recordData: String? = ""
         var dictionary: [String : Any] = [:]
         for (key, _) in record.entity.attributesByName {
@@ -130,7 +130,7 @@ class Export {
                         switch key.lowercased() {
                         case "responsible16":
                             if includeResponsible {
-                                dictionary[key] = value!
+                                dictionary[key] = rotated(responsible: value as! Int16)
                             }
                         default:
                             dictionary[key] = value!
@@ -149,6 +149,15 @@ class Export {
             
         }
         return recordData
+        
+        func rotated(responsible: Int16) -> Int16? {
+            var result = Responsible(rawValue: Int(responsible))!
+            if rotateTo == .partner {
+                result = result.partnerInverse
+            } else if (rotateTo?.isOpponent ?? false) {
+                result = result.teamInverse
+            }
+            return Int16(result.rawValue)
+        }
     }
-    
 }

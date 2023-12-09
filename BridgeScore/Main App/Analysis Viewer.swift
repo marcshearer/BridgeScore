@@ -1172,7 +1172,7 @@ struct AnalysisBiddingOptions : View {
                     LazyVGrid(columns: headerColumns, spacing: 0) {
                         GridRow {
                             HStack {
-                                PickerInputSimple(title: "Show", field: $formatInt, values: AnalysisOptionFormat.allCases.map{$0.string}) { newValue in
+                                PickerInputSimple(title: "Show", field: $formatInt, values: AnalysisOptionFormat.allCases.map{$0.string}, width: 90, titleWidth: 40) { newValue in
                                     UserDefault.analysisOptionFormat.set(newValue)
                                 }.frame(width: 108)
                                 Spacer()

@@ -507,6 +507,31 @@ public enum Responsible: Int, EnumPickerType, Identifiable {
         let players = Scorecard.current.scorecard?.type.players ?? 2
         return allCases.filter({$0 != .blank && (players == 4 || ($0 != .teamPlus && $0 != .teamMinus)) && (players > 1 || ($0 != .partnerMinus && $0 != .partnerPlus))})
     }
+    
+    public var partnerInverse : Responsible {
+        switch self {
+        case .partnerPlus, .partnerMinus, .scorerPlus, .scorerMinus:
+            Responsible(rawValue: -rawValue)!
+        default:
+            self
+        }
+    }
+    
+    public var teamInverse: Responsible {
+        switch self {
+        case .partnerPlus, .scorerPlus:
+            .teamPlus
+        case .partnerMinus, .scorerMinus:
+            .teamMinus
+        case .teamPlus:
+            .scorerPlus
+        case .teamMinus:
+            .scorerMinus
+        default:
+            self
+        }
+    }
+    
 }
 
 public enum Pair: Int, CaseIterable, Identifiable, Equatable {
@@ -594,6 +619,10 @@ public enum SeatPlayer: Int {
     case partner = 2
     case lhOpponent = 1
     case rhOpponent = 3
+    
+    var isOpponent: Bool {
+        self == .lhOpponent || self == .rhOpponent
+    }
 }
 
 public enum Seat: Int, EnumPickerType, ContractEnumType, Identifiable {
@@ -630,6 +659,10 @@ public enum Seat: Int, EnumPickerType, ContractEnumType, Identifiable {
     
     public func seatPlayer(_ seatPlayer: SeatPlayer) -> Seat {
         return self.offset(by: seatPlayer.rawValue)
+    }
+    
+    public func seatPlayer(_ seat: Seat) -> SeatPlayer {
+        return SeatPlayer(rawValue: offset(to: seat))!
     }
     
     public var string: String {

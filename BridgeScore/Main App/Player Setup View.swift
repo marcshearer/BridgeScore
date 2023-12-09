@@ -160,7 +160,7 @@ struct PlayerDetailView : View {
                             Separator()
                             
                             if !selected.otherIsSelf {
-                                InputToggle(title: "Is yourself?", field: $selected.isSelf)
+                                InputToggle(title: "Is yourself?", field: $selected.isSelf, disabled: Binding.constant(false))
                             }
                             
                             if selected.retired {

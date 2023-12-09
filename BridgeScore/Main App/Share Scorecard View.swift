@@ -26,6 +26,8 @@ struct ShareScorecardView: View {
     @State var frame: CGRect
     @State var dismissView: Bool = false
     @State var playerName: String?
+    @State var responsibleDisabled: Bool = true
+    @State var firstTime: Bool = true
     var playerNames: [String] = []
     
     init(scorecard: ScorecardViewModel, frame: CGRect, initialYOffset: CGFloat) {
@@ -55,7 +57,7 @@ struct ShareScorecardView: View {
                             HStack {
                                 Spacer().frame(width: 14)
                                 VStack {
-                                    LeadingText("Player").frame(width: 200)
+                                    LeadingText("Viewed as").frame(width: 200)
                                     Spacer()
                                 }
                                 .frame(height: 150)
@@ -82,12 +84,14 @@ struct ShareScorecardView: View {
                                                 .contentShape(Rectangle())
                                                 .onTapGesture {
                                                     self.playerName = playerName
+                                                    responsibleDisabled = (rotateTo == nil)
                                                 }
                                             }
                                         }
                                     }
                                     .onChange(of: playerName, initial: false) {
-                                        proxy.scrollTo(playerName, anchor: .center)
+                                        proxy.scrollTo(playerName, anchor: (firstTime ? .center : nil))
+                                        firstTime = false
                                     }
                                     .frame(width: 200, height: 150)
                                     .overlay(
@@ -104,12 +108,12 @@ struct ShareScorecardView: View {
                         VStack {
                             HStack {
                                 Spacer().frame(width: 14)
-                                InputToggle(title: "Include comments", field: $includeComment, topSpace: 30, width: 40, inlineTitleWidth: 200)
+                                InputToggle(title: "Include comments", field: $includeComment, disabled: Binding.constant(false), topSpace: 30, width: 40, inlineTitleWidth: 200)
                                 Spacer()
                             }
                             HStack {
                                 Spacer().frame(width: 14)
-                                InputToggle(title: "Include responsible", field: $includeResponsible, topSpace: 10, width: 40, inlineTitleWidth: 200)
+                                InputToggle(title: "Include responsible", field: $includeResponsible, disabled: $responsibleDisabled, topSpace: 10, width: 40, inlineTitleWidth: 200)
                                 Spacer()
                             }
                             Spacer().frame(height: 20)
@@ -118,7 +122,7 @@ struct ShareScorecardView: View {
                     VStack {
                         Spacer()
                         Button {
-                            if let playerName = playerName, let json = Export.export(scorecard: scorecard, playerName: playerName, includeComment: includeComment, includeResponsible: includeResponsible), let data = json.data(using: .utf8) {
+                            if let playerName = playerName, let json = Export.export(scorecard: scorecard, playerName: playerName, includeComment: includeComment, includeResponsible: includeResponsible, rotateTo: rotateTo), let data = json.data(using: .utf8) {
                                 attachmentData = data
                                 showMail = true
                             } else {
@@ -157,7 +161,7 @@ struct ShareScorecardView: View {
             .background(Palette.alternate.background)
             .cornerRadius(10)
             .onAppear {
-                players = MasterData.shared.players.filter({(!$0.retired || $0 == scorecard.partner!) && $0.email != "" && !$0.isSelf})
+                players = MasterData.shared.players.filter({(!$0.retired || $0 == scorecard.partner!) && $0.email != ""})
                 playerIndex = players.firstIndex(where: {$0.playerId == scorecard.partner?.playerId}) ?? 0
                 updatePlayerName()
                 withAnimation(.linear(duration: 0.25).delay(0.1)) {
@@ -217,8 +221,32 @@ struct ShareScorecardView: View {
         if let toPlayer = toPlayer {
             if let playerName = playerNames.first(where: {$0.folding(options: .diacriticInsensitive, locale: nil).lowercased() == toPlayer.name.folding(options: .diacriticInsensitive, locale: nil).lowercased()}) {
                 self.playerName = playerName
+                responsibleDisabled = (rotateTo == nil)
             }
         }
+    }
+    
+    var rotateTo: SeatPlayer? {
+        var result: SeatPlayer? = nil
+        if let playerName = playerName {
+            let bboName = MasterData.shared.bboNames.first(where: {$0.name.lowercased() == playerName.lowercased()})?.bboName
+            if let ranking = Scorecard.current.rankings(player: (bboName: bboName ?? "", name: playerName)).first {
+                var playerSeat: Seat?
+                var mySeat: Seat?
+                for seat in Seat.validCases {
+                    if ranking.players[seat] == playerName || ranking.players[seat] == bboName {
+                        playerSeat = seat
+                    }
+                    if ranking.players[seat] == MasterData.shared.scorer?.name || ranking.players[seat] == MasterData.shared.scorer?.bboName {
+                        mySeat = seat
+                    }
+                }
+                if let playerSeat = playerSeat, let mySeat = mySeat {
+                    result = SeatPlayer(rawValue: mySeat.offset(to: playerSeat))
+                }
+            }
+        }
+        return result
     }
 }
 

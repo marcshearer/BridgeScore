@@ -13,6 +13,7 @@ struct InputToggle : View {
     var title: String?
     var text: String?
     @Binding var field: Bool
+    @Binding var disabled: Bool
     var message: Binding<String>?
     var messageOffset: CGFloat = 0.0
     var topSpace: CGFloat = 0
@@ -37,6 +38,7 @@ struct InputToggle : View {
                     HStack {
                         Spacer().frame(width: 8)
                         Text(title ?? "")
+                            .foregroundColor(disabled ? Palette.background.faintText : Palette.background.text)
                         Spacer()
                     }
                     .frame(width: inlineTitleWidth)
@@ -59,5 +61,6 @@ struct InputToggle : View {
             }
         }
         .frame(height: self.height + self.topSpace + (title == nil || inlineTitle ? 0 : 30))
+        .disabled(disabled)
     }
 }

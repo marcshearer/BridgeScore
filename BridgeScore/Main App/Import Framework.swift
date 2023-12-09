@@ -368,7 +368,7 @@ class ImportedScorecard: NSObject {
         }
         for seat in validSeats {
             if let line = lines.first(where: {$0.ranking[seat] == myNumber}) {
-                if myRanking?.players[seat]?.lowercased() == myName{
+                if myRanking?.players[seat]?.lowercased() == myName {
                     result = line
                     break
                 }
@@ -592,6 +592,15 @@ class ImportedScorecard: NSObject {
         // Find self and partner
         if !identifySelf {
             myRanking = rankings.first(where: {$0.players.contains(where: {$0.value.lowercased() == myName})})
+            if myRanking == nil {
+                if let myBboName = MasterData.shared.scorer?.bboName.lowercased() {
+                    myRanking = rankings.first(where: {$0.players.contains(where: {$0.value.lowercased() == myBboName})})
+                    if myRanking != nil {
+                        // Results from BridgeWebs but bbo name not translated
+                        myName = myBboName
+                    }
+                }
+            }
             if let myRanking = myRanking {
                 myRankingSeat = myRanking.players.first(where: {$0.value.lowercased() == myName})?.key
                 if format != .individual {
