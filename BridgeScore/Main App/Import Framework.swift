@@ -799,6 +799,7 @@ class ImportedTraveller: Equatable {
     public var board: Int?
     public var ranking: [Seat: Int] = [:]
     public var section: [Seat: Int] = [:]
+    public var direction: Pair?
     public var contract: Contract?
     public var declarer: Seat?
     public var made: Int?

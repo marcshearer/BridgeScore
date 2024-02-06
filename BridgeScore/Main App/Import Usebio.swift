@@ -8,10 +8,11 @@
 import CoreData
 import SwiftUI
 import CoreMedia
+import UniformTypeIdentifiers
 
 class ImportUsebio {
     
-    public class func importScorecard(fileURL: URL, scorecard: ScorecardViewModel, completion: @escaping (ImportedUsebioScorecard?, String?)->()) {
+    public class func createImportScorecardFrom(fileURL: URL, scorecard: ScorecardViewModel, completion: @escaping (ImportedUsebioScorecard?, String?)->()) {
         
         if let data = try? Data(contentsOf: fileURL) {
             let importedScorecard = ImportedUsebioScorecard(data: data, scorecard: scorecard)
@@ -24,6 +25,30 @@ class ImportUsebio {
             }
         } else {
             completion(nil, nil)
+        }
+    }
+    
+    public class func createImportedScorecardFrom(droppedFiles fileData: ImportFileData, scorecard: ScorecardViewModel, completion: @escaping (ImportedUsebioScorecard?, String?)->()) -> [ImportedUsebioScorecard] {
+        // Version for drop of files
+        if let data = fileData.contents?.data(using: .utf8) {
+            let importedScorecard = ImportedUsebioScorecard(data: data, scorecard: scorecard)
+            importedScorecard.parse { (error) in
+                if error == nil {
+                    completion(importedScorecard, nil)
+                } else {
+                    completion(nil, error)
+                }
+            }
+        } else {
+            completion(nil, nil)
+        }
+        
+        if let contents = fileData.contents {
+            let imported = ImportedUsebioScorecard(data: contents.data(using: .utf8)!, scorecard: scorecard)
+            imported.date = scorecard.date
+            return [imported]
+        } else {
+            return []
         }
     }
     
@@ -47,28 +72,17 @@ struct ImportUsebioScorecard: View {
     @State private var importedUsebioScorecard: ImportedUsebioScorecard!
     @State private var identifySelf = false
     @State private var importing: Bool = false
+    private let uttypes = [UTType.data]
+    @State private var dropZoneEntered = false
+    @State private var droppedFiles: [(filename: String, contents: String)] = []
     
     var body: some View {
         StandardView("Detail") {
             if selected == nil {
-                ImportedScorecard.fileList(scorecard: scorecard, suffix: "xml", selected: selected, decompose: decompose) { selected in
-                    if MasterData.shared.scorer != nil {
-                        ImportUsebio.importScorecard(fileURL: selected, scorecard: scorecard) { (imported, error) in
-                            if let imported = imported {
-                                self.selected = selected
-                                importedUsebioScorecard = imported
-                                identifySelf = imported.identifySelf
-                            } else {
-                                MessageBox.shared.show(error ?? "Unable to import scorecard", okAction: {
-                                    presentationMode.wrappedValue.dismiss()
-                                })
-                            }
-                        }
-                    } else {
-                        MessageBox.shared.show("In order to import a scorecard a player must be defined as yourself", okAction: {
-                            presentationMode.wrappedValue.dismiss()
-                        })
-                    }
+                if MyApp.target == .macOS {
+                    dropZone
+                } else {
+                    fileList
                 }
             } else if !importing {
                 let importedScorecard = Binding.constant(importedUsebioScorecard as ImportedScorecard)
@@ -79,6 +93,83 @@ struct ImportUsebioScorecard: View {
                 })
             } else {
                 importingFile
+            }
+        }
+    }
+    
+    var dropZone: some View {
+        VStack(spacing: 0) {
+            Banner(title: Binding.constant("Drop Usebio File"), backImage: Banner.crossImage)
+            HStack {
+                Spacer().frame(width: 50)
+                VStack {
+                    Spacer().frame(height: 50)
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 30, style: .continuous)
+                            .foregroundColor(dropZoneEntered ? Palette.contrastTile.background : Palette.background.background)
+                        HStack {
+                            Spacer().frame(width: 50)
+                            Spacer()
+                            VStack {
+                                Spacer()
+                                Text("Drop Usebio XML Import File Here").font(bannerFont)
+                                    .multilineTextAlignment(.center)
+                                Spacer()
+                            }
+                            Spacer()
+                            Spacer().frame(width: 50)
+                        }
+                        .overlay(RoundedRectangle(cornerRadius: 30)
+                            .strokeBorder(style: StrokeStyle(lineWidth: 5, dash: [10, 5]))
+                            .foregroundColor(Palette.gridLine))
+                    }
+                    .onDrop(of: uttypes, delegate: ScorecardDropFiles(dropZoneEntered: $dropZoneEntered, droppedFiles: $droppedFiles))
+                    Spacer().frame(height: 50)
+                }
+                Spacer().frame(width: 50)
+            }
+            .onChange(of: droppedFiles.count, initial: false) {
+                if !droppedFiles.isEmpty {
+                    let fileData = processDroppedFile(droppedFile: droppedFiles.first!)
+                    let imported = ImportUsebio.createImportedScorecardFrom(droppedFiles: fileData, scorecard: scorecard) { (imported, error) in
+                        if let imported = imported {
+                            self.selected = URL(string: droppedFiles.first!.filename)
+                            importedUsebioScorecard = imported
+                            identifySelf = imported.identifySelf
+                        } else {
+                            MessageBox.shared.show(error ?? "Unable to import scorecard", okAction: {
+                                presentationMode.wrappedValue.dismiss()
+                            })
+                        }
+                        droppedFiles = []
+                    }
+                }
+            }
+        }
+    }
+    
+    func processDroppedFile(droppedFile: (filename: String, contents: String)) -> ImportFileData {
+        return ImportFileData(droppedFile.filename, nil, "", nil, nil, contents: droppedFile.contents)
+    }
+    
+    var fileList: some View {
+        ImportedScorecard.fileList(scorecard: scorecard, suffix: "xml", selected: selected, decompose: decompose) { selected in
+            if MasterData.shared.scorer != nil {
+                ImportUsebio.createImportScorecardFrom(fileURL: selected, scorecard: scorecard) { (imported, error) in
+                    if let imported = imported {
+                        self.selected = selected
+                        importedUsebioScorecard = imported
+                        identifySelf = imported.identifySelf
+                    } else {
+                        MessageBox.shared.show(error ?? "Unable to import scorecard", okAction: {
+                            presentationMode.wrappedValue.dismiss()
+                        })
+                    }
+                }
+            } else {
+                MessageBox.shared.show("In order to import a scorecard a player must be defined as yourself", okAction: {
+                    presentationMode.wrappedValue.dismiss()
+                })
             }
         }
     }
@@ -430,15 +521,19 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
                 currentMatch.table = Int(value)!
             }))
         case "TEAM", "NS_PAIR_NUMBER":
-            current = current?.add(child: Node(name: name, completion: { [self] (value) in
-                currentMatch.ranking[.north] = Int(value)
-                currentMatch.ranking[.south] = Int(value)
-            }))
+            if currentMatch.ranking[.north] == nil {
+                current = current?.add(child: Node(name: name, completion: { [self] (value) in
+                    currentMatch.ranking[.north] = Int(value)
+                    currentMatch.ranking[.south] = Int(value)
+                }))
+            }
         case "OPPOSING_TEAM", "EW_PAIR_NUMBER":
-            current = current?.add(child: Node(name: name, completion: { [self] (value) in
-                currentMatch.ranking[.east] = Int(value)
-                currentMatch.ranking[.west] = Int(value)
-            }))
+            if currentMatch.ranking[.east] == nil {
+                current = current?.add(child: Node(name: name, completion: { [self] (value) in
+                    currentMatch.ranking[.east] = Int(value)
+                    currentMatch.ranking[.west] = Int(value)
+                }))
+            }
         case "BOARD":
             currentBoard = ImportedUsebioBoard()
             current = current?.add(child: Node(name: name, process: processBoard))
@@ -488,18 +583,24 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
     private func processTravellerLine(name: String, attributes: [String : String]) {
         let traveller = currentBoard.travellers.last!
         switch name {
+        case "DIRECTION":
+            current = current?.add(child: Node(name: name, completion: { (value) in
+                traveller.direction = value.uppercased() == "NS" ? .ns : .ew
+            }))
         case "NS_PAIR_NUMBER":
             current = current?.add(child: Node(name: name, completion: { [self] (value) in
+                let invert = (traveller.direction == .ew)
                 for seat in Pair.ns.seats {
-                    traveller.ranking[seat] = currentMatch.ranking[seat]
-                    traveller.section[seat] = currentMatch.section[seat] ?? 1
+                    traveller.ranking[seat] = currentMatch.ranking[invert ? seat.equivalent : seat]
+                    traveller.section[seat] = currentMatch.section[invert ? seat.equivalent : seat] ?? 1
                 }
             }))
         case "EW_PAIR_NUMBER":
             current = current?.add(child: Node(name: name, completion: { [self] (value) in
+                let invert = (traveller.direction == .ew)
                 for seat in Pair.ew.seats {
-                    traveller.ranking[seat] = currentMatch.ranking[seat]
-                    traveller.section[seat] = currentMatch.section[seat] ?? 1
+                    traveller.ranking[seat] = currentMatch.ranking[invert ? seat.equivalent : seat]
+                    traveller.section[seat] = currentMatch.section[invert ? seat.equivalent : seat] ?? 1
                 }
             }))
         case "CONTRACT":
