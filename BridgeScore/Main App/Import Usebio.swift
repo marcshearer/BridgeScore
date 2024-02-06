@@ -39,15 +39,9 @@ class ImportUsebio {
                     completion(nil, error)
                 }
             }
+            return [importedScorecard]
         } else {
             completion(nil, nil)
-        }
-        
-        if let contents = fileData.contents {
-            let imported = ImportedUsebioScorecard(data: contents.data(using: .utf8)!, scorecard: scorecard)
-            imported.date = scorecard.date
-            return [imported]
-        } else {
             return []
         }
     }
@@ -359,7 +353,7 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
             }))
         case "BOARDS_PLAYED":
             current = current?.add(child: Node(name: name, completion: { [self] (value) in
-                boardCount = Int(value)
+                // boardCount = Int(value) // Presupposes that all play all boards
             }))
         case "BOARDS_PER_ROUND":
             current = current?.add(child: Node(name: name, completion: { [self] (value) in
