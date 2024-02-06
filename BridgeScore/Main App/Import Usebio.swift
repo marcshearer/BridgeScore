@@ -352,7 +352,7 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
                 }
             }))
         case "BOARDS_PLAYED":
-            current = current?.add(child: Node(name: name, completion: { [self] (value) in
+            current = current?.add(child: Node(name: name, completion: { (value) in
                 // boardCount = Int(value) // Presupposes that all play all boards
             }))
         case "BOARDS_PER_ROUND":
