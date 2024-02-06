@@ -130,7 +130,9 @@ struct AnalysisViewer: View {
                                     AnalysisWrapper(label: "Summary", height: 88, teamsHeight: 149, stopEdit: $stopEdit) {
                                         AnalysisSummary(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData)
                                     }
-                                    AnalysisWrapper(label: "Tricks Made", height: 130, stopEdit: $stopEdit) {
+                                    // Grow up to size for 5 entries with no scroll
+                                    let height = 130 + min(50, max(0, (frame.height - 794) / 3))
+                                    AnalysisWrapper(label: "Tricks Made", height: height, stopEdit: $stopEdit) {
                                         AnalysisCombinationTricks(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData)
                                     }
                                     AnalysisWrapper(label: "Suggest", height: 70, teamsHeight: 90, stopEdit: $stopEdit) {
@@ -1172,9 +1174,9 @@ struct AnalysisBiddingOptions : View {
                     LazyVGrid(columns: headerColumns, spacing: 0) {
                         GridRow {
                             HStack {
-                                PickerInputSimple(title: "Show", field: $formatInt, values: AnalysisOptionFormat.allCases.map{$0.string}, width: 90, titleWidth: 40) { newValue in
+                                PickerInputSimple(title: "Show", field: $formatInt, values: AnalysisOptionFormat.allCases.map{$0.string}, topSpace: 5, width: 90, height: 25, titleWidth: 40) { newValue in
                                     UserDefault.analysisOptionFormat.set(newValue)
-                                }.frame(width: 108)
+                                }.frame(width: 180)
                                 Spacer()
                             }
                             ForEach(allMethods, id: \.self) { method in
@@ -1469,7 +1471,7 @@ struct AnalysisTravellerView: View {
         let columns = [GridItem(.flexible(minimum: headToHead ? 116 : 90), spacing: 0),
                        GridItem(.fixed(40), spacing: 0),
                        GridItem(.fixed(60), spacing: 0),
-                       GridItem(.fixed(54), spacing: 0),
+                       GridItem(.fixed(60), spacing: 0),
                        GridItem(.fixed(headToHead ? 80 : 60), spacing: 0),
                        GridItem(.flexible(minimum: 70), spacing: 0)]
         let summaryColumns = [GridItem(.fixed(56), spacing: 0), 

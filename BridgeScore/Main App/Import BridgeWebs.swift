@@ -317,6 +317,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         case row
         case type
         case hand
+        case session
         case board
         case vulnerability
         case dealer
@@ -331,6 +332,8 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
     private var element = Element.unknown
     private var parser: XMLParser!
     private let replacingSingleQuote = "@@replacingSingleQuote@@"
+    private var session: Int?
+    private var nextBoard: [Int:Int] = [:] // Session
     private var boardNumber: Int!
     private var tag: String?
 
@@ -521,7 +524,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 break
             }
         }
-        importedTraveller.board = boardNumber
+        importedTraveller.board = boards[boardNumber]?.boardNumber
         if travellers[boardNumber] == nil {
             travellers[boardNumber] = []
         }
@@ -593,15 +596,16 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         number = Int(id)
         var components = id.components(separatedBy: ":")
         if components.count == 1 {
-            if number == nil && id.length >= 2 && "ANSBEW".contains(id.right(1)) {
-                    // Pair is in format 1A, 2B etc
+            // Note that have seen up to pairs 1E and 1F but might go further - not sure why it does this
+            if number == nil && id.length >= 2 && "ABCDEFGHIJKLMNOPQRSTUVWXYZ".contains(id.right(1).uppercased()) {
+                // Pair is in format 1A, 2B etc
                 components[0] = id.left(id.length - 1)
                 components.append(id.right(1))
             }
         }
         number = Int(components[0])
         if components.count >= 2 {
-            way = ("ANS".contains(components[1]) ? .ns : .ew)
+            way = ("ACEGIKMOQSUWY".contains(components[1]) ? .ns : .ew)
         }
         return (number, way)
     }
@@ -631,6 +635,8 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
             element = .type
         case "hand":
             element = .hand
+        case "session":
+            element = .session
         case "bd":
             element = .board
         case "dlr":
@@ -658,13 +664,25 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 dealer = nil
                 vulnerability = nil
             }
+        case .session:
+            if let number = Int(string) {
+                session = number
+            }
         case .board:
             switch zone {
             case .travellers:
                 if let number = Int(string) {
-                    boardNumber = number
+                    if let session = session {
+                        if let next = nextBoard[session] {
+                            nextBoard[session] = next + 1
+                        } else {
+                            nextBoard[session] = 1
+                        }
+                    } else {
+                        boardNumber = number
+                    }
                     if boards[boardNumber] == nil {
-                        boards[boardNumber] = ImportedBoard(boardNumber: boardNumber)
+                        boards[boardNumber] = ImportedBoard(boardNumber: number)
                     }
                 }
             default:

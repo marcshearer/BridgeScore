@@ -617,7 +617,12 @@ class ImportedScorecard: NSObject {
         
         // Check scoring type
         if type != scorecard?.type.boardScoreType || format.players != scorecard?.type.players {
-            error = "Scoring type in imported scorecard must be consistent with current scorecard"
+            if type == scorecard?.type.boardScoreType && scorecard?.type.players == 1 {
+                // Just force players to individual
+                format = .individual
+            } else {
+                error = "Scoring type in imported scorecard must be consistent with current scorecard"
+            }
         }
         
         var boards: Int

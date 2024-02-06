@@ -596,7 +596,7 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
             label.minimumScaleFactor = 0.5
         case .contract:
             let contract = traveller.contract
-            label.attributedText = NSAttributedString("\(contract.level.short) ") + NSAttributedString(contract.suit.string, color: UIColor(contract.suit.color)) + NSAttributedString(" \(contract.double.bold)")
+            label.attributedText = contract.attributedString
         case .declarer:
             label.text = traveller.declarer.short
         case .lead:

@@ -1018,6 +1018,8 @@ enum AnalysisAssessmentMethod : Int, CaseIterable, Hashable {
             return "Med"
         case .mode:
             return "Mod"
+        case .other:
+            return "Oth"
         default:
             return "\(self)".capitalized
         }

@@ -320,8 +320,8 @@ struct ScorecardInputView: View {
                     ZStack{
                         Color.black.opacity(0.4)
                         let backgroundView = UIView(frame: uiView.superview!.superview!.frame)
-                        let width = min(1134, backgroundView.frame.width) // Allow for safe area
-                        let height = min(794, (backgroundView.frame.height))
+                        let width = min(1400, backgroundView.frame.width) // Allow for safe area
+                        let height = min(1024, (backgroundView.frame.height))
                         let frame = CGRect(x: (backgroundView.frame.width - width) / 2,
                                            y: ((backgroundView.frame.height - height) / 2),
                                            width: width,

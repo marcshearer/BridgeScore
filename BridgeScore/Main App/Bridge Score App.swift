@@ -41,7 +41,7 @@ struct MyScene: Scene {
                     #if targetEnvironment(macCatalyst)
                         // prevent window in macOS from being resized down
                         UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.forEach { windowScene in
-                            windowScene.sizeRestrictions?.minimumSize = CGSize(width: 1150, height: 880)
+                            windowScene.sizeRestrictions?.minimumSize = CGSize(width: 1200, height: 880)
                             windowScene.sizeRestrictions?.allowsFullScreen = false
                         }
                     #endif
