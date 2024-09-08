@@ -89,15 +89,16 @@ enum ColumnType: Int, Codable {
     case made = 7
     case points = 8
     case score = 9
-    case comment = 10
-    case responsible = 11
-    case vulnerable = 12
-    case dealer = 13
-    case teamTable = 14
-    case analysis1 = 15
-    case analysis2 = 16
-    case commentAvailable = 17
-    case combined = 18
+    case xImps = 10
+    case comment = 11
+    case responsible = 12
+    case vulnerable = 13
+    case dealer = 14
+    case teamTable = 15
+    case analysis1 = 16
+    case analysis2 = 17
+    case commentAvailable = 18
+    case combined = 19
 }
 
 // Controls that need tap gesture
@@ -767,6 +768,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                     ScorecardColumn(type: .combined, heading: "Contract", size: .fixed([(teams ? 100 : 120)]), phoneSize: .fixed([90])),
                     ScorecardColumn(type: .points, heading: "Points", size: .fixed([(teams ? 70 : 90)]), omit: phone),
                     ScorecardColumn(type: .score, heading: "Score", size: .fixed([(teams ? 70 : 90)]), phoneSize: .fixed([70])),
+                    ScorecardColumn(type: .xImps, heading: "X Imps", size: .fixed([(teams ? 70 : 90)]), omit: phone || !teams || (Scorecard.current.travellerList.count / scorecard.boards) <= 2),
                     ScorecardColumn(type: .responsible, heading: "Resp", size: .fixed([70]), omit: phone)]
                 boardAnalysisCommentColumns = boardColumns
                 
@@ -2085,6 +2087,15 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             textControl?.isUserInteractionEnabled = isEnabled
             firstResponderLabel.isUserInteractionEnabled = true
             set(tap: .textInput)
+        case .xImps:
+            label.isHidden = false
+            var xImps: Float?
+            if let (_, traveller, seat) = Scorecard.getBoardTraveller(boardNumber: board.board, equivalentSeat: false) {
+                xImps = (seat.pair == .ns ? 1 : -1) * traveller.nsXImps
+            }
+            label.text = (board.score == nil || xImps == nil ? "" : "\(xImps!.toString(places: 2))")
+            label.textColor = UIColor((xImps ?? 0) < 0 ? Palette.background.strongText : Palette.background.themeText)
+            set(tap: .label)
         case .points:
             analysisSplitPoints(isEnabled: isEnabled)
         case .comment:
@@ -2670,7 +2681,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             switch column {
             case .versus:
                 versusTapped(self)
-            case .score:
+            case .score, .xImps:
                 if Scorecard.current.isImported && board?.score != nil {
                     scoreTapped(self)
                 } else {

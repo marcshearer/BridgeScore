@@ -543,7 +543,7 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
             label.text = (isLandscape ? (sitting.pair.short + "\n") : "") + scorecard.type.boardScoreType.string
             label.numberOfLines = (isLandscape ? 2 : 1)
         case .xImps:
-            label.text = (isLandscape ? (sitting.pair.short + "\n") : "") + "\nXImps"
+            label.text = (isLandscape ? (sitting.pair.short + "\n") : "") + "XImps"
             label.numberOfLines = (isLandscape ? 2 : 1)
         case .points:
             label.text = sitting.pair.short
