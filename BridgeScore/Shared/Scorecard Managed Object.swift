@@ -20,6 +20,7 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var locationId: UUID!
     @NSManaged public var desc: String
     @NSManaged public var comment: String
+    @NSManaged public var scorerId: UUID!
     @NSManaged public var partnerId: UUID!
     @NSManaged public var boards16: Int16
     @NSManaged public var boardsTable16: Int16

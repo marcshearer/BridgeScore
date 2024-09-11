@@ -18,6 +18,7 @@ enum UserDefault: String, CaseIterable {
     case currentUnsaved
     case currentId
     case currentLocation
+    case currentScorer
     case currentPartner
     case currentDate
     case currentDescription
@@ -55,6 +56,8 @@ enum UserDefault: String, CaseIterable {
         case .currentId:
             return nil
         case .currentLocation:
+            return nil
+        case .currentScorer:
             return nil
         case .currentPartner:
             return nil

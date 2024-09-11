@@ -267,7 +267,7 @@ struct ImportBBOScorecard: View {
     
     func checkImport() -> Bool {
         var result = false
-        if let scorer = MasterData.shared.scorer {
+        if let scorer = scorecard.scorer {
             if scorer.bboName == "" {
                 MessageBox.shared.show("In order to import a scorecard the player defined as yourself must have a BBO name", okAction: {
                     presentationMode.wrappedValue.dismiss()
@@ -343,7 +343,7 @@ class ImportedBBOScorecard: ImportedScorecard {
         super.init()
         self.importSource = .bbo
         self.scorecard = scorecard
-        let scorer = MasterData.shared.scorer
+        let scorer = scorecard!.scorer
         myName = scorer!.bboName.lowercased()
         for line in lines {
             let columns = columns(line)

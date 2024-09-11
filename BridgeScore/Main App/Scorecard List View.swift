@@ -306,7 +306,7 @@ struct ScorecardSummaryView: View {
     
     var description: some View {
         HStack {
-            let text = scorecard.desc + (scorecard.comment == "" || portraitPhone ? "" : " (\(scorecard.comment))")
+            let text = scorecard.desc + (scorecard.comment == "" || portraitPhone ? "" : " (\(scorecard.comment))") + (scorecard.scorer?.isSelf ?? true || portraitPhone ? "" : " as \(scorecard.scorer!.name)")
             Text(text).lineLimit(portraitPhone ? 1 : 2)
                 .if(MyApp.format == .phone) { (view) in
                     view.minimumScaleFactor(1)

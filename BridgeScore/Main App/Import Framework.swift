@@ -593,7 +593,7 @@ class ImportedScorecard: NSObject {
         if !identifySelf {
             myRanking = rankings.first(where: {$0.players.contains(where: {$0.value.lowercased() == myName})})
             if myRanking == nil {
-                if let myBboName = MasterData.shared.scorer?.bboName.lowercased() {
+                if let myBboName = scorecard.scorer?.bboName.lowercased() {
                     myRanking = rankings.first(where: {$0.players.contains(where: {$0.value.lowercased() == myBboName})})
                     if myRanking != nil {
                         // Results from BridgeWebs but bbo name not translated

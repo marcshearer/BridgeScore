@@ -53,7 +53,7 @@ struct ImportPBNScorecard: View {
         StandardView("Detail") {
             if selected == nil {
                 ImportedScorecard.fileList(scorecard: scorecard, suffix: "pbn", selected: selected, decompose: decompose) { selected in
-                    if MasterData.shared.scorer != nil {
+                    if scorecard.scorer != nil {
                         self.selected = selected
                         if let imported = ImportPBN.importScorecard(fileURL: selected, scorecard: scorecard) {
                             importedPBNScorecard = imported
@@ -321,9 +321,9 @@ struct IdentifySelfView: View {
     
     private func updateRanking(imported: ImportedScorecard, ranking: ImportedRanking, sitting: Seat) {
         let type = Scorecard.current.scorecard!.type
-        ranking.players[sitting] = MasterData.shared.scorer?.name
+        ranking.players[sitting] = Scorecard.current.scorecard!.scorer?.name
         if type.players == 1 {
-            ranking.players[sitting.partner] = MasterData.shared.scorer?.name
+            ranking.players[sitting.partner] = Scorecard.current.scorecard!.scorer?.name
         } else {
             ranking.players[sitting.partner] = Scorecard.current.scorecard?.partner?.name
         }
@@ -401,7 +401,7 @@ class ImportedPBNScorecard: ImportedScorecard {
         
         
         self.scorecard = scorecard
-        let scorer = MasterData.shared.scorer
+        let scorer = scorecard?.scorer
         myName = scorer!.name.lowercased()
         
         for line in csvLines {

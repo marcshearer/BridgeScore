@@ -237,7 +237,7 @@ struct ShareScorecardView: View {
                     if ranking.players[seat] == playerName || ranking.players[seat] == bboName {
                         playerSeat = seat
                     }
-                    if ranking.players[seat] == MasterData.shared.scorer?.name || ranking.players[seat] == MasterData.shared.scorer?.bboName {
+                    if ranking.players[seat] == scorecard.scorer?.name || ranking.players[seat] == scorecard.scorer?.bboName {
                         mySeat = seat
                     }
                 }
@@ -293,7 +293,7 @@ struct ScorecardMailView: UIViewControllerRepresentable {
         mailViewController.setPreferredSendingEmailAddress(fromEmail)
         mailViewController.setToRecipients([toEmail])
         mailViewController.setSubject("Sharing: \(scorecard.desc)")
-        mailViewController.setMessageBody("<html><head/><body><p>Attached is a copy of the \(scorecard.desc) event as played by \(MasterData.shared.scorer!.name) and \(scorecard.partner!.name) in the \(scorecard.location!.name) on \(Utility.dateString(scorecard.date, style: .full)).</p><p>Click on the attachment to import it into your Bridge Score history.</p><p>Regards,<br/>\(MasterData.shared.scorer!.name)</p></body></html>", isHTML: true)
+        mailViewController.setMessageBody("<html><head/><body><p>Attached is a copy of the \(scorecard.desc) event as played by \(scorecard.scorer!.name) and \(scorecard.partner!.name) in the \(scorecard.location!.name) on \(Utility.dateString(scorecard.date, style: .full)).</p><p>Click on the attachment to import it into your Bridge Score history.</p><p>Regards,<br/>\(scorecard.scorer!.name)</p></body></html>", isHTML: true)
         mailViewController.addAttachmentData(attachmentData!, mimeType: "application/json", fileName: "\(scorecard.desc).bsjson")
         return mailViewController
     }

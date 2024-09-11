@@ -168,7 +168,7 @@ import CoreData
         var result = false
         for seat in Seat.validCases {
             if let ranking = ranking(seat: seat) {
-                if let scorer = MasterData.shared.scorer, let player = ranking.players[seat]?.lowercased() {
+                if let scorer = scorecard.scorer, let player = ranking.players[seat]?.lowercased() {
                     if player == scorer.bboName.lowercased() || player == scorer.name.lowercased() {
                         result = true
                     }
@@ -182,7 +182,7 @@ import CoreData
         var result = false
         for seat in Seat.validCases {
             if let ranking = ranking(seat: seat) {
-                if let scorer = MasterData.shared.scorer, let player = ranking.players[seat.leftOpponent]?.lowercased() {
+                if let scorer = scorecard.scorer, let player = ranking.players[seat.leftOpponent]?.lowercased() {
                     if player == scorer.bboName.lowercased() || player == scorer.name.lowercased() {
                         result = true
                     }

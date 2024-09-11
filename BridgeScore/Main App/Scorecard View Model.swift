@@ -19,6 +19,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     @Published public var location: LocationViewModel?
     @Published public var desc: String = ""
     @Published public var comment: String = ""
+    @Published public var scorer: PlayerViewModel?
     @Published public var partner: PlayerViewModel?
     @Published public var boards: Int = 0
     @Published public var boardsTable: Int = 0
@@ -54,6 +55,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
                 self.location?.locationId != mo.locationId ||
                 self.desc != mo.desc ||
                 self.comment != mo.comment ||
+                self.scorer?.playerId != mo.scorerId ||
                 self.partner?.playerId != mo.partnerId ||
                 self.boards != mo.boards ||
                 self.boardsTable != mo.boardsTable ||
@@ -133,6 +135,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         let layout = from ?? MasterData.shared.layouts.first ?? LayoutViewModel()
         self.desc = layout.scorecardDesc
         self.location = layout.location
+        self.scorer = MasterData.shared.scorer
         self.partner = layout.partner
         self.boards = layout.boards
         self.boardsTable = layout.boardsTable
@@ -156,6 +159,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.location = from.location
         self.desc = from.desc
         self.comment = from.comment
+        self.scorer = from.scorer
         self.partner = from.partner
         self.boards = from.boards
         self.boardsTable = from.boardsTable
@@ -180,6 +184,11 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             }
             self.desc = mo.desc
             self.comment = mo.comment
+            if let scorer = MasterData.shared.player(id: mo.scorerId) {
+                self.scorer = scorer
+            } else {
+                self.scorer = MasterData.shared.scorer
+            }
             if let partner = MasterData.shared.player(id: mo.partnerId) {
                 self.partner = partner
             }
@@ -204,6 +213,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             mo.locationId = self.location?.locationId
             mo.desc = self.desc
             mo.comment = self.comment
+            mo.scorerId = self.scorer?.playerId
             mo.partnerId = self.partner?.playerId
             mo.boards = self.boards
             mo.boardsTable = self.boardsTable
@@ -281,6 +291,9 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         }
         UserDefault.currentDescription.set(self.desc)
         UserDefault.currentComment.set(self.comment)
+        if let partnerId = self.partner?.playerId {
+            UserDefault.currentScorer.set(partnerId)
+        }
         if let partnerId = self.partner?.playerId {
             UserDefault.currentPartner.set(partnerId)
         }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22225" systemVersion="23B81" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22758" systemVersion="23G93" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
     <entity name="BBOName" representedClassName="BBONameMO" syncable="YES">
         <attribute name="bboName" optional="YES" attributeType="String"/>
         <attribute name="name" optional="YES" attributeType="String"/>
@@ -116,6 +116,7 @@
         <attribute name="resetNumbers" attributeType="Boolean" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="scorecardId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="scoreEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="scorerId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="scoreValue" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="type16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>

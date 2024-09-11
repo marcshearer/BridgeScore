@@ -148,7 +148,7 @@ struct ImportUsebioScorecard: View {
     
     var fileList: some View {
         ImportedScorecard.fileList(scorecard: scorecard, suffix: "xml", selected: selected, decompose: decompose) { selected in
-            if MasterData.shared.scorer != nil {
+            if scorecard.scorer != nil {
                 ImportUsebio.createImportScorecardFrom(fileURL: selected, scorecard: scorecard) { (imported, error) in
                     if let imported = imported {
                         self.selected = selected
@@ -287,7 +287,7 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
         }
         
         self.scorecard = scorecard
-        let scorer = MasterData.shared.scorer
+        let scorer = scorecard!.scorer
         myName = scorer!.name.lowercased()
         
     }

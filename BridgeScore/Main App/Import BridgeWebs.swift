@@ -343,7 +343,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         super.init()
         self.importSource = .bridgeWebs
         self.scorecard = scorecard
-        let scorer = MasterData.shared.scorer
+        let scorer = scorecard.scorer
         myName = scorer!.name.lowercased()
         self.title = title
         self.date = date ?? scorecard.date

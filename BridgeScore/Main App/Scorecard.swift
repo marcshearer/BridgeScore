@@ -956,7 +956,7 @@ class Scorecard {
     
     public static func myRanking(table: Int?) -> RankingViewModel? {
         var result: RankingViewModel?
-        if let scorer = MasterData.shared.scorer {
+        if let scorer = Scorecard.current.scorecard?.scorer {
             let rankings = Scorecard.current.rankings(table: table ?? 1, player: (bboName:scorer.bboName, name: scorer.name))
             if let myRanking = rankings.first {
                 result = myRanking

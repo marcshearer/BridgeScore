@@ -59,7 +59,7 @@ import CoreData
     }
     
     public var isSelf: Bool {
-        if let scorer = MasterData.shared.scorer {
+        if let scorer = scorecard.scorer {
             return players.map{$0.value}.contains(where: {$0.lowercased() == scorer.bboName.lowercased() || $0.lowercased() == scorer.name.lowercased()
             })
         } else {

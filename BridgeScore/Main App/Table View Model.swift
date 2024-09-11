@@ -131,7 +131,7 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
     
     public var players: [Seat:String] {
         var result: [Seat:String] = [:]
-        if let scorer = MasterData.shared.scorer {
+        if let scorer = scorecard.scorer {
             let boardNumber = ((table - 1) * scorecard.boardsTable) + 1
             let rankings = Scorecard.current.rankings(table: table, player: (bboName: scorer.bboName.lowercased(), name: scorer.name))
             if rankings.count == 1 {

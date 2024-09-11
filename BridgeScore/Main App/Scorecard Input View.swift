@@ -211,7 +211,7 @@ struct ScorecardInputView: View {
             }
         }) {
             ZStack {
-                let title = "Details" + (Scorecard.current.isImported ? " - Imported from \(Scorecard.current.scorecard!.importSource.from)" : "")
+                let title = "Details" + (Scorecard.current.isImported ? " - Imported from \(Scorecard.current.scorecard!.importSource.from)" : "") + (Scorecard.current.scorecard!.scorer!.isSelf ? "" : " as \(Scorecard.current.scorecard!.scorer!.name)")
                 let backgroundView = UIView(frame: uiView.superview!.superview!.frame)
                 let width = min(704, backgroundView.frame.width) // Allow for safe area
                 let height = min(784, (backgroundView.frame.height))
@@ -2093,6 +2093,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             if let (_, traveller, seat) = Scorecard.getBoardTraveller(boardNumber: board.board, equivalentSeat: false) {
                 xImps = (seat.pair == .ns ? 1 : -1) * traveller.nsXImps
             }
+            label.isUserInteractionEnabled = !isEnabled
             label.text = (board.score == nil || xImps == nil ? "" : "\(xImps!.toString(places: 2))")
             label.textColor = UIColor((xImps ?? 0) < 0 ? Palette.background.strongText : Palette.background.themeText)
             set(tap: .label)
