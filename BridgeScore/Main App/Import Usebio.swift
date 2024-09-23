@@ -12,10 +12,12 @@ import UniformTypeIdentifiers
 
 class ImportUsebio {
     
+    static let filterSessionId: String? = nil // Set to a session id e.g. "2" to import that session only
+    
     public class func createImportScorecardFrom(fileURL: URL, scorecard: ScorecardViewModel, completion: @escaping (ImportedUsebioScorecard?, String?)->()) {
         
         if let data = try? Data(contentsOf: fileURL) {
-            let importedScorecard = ImportedUsebioScorecard(data: data, scorecard: scorecard)
+            let importedScorecard = ImportedUsebioScorecard(data: data, filterSessionId: filterSessionId, scorecard: scorecard)
             importedScorecard.parse { (error) in
                 if error == nil {
                     completion(importedScorecard, nil)
@@ -31,7 +33,7 @@ class ImportUsebio {
     public class func createImportedScorecardFrom(droppedFiles fileData: ImportFileData, scorecard: ScorecardViewModel, completion: @escaping (ImportedUsebioScorecard?, String?)->()) -> [ImportedUsebioScorecard] {
         // Version for drop of files
         if let data = fileData.contents?.data(using: .utf8) {
-            let importedScorecard = ImportedUsebioScorecard(data: data, scorecard: scorecard)
+            let importedScorecard = ImportedUsebioScorecard(data: data, filterSessionId: filterSessionId, scorecard: scorecard)
             importedScorecard.parse { (error) in
                 if error == nil {
                     completion(importedScorecard, nil)
@@ -380,6 +382,12 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
             }
         case "SECTION":
             current = current?.add(child: Node(name: name, process: processEvent))
+        case "BOARD":
+            if currentMatch == nil {
+                currentMatch = ImportedUsebioRankingTable()
+            }
+            currentBoard = ImportedUsebioBoard()
+            current = current?.add(child: Node(name: name, process: processBoard))
         default:
             current = current?.add(child: Node(name: name))
         }
@@ -585,7 +593,7 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
             current = current?.add(child: Node(name: name, completion: { [self] (value) in
                 let invert = (traveller.direction == .ew)
                 for seat in Pair.ns.seats {
-                    traveller.ranking[seat] = currentMatch.ranking[invert ? seat.equivalent : seat]
+                    traveller.ranking[seat] = currentMatch.ranking[invert ? seat.equivalent : seat] ?? Int(value)
                     traveller.section[seat] = currentMatch.section[invert ? seat.equivalent : seat] ?? 1
                 }
             }))
@@ -593,7 +601,7 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
             current = current?.add(child: Node(name: name, completion: { [self] (value) in
                 let invert = (traveller.direction == .ew)
                 for seat in Pair.ew.seats {
-                    traveller.ranking[seat] = currentMatch.ranking[invert ? seat.equivalent : seat]
+                    traveller.ranking[seat] = currentMatch.ranking[invert ? seat.equivalent : seat] ?? Int(value)
                     traveller.section[seat] = currentMatch.section[invert ? seat.equivalent : seat] ?? 1
                 }
             }))
