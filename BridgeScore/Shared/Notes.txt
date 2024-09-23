@@ -6,7 +6,6 @@ If xcode fails to install app on device it's normally because info.plist isn't w
 To Do Urgently
 ==============
 Allow selection of other player on import if self not in scorecard
-Suppress scorecards for others from stats
 Invalidate List of scorecards if change self
 
 Bugs

@@ -277,6 +277,7 @@ class StatsGraphUIView: UIView, GraphDetailDelegate {
         var total: Float = 0
         values = []
         for scorecard in MasterData.shared.scorecards.reversed() {
+            if scorecard.scorer?.isSelf ?? true {
             if let score = scorecard.score, let maxScore = scorecard.maxScore {
                 if filterValues.filter(scorecard) {
                     count += 1
@@ -285,6 +286,7 @@ class StatsGraphUIView: UIView, GraphDetailDelegate {
                     values.append(CGFloat(percentage))
                     drillRef.append(scorecard.scorecardId.uuidString)
                     xAxisLabels.append(Utility.dateString(scorecard.date))
+                }
                 }
             }
         }
