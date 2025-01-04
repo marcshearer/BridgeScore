@@ -291,7 +291,7 @@ struct ImportBBOScorecard: View {
         var result: [ImportFileData] = []
         
         for path in paths {
-            let (name, fileType) = fileName(path.relativeString)
+            let (name, fileType) = ImportedScorecard.fileName(path.relativeString)
             var components = name.components(separatedBy: "_")
             var number: Int?
             number = Int(components.first!)
@@ -303,18 +303,9 @@ struct ImportBBOScorecard: View {
             if date != nil {
                 components.removeLast()
             }
-            result.append(ImportFileData(path.absoluteString, number, components.joined(separator: " "), date, fileType))
+            result.append(ImportFileData(path, name, number, components.joined(separator: " "), date, fileType))
         }
         return result
-    }
-    
-    func fileName(_ path: String) -> (String, String?) {
-        let components = path.components(separatedBy: "/")
-        var subComponents = components.last!.components(separatedBy: ".")
-        let fileType = ((subComponents.last ?? "") == ""  ? nil : subComponents.last!)
-        subComponents.removeLast()
-        let text = subComponents.joined(separator: ".")
-        return (text,fileType)
     }
 }
 

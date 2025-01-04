@@ -398,6 +398,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
             case "name1":
                 let sitting = importedRanking.way?.seats.first ?? .north
                 importedRanking.players[sitting] = columns.element(index)
+                switchPlayers(importedRanking: importedRanking, sitting: sitting)
             case "name2":
                 let sitting = importedRanking.way?.seats.first?.partner ?? .south
                 let name2 = columns.element(index) ?? ""
@@ -406,11 +407,21 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 } else {
                     importedRanking.players[sitting] = name2
                 }
+                switchPlayers(importedRanking: importedRanking, sitting: sitting)
             default:
                 break
             }
         }
         rankings.append(importedRanking)
+    }
+    
+    func switchPlayers(importedRanking: ImportedRanking, sitting: Seat) {
+        /* Change as appropriate
+        let names = ["Peter Thommeny", "George Watson", "Jack Shearer", "Marc Shearer"]
+        if let index = names.firstIndex(where: {$0 == importedRanking.players[sitting]}) {
+            importedRanking.players[sitting] = names[(index + 2) % 4]
+        }
+         */
     }
     
     func initTraveller(columns: [String]) {

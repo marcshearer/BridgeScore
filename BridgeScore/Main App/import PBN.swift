@@ -177,8 +177,8 @@ struct ImportPBNScorecard: View {
         }
     }
     
-    func decompose(_ paths: [URL]) -> [(URL, Int?, String, Date?)] {
-        var result: [(path: URL, number: Int?, text: String, date: Date?)] = []
+    func decompose(_ paths: [URL]) -> [ImportFileData] {
+        var result: [ImportFileData] = []
         
         for path in paths {
             var text: String?
@@ -197,7 +197,8 @@ struct ImportPBNScorecard: View {
                 }
             }
             if let text = text, let date = date {
-                result.append((path, 1, text, date))
+                let (fileName, fileType) = ImportedScorecard.fileName(path.relativeString)
+                result.append(ImportFileData(path, fileName, nil, text, date, fileType))
             }
         }
         let baseDate = Date(timeIntervalSinceReferenceDate: 0)
@@ -402,7 +403,7 @@ class ImportedPBNScorecard: ImportedScorecard {
         
         self.scorecard = scorecard
         let scorer = scorecard?.scorer
-        myName = scorer!.name.lowercased()
+        myName = scorer?.name.lowercased()
         
         for line in csvLines {
             let columns = line.components(separatedBy: ",")
@@ -444,6 +445,19 @@ class ImportedPBNScorecard: ImportedScorecard {
             recalculateTravellers()
             validate()
         }
+    }
+    
+    public class func createImportedScorecardFrom(droppedFiles fileData: [ImportFileData], scorecard: ScorecardViewModel) -> [ImportedPBNScorecard] {
+        // Version for drop of files
+        var result: [ImportedPBNScorecard] = []
+        for fileData in fileData {
+            if let data = fileData.contents {
+                let lines = data.replacingOccurrences(of: "\r\n", with: "\n").components(separatedBy: "\n")
+                let importedScorecard = ImportedPBNScorecard(lines: lines, scorecard: scorecard)
+                result.append(importedScorecard)
+            }
+        }
+        return result
     }
     
     private func initHeading(key: String, value: String) {

@@ -303,12 +303,12 @@ class ImportedScorecard: NSObject {
     
     // MARK: - Shared file list routine
     
-    static func fileList(scorecard: ScorecardViewModel, suffix: String, selected: URL?, decompose: ([URL]) -> [(URL, Int?, String, Date?)], completion: @escaping (URL)->()) -> some View {
+    static func fileList(scorecard: ScorecardViewModel, suffix: String, selected: URL?, decompose: ([URL]) -> [ImportFileData], completion: @escaping (URL)->()) -> some View {
         return VStack(spacing: 0) {
             Banner(title: Binding.constant("Choose file to import"), backImage: Banner.crossImage)
             Spacer().frame(height: 16)
             if let files = try? FileManager.default.contentsOfDirectory(at: ImportedScorecard.importsURL, includingPropertiesForKeys: nil).filter({$0.relativeString.uppercased().right(4) == "." + suffix.uppercased()}) {
-                let fileData: [(path: URL, number: Int?, text: String, date: Date?)] = decompose(files)
+                let fileData = decompose(files)
                 if fileData.isEmpty {
                     Spacer()
                     HStack {
@@ -347,14 +347,15 @@ class ImportedScorecard: NSObject {
             }
             Spacer()
         }
+    }
         
-        func fileName(_ path: String) -> String {
-            let components = path.components(separatedBy: "/")
-            var subComponents = components.last!.components(separatedBy: ".")
-            subComponents.removeLast()
-            let text = subComponents.joined(separator: ".")
-            return text
-        }
+    static func fileName(_ path: String) -> (String, String?) {
+        let components = path.components(separatedBy: "/")
+        var subComponents = components.last!.components(separatedBy: ".")
+        let fileType = ((subComponents.last ?? "") == ""  ? nil : subComponents.last!)
+        subComponents.removeLast()
+        let text = subComponents.joined(separator: ".")
+        return (text,fileType)
     }
     
     // MARK: - Utility Routines ======================================================================== -
@@ -438,20 +439,22 @@ class ImportedScorecard: NSObject {
                         }
                     }
                 } else if scorecard.type.boardScoreType == .percent {
-                    if traveller.nsMps == nil || traveller.totalMps == nil {
+                    if (traveller.nsMps == nil || traveller.totalMps == nil) && traveller.nsPoints != nil {
                         traveller.totalMps = (boardTravellers.count - 1) * 2
                         traveller.nsMps = 0
                         for otherTraveller in boardTravellers {
                             if otherTraveller != traveller {
-                                if traveller.nsPoints! == otherTraveller.nsPoints! {
-                                    traveller.nsMps! += 1
-                                } else if traveller.nsPoints! > otherTraveller.nsPoints! {
-                                    traveller.nsMps! += 2
+                                if otherTraveller.nsPoints != nil {
+                                    if traveller.nsPoints! == otherTraveller.nsPoints! {
+                                        traveller.nsMps! += 1
+                                    } else if traveller.nsPoints! > otherTraveller.nsPoints! {
+                                        traveller.nsMps! += 2
+                                    }
                                 }
                             }
                         }
+                        traveller.nsScore = Utility.round(Float(traveller.nsMps!) / Float(traveller.totalMps!) * 100, places: scorecard.type.boardPlaces)
                     }
-                    traveller.nsScore = Utility.round(Float(traveller.nsMps!) / Float(traveller.totalMps!) * 100, places: scorecard.type.boardPlaces)
                 } else if scorecard.type.boardScoreType == .aggregate {
                     traveller.nsScore = Float(traveller.nsPoints ?? 0)
                 }
@@ -833,6 +836,7 @@ class ImportedBoard {
 }
 
 class ImportFileData {
+    var path: URL
     var fileName: String
     var number: Int?
     var text: String
@@ -841,7 +845,8 @@ class ImportFileData {
     var contents: String?
     var associated: String?
     
-    init(_ fileName: String, _ number: Int? = nil, _ text: String, _ date: Date?, _ fileType: String?, contents: String? = nil) {
+    init(_ path: URL, _ fileName: String, _ number: Int? = nil, _ text: String, _ date: Date?, _ fileType: String?, contents: String? = nil) {
+        self.path = path
         self.fileName = fileName
         self.number = number
         self.text = text

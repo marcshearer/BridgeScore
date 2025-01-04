@@ -30,7 +30,7 @@ class ImportUsebio {
         }
     }
     
-    public class func createImportedScorecardFrom(droppedFiles fileData: ImportFileData, scorecard: ScorecardViewModel, completion: @escaping (ImportedUsebioScorecard?, String?)->()) -> [ImportedUsebioScorecard] {
+    public class func createImportedScorecardFrom(droppedFile fileData: ImportFileData, scorecard: ScorecardViewModel, completion: @escaping (ImportedUsebioScorecard?, String?)->()) -> ImportedUsebioScorecard? {
         // Version for drop of files
         if let data = fileData.contents?.data(using: .utf8) {
             let importedScorecard = ImportedUsebioScorecard(data: data, filterSessionId: filterSessionId, scorecard: scorecard)
@@ -41,10 +41,10 @@ class ImportUsebio {
                     completion(nil, error)
                 }
             }
-            return [importedScorecard]
+            return importedScorecard
         } else {
             completion(nil, nil)
-            return []
+            return nil
         }
     }
     
@@ -108,7 +108,7 @@ struct ImportUsebioScorecard: View {
                             Spacer()
                             VStack {
                                 Spacer()
-                                Text("Drop Usebio XML Import File Here").font(bannerFont)
+                                Text("Drop Usebio XML (and optionally PBN) Import File Here").font(bannerFont)
                                     .multilineTextAlignment(.center)
                                 Spacer()
                             }
@@ -125,27 +125,49 @@ struct ImportUsebioScorecard: View {
                 Spacer().frame(width: 50)
             }
             .onChange(of: droppedFiles.count, initial: false) {
+                var importedScorecard: ImportedUsebioScorecard?
                 if !droppedFiles.isEmpty {
-                    let fileData = processDroppedFile(droppedFile: droppedFiles.first!)
-                    let imported = ImportUsebio.createImportedScorecardFrom(droppedFiles: fileData, scorecard: scorecard) { (imported, error) in
-                        if let imported = imported {
-                            self.selected = URL(string: droppedFiles.first!.filename)
-                            importedUsebioScorecard = imported
-                            identifySelf = imported.identifySelf
-                        } else {
-                            MessageBox.shared.show(error ?? "Unable to import scorecard", okAction: {
-                                presentationMode.wrappedValue.dismiss()
-                            })
+                    let fileData = processDroppedFiles(droppedFiles: droppedFiles)
+                    if let xmlFileData = fileData.first(where: {$0.fileType?.uppercased() == "XML"}) {
+                        importedScorecard = ImportUsebio.createImportedScorecardFrom(droppedFile: xmlFileData, scorecard: scorecard) { (imported, error) in
+                            if let imported = imported {
+                                self.selected = URL(string: droppedFiles.first!.filename)
+                                importedUsebioScorecard = imported
+                                identifySelf = imported.identifySelf
+                            } else {
+                                MessageBox.shared.show(error ?? "Unable to import scorecard", okAction: {
+                                    presentationMode.wrappedValue.dismiss()
+                                })
+                            }
                         }
-                        droppedFiles = []
                     }
+                    if let usebioScorecard = importedScorecard {
+                        let pbnFileData = fileData.filter({$0.fileType?.uppercased() == "PBN"})
+                        if !pbnFileData.isEmpty {
+                            // Add in hands from any PBN files
+                            let pbnScorecards = ImportedPBNScorecard.createImportedScorecardFrom(droppedFiles: pbnFileData, scorecard: scorecard)
+                            for pbnScorecard in pbnScorecards {
+                                for (boardNumber, board) in pbnScorecard.boards {
+                                    if usebioScorecard.boards[boardNumber] == nil {
+                                        usebioScorecard.boards[boardNumber] = board
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    droppedFiles = []
                 }
             }
         }
     }
     
-    func processDroppedFile(droppedFile: (filename: String, contents: String)) -> ImportFileData {
-        return ImportFileData(droppedFile.filename, nil, "", nil, nil, contents: droppedFile.contents)
+    func processDroppedFiles(droppedFiles: [(filename: String, contents: String)]) -> [ImportFileData] {
+        var fileData: [ImportFileData] = []
+        for (filename, contents) in droppedFiles {
+            let (fileName, fileType) = ImportedScorecard.fileName(filename)
+            fileData.append(ImportFileData(URL(fileURLWithPath: filename), fileName, nil, "", nil, fileType, contents: contents))
+        }
+        return fileData
     }
     
     var fileList: some View {
@@ -187,8 +209,8 @@ struct ImportUsebioScorecard: View {
         }
     }
     
-    func decompose(_ paths: [URL]) -> [(URL, Int?, String, Date?)] {
-        var result: [(path: URL, number: Int?, text: String, date: Date?)] = []
+    func decompose(_ paths: [URL]) -> [ImportFileData] {
+        var result: [ImportFileData] = []
         
         for path in paths {
             var text: String?
@@ -206,10 +228,12 @@ struct ImportUsebioScorecard: View {
                             date = Date(from: dateString.replacingOccurrences(of: ".", with: "/"), format: "dd/MM/yyyy")
                         }
                     }
+                    
+                    if let text = text, let date = date {
+                        let (fileName, fileType) = ImportedScorecard.fileName(path.absoluteString)
+                        result.append(ImportFileData(path, fileName, 1, text, date, fileType, contents: contents))
+                    }
                 }
-            }
-            if let text = text, let date = date {
-                result.append((path, 1, text, date))
             }
         }
         let baseDate = Date(timeIntervalSinceReferenceDate: 0)
@@ -259,16 +283,20 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
     private var currentMatch: ImportedUsebioRankingTable!
     private var currentBoard: ImportedUsebioBoard!
     private var completion: ((String?)->())?
+    private var multiSession = false
+    private var sessionId: String? = ""
+    private var boardNumberOffset = 0
+    private var maxBoardNumber = 0
     
     init(data: Data, filterSessionId: String? = nil, scorecard: ScorecardViewModel? = nil) {
         super.init()
-        self.importSource = .pbn
+        self.importSource = .usebio
         let string = String(decoding: data, as: UTF8.self)
         let replacedQuote = string.replacingOccurrences(of: "&#39;", with: replacingSingleQuote)
         self.data = replacedQuote.data(using: .utf8)
         self.filterSessionId = filterSessionId
         
-            // Set values to match scorecard
+        // Set values to match scorecard
         if let scorecard = scorecard {
             type = scorecard.type.boardScoreType
             var boards: Int
@@ -372,6 +400,16 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
                 if let id = attributes["SESSION_ID"] {
                     if id.uppercased() != filterSessionId.uppercased() {
                         matched = false
+                    }
+                }
+            } else {
+                if let id = attributes["SESSION_ID"] {
+                    if id.uppercased() == "ALL" {
+                        matched = false
+                    } else {
+                        multiSession = true
+                        sessionId = id
+                        boardNumberOffset = ((maxBoardNumber / 32) + 1) * 32
                     }
                 }
             }
@@ -560,7 +598,10 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
         switch name {
         case "BOARD_NUMBER":
             current = current?.add(child: Node(name: name, completion: { [self] (value) in
-                currentBoard.boardNumber = Int(value)
+                if let boardNumber = Int(value) {
+                    currentBoard.boardNumber = boardNumber + boardNumberOffset
+                    maxBoardNumber = max(maxBoardNumber, currentBoard.boardNumber)
+                }
             }))
         case "TRAVELLER_LINE":
             let board = currentBoard.boardNumber!
