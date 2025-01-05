@@ -121,7 +121,6 @@ struct ScorecardDetailsView: View {
     let types = Type.allCases
     @State private var typeIndex: Int?
     
-    @State private var resetBoardNumberIndex: Int?
     @State private var manualTotalsIndex: Int? = 0
 
     @State private var players: [PlayerViewModel] = []
@@ -135,7 +134,7 @@ struct ScorecardDetailsView: View {
             InsetView {
                 VStack(spacing: 0) {
                     
-                    Input(title: "Description", field: $scorecard.desc, message: $scorecard.descMessage)
+                    Input(title: "Description", field: $scorecard.desc, message: $scorecard.descMessage, topSpace: 0)
                                         
                     Separator(thickness: 1)
                     
@@ -232,21 +231,36 @@ struct ScorecardDetailsView: View {
                     
                     Separator(thickness: 1)
 
-                    StepperInput(title: "Tables", field: $scorecard.boards, label: boardsLabel, isEnabled: !Scorecard.current.isImported, minValue: $scorecard.boardsTable, increment: $scorecard.boardsTable, onChange:  { (newValue) in
+                    // Note this is inputting the number of boards even though prompting for tables
+                    StepperInput(title: "Tables", field: $scorecard.boards, label: boardsLabel, isEnabled: !Scorecard.current.isImported, minValue: $scorecard.boardsTable, increment: $scorecard.boardsTable, onChange:  { (boards) in
+                        let tables = boards / max(1, scorecard.boardsTable, 1)
+                        if scorecard.sessions > tables {
+                            scorecard.sessions = tables
+                            if scorecard.sessions <= 1 {
+                                scorecard.resetNumbers = false
+                            }
+                        }
                         tableRefresh = true
                     })
                     .disabled(Scorecard.current.isImported)
                     
                     Separator(thickness: 1)
+                    
+                    StepperInput(title: "Sessions", field: $scorecard.sessions, label: { value in "\(value) session\(value == 1 ? "" : "s")" }, isEnabled: !Scorecard.current.isImported, minValue: Binding.constant(1), maxValue: Binding.constant(scorecard.tables), onChange: { (sessions) in
+                        if sessions <= 1 {
+                            scorecard.resetNumbers = false
+                        } else if scorecard.sessions <= 1 {
+                            scorecard.resetNumbers = true
+                        }
+                    })
+                    .disabled(Scorecard.current.isImported)
+                    
+                    Separator(thickness: 1)
 
-                    PickerInput(id: id, title: "Board Numbers", field: $resetBoardNumberIndex, values: { ResetBoardNumber.allCases.map{$0.string}}, disabled: Scorecard.current.isImported)
-                    { (index) in
-                        scorecard.resetNumbers = (index == ResetBoardNumber.perTable.rawValue)
+                    InputToggle(title: "Reset board number", field: $scorecard.resetNumbers, disabled: Binding.constant(scorecard.sessions <= 1))
+                    { (newValue) in
                         tableRefresh = true
                     }
-                    
-                    Spacer().frame(height: 16)
-                    
                 }
             }
             
@@ -259,7 +273,6 @@ struct ScorecardDetailsView: View {
             locationIndex = locations.firstIndex(where: {$0 == scorecard.location}) ?? 0
             playerIndex = players.firstIndex(where: {$0 == scorecard.partner}) ?? 0
             typeIndex = types.firstIndex(where: {$0 == scorecard.type}) ?? 0
-            resetBoardNumberIndex = (scorecard.resetNumbers ? ResetBoardNumber.perTable : ResetBoardNumber.continuous).rawValue
             manualTotalsIndex = (scorecard.manualTotals ? TotalCalculation.manual : TotalCalculation.automatic).rawValue
         }
     }

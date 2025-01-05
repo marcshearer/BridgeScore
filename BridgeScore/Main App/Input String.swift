@@ -33,7 +33,7 @@ struct Input : View {
     var placeHolder: String? = nil
     var topSpace: CGFloat = 0
     var leadingSpace: CGFloat = 0
-    var height: CGFloat = 50
+    var height: CGFloat = 40
     var width: CGFloat?
     var color: PaletteColor = Palette.input
     var keyboardType: KeyboardType = .default
@@ -42,7 +42,7 @@ struct Input : View {
     var multiLine: Bool = false
     var clearText: Bool = true
     var inlineTitle: Bool = true
-    var inlineTitleWidth: CGFloat = 150
+    var inlineTitleWidth: CGFloat = 180
     var onChange: ((String)->())?
     @FocusState var focused: Bool
     @State private var refresh = false
@@ -68,7 +68,7 @@ struct Input : View {
                         .font(messageFont)
                     Spacer().frame(width: 16)
                 }
-                .frame(height: 16)
+                .frame(height: 8)
             } else {
                 Spacer().frame(height: topSpace)
             }
@@ -155,7 +155,7 @@ struct Input : View {
             
             .font(inputFont)
         }
-        .frame(height: self.height + self.topSpace + (title != nil && !inlineTitle ? 30 : (message != nil ? 16 : 0)))
+        .frame(height: self.height + self.topSpace + (title != nil && !inlineTitle ? 24 : (message != nil ? 16 : 0)))
         .if(width != nil) { (view) in
             view.frame(width: width! + leadingSpace + 16 + (clearText ? 20 : 0))
         }

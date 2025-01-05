@@ -148,19 +148,15 @@ struct PlayerDetailView : View {
                         VStack(spacing: 0) {
                             
                             Input(title: "Name", field: $selected.name, message: $selected.nameMessage, autoCapitalize: .words, autoCorrect: false)
-                            
-                            Separator()
-                            
+                                                       
                             Input(title: "BBO name", field: $selected.bboName, message: $selected.bboNameMessage, autoCapitalize: .none, autoCorrect: false)
-                            
-                            Separator()
                             
                             Input(title: "Email address", field: $selected.email, message: $selected.emailMessage, keyboardType: .emailAddress, autoCapitalize: .none, autoCorrect: false)
                             
                             Separator()
                             
                             if !selected.otherIsSelf {
-                                InputToggle(title: "Is yourself?", field: $selected.isSelf, disabled: Binding.constant(false))
+                                InputToggle(title: "Is yourself?", field: $selected.isSelf, disabled: Binding.constant(false), topSpace: 15)
                             }
                             
                             if selected.retired {

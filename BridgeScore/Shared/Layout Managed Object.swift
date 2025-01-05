@@ -23,6 +23,7 @@ public class LayoutMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var boardsTable16: Int16
     @NSManaged public var type16: Int16
     @NSManaged public var manualTotals: Bool
+    @NSManaged public var sessions16: Int16
     @NSManaged public var resetNumbers: Bool
     
     public convenience init() {
@@ -46,6 +47,11 @@ public class LayoutMO: NSManagedObject, ManagedObject, Identifiable {
         set { self.boardsTable16 = Int16(newValue)}
     }
     
+    public var sessions: Int {
+        get { Int(self.sessions16) }
+        set { self.sessions16 = Int16(newValue)}
+    }
+        
     public var type: Type {
         get { Type(rawValue: Int(type16)) ?? .percent }
         set { self.type16 = Int16(newValue.rawValue) }

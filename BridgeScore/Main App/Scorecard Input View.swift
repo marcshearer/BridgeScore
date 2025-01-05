@@ -214,9 +214,9 @@ struct ScorecardInputView: View {
                 let title = "Details" + (Scorecard.current.isImported ? " - Imported from \(Scorecard.current.scorecard!.importSource.from)" : "") + (Scorecard.current.scorecard!.scorer!.isSelf ? "" : " as \(Scorecard.current.scorecard!.scorer!.name)")
                 let backgroundView = UIView(frame: uiView.superview!.superview!.frame)
                 let width = min(704, backgroundView.frame.width) // Allow for safe area
-                let height = min(784, (backgroundView.frame.height))
+                let height = min(790, (backgroundView.frame.height))
                 let frame = CGRect(x: (backgroundView.frame.width - width) / 2,
-                                   y: ((backgroundView.frame.height - height) / 2),
+                                   y: ((backgroundView.frame.height - height) / 2) + 20,
                                    width: width,
                                    height: height)
                 

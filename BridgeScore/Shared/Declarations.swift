@@ -21,7 +21,7 @@ let inputDefaultHeight: CGFloat = 30.0
 var inputToggleDefaultHeight: CGFloat { MyApp.format != .phone ? 30.0 : 16.0 }
 var bannerHeight: CGFloat { isLandscape ? (MyApp.format != .phone ? 60.0 : 50.0)
                                         : (MyApp.format != .phone ? 60.0 : 40.0) }
-var alternateBannerHeight: CGFloat { MyApp.format != .phone ? 50.0 : 35.0 }
+var alternateBannerHeight: CGFloat { MyApp.format != .phone ? 35.0 : 35.0 }
 var minimumBannerHeight: CGFloat { MyApp.format != .phone ? 40.0 : 20.0 }
 var bannerBottom: CGFloat { (MyApp.format != .phone ? 30.0 : (isLandscape ? 5.0 : 10.0)) }
 var slideInMenuRowHeight: CGFloat { MyApp.target == .iOS ? 50 : 40 }
@@ -414,20 +414,6 @@ public enum Type: Int, CaseIterable {
             return "Team"
         default:
             return "Pair"
-        }
-    }
-}
-
-public enum ResetBoardNumber: Int, CaseIterable {
-    case continuous = 0
-    case perTable = 1
-    
-    public var string: String {
-        switch self {
-        case .continuous:
-            return "Continuous for match"
-        case .perTable:
-            return "Restart for each table"
         }
     }
 }

@@ -26,6 +26,7 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var boardsTable16: Int16
     @NSManaged public var type16: Int16
     @NSManaged public var manualTotals: Bool
+    @NSManaged public var sessions16: Int16
     @NSManaged public var resetNumbers: Bool
     @NSManaged public var scoreValue: Float
     @NSManaged public var scoreEntered: Bool
@@ -49,6 +50,11 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
     public var boardsTable: Int {
         get { Int(self.boardsTable16) }
         set { self.boardsTable16 = Int16(newValue)}
+    }
+    
+    public var sessions: Int {
+        get { Int(self.sessions16) }
+        set { self.sessions16 = Int16(newValue)}
     }
     
     public var position: Int {

@@ -17,7 +17,7 @@ struct InputFloat : View {
     var places: Int = 2
     var maxCharacters: Int
     var inlineTitle: Bool = true
-    var inlineTitleWidth: CGFloat = 150
+    var inlineTitleWidth: CGFloat = 180
     var onChange: ((Float?)->())?
 
     var body : some View {
@@ -40,7 +40,7 @@ struct InputFloatIOS : View {
     var width: CGFloat?
     var places: Int = 2
     var inlineTitle: Bool = true
-    var inlineTitleWidth: CGFloat = 150
+    var inlineTitleWidth: CGFloat = 180
     var onChange: ((Float?)->())?
     
     @State private var keyboardType: UIKeyboardType = .numbersAndPunctuation

@@ -17,7 +17,7 @@ struct InputInt : View {
     var width: CGFloat?
     var maxCharacters: Int
     var inlineTitle: Bool = true
-    var inlineTitleWidth: CGFloat = 150
+    var inlineTitleWidth: CGFloat = 180
     var onChange: ((Int)->())?
     #if targetEnvironment(macCatalyst)
     @State private var wrappedFloat: Float? = 0.0
@@ -57,7 +57,7 @@ struct InputIntIOS : View {
     var height: CGFloat = 44
     var width: CGFloat?
     var inlineTitle: Bool = true
-    var inlineTitleWidth: CGFloat = 150
+    var inlineTitleWidth: CGFloat = 180
     var onChange: ((Int)->())?
     
     @State private var keyboardType: UIKeyboardType = .numberPad

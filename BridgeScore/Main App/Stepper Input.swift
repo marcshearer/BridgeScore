@@ -23,10 +23,10 @@ struct StepperInput: View {
     var height: CGFloat = 45
     var width: CGFloat?
     var labelWidth: CGFloat?
-    var buttonWidth: ()->(CGFloat) = {MyApp.format == .phone && !isLandscape ? 25 : 50}
-    var buttonHeight: ()->(CGFloat) = {30}
+    var buttonWidth: ()->(CGFloat) = {MyApp.format == .phone && !isLandscape ? 25 : 35}
+    var buttonHeight: ()->(CGFloat) = {25}
     var inlineTitle: Bool = true
-    var inlineTitleWidth: CGFloat = 150
+    var inlineTitleWidth: CGFloat = 180
     var onChange: ((Int)->())? = nil
     
     var body: some View {
@@ -47,13 +47,13 @@ struct StepperInputAdditional<Additional>: View where Additional: Equatable {
     var message: Binding<String>?
     var topSpace: CGFloat = 5
     var leadingSpace: CGFloat = 0
-    var height: CGFloat = 45
+    var height: CGFloat = 40
     var width: CGFloat?
     var labelWidth: CGFloat?
-    var buttonWidth: ()->(CGFloat) = {MyApp.format == .phone && !isLandscape ? 25 : 50}
-    var buttonHeight: ()->(CGFloat) = {30}
+    var buttonWidth: ()->(CGFloat) = {MyApp.format == .phone && !isLandscape ? 25 : 35}
+    var buttonHeight: ()->(CGFloat) = {25}
     var inlineTitle: Bool = true
-    var inlineTitleWidth: CGFloat = 150
+    var inlineTitleWidth: CGFloat = 180
     var additionalBinding: Binding<Additional>? = nil
     var setAdditional: ((Binding<Additional>?, Additional)->())? = nil
     var onChange: ((Int)->())? = nil
@@ -104,6 +104,7 @@ struct StepperInputAdditional<Additional>: View where Additional: Equatable {
                                         .foregroundColor(Palette.disabledButton.themeText)
                                         .cornerRadius(4)
                                 }
+                                .frame(width: buttonWidth(), height: buttonHeight())
                                 Button {
                                     change(field, direction: -1)
                                 } label: {
@@ -138,8 +139,9 @@ struct StepperInputAdditional<Additional>: View where Additional: Equatable {
         let minValue = self.minValue?.wrappedValue ?? 0
         let maxValue = self.maxValue?.wrappedValue ?? Int.max
         
-        field.wrappedValue = max(min(field.wrappedValue + increment, maxValue), minValue)
-        onChange?(field.wrappedValue)
+        let newValue = max(min(field.wrappedValue + increment, maxValue), minValue)
+        onChange?(newValue)
+        field.wrappedValue = newValue
         refresh.toggle()
     }
 }

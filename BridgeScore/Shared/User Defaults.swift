@@ -27,6 +27,7 @@ enum UserDefault: String, CaseIterable {
     case currentManualTotals
     case currentBoards
     case currentBoardsTable
+    case currentSessions
     case currentResetNumbers
     case currentScore
     case currentMaxScore
@@ -74,6 +75,8 @@ enum UserDefault: String, CaseIterable {
         case .currentBoards:
             return 1
         case .currentBoardsTable:
+            return 1
+        case .currentSessions:
             return 1
         case .currentResetNumbers:
             return false

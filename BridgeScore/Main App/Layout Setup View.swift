@@ -144,7 +144,6 @@ struct LayoutDetailView : View {
     let types = Type.allCases
     @State private var typeIndex: Int?
     
-    @State private var resetBoardNumberIndex: Int? = 0
     @State private var manualTotalsIndex: Int? = 0
 
     @State private var players: [PlayerViewModel] = []
@@ -207,24 +206,37 @@ struct LayoutDetailView : View {
                             
                             Separator()
                             
-                            StepperInputAdditional(title: "Boards", field: $selected.boardsTable, label: { value in "\(value) boards per round" }, minValue: $minValue, inlineTitleWidth: 200, additionalBinding: $selected.boardsTable, onChange: { (newValue) in
+                            StepperInputAdditional(title: "Boards per table", field: $selected.boardsTable, label: { value in "\(value) boards" }, minValue: $minValue, inlineTitleWidth: 200, additionalBinding: $selected.boardsTable, onChange: { (newValue) in
                                     selected.boards = max(selected.boards, newValue)
                                     selected.boards = max(newValue, ((selected.boards / newValue) * newValue))
                                  })
 
                             Separator()
                             
-                            StepperInput(title: "Tables", field: $selected.boards, label: boardsLabel, minValue: $selected.boardsTable, increment: $selected.boardsTable, inlineTitleWidth: 200)
+                            // Note this is inputting the number of boards even though prompting for tables
+                            StepperInput(title: "Tables", field: $selected.boards, label: boardsLabel, minValue: $selected.boardsTable, increment: $selected.boardsTable, inlineTitleWidth: 200, onChange:  { (boards) in
+                                let tables = boards / max(1, selected.boardsTable, 1)
+                                if selected.sessions > tables {
+                                    selected.sessions = tables
+                                    if selected.sessions <= 1 {
+                                        selected.resetNumbers = false
+                                    }
+                                }
+                            })
                             
                             Separator()
                             
-                            PickerInput(id: id, title: "Board Numbers", field: $resetBoardNumberIndex, values: { ResetBoardNumber.allCases.map{$0.string}}, inlineTitleWidth: 200)
-                            { (index) in
-                                if let index = index {
-                                    selected.resetNumbers = (index == ResetBoardNumber.perTable.rawValue)
+                            StepperInput(title: "Sessions", field: $selected.sessions, label: { value in "\(value) session\(value == 1 ? "" : "s")" }, minValue: Binding.constant(1), maxValue: Binding.constant(selected.tables), inlineTitleWidth: 200, onChange: { (sessions) in
+                                if sessions <= 1 {
+                                    selected.resetNumbers = false
+                                } else if selected.sessions <= 1 {
+                                    selected.resetNumbers = true
                                 }
-                            }
+                            })
                             
+                            Separator()
+                            
+                            InputToggle(title: "Reset board numbers", field: $selected.resetNumbers, disabled: Binding.constant(selected.sessions <= 1), inlineTitleWidth: 200)
                             
                         }
                     }
@@ -246,7 +258,6 @@ struct LayoutDetailView : View {
         locationIndex = locations.firstIndex(where: {$0 == selected.location}) ?? 0
         playerIndex = players.firstIndex(where: {$0 == selected.partner}) ?? 0
         typeIndex = types.firstIndex(where: {$0 == selected.type}) ?? 0
-        resetBoardNumberIndex = (selected.resetNumbers ? ResetBoardNumber.perTable : ResetBoardNumber.continuous).rawValue
         manualTotalsIndex = (selected.manualTotals ? TotalCalculation.manual : TotalCalculation.automatic).rawValue
 
     }

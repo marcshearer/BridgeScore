@@ -20,7 +20,7 @@ struct InputNumberMac : View {
     var negative: Bool
     var maxCharacters: Int
     var inlineTitle: Bool = true
-    var inlineTitleWidth: CGFloat = 150
+    var inlineTitleWidth: CGFloat = 180
     var onChange: ((Float?)->())?
     
     @State private var keyboardType: UIKeyboardType = .numbersAndPunctuation

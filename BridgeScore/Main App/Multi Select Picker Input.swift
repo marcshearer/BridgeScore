@@ -29,7 +29,7 @@
         var below: Bool = true
         var animation: ViewAnimation = .slideLeft
         var inlineTitle: Bool = true
-        var inlineTitleWidth: CGFloat = 150
+        var inlineTitleWidth: CGFloat = 180
         var onChange: ((Int?)->())?
             
         var body: some View {

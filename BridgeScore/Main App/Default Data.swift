@@ -19,6 +19,7 @@ class DefaultData {
         layout1.sequence = 1
         layout1.boards = 24
         layout1.boardsTable = 3
+        layout1.sessions = 1
         layout1.type = .percent
         layout1.resetNumbers = false
         layout1.sequence = 0
@@ -31,6 +32,7 @@ class DefaultData {
         layout2.sequence = 0
         layout2.boards = 24
         layout2.boardsTable = 3
+        layout2.sessions = 1
         layout2.type = .percent
         layout2.resetNumbers = false
         layout2.sequence = 1
@@ -43,6 +45,7 @@ class DefaultData {
         layout3.sequence = 0
         layout3.boards = 24
         layout3.boardsTable = 3
+        layout3.sessions = 1
         layout3.type = .percent
         layout3.resetNumbers = false
         layout3.sequence = 2
@@ -55,6 +58,7 @@ class DefaultData {
         layout4.sequence = 0
         layout4.boards = 24
         layout4.boardsTable = 12
+        layout3.sessions = 2
         layout4.type = .vpMatchTeam
         layout4.resetNumbers = true
         layout4.sequence = 3
@@ -67,6 +71,7 @@ class DefaultData {
         layout5.sequence = 0
         layout5.boards = 25
         layout5.boardsTable = 5
+        layout5.sessions = 1
         layout5.type = .percent
         layout5.resetNumbers = false
         layout5.sequence = 4
@@ -79,19 +84,21 @@ class DefaultData {
         layout6.sequence = 0
         layout6.boards = 12
         layout6.boardsTable = 2
+        layout6.sessions = 1
         layout6.type = .percent
         layout6.resetNumbers = false
         layout6.sequence = 5
         
         let layout7 = LayoutViewModel()
-        layout7.desc = "ARBC Pairs"
-        layout7.scorecardDesc = "ARBC Pairs"
-        layout7.location = locations.first(where: {$0.name == "Andrew Robson"})
+        layout7.desc = "New Melville Pairs"
+        layout7.scorecardDesc = "New Melville Pairs"
+        layout7.location = locations.first(where: {$0.name == "New Melville"})
         layout7.partner = players.first(where: {$0.name == "Michele Grainger"})
         layout7.sequence = 0
-        layout7.boards = 18
+        layout7.boards = 24
         layout7.boardsTable = 3
-        layout7.type = .percent
+        layout3.sessions = 1
+        layout7.type = .xImp
         layout7.resetNumbers = false
         layout7.sequence = 6
 
@@ -165,7 +172,12 @@ class DefaultData {
             location8.bridgeWebsId = "carlton"
             location8.sequence = 7
             
-            return [location1, location2, location3, location5, location6, location7, location8]
+            let location9 = LocationViewModel()
+            location9.name = "New Melville"
+            location9.bridgeWebsId = "newmelville"
+            location9.sequence = 8
+            
+            return [location1, location2, location3, location5, location6, location7, location8, location9]
         }
     }
 

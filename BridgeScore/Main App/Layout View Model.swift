@@ -20,13 +20,16 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
     @Published public var scorecardDesc: String = ""
     @Published public var boards: Int = 0
     @Published public var boardsTable: Int = 0
+    @Published public var sessions: Int = 1
     @Published public var type: Type = .percent
     @Published public var manualTotals: Bool = false
     @Published public var resetNumbers: Bool = false
+
+    public var tables: Int { get { boards / max(1, boardsTable) } }
     
     // Linked managed objects - should only be referenced in this and the Data classes
     @Published internal var layoutMO: LayoutMO?
-    
+
     @Published public var descMessage: String = ""
     @Published private(set) var saveMessage: String = ""
     @Published private(set) var canSave: Bool = false
@@ -48,6 +51,7 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
                 self.sequence != mo.sequence ||
                 self.boards != mo.boards ||
                 self.boardsTable != mo.boardsTable ||
+                self.sessions != mo.sessions ||
                 self.type != mo.type ||
                 self.manualTotals != mo.manualTotals ||
                 self.resetNumbers != mo.resetNumbers {
@@ -65,6 +69,7 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
         self.desc = ""
         self.boardsTable = 3
         self.boards = 24
+        self.sessions = 1
         self.setupMappings()
     }
     
@@ -118,6 +123,7 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
             self.scorecardDesc = mo.scorecardDesc
             self.boards = mo.boards
             self.boardsTable = mo.boardsTable
+            self.sessions = mo.sessions
             self.type = mo.type
             self.manualTotals = mo.manualTotals
             self.resetNumbers = mo.resetNumbers
@@ -133,6 +139,7 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
         self.scorecardDesc = from.scorecardDesc
         self.boards = from.boards
         self.boardsTable = from.boardsTable
+        self.sessions = from.sessions
         self.type = from.type
         self.manualTotals = from.manualTotals
         self.resetNumbers = from.resetNumbers
@@ -147,6 +154,7 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
         self.layoutMO!.scorecardDesc = self.scorecardDesc
         self.layoutMO!.boards = self.boards
         self.layoutMO!.boardsTable = self.boardsTable
+        self.layoutMO!.sessions = self.sessions
         self.layoutMO!.type = self.type
         self.layoutMO!.manualTotals = self.manualTotals
         self.layoutMO!.resetNumbers = self.resetNumbers

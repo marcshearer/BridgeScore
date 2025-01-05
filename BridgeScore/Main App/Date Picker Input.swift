@@ -32,7 +32,7 @@ struct DatePickerInput : View {
     var height: CGFloat = 45
     var centered: Bool = false
     var inlineTitle: Bool = true
-    var inlineTitleWidth: CGFloat = 150
+    var inlineTitleWidth: CGFloat = 180
     var onChange: ((Date)->())?
     @State private var datePicker = false
 
@@ -65,12 +65,12 @@ struct OptionalDatePickerInput : View {
     var height: CGFloat = 45
     var centered: Bool = false
     var inlineTitle: Bool = true
-    var inlineTitleWidth: CGFloat = 150
+    var inlineTitleWidth: CGFloat = 180
     var onChange: ((Date?)->())?
     @State private var datePicker = false
     @State private var picker: AnyView!
 
-    init(title: String? = nil, field: Binding<Date?>, message: Binding<String>? = nil, placeholder: String = "", clearText: String? = nil, from: Date? = nil, to: Date? = nil, color: PaletteColor = Palette.clear, textType: ThemeTextType = .theme, font: Font = inputFont, cornerRadius: CGFloat = 0, pickerColor: PaletteColor = Palette.datePicker, topSpace: CGFloat = 0, width: CGFloat? = nil, height: CGFloat = 45, centered: Bool = false, inlineTitle: Bool = true, inlineTitleWidth: CGFloat = 150, onChange: ((Date?)->())? = nil) {
+    init(title: String? = nil, field: Binding<Date?>, message: Binding<String>? = nil, placeholder: String = "", clearText: String? = nil, from: Date? = nil, to: Date? = nil, color: PaletteColor = Palette.clear, textType: ThemeTextType = .theme, font: Font = inputFont, cornerRadius: CGFloat = 0, pickerColor: PaletteColor = Palette.datePicker, topSpace: CGFloat = 0, width: CGFloat? = nil, height: CGFloat = 45, centered: Bool = false, inlineTitle: Bool = true, inlineTitleWidth: CGFloat = 180, onChange: ((Date?)->())? = nil) {
         
         self.title = title
         self.field = field

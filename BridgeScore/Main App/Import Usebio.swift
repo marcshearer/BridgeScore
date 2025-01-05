@@ -406,8 +406,8 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
                 if let id = attributes["SESSION_ID"] {
                     if id.uppercased() == "ALL" {
                         matched = false
-                    } else {
                         multiSession = true
+                    } else {
                         sessionId = id
                         boardNumberOffset = ((maxBoardNumber / 32) + 1) * 32
                     }

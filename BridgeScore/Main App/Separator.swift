@@ -16,10 +16,10 @@ struct Separator : View {
     
     var orientation: SeparatorDirection!
     var padding = false
-    var thickness: CGFloat = 0.5
-    var color: Color = Palette.separator.background
+    var thickness: CGFloat
+    var color: Color
     
-    init(direction: SeparatorDirection = .horizontal, padding: Bool = false, thickness: CGFloat = 0.5, color: Color = Palette.separator.background) {
+    init(direction: SeparatorDirection = .horizontal, padding: Bool = false, thickness: CGFloat = 1.0, color: Color = Palette.separator.background) {
         self.orientation = direction
         self.padding = padding
         self.thickness = thickness

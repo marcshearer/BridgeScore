@@ -11,6 +11,7 @@ Invalidate List of scorecards if change self
 Bugs
 ====
 Background still active with MessageBox
+Clear of a text input doesn't update undo history
 
 To Do
 =====

@@ -23,6 +23,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     @Published public var partner: PlayerViewModel?
     @Published public var boards: Int = 0
     @Published public var boardsTable: Int = 0
+    @Published public var sessions: Int = 1
     @Published public var type: Type = .percent
     @Published public var manualTotals: Bool = false
     @Published public var resetNumbers: Bool = false
@@ -59,6 +60,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
                 self.partner?.playerId != mo.partnerId ||
                 self.boards != mo.boards ||
                 self.boardsTable != mo.boardsTable ||
+                self.sessions != mo.sessions ||
                 self.type != mo.type ||
                 self.manualTotals != mo.manualTotals ||
                 self.resetNumbers != mo.resetNumbers ||
@@ -139,6 +141,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.partner = layout.partner
         self.boards = layout.boards
         self.boardsTable = layout.boardsTable
+        self.sessions = layout.sessions
         self.type = layout.type
         self.manualTotals = layout.manualTotals
         self.resetNumbers = layout.resetNumbers
@@ -163,6 +166,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.partner = from.partner
         self.boards = from.boards
         self.boardsTable = from.boardsTable
+        self.sessions = from.sessions
         self.type = from.type
         self.manualTotals = from.manualTotals
         self.resetNumbers = from.resetNumbers
@@ -194,6 +198,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             }
             self.boards = mo.boards
             self.boardsTable = mo.boardsTable
+            self.sessions = mo.sessions
             self.type = mo.type
             self.manualTotals = mo.manualTotals
             self.resetNumbers = mo.resetNumbers
@@ -217,6 +222,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             mo.partnerId = self.partner?.playerId
             mo.boards = self.boards
             mo.boardsTable = self.boardsTable
+            mo.sessions = self.sessions
             mo.type = self.type
             mo.manualTotals = self.manualTotals
             mo.resetNumbers = self.resetNumbers
@@ -299,6 +305,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         }
         UserDefault.currentBoards.set(self.boards)
         UserDefault.currentBoardsTable.set(self.boardsTable)
+        UserDefault.currentSessions.set(self.sessions)
         UserDefault.currentType.set(self.type)
         UserDefault.currentManualTotals.set(self.manualTotals)
         UserDefault.currentResetNumbers.set(self.resetNumbers)
@@ -326,6 +333,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.partner = MasterData.shared.player(id: UserDefault.currentPartner.uuid)
         self.boards = UserDefault.currentBoards.int
         self.boardsTable = UserDefault.currentBoardsTable.int
+        self.sessions = UserDefault.currentSessions.int
         self.type = UserDefault.currentType.type ?? .percent
         self.manualTotals = UserDefault.currentManualTotals.bool
         self.resetNumbers = UserDefault.currentResetNumbers.bool
