@@ -142,7 +142,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         }
     }
 
-    // MARK: - CollectionView Delegates ================================================================ -
+    // MARK: - TableView Delegates ================================================================ -
     
     func numberOfSections(in tableView: UITableView) -> Int {
         rankings.count
@@ -366,14 +366,14 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         rankings = []
         totalRankings = 0
         
-        Scorecard.current.scanRankings() { (ranking, newGrouping, _) in
+        Scorecard.current.scanRankings(session: nil) { (ranking, newGrouping, _) in
             if newGrouping {
                 rankings.append([])
             }
             rankings[rankings.count - 1].append(ranking)
             totalRankings += 1
         }
-        multiTables = Set(rankings.map{$0.first!.table}).count > 1
+        multiTables = Set(rankings.map{$0.first!.session}).count > 1
         multiSections = Set(rankings.map{$0.first!.section}).count > 1
         multiWays = Set(rankings.map{$0.first!.way}).count > 1
     }
@@ -427,7 +427,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
     private func loadScorecardRankingView() {
         
         valuesTableView = UITableView()
-
+        
         // Background
         addSubview(backgroundView)
         backgroundView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
@@ -481,6 +481,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         tableView.separatorStyle = .none
         tableView.sectionHeaderTopPadding = 0
         tableView.bounces = false
+        valuesTableView.showsVerticalScrollIndicator = false
          
         ScorecardRankingSectionHeaderView.register(tableView)
         ScorecardRankingTableCell.register(tableView)
@@ -533,7 +534,7 @@ fileprivate class ScorecardRankingSectionHeaderView: TableViewSectionHeaderWithC
 }
 
 
-// MARK: - Board Table View Cell ================================================================ -
+// MARK: - Ranking Table View Cell ================================================================ -
 
 class ScorecardRankingTableCell: TableViewCellWithCollectionView, UITextFieldDelegate {
     private static let cellIdentifier = "Ranking Table Cell"
@@ -710,7 +711,7 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
             roundCollectionView.backgroundColor = UIColor(color.background)
             roundCollectionView.reloadData()
         case .score:
-            label.text = ranking.score.toString(places: min(1, scorecard.type.matchPlaces), exact: true)
+            label.text = ranking.score.toString(places: min(1, (ranking.session == 0 ? scorecard.type.matchPlaces : scorecard.type.tablePlaces)), exact: true)
             label.textAlignment = .right
         case .nsXImps:
             let nsXImps = ranking.xImps[.ns]
@@ -724,7 +725,7 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
             label.text = (ranking.points == 0 ? "" : ranking.points.toString(places: 2, exact: true))
             label.textAlignment = .right
         case .table:
-            label.text = "     Stanza \(ranking.table)"
+            label.text = "     " + (ranking.session == 0 ? "Combined Sessions" : "Session \(ranking.session)")
             label.textAlignment = .left
         case .section:
             label.text = "     Section \(ranking.section)"

@@ -180,7 +180,7 @@ struct AnalysisViewer: View {
                     }
                 }
             }
-            .onChange(of: board.board, initial: true) {
+            .onChange(of: board.boardIndex, initial: true) {
                 updateAnalysisData()
             }
             .onSwipe() { direction in
@@ -222,7 +222,7 @@ struct AnalysisViewer: View {
                         Spacer()
                         HStack {
                             Spacer().frame(width: 20)
-                            Text("Board \(board.boardNumber)\(scorecard.resetNumbers ? "(\(board.tableNumber))" : "")")
+                            Text("Board \(board.boardNumberText)\(scorecard.isMultiSession ? "(\(board.session))" : "")")
                             if traveller.rankingNumber == handTraveller.rankingNumber {
                                 HStack {
                                     Spacer().frame(width: 20)
@@ -284,7 +284,7 @@ struct AnalysisViewer: View {
         }
         
         func save() {
-            if let board = Scorecard.current.boards[board.board] {
+            if let board = Scorecard.current.boards[board.boardIndex] {
                 if board.changed {
                     Scorecard.current.save(board: board)
                 }
@@ -294,7 +294,7 @@ struct AnalysisViewer: View {
         func otherTable() {
             if let rankingNumber = traveller.rankingNumber[sitting] {
                 let newSitting = (sitting == initialSitting ? sitting.equivalent : initialSitting)
-                if let newTraveller = Scorecard.current.travellers(board: board.board, seat: newSitting, rankingNumber: rankingNumber).first {
+                if let newTraveller = Scorecard.current.travellers(board: board.boardIndex, seat: newSitting, rankingNumber: rankingNumber).first {
                     sitting = newSitting
                     traveller = newTraveller
                     handTraveller = traveller
@@ -327,10 +327,10 @@ struct AnalysisViewer: View {
     
     func nextTraveller(_ direction: Int) {
         let boards = Scorecard.current.boards.count
-        var boardNumber = board.board
+        var boardIndex = board.boardIndex
         repeat {
-            boardNumber += direction
-            if let (newBoard, newTraveller, newSitting) = Scorecard.getBoardTraveller(boardNumber: boardNumber, equivalentSeat: (sitting != initialSitting)) {
+            boardIndex += direction
+            if let (newBoard, newTraveller, newSitting) = Scorecard.getBoardTraveller(boardIndex: boardIndex, equivalentSeat: (sitting != initialSitting)) {
                 initialSitting = newBoard.table!.sitting
                 sitting = newSitting
                 rotated = sitting.offset(to: initialSitting)
@@ -342,7 +342,7 @@ struct AnalysisViewer: View {
                 summaryMode = true
                 break
             }
-        } while boardNumber > 1 && boardNumber < boards
+        } while boardIndex > 1 && boardIndex < boards
     }
     
     struct AnalysisResponsible : View {
@@ -507,14 +507,14 @@ struct AnalysisViewer: View {
                     nextTraveller(-1)
                 } label: {
                     Image(systemName: "backward.frame")
-                }.disabled(board.board <= 1).foregroundColor(Palette.banner.text.opacity(board.board <= 1 ? 0.5 : 1))
+                }.disabled(board.boardIndex <= 1).foregroundColor(Palette.banner.text.opacity(board.boardIndex <= 1 ? 0.5 : 1))
                 Spacer().frame(width: 20)
                 Button {
                     save()
                     nextTraveller(1)
                 } label: {
                     Image(systemName: "forward.frame")
-                }.disabled(board.board >= boards).foregroundColor(Palette.banner.text.opacity(board.board >= boards ? 0.5 : 1))
+                }.disabled(board.boardIndex >= boards).foregroundColor(Palette.banner.text.opacity(board.boardIndex >= boards ? 0.5 : 1))
                 Spacer().frame(width: 20)
                 Button {
                     save()
@@ -1126,7 +1126,7 @@ struct overridePopover : View {
     }
     
     func setValue(combination: AnalysisTrickCombination, value: Int?) {
-        analysisData.override.setValue(board: board.board, suit: combination.suit, declarer: combination.declarer, value: value)
+        analysisData.override.setValue(board: board.boardIndex, suit: combination.suit, declarer: combination.declarer, value: value)
         Scorecard.current.save(board: board)
         if value != nil {
             method = .override
@@ -1646,7 +1646,7 @@ struct AnalysisTravellerView: View {
             }
             Spacer().frame(height: 4)
         }
-        .onChange(of: board.board, initial: true) {
+        .onChange(of: board.boardIndex, initial: true) {
             reflectChange()
         }
         .onChange(of: traveller.rankingNumber, initial: false) {
@@ -1672,7 +1672,7 @@ struct AnalysisTravellerView: View {
     
     func buildTravellers(board: BoardViewModel, sitting: Seat) -> [TravellerExtension] {
         var result: [TravellerExtension] = []
-        for traveller in Scorecard.current.travellers(board: board.board) {
+        for traveller in Scorecard.current.travellers(board: board.boardIndex) {
             result.append(TravellerExtension(scorecard: scorecard, traveller: traveller))
         }
         let headToHead = (scorecard.type.players == 4 && travellers.count <= 2)
@@ -1772,7 +1772,7 @@ class TravellerExtension: TravellerViewModel {
     }
     
     init(scorecard: ScorecardViewModel, traveller: TravellerViewModel) {
-        super.init(scorecard: scorecard, board: traveller.board, section: traveller.section, ranking: traveller.rankingNumber)
+        super.init(scorecard: scorecard, board: traveller.boardIndex, section: traveller.section, ranking: traveller.rankingNumber)
         self.travellerMO = traveller.travellerMO
         self.revert()
         self.nsPoints = Scorecard.points(contract: traveller.contract, vulnerability: Vulnerability(board: traveller.boardNumber), declarer: traveller.declarer, made: traveller.made, seat: .north)

@@ -67,7 +67,8 @@ enum ImportFormat {
     }
 }
 
-class ImportedScorecard: NSObject {
+class ImportedScorecard: NSObject, ObservableObject {
+    var id = UUID()
     var importSource: ImportSource?
     var title: String?
     var boardCount: Int?
@@ -80,13 +81,13 @@ class ImportedScorecard: NSObject {
     var myRanking: ImportedRanking?
     var myRankingSeat: Seat?
     var myName: String!
-    var travellers: [Int:[ImportedTraveller]] = [:]
+    var travellers: [Int:[ImportedTraveller]] = [:] // Board Index
     var boards: [Int:ImportedBoard] = [:]
-    var warnings: [String] = []
-    var error: String?
+    @Published var warnings: [String] = []
+    @Published var error: String?
     var scorecard: ScorecardViewModel!
     var boardsTable: Int?
-    var table: Int = 1
+    var session: Int? = nil
     var format: ImportFormat = .pairs
     var hand: String?
     var dealer: Seat?
@@ -99,30 +100,34 @@ class ImportedScorecard: NSObject {
     
     // MARK: - Import to main data structures =================================================================== -
         
+    public override init() {
+        super.init()
+    }
+    
     public func importScorecard() {
-        // Import source
+            // Import source
         scorecard?.importSource = importSource!
         
-        // Update date
+            // Update date
         if let date = date {
             scorecard?.date = date
         }
         
-        // Update partner
+            // Update partner
         if let partner = partner {
             scorecard?.partner = partner
         }
         
-        // Update location
+            // Update location
         if let location = location {
             scorecard?.location = location
         }
         
-        // Clear manual totals
+            // Clear manual totals
         scorecard.manualTotals = false
         
         if travellers.count > 0 {
-            if !(scorecard?.resetNumbers ?? false) {
+            if !(scorecard?.isMultiSession ?? false) {
                     // Update number of boards / tables
                 if let boardCount = boardCount {
                     scorecard?.boards = boardCount
@@ -136,15 +141,20 @@ class ImportedScorecard: NSObject {
             }
         }
         
-        // Update boards and tables
+            // Update boards and tables
         
         if let scorecard = scorecard {
             if travellers.count > 0 {
                 if Scorecard.current.match(scorecard: scorecard) {
-                    if scorecard.resetNumbers {
-                        importTable(tableNumber: table, boardOffset: (table - 1) * scorecard.boardsTable)
-                        importRankings(table: table)
-                        importRankingTables(table: table)
+                    if scorecard.isMultiSession, let session = session {
+                        let tables = scorecard.sessionTables(session: session)
+                        for tableNumber in tables {
+                            importTable(tableNumber: tableNumber, boardOffset: (session - 1) * scorecard.boardsSession)
+                        }
+                        importRankings(session: session)
+                        for table in tables {
+                            importRankingTables(table: table)
+                        }
                     } else {
                         for tableNumber in 1...scorecard.tables {
                             importTable(tableNumber: tableNumber)
@@ -153,60 +163,76 @@ class ImportedScorecard: NSObject {
                         importRankingTables()
                     }
                 }
-                rebuildRankingTotals()
-                Scorecard.updateScores(scorecard: scorecard)
             } else {
                 importRankings()
             }
-          
+            
+            rebuildRankingTotals()
+            Scorecard.updateScores(scorecard: scorecard)
+            
             Scorecard.current.saveAll(scorecard: scorecard)
+            scorecard.saveScorecard()
+        }
+    }
+            
+            
+    func prepareForNext() {
+        if let scorecard = scorecard {
+            if scorecard.tables > 1 && scorecard.isMultiSession {
+                scorecard.importNext += 1
+            }
+            scorecard.saveScorecard()
         }
     }
     
     private func importTable(tableNumber: Int, boardOffset: Int = 0) {
+        var tableUpdated: Bool = false
         if let scorecard = scorecard,
             let myRanking = myRanking,
-            let myNumber = myRanking.number,
             let myPair = myRanking.way {
             
+            let myNumber = myRanking.number
             let mySection = myRanking.section
             let table = Scorecard.current.tables[tableNumber]
             
-            for tableBoardNumber in 1...scorecard.boardsTable {
+            for tableBoardIndex in 1...scorecard.boardsTable {
                 
-                let boardNumber = ((tableNumber - 1) * scorecard.boardsTable) + tableBoardNumber
+                let boardIndex = ((tableNumber - 1) * scorecard.boardsTable) + tableBoardIndex
                 
-                if let lines = travellers[boardNumber - boardOffset],
+                if let lines = travellers[boardIndex - boardOffset], let myNumber = myNumber,
                    let myLine = myTravellerLine(lines: lines, myNumber: myNumber, myPair: myPair, mySection: mySection) {
                     
-                    let mySeat = seat(line: myLine, ranking: myRanking, myPair: myPair, name: myName) ?? .unknown
-                    var versus = ""
-                    for seat in Seat.validCases {
-                        if seat != mySeat && (scorecard.type.players == 1 || seat.pair != mySeat.pair) {
-                            let otherNumber = myLine.ranking[seat] ?? myNumber
-                            if let ranking = otherRanking(number: otherNumber, myPair: mySeat.pair, section: mySection), let otherName = ranking.players[seat]  {
-                                if versus != "" {
-                                    versus += " & "
+                    if !tableUpdated {
+                        let mySeat = seat(line: myLine, ranking: myRanking, myPair: myPair, name: myName) ?? .unknown
+                        var versus = ""
+                        for seat in Seat.validCases {
+                            if seat != mySeat && (scorecard.type.players == 1 || seat.pair != mySeat.pair) {
+                                let otherNumber = myLine.ranking[seat] ?? myNumber
+                                if let ranking = otherRanking(number: otherNumber, myPair: mySeat.pair, section: mySection), let otherName = ranking.players[seat]  {
+                                    if versus != "" {
+                                        versus += " & "
+                                    }
+                                    let name = MasterData.shared.realName(bboName: otherName) ?? "Unknown" // Try bbo lookup but will fail on other imports and return itself
+                                    versus += name
                                 }
-                                let name = MasterData.shared.realName(bboName: otherName) ?? "Unknown" // Try bbo lookup but will fail on other imports and return itself
-                                versus += name
                             }
                         }
+                        table?.versus = versus
+                        table?.sitting = mySeat
+                        tableUpdated = true
                     }
-                    table?.versus = versus
-                    table?.sitting = mySeat
                     
-                    importBoard(myLine: myLine, boardNumber: boardNumber, boardOffset: boardOffset, myRanking: myRanking)
+                    importBoard(myLine: myLine, boardIndex: boardIndex, boardOffset: boardOffset, myRanking: myRanking)
                 } else {
                     table?.versus = "Sitout"
                 }
-                importTravellers(boardNumber: boardNumber, boardOffset: boardOffset)
+                importTravellers(boardNumber: boardIndex, boardOffset: boardOffset)
             }
         }
     }
     
-    func importBoard(myLine: ImportedTraveller, boardNumber: Int, boardOffset: Int, myRanking: ImportedRanking) {
-        let board = Scorecard.current.boards[boardNumber]
+    func importBoard(myLine: ImportedTraveller, boardIndex: Int, boardOffset: Int, myRanking: ImportedRanking) {
+        let board = Scorecard.current.boards[boardIndex]
         board?.contract = myLine.contract ?? Contract()
         board?.declarer = myLine.declarer ?? .unknown
         board?.made = myLine.made
@@ -221,7 +247,7 @@ class ImportedScorecard: NSObject {
             }
             board?.score = (myPair == .ns ? nsScore : scorecard.type.invertScore(score: nsScore))
         }
-        if let board = board, let importedBoard = boards[boardNumber - boardOffset] {
+        if let board = board, let importedBoard = boards[boardIndex - boardOffset] {
             board.hand = importedBoard.hand ?? ""
             board.optimumScore = importedBoard.optimumScore
             board.doubleDummy = [:]
@@ -229,15 +255,15 @@ class ImportedScorecard: NSObject {
                 board.doubleDummy[declarer] = [:]
                 for suit in Suit.validCases {
                     if let made = importedBoard.doubleDummy[declarer]?[suit] {
-                        board.doubleDummy[declarer]![suit] = DoubleDummyViewModel(scorecard: scorecard, board: board.board, declarer: declarer, suit: suit, made: made)
+                        board.doubleDummy[declarer]![suit] = DoubleDummyViewModel(scorecard: scorecard, board: board.boardIndex, declarer: declarer, suit: suit, made: made)
                     }
                 }
             }
         }
     }
     
-    func importRankings(table: Int? = nil) {
-        Scorecard.current.removeRankings(table: table)
+    func importRankings(session: Int? = nil) {
+        Scorecard.current.removeRankings(session: session)
         if let scorecard = scorecard {
             let sortedRankings = rankings.sorted(by: {($0.ranking ?? 0) < ($1.ranking ?? 0)})
             for (index, importedRanking) in sortedRankings.enumerated() {
@@ -246,7 +272,7 @@ class ImportedScorecard: NSObject {
                 
                 if let number = importedRanking.number,
                    let way = importedRanking.way {
-                    let ranking = RankingViewModel(scorecard: scorecard, table: table ?? 0, section: section, way: way, number: number)
+                    let ranking = RankingViewModel(scorecard: scorecard, session: session ?? 0, section: section, way: way, number: number)
                     
                     // Sort out ties
                     if index > 0 && sortedRankings[index - 1].score == ranking.score {
@@ -453,8 +479,8 @@ class ImportedScorecard: NSObject {
                                 }
                             }
                         }
-                        traveller.nsScore = Utility.round(Float(traveller.nsMps!) / Float(traveller.totalMps!) * 100, places: scorecard.type.boardPlaces)
                     }
+                    traveller.nsScore = Utility.round(Float(traveller.nsMps!) / Float(traveller.totalMps!) * 100, places: scorecard.type.boardPlaces)
                 } else if scorecard.type.boardScoreType == .aggregate {
                     traveller.nsScore = Float(traveller.nsPoints ?? 0)
                 }
@@ -499,8 +525,8 @@ class ImportedScorecard: NSObject {
             // Don't re-score since don't have accurate formula / tables for this method
         } else {
             if scorecard.type.players == 4 {
-                    // First rebuild cross imps on each traveller
-                for (boardNumber, _) in Scorecard.current.boards {
+                // First rebuild cross imps on each traveller
+                for (boardNumber, _) in Scorecard.current.boards.filter({!scorecard.isMultiSession || $1.session == session}) {
                     let boardTravellers = Scorecard.current.travellers(board: boardNumber)
                     for traveller in boardTravellers {
                         let otherTravellers = boardTravellers.filter{!($0 == traveller)}
@@ -510,55 +536,90 @@ class ImportedScorecard: NSObject {
                         traveller.save()
                     }
                 }
-                    // Now put the total back on the ranking
-                for ranking in Scorecard.current.rankingList {
+                // Now put the total back on the ranking
+                for ranking in Scorecard.current.rankingList.filter({!scorecard.isMultiSession || $0.session == session}) {
                     for pair in Pair.validCases {
-                        let xImps = Scorecard.current.travellers(seat: pair.first, rankingNumber: ranking.number, section: ranking.section).map{$0.nsXImps * Float(pair.sign)}.reduce(0,+)
+                        let xImps = Scorecard.current.travellers(seat: pair.first, rankingNumber: ranking.number, section: ranking.section, session: (scorecard.isMultiSession ? session : nil)).map{$0.nsXImps * Float(pair.sign)}.reduce(0,+)
                         ranking.xImps[pair] = xImps
                         ranking.save()
                     }
                 }
             }
-            for ranking in Scorecard.current.rankingList {
+            for ranking in Scorecard.current.rankingList.filter({!scorecard.isMultiSession || $0.session == session}) {
                 var tableScores: Float = 0
                 var tablesPlayed = 0
-                for tableNumber in 1...scorecard.tables {
+                for tableNumber in scorecard.sessionTables(session: session) {
                     if let table = Scorecard.current.tables[tableNumber] {
-                        if !scorecard.resetNumbers || ranking.table == tableNumber {
-                            let players = scorecard.type.players
-                            var seats:[Seat] = []
-                                // Need to pick up this person in all seats if individual
-                                // North or East if pairs, and North only if teams since 1 of team will have sat north
-                            if players == 1 { seats = Seat.validCases }
-                            else if players == 2 {
-                                if ranking.way == .unknown {
-                                    seats = [.north, .east]
-                                } else {
-                                    seats = [ranking.way.seats.first!]
-                                }
-                            } else { seats = [.north] }
-                            if let tableScore = table.score(ranking: ranking, seats: seats) {
-                                tableScores += tableScore
-                                tablesPlayed += 1
+                        let players = scorecard.type.players
+                        var seats:[Seat] = []
+                            // Need to pick up this person in all seats if individual
+                            // North or East if pairs, and North only if teams since 1 of team will have sat north
+                        if players == 1 { seats = Seat.validCases }
+                        else if players == 2 {
+                            if ranking.way == .unknown {
+                                seats = [.north, .east]
+                            } else {
+                                seats = [ranking.way.seats.first!]
                             }
+                        } else { seats = [.north] }
+                        if let tableScore = table.score(ranking: ranking, seats: seats) {
+                            tableScores += tableScore
+                            tablesPlayed += 1
                         }
                     }
                 }
-                if scorecard.resetNumbers {
-                    ranking.score = Scorecard.aggregate(total: tableScores, count: 1, boards: scorecard.boardsTable, subsidiaryPlaces: scorecard.type.boardPlaces, places: scorecard.type.tablePlaces, type: scorecard.type.tableAggregate) ?? 0
-                } else {
-                    ranking.score = Scorecard.aggregate(total: tableScores, count: tablesPlayed, boards: scorecard.boards, subsidiaryPlaces: scorecard.type.tablePlaces, places: scorecard.type.matchPlaces, type: scorecard.type.matchAggregate) ?? 0
-                }
+                ranking.score = Scorecard.aggregate(total: tableScores, count: tablesPlayed, boards: scorecard.boardsSession, subsidiaryPlaces: scorecard.type.tablePlaces, places: scorecard.type.matchPlaces, type: (session == nil ? scorecard.type.sessionAggregate : scorecard.type.sessionAggregate)) ?? 0
             }
         }
+        if let session = session {
+            updateRankingPositions(session: session)
+            mergedSessionRankings()
+        }
+        updateRankingPositions(session: 0)
+    }
+    
+    func mergedSessionRankings() {
+        var lastRanking: RankingViewModel?
+        var lastTotal:Float = 0
+        var lastCount = 0
         
+        Scorecard.current.removeRankings(session: 0)
+        let rankings = Scorecard.current.rankingList.sorted(by: {NSObject.sort($0, $1, sortKeys: [("section", .ascending), ("number", .ascending), ("waySort", .ascending)])})
+        for ranking in rankings {
+            if let lastRanking = lastRanking, lastRanking.number == ranking.number && lastRanking.section == ranking.section && (lastRanking.way == ranking.way || scorecard.type.players == 4) {
+                // Add this ranking to the list
+                lastCount += 1
+                lastTotal += ranking.score
+                lastRanking.score = Scorecard.aggregate(total: lastTotal, count: lastCount, boards: scorecard.boardsSession * lastCount, subsidiaryPlaces: scorecard.type.tablePlaces, places: scorecard.type.matchPlaces, type: scorecard.type.matchAggregate) ?? 0
+                for pair in Pair.validCases {
+                    if let pairXImps = ranking.xImps[pair] {
+                        if lastRanking.xImps[pair] == nil {
+                            lastRanking.xImps[pair] = pairXImps
+                        } else {
+                            lastRanking.xImps[pair]! += pairXImps
+                        }
+                    }
+                }
+            } else {
+                // Save last ranking and set up a new one based on this ranking
+                lastRanking?.insert()
+                lastCount = 1
+                lastTotal = ranking.score
+                lastRanking = ranking.copied()
+                lastRanking!.session = 0
+            }
+        }
+        lastRanking?.insert()
+    }
+     
+    func updateRankingPositions(session: Int?) {
         // Now reset ranking position on each ranking, set ties and fill in my position and field entry
         var position = 0
         var groupEntry = 0
         var myGroup = false
-        Scorecard.current.scanRankings { (ranking, newGrouping, lastRanking) in
+        Scorecard.current.scanRankings(session: session) { (ranking, newGrouping, lastRanking) in
             if newGrouping {
-                if myGroup && !scorecard.resetNumbers {
+                if myGroup && (!scorecard.isMultiSession || session == 0) {
                     scorecard.entry = groupEntry
                 }
                 position = 0
@@ -568,14 +629,15 @@ class ImportedScorecard: NSObject {
             position += 1
             groupEntry += 1
             ranking.ranking = position
-            if ranking.score == lastRanking?.score {
+            ranking.tie = false
+            if !newGrouping && (ranking.score == lastRanking?.score) {
                 lastRanking!.tie = true
                 ranking.ranking = lastRanking!.ranking
                 ranking.tie = true
             }
             if ranking.number == myRanking?.number && (myRanking?.way == .unknown || ranking.way == myRanking?.way) {
                 myGroup = true
-                if !scorecard.resetNumbers {
+                if !scorecard.isMultiSession || session == 0 {
                     scorecard.position = ranking.ranking
                 }
             }
@@ -584,7 +646,7 @@ class ImportedScorecard: NSObject {
                 ranking.way = .unknown
             }
         }
-        if myGroup && !scorecard.resetNumbers {
+        if myGroup && (!scorecard.isMultiSession || session == 0) {
             scorecard.entry = groupEntry
         }
     }
@@ -629,16 +691,16 @@ class ImportedScorecard: NSObject {
         }
         
         var boards: Int
-        if scorecard?.tables == 1 || !(scorecard?.resetNumbers ?? false) {
+        if !(scorecard?.isMultiSession ?? false) {
             boards = scorecard!.boards
         } else {
-            boards = scorecard!.boardsTable
+            boards = scorecard!.boardsSession
         }
         
         // Check total number of boards
         if boardCount != boards {
-            if scorecard?.resetNumbers ?? false {
-                error = "Number of boards must equal current scorecard boards per table on partial imports"
+            if scorecard?.isMultiSession ?? false {
+                error = "Number of boards must equal current scorecard boards per session on partial imports"
             } else {
                 warnings.append("Number of boards imported does not match current scorecard")
             }
@@ -646,54 +708,67 @@ class ImportedScorecard: NSObject {
         checkBoardsPerTable(name: myName)
     }
     
-    public func confirmDetails(importedScorecard: Binding<ImportedScorecard>, nextTable: Binding<Int>? = nil, suffix: String = "", onError: @escaping ()->(), completion: @escaping ()->()) -> some View {
+    func lastMinuteValidate() {
+        // Note this should be called after any previous imports have been action
+        // It checks the data of the next import against the current state of the scorecard
+        checkRankings()
+    }
+    
+    public func confirmDetails(importedScorecard: Binding<ImportedScorecard>, suffix: String = "", onError: @escaping ()->(), completion: @escaping ()->()) -> some View {
+        @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
         @OptionalStringBinding(importedScorecard.wrappedValue.title) var titleBinding
         @OptionalStringBinding(Utility.dateString(importedScorecard.wrappedValue.date, format: "EEEE d MMMM yyyy")) var dateBinding
         @OptionalStringBinding(importedScorecard.wrappedValue.partner?.name) var partnerBinding
         @OptionalStringBinding("\(importedScorecard.wrappedValue.boardCount ?? 0)") var boardCountBinding
         @OptionalStringBinding("\(importedScorecard.wrappedValue.boardsTable ?? 0)") var boardsTableBinding
 
+        var editSession: Binding<Int> {
+            Binding {
+                self.scorecard.importNext
+            } set: { (newValue) in
+                self.scorecard.importNext = newValue
+            }
+        }
+        
         return VStack(spacing: 0) {
+            
             Banner(title: Binding.constant("Confirm Import Details\(suffix)"), backImage: Banner.crossImage)
             Spacer().frame(height: 16)
             
-            if nextTable != nil {
+            if scorecard.isMultiSession {
+                
                 InsetView(title: "Import Settings") {
                     VStack(spacing: 0) {
                 
-                        StepperInput(title: "Import for stanza", field: importedScorecard.table, label: stepperLabel, minValue: nextTable, maxValue: Binding.constant(scorecard.tables))
+                        StepperInput(title: "Import for session", field: editSession, label: stepperLabel, minValue: {1}, maxValue: { self.scorecard.sessions}, onChange: { (value) in
+                            self.session = value
+                        })
                         
                         Spacer().frame(height: 16)
                     }
                 }
             }
             
-            InsetView(title: "BBO Import Details") {
+            InsetView(title: "\((importSource ?? .none).from) Import Details") {
                 VStack(spacing: 0) {
                     
-                    Input(title: "Title", field: titleBinding, clearText: false)
-                    .disabled(true)
-                    Input(title: "Date", field: dateBinding, clearText: false)
-                    .disabled(true)
-                    Input(title: "Partner", field: partnerBinding, clearText: false)
-                    .disabled(true)
+                    Input(title: "Title", field: titleBinding, asText: true)
+                    Input(title: "Date", field: dateBinding, asText: true)
+                    Input(title: "Partner", field: partnerBinding, asText: true)
                     
                     Spacer().frame(height: 8)
                     Separator()
                     Spacer().frame(height: 8)
 
-                    Input(title: (scorecard.resetNumbers ? "Boards / Table" : "Total Boards"), field: boardCountBinding, clearText: false)
-                    .disabled(true)
-                    if !scorecard.resetNumbers {
-                        Input(title: "Boards / Table", field: boardsTableBinding, clearText: false)
-                        .disabled(true)
-                    }
+                    Input(title: (scorecard.isMultiSession ? "Boards / Session" : "Total Boards"), field: boardCountBinding, asText: true)
+                    Input(title: "Boards / Table", field: boardsTableBinding, topSpace: 0, asText: true)
                     
                     Spacer()
                 }
             }
 
             if !importedScorecard.wrappedValue.warnings.isEmpty {
+                
                 InsetView(title: "Warnings") {
                     ScrollView {
                         VStack(spacing: 0) {
@@ -720,7 +795,7 @@ class ImportedScorecard: NSObject {
                         Spacer()
                         HStack {
                             Spacer()
-                                Text("Confirm")
+                            Text("Confirm")
                             Spacer()
                         }
                         Spacer()
@@ -738,19 +813,107 @@ class ImportedScorecard: NSObject {
                 }
                 Spacer().frame(height: 16)
             }
-            .onAppear {
-                if let error = importedScorecard.wrappedValue.error {
-                    MessageBox.shared.show(error, okAction: {
-                        onError()
-                    })
-                }
+        }
+        .onAppear {
+            if self.scorecard.isMultiSession {
+                self.session = min(self.scorecard.importNext, self.scorecard.sessions)
             }
         }
         .background(Palette.alternate.background)
     }
     
     private func stepperLabel(value: Int) -> String {
-        return "Stanza \(value) of \(scorecard.tables)"
+        return "Session \(value) of \(scorecard.sessions)"
+    }
+    
+    internal func checkRankings() {
+        var minFound: Int?
+        var errorMessage: String?
+        var translate: [(from: Int, to: Int)] = []
+        
+        let existingRankings = Scorecard.current.rankingList.filter{$0.session == 0}
+        if !existingRankings.isEmpty {
+            for ranking in rankings {
+                // Find existing ranking containing any player from this ranking
+                var existingRanking: RankingViewModel?
+                for seat in Seat.validCases {
+                    existingRanking = existingRankings.filter{$0.players.contains(where: {$1 == ranking.players[seat]})}.first
+                    if existingRanking != nil {
+                        break
+                    }
+                }
+                if let existingRanking = existingRanking {
+                    // Check all players
+                    var found = 0
+                    for seat in Seat.validCases {
+                        if existingRanking.players.contains(where: {$1 == ranking.players[seat]}) {
+                            found += 1
+                        } else {
+                            // Not in this pair / team in existing rankings
+                            // Check not in another pair / team in existing rankings
+                            if !existingRankings.filter({$0.players.contains(where: {$1 == ranking.players[seat]})}).isEmpty {
+                                // Give up
+                                errorMessage = "Players in different \(scorecard.type.description)s"
+                                break
+                            }
+                        }
+                    }
+                    if found < scorecard.type.players {
+                        minFound = min(minFound ?? Int.max, found)
+                    }
+                    
+                    if let rankingNumber = ranking.number, rankingNumber != existingRanking.number {
+                        // Different pair / team numbers - need to translate!
+                        translate.append((from: rankingNumber, to: existingRanking.number))
+                    }
+                } else  {
+                    // All the members of this pair/team not in previous rankings - give up
+                    errorMessage = "Entire \(scorecard.type.description) not found"
+                    break
+                }
+            }
+            if let errorMessage = errorMessage {
+                error = "Unable to match \(scorecard.type.description)s (\(errorMessage))"
+            } else {
+                if let minFound = minFound {
+                    warnings.append("Some \(scorecard.type.description)s have only \(minFound) players matching existing sessions")
+                }
+                if !translate.isEmpty {
+                        // Carry out translation
+                    for ranking in rankings {
+                        for (from, to) in translate {
+                            if ranking.number == from {
+                                ranking.number = to
+                                break
+                            }
+                        }
+                    }
+                    for rankingTable in rankingTables {
+                        for (from, to) in translate {
+                            if rankingTable.number == from {
+                                rankingTable.number = to
+                                break
+                            }
+                        }
+                    }
+                    for (_, boardTravellers) in travellers {
+                        for traveller in boardTravellers {
+                            for seat in Seat.validCases {
+                                if let number = traveller.ranking[seat] {
+                                    for (from, to) in translate {
+                                        if number == from {
+                                            traveller.ranking[seat] = to
+                                            break
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    warnings.append("\(scorecard.type.description) numbers changed to match existing sessions")
+                }
+            }
+        }
     }
 }
 

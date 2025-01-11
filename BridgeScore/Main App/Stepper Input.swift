@@ -14,9 +14,9 @@ struct StepperInput: View {
     var field: Binding<Int>
     var label: ((Int)->String)?
     var isEnabled: Bool = true
-    var minValue: Binding<Int>? = nil
-    var maxValue: Binding<Int>? = nil
-    var increment: Binding<Int>? = nil
+    var minValue: (()->Int)? = nil
+    var maxValue: (()->Int)? = nil
+    var increment: (()->Int)? = nil
     var message: Binding<String>?
     var topSpace: CGFloat = 5
     var leadingSpace: CGFloat = 0
@@ -41,9 +41,9 @@ struct StepperInputAdditional<Additional>: View where Additional: Equatable {
     var field: Binding<Int>
     var label: ((Int)->String)?
     var isEnabled: Bool = true
-    var minValue: Binding<Int>? = nil
-    var maxValue: Binding<Int>? = nil
-    var increment: Binding<Int>? = nil
+    var minValue: (()->Int)? = nil
+    var maxValue: (()->Int)? = nil
+    var increment: (()->Int)? = nil
     var message: Binding<String>?
     var topSpace: CGFloat = 5
     var leadingSpace: CGFloat = 0
@@ -135,9 +135,9 @@ struct StepperInputAdditional<Additional>: View where Additional: Equatable {
     }
     
     func change(_ field: Binding<Int>, direction: Int = 0) {
-        let increment = (self.increment?.wrappedValue ?? 1) * direction
-        let minValue = self.minValue?.wrappedValue ?? 0
-        let maxValue = self.maxValue?.wrappedValue ?? Int.max
+        let increment = (self.increment?() ?? 1) * direction
+        let minValue = self.minValue?() ?? 0
+        let maxValue = self.maxValue?() ?? Int.max
         
         let newValue = max(min(field.wrappedValue + increment, maxValue), minValue)
         onChange?(newValue)

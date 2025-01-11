@@ -25,11 +25,11 @@ class Scorecard {
     @Published private(set) var analysisList: [Int:[Pair:Analysis]] = [:] // Board number, Sitting
     @Published private(set) var overrideList: [Int:AnalysisOverride] = [:] // Board number
     
-    public func rankings(table: Int? = nil, section: Int? = nil, way: Pair? = nil, number: Int? = nil, player: (bboName: String, name: String)? = nil) -> [RankingViewModel] {
+    public func rankings(session: Int? = nil, section: Int? = nil, way: Pair? = nil, number: Int? = nil, player: (bboName: String, name: String)? = nil) -> [RankingViewModel] {
         var result = rankingList
-        if let table = table {
-            if scorecard?.resetNumbers ?? false {
-                result = result.filter({$0.table == table})
+        if let session = session {
+            if scorecard?.isMultiSession ?? false {
+                result = result.filter({$0.session == session})
             }
         }
         if let section = section {
@@ -47,8 +47,8 @@ class Scorecard {
         return result
     }
     
-    public func ranking(table: Int, section: Int, way: Pair, number: Int) -> RankingViewModel? {
-        let resultList = rankingList.filter({(!(scorecard?.resetNumbers ?? false) || $0.table == table) && $0.section == section && ($0.way == .unknown || $0.way == way) && $0.number == number})
+    public func ranking(session: Int, section: Int, way: Pair, number: Int) -> RankingViewModel? {
+        let resultList = rankingList.filter({(!(scorecard?.isMultiSession ?? false) || $0.session == session) && $0.section == section && ($0.way == .unknown || $0.way == way) && $0.number == number})
         return resultList.count == 1 ? resultList.first : nil
     }
     
@@ -57,10 +57,13 @@ class Scorecard {
         return resultList.count == 1 ? resultList.first : nil
     }
     
-    public func travellers(board: Int? = nil, seat: Seat? = nil, rankingNumber: Int? = nil, section: Int? = nil) -> [TravellerViewModel] {
+    public func travellers(board: Int? = nil, seat: Seat? = nil, rankingNumber: Int? = nil, section: Int? = nil, session: Int? = nil) -> [TravellerViewModel] {
         var result = travellerList
         if let board = board {
-            result = result.filter({$0.board == board})
+            result = result.filter({$0.boardIndex == board})
+        }
+        if let session = session {
+            result = result.filter({Scorecard.current.boards[$0.boardIndex]?.session == session})
         }
         if let seat = seat {
             if let section = section {
@@ -74,24 +77,24 @@ class Scorecard {
     }
     
     public func traveller(board: Int, seat: Seat, rankingNumber: Int, section: Int) -> TravellerViewModel? {
-        let resultList = travellerList.filter{$0.board == board && $0.rankingNumber[seat] == rankingNumber && $0.section[seat] == section}
+        let resultList = travellerList.filter{$0.boardIndex == board && $0.rankingNumber[seat] == rankingNumber && $0.section[seat] == section}
         return resultList.count == 1 ? resultList.first : nil
     }
     
     public func analysis(board: BoardViewModel, traveller: TravellerViewModel, sitting: Seat) -> Analysis {
-        if let analysis = analysisList[board.board]?[sitting.pair] {
+        if let analysis = analysisList[board.boardIndex]?[sitting.pair] {
             return analysis
         } else {
-            var override = overrideList[board.board]
+            var override = overrideList[board.boardIndex]
             if override == nil {
                 override = AnalysisOverride(board: board)
-                overrideList[board.board] = override
+                overrideList[board.boardIndex] = override
             }
             let analysis = Analysis(override: override!, board: board, traveller: traveller, sitting: sitting.pair)
-            if analysisList[board.board] == nil {
-                analysisList[board.board] = [:]
+            if analysisList[board.boardIndex] == nil {
+                analysisList[board.boardIndex] = [:]
             }
-            analysisList[analysis.board.board]![analysis.sitting] = analysis
+            analysisList[analysis.board.boardIndex]![analysis.sitting] = analysis
             return analysis
         }
     }
@@ -116,14 +119,14 @@ class Scorecard {
         
         boards = [:]
         for boardMO in boardMOs {
-            boards[boardMO.board] = BoardViewModel(scorecard: scorecard, boardMO: boardMO)
+            boards[boardMO.boardIndex] = BoardViewModel(scorecard: scorecard, boardMO: boardMO)
         }
         
         // Load double dummies
         let doubleDummyMOs = CoreData.fetch(from: DoubleDummyMO.tableName, filter: scorecardFilter) as! [DoubleDummyMO]
         
         for doubleDummyMO in doubleDummyMOs {
-            if let board = boards[doubleDummyMO.board] {
+            if let board = boards[doubleDummyMO.boardIndex] {
                 // Add to double dummy MO dicionary
                 if board.doubleDummy[doubleDummyMO.declarer] == nil {
                     board.doubleDummy[doubleDummyMO.declarer] = [:]
@@ -141,7 +144,7 @@ class Scorecard {
         let overrideMOs = CoreData.fetch(from: OverrideMO.tableName, filter: scorecardFilter) as! [OverrideMO]
         
         for overrideMO in overrideMOs {
-            if let board = boards[overrideMO.board] {
+            if let board = boards[overrideMO.boardIndex] {
                 // Add to override tricks MO dicionary
                 if board.override[overrideMO.declarer] == nil {
                     board.override[overrideMO.declarer] = [:]
@@ -238,12 +241,12 @@ class Scorecard {
         
         assert(self.scorecard == scorecard, "Not the current scorecard")
         
-        for (boardNumber, board) in boards {
-            if boardNumber < 1 || boardNumber > scorecard.boards {
+        for (boardIndex, board) in boards {
+            if boardIndex < 1 || boardIndex > scorecard.boards {
                     // Remove any boards no longer in bounds
                 if board.isNew {
                         // Not yet in core data - just remove from array
-                    boards[board.board] = nil
+                    boards[board.boardIndex] = nil
                 } else {
                     remove(board: board)
                 }
@@ -257,13 +260,13 @@ class Scorecard {
             if tableNumber < 1 || tableNumber > scorecard.tables {
                     // Remove any tables no longer in bounds
                 if table.isNew {
-                        // Not yet in core data - just remove from array
+                    // Not yet in core data - just remove from array
                     tables[table.table] = nil
                 } else {
                     remove(table: table)
                 }
             } else if table.changed {
-                    // Save any existing tables
+                // Save any existing tables
                 save(table: table)
             }
         }
@@ -273,23 +276,35 @@ class Scorecard {
             save(ranking: ranking)
         }
         
-        for (rankingTable) in rankingTableList {
-            // Save any existing ranking tables
-            save(rankingTable: rankingTable)
-        }
-        
         var removeList = IndexSet()
+        for (index, rankingTable) in rankingTableList.reversed().enumerated() {
+            if rankingTable.table < 1 || rankingTable.table > scorecard.tables {
+                // Remove any tables no longer in bounds
+                if rankingTable.isNew {
+                    // Not yet in core data - just remove from array
+                    removeList.insert(index)
+                } else {
+                    remove(rankingTable: rankingTable)
+                }
+            } else if rankingTable.changed {
+                // Save any existing ranking tables
+                save(rankingTable: rankingTable)
+            }
+        }
+        rankingTableList.remove(atOffsets: removeList)
+        
+        removeList = IndexSet()
         for (index, traveller) in travellerList.reversed().enumerated() {
-            if traveller.board < 1 || traveller.board > scorecard.boards {
-                    // Remove any travellers no longer in bounds
+            if traveller.boardIndex < 1 || traveller.boardIndex > scorecard.boards {
+                // Remove any travellers no longer in bounds
                 if traveller.isNew {
-                        // Not yet in core data - just remove from array
+                    // Not yet in core data - just remove from array
                     removeList.insert(index)
                 } else {
                     remove(traveller: traveller)
                 }
             } else if traveller.changed {
-                    // Save any existing travellers
+                // Save any existing travellers
                 save(traveller: traveller)
             }
         }
@@ -319,8 +334,8 @@ class Scorecard {
         clear()
     }
     
-    public func removeRankings(table: Int? = nil) {
-        for ranking in rankings(table: table).reversed() {
+    public func removeRankings(session: Int? = nil) {
+        for ranking in rankings(session: session).reversed() {
             if !ranking.isNew {
                 remove(ranking: ranking)
             }
@@ -351,9 +366,12 @@ class Scorecard {
     public func addNew() {
         if let scorecard = scorecard {
             // Fill in any gaps in boards
-            for boardNumber in 1...scorecard.boards {
-                if boards[boardNumber] == nil {
-                    boards[boardNumber] = BoardViewModel(scorecard: scorecard, board: boardNumber)
+            for boardIndex in 1...scorecard.boards {
+                if boards[boardIndex] == nil {
+                    boards[boardIndex] = BoardViewModel(scorecard: scorecard, boardIndex: boardIndex)
+                } else {
+                    boards[boardIndex]?.session = Scorecard.defaultSession(scorecard: scorecard, boardIndex: boardIndex)
+                    boards[boardIndex]?.boardNumber = Scorecard.defaultBoardNumber(scorecard: scorecard, boardIndex: boardIndex)
                 }
             }
             
@@ -374,10 +392,9 @@ class Scorecard {
         scorecard?.importSource = .none
         scorecard?.importNext = 1
         removeRankings()
-        for boardNumber in 1...(scorecard?.boards ?? 0) {
-            removeTravellers(board: boardNumber)
-            if let board = Scorecard.current.boards[boardNumber] {
-                // board.doubleDummy = [:]
+        for boardIndex in 1...(scorecard?.boards ?? 0) {
+            removeTravellers(board: boardIndex)
+            if let board = Scorecard.current.boards[boardIndex] {
                 board.override = [:]
                 board.save()
             }
@@ -390,7 +407,7 @@ class Scorecard {
     public func insert(board: BoardViewModel) {
         assert(board.scorecard == scorecard, "Board is not in current scorecard")
         assert(board.isNew, "Cannot insert a board which already has a managed object")
-        assert(boards[board.board] == nil, "Board already exists and cannot be created")
+        assert(boards[board.boardIndex] == nil, "Board already exists and cannot be created")
         assert(board.doubleDummy.isEmpty, "Board double dummies already exist")
         assert(board.override.isEmpty, "Board override tricks already exist")
         CoreData.update(updateLogic: {
@@ -418,14 +435,14 @@ class Scorecard {
                 board.overrideMO[declarer]![suit] = mo
             }
             // Add to board dictionary
-            boards[board.board] = board
+            boards[board.boardIndex] = board
         })
     }
     
     public func remove(board: BoardViewModel) {
         assert(board.scorecard == scorecard, "Board is not in current scorecard")
         assert(!board.isNew, "Cannot remove a board which doesn't already have a managed object")
-        assert(boards[board.board] != nil, "Board does not exist and cannot be deleted")
+        assert(boards[board.boardIndex] != nil, "Board does not exist and cannot be deleted")
         CoreData.update(updateLogic: {
             // Delete board MO
             CoreData.context.delete(board.boardMO!)
@@ -444,13 +461,13 @@ class Scorecard {
             board.overrideMO = [:]
             board.override = [:]
             // Remove from boards dictionary
-            boards[board.board] = nil
+            boards[board.boardIndex] = nil
         })
     }
     
     public func save(board: BoardViewModel) {
         assert(board.scorecard == scorecard, "Board is not in current scorecard")
-        assert(boards[board.board] != nil, "Board does not exist and cannot be updated")
+        assert(boards[board.boardIndex] != nil, "Board does not exist and cannot be updated")
         if board.isNew {
             CoreData.update(updateLogic: {
                 // Create board MO
@@ -560,7 +577,7 @@ class Scorecard {
     public func insert(ranking: RankingViewModel) {
         assert(ranking.scorecard == scorecard, "Ranking is not in current scorecard")
         assert(ranking.isNew, "Cannot insert a ranking which already has a managed object")
-        assert(self.ranking(table: ranking.table, section: ranking.section, way: ranking.way,  number: ranking.number) == nil, "Ranking already exists and cannot be created")
+        assert(self.ranking(session: ranking.session, section: ranking.section, way: ranking.way,  number: ranking.number) == nil, "Ranking already exists and cannot be created")
         CoreData.update(updateLogic: {
             ranking.rankingMO = RankingMO()
             ranking.updateMO()
@@ -571,16 +588,16 @@ class Scorecard {
     public func remove(ranking: RankingViewModel) {
         assert(ranking.scorecard == scorecard, "Ranking is not in current scorecard")
         assert(!ranking.isNew, "Cannot remove a ranking which doesn't already have a managed object")
-        assert(self.ranking(table: ranking.table, section: ranking.section, way: ranking.way, number: ranking.number) != nil, "Ranking does not exist and cannot be deleted")
+        assert(self.ranking(session: ranking.session, section: ranking.section, way: ranking.way, number: ranking.number) != nil, "Ranking does not exist and cannot be deleted")
         CoreData.update(updateLogic: {
             CoreData.context.delete(ranking.rankingMO!)
-            rankingList.removeAll(where: {$0.table == ranking.table && $0.section == ranking.section && $0.way == ranking.way && $0.number == ranking.number})
+            rankingList.removeAll(where: {$0.session == ranking.session && $0.section == ranking.section && $0.way == ranking.way && $0.number == ranking.number})
         })
     }
     
     public func save(ranking: RankingViewModel) {
         assert(ranking.scorecard == scorecard, "Ranking is not in current scorecard")
-        assert(self.ranking(table: ranking.table, section: ranking.section, way: ranking.way, number: ranking.number) != nil, "Ranking does not exist and cannot be updated")
+        assert(self.ranking(session: ranking.session, section: ranking.section, way: ranking.way, number: ranking.number) != nil, "Ranking does not exist and cannot be updated")
         if ranking.isNew {
             CoreData.update(updateLogic: {
                 ranking.rankingMO = RankingMO()
@@ -636,7 +653,7 @@ class Scorecard {
     public func insert(traveller: TravellerViewModel) {
         assert(traveller.scorecard == scorecard, "Traveller is not in current scorecard")
         assert(traveller.isNew, "Cannot insert a traveller which already has a managed object")
-        assert(self.traveller(board: traveller.board, seat: .north, rankingNumber: traveller.rankingNumber[.north]!, section: traveller.section[.north]!) == nil, "Traveller already exists and cannot be created")
+        assert(self.traveller(board: traveller.boardIndex, seat: .north, rankingNumber: traveller.rankingNumber[.north]!, section: traveller.section[.north]!) == nil, "Traveller already exists and cannot be created")
         CoreData.update(updateLogic: {
             traveller.travellerMO = TravellerMO()
             traveller.updateMO()
@@ -649,13 +666,13 @@ class Scorecard {
         assert(!traveller.isNew, "Cannot remove a traveller which doesn't already have a managed object")
         CoreData.update(updateLogic: {
             CoreData.context.delete(traveller.travellerMO!)
-            travellerList.removeAll(where: {$0.board == traveller.board && $0.rankingNumber[.north] == traveller.rankingNumber[.north] && $0.section[.north] == traveller.section[.north]})
+            travellerList.removeAll(where: {$0.boardIndex == traveller.boardIndex && $0.rankingNumber[.north] == traveller.rankingNumber[.north] && $0.section[.north] == traveller.section[.north]})
         })
     }
     
     public func save(traveller: TravellerViewModel) {
         assert(traveller.scorecard == scorecard, "Traveller is not in current scorecard")
-        assert(self.traveller(board: traveller.board, seat: .north, rankingNumber: traveller.rankingNumber[.north]!, section: traveller.section[.north]!) != nil, "Traveller does not exist and cannot be updated")
+        assert(self.traveller(board: traveller.boardIndex, seat: .north, rankingNumber: traveller.rankingNumber[.north]!, section: traveller.section[.north]!) != nil, "Traveller does not exist and cannot be updated")
         if traveller.isNew {
             CoreData.update(updateLogic: {
                 traveller.travellerMO = TravellerMO()
@@ -670,10 +687,19 @@ class Scorecard {
     
     // MARK: - Utilities ======================================================================== -
     
-    public static func boardNumber(scorecard: ScorecardViewModel, board: Int) -> Int {
-        return scorecard.resetNumbers ? ((board - 1) % scorecard.boardsTable) + 1 : board
+    public static func defaultSession(scorecard: ScorecardViewModel, table: Int) -> Int {
+        return scorecard.isMultiSession ? ((table - 1) / scorecard.tablesSession) + 1 : 1
     }
     
+    public static func defaultSession(scorecard: ScorecardViewModel, boardIndex: Int) -> Int {
+        let table = ((boardIndex - 1) / scorecard.boardsTable) + 1
+        return defaultSession(scorecard: scorecard, table: table)
+    }
+    
+    public static func defaultBoardNumber(scorecard: ScorecardViewModel, boardIndex: Int) -> Int {
+        return (scorecard.isMultiSession && scorecard.resetNumbers) ? ((boardIndex - 1) % scorecard.boardsSession) + 1 : boardIndex
+    }
+        
     @discardableResult static public func updateScores(scorecard: ScorecardViewModel) -> Bool {
         var changed = false
         
@@ -697,7 +723,7 @@ class Scorecard {
         if let table = Scorecard.current.tables[tableNumber] {
             // First check if any imported table scores since likely to be more precies
             var tableScore: Float?
-            if let myRanking = myRanking(table: tableNumber),
+            if let myRanking = myRanking(session: table.session),
                     let rankingTable = Scorecard.current.rankingTableList.first(where: {matchRanking(ranking: myRanking, tableNumber: tableNumber, rankingTable: $0)}),
                     let score = rankingTable.nsScore {
                 tableScore = score
@@ -709,8 +735,8 @@ class Scorecard {
                 }
             } else {
                 for index in 1...boards {
-                    let boardNumber = ((tableNumber - 1) * boards) + index
-                    if let board = Scorecard.current.boards[boardNumber] {
+                    let board = ((tableNumber - 1) * boards) + index
+                    if let board = Scorecard.current.boards[board] {
                         if let score = board.score {
                             count += 1
                             total += score
@@ -749,7 +775,7 @@ class Scorecard {
         for tableNumber in 1...scorecard.tables {
             if let table = Scorecard.current.tables[tableNumber] {
                 if let score = table.score {
-                        // Weight it to number of boards completed if averaging
+                    // Weight it to number of boards completed if averaging
                     let scored = table.scoredBoards
                     let weight = scorecard.type.matchAggregate == .average ? scored : 1
                     total += score * Float(weight)
@@ -795,6 +821,8 @@ class Scorecard {
             result = BridgeImps(Int(Utility.round(total))).vp(boards: boards, places: places)
         case .discreteVp:
             result = Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: boards))
+        case .sbuDiscreteVp:
+            result = Float(BridgeImps(Int(Utility.round(total))).sbuDiscreteVp(boards: boards))
         case .acblDiscreteVp:
             result = Float(BridgeImps(Int(Utility.round(total))).acblDiscreteVp(boards: boards))
         case .percentVp:
@@ -813,13 +841,13 @@ class Scorecard {
         return made == 0 ? "=" : String(format: "%+d", made)
     }
     
-    public func scanRankings(action: (RankingViewModel, Bool, RankingViewModel?)->()) {
+    public func scanRankings(session: Int? = nil, action: (RankingViewModel, Bool, RankingViewModel?)->()) {
         var lastRanking: RankingViewModel?
         var newGrouping: Bool
         
-        for ranking in Scorecard.current.rankingList.sorted(by: {NSObject.sort($0, $1, sortKeys: [("table", .ascending), ("section", .ascending), ("waySort", .ascending), ("score", .descending)])}) {
+        for ranking in Scorecard.current.rankingList.filter({ $0.session == (session ?? $0.session) }).sorted(by: {NSObject.sort($0, $1, sortKeys: [("session", .ascending), ("section", .ascending), ("waySort", .ascending), ("score", .descending)])}) {
             newGrouping = false
-            if lastRanking?.table != ranking.table {
+            if lastRanking?.session != ranking.session {
                 newGrouping = true
             }
             if lastRanking?.section != ranking.section {
@@ -828,7 +856,7 @@ class Scorecard {
             if lastRanking?.way != ranking.way && scorecard?.type.players != 4 {
                 newGrouping = true
             }
-            action(ranking, newGrouping, newGrouping ? nil : lastRanking)
+            action(ranking, newGrouping, lastRanking)
             lastRanking = ranking
         }
     }
@@ -936,16 +964,16 @@ class Scorecard {
         return result
     }
     
-    public static func getBoardTraveller(boardNumber: Int, equivalentSeat: Bool = false) -> (BoardViewModel, TravellerViewModel, Seat)? {
+    public static func getBoardTraveller(boardIndex: Int, equivalentSeat: Bool = false) -> (BoardViewModel, TravellerViewModel, Seat)? {
         var result: (BoardViewModel, TravellerViewModel, Seat)?
-        if let nextBoard = Scorecard.current.boards[boardNumber] {
+        if let nextBoard = Scorecard.current.boards[boardIndex] {
             if !Scorecard.current.travellerList.isEmpty {
-                if let myRanking = myRanking(table: nextBoard.table?.table) {
+                if let myRanking = myRanking(session: nextBoard.session) {
                     var seat = nextBoard.table!.sitting
                     if equivalentSeat {
                         seat = seat.equivalent
                     }
-                    if let nextTraveller = Scorecard.current.traveller(board: nextBoard.board, seat: seat, rankingNumber: myRanking.number, section: myRanking.section) {
+                    if let nextTraveller = Scorecard.current.traveller(board: nextBoard.boardIndex, seat: seat, rankingNumber: myRanking.number, section: myRanking.section) {
                         result = (nextBoard, nextTraveller, seat)
                     }
                 }
@@ -954,10 +982,10 @@ class Scorecard {
         return result
     }
     
-    public static func myRanking(table: Int?) -> RankingViewModel? {
+    public static func myRanking(session: Int?) -> RankingViewModel? {
         var result: RankingViewModel?
         if let scorer = Scorecard.current.scorecard?.scorer {
-            let rankings = Scorecard.current.rankings(table: table ?? 1, player: (bboName:scorer.bboName, name: scorer.name))
+            let rankings = Scorecard.current.rankings(session: (Scorecard.current.scorecard!.isMultiSession ? session : nil), player: (bboName:scorer.bboName, name: scorer.name))
             if let myRanking = rankings.first {
                 result = myRanking
             }
@@ -1012,7 +1040,7 @@ class Scorecard {
                 playData += "&\(seat.short.lowercased())n=\(name)"
             }
             playData += "&v=\(board.vulnerability.short.lowercased())"
-            playData += "&b=\(board.board)"
+            playData += "&b=\(board.boardIndex)"
             let suits = board.hand.components(separatedBy: ",")
             for seat in Seat.validCases {
                 playData += "&\(seat.short.lowercased())="

@@ -13,7 +13,7 @@ import CoreData
 
     // Properties in core data model
     @Published private(set) var scorecard: ScorecardViewModel
-    @Published public var board: Int = 0
+    @Published public var boardIndex: Int = 0
     @Published public var contract = Contract()
     @Published public var declarer: Seat = .unknown
     @Published public var made: Int = 0
@@ -54,7 +54,7 @@ import CoreData
         var result = false
         if let mo = self.travellerMO {
             if self.scorecard.scorecardId != mo.scorecardId ||
-                self.board != mo.board ||
+                self.boardIndex != mo.boardIndex ||
                 self.contract != mo.contract ||
                 self.declarer != mo.declarer ||
                 self.made != mo.made ||
@@ -76,7 +76,7 @@ import CoreData
     
     public init(scorecard: ScorecardViewModel, board: Int, section: [Seat:Int], ranking: [Seat:Int]) {
         self.scorecard = scorecard
-        self.board = board
+        self.boardIndex = board
         self.section = section
         self.rankingNumber = ranking
         super.init()
@@ -84,7 +84,7 @@ import CoreData
     }
     
     public convenience init(scorecard: ScorecardViewModel, travellerMO: TravellerMO) {
-        self.init(scorecard: scorecard, board: travellerMO.board, section: travellerMO.section, ranking: travellerMO.rankingNumber)
+        self.init(scorecard: scorecard, board: travellerMO.boardIndex, section: travellerMO.section, ranking: travellerMO.rankingNumber)
         self.travellerMO = travellerMO
         self.revert()
     }
@@ -97,7 +97,7 @@ import CoreData
             if let scorecard = MasterData.shared.scorecard(id: mo.scorecardId) {
                 self.scorecard = scorecard
             }
-            self.board = mo.board
+            self.boardIndex = mo.boardIndex
             self.contract = mo.contract
             self.declarer = mo.declarer
             self.made = mo.made
@@ -115,7 +115,7 @@ import CoreData
     public func updateMO() {
         if let mo = travellerMO {
             mo.scorecardId = scorecard.scorecardId
-            mo.board = board
+            mo.boardIndex = boardIndex
             mo.contract = contract
             mo.declarer = declarer
             mo.made = made
@@ -155,13 +155,14 @@ import CoreData
     }
     
     public var boardNumber: Int {
-        return scorecard.resetNumbers ? ((board - 1) % scorecard.boardsTable) + 1 : board
+        assert(self.scorecard == Scorecard.current.scorecard, "Not the current scorecard")
+        return Scorecard.current.boards[boardIndex]!.boardNumber
     }
     
     public func ranking(seat: Seat) -> RankingViewModel? {
         assert(self.scorecard == Scorecard.current.scorecard, "Only valid when this scorecard is current")
-        let table = ((board - 1) / scorecard.boardsTable) + 1
-        return Scorecard.current.ranking(table: table, section: section[seat] ?? 0, way: seat.pair, number: rankingNumber[seat] ?? 0)
+        let session = ((boardIndex - 1) / (scorecard.boardsSession)) + 1
+        return Scorecard.current.ranking(session: session, section: section[seat] ?? 0, way: seat.pair, number: rankingNumber[seat] ?? 0)
     }
     
     public var isSelf: Bool {
@@ -224,14 +225,14 @@ import CoreData
     }
     
     public override var description: String {
-        "Traveller: Board: \(self.board), North: \(self.rankingNumber[.north] ?? 0) South: \(self.rankingNumber[.south] ?? 0) East: \(self.rankingNumber[.east] ?? 0) West: \(self.rankingNumber[.west] ?? 0) of Section \(self.section) of Scorecard: \(MasterData.shared.scorecard(id: self.scorecard.scorecardId)?.desc ?? "")"
+        "Traveller: Board: \(self.boardIndex), North: \(self.rankingNumber[.north] ?? 0) South: \(self.rankingNumber[.south] ?? 0) East: \(self.rankingNumber[.east] ?? 0) West: \(self.rankingNumber[.west] ?? 0) of Section \(self.section) of Scorecard: \(MasterData.shared.scorecard(id: self.scorecard.scorecardId)?.desc ?? "")"
     }
     
     public override var debugDescription: String { self.description }
     
     public static func == (lhs: TravellerViewModel, rhs: TravellerViewModel) -> Bool {
         // Just checks vital bits
-        return lhs.boardNumber == rhs.boardNumber && lhs.section == rhs.section && lhs.rankingNumber == rhs.rankingNumber
+        return lhs.boardIndex == rhs.boardIndex && lhs.section == rhs.section && lhs.rankingNumber == rhs.rankingNumber
         
     }
 }

@@ -381,15 +381,15 @@
 				B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */,
 				B2EB3D65279D54D500D64225 /* Board Managed Object.swift */,
 				B2BBC8B727BBF4B100D51A26 /* Table Managed Object.swift */,
-				B26BCE73279B236F00B73501 /* Layout Managed Object.swift */,
-				B2EB3D67279D65CC00D64225 /* Player Managed Object.swift */,
-				B2EB3D69279D666800D64225 /* Location Managed Object.swift */,
-				B2A5A42527E2582F00754061 /* BBO Name Managed Object.swift */,
 				B256D42227EC456B00F47322 /* Ranking Managed Object.swift */,
 				B2B1D58A2B04C29F007A2977 /* Ranking Table Managed Object.swift */,
 				B256D42027EC434100F47322 /* Traveller Managed Object.swift */,
 				B25AE9E42AA7021600F04229 /* Double Dummy Managed Object.swift */,
 				B28D3F5D2ACE6FD60060DAA1 /* Override Managed Object.swift */,
+				B26BCE73279B236F00B73501 /* Layout Managed Object.swift */,
+				B2EB3D67279D65CC00D64225 /* Player Managed Object.swift */,
+				B2EB3D69279D666800D64225 /* Location Managed Object.swift */,
+				B2A5A42527E2582F00754061 /* BBO Name Managed Object.swift */,
 			);
 			name = "Managed Object Models";
 			sourceTree = "<group>";
@@ -486,15 +486,15 @@
 				B2EB3D76279D73FC00D64225 /* Scorecard View Model.swift */,
 				B2EB3D74279D73E100D64225 /* Board View Model.swift */,
 				B2BBC8B927BBF6BC00D51A26 /* Table View Model.swift */,
-				B2EB3D6D279D6BA600D64225 /* Layout View Model.swift */,
-				B2EB3D70279D717F00D64225 /* Player View Model.swift */,
-				B2EB3D72279D734700D64225 /* Location View Model.swift */,
-				B2A5A42727E3090300754061 /* BBO Name View Model.swift */,
 				B256D42427EC578500F47322 /* Ranking View Model.swift */,
 				B2B1D58C2B04C3DB007A2977 /* Ranking Table View Model.swift */,
 				B256D42627EC5B1700F47322 /* Traveller View Model.swift */,
 				B25AE9E62AA704BE00F04229 /* Double Dummy View Model.swift */,
 				B28D3F5F2ACE70850060DAA1 /* Override View Model.swift */,
+				B2EB3D6D279D6BA600D64225 /* Layout View Model.swift */,
+				B2EB3D70279D717F00D64225 /* Player View Model.swift */,
+				B2EB3D72279D734700D64225 /* Location View Model.swift */,
+				B2A5A42727E3090300754061 /* BBO Name View Model.swift */,
 			);
 			name = "View Models";
 			sourceTree = "<group>";

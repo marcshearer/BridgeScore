@@ -106,3 +106,11 @@ extension String {
         wrappedValue = Binding { optional ?? 0 } set: { (_) in }
     }
 }
+
+@propertyWrapper public final class OptionalBoolBinding {
+    public var wrappedValue: Binding<Bool>
+    
+    public init(_ optional: Bool?) {
+        wrappedValue = Binding { optional ?? false } set: { (_) in }
+    }
+}

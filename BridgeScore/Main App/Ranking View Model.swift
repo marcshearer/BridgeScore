@@ -13,12 +13,12 @@ import CoreData
 
     // Properties in core data model
     @Published private(set) var scorecard: ScorecardViewModel
-    @Published public var table: Int = 0
+    @Published public var session: Int = 0
     @Published public var section: Int = 0
     @Published public var number: Int = 0
     @Published public var ranking: Int = 0
     @Published public var score: Float = 0
-    @Published public var xImps: [Pair:Float ] = [:]
+    @Published public var xImps: [Pair:Float] = [:]
     @Published public var points: Float = 0
     @Published public var players: [Seat:String] = [:]
     @Published public var way: Pair = .unknown
@@ -40,7 +40,7 @@ import CoreData
         var result = false
         if let mo = self.rankingMO {
             if self.scorecard.scorecardId != mo.scorecardId ||
-                self.table != mo.table ||
+                self.session != mo.session ||
                 self.section != mo.section ||
                 self.way != mo.way ||
                 self.tie != mo.tie ||
@@ -67,9 +67,9 @@ import CoreData
         }
     }
     
-    public init(scorecard: ScorecardViewModel, table: Int, section: Int, way: Pair, number: Int) {
+    public init(scorecard: ScorecardViewModel, session: Int, section: Int, way: Pair, number: Int) {
         self.scorecard = scorecard
-        self.table = table
+        self.session = session
         self.section = section
         self.number = number
         super.init()
@@ -77,7 +77,7 @@ import CoreData
     }
     
     public convenience init(scorecard: ScorecardViewModel, rankingMO: RankingMO) {
-        self.init(scorecard: scorecard, table: rankingMO.table, section: rankingMO.section, way: rankingMO.way, number: rankingMO.number)
+        self.init(scorecard: scorecard, session: rankingMO.session, section: rankingMO.section, way: rankingMO.way, number: rankingMO.number)
         self.rankingMO = rankingMO
         self.revert()
     }
@@ -90,7 +90,7 @@ import CoreData
             if let scorecard = MasterData.shared.scorecard(id: mo.scorecardId) {
                 self.scorecard = scorecard
             }
-            self.table = mo.table
+            self.session = mo.session
             self.section = mo.section
             self.way = mo.way
             self.tie = mo.tie
@@ -106,7 +106,7 @@ import CoreData
     public func updateMO() {
         if let mo = rankingMO {
             mo.scorecardId = scorecard.scorecardId
-            mo.table = table
+            mo.session = session
             mo.section = section
             mo.way = way
             mo.tie = self.tie
@@ -119,6 +119,18 @@ import CoreData
         } else {
             fatalError("No managed object")
         }
+    }
+    
+    public func copied() -> RankingViewModel {
+        let result = RankingViewModel(scorecard: scorecard, session: self.session, section: self.section, way: self.way, number: self.number)
+        result.tie = self.tie
+        result.number = self.number
+        result.ranking = self.ranking
+        result.score = self.score
+        result.xImps = self.xImps
+        result.points = self.points
+        result.players = self.players
+        return result
     }
     
     public func save() {
@@ -162,7 +174,7 @@ import CoreData
     }
     
     override public var description: String {
-        return "Scorecard: \(scorecard.desc), Table: \(table) Section: \(section), Number: \(number)"
+        return "Scorecard: \(scorecard.desc), Session: \(session) Section: \(section), Number: \(number)"
     }
     
     override public var debugDescription: String { self.description }

@@ -25,6 +25,7 @@ public class LayoutMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var manualTotals: Bool
     @NSManaged public var sessions16: Int16
     @NSManaged public var resetNumbers: Bool
+    @NSManaged public var regularDay16: Int16
     
     public convenience init() {
         self.init(context: CoreData.context)
@@ -52,9 +53,14 @@ public class LayoutMO: NSManagedObject, ManagedObject, Identifiable {
         set { self.sessions16 = Int16(newValue)}
     }
         
-    public var type: Type {
-        get { Type(rawValue: Int(type16)) ?? .percent }
+    public var type: ScorecardType {
+        get { ScorecardType(rawValue: Int(type16)) ?? .percent }
         set { self.type16 = Int16(newValue.rawValue) }
+    }
+    
+    public var regularDay: RegularDay {
+        get { RegularDay(rawValue: Int(regularDay16)) ?? .none }
+        set { self.regularDay16 = Int16(newValue.rawValue) }
     }
     
     public override var description: String {

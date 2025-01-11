@@ -77,6 +77,15 @@ class BridgeImps {
         return vp
     }
     
+    public func sbuDiscreteVp(boards: Int, maxVp: Int = 20) -> Int {
+        var vp: Int = 10
+        if let element = impsToVpsSbu.first(where: {$0.from <= boards && $0.to >= boards}) {
+            let increment = element.cutoffs.firstIndex(where: {$0 > abs(imps)}) ?? 10
+            vp = 10 + (increment * imps.sign)
+        }
+        return vp
+    }
+    
     public func discreteVp(boards: Int, maxVp: Int = 20) -> Int {    
         let midVp = maxVp / 2
         let positive = abs(imps)
@@ -121,12 +130,24 @@ class BridgeImps {
     let pointsToImps = [10, 40, 80, 120, 160, 210, 260, 310, 360, 420, 490, 590, 740, 890, 1090, 1290, 1490, 1740, 1990, 2240, 2490, 2990, 3490, 3990]
     
     let impsToVpsAcbl: [(from: Int, to: Int, cutoffs: [Int])] =
+    //     Bds  VPs 11  12  13  14  15  16  17  18  19  20
         [( 1,  8, [  1,  3,  5,  8, 11, 14, 17, 20, 24, 28]),
          ( 9, 11, [  1,  3,  6, 10, 14, 18, 22, 26, 31, 36]),
          (12, 15, [  1,  4,  7, 11, 15, 20, 25, 30, 36, 42]),
          (16, 20, [  2,  5,  9, 14, 19, 25, 32, 39, 47, 56]),
          (21, 27, [  3,  7, 12, 18, 25, 33, 42, 51, 61, 72]),
          (28, 36, [  4,  9, 15, 22, 30, 39, 49, 60, 72, 85])]
+    
+    let impsToVpsSbu: [(from: Int, to: Int, cutoffs: [Int])] =
+    //     Bds  VPs 11  12  13  14  15  16  17  18  19  20
+        [( 1,  4, [  1,  3,  5,  7,  9, 11, 13, 15, 17, 20]),
+         ( 5,  6, [  1,  3,  5,  7,  9, 12, 15, 18, 21, 25]),
+         ( 7,  9, [  1,  3,  5,  7, 10, 13, 17, 21, 25, 30]),
+         (10, 13, [  1,  3,  6,  9, 12, 16, 20, 25, 30, 35]),
+         (14, 19, [  2,  5,  9, 13, 17, 21, 25, 29, 34, 40]),
+         (20, 27, [  2,  5,  9, 13, 18, 23, 29, 35, 42, 50]),
+         (28, 39, [  2,  5,  9, 14, 20, 26, 33, 41, 50, 60]),
+         (40, 55, [  2,  6, 11, 17, 24, 32, 40, 49, 59, 70])]
 }
 
 class BridgeMatchPoints {

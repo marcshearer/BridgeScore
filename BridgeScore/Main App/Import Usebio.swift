@@ -1,5 +1,5 @@
 //
-//  import PBN.swift
+//  import Usebio.swift
 //  BridgeScore
 //
 //  Created by Marc Shearer on 18/09/2023.
@@ -12,11 +12,10 @@ import UniformTypeIdentifiers
 
 class ImportUsebio {
     
-    static let filterSessionId: String? = nil // Set to a session id e.g. "2" to import that session only
-    
     public class func createImportScorecardFrom(fileURL: URL, scorecard: ScorecardViewModel, completion: @escaping (ImportedUsebioScorecard?, String?)->()) {
-        
+    
         if let data = try? Data(contentsOf: fileURL) {
+            let filterSessionId = (scorecard.isMultiSession ? "\(scorecard.importNext)" : nil)
             let importedScorecard = ImportedUsebioScorecard(data: data, filterSessionId: filterSessionId, scorecard: scorecard)
             importedScorecard.parse { (error) in
                 if error == nil {
@@ -33,6 +32,7 @@ class ImportUsebio {
     public class func createImportedScorecardFrom(droppedFile fileData: ImportFileData, scorecard: ScorecardViewModel, completion: @escaping (ImportedUsebioScorecard?, String?)->()) -> ImportedUsebioScorecard? {
         // Version for drop of files
         if let data = fileData.contents?.data(using: .utf8) {
+            let filterSessionId = (scorecard.isMultiSession ? "\(scorecard.importNext)" : nil)
             let importedScorecard = ImportedUsebioScorecard(data: data, filterSessionId: filterSessionId, scorecard: scorecard)
             importedScorecard.parse { (error) in
                 if error == nil {
@@ -154,6 +154,7 @@ struct ImportUsebioScorecard: View {
                                 }
                             }
                         }
+                        usebioScorecard.lastMinuteValidate()
                     }
                     droppedFiles = []
                 }
@@ -204,6 +205,7 @@ struct ImportUsebioScorecard: View {
             Utility.executeAfter(delay: 0.1) {
                 importedUsebioScorecard.importScorecard()
                 completion?()
+                importedUsebioScorecard.prepareForNext()
                 presentationMode.wrappedValue.dismiss()
             }
         }
@@ -286,7 +288,6 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
     private var multiSession = false
     private var sessionId: String? = ""
     private var boardNumberOffset = 0
-    private var maxBoardNumber = 0
     
     init(data: Data, filterSessionId: String? = nil, scorecard: ScorecardViewModel? = nil) {
         super.init()
@@ -300,10 +301,10 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
         if let scorecard = scorecard {
             type = scorecard.type.boardScoreType
             var boards: Int
-            if scorecard.tables == 1 || !scorecard.resetNumbers {
+            if !scorecard.isMultiSession {
                 boards = scorecard.boards
             } else {
-                boards = scorecard.boardsTable
+                boards = scorecard.boardsSession
             }
             boardCount = boards
             switch scorecard.type.players {
@@ -400,16 +401,6 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
                 if let id = attributes["SESSION_ID"] {
                     if id.uppercased() != filterSessionId.uppercased() {
                         matched = false
-                    }
-                }
-            } else {
-                if let id = attributes["SESSION_ID"] {
-                    if id.uppercased() == "ALL" {
-                        matched = false
-                        multiSession = true
-                    } else {
-                        sessionId = id
-                        boardNumberOffset = ((maxBoardNumber / 32) + 1) * 32
                     }
                 }
             }
@@ -600,7 +591,6 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
             current = current?.add(child: Node(name: name, completion: { [self] (value) in
                 if let boardNumber = Int(value) {
                     currentBoard.boardNumber = boardNumber + boardNumberOffset
-                    maxBoardNumber = max(maxBoardNumber, currentBoard.boardNumber)
                 }
             }))
         case "TRAVELLER_LINE":

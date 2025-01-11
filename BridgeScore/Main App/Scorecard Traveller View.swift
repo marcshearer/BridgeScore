@@ -75,7 +75,7 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
     private var bottomSpacing: NSLayoutConstraint!
     private var travellerColumns: [TravellerColumn] = []
     private var values: [TravellerViewModel] = []
-    private var boardNumber: Int = 0
+    private var boardIndex: Int = 0
     private var sitting: Seat = .unknown
     private var sourceView: ScorecardInputUIView!
     private var completion: (()->())? = nil
@@ -120,7 +120,7 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
     // MARK: - Cell delegate ===================================================================== -
     
     func showHand(traveller: TravellerViewModel) {
-        if let board = Scorecard.current.boards[boardNumber] {
+        if let board = Scorecard.current.boards[boardIndex] {
             var sitting = traveller.declarer
             if let table = board.table {
                 sitting = table.sitting
@@ -212,11 +212,11 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
     
     // MARK: - Show / Hide ============================================================================ -
     
-    public func show(from sourceView: ScorecardInputUIView, frame: CGRect, boardNumber: Int, sitting: Seat, completion: (()->())? = nil) {
+    public func show(from sourceView: ScorecardInputUIView, frame: CGRect, boardIndex: Int, sitting: Seat, completion: (()->())? = nil) {
         self.sourceView = sourceView
         self.completion = completion
         self.frame = frame
-        self.boardNumber = boardNumber
+        self.boardIndex = boardIndex
         self.sitting = sitting
         sourceView.superview!.superview!.addSubview(self)
         sourceView.superview!.superview!.bringSubviewToFront(self)
@@ -284,7 +284,7 @@ class ScorecardTravellerView: UIView, UITableViewDataSource, UITableViewDelegate
     }
     
     private func setupValues() {
-        values = Scorecard.current.travellers(board: boardNumber)
+        values = Scorecard.current.travellers(board: boardIndex)
         if Scorecard.current.scorecard?.type.players == 4 {
             // Sort by teams (self first)
             values.sort(by: {NSObject.sort($0, $1, sortKeys: [("isSelf", .descending), ("isTeam", .descending), ("minRankingNumber", .ascending)])})

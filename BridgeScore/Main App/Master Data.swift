@@ -68,7 +68,7 @@ class MasterData: ObservableObject {
                 self.insert(layout: layout)
             }
         }
-  
+         
         // Setup scorecards
         self.scorecards = []
         for scorecardMO in scorecardMOs {
@@ -79,6 +79,76 @@ class MasterData: ObservableObject {
         self.bboNames = []
         for bboNameMO in bboNameMOs {
             bboNames.append(BBONameViewModel(bboNameMO: bboNameMO))
+        }
+        
+        // TODO: - Remove when definitely not needed again
+        /*
+        // Convert layouts for changes to multi-sessions
+        convertLayouts()
+        
+        // Convert scorecards to changes for multi-sessions
+        convertScorecards()
+        */
+    }
+    
+    func convertLayouts() {
+        CoreData.update {
+            for layout in layouts {
+                if layout.resetNumbers {
+                    layout.sessions = layout.tables
+                } else {
+                    layout.sessions = 1
+                }
+            }
+        }
+    }
+    
+    func convertScorecards() {
+        for scorecard in scorecards {
+            CoreData.update {
+                
+                // Setup scorecard session and board number
+                if scorecard.resetNumbers {
+                    scorecard.sessions = scorecard.tables
+                } else {
+                    scorecard.sessions = 1
+                }
+                scorecard.updateMO()
+                
+                let scorecardFilter = NSPredicate(format: "scorecardId = %@", scorecard.scorecardId as NSUUID)
+
+                // Setup board index, session and board number
+                let boardMOs = CoreData.fetch(from: BoardMO.tableName, filter: scorecardFilter) as! [BoardMO]
+                for boardMO in boardMOs {
+                    boardMO.boardIndex16 = boardMO.board16
+                    boardMO.session = Scorecard.defaultSession(scorecard: scorecard, boardIndex: boardMO.boardIndex)
+                    boardMO.boardNumber = Scorecard.defaultBoardNumber(scorecard: scorecard, boardIndex: boardMO.boardIndex)
+                }
+                
+                // Setup traveller index
+                let travellerMOs = CoreData.fetch(from: TravellerMO.tableName, filter: scorecardFilter) as! [TravellerMO]
+                for travellerMO in travellerMOs {
+                    travellerMO.boardIndex16 = travellerMO.board16
+                }
+                
+                // Setup double dummy index
+                let doubleDummyMOs = CoreData.fetch(from: DoubleDummyMO.tableName, filter: scorecardFilter) as! [DoubleDummyMO]
+                for doubleDummyMO in doubleDummyMOs {
+                    doubleDummyMO.boardIndex16 = doubleDummyMO.board16
+                }
+                
+                // Setup double dummy index
+                let overrideMOs = CoreData.fetch(from: OverrideMO.tableName, filter: scorecardFilter) as! [OverrideMO]
+                for overrideMO in overrideMOs {
+                    overrideMO.boardIndex16 = overrideMO.board16
+                }
+                
+                // Setup ranking session
+                let rankingMOs = CoreData.fetch(from: RankingMO.tableName, filter: scorecardFilter) as! [RankingMO]
+                for rankingMO in rankingMOs {
+                    rankingMO.session16 = rankingMO.table16
+                }
+            }
         }
     }
 }
@@ -156,6 +226,7 @@ extension MasterData {
             scorecard.scorecardMO = ScorecardMO()
             scorecard.updateMO()
             let index = self.scorecards.firstIndex(where: {$0.date < scorecard.date}) ?? scorecards.endIndex
+            Utility.debugMessage("MasterData", "Inserting \(scorecard.scorecardId.uuidString)", force: true)
             self.scorecards.insert(scorecard, at: index)
         }
     }

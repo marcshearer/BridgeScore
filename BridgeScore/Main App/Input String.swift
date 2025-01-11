@@ -41,6 +41,7 @@ struct Input : View {
     var autoCorrect: Bool = true
     var multiLine: Bool = false
     var clearText: Bool = true
+    var asText: Bool = false
     var inlineTitle: Bool = true
     var inlineTitleWidth: CGFloat = 180
     var onChange: ((String)->())?
@@ -55,8 +56,8 @@ struct Input : View {
             
             if title != nil && !inlineTitle {
                 HStack {
-                    InputTitle(title: title, message: message, topSpace: topSpace, width: (width == nil ? nil : width! + leadingSpace + 16 + (clearText ? 20 : 0)))
-                    Spacer().frame(width: clearText ? 20 : 0)
+                    InputTitle(title: title, message: message, topSpace: topSpace, width: (width == nil ? nil : width! + leadingSpace + 16 + (clearText && !asText ? 20 : 0)))
+                    Spacer().frame(width: clearText && !asText ? 20 : 0)
                 }
                 .frame(height: 22)
                 Spacer().frame(height: 8)
@@ -89,7 +90,7 @@ struct Input : View {
                 }
                 HStack {
                     ZStack {
-                        if field.wrappedValue == "" {
+                        if !asText && field.wrappedValue == "" {
                             if let placeHolder = placeHolder {
                                 VStack(spacing: 0) {
                                     HStack {
@@ -105,25 +106,34 @@ struct Input : View {
                         }
                         VStack(spacing: 0) {
                             Spacer().frame(height: 4)
-                            UndoWrapper(field) { field in
-                                TextEditor(text: field)
-                                    .scrollContentBackground(.hidden)
-                                    .frame(height: height - 4)
-                                    .focused($focused)
+                            if asText {
+                                Text(field.wrappedValue)
+                                    .truncationMode(.tail)
+                                    .foregroundColor(color.text)
                                     .if(multiLine) { view in
                                         view.lineLimit(1)
                                     }
-                                    .keyboardType(self.keyboardType)
-                                    .autocapitalization(autoCapitalize)
-                                    .disableAutocorrection(!autoCorrect)
-                                    .foregroundColor(color.text)
-                                    .onChange(of: field.wrappedValue, initial: false) {
-                                        if field.wrappedValue.contains("\n") {
-                                            field.wrappedValue = field.wrappedValue.replacingOccurrences(of: "\n", with: "")
-                                            focused = false
+                            } else {
+                                UndoWrapper(field) { field in
+                                    TextEditor(text: field)
+                                        .scrollContentBackground(.hidden)
+                                        .frame(height: height - 4)
+                                        .focused($focused)
+                                        .if(multiLine) { view in
+                                            view.lineLimit(1)
                                         }
-                                        onChange?(field.wrappedValue)
-                                    }
+                                        .keyboardType(self.keyboardType)
+                                        .autocapitalization(autoCapitalize)
+                                        .disableAutocorrection(!autoCorrect)
+                                        .foregroundColor(color.text)
+                                        .onChange(of: field.wrappedValue, initial: false) {
+                                            if field.wrappedValue.contains("\n") {
+                                                field.wrappedValue = field.wrappedValue.replacingOccurrences(of: "\n", with: "")
+                                                focused = false
+                                            }
+                                            onChange?(field.wrappedValue)
+                                        }
+                                }
                             }
                         }
                         .frame(height: height).layoutPriority(999)
@@ -138,7 +148,7 @@ struct Input : View {
                     Spacer()
                 }
                 
-                if clearText {
+                if clearText && !asText {
                     VStack {
                         Spacer()
                         Button {
@@ -157,7 +167,7 @@ struct Input : View {
         }
         .frame(height: self.height + self.topSpace + (title != nil && !inlineTitle ? 24 : (message != nil ? 16 : 0)))
         .if(width != nil) { (view) in
-            view.frame(width: width! + leadingSpace + 16 + (clearText ? 20 : 0))
+            view.frame(width: width! + leadingSpace + 16 + (clearText && !asText ? 20 : 0))
         }
     }
 }

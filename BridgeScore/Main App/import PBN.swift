@@ -22,6 +22,7 @@ class ImportPBN {
                 }
             }
             let imported = ImportedPBNScorecard(lines: lines, csvLines: csvLines, scorecard: scorecard)
+            imported.lastMinuteValidate()
             return imported
         } else {
             return nil
@@ -172,6 +173,7 @@ struct ImportPBNScorecard: View {
             Utility.executeAfter(delay: 0.1) {
                 importedPBNScorecard.importScorecard()
                 completion?()
+                importedPBNScorecard.prepareForNext()
                 presentationMode.wrappedValue.dismiss()
             }
         }
@@ -384,10 +386,10 @@ class ImportedPBNScorecard: ImportedScorecard {
         if let scorecard = scorecard {
             type = scorecard.type.boardScoreType
             var boards: Int
-            if scorecard.tables == 1 || !scorecard.resetNumbers {
+            if !scorecard.isMultiSession {
                 boards = scorecard.boards
             } else {
-                boards = scorecard.boardsTable
+                boards = scorecard.boardsSession
             }
             boardCount = boards
             switch scorecard.type.players {

@@ -98,14 +98,15 @@ struct ImportBBOScorecard: View {
     private let uttypes = [UTType.data]
     @State private var selected: String? = nil
     @State private var importedBBOScorecards: [ImportedBBOScorecard] = []
-    @State private var importSequence = 0
+    @State private var importSequence = Int.max
     @State private var dropZoneEntered = false
     @State private var droppedFiles: [(filename: String, contents: String)] = []
-    private var nextTable: Binding<Int> {
+    @State private var importedBBOScorecard: ImportedBBOScorecard? = nil
+    var importedScorecard: Binding<ImportedScorecard> {
         Binding {
-            scorecard.importNext
+            importedBBOScorecard! as ImportedScorecard
         } set: { (newValue) in
-            scorecard.importNext = newValue
+            self.importedScorecard.wrappedValue = importedBBOScorecard! as ImportedScorecard
         }
     }
     
@@ -119,27 +120,36 @@ struct ImportBBOScorecard: View {
                 }
             } else {
                 if importSequence < importedBBOScorecards.count {
-                    let importedBBOScorecard = importedBBOScorecards[importSequence]
-                    let importedScorecard = Binding.constant(importedBBOScorecard as ImportedScorecard)
-                    let suffix = (scorecard.resetNumbers && scorecard.tables > 1 && importedBBOScorecards.count > 1 ? " (\(importSequence + 1) of \(importedBBOScorecards.count))" : "")
-                    importedBBOScorecard.confirmDetails(importedScorecard: importedScorecard, nextTable: nextTable, suffix: suffix, onError: {
+                    let suffix = (scorecard.isMultiSession && (scorecard.sessions > 1) && importedBBOScorecards.count > 1 ? " (\(importSequence + 1) of \(importedBBOScorecards.count))" : "")
+                    importedBBOScorecard?.confirmDetails(importedScorecard: importedScorecard, suffix: suffix, onError: {
                         presentationMode.wrappedValue.dismiss()
                     }, completion: {
-                        importedBBOScorecard.importScorecard()
-                        if scorecard.tables > 1 && scorecard.resetNumbers {
-                            scorecard.importNext += 1
-                        }
-                        if importSequence >= importedBBOScorecards.count - 1 {
-                            completion?()
+                        importedBBOScorecard!.importScorecard()
+                        completion?()
+                        if scorecard.importNext >= scorecard.sessions {
+                            importedBBOScorecard!.prepareForNext()
                             presentationMode.wrappedValue.dismiss()
                         } else {
-                            // Get ready for next stanza
-                            importSequence += 1
-                            importedBBOScorecards[importSequence].table = scorecard.importNext
-                            nextTable.wrappedValue = scorecard.importNext
+                            MessageBox.shared.show("Session \(scorecard.importNext) imported successfully", okText: "Continue", okAction: {
+                                importedBBOScorecard!.prepareForNext()
+                                if importSequence >= importedBBOScorecards.count - 1 {
+                                    selected = nil
+                                } else {
+                                    // Get ready for next session
+                                    importSequence += 1
+                                    importedBBOScorecard = importedBBOScorecards[importSequence]
+                                    importedBBOScorecard?.session = scorecard.importNext
+                                }
+                            })
                         }
                     })
                 }
+            }
+        }
+        .onChange(of: importSequence) {
+            if importSequence < importedBBOScorecards.count {
+                importedBBOScorecards[importSequence].lastMinuteValidate()
+                importedBBOScorecard = importedBBOScorecards[importSequence]
             }
         }
     }
@@ -159,7 +169,7 @@ struct ImportBBOScorecard: View {
                             Spacer()
                             VStack {
                                 Spacer()
-                                Text("Drop \(scorecard.resetNumbers ? "(multiple) " : "")CSV and PBN Import Files Here").font(bannerFont)
+                                Text("Drop \(scorecard.isMultiSession ? "(multiple) " : "")CSV and PBN Import Files Here").font(bannerFont)
                                     .multilineTextAlignment(.center)
                                 Spacer()
                             }
@@ -181,9 +191,9 @@ struct ImportBBOScorecard: View {
                         let fileData = processDroppedFiles()
                         let imported = ImportBBO.createImportedScorecardFrom(droppedFiles: fileData, scorecard: scorecard)
                         if !imported.isEmpty {
-                            importSequence = 0
                             importedBBOScorecards = imported
                             selected = droppedFiles.first!.filename
+                            importSequence = 0
                         }
                     }
                     droppedFiles = []
@@ -194,7 +204,8 @@ struct ImportBBOScorecard: View {
     
     func processDroppedFiles() -> [ImportFileData] {
         let fileData = decompose(droppedFiles.map{URL(string: $0.filename)!})
-        for (index, file) in fileData.enumerated() {
+        // Process files in name order since first component is session number - hence chronological
+        for (index, file) in fileData.sorted(by: {$0.text < $1.text}).enumerated() {
             // Add content
             file.contents = droppedFiles[index].contents
         }

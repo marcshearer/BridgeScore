@@ -430,8 +430,8 @@ class ScorecardCanvasUIView : UIView, UITableViewDataSource, UITableViewDelegate
             
             // Add body rows
             for tableBoard in 1...scorecard.boardsTable {
-                let boardNumber = ((table - 1) * scorecard.boardsTable) + tableBoard
-                let board = BoardViewModel(scorecard: scorecard, board: boardNumber)
+                let boardIndex = ((table - 1) * scorecard.boardsTable) + tableBoard
+                let board = BoardViewModel(scorecard: scorecard, boardIndex: boardIndex)
                 rows.append(CanvasRow(row: rows.count, type: .body, table: table, board: board))
             }
             
@@ -507,8 +507,8 @@ class ScorecardCanvasUIViewCollectionViewCell: UICollectionViewCell {
         case .body:
             if column.type == .board {
                 self.label.font = boardFont
-                let boardNumber = row.board?.board ?? 0
-                self.label.text = "\(scorecard.resetNumbers ? ((boardNumber - 1) % scorecard.boardsTable) + 1 : boardNumber)"
+                let boardIndex = row.board?.board ?? 0
+                self.label.text = "\(scorecard.resetNumbers ? ((boardIndex - 1) % scorecard.boardsTable) + 1 : boardIndex)"
             } else {
                 self.label.font = cellFont
             }

@@ -239,7 +239,7 @@ struct ScorecardInputView: View {
                 if Scorecard.current.isImported {
                     viewType = .analysis
                 }
-                saveScorecard()
+                scorecard.saveScorecard()
             }
         }
         .sheet(isPresented: $importBwScorecard, onDismiss: {
@@ -253,7 +253,7 @@ struct ScorecardInputView: View {
                 if Scorecard.current.isImported {
                     viewType = .analysis
                 }
-                saveScorecard()
+                scorecard.saveScorecard()
             }
         }
         .sheet(isPresented: $importPbnScorecard, onDismiss: {
@@ -267,7 +267,7 @@ struct ScorecardInputView: View {
                 if Scorecard.current.isImported {
                     viewType = .analysis
                 }
-                saveScorecard()
+                scorecard.saveScorecard()
             }
         }
         .sheet(isPresented: $importUsebioScorecard, onDismiss: {
@@ -281,7 +281,7 @@ struct ScorecardInputView: View {
                 if Scorecard.current.isImported {
                     viewType = .analysis
                 }
-                saveScorecard()
+                scorecard.saveScorecard()
             }
         }
         .fullScreenCover(isPresented: $shareScorecard, onDismiss: {
@@ -381,7 +381,7 @@ struct ScorecardInputView: View {
         }
         bannerOptions += [
             BannerOption(image: AnyView(Image(systemName: "square.and.arrow.up")), text: "Share scorecard", likeBack: true, menu: true, action: { shareScorecard = true })]
-        if isNotImported.wrappedValue || (scorecard.resetNumbers && scorecard.importNext <= scorecard.tables) {
+        if isNotImported.wrappedValue || (scorecard.isMultiSession && scorecard.importNext <= scorecard.sessions) {
             let importMatch = (!isNotImported.wrappedValue ? scorecard.importSource : nil)
             if importMatch == nil || importMatch == .pbn {
                 bannerOptions += [BannerOption(image: AnyView(Image(systemName: "square.and.arrow.down")), text: "Import PBN file", likeBack: true, menu: true, action: { UndoManager.clearActions() ; importPbnScorecard = true})]
@@ -421,23 +421,8 @@ struct ScorecardInputView: View {
     }
     
     func backAction() -> Bool {
-        saveScorecard()
+        scorecard.saveScorecard()
         return true
-    }
-    
-    func saveScorecard() {
-        Scorecard.current.addNew()
-        Scorecard.current.saveAll(scorecard: scorecard)
-        if let master = MasterData.shared.scorecard(id: scorecard.scorecardId) {
-            master.copy(from: scorecard)
-            master.save()
-            scorecard.copy(from: master)
-        } else {
-            let master = ScorecardViewModel()
-            master.copy(from: scorecard)
-            master.insert()
-            scorecard.copy(from: master)
-        }
     }
 }
 
@@ -539,10 +524,10 @@ protocol ScorecardDelegate {
     func scorecardUpdateDeclarers(tableNumber: Int, to: [Seat]?)
     func scorecardSelectNext(rowType: RowType, itemNumber: Int, columnType: ColumnType?, action: KeyAction)
     func scorecardEndEditing(_ force: Bool)
-    func scorecardSetCommentBoardNumber(boardNumber: Int)
+    func scorecardSetCommentBoardIndex(boardIndex: Int)
     var scorecardViewType: ViewType {get}
     var scorecardHideRejected: Bool {get}
-    var scorecardCommentBoardNumber: Int? {get}
+    var scorecardCommentBoardIndex: Int? {get}
     var scorecardAutoComplete: [ColumnType:AutoComplete] {get}
     var scorecardKeyboardHeight: CGFloat {get}
     var scorecardInputControlInset: CGFloat {get}
@@ -643,7 +628,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     private var ignoreKeyboard = false
     private var titleHeightConstraint: NSLayoutConstraint!
     private var orientation: UIDeviceOrientation?
-    internal var scorecardCommentBoardNumber: Int?
+    internal var scorecardCommentBoardIndex: Int?
     internal var scorecardInputControlInset: CGFloat = 0
     private var viewController: UIViewController!
     private var maskBackgroundView: UIView!
@@ -845,7 +830,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
             if let cell = cell {
                 focusRowType = cell.rowType
                 focusTable = cell.table.table
-                focusBoard = cell.board?.board
+                focusBoard = cell.board?.boardIndex
                 focusColumnType = cell.column.type
             } else {
                 focusRowType = nil
@@ -939,7 +924,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         var cell: ScorecardInputCollectionCell?
         switch rowType {
         case .board:
-            let boardColumns = getBoardColumns(boardNumber: itemNumber)
+            let boardColumns = getBoardColumns(board: itemNumber)
             if let columnNumber = boardColumns.firstIndex(where: {$0.type == columnType}) {
                 let section = (itemNumber - 1) / scorecard.boardsTable
                 let row = (itemNumber - 1) % scorecard.boardsTable
@@ -966,8 +951,8 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     
     private func updateBoardCell(section: Int, row: Int, columnType: ColumnType) {
         if let rowCell = self.mainTableView.cellForRow(at: IndexPath(row: row, section: section)) as? ScorecardInputBoardTableCell {
-            let boardNumber = (section * scorecard.boardsTable) + (row + 1)
-            if let columnNumber = getBoardColumns(boardNumber: boardNumber).firstIndex(where: {$0.type == columnType}) {
+            let boardIndex = (section * scorecard.boardsTable) + (row + 1)
+            if let columnNumber = getBoardColumns(board: boardIndex).firstIndex(where: {$0.type == columnType}) {
                 rowCell.collectionView.reloadItems(at: [IndexPath(item: columnNumber, section: 0)])
             }
         }
@@ -975,7 +960,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     
     private func updateBoardTitleCell(columnType: ColumnType) {
         if let rowCell = self.titleView {
-            if let columnNumber = getBoardColumns(boardNumber: -1).firstIndex(where: {$0.type == columnType}) {
+            if let columnNumber = getBoardColumns(board: -1).firstIndex(where: {$0.type == columnType}) {
                 rowCell.collectionView.reloadItems(at: [IndexPath(item: columnNumber, section: 0)])
             }
         }
@@ -1003,7 +988,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     
     func scorecardContractEntry(board: BoardViewModel, table: TableViewModel, contract: Contract?) {
         contractEntryView = ScorecardContractEntryView(frame: CGRect())
-        let section = (board.board - 1) / self.scorecard.boardsTable
+        let section = (board.boardIndex - 1) / self.scorecard.boardsTable
         disableBanner.wrappedValue = true
         contractEntryView.show(from: superview!.superview!, contract: contract ?? board.contract, sitting: table.sitting, declarer: board.declarer) { [self] (contract, declarer, sitting, keyAction) in
             if let sitting = sitting {
@@ -1020,8 +1005,8 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 }
             }
             
-            if let columnNumber = getColumnNumber(rowType: .board, itemNumber: board.board, type: .contract) {
-                let row = (board.board - 1) % scorecard.boardsTable
+            if let columnNumber = getColumnNumber(rowType: .board, itemNumber: board.boardIndex, type: .contract) {
+                let row = (board.boardIndex - 1) % scorecard.boardsTable
                 if let cell = cell(rowType: .board, section: table.table - 1, row: row, column: columnNumber) {
                     if let contract = contract {
                         if contract != board.contract || declarer != board.declarer {
@@ -1058,9 +1043,9 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     
     func scorecardShowTraveller(scorecard: ScorecardViewModel, board: BoardViewModel, sitting: Seat) {
         if !Scorecard.current.travellerList.isEmpty {
-            let showTraverllerView = ScorecardTravellerView(frame: CGRect())
+            let showTravellerView = ScorecardTravellerView(frame: CGRect())
             disableBanner.wrappedValue = true
-            showTraverllerView.show(from: self, frame: self.superview!.superview!.frame, boardNumber: board.board, sitting: sitting) {
+            showTravellerView.show(from: self, frame: self.superview!.superview!.frame, boardIndex: board.boardIndex, sitting: sitting) {
                 self.disableBanner.wrappedValue = false
             }
         }
@@ -1068,7 +1053,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     
     func scorecardShowHand(scorecard: ScorecardViewModel, board: BoardViewModel, sitting: Seat) {
         if !Scorecard.current.travellerList.isEmpty {
-            if let (board, traveller, _) = Scorecard.getBoardTraveller(boardNumber: board.board) {
+            if let (board, traveller, _) = Scorecard.getBoardTraveller(boardIndex: board.boardIndex) {
                 disableBanner.wrappedValue = true
                 handBoard.wrappedValue = board
                 handTraveller.wrappedValue = traveller
@@ -1110,8 +1095,8 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         var declarers: [Seat] = []
         let boards = scorecard.boardsTable
         for index in 1...boards {
-            let boardNumber = ((tableNumber - 1) * boards) + index
-            declarers.append(Scorecard.current.boards[boardNumber]?.declarer ?? .unknown)
+            let boardIndex = ((tableNumber - 1) * boards) + index
+            declarers.append(Scorecard.current.boards[boardIndex]?.declarer ?? .unknown)
         }
         return declarers
     }
@@ -1119,8 +1104,8 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     func scorecardUpdateDeclarers(tableNumber: Int, to declarers: [Seat]?) {
         let boards = scorecard.boardsTable
         for index in 1...boards {
-            let boardNumber = ((tableNumber - 1) * boards) + index
-            if let board = Scorecard.current.boards[boardNumber] {
+            let boardIndex = ((tableNumber - 1) * boards) + index
+            if let board = Scorecard.current.boards[boardIndex] {
                 board.declarer = declarers?[index - 1] ?? .unknown
             }
         }
@@ -1243,8 +1228,8 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     func previousRow(rowType: RowType, itemNumber: Int) -> (rowType: RowType, itemNumber: Int)? {
         if rowType == .board {
             let tableNumber = ((itemNumber - 1) / scorecard.boardsTable) + 1
-            let boardNumber =  ((itemNumber - 1) % self.scorecard.boardsTable) + 1
-            if boardNumber > 1 {
+            let boardIndex =  ((itemNumber - 1) % self.scorecard.boardsTable) + 1
+            if boardIndex > 1 {
                 // Just previous board
                 return (rowType: rowType, itemNumber - 1)
             } else {
@@ -1265,8 +1250,8 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     func nextRow(rowType: RowType, itemNumber: Int) -> (rowType: RowType, itemNumber: Int)? {
         if rowType == .board {
             let tableNumber = ((itemNumber - 1) / scorecard.boardsTable) + 1
-            let boardNumber =  ((itemNumber - 1) % self.scorecard.boardsTable) + 1
-            if boardNumber < scorecard.boardsTable {
+            let boardIndex =  ((itemNumber - 1) % self.scorecard.boardsTable) + 1
+            if boardIndex < scorecard.boardsTable {
                 // Just next board
                 return (rowType: rowType, itemNumber: itemNumber + 1)
             } else if tableNumber < scorecard.tables {
@@ -1298,7 +1283,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     }
     
     func getColumns(rowType: RowType, itemNumber: Int) -> [ScorecardColumn] {
-        return (rowType == .table ? tableColumns : getBoardColumns(boardNumber: itemNumber))
+        return (rowType == .table ? tableColumns : getBoardColumns(board: itemNumber))
     }
     
     func getColumnNumber(rowType: RowType, itemNumber: Int, type: ColumnType, findNearest: Bool = false) -> Int? {
@@ -1344,28 +1329,28 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         self.mainTableView
     }
     
-    func scorecardSetCommentBoardNumber(boardNumber: Int) {
+    func scorecardSetCommentBoardIndex(boardIndex: Int) {
         // -1 is used to show all comments
         
-        let oldBoardNumber = self.scorecardCommentBoardNumber
-        self.scorecardCommentBoardNumber = (boardNumber == oldBoardNumber || oldBoardNumber == -1 ? nil : boardNumber)
-        if let oldBoardNumber = oldBoardNumber {
+        let oldCommentBoardIndex = self.scorecardCommentBoardIndex
+        self.scorecardCommentBoardIndex = (boardIndex == oldCommentBoardIndex || oldCommentBoardIndex == -1 ? nil : boardIndex)
+        if let oldCommentBoardIndex = oldCommentBoardIndex {
             // Close up previously selected row
-            if oldBoardNumber == -1 {
+            if oldCommentBoardIndex == -1 {
                 tableRefresh()
             } else {
-                let oldSection = (oldBoardNumber - 1) / scorecard.boardsTable
-                let oldRow = (oldBoardNumber - 1) % scorecard.boardsTable
+                let oldSection = (oldCommentBoardIndex - 1) / scorecard.boardsTable
+                let oldRow = (oldCommentBoardIndex - 1) % scorecard.boardsTable
                 mainTableView.reloadRows(at: [IndexPath(row: oldRow, section: oldSection)], with: .automatic)
             }
         }
-        if let newBoardNumber = self.scorecardCommentBoardNumber {
+        if let newBoardIndex = self.scorecardCommentBoardIndex {
             // Open up new selected row(s)
-            if newBoardNumber == -1 {
+            if newBoardIndex == -1 {
                 tableRefresh()
             } else {
-                let section = (newBoardNumber - 1) / scorecard.boardsTable
-                let row = (newBoardNumber - 1) % scorecard.boardsTable
+                let section = (newBoardIndex - 1) / scorecard.boardsTable
+                let row = (newBoardIndex - 1) % scorecard.boardsTable
                 mainTableView.reloadRows(at: [IndexPath(row: row, section: section)], with: .automatic)
             }
         }
@@ -1411,8 +1396,8 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         if let type = RowType(rawValue: collectionView.tag / tagMultiplier) {
             switch type {
             case .board, .boardTitle:
-                let boardNumber = collectionView.tag % tagMultiplier
-                columns = getBoardColumns(boardNumber: boardNumber).count
+                let boardIndex = collectionView.tag % tagMultiplier
+                columns = getBoardColumns(board: boardIndex).count
             case .table:
                 columns = tableColumns.count
             }
@@ -1426,16 +1411,16 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         if let type = RowType(rawValue: collectionView.tag / tagMultiplier) {
             switch type {
             case .board:
-                let boardNumber = collectionView.tag % tagMultiplier
+                let boardIndex = collectionView.tag % tagMultiplier
                 height = boardRowHeight
-                column = getBoardColumns(boardNumber: boardNumber)[indexPath.item]
+                column = getBoardColumns(board: boardIndex)[indexPath.item]
             case .table:
                 height = tableRowHeight
                 column = tableColumns[indexPath.item]
             case .boardTitle:
-                let boardNumber = collectionView.tag % tagMultiplier
+                let boardIndex = collectionView.tag % tagMultiplier
                 height = titleRowHeight
-                column = getBoardColumns(boardNumber: boardNumber)[indexPath.item]
+                column = getBoardColumns(board: boardIndex)[indexPath.item]
             }
         } else {
             fatalError()
@@ -1452,20 +1437,20 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
             switch type {
             case .board:
                 let cell = ScorecardInputCollectionCell.dequeue(collectionView, from: self, for: indexPath)
-                let boardNumber = collectionView.tag % tagMultiplier
-                if let board = Scorecard.current.boards[boardNumber] {
-                    let tableNumber = ((boardNumber - 1) / scorecard.boardsTable) + 1
+                let boardIndex = collectionView.tag % tagMultiplier
+                if let board = Scorecard.current.boards[boardIndex] {
+                    let tableNumber = ((boardIndex - 1) / scorecard.boardsTable) + 1
                     if let table = Scorecard.current.tables[tableNumber] {
-                        let column = getBoardColumns(boardNumber: boardNumber)[indexPath.item]
-                        cell.set(scorecard: scorecard, table: table, board: board, itemNumber: boardNumber, rowType: .board, column: column)
+                        let column = getBoardColumns(board: boardIndex)[indexPath.item]
+                        cell.set(scorecard: scorecard, table: table, board: board, itemNumber: boardIndex, rowType: .board, column: column)
                     }
                 }
                 return cell
             case .boardTitle:
                 let cell = ScorecardInputCollectionCell.dequeue(collectionView, from: self, for: indexPath)
-                let boardNumber = collectionView.tag % tagMultiplier
+                let boardIndex = collectionView.tag % tagMultiplier
                 var column: ScorecardColumn
-                column = getBoardColumns(boardNumber: boardNumber)[indexPath.item]
+                column = getBoardColumns(board: boardIndex)[indexPath.item]
                 cell.setTitle(scorecard: scorecard, column: column)
                 return cell
             case .table:
@@ -1579,9 +1564,9 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         return Float(filteredText)
     }
     
-    private func getBoardColumns(boardNumber: Int) -> [ScorecardColumn] {
+    private func getBoardColumns(board: Int) -> [ScorecardColumn] {
         var columns: [ScorecardColumn]
-        if scorecardViewType == .analysis && (scorecardCommentBoardNumber == boardNumber || scorecardCommentBoardNumber == -1) {
+        if scorecardViewType == .analysis && (scorecardCommentBoardIndex == board || scorecardCommentBoardIndex == -1) {
             columns = boardAnalysisCommentColumns
         } else {
             columns = boardColumns
@@ -1937,7 +1922,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             label.text = scorecard.type.boardScoreType.string
         case .analysis1:
             if scorecard.type.players == 4 {
-                if let players = Scorecard.myRanking(table: 1)?.playerNames(separator: " & ", firstOnly: true, .player, .partner) {
+                if let players = Scorecard.myRanking(session: 1)?.playerNames(separator: " & ", firstOnly: true, .player, .partner) {
                     label.text = players
                 } else {
                     label.text = "Our Table"
@@ -1947,7 +1932,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             }
         case .analysis2:
             if scorecard.type.players == 4 {
-                if let players = Scorecard.myRanking(table: 1)?.playerNames(separator: " & ", firstOnly: true, .lhOpponent, .rhOpponent) {
+                if let players = Scorecard.myRanking(session: 1)?.playerNames(separator: " & ", firstOnly: true, .lhOpponent, .rhOpponent) {
                     label.text = players
                 } else {
                     label.text = "Other Table"
@@ -1959,7 +1944,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             self.isUserInteractionEnabled = true
             label.attributedText = Scorecard.commentAvailableText(exists: Scorecard.current.boards.map({$0.value.comment != ""}).contains(true))
             label.isUserInteractionEnabled = true
-            let color = scorecardDelegate?.scorecardCommentBoardNumber == -1 ? Palette.enabledButton : Palette.background
+            let color = scorecardDelegate?.scorecardCommentBoardIndex == -1 ? Palette.enabledButton : Palette.background
             label.backgroundColor = UIColor(color.background)
             label.textColor = UIColor(color.text)
             set(tap: .label)
@@ -2038,7 +2023,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         switch column.type {
         case .board:
             label.font = boardFont
-            label.text = "\(board.boardNumber)"
+            label.text = board.boardNumberText
             label.isUserInteractionEnabled = !isEnabled
             set(tap: .label)
         case .vulnerable:
@@ -2090,7 +2075,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         case .xImps:
             label.isHidden = false
             var xImps: Float?
-            if let (_, traveller, seat) = Scorecard.getBoardTraveller(boardNumber: board.board, equivalentSeat: false) {
+            if let (_, traveller, seat) = Scorecard.getBoardTraveller(boardIndex: board.boardIndex, equivalentSeat: false) {
                 xImps = (seat.pair == .ns ? 1 : -1) * traveller.nsXImps
             }
             label.isUserInteractionEnabled = !isEnabled
@@ -2135,15 +2120,27 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             }
         case .commentAvailable:
             label.isHidden = (Scorecard.current.isImported && board?.score == nil)
-            let color = (scorecardDelegate?.scorecardCommentBoardNumber == board.board ? Palette.enabledButton : Palette.background)
+            let color = (scorecardDelegate?.scorecardCommentBoardIndex == board.boardIndex ? Palette.enabledButton : Palette.background)
             label.backgroundColor = UIColor(color.background)
             label.textColor = UIColor(color.contrastText)
             label.attributedText = Scorecard.commentAvailableText(exists: board.comment != "")
             label.isUserInteractionEnabled = true
             set(tap: .label)
         case .table:
+            let sessionCaption = (scorecard.sessions > 1 && scorecard.tablesSession > 1)
+            if sessionCaption {
+                caption.isHidden = false
+                captionHeight.constant = 24
+                caption.text = "Session \(((table.session - 1) / scorecard.tablesSession) + 1)"
+            }
             label.font = boardTitleFont.bold
-            label.text = (scorecard.resetNumbers ? "Stanza \(table.table)" : (Scorecard.current.isImported ? "" : "Table \(table.table)"))
+            if Scorecard.current.isImported && scorecard.type.players != 4 {
+                // No space on imported pairs view
+                label.text = ""
+            } else {
+                label.text = "\(!sessionCaption && scorecard.tablesSession == 1 ? "Session" : "Table")  \(table.table)"
+            }
+            
             label.isUserInteractionEnabled = true
             set(tap: .label)
         case .sitting:
@@ -2196,7 +2193,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             bottomLabel.isHidden = false
             bottomLabel.font = titleFont
             bottomLabelHeight.constant = (boardRowHeight - 1 - 2) / 2
-            if let (_, otherTraveller, _) = Scorecard.getBoardTraveller(boardNumber: board.board, equivalentSeat: true) {
+            if let (_, otherTraveller, _) = Scorecard.getBoardTraveller(boardIndex: board.boardIndex, equivalentSeat: true) {
                 bottomLabel.attributedText = otherTraveller.contract.attributedCompact + " " + otherTraveller.declarer.short + " " + Scorecard.madeString(made: otherTraveller.made)
             }
             bottomLabel.isUserInteractionEnabled =  true
@@ -2262,7 +2259,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             bottomLabel.isHidden = false
             bottomLabel.font = titleFont
             bottomLabelHeight.constant = (boardRowHeight - 1 - 2) / 2
-            if let (_, otherTraveller, _) = Scorecard.getBoardTraveller(boardNumber: board.board, equivalentSeat: true) {
+            if let (_, otherTraveller, _) = Scorecard.getBoardTraveller(boardIndex: board.boardIndex, equivalentSeat: true) {
                 let points = otherTraveller.points(sitting: table.sitting.equivalent)
                 bottomLabel.text = "\(points > 0 ? "+" : "")\(points)"
             }
@@ -2283,7 +2280,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             label.isUserInteractionEnabled = true
             set(tap: .label)
         }
-        if let (_, traveller, _) = Scorecard.getBoardTraveller(boardNumber: board.board, equivalentSeat: otherTable) {
+        if let (_, traveller, _) = Scorecard.getBoardTraveller(boardIndex: board.boardIndex, equivalentSeat: otherTable) {
             let analysis = Scorecard.current.analysis(board: board, traveller: traveller, sitting: sitting)
             let summary = analysis.summary(phase: phase, otherTable: otherTable, verbose: true)
             analysisView.set(board: board, summary: summary, hideRejected: scorecardDelegate?.scorecardHideRejected ?? true, viewTapped: showHand)
@@ -2497,8 +2494,8 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             switch column.type {
             case .score:
                 if inputText.textValue != "" {
-                    if board.board < scorecard.boards {
-                        scorecardDelegate?.scorecardSelectNext(rowType: .board, itemNumber: board.board, columnType: .score, action: .down)
+                    if board.boardIndex < scorecard.boards {
+                        scorecardDelegate?.scorecardSelectNext(rowType: .board, itemNumber: board.boardIndex, columnType: .score, action: .down)
                     }
                 }
                 return true
@@ -2690,7 +2687,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 }
             case .commentAvailable:
                 if rowType == .boardTitle || Scorecard.current.isImported && board?.score != nil {
-                    scorecardDelegate?.scorecardSetCommentBoardNumber(boardNumber: board?.board ?? -1)
+                    scorecardDelegate?.scorecardSetCommentBoardIndex(boardIndex: board?.boardIndex ?? -1)
                 }
             case .comment:
                 if !(Scorecard.current.isImported && board?.score == nil) {

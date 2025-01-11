@@ -25,6 +25,10 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
     @Published private(set) var saveMessage: String = ""
     @Published private(set) var canSave: Bool = true
     
+    public var session: Int {
+        get { ((table - 1) / scorecard.tablesSession) + 1 }
+    }
+    
     // Auto-cleanup
     private var cancellableSet: Set<AnyCancellable> = []
     
@@ -119,8 +123,8 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
         assert(self.scorecard == Scorecard.current.scorecard, "Only valid when this scorecard is current")
         var result: [BoardViewModel] = []
         for tableBoard in 1...Scorecard.current.scorecard!.boardsTable {
-            let boardNumber = ((table - 1) * scorecard.boardsTable) + tableBoard
-            result.append(Scorecard.current.boards[boardNumber]!)
+            let boardIndex = ((table - 1) * scorecard.boardsTable) + tableBoard
+            result.append(Scorecard.current.boards[boardIndex]!)
         }
         return result
     }
@@ -132,11 +136,11 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
     public var players: [Seat:String] {
         var result: [Seat:String] = [:]
         if let scorer = scorecard.scorer {
-            let boardNumber = ((table - 1) * scorecard.boardsTable) + 1
-            let rankings = Scorecard.current.rankings(table: table, player: (bboName: scorer.bboName.lowercased(), name: scorer.name))
+            let boardIndex = ((table - 1) * scorecard.boardsTable) + 1
+            let rankings = Scorecard.current.rankings(session: (scorecard.isMultiSession ? session : nil), player: (bboName: scorer.bboName.lowercased(), name: scorer.name))
             if rankings.count == 1 {
                 let myRanking = rankings.first!
-                if let myTraveller = Scorecard.current.traveller(board: boardNumber, seat: sitting, rankingNumber: myRanking.number, section: myRanking.section) {
+                if let myTraveller = Scorecard.current.traveller(board: boardIndex, seat: sitting, rankingNumber: myRanking.number, section: myRanking.section) {
                     for seat in Seat.validCases {
                         result[seat] = myTraveller.ranking(seat: seat)?.players[seat]
                     }
@@ -155,9 +159,9 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
         }
         if tableScore == nil {
             for tableBoard in 1...scorecard.boardsTable {
-                let boardNumber = ((table - 1) * scorecard.boardsTable) + tableBoard
+                let boardIndex = ((table - 1) * scorecard.boardsTable) + tableBoard
                 for seat in seats {
-                    if let traveller = Scorecard.current.traveller(board: boardNumber, seat: seat, rankingNumber: ranking.number, section: ranking.section) {
+                    if let traveller = Scorecard.current.traveller(board: boardIndex, seat: seat, rankingNumber: ranking.number, section: ranking.section) {
                         tableTotal = (tableTotal ?? 0) + (seat.pair == .ns ? traveller.nsScore : scorecard.type.invertScore(score: traveller.nsScore))
                         boards += 1
                     }

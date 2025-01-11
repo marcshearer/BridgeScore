@@ -21,9 +21,10 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
     @Published public var boards: Int = 0
     @Published public var boardsTable: Int = 0
     @Published public var sessions: Int = 1
-    @Published public var type: Type = .percent
+    @Published public var type: ScorecardType = .percent
     @Published public var manualTotals: Bool = false
     @Published public var resetNumbers: Bool = false
+    @Published public var regularDay: RegularDay = .none
 
     public var tables: Int { get { boards / max(1, boardsTable) } }
     
@@ -54,7 +55,8 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
                 self.sessions != mo.sessions ||
                 self.type != mo.type ||
                 self.manualTotals != mo.manualTotals ||
-                self.resetNumbers != mo.resetNumbers {
+                self.resetNumbers != mo.resetNumbers ||
+                self.regularDay != mo.regularDay {
                     result = true
             }
         } else {
@@ -127,6 +129,7 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
             self.type = mo.type
             self.manualTotals = mo.manualTotals
             self.resetNumbers = mo.resetNumbers
+            self.regularDay = mo.regularDay
         }
     }
     
@@ -143,6 +146,7 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
         self.type = from.type
         self.manualTotals = from.manualTotals
         self.resetNumbers = from.resetNumbers
+        self.regularDay = from.regularDay
         self.layoutMO = from.layoutMO
     }
     
@@ -158,6 +162,7 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
         self.layoutMO!.type = self.type
         self.layoutMO!.manualTotals = self.manualTotals
         self.layoutMO!.resetNumbers = self.resetNumbers
+        self.layoutMO!.regularDay = self.regularDay
         self.layoutMO!.sequence = self.sequence
     }
     

@@ -77,8 +77,8 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
         set { self.importNext16 = Int16(newValue)}
     }
     
-    public var type: Type {
-        get { Type(rawValue: Int(type16)) ?? .percent }
+    public var type: ScorecardType {
+        get { ScorecardType(rawValue: Int(type16)) ?? .percent }
         set { self.type16 = Int16(newValue.rawValue) }
     }
     

@@ -136,13 +136,15 @@ struct LayoutSelectionView : View {
 struct LayoutDetailView : View {
     var id: UUID
     @ObservedObject var selected: LayoutViewModel
-    @State var minValue = 1
     
     @State private var locations: [LocationViewModel] = []
     @State private var locationIndex: Int?
     
-    let types = Type.allCases
+    let types = ScorecardType.allCases
     @State private var typeIndex: Int?
+    
+    let days = RegularDay.allCases
+    @State private var dayIndex: Int?
     
     @State private var manualTotalsIndex: Int? = 0
 
@@ -180,6 +182,15 @@ struct LayoutDetailView : View {
                                 Separator()
                             }
                             
+                            PickerInput(id: id, title: "Regular day", field: $dayIndex, values: {days.map{$0.string}}, inlineTitleWidth: 200)
+                            { index in
+                                if let index = index {
+                                    selected.regularDay = days[index]
+                                }
+                            }
+                            
+                            Separator()
+                            
                             Input(title: "Default description", field: $selected.scorecardDesc, inlineTitleWidth: 200)
                             
                         }
@@ -206,27 +217,21 @@ struct LayoutDetailView : View {
                             
                             Separator()
                             
-                            StepperInputAdditional(title: "Boards per table", field: $selected.boardsTable, label: { value in "\(value) boards" }, minValue: $minValue, inlineTitleWidth: 200, additionalBinding: $selected.boardsTable, onChange: { (newValue) in
-                                    selected.boards = max(selected.boards, newValue)
-                                    selected.boards = max(newValue, ((selected.boards / newValue) * newValue))
+                            StepperInputAdditional(title: "Boards per table", field: $selected.boardsTable, label: { value in "\(value) boards per table" }, inlineTitleWidth: 200, additionalBinding: $selected.boardsTable, onChange: { (newValue) in
+                                setBoards(boardsTable: newValue)
                                  })
 
                             Separator()
                             
                             // Note this is inputting the number of boards even though prompting for tables
-                            StepperInput(title: "Tables", field: $selected.boards, label: boardsLabel, minValue: $selected.boardsTable, increment: $selected.boardsTable, inlineTitleWidth: 200, onChange:  { (boards) in
-                                let tables = boards / max(1, selected.boardsTable, 1)
-                                if selected.sessions > tables {
-                                    selected.sessions = tables
-                                    if selected.sessions <= 1 {
-                                        selected.resetNumbers = false
-                                    }
-                                }
-                            })
+                            StepperInput(title: "Tables\(selected.sessions <= 1 ? "" : " per session")", field: $selected.boards, label: boardsLabel, minValue: {selected.boardsTable}, increment: {selected.boardsTable * selected.sessions}, inlineTitleWidth: 200)
                             
                             Separator()
                             
-                            StepperInput(title: "Sessions", field: $selected.sessions, label: { value in "\(value) session\(value == 1 ? "" : "s")" }, minValue: Binding.constant(1), maxValue: Binding.constant(selected.tables), inlineTitleWidth: 200, onChange: { (sessions) in
+                            StepperInput(title: "Sessions", field: $selected.sessions, label: { value in "\(value) \(plural("session", value))" }, maxValue: {8}, inlineTitleWidth: 200, onChange: { (sessions) in
+                                // Make sure total boards still makes sense
+                                let tablesPerSession = (selected.boards / selected.boardsTable) / sessions
+                                selected.boards = selected.boardsTable * max(1, tablesPerSession) * sessions
                                 if sessions <= 1 {
                                     selected.resetNumbers = false
                                 } else if selected.sessions <= 1 {
@@ -258,13 +263,19 @@ struct LayoutDetailView : View {
         locationIndex = locations.firstIndex(where: {$0 == selected.location}) ?? 0
         playerIndex = players.firstIndex(where: {$0 == selected.partner}) ?? 0
         typeIndex = types.firstIndex(where: {$0 == selected.type}) ?? 0
+        dayIndex = days.firstIndex(where: {$0 == selected.regularDay}) ?? 0
         manualTotalsIndex = (selected.manualTotals ? TotalCalculation.manual : TotalCalculation.automatic).rawValue
 
     }
     
+    func setBoards(boardsTable: Int) {
+        selected.boards = max(selected.boards, boardsTable)
+        selected.boards = max(boardsTable, ((selected.boards / boardsTable) * boardsTable))
+    }
+    
     func boardsLabel(boards: Int) -> String {
-        let tables = boards / max(1, selected.boardsTable)
-        return "\(tables) \(plural("table", tables)) - \(boards) \(plural("board", boards)) in total"
+        let tablesPerSession = (boards / max(1, selected.boardsTable) / max(1, selected.sessions))
+        return "\(tablesPerSession) \(plural("table", tablesPerSession))\(selected.sessions <= 1 ? "" : " per session") - \(boards) \(plural("board", boards)) in total"
     }
     
     func plural(_ text: String, _ value: Int) -> String {

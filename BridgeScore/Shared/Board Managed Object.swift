@@ -12,9 +12,12 @@ public class BoardMO: NSManagedObject, ManagedObject, Identifiable {
 
     public static let tableName = "Board"
     
-    public var id: (UUID, Int) { (self.scorecardId, self.board) }
+    public var id: (UUID, Int) { (self.scorecardId, self.boardIndex) }
     @NSManaged public var scorecardId: UUID
-    @NSManaged public var board16: Int16
+    @NSManaged public var board16: Int16 // TODO: - Remove when converted
+    @NSManaged public var boardIndex16: Int16
+    @NSManaged public var session16: Int16
+    @NSManaged public var boardNumber16: Int16
     @NSManaged public var dealer16: Int16
     @NSManaged public var vulnerability16: Int16
     @NSManaged public var contractLevel16: Int16
@@ -40,9 +43,19 @@ public class BoardMO: NSManagedObject, ManagedObject, Identifiable {
         self.init(context: CoreData.context)
     }
     
-    public var board: Int {
-        get { Int(self.board16) }
-        set { self.board16 = Int16(newValue)}
+    public var boardIndex: Int {
+        get { Int(self.boardIndex16) }
+        set { self.boardIndex16 = Int16(newValue)}
+    }
+    
+    public var session: Int {
+        get { Int(self.session16) }
+        set { self.session16 = Int16(newValue)}
+    }
+    
+    public var boardNumber: Int {
+        get { Int(self.boardNumber16) }
+        set { self.boardNumber16 = Int16(newValue)}
     }
     
     public var dealer: Seat? {
@@ -174,7 +187,7 @@ public class BoardMO: NSManagedObject, ManagedObject, Identifiable {
     }
 
     public override var description: String {
-        "Board: \(self.board) of Scorecard: \(MasterData.shared.scorecard(id: self.scorecardId)?.desc ?? "")"
+        "Board: \(self.boardIndex) of Scorecard: \(MasterData.shared.scorecard(id: self.scorecardId)?.desc ?? "")"
     }
     public override var debugDescription: String { self.description }
 }

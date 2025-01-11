@@ -24,7 +24,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     @Published public var boards: Int = 0
     @Published public var boardsTable: Int = 0
     @Published public var sessions: Int = 1
-    @Published public var type: Type = .percent
+    @Published public var type: ScorecardType = .percent
     @Published public var manualTotals: Bool = false
     @Published public var resetNumbers: Bool = false
     @Published public var score: Float?
@@ -35,6 +35,8 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     @Published public var importNext: Int = 0
     
     public var tables: Int { get { boards / max(1, boardsTable) } }
+    public var tablesSession: Int { get { tables / max(1, sessions) } }
+    public var boardsSession: Int { get { boards / max(1, sessions) } }
     
     // Linked managed objects - should only be referenced in this and the Data classes
     @Published internal var scorecardMO: ScorecardMO?
@@ -145,7 +147,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.type = layout.type
         self.manualTotals = layout.manualTotals
         self.resetNumbers = layout.resetNumbers
-        self.date = Date()
+        self.date = layout.regularDay.lastDate
         self.comment = ""
         self.score = nil
         self.maxScore = nil
@@ -241,7 +243,25 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         return lhs.scorecardId == rhs.scorecardId
     }
     
-    public func save() {
+    public func saveScorecard() {
+        // Note that scorecard should always be saved in this way as we're re-using
+        // the object that the scorecard is defined in
+        assert(Scorecard.current.match(scorecard: self), "This is not the currently loaded scorecard")
+        Scorecard.current.addNew()
+        Scorecard.current.saveAll(scorecard: self)
+        if let master = MasterData.shared.scorecard(id: self.scorecardId) {
+            master.copy(from: self)
+            master.save()
+            self.copy(from: master)
+        } else {
+            let master = ScorecardViewModel()
+            master.copy(from: self)
+            master.insert()
+            self.copy(from: master)
+        }
+    }
+    
+    private func save() {
         if self.scorecardMO == nil {
             MasterData.shared.insert(scorecard: self)
         } else {
@@ -249,16 +269,16 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         }
         if Scorecard.current.match(scorecard: self) {
             Scorecard.current.saveAll(scorecard: self)
+            UserDefault.currentUnsaved.set(false)
         }
-        UserDefault.currentUnsaved.set(false)
     }
     
-    public func insert() {
+    private func insert() {
         MasterData.shared.insert(scorecard: self)
         if Scorecard.current.match(scorecard: self) {
             Scorecard.current.saveAll(scorecard: self)
+            UserDefault.currentUnsaved.set(false)
         }
-        UserDefault.currentUnsaved.set(false)
     }
     
     public func remove() {
@@ -272,7 +292,11 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     }
     
     public var isNew: Bool {
-        return self.scorecardMO == nil
+        self.scorecardMO == nil
+    }
+    
+    public var isMultiSession: Bool {
+        self.sessions > 1
     }
     
     private func descExists(_ name: String) -> Bool {
@@ -285,6 +309,18 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     
     public var description: String {
         "Scorecard: \(self.desc)"
+    }
+    
+    public func sessionTables(session: Int?) -> ClosedRange<Int> {
+        var result: ClosedRange<Int>
+        if let session = session {
+            let lowerBound = max(1, ((session - 1) * tablesSession) + 1)
+            let upperBound = min(tables, lowerBound + tablesSession - 1)
+            result = lowerBound...upperBound
+        } else {
+            result = 1...tables
+        }
+        return result
     }
     
     public var debugDescription: String { self.description }

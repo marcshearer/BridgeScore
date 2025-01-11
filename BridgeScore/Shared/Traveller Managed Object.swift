@@ -12,9 +12,10 @@ public class TravellerMO: NSManagedObject, ManagedObject, Identifiable {
 
     public static let tableName = "Traveller"
     
-    public var id: (UUID, Int, [Seat:Int], Int16) { (self.scorecardId, self.board, self.rankingNumber, self.northSection16) }
+    public var id: (UUID, Int, [Seat:Int], Int16) { (self.scorecardId, self.boardIndex, self.rankingNumber, self.northSection16) }
     @NSManaged public var scorecardId: UUID
-    @NSManaged public var board16: Int16
+    @NSManaged public var board16: Int16 // TODO: - Remove when converted
+    @NSManaged public var boardIndex16: Int16
     @NSManaged public var contractLevel16: Int16
     @NSManaged public var contractSuit16: Int16
     @NSManaged public var contractDouble16: Int16
@@ -43,9 +44,9 @@ public class TravellerMO: NSManagedObject, ManagedObject, Identifiable {
         self.init(context: CoreData.context)
     }
     
-    public var board: Int {
-        get { Int(self.board16) }
-        set { self.board16 = Int16(newValue) }
+    public var boardIndex: Int {
+        get { Int(self.boardIndex16) }
+        set { self.boardIndex16 = Int16(newValue) }
     }
     
     public var declarer: Seat {
@@ -141,7 +142,7 @@ public class TravellerMO: NSManagedObject, ManagedObject, Identifiable {
     }
     
     public override var description: String {
-        "Traveller: \(self.board), North \(self.rankingNumber[.north] ?? 0) South \(self.rankingNumber[.south] ?? 0) East \(self.rankingNumber[.east] ?? 0) West \(self.rankingNumber[.west] ?? 0)of Section \(self.section) of Scorecard: \(MasterData.shared.scorecard(id: self.scorecardId)?.desc ?? "")"
+        "Traveller: \(self.boardIndex), North \(self.rankingNumber[.north] ?? 0) South \(self.rankingNumber[.south] ?? 0) East \(self.rankingNumber[.east] ?? 0) West \(self.rankingNumber[.west] ?? 0)of Section \(self.section) of Scorecard: \(MasterData.shared.scorecard(id: self.scorecardId)?.desc ?? "")"
     }
     public override var debugDescription: String { self.description }
 }

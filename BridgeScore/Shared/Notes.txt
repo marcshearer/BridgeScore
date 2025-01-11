@@ -12,6 +12,7 @@ Bugs
 ====
 Background still active with MessageBox
 Clear of a text input doesn't update undo history
+Averages of percentages rounded by table can alter total result
 
 To Do
 =====

@@ -13,7 +13,9 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
 
     // Properties in core data model
     @Published private(set) var scorecard: ScorecardViewModel
-    @Published public var board: Int
+    @Published public var boardIndex: Int
+    @Published public var session: Int
+    @Published public var boardNumber: Int
     @Published public var contract = Contract()
     @Published public var declarer: Seat = .unknown
     @Published public var made: Int? = nil
@@ -38,20 +40,20 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
     
     public var tableNumber: Int {
         assert(self.scorecard == Scorecard.current.scorecard, "Only valid when this scorecard is current")
-        return ((board - 1) / (Scorecard.current.scorecard?.boardsTable ?? 1)) + 1
+        return ((boardIndex - 1) / (Scorecard.current.scorecard?.boardsTable ?? 1)) + 1
     }
     public var table: TableViewModel? {
-        assert(self.scorecard == Scorecard.current.scorecard, "Only valid when this scorecard is current")
-        let table = ((board - 1) / (Scorecard.current.scorecard?.boardsTable ?? 1)) + 1
-        return Scorecard.current.tables[table]
+        return Scorecard.current.tables[tableNumber]
     }
     public var vulnerability: Vulnerability {
         return Vulnerability(board: boardNumber)
     }
     public var dealer: Seat {
-        return Seat(rawValue: ((board - 1) % 4) + 1) ?? .unknown
+        return Seat(rawValue: ((boardNumber - 1) % 4) + 1) ?? .unknown
     }
-    
+    public var boardNumberText: String {
+        return ("\(boardNumber)")
+    }
     public var tricksMade: Int? {
         made == nil ? nil : contract.level.tricks + made!
     }
@@ -61,7 +63,9 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
         var result = false
         if let mo = self.boardMO {
             if self.scorecard.scorecardId != mo.scorecardId ||
-                self.board != mo.board ||
+                self.boardIndex != mo.boardIndex ||
+                self.session != mo.session ||
+                self.boardNumber != mo.boardNumber ||
                 self.dealer != mo.dealer ||
                 self.vulnerability != mo.vulnerability ||
                 self.contract != mo.contract ||
@@ -136,15 +140,17 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
         return result
     }
     
-    public init(scorecard: ScorecardViewModel, board: Int) {
+    public init(scorecard: ScorecardViewModel, boardIndex: Int) {
         self.scorecard = scorecard
-        self.board = board
+        self.boardIndex = boardIndex
+        self.session = Scorecard.defaultSession(scorecard: scorecard, boardIndex: boardIndex)
+        self.boardNumber = Scorecard.defaultBoardNumber(scorecard: scorecard, boardIndex: boardIndex)
         super.init()
         self.setupMappings()
     }
     
     public convenience init(scorecard: ScorecardViewModel, boardMO: BoardMO) {
-        self.init(scorecard: scorecard, board: boardMO.board)
+        self.init(scorecard: scorecard, boardIndex: boardMO.boardIndex)
         self.boardMO = boardMO
         self.revert()
     }
@@ -157,7 +163,9 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
             if let scorecard = MasterData.shared.scorecard(id: mo.scorecardId) {
                 self.scorecard = scorecard
             }
-            self.board = mo.board
+            self.boardIndex = mo.boardIndex
+            self.session = mo.session
+            self.boardNumber = mo.boardNumber
             self.contract = mo.contract
             self.declarer = mo.declarer
             self.made = mo.made
@@ -190,7 +198,9 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
     public func updateMO() {
         if let mo = boardMO {
             mo.scorecardId = scorecard.scorecardId
-            mo.board = board
+            mo.boardIndex = boardIndex
+            mo.session = session
+            mo.boardNumber = boardNumber
             mo.dealer = dealer
             mo.vulnerability = vulnerability
             mo.contract = contract
@@ -282,16 +292,12 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
         }
     }
     
-    public var boardNumber: Int {
-        Scorecard.boardNumber(scorecard: scorecard, board: board)
-    }
-    
     public func points(seat: Seat) -> Int? {
         return (made == nil ? nil : Scorecard.points(contract: contract, vulnerability: vulnerability, declarer: declarer, made: made!, seat: seat))
     }
     
     public override var description: String {
-        return "Scorecard: \(scorecard.desc), Board: \(board)"
+        return "Scorecard: \(scorecard.desc), Board index: \(boardIndex)"
     }
     
     public override var debugDescription: String { self.description }

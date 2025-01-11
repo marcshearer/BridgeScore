@@ -13,9 +13,10 @@ public class RankingMO: NSManagedObject, ManagedObject, Identifiable {
 
     public static let tableName = "Ranking"
     
-    public var id: (UUID, Int, Int, Int) { (self.scorecardId, self.table, self.section, self.number) }
+    public var id: (UUID, Int, Int, Int) { (self.scorecardId, self.session, self.section, self.number) }
     @NSManaged public var scorecardId: UUID
-    @NSManaged public var table16: Int16
+    @NSManaged public var table16: Int16 // TODO: - Remove when converted
+    @NSManaged public var session16: Int16
     @NSManaged public var section16: Int16
     @NSManaged public var number16: Int16
     @NSManaged public var ranking16: Int16
@@ -34,9 +35,9 @@ public class RankingMO: NSManagedObject, ManagedObject, Identifiable {
         self.init(context: CoreData.context)
     }
     
-    public var table: Int {
-        get { Int(self.table16) }
-        set { self.table16 = Int16(newValue) }
+    public var session: Int {
+        get { Int(self.session16) }
+        set { self.session16 = Int16(newValue) }
     }
     
     public var section: Int {
@@ -106,7 +107,7 @@ public class RankingMO: NSManagedObject, ManagedObject, Identifiable {
     }
     
     public override var description: String {
-        return "Scorecard: \(MasterData.shared.scorecard(id: self.scorecardId)?.desc ?? ""), Table: \(table) Section: \(section), Number: \(number)"
+        return "Scorecard: \(MasterData.shared.scorecard(id: self.scorecardId)?.desc ?? ""), Table: \(session) Section: \(section), Number: \(number)"
     }
     public override var debugDescription: String { self.description }
 }

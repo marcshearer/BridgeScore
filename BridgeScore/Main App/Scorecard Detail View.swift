@@ -92,17 +92,7 @@ struct ScorecardDetailView: View {
             })
             return false
         } else {
-            Scorecard.current.addNew()
-            if let master = MasterData.shared.scorecard(id: scorecard.scorecardId) {
-                master.copy(from: scorecard)
-                master.save()
-                scorecard.copy(from: master)
-            } else {
-                let master = ScorecardViewModel()
-                master.copy(from: scorecard)
-                master.insert()
-                scorecard.copy(from: master)
-            }
+            scorecard.saveScorecard()
             dismissView = true
             return false
         }
@@ -113,12 +103,11 @@ struct ScorecardDetailsView: View {
     var id: UUID
     @ObservedObject var scorecard: ScorecardViewModel
     @Binding var tableRefresh: Bool
-    @State var minValue = 1
-
+    
     @State private var locations: [LocationViewModel] = []
     @State private var locationIndex: Int?
     
-    let types = Type.allCases
+    let types = ScorecardType.allCases
     @State private var typeIndex: Int?
     
     @State private var manualTotalsIndex: Int? = 0
@@ -224,43 +213,53 @@ struct ScorecardDetailsView: View {
                     
                     Separator(thickness: 1)
 
-                    StepperInputAdditional(title: "Boards", field: $scorecard.boardsTable, label: { value in "\(value) boards per round" }, isEnabled: !Scorecard.current.isImported, minValue: $minValue, additionalBinding: $scorecard.boards, onChange: { (newValue) in
-                            setBoards(boardsTable: newValue)
+                    StepperInputAdditional(title: "Boards per table", field: $scorecard.boardsTable, label: { value in "\(value) boards per table" }, isEnabled: !Scorecard.current.isImported, additionalBinding: $scorecard.boards, onChange: { (newValue) in
+                        Utility.mainThread {
+                            // Need to do this on main thread to avoid multiple updates in parallel
+                            setBoards(boardsTable: newValue, sessions: scorecard.sessions)
                             tableRefresh = true
-                        })
+                        }
+                    })
                     
                     Separator(thickness: 1)
 
                     // Note this is inputting the number of boards even though prompting for tables
-                    StepperInput(title: "Tables", field: $scorecard.boards, label: boardsLabel, isEnabled: !Scorecard.current.isImported, minValue: $scorecard.boardsTable, increment: $scorecard.boardsTable, onChange:  { (boards) in
-                        let tables = boards / max(1, scorecard.boardsTable, 1)
-                        if scorecard.sessions > tables {
-                            scorecard.sessions = tables
-                            if scorecard.sessions <= 1 {
-                                scorecard.resetNumbers = false
-                            }
+                    StepperInput(title: "Tables\(scorecard.sessions <= 1 ? "" : " per session")", field: $scorecard.boards, label: boardsLabel, isEnabled: !Scorecard.current.isImported, minValue: {scorecard.boardsTable * scorecard.sessions}, increment: {scorecard.boardsTable * scorecard.sessions}, onChange:  { (boards) in
+                        Utility.mainThread {
+                            // Need to do this on main thread to avoid multiple updates in parallel
+                            tableRefresh = true
                         }
-                        tableRefresh = true
                     })
                     .disabled(Scorecard.current.isImported)
                     
                     Separator(thickness: 1)
                     
-                    StepperInput(title: "Sessions", field: $scorecard.sessions, label: { value in "\(value) session\(value == 1 ? "" : "s")" }, isEnabled: !Scorecard.current.isImported, minValue: Binding.constant(1), maxValue: Binding.constant(scorecard.tables), onChange: { (sessions) in
-                        if sessions <= 1 {
-                            scorecard.resetNumbers = false
-                        } else if scorecard.sessions <= 1 {
-                            scorecard.resetNumbers = true
+                    StepperInput(title: "Sessions\(scorecard.sessions <= 1 ? "" : " per session")", field: $scorecard.sessions, label: { value in "\(value) \(plural("session", value))" }, isEnabled: !Scorecard.current.isImported, minValue: {1}, maxValue: {8}, onChange: { (sessions) in
+                        // Make sure total boards still makes sense
+                        Utility.mainThread {
+                            // Need to do this on main thread to avoid multiple updates in parallel
+                            let tablesPerSession = (scorecard.boards / scorecard.boardsTable) / sessions
+                            scorecard.boards = scorecard.boardsTable * max(1, tablesPerSession) * sessions
+                            if sessions <= 1 {
+                                scorecard.resetNumbers = false
+                            } else if scorecard.sessions <= 1 {
+                                scorecard.resetNumbers = true
+                            }
+                            tableRefresh = true
                         }
                     })
                     .disabled(Scorecard.current.isImported)
                     
                     Separator(thickness: 1)
 
-                    InputToggle(title: "Reset board number", field: $scorecard.resetNumbers, disabled: Binding.constant(scorecard.sessions <= 1))
+                    InputToggle(title: "Reset board number", field: $scorecard.resetNumbers, disabled: Binding.constant(scorecard.sessions <= 1), onChange:
                     { (newValue) in
-                        tableRefresh = true
-                    }
+                        Utility.mainThread {
+                            // Need to do this on main thread to avoid multiple updates in parallel
+                            tableRefresh = true
+                        }
+                    })
+                    .disabled(Scorecard.current.isImported)
                 }
             }
             
@@ -277,18 +276,14 @@ struct ScorecardDetailsView: View {
         }
     }
     
-    func setBoards(boardsTable: Int) {
-        scorecard.boards = max(scorecard.boards, boardsTable)
-        scorecard.boards = max(boardsTable, ((scorecard.boards / boardsTable) * boardsTable))
-    }
-    
-    func boardsTableLabel(boardsTable: Int) -> String {
-        return "\(boardsTable) \(plural("board", boardsTable)) per table"
+    func setBoards(boardsTable: Int, sessions: Int) {
+        scorecard.boards = max(scorecard.boards, boardsTable * sessions)
+        scorecard.boards = max(boardsTable * sessions, ((scorecard.boards / boardsTable) * boardsTable))
     }
     
     func boardsLabel(boards: Int) -> String {
-         let tables = boards / max(1, scorecard.boardsTable)
-        return "\(tables) \(plural("table", tables)) - \(boards) \(plural("board", boards)) in total"
+        let tablesPerSession = (boards / max(1, scorecard.boardsTable) / max(1, scorecard.sessions))
+        return "\(tablesPerSession) \(plural("table", tablesPerSession))\(scorecard.sessions <= 1 ? "" : " per session") - \(boards) \(plural("board", boards)) in total"
     }
     
     func plural(_ text: String, _ value: Int) -> String {

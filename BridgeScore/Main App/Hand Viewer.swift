@@ -153,7 +153,7 @@ struct HandViewer: View {
         }
         .background(Palette.handTable.background)
         .ignoresSafeArea(.keyboard)
-        .onChange(of: board.board, initial: true) {
+        .onChange(of: board.boardIndex, initial: true) {
             reflectChange()
         }
         .onChange(of: traveller, initial: false) {
@@ -293,15 +293,15 @@ struct HandViewer: View {
                     Spacer().frame(width: 10)
                     VStack {
                         Spacer().frame(height: 10)
-                        if Scorecard.current.scorecard!.resetNumbers {
-                            HStack {
-                                Text("Stanza:")
-                                Spacer()
-                            }
-                        }
                         HStack {
                             Text("Board:")
                             Spacer()
+                        }
+                        if Scorecard.current.scorecard!.isMultiSession {
+                            HStack {
+                                Text("Session:")
+                                Spacer()
+                            }
                         }
                         HStack {
                             Text("Dealer:")
@@ -330,15 +330,15 @@ struct HandViewer: View {
                     Spacer().frame(width: 10)
                     VStack {
                         Spacer().frame(height: 10)
-                        if Scorecard.current.scorecard!.resetNumbers {
+                        HStack {
+                            Text(board.boardNumberText)
+                            Spacer()
+                        }
+                        if Scorecard.current.scorecard!.isMultiSession {
                             HStack {
-                                Text("\(board.tableNumber)")
+                                Text("\(board.session)")
                                 Spacer()
                             }
-                        }
-                        HStack {
-                            Text("\(board.boardNumber)")
-                            Spacer()
                         }
                         HStack {
                             Text("\(board.dealer.string)")

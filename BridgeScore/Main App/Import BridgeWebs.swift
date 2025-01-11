@@ -101,7 +101,10 @@ struct ImportBridgeWebsScorecard: View {
     
     var dropZone: some View {
         VStack(spacing: 0) {
-            Banner(title: Binding.constant("Download BridgeWebs Files"), backImage: Banner.crossImage)
+            Banner(title: Binding.constant("Download BridgeWebs Files"), backImage: Banner.crossImage, backAction: {
+                presentationMode.wrappedValue.dismiss()
+                return true
+            })
             HStack {
                 Spacer().frame(width: 50)
                 VStack {
@@ -215,7 +218,15 @@ struct ImportBridgeWebsScorecard: View {
             Utility.executeAfter(delay: 0.1) {
                 importedBridgeWebsScorecard.importScorecard()
                 completion?()
-                presentationMode.wrappedValue.dismiss()
+                if (!scorecard.isMultiSession) || (scorecard.importNext >= scorecard.sessions) {
+                    importedBridgeWebsScorecard!.prepareForNext()
+                    presentationMode.wrappedValue.dismiss()
+                } else {
+                    MessageBox.shared.show("Session \(scorecard.importNext) imported successfully", okText: "Continue", okAction: {
+                        importedBridgeWebsScorecard!.prepareForNext()
+                        phase = .getList
+                    })
+                }
             }
         }
     }
@@ -247,7 +258,7 @@ struct ImportBridgeWebsScorecard: View {
 
         let task = URLSession.shared.dataTask(with: url) {(data, response, error) in
             if error != nil {
-                errorMessage = "Error get list of available files\nCheck network connection"
+                errorMessage = "Error getting list of available files\nCheck network connection"
                 phase = .error
             } else if let data = data {
                 fileList = []
@@ -273,7 +284,7 @@ struct ImportBridgeWebsScorecard: View {
     }
     
     private func downloadFile(file: FileNameElement) {
-        let urlString = "https://www.bridgewebs.com/cgi-bin/bwop/bw.cgi?xml=1&club=\(file.locationId ?? scorecard.location!.bridgeWebsId)&pid=xml_results_travs&msec=1&mod=Results&ekey=\(file.event)"
+        let urlString = "https://www.bridgewebs.com/cgi-bin/bwop/bw.cgi?xml=1&club=\(file.locationId ?? scorecard.location!.bridgeWebsId)&pid=xml_results_travs&msec=\(scorecard.isMultiSession ? 1 + scorecard.importNext : 1)&mod=Results&ekey=\(file.event)"
         
         let url = URL(string: urlString)!
 
@@ -289,16 +300,13 @@ struct ImportBridgeWebsScorecard: View {
     
     private func completion(importedScorecard: ImportedBridgeWebsScorecard?, message: String?) {
         if let importedScorecard = importedScorecard {
+            importedScorecard.lastMinuteValidate()
             self.importedBridgeWebsScorecard = importedScorecard
             phase = .confirm
         } else {
             errorMessage = message ?? "Error"
             phase = .error
         }
-    }
-    
-    private func stepperLabel(value: Int) -> String {
-        return "Table \(value) of \(scorecard.tables)"
     }
 }
 
@@ -332,8 +340,8 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
     private var element = Element.unknown
     private var parser: XMLParser!
     private let replacingSingleQuote = "@@replacingSingleQuote@@"
-    private var session: Int?
-    private var nextBoard: [Int:Int] = [:] // Session
+    private var sessionNumber: Int?
+    private var nextBoard: [Int:Int] = [:] // sessionNumber
     private var boardNumber: Int!
     private var tag: String?
 
@@ -683,11 +691,11 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
             switch zone {
             case .travellers:
                 if let number = Int(string) {
-                    if let session = session {
-                        if let next = nextBoard[session] {
-                            nextBoard[session] = next + 1
+                    if let sessionNumber = sessionNumber {
+                        if let next =  nextBoard[sessionNumber] {
+                            nextBoard[sessionNumber] = next + 1
                         } else {
-                            nextBoard[session] = 1
+                            nextBoard[sessionNumber] = 1
                         }
                     } else {
                         boardNumber = number

@@ -23,7 +23,7 @@ class AnalysisOverride: ObservableObject, Equatable {
             if let override = board.override[declarer]![suit] {
                 override.made = value
             } else {
-                board.override[declarer]![suit] = (value == nil ? nil : OverrideViewModel(scorecard: scorecard, board: board.board, declarer: declarer, suit: suit, made: value!))
+                board.override[declarer]![suit] = (value == nil ? nil : OverrideViewModel(scorecard: scorecard, board: board.boardIndex, declarer: declarer, suit: suit, made: value!))
             }
         }
     }
@@ -33,8 +33,8 @@ class AnalysisOverride: ObservableObject, Equatable {
     }
 
     static func == (lhs: AnalysisOverride, rhs: AnalysisOverride) -> Bool {
-        let lhsBoard = Scorecard.current.boards[lhs.board.board]
-        let rhsBoard = Scorecard.current.boards[rhs.board.board]
+        let lhsBoard = Scorecard.current.boards[lhs.board.boardIndex]
+        let rhsBoard = Scorecard.current.boards[rhs.board.boardIndex]
         return lhs.board == rhs.board && lhsBoard?.override == rhsBoard?.override
     }
 }
@@ -93,7 +93,7 @@ class Analysis {
     private(set) var boardTravellers: [TravellerViewModel]
     private var tricksMade: [AnalysisTrickCombination:(modeFraction: Float, made: [AnalysisAssessmentMethod:Int])] = [:]
     private var combinationCompareData: [AnalysisTrickCombination:AnalysisCombinationCompareData] = [:]
-    private var scoreType: Type
+    private var scoreType: ScorecardType
     private var boardScoreType: ScoreType
     
     init(override: AnalysisOverride, board: BoardViewModel, traveller: TravellerViewModel, sitting: Pair) {
@@ -101,7 +101,7 @@ class Analysis {
         self.sitting = sitting
         self.board = board
         self.traveller = traveller
-        self.boardTravellers = Scorecard.current.travellers(board: board.board).sorted(by: {$0.points(sitting: sitting.first) < $1.points(sitting: sitting.first)})
+        self.boardTravellers = Scorecard.current.travellers(board: board.boardIndex).sorted(by: {$0.points(sitting: sitting.first) < $1.points(sitting: sitting.first)})
         self.scoreType = Scorecard.current.scorecard!.type
         self.boardScoreType = scoreType.boardScoreType
         buildOptions()
@@ -206,7 +206,7 @@ class Analysis {
                 result = .other
                 playSitting = sitting.other
             }
-            let combination = AnalysisTrickCombination(board: board.board, suit: suit, declarer: declarer)
+            let combination = AnalysisTrickCombination(board: board.boardIndex, suit: suit, declarer: declarer)
             let (modeFraction, made) = madeValues(combination: combination)
             if let result = result {
                 playMade = made[result]
@@ -259,7 +259,7 @@ class Analysis {
                     // Generic options
                 switch type {
                 case .actual:
-                    typeOptions.append(AnalysisOption(parent: self, board: board.board, type: type, contract: Contract(copying: traveller.contract), declarer: traveller.declarer.pair))
+                    typeOptions.append(AnalysisOption(parent: self, board: board.boardIndex, type: type, contract: Contract(copying: traveller.contract), declarer: traveller.declarer.pair))
                 case .otherTable:
                     if let otherTraveller = otherTraveller {
                         let contract = Contract(copying: otherTraveller.contract)
@@ -283,7 +283,7 @@ class Analysis {
                                     tryBid.double = .undoubled
                                     tryBid.level = ContractLevel(rawValue: level)!
                                     if theirBid == nil || tryBid >+ theirBid! {
-                                        typeOptions.append(AnalysisOption(parent: self, board: board.board, type: type, contract: tryBid, declarer: sitting))
+                                        typeOptions.append(AnalysisOption(parent: self, board: board.boardIndex, type: type, contract: tryBid, declarer: sitting))
                                     }
                                 }
                             }
@@ -301,7 +301,7 @@ class Analysis {
                         if weDeclared || theirBid.double == .doubled {
                             let contract = Contract(copying: theirBid)
                             contract.double = .undoubled
-                            typeOptions.append(AnalysisOption(parent: self, board: board.board, type: type, contract: contract, declarer: sitting.other, decisionBy: sitting))
+                            typeOptions.append(AnalysisOption(parent: self, board: board.boardIndex, type: type, contract: contract, declarer: sitting.other, decisionBy: sitting))
                         }
                     }
                 case .upToGame:
@@ -342,22 +342,22 @@ class Analysis {
                                     // We have doubled them - consider not doubling
                                 let dontDouble = Contract(copying: option.contract)
                                 dontDouble.double = .undoubled
-                                options.append(AnalysisOption(parent: self, board: board.board, type: .dontDouble, contract: dontDouble, declarer: option.declarer, decisionBy: option.declarer.other, linked: option))
+                                options.append(AnalysisOption(parent: self, board: board.boardIndex, type: .dontDouble, contract: dontDouble, declarer: option.declarer, decisionBy: option.declarer.other, linked: option))
                             } else if option.declarer == sitting {
                                     // We have over bid
                                     // Add linked options for opps doubling or overbidding
                                     // and us then doubling them or them doubling us
                                 let doubleUs = Contract(copying: option.contract)
                                 doubleUs.double = .doubled
-                                options.append(AnalysisOption(parent: self, board: board.board, type: .double, contract: doubleUs, declarer: option.declarer, decisionBy: option.declarer.other, linked: option, double: true))
+                                options.append(AnalysisOption(parent: self, board: board.boardIndex, type: .double, contract: doubleUs, declarer: option.declarer, decisionBy: option.declarer.other, linked: option, double: true))
                                 
                                 if let bidOver = Contract(higher: option.contract, suit: theirBid!.suit) {
-                                    let bidOverOption = AnalysisOption(parent: self, board: board.board, type: .bidOver, contract: bidOver, declarer: option.declarer.other, decisionBy: option.declarer.other, linked: option)
+                                    let bidOverOption = AnalysisOption(parent: self, board: board.boardIndex, type: .bidOver, contract: bidOver, declarer: option.declarer.other, decisionBy: option.declarer.other, linked: option)
                                     options.append(bidOverOption)
                                     
                                     let doubleThem = Contract(copying: bidOver)
                                     doubleThem.double = .doubled
-                                    options.append(AnalysisOption(parent: self, board: board.board, type: .bidOverDouble, contract: doubleThem, declarer: option.declarer.other, decisionBy: option.declarer, linked: bidOverOption, double: true))
+                                    options.append(AnalysisOption(parent: self, board: board.boardIndex, type: .bidOverDouble, contract: doubleThem, declarer: option.declarer.other, decisionBy: option.declarer, linked: bidOverOption, double: true))
                                 }
                             }
                         }
@@ -366,7 +366,7 @@ class Analysis {
                                 // If we passed them consider doubling them
                             let doubleThem = Contract(copying: option.contract)
                             doubleThem.double = .doubled
-                            options.append(AnalysisOption(parent: self, board: board.board, type: .passPrevious, contract: doubleThem, declarer: option.declarer, decisionBy: option.declarer.other, linked: option, double: true))
+                            options.append(AnalysisOption(parent: self, board: board.boardIndex, type: .passPrevious, contract: doubleThem, declarer: option.declarer, decisionBy: option.declarer.other, linked: option, double: true))
                         }
                     }
                 }
@@ -422,7 +422,7 @@ class Analysis {
                         } else {
                             type = .upToGrand
                         }
-                        options.append(AnalysisOption(parent: self, board: board.board, type: type, contract: contract, declarer: sitting))
+                        options.append(AnalysisOption(parent: self, board: board.boardIndex, type: type, contract: contract, declarer: sitting))
                     }
                 }
             }
@@ -434,9 +434,9 @@ class Analysis {
         for option in options {
             option.assessments = [:]
             var assessment: [Int:AnalysisAssessment] = [:]
-            let combination = AnalysisTrickCombination(board: board.board, suit: option.contract.suit, declarer: option.declarer)
+            let combination = AnalysisTrickCombination(board: board.boardIndex, suit: option.contract.suit, declarer: option.declarer)
             var allTricksMade = madeValues(combination: combination).made.map({$0.value})
-            let overrideMade = override.get(board: board.board, suit: combination.suit, declarer: combination.declarer)
+            let overrideMade = override.get(board: board.boardIndex, suit: combination.suit, declarer: combination.declarer)
             if let overrideMade = overrideMade {
                 allTricksMade.append(overrideMade)
             }
@@ -577,9 +577,9 @@ class Analysis {
         var assessment: [AnalysisTrickCombination:(modeFraction: Float, made: [AnalysisAssessmentMethod:Int])] = [:]
         for pair in Pair.validCases {
             for suit in Suit.validCases {
-                let combination = AnalysisTrickCombination(board: board.board, suit: suit, declarer: pair)
+                let combination = AnalysisTrickCombination(board: board.boardIndex, suit: suit, declarer: pair)
                 assessment[combination] = (0,[:])
-                let suitTravellers = Scorecard.current.travellers(board: board.board).filter({ $0.contract.suit == suit && $0.declarer.pair == pair}) .sorted(by: { ((($0.contractLevel + $0.made) - ($1.contractLevel + $1.made)) * ($0.declarer.pair == pair ? 1 : -1)) < 0 })
+                let suitTravellers = Scorecard.current.travellers(board: board.boardIndex).filter({ $0.contract.suit == suit && $0.declarer.pair == pair}) .sorted(by: { ((($0.contractLevel + $0.made) - ($1.contractLevel + $1.made)) * ($0.declarer.pair == pair ? 1 : -1)) < 0 })
                     // Play
                 if suit == traveller.contract.suit {
                     assessment[combination]!.made[.play] = Values.trickOffset + traveller.contractLevel + traveller.made
@@ -746,7 +746,7 @@ class Analysis {
                 let playOption = options.first?.assessments[.play]
                 
                     // Check if already shown some values on the play and subtract them out
-                let (_, alreadyShown, _) = compare(combination: AnalysisTrickCombination(board: board.board, suit: bestOption.contract.suit, declarer: bestOption.declarer), positiveOnly: true) ?? (NSAttributedString(""), nil, nil)
+                let (_, alreadyShown, _) = compare(combination: AnalysisTrickCombination(board: board.boardIndex, suit: bestOption.contract.suit, declarer: bestOption.declarer), positiveOnly: true) ?? (NSAttributedString(""), nil, nil)
                 if let (impact, impactDescription) = bestOption.value(method: useMethod, format: .score, compare: playOption, verbose: true, showVariance: true, colorCode: false, alreadyShown: alreadyShown, positiveOnly: true) {
                     
                     let rejected = traveller.biddingRejected
@@ -755,7 +755,7 @@ class Analysis {
                     
                 }
             } else {
-                if let (text, impact, _) = compare(combination: AnalysisTrickCombination(board: board.board, suit: traveller.contract.suit, declarer: traveller.declarer.pair), positiveOnly: true, verbose: true) {
+                if let (text, impact, _) = compare(combination: AnalysisTrickCombination(board: board.boardIndex, suit: traveller.contract.suit, declarer: traveller.declarer.pair), positiveOnly: true, verbose: true) {
                         
                     let rejected = traveller.playRejected
                         
