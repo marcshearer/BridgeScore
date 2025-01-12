@@ -90,6 +90,8 @@
 		B28D3F602ACE70850060DAA1 /* Override View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28D3F5F2ACE70850060DAA1 /* Override View Model.swift */; };
 		B28E2B1E27C6A582002A9EE2 /* Input Float.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28E2B1D27C6A582002A9EE2 /* Input Float.swift */; };
 		B28E4EE827B55F9A0059819C /* Backup.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28E4EE727B55F9A0059819C /* Backup.swift */; };
+		B29BBA782D33D0B10032BC2F /* Scorecard Type Classes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B29BBA772D33D0A10032BC2F /* Scorecard Type Classes.swift */; };
+		B29BBA7A2D33D15A0032BC2F /* Contract Classes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B29BBA792D33D1540032BC2F /* Contract Classes.swift */; };
 		B2A2053527AFC2E400C83C88 /* Player Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053427AFC2E400C83C88 /* Player Setup View.swift */; };
 		B2A2053727AFC41500C83C88 /* Toolbar View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053627AFC41500C83C88 /* Toolbar View.swift */; };
 		B2A2053927B01D0000C83C88 /* Location Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A2053827B01D0000C83C88 /* Location Setup View.swift */; };
@@ -222,6 +224,8 @@
 		B28E2B1D27C6A582002A9EE2 /* Input Float.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Input Float.swift"; sourceTree = "<group>"; };
 		B28E4EE727B55F9A0059819C /* Backup.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Backup.swift; sourceTree = "<group>"; };
 		B28E4EE927B566300059819C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B29BBA772D33D0A10032BC2F /* Scorecard Type Classes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Type Classes.swift"; sourceTree = "<group>"; };
+		B29BBA792D33D1540032BC2F /* Contract Classes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contract Classes.swift"; sourceTree = "<group>"; };
 		B2A2053427AFC2E400C83C88 /* Player Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Player Setup View.swift"; sourceTree = "<group>"; };
 		B2A2053627AFC41500C83C88 /* Toolbar View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Toolbar View.swift"; sourceTree = "<group>"; };
 		B2A2053827B01D0000C83C88 /* Location Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Location Setup View.swift"; sourceTree = "<group>"; };
@@ -471,6 +475,8 @@
 				B26BCE532799AE4D00B73501 /* Master Data.swift */,
 				B2EB3D78279DB80000D64225 /* Scorecard.swift */,
 				B2AB6ECA2AC2CCA900ED002A /* Analysis.swift */,
+				B29BBA772D33D0A10032BC2F /* Scorecard Type Classes.swift */,
+				B29BBA792D33D1540032BC2F /* Contract Classes.swift */,
 				B2F3C3A32AA1E72200A58E89 /* Card Class.swift */,
 				B26BCE552799AE6400B73501 /* Preview Data.swift */,
 				B2EB3D7A279DCBCB00D64225 /* Default Data.swift */,
@@ -669,6 +675,7 @@
 				B26BCE672799AED700B73501 /* Swipe Gestures.swift in Sources */,
 				B2EB3D73279D734700D64225 /* Location View Model.swift in Sources */,
 				B2BBC8BA27BBF6BC00D51A26 /* Table View Model.swift in Sources */,
+				B29BBA782D33D0B10032BC2F /* Scorecard Type Classes.swift in Sources */,
 				B25AE9E52AA7021600F04229 /* Double Dummy Managed Object.swift in Sources */,
 				B2EB3D75279D73E100D64225 /* Board View Model.swift in Sources */,
 				B22D1C312AFA2C0400C8897F /* First Responder Label.swift in Sources */,
@@ -732,6 +739,7 @@
 				B2A2053927B01D0000C83C88 /* Location Setup View.swift in Sources */,
 				B2B1D5892B026C87007A2977 /* Import Usebio.swift in Sources */,
 				B23ADBF427B28D68001B6B38 /* Local Authentication.swift in Sources */,
+				B29BBA7A2D33D15A0032BC2F /* Contract Classes.swift in Sources */,
 				B2A5A42827E3090300754061 /* BBO Name View Model.swift in Sources */,
 				B26BCE6A2799AED700B73501 /* Standard View.swift in Sources */,
 				B26C555727C7EA9200015D0A /* Table with Collection.swift in Sources */,

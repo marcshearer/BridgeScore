@@ -478,11 +478,17 @@ class Analysis {
         case .xImp:
             // Compare our score with every othre traveller and average
             score = otherTravellers.map({Float(BridgeImps(points: points - $0.points(sitting: sitting.first)).imps)}).reduce(0,+) / Float(otherTravellers.count)
+        case .butlerImp:
+            // Compare our score with every other traveller except top and bottom and average
+            var travellers = otherTravellers.map({Float(BridgeImps(points: points - $0.points(sitting: sitting.first)).imps)}).sorted(by: {$0 < $1})
+            travellers.removeFirst()
+            travellers.removeLast()
+            score = travellers.reduce(0,+) / max(1,(Float(otherTravellers.count) - 2))
         case .imp:
             let compare = otherTravellers.map{$0.points(sitting: sitting.first)}.reduce(0, +) / otherTravellers.count
             let imps = BridgeImps(points: points - compare)
             score = Float(imps.imps)
-        case .vp, .acblVp:
+        case .vp, .acblVp, .sbuVp:
             break
         case .unknown:
             break
