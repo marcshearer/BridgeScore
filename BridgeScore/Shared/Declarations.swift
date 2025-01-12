@@ -114,8 +114,12 @@ public enum AggregateType {
             return subsidiaryScoreType
         case .total:
             return subsidiaryScoreType
-        case .continuousVp, .discreteVp, .sbuDiscreteVp, .acblDiscreteVp, .percentVp, .contPercentVp:
+        case .continuousVp, .discreteVp, .percentVp, .contPercentVp:
             return .vp
+        case .sbuDiscreteVp:
+            return .sbuVp
+        case .acblDiscreteVp:
+            return .acblVp
         }
     }
 }
@@ -124,7 +128,9 @@ public enum ScoreType {
     case percent
     case imp
     case xImp
+    case butlerImp
     case acblVp
+    case sbuVp
     case vp
     case aggregate
     case unknown
@@ -135,9 +141,11 @@ public enum ScoreType {
             return "Score %"
         case .xImp:
             return "X Imps"
+        case .butlerImp:
+            return "B Imps"
         case .imp:
             return "Imps"
-        case .vp, .acblVp:
+        case .vp, .sbuVp, .acblVp:
             return "VPs"
         case .aggregate:
             return "Score"
@@ -150,11 +158,9 @@ public enum ScoreType {
         switch self {
         case .percent:
             return 19.5
-        case .xImp:
+        case .imp, .xImp, .butlerImp:
             return 3.5
-        case .imp:
-            return 3.5
-        case .vp, .acblVp:
+        case .vp, .sbuVp, .acblVp:
             return 2.5
         case .aggregate:
             return 100.0
@@ -165,7 +171,7 @@ public enum ScoreType {
     
     public func prefix(score: Float) -> String {
         switch self {
-        case .imp, .xImp, .aggregate:
+        case .imp, .xImp, .butlerImp, .aggregate:
             return (score > 0 ? "+" : "")
         default:
             return ""
@@ -180,7 +186,7 @@ public enum ScoreType {
         switch self {
         case .percent:
             return "%"
-        case .xImp, .imp:
+        case .xImp, .imp, .butlerImp:
             return " Imps"
         case .vp, .acblVp:
             return " VPs"
@@ -265,7 +271,9 @@ public enum ScorecardType: Int, CaseIterable {
             return .percent
         case .xImp, .vpXImp:
             return .xImp
-        case .vpMatchTeam, .vpTableTeam, .vpContTableTeam, .sbuVpTableTeam, .acblVpTableTeam, .butlerImp:
+        case .butlerImp:
+            return .butlerImp
+        case .vpMatchTeam, .vpTableTeam, .vpContTableTeam, .sbuVpTableTeam, .acblVpTableTeam:
             return .imp
         case .aggregate:
             return .aggregate
