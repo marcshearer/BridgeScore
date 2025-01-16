@@ -140,7 +140,7 @@ struct LayoutDetailView : View {
     @State private var locations: [LocationViewModel] = []
     @State private var locationIndex: Int?
     
-    let types = ScorecardType.allCases
+    let types: [ScorecardType] = []
     @State private var typeIndex: Int?
     
     let days = RegularDay.allCases

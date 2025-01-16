@@ -82,6 +82,8 @@ class MasterData: ObservableObject {
         }
         
         // TODO: - Remove when definitely not needed again
+        convertScorecardTypes()
+        
         /*
         // Convert layouts for changes to multi-sessions
         convertLayouts()
@@ -89,6 +91,23 @@ class MasterData: ObservableObject {
         // Convert scorecards to changes for multi-sessions
         convertScorecards()
         */
+    }
+    
+    func convertScorecardTypes() {
+        for layout in layouts {
+            CoreData.update {
+                // Setup scorecard type class from old type enum
+                layout.type = (OldScorecardType(rawValue: Int(layout.layoutMO!.type16)) ?? .percent).convert()
+                layout.updateMO()
+            }
+        }
+        for scorecard in scorecards {
+            CoreData.update {
+                // Setup scorecard type class from old type enum
+                scorecard.type = (OldScorecardType(rawValue: Int(scorecard.scorecardMO!.type16)) ?? .percent).convert()
+                scorecard.updateMO()
+            }
+        }
     }
     
     func convertLayouts() {

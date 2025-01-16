@@ -147,6 +147,7 @@ struct ScorecardListView: View, DropDelegate {
             if layoutSelected {
                 self.selected.reset(from: layout)
                 Scorecard.current.load(scorecard: selected)
+                selected.saveScorecard()
                 importScorecard = .none
                 linkToEdit = true
             }

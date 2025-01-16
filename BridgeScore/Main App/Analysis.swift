@@ -488,7 +488,7 @@ class Analysis {
             let compare = otherTravellers.map{$0.points(sitting: sitting.first)}.reduce(0, +) / otherTravellers.count
             let imps = BridgeImps(points: points - compare)
             score = Float(imps.imps)
-        case .vp, .acblVp, .sbuVp:
+        case .vp:
             break
         case .unknown:
             break

@@ -24,7 +24,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     @Published public var boards: Int = 0
     @Published public var boardsTable: Int = 0
     @Published public var sessions: Int = 1
-    @Published public var type: ScorecardType = .percent
+    @Published public var type: ScorecardType = ScorecardType()
     @Published public var manualTotals: Bool = false
     @Published public var resetNumbers: Bool = false
     @Published public var score: Float?
@@ -370,7 +370,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.boards = UserDefault.currentBoards.int
         self.boardsTable = UserDefault.currentBoardsTable.int
         self.sessions = UserDefault.currentSessions.int
-        self.type = UserDefault.currentType.type ?? .percent
+        self.type = UserDefault.currentType.type ?? ScorecardType()
         self.manualTotals = UserDefault.currentManualTotals.bool
         self.resetNumbers = UserDefault.currentResetNumbers.bool
         let score = UserDefault.currentScore.string

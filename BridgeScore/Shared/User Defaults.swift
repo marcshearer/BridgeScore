@@ -1,5 +1,5 @@
 //
-//  User Defaults.swift
+//  User Default.swift
 //  BridgeScore
 //
 //  Created by Marc Shearer on 12/03/2022.
@@ -69,7 +69,7 @@ enum UserDefault: String, CaseIterable {
         case .currentComment:
             return ""
         case .currentType:
-            return ScorecardType.percent.rawValue
+            return .none
         case .currentManualTotals:
             return false
         case .currentBoards:
@@ -149,7 +149,10 @@ enum UserDefault: String, CaseIterable {
         } else if let uuid = value as? UUID {
             MyApp.defaults.set(uuid.uuidString, forKey: name)
         } else if let type = value as? ScorecardType {
-            MyApp.defaults.set("\(type.rawValue)", forKey: name)
+            MyApp.defaults.set("\(type.eventType.rawValue)", forKey: "\(name)-eventType")
+            UserDefault.setScoreType(type: type.boardScoreType, forKey: "\(name)-boardScoreType")
+            UserDefault.setAggregateType(type: type.aggregateType, forKey: "\(name)-aggregateType")
+            MyApp.defaults.set(type.headToHead, forKey: "\(name)-headToHead")
         } else if let date = value as? Date {
             MyApp.defaults.set(date.toFullString(), forKey: name)
         } else {
@@ -157,6 +160,26 @@ enum UserDefault: String, CaseIterable {
         }
     }
     
+    public static func setScoreType(type: ScoreType, forKey name: String) {
+        MyApp.defaults.set("\(type.rawValue)", forKey: name)
+        switch type {
+        case .vp(let type):
+            MyApp.defaults.set("\(type)", forKey: "\(name)-vpType")
+        default:
+            break
+        }
+    }
+    
+    public static func setAggregateType(type: AggregateType, forKey name: String) {
+        MyApp.defaults.set("\(type.rawValue)", forKey: name)
+        switch type {
+        case .vp(let type):
+            MyApp.defaults.set("\(type)", forKey: "\(name)-vpType")
+        default:
+            break
+        }
+    }
+        
     public static func string(forKey name: String) -> String {
         return MyApp.defaults.string(forKey: name)!
     }
@@ -199,7 +222,39 @@ enum UserDefault: String, CaseIterable {
     }
     
     public static func type(forKey name: String) -> ScorecardType? {
-        return ScorecardType(rawValue: Int(MyApp.defaults.string(forKey: name) ?? "") ?? -1)
+        let eventType = eventType(forKey: "\(name)-eventType")
+        let boardScoreType = scoreType(forKey: "\(name)-boardScoreType")
+        let aggregateType = aggregateType(forKey: "\(name)-aggregateType")
+        let headToHead = MyApp.defaults.bool(forKey: "\(name)-headToHead")
+        return ScorecardType(eventType: eventType, boardScoreType: boardScoreType, aggregateType: aggregateType, headToHead: headToHead)
+    }
+    
+    public static func eventType(forKey name: String) -> EventType {
+        EventType(rawValue: Int(MyApp.defaults.string(forKey: "\(name)") ?? "") ?? -1) ?? .unknown
+    }
+ 
+    public static func scoreType(forKey name: String) -> ScoreType {
+        let scoreTypeRawValue = Int(MyApp.defaults.string(forKey: "\(name)") ?? "") ?? -1
+        if scoreTypeRawValue == ScoreType.vp(type: .unknown).rawValue {
+            let vpType = vpType(forKey: "\(name)-vpType")
+            return .vp(type: vpType)
+        } else {
+            return ScoreType(rawValue: scoreTypeRawValue) ?? .unknown
+        }
+    }
+    
+    public static func aggregateType(forKey name: String) -> AggregateType {
+        let aggregateRawValue = Int(MyApp.defaults.string(forKey: "\(name)") ?? "") ?? -1
+        if aggregateRawValue == AggregateType.vp(type: .unknown).rawValue {
+            let vpType = vpType(forKey: "\(name)-vpType")
+            return .vp(type: vpType)
+        } else {
+            return AggregateType(rawValue: aggregateRawValue) ?? .unknown
+        }
+    }
+    
+    public static func vpType(forKey name: String) -> VpType {
+        return VpType(rawValue: Int(MyApp.defaults.string(forKey: "\(name)") ?? "") ?? -1) ?? .unknown
     }
     
     public static func importSource(forKey name: String) -> ImportSource? {

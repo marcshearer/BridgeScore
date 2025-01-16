@@ -382,7 +382,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                         if number != nil {
                             importedRanking.number = number
                             importedRanking.full = components.first!
-                            format = .pairs
+                            eventType = .pairs
                             if way != nil {
                                 importedRanking.way = way
                             }
@@ -395,7 +395,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                         // Don't overwrite pair number
                         importedRanking.number = Int(components.first!)
                         if players ?? 0 > 2 {
-                            format = .teams
+                            eventType = .teams
                         }
                     }
                 }
@@ -411,7 +411,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 let sitting = importedRanking.way?.seats.first?.partner ?? .south
                 let name2 = columns.element(index) ?? ""
                 if name2 == "" {
-                    format = .individual
+                    eventType = .individual
                 } else {
                     importedRanking.players[sitting] = name2
                 }
@@ -577,7 +577,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                             rankings[matchIndex].players[.east] = ranking.players[.east] ?? ranking.players[.north]
                             rankings[matchIndex].players[.west] = ranking.players[.west] ?? ranking.players[.south]
                             remove.append(index)
-                            format = .teams
+                            eventType = .teams
                         }
                     }
                 }
@@ -587,25 +587,27 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
             }
         }
         for ranking in rankings {
-            if format == .individual {
+            if eventType == .individual {
                 for seat in Seat.validCases {
                     for otherSeat in Seat.validCases {
                         ranking.players[seat] = ranking.players[otherSeat] ?? ranking.players[seat]
                     }
                 }
             }
-            if format != .teams {
+            if eventType != .teams {
                 for seat in Seat.validCases {
                     ranking.players[seat] = ranking.players[seat] ?? ranking.players[seat.equivalent]
                 }
             }
         }
         // Update scorecard type
-        switch format {
+        switch eventType {
         case .individual, .pairs:
             type = type ?? .percent
         case .teams:
             type = .imp
+        default:
+            type = .unknown
         }
     }
     
@@ -725,10 +727,10 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 switch string.lowercased() {
                 case "s":
                     players = 2
-                    format = .pairs
+                    eventType = .pairs
                 case "4", "8":
                     players = 4
-                    format = .teams
+                    eventType = .teams
                 default:
                     players = 2
                 }

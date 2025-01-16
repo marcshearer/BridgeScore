@@ -1919,7 +1919,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         label.font = titleFont.bold
         switch column.type {
         case .score:
-            label.text = scorecard.type.boardScoreType.string
+            label.text = scorecard.type.boardScoreType.title
         case .analysis1:
             if scorecard.type.players == 4 {
                 if let players = Scorecard.myRanking(session: 1)?.playerNames(separator: " & ", firstOnly: true, .player, .partner) {
@@ -2161,7 +2161,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         if rowType == .table && column.heading != "" {
             caption.isHidden = false
             captionHeight.constant = 24
-            caption.text = (column.type == .tableScore ? scorecard.type.boardScoreType.string : column.heading)
+            caption.text = (column.type == .tableScore ? scorecard.type.boardScoreType.title : column.heading)
         }
     }
     

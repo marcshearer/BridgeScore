@@ -309,11 +309,11 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
             boardCount = boards
             switch scorecard.type.players {
             case 1:
-                format = .individual
+                eventType = .individual
             case 4:
-                format = .teams
+                eventType = .teams
             default:
-                format = .pairs
+                eventType = .pairs
             }
         }
         
@@ -357,8 +357,8 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
     func processUsebio(name: String, attributes: [String : String]) {
         switch name {
         case "EVENT":
-            if let eventType = EventType(attributes["EVENT_TYPE"] ?? "INVALID") {
-                format = eventType.format ?? format
+            if let usebioEventType = UsebioEventType(attributes["EVENT_TYPE"] ?? "INVALID") {
+                eventType = usebioEventType.eventType ?? eventType
             }
             current = current?.add(child: Node(name: name, attributes: attributes, process: processEvent))
         default:
@@ -378,7 +378,7 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
             }))
         case "BOARD_SCORING_METHOD":
             current = current?.add(child: Node(name: name, completion: { [self] (value) in
-                if let matchScoring = ScoringMethod(value) {
+                if let matchScoring = UsebioScoringMethod(value) {
                     type = matchScoring.scoreType
                 }
             }))
@@ -724,7 +724,7 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
                             for rankingTable in rankingTables.filter({$0.number == ranking.number}) {
                                 rankingTable.way = ranking.way
                             }
-                            format = .teams
+                            eventType = .teams
                         }
                     }
                 }
@@ -734,19 +734,21 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
             }
         }
         for ranking in rankings {
-            if format == .individual {
+            if eventType == .individual {
                 ranking.players[.south] = ranking.players[.north]
             }
-            if format != .teams {
+            if eventType != .teams {
                 ranking.players[.east] = ranking.players[.north]
                 ranking.players[.west] = ranking.players[.south]
             }
         }
-        switch format {
+        switch eventType {
         case .individual, .pairs:
             type = type ?? .percent
         case .teams:
             type = .imp
+        default:
+            type = .unknown
         }
     }
     
@@ -779,7 +781,7 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
     }
 }
 
-public enum EventType: String {
+private enum UsebioEventType: String {
     case ko
     case ladder
     case mp_pairs
@@ -806,7 +808,7 @@ public enum EventType: String {
         return self == .swiss_pairs || self == .swiss_teams || self == .mp_pairs || self == .pairs || self == .cross_imps || self == .teams || self == .individual || self == .teams_of_four
     }
     
-    var format: ImportFormat? {
+    var eventType: EventType? {
         switch self {
         case .individual:
             return .individual
@@ -829,7 +831,7 @@ public enum EventType: String {
     }
 }
 
-public enum ScoringMethod: String {
+private enum UsebioScoringMethod: String {
     case vps
     case imps
     case match_points
@@ -844,7 +846,7 @@ public enum ScoringMethod: String {
     var scoreType: ScoreType {
         switch self {
         case .vps:
-            .vp
+            .vp(type: .unknown)
         case .imps:
             .imp
         case .match_points:

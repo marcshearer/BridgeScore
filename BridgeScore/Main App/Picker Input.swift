@@ -28,10 +28,11 @@ struct PickerInput : View {
     var inlineTitle: Bool = true
     var inlineTitleWidth: CGFloat = 180
     var disabled: Bool = false
+    var alternateGeometry: GeometryProxy? = nil
     var onChange: ((Int?)->())?
     
     var body: some View {
-        PickerInputAdditional<Int>(id: id, title: title, field: field, values: values, popupTitle: popupTitle, placeholder: placeholder, topSpace: topSpace, leadingSpace: leadingSpace, width: width, height: height, maxLabelWidth: maxLabelWidth, centered: centered, color: color, selectedColor: selectedColor, font: font, cornerRadius: cornerRadius, animation: animation, inlineTitle: inlineTitle, inlineTitleWidth: inlineTitleWidth, disabled: disabled, setAdditional: { (_, _) in}, onChange: onChange)
+        PickerInputAdditional<Int>(id: id, title: title, field: field, values: values, popupTitle: popupTitle, placeholder: placeholder, topSpace: topSpace, leadingSpace: leadingSpace, width: width, height: height, maxLabelWidth: maxLabelWidth, centered: centered, color: color, selectedColor: selectedColor, font: font, cornerRadius: cornerRadius, animation: animation, inlineTitle: inlineTitle, inlineTitleWidth: inlineTitleWidth, disabled: disabled, setAdditional: { (_, _) in}, alternateGeometry: alternateGeometry, onChange: onChange)
     }
 }
 
@@ -59,6 +60,7 @@ struct PickerInputAdditional<Additional>: View where Additional: Equatable  {
     var disabled: Bool = false
     var additionalBinding: Binding<Additional>? = nil
     var setAdditional: ((Binding<Additional>?, Additional)->())? = nil
+    var alternateGeometry: GeometryProxy? = nil
     var onChange: ((Int?)->())?
         
     var body: some View {
@@ -90,7 +92,7 @@ struct PickerInputAdditional<Additional>: View where Additional: Equatable  {
                             let top = geometry.frame(in: .global).minY - (slideInMenuRowHeight * 1.4)
                             let left = geometry.frame(in: .global).maxX + 30
                             
-                            PopupMenu(id: id, field: field, values: values, title: popupTitle ?? title, animation: animation, top: top, left: left, width: 400, selectedColor: selectedColor, onChange: onChange) {
+                            PopupMenu(id: id, field: field, values: values, title: popupTitle ?? title, animation: animation, top: top, left: left, width: 400, selectedColor: selectedColor, alternateGeometry: alternateGeometry, onChange: onChange) {
                                 
                                 HStack {
                                     if centered {

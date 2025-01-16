@@ -751,7 +751,7 @@ class Scorecard {
                     if count == 0 {
                         newScore = nil
                     } else {
-                        newScore = Scorecard.aggregate(total: total, count: count, boards: count, subsidiaryPlaces: type.boardPlaces, places: places, type: type.tableAggregate)
+                        newScore = type.tableAggregate.aggregate(total: total, count: count, boards: count, places: places)
                     }
                 }
                 if newScore != table.score {
@@ -777,7 +777,7 @@ class Scorecard {
                 if let score = table.score {
                     // Weight it to number of boards completed if averaging
                     let scored = table.scoredBoards
-                    let weight = scorecard.type.matchAggregate == .average ? scored : 1
+                    let weight = (scorecard.type.matchAggregate ~= .average ? scored : 1)
                     total += score * Float(weight)
                     completedBoards += scored
                     count += weight
@@ -791,7 +791,7 @@ class Scorecard {
             if count == 0 {
                 newScore = nil
             } else {
-                newScore = Scorecard.aggregate(total: total, count: count, boards: completedBoards, subsidiaryPlaces: type.tablePlaces, places: places, type: type.matchAggregate)
+                newScore = type.matchAggregate.aggregate(total: total, count: count, boards: completedBoards, places: places)
             }
         }
         if newScore != scorecard.score {
@@ -807,34 +807,6 @@ class Scorecard {
             scorecard.maxScore = type.maxScore(tables: count)
         }
         return changed
-    }
-    
-    static func aggregate(total: Float, count: Int, boards: Int, subsidiaryPlaces: Int, places: Int, type: AggregateType) -> Float? {
-        var result: Float?
-        let average = (count == 0 ? 0 : Utility.round(total / Float(count), places: subsidiaryPlaces))
-        switch type {
-        case .average:
-            result = Utility.round(average, places: places)
-        case .total:
-            result = Utility.round(total, places: places)
-        case .continuousVp:
-            result = BridgeImps(Int(Utility.round(total))).vp(boards: boards, places: places)
-        case .discreteVp:
-            result = Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: boards))
-        case .sbuDiscreteVp:
-            result = Float(BridgeImps(Int(Utility.round(total))).sbuDiscreteVp(boards: boards))
-        case .acblDiscreteVp:
-            result = Float(BridgeImps(Int(Utility.round(total))).acblDiscreteVp(boards: boards))
-        case .percentVp:
-            if let vps = BridgeMatchPoints(average).vp(boards: boards) {
-                result = Float(vps)
-            }
-        case .contPercentVp:
-            if let vps = BridgeMatchPoints(average).continuousVp(boards: boards) {
-                result = vps
-            }
-        }
-        return result
     }
     
     public static func madeString(made: Int) -> String {

@@ -15,6 +15,7 @@ class SlideInMenu : ObservableObject {
     @Published private(set) var title: String? = nil
     @Published public var options: [(text: String, id: AnyHashable)] = []
     @Published public var field: Int?
+    @Published public var alternateGeometry: GeometryProxy? = nil
     @Published private(set) var selected: Flags?
     @Published private(set) var selectAll: String?
     @Published private(set) var top: CGFloat = 0
@@ -26,7 +27,7 @@ class SlideInMenu : ObservableObject {
     @Published private(set) var completion: ((String?)->())?
     @Published private(set) var shown: UUID?
     
-    public func show(id: UUID, title: String? = nil, options: [(String, AnyHashable)]? = nil, strings: [String] = [], selected: Flags? = nil, default field: Int? = nil, selectAll: String? = nil, animation: ViewAnimation = .slideLeft, top: CGFloat? = nil, left: CGFloat? = nil, width: CGFloat? = nil, selectedColor: PaletteColor? = nil, hideBackground: Bool = true, completion: ((String?)->())? = nil) {
+    public func show(id: UUID, title: String? = nil, options: [(String, AnyHashable)]? = nil, strings: [String] = [], selected: Flags? = nil, default field: Int? = nil, selectAll: String? = nil, animation: ViewAnimation = .slideLeft, top: CGFloat? = nil, left: CGFloat? = nil, width: CGFloat? = nil, selectedColor: PaletteColor? = nil, hideBackground: Bool = true, alternateGeometry: GeometryProxy? = nil, completion: ((String?)->())? = nil) {
         withAnimation(.none) {
             self.title = title
             self.options = options ?? strings.map{($0, $0)}
@@ -39,6 +40,7 @@ class SlideInMenu : ObservableObject {
             self.selectedColor = selectedColor
             self.hideBackground = hideBackground
             self.animation = animation
+            self.alternateGeometry = alternateGeometry
             self.completion = completion
             Utility.mainThread {
                 self.shown = id
@@ -75,7 +77,7 @@ struct SlideInMenuView : View {
         
         GeometryReader { (fullGeometry) in
             GeometryReader { (geometry) in
-                let (contentHeight, actualTop) = sizeToFit(geometry: geometry)
+                let (contentHeight, actualTop) = sizeToFit(geometry: geometry, alternateGeometry: values.alternateGeometry)
                 ZStack {
                     Rectangle()
                         .foregroundColor(values.shown == id ? (values.hideBackground ? Palette.maskBackground : Palette.clickableBackground) : Color.clear)
@@ -165,9 +167,9 @@ struct SlideInMenuView : View {
         }
     }
     
-    func sizeToFit(geometry: GeometryProxy) -> (CGFloat, CGFloat) {
+    func sizeToFit(geometry: GeometryProxy, alternateGeometry: GeometryProxy? = nil) -> (CGFloat, CGFloat) {
         let padElements: CGFloat = (values.title == nil ? 0 : 2.4) + (values.selectAll == nil ? 0 : 1)
-        let availableHeight = geometry.size.height - bannerHeight - 8
+        let availableHeight = (alternateGeometry ?? geometry).size.height - bannerHeight - 8
         let maxFit = CGFloat(Int((availableHeight / slideInMenuRowHeight) - padElements)) - 0.4
         let allowedElements = min(maxFit, CGFloat(values.options.count))
         let contentHeight = (allowedElements + padElements) * slideInMenuRowHeight
@@ -175,6 +177,7 @@ struct SlideInMenuView : View {
         let top = min(proposedTop,
                       max(bannerHeight + 8,
                           geometry.size.height - contentHeight))
+        print("\((alternateGeometry ?? geometry).size) \(geometry.size) \(contentHeight) \(top)")
         return (contentHeight, top)
     }
     

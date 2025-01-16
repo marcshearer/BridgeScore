@@ -50,23 +50,6 @@ public enum ImportSource: Int, Equatable, CaseIterable {
     }
 }
 
-enum ImportFormat {
-    case individual
-    case pairs
-    case teams
-    
-    public var players: Int {
-        switch self {
-        case .individual:
-            return 1
-        case .pairs:
-            return 2
-        case.teams:
-            return 4
-        }
-    }
-}
-
 class ImportedScorecard: NSObject, ObservableObject {
     var id = UUID()
     var importSource: ImportSource?
@@ -88,7 +71,7 @@ class ImportedScorecard: NSObject, ObservableObject {
     var scorecard: ScorecardViewModel!
     var boardsTable: Int?
     var session: Int? = nil
-    var format: ImportFormat = .pairs
+    var eventType: EventType = .pairs
     var hand: String?
     var dealer: Seat?
     var vulnerability: Vulnerability?
@@ -521,7 +504,7 @@ class ImportedScorecard: NSObject, ObservableObject {
     
     func rebuildRankingTotals() {
         // Note this works on the main data structures after the import rather than the imported layer
-        if scorecard.type == .vpContPercent {
+        if scorecard.type.boardScoreType == .percent && scorecard.type.isContinuousVp {
             // Don't re-score since don't have accurate formula / tables for this method
         } else {
             if scorecard.type.players == 4 {
@@ -568,10 +551,11 @@ class ImportedScorecard: NSObject, ObservableObject {
                         }
                     }
                 }
-                ranking.score = Scorecard.aggregate(total: tableScores, count: tablesPlayed, boards: scorecard.boardsSession, subsidiaryPlaces: scorecard.type.tablePlaces, places: scorecard.type.matchPlaces, type: (session == nil ? scorecard.type.sessionAggregate : scorecard.type.sessionAggregate)) ?? 0
+                let aggregateType = (session == nil || tablesPlayed > 1 ? scorecard.type.matchAggregate : scorecard.type.tableAggregate)
+                ranking.score = aggregateType.aggregate(total: tableScores, count: tablesPlayed, boards: scorecard.boardsSession, places: scorecard.type.matchPlaces) ?? 0
             }
         }
-        if let session = session {
+        if let session = session { 
             updateRankingPositions(session: session)
             mergedSessionRankings()
         }
@@ -590,7 +574,7 @@ class ImportedScorecard: NSObject, ObservableObject {
                 // Add this ranking to the list
                 lastCount += 1
                 lastTotal += ranking.score
-                lastRanking.score = Scorecard.aggregate(total: lastTotal, count: lastCount, boards: scorecard.boardsSession * lastCount, subsidiaryPlaces: scorecard.type.tablePlaces, places: scorecard.type.matchPlaces, type: scorecard.type.matchAggregate) ?? 0
+                lastRanking.score = scorecard.type.matchAggregate.aggregate(total: lastTotal, count: lastCount, boards: scorecard.boardsSession * lastCount, places: scorecard.type.matchPlaces) ?? 0
                 for pair in Pair.validCases {
                     if let pairXImps = ranking.xImps[pair] {
                         if lastRanking.xImps[pair] == nil {
@@ -668,7 +652,7 @@ class ImportedScorecard: NSObject, ObservableObject {
             }
             if let myRanking = myRanking {
                 myRankingSeat = myRanking.players.first(where: {$0.value.lowercased() == myName})?.key
-                if format != .individual {
+                if eventType != .individual {
                     let partnerName = myRanking.players[myRankingSeat!.partner]
                     partner = MasterData.shared.players.first(where: {$0.bboName.lowercased() == partnerName?.lowercased() || $0.name.lowercased() == partnerName?.lowercased()})
                     if partner != scorecard?.partner {
@@ -681,10 +665,10 @@ class ImportedScorecard: NSObject, ObservableObject {
         }
         
         // Check scoring type
-        if type != scorecard?.type.boardScoreType || format.players != scorecard?.type.players {
+        if type != scorecard?.type.boardScoreType || eventType.players != scorecard?.type.players {
             if type == scorecard?.type.boardScoreType && scorecard?.type.players == 1 {
                 // Just force players to individual
-                format = .individual
+                eventType = .individual
             } else {
                 error = "Scoring type in imported scorecard must be consistent with current scorecard"
             }

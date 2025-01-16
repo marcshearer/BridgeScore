@@ -61,6 +61,7 @@ var analysisFont: UIFont { UIFont.systemFont(ofSize: (MyApp.format != .phone ? 1
 let scorecardListViewId = UUID()
 let scorecardInputViewId = UUID()
 let scorecardDetailViewId = UUID()
+let scorecardTypeViewId = UUID()
 let layoutSetupViewId = UUID()
 let statsViewId = UUID()
 

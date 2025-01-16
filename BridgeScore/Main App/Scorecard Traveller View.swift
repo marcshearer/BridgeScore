@@ -540,7 +540,7 @@ class ScorecardTravellerCollectionCell: UICollectionViewCell {
         label.font = titleFont.bold
         switch column.type {
         case .score:
-            label.text = (isLandscape ? (sitting.pair.short + "\n") : "") + scorecard.type.boardScoreType.string
+            label.text = (isLandscape ? (sitting.pair.short + "\n") : "") + scorecard.type.boardScoreType.title
             label.numberOfLines = (isLandscape ? 2 : 1)
         case .xImps:
             label.text = (isLandscape ? (sitting.pair.short + "\n") : "") + "XImps"

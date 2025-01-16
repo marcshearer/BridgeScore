@@ -40,9 +40,15 @@
         <attribute name="suit16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
     <entity name="Layout" representedClassName="LayoutMO" syncable="YES">
+        <attribute name="aggregateType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="aggregateVpType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="boards16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="boardScoreType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="boardScoreVpType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="boardsTable16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="desc" optional="YES" attributeType="String"/>
+        <attribute name="eventType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="headToHead" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="layoutId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="locationId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="manualTotals" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
@@ -107,12 +113,18 @@
         <attribute name="way16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
     <entity name="Scorecard" representedClassName="ScorecardMO" syncable="YES">
+        <attribute name="aggregateType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="aggregateVpType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="boards16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="boardScoreType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="boardScoreVpType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="boardsTable16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="comment" optional="YES" attributeType="String"/>
         <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="desc" optional="YES" attributeType="String"/>
         <attribute name="entry16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="eventType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="headToHead" optional="YES" attributeType="Boolean" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="importNext16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="importSource16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="locationId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>

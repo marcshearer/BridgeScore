@@ -394,11 +394,11 @@ class ImportedPBNScorecard: ImportedScorecard {
             boardCount = boards
             switch scorecard.type.players {
             case 1:
-                format = .individual
+                eventType = .individual
             case 4:
-                format = .teams
+                eventType = .teams
             default:
-                format = .pairs
+                eventType = .pairs
             }
         }
         
@@ -543,10 +543,10 @@ class ImportedPBNScorecard: ImportedScorecard {
                 importedRanking.players[.south] = columns.element(index)
             case "name3":
                 importedRanking.players[.east] = columns.element(index)
-                format = .teams
+                eventType = .teams
             case "name4":
                 importedRanking.players[.west] = columns.element(index)
-                format = .teams
+                eventType = .teams
             default:
                 break
             }
@@ -647,19 +647,21 @@ class ImportedPBNScorecard: ImportedScorecard {
     private func combineRankings() {
         // Teams pairs as separate lines
         for ranking in rankings {
-            if format == .individual {
+            if eventType == .individual {
                 ranking.players[.south] = ranking.players[.north]
             }
-            if format != .teams {
+            if eventType != .teams {
                 ranking.players[.east] = ranking.players[.north]
                 ranking.players[.west] = ranking.players[.south]
             }
         }
-        switch format {
+        switch eventType {
         case .individual, .pairs:
             type = type ?? .percent
         case .teams:
             type = .imp
+        default:
+            type = .unknown
         }
     }
     

@@ -36,6 +36,7 @@
 		B24BC3CA27F5A07800576D50 /* Import BridgeWebs.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24BC3C927F5A07800576D50 /* Import BridgeWebs.swift */; };
 		B24EAE8E27DDE95C001B3E64 /* Multi Select Picker Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24EAE8D27DDE95C001B3E64 /* Multi Select Picker Input.swift */; };
 		B250412E2ABD9A0E00C58CAD /* Picker Input Simple.swift in Sources */ = {isa = PBXBuildFile; fileRef = B250412D2ABD9A0E00C58CAD /* Picker Input Simple.swift */; };
+		B25417882D37F35C0092A4C0 /* Scorecard Type View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25417872D37F3500092A4C0 /* Scorecard Type View.swift */; };
 		B256D42127EC434100F47322 /* Traveller Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B256D42027EC434100F47322 /* Traveller Managed Object.swift */; };
 		B256D42327EC456B00F47322 /* Ranking Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B256D42227EC456B00F47322 /* Ranking Managed Object.swift */; };
 		B256D42527EC578500F47322 /* Ranking View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B256D42427EC578500F47322 /* Ranking View Model.swift */; };
@@ -168,6 +169,7 @@
 		B24BC3C927F5A07800576D50 /* Import BridgeWebs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Import BridgeWebs.swift"; sourceTree = "<group>"; };
 		B24EAE8D27DDE95C001B3E64 /* Multi Select Picker Input.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Multi Select Picker Input.swift"; sourceTree = "<group>"; };
 		B250412D2ABD9A0E00C58CAD /* Picker Input Simple.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Picker Input Simple.swift"; sourceTree = "<group>"; };
+		B25417872D37F3500092A4C0 /* Scorecard Type View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Type View.swift"; sourceTree = "<group>"; };
 		B256D42027EC434100F47322 /* Traveller Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Traveller Managed Object.swift"; sourceTree = "<group>"; };
 		B256D42227EC456B00F47322 /* Ranking Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Ranking Managed Object.swift"; sourceTree = "<group>"; };
 		B256D42427EC578500F47322 /* Ranking View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Ranking View Model.swift"; sourceTree = "<group>"; };
@@ -574,6 +576,7 @@
 		B2EB3D7C279F0E6000D64225 /* Shared Views */ = {
 			isa = PBXGroup;
 			children = (
+				B25417872D37F3500092A4C0 /* Scorecard Type View.swift */,
 				B203F96927F30BD900DA748A /* Scorecard Web View.swift */,
 				B213998B27D8AA830098E4A4 /* Seat Picker Popup View.swift */,
 				B2A918922ADABF0B00761B66 /* Analysis Summary View.swift */,
@@ -755,6 +758,7 @@
 				B204175827CE58CD00A3EFA8 /* Debug Utilities.swift in Sources */,
 				B24BC3A327F42EEA00576D50 /* Flags.swift in Sources */,
 				B2B1D58D2B04C3DB007A2977 /* Ranking Table View Model.swift in Sources */,
+				B25417882D37F35C0092A4C0 /* Scorecard Type View.swift in Sources */,
 				B217314427D026050096DAE8 /* Undo Handler.swift in Sources */,
 				B250412E2ABD9A0E00C58CAD /* Picker Input Simple.swift in Sources */,
 				B2AB6ECB2AC2CCA900ED002A /* Analysis.swift in Sources */,

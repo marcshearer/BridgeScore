@@ -92,7 +92,7 @@ class ScorecardFilterValues: ObservableObject {
         }
 
         if !types.isEmpty {
-            if !types.value(scorecard.type.rawValue) {
+            if !types.value(scorecard.type.eventType.rawValue) {
                 include = false
             }
         }

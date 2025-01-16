@@ -21,7 +21,7 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
     @Published public var boards: Int = 0
     @Published public var boardsTable: Int = 0
     @Published public var sessions: Int = 1
-    @Published public var type: ScorecardType = .percent
+    @Published public var type: ScorecardType = ScorecardType()
     @Published public var manualTotals: Bool = false
     @Published public var resetNumbers: Bool = false
     @Published public var regularDay: RegularDay = .none

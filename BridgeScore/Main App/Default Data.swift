@@ -20,7 +20,7 @@ class DefaultData {
         layout1.boards = 24
         layout1.boardsTable = 3
         layout1.sessions = 1
-        layout1.type = .percent
+        layout1.type = ScorecardType(eventType: .pairs, boardScoreType: .percent, aggregateType: .average, headToHead: false)
         layout1.resetNumbers = false
         layout1.sequence = 0
         
@@ -33,7 +33,7 @@ class DefaultData {
         layout2.boards = 24
         layout2.boardsTable = 3
         layout2.sessions = 1
-        layout2.type = .percent
+        layout2.type = ScorecardType(eventType: .pairs, boardScoreType: .percent, aggregateType: .average, headToHead: false)
         layout2.resetNumbers = false
         layout2.sequence = 1
         
@@ -46,7 +46,7 @@ class DefaultData {
         layout3.boards = 24
         layout3.boardsTable = 3
         layout3.sessions = 1
-        layout3.type = .percent
+        layout3.type = ScorecardType(eventType: .pairs, boardScoreType: .percent, aggregateType: .average, headToHead: false)
         layout3.resetNumbers = false
         layout3.sequence = 2
         
@@ -59,7 +59,7 @@ class DefaultData {
         layout4.boards = 24
         layout4.boardsTable = 12
         layout3.sessions = 2
-        layout4.type = .vpMatchTeam
+        layout4.type = ScorecardType(eventType: .teams, boardScoreType: .imp, aggregateType: .vp(type: .wbfContinuous), headToHead: true)
         layout4.resetNumbers = true
         layout4.sequence = 3
         
@@ -72,7 +72,7 @@ class DefaultData {
         layout5.boards = 25
         layout5.boardsTable = 5
         layout5.sessions = 1
-        layout5.type = .percent
+        layout5.type = ScorecardType(eventType: .pairs, boardScoreType: .percent, aggregateType: .average, headToHead: false)
         layout5.resetNumbers = false
         layout5.sequence = 4
         
@@ -85,7 +85,7 @@ class DefaultData {
         layout6.boards = 12
         layout6.boardsTable = 2
         layout6.sessions = 1
-        layout6.type = .percent
+        layout6.type = ScorecardType(eventType: .pairs, boardScoreType: .percent, aggregateType: .average, headToHead: false)
         layout6.resetNumbers = false
         layout6.sequence = 5
         
@@ -98,7 +98,7 @@ class DefaultData {
         layout7.boards = 24
         layout7.boardsTable = 3
         layout3.sessions = 1
-        layout7.type = .xImp
+        layout7.type = ScorecardType(eventType: .pairs, boardScoreType: .xImp, aggregateType: .total, headToHead: false)
         layout7.resetNumbers = false
         layout7.sequence = 6
 

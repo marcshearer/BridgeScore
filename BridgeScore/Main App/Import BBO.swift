@@ -434,21 +434,21 @@ class ImportedBBOScorecard: ImportedScorecard {
                     if names.element(1) ?? "" != "" {
                         importedRanking.players[.south] = names[1].lowercased()
                     } else {
-                        format = .individual
+                        eventType = .individual
                     }
                 }
             case "name1":
                 importedRanking.players[.north] = columns.element(index)?.lowercased()
-                format = .teams
+                eventType = .teams
             case "name2":
                 importedRanking.players[.south] = columns.element(index)?.lowercased()
-                format = .teams
+                eventType = .teams
             case "name3":
                 importedRanking.players[.east] = columns.element(index)?.lowercased()
-                format = .teams
+                eventType = .teams
             case "name4":
                 importedRanking.players[.west] = columns.element(index)?.lowercased()
-                format = .teams
+                eventType = .teams
             case "score", "imps":
                 if let string = columns.element(index) {
                     importedRanking.score = Float(string)
@@ -605,17 +605,17 @@ class ImportedBBOScorecard: ImportedScorecard {
                     translateNumber[number] = rankings[index - 1].number
                     remove.append(index)
                 }
-                format = .teams
+                eventType = .teams
             }
         }
         for removeIndex in remove.reversed() {
             rankings.remove(at: removeIndex)
         }
         for ranking in rankings {
-            if format == .individual {
+            if eventType == .individual {
                 ranking.players[.south] = ranking.players[.north]
             }
-            if format != .teams {
+            if eventType != .teams {
                 ranking.players[.east] = ranking.players[.north]
                 ranking.players[.west] = ranking.players[.south]
             }
@@ -631,7 +631,7 @@ class ImportedBBOScorecard: ImportedScorecard {
                 }
             }
         }
-        type = (type == .xImp && format == .teams ? .imp : type)
+        type = (type == .xImp && eventType == .teams ? .imp : type)
     }
     
         // MARK: - Utility routines ==================================================================== -

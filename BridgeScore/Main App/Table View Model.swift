@@ -167,7 +167,7 @@ public class TableViewModel : ObservableObject, Identifiable, CustomDebugStringC
                     }
                 }
             }
-            tableScore = (tableTotal == nil ? nil : Scorecard.aggregate(total: tableTotal!, count: boards, boards: boards, subsidiaryPlaces: scorecard.type.boardPlaces, places: scorecard.type.tablePlaces, type: scorecard.type.tableAggregate) ?? 0)
+            tableScore = (tableTotal == nil ? nil : scorecard.type.tableAggregate.aggregate(total: tableTotal!, count: boards, boards: boards, places: scorecard.type.tablePlaces) ?? 0)
         }
         return tableScore
     }

@@ -65,7 +65,7 @@ struct StatsFilterView: View {
     @State private var refresh = false
     let players = MasterData.shared.players.filter{!$0.retired && !$0.isSelf}
     let locations = MasterData.shared.locations.filter{!$0.retired}
-    let types = ScorecardType.allCases
+    let types = EventType.allCases
     
     var body: some View {
         
@@ -108,7 +108,7 @@ struct StatsFilterView: View {
                         
                         Spacer().frame(height: 15)
                         
-                        MultiSelectPickerInput(id: id, values: {types.map{($0.string, $0.rawValue)}}, selected: $filterValues.types, placeholder: "Scoring Method", multiplePlaceholder: "Multiple Types", selectAll: "No type filter", height: 40, centered: true, color: (filterValues.types.firstValue(equal: true) != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
+                        MultiSelectPickerInput(id: id, values: {types.map{($0.string, $0.rawValue)}}, selected: $filterValues.types, placeholder: "Event type", multiplePlaceholder: "Multiple Types", selectAll: "No type filter", height: 40, centered: true, color: (filterValues.types.firstValue(equal: true) != nil ? Palette.filterUsed : Palette.filterUnused), selectedColor: Palette.filterUsed, font: searchFont, cornerRadius: 20, animation: .none) { (index) in
                                 filterValues.objectWillChange.send()
                                 filterValues.save()
                         }
