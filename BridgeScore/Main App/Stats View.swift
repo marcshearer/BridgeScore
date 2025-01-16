@@ -278,7 +278,7 @@ class StatsGraphUIView: UIView, GraphDetailDelegate {
         values = []
         for scorecard in MasterData.shared.scorecards.reversed() {
             if scorecard.scorer?.isSelf ?? true {
-            if let score = scorecard.score, let maxScore = scorecard.maxScore {
+            if let score = scorecard.score, let maxScore = scorecard.maxScore, maxScore > 0 {
                 if filterValues.filter(scorecard) {
                     count += 1
                     let percentage = (score / maxScore) * 100

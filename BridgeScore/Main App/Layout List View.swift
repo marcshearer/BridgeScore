@@ -8,19 +8,20 @@
 import SwiftUI
 
 struct LayoutListView: View {
+    var id = UUID()
     @Environment(\.dismiss) var dismiss
     @Binding var selected: Bool
     @Binding var layout: LayoutViewModel
     @State private var title = "Select Template"
     @State private var linkToEdit = false
     @ObservedObject private var data = MasterData.shared
- 
+    
     var body: some View {
         let layouts = data.layouts
         
-        StandardView("Layout List") {
+        StandardView("Layout List", slideInId: id) {
             VStack(spacing: 0) {
-            
+                
                 Banner(title: $title, back: true, backAction: { self.selected = false ; return true }, optionMode: .none)
                 
                 LazyVStack {
@@ -38,7 +39,7 @@ struct LayoutListView: View {
                         }
                         .background(Rectangle().fill(Palette.background.background))
                         .onTapGesture {
-                            // Return this layout
+                                // Return this layout
                             self.layout = layout
                             self.selected = true
                             dismiss()
@@ -49,6 +50,7 @@ struct LayoutListView: View {
                 Spacer()
                 
             }
+            
         }
     }
 }

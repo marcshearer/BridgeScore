@@ -71,18 +71,14 @@ struct ScorecardTypeView: View {
     @State var scoreTypeIndex:Int? = 0
     @State var aggregateTypes: [AggregateType] = []
     @State var aggregateTypeIndex:Int? = 0
-    @State var vpTypes: [VpType] = []
-    @State var vpTypeIndex:Int? = 0
-    @State var alternateGeometry: GeometryProxy? = nil
     
     var body : some View {
-        // PopupStandardView("Scoring", slideInId: id) {
         VStack(spacing: 0) {
             VStack(spacing: 0) {
                 InsetView(title: "Scorecard Type") {
                     VStack(spacing: 0) {
                         
-                        PickerInput(id: id, title: "Event type", field: $eventTypeIndex, values: {eventTypes.map{$0.string}}, alternateGeometry: alternateGeometry)
+                        PickerInput(id: id, title: "Event type", field: $eventTypeIndex, values: {eventTypes.map{$0.string}})
                         { index in
                             if let index = index {
                                 type.eventType = eventTypes[index].eventType
@@ -93,7 +89,7 @@ struct ScorecardTypeView: View {
                         
                         Separator()
                         
-                        PickerInput(id: id, title: "Board scoring", field: $scoreTypeIndex, values: {scoreTypes.map{$0.string}}, disabled: scoreTypes.count <= 1)//, alternateGeometry: alternateGeometry)
+                        PickerInput(id: id, title: "Board scoring", field: $scoreTypeIndex, values: {scoreTypes.map{$0.string}}, disabled: scoreTypes.count <= 1)
                         { index in
                             if let index = index {
                                 type.boardScoreType = scoreTypes[index]
@@ -103,7 +99,7 @@ struct ScorecardTypeView: View {
                         
                         Separator()
                         
-                        PickerInput(id: id, title: "Match scoring", field: $aggregateTypeIndex, values: {aggregateTypes.map{$0.string}}, disabled: aggregateTypes.count <= 1, alternateGeometry: alternateGeometry)
+                        PickerInput(id: id, title: "Match scoring", field: $aggregateTypeIndex, values: {aggregateTypes.map{aggregateDescription($0)}}, disabled: aggregateTypes.count <= 1)
                         { index in
                             if let index = index {
                                 type.aggregateType = aggregateTypes[index]
@@ -111,23 +107,16 @@ struct ScorecardTypeView: View {
                             }
                         }.opacity(aggregateTypes.isEmpty ? 0.1 : 1.0)
                         
-                        PickerInput(id: id, title: "VP type", field: $vpTypeIndex, values: {vpTypes.map{$0.string}}, disabled: vpTypes.count <= 1, alternateGeometry: alternateGeometry)
-                        { index in
-                            if let index = index {
-                                type.aggregateType = .vp(type: vpTypes[index])
-                                updateData(from: .vpType)
-                            }
-                        }.opacity(vpTypes.isEmpty ? 0.1 : 1.0)
-                        
                         Spacer()
                     }
-                    .frame(width: 550, height: 235)
+                    .frame(width: 550, height: 135)
                 }
                 VStack(spacing: 0) {
                     Spacer()
                     HStack {
                         Spacer()
                         Button {
+                            print("\(type.aggregateType.string)")
                             dismiss = true
                         } label: {
                             VStack {
@@ -149,11 +138,20 @@ struct ScorecardTypeView: View {
                 }
             }
         }
-        .frame(width: 600, height: 350)
+        .frame(width: 600, height: 250)
         .background(Palette.alternate.background)
         .cornerRadius(10)
         .onAppear {
             updateData(from: .all)
+        }
+    }
+    
+    func aggregateDescription(_ aggregateType: AggregateType) -> String {
+        switch aggregateType {
+        case .vp:
+            aggregateType.verbose
+        default:
+            "\(type.boardScoreType.string) \(aggregateType.verbose)"
         }
     }
     
@@ -189,7 +187,7 @@ struct ScorecardTypeView: View {
             }
         }
         if updateFrom <= .aggregateType {
-            aggregateTypes = type.validAggregateTypes
+            aggregateTypes = aggregateTypeList
             aggregateTypeIndex = aggregateTypes.firstIndex(where: {$0 == type.aggregateType})
             if aggregateTypeIndex == nil {
                 // Not valid - set to first
@@ -198,32 +196,54 @@ struct ScorecardTypeView: View {
                     type.aggregateType = .unknown
                 } else {
                     aggregateTypeIndex = 0
-                    if aggregateTypes[0] ~= .vp(type: .unknown) {
-                        if case let .vp(vpType) = type.aggregateType {
-                            type.aggregateType = .vp(type: vpType)
-                        } else {
-                            type.aggregateType = .vp(type: .unknown)
-                        }
-                    } else {
-                        type.aggregateType = aggregateTypes[0]
-                    }
+                    type.aggregateType = aggregateTypes[0]
                 }
             }
         }
-        if updateFrom <= .vpType {
-            vpTypes = type.validVpTypes
-            if case let .vp(vpType) = type.aggregateType {
-                vpTypeIndex = vpTypes.firstIndex(where: {$0 == vpType})
-            } else {
-                vpTypeIndex = nil
+    }
+    
+    var aggregateTypeList: [AggregateType] {
+        var aggregateTypeList = type.validAggregateTypes
+        if let vpIndex = aggregateTypeList.firstIndex(where: {$0 ~= .vp(type: .unknown)}) {
+            aggregateTypeList.remove(at: vpIndex)
+            let vpTypeList = type.validVpTypes(overrideType: .vp(type: .unknown)).map{AggregateType.vp(type: $0)}
+            if !vpTypeList.isEmpty {
+                aggregateTypeList.insert(contentsOf: vpTypeList, at: vpIndex)
             }
-            if vpTypeIndex == nil {
-                // Not valid - set to first
-                if vpTypes.isEmpty {
-                    vpTypeIndex = -1
-                } else {
-                    vpTypeIndex = 0
-                    type.aggregateType = .vp(type: vpTypes[0])
+        }
+        return aggregateTypeList
+    }
+}
+
+struct ScorecardTypePrompt : View {
+    @Binding var type: ScorecardType
+    var inLineTitleWidth: CGFloat = 180
+    var onTapGesture: ()->()
+    
+    var body: some View {
+        HStack {
+            HStack {
+                Spacer().frame(width: 8)
+                Text("Scoring")
+                Spacer()
+            }
+            .frame(width: inLineTitleWidth)
+            Spacer().frame(width: 20)
+            Text(type.string)
+                .foregroundColor(!Scorecard.current.isImported ? Palette.input.themeText : Palette.input.text)
+                .font(inputFont)
+                .frame(maxHeight: inputDefaultHeight)
+            Spacer()
+            Image(systemName: "chevron.right")
+                .foregroundColor(!Scorecard.current.isImported ? Palette.input.themeText : Palette.input.text)
+            Spacer().frame(width: 16)
+        }
+        .frame(height: 45)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            if !Scorecard.current.isImported {
+                withAnimation(.linear(duration: 0.25)) {
+                    onTapGesture()
                 }
             }
         }

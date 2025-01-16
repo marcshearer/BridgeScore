@@ -20,19 +20,18 @@ struct DoubleColumnView <LeftContent, RightContent> : View where LeftContent : V
         self.rightView = rightView()
     }
     var body: some View {
-        HStack(spacing: 0) {
-            VStack {
-                leftView
-                Spacer()
-            }
-            .frame(width: leftWidth)
-            if separator {
-                Separator(direction: .vertical, thickness: 2.0)
-                    .foregroundColor(Palette.banner.background)
-            }
-            VStack {
-                rightView
-                Spacer()
+        VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                VStack(spacing: 0) {
+                    leftView
+                }
+                .frame(width: leftWidth)
+                if separator {
+                    Separator(direction: .vertical, thickness: 2.0, color: Palette.banner.background)
+                }
+                VStack(spacing: 0) {
+                    rightView
+                }
             }
         }
     }

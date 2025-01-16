@@ -42,46 +42,44 @@ struct ScorecardDetailView: View {
     var body: some View {
         PopupStandardView("Detail", slideInId: id) {
             ZStack {
-                GeometryReader { geometry in
-                    VStack(spacing: 0) {
+                VStack(spacing: 0) {
+                    
+                    Banner(title: $title, alternateStyle: true, back: true, backText: "Done", backAction: backAction, optionMode: .buttons, options: UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo))
+                    
+                    ScrollView(showsIndicators: false) {
                         
-                        Banner(title: $title, alternateStyle: true, back: true, backText: "Done", backAction: backAction, optionMode: .buttons, options: UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo))
-                        
-                        ScrollView(showsIndicators: false) {
-                            
-                            ScorecardDetailsView(id: id, scorecard: scorecard, tableRefresh: $tableRefresh, inputType: $inputType)
+                        ScorecardDetailsView(id: id, scorecard: scorecard, tableRefresh: $tableRefresh, inputType: $inputType)
+                    }
+                }
+                .background(Palette.alternate.background)
+                .cornerRadius(10)
+                .undoManager(canUndo: $canUndo, canRedo: $canRedo)
+                .keyboardAdaptive
+                .onSwipe { (direction) in
+                    if direction != .left {
+                        if backAction() {
+                            presentationMode.wrappedValue.dismiss()
                         }
                     }
-                    .background(Palette.alternate.background)
-                    .cornerRadius(10)
-                    .undoManager(canUndo: $canUndo, canRedo: $canRedo)
-                    .keyboardAdaptive
-                    .onSwipe { (direction) in
-                        if direction != .left {
-                            if backAction() {
-                                presentationMode.wrappedValue.dismiss()
-                            }
+                }
+                .onAppear {
+                    withAnimation(.linear(duration: 0.25).delay(0.1)) {
+                        yOffset = frame.minY
+                    }
+                }
+                .onChange(of: dismissView) {
+                    if dismissView == true {
+                        dismissView = false
+                        withAnimation(.linear(duration: 0.25)) {
+                            yOffset = initialYOffset
+                        }
+                        Utility.executeAfter(delay: 0.25) {
+                            presentationMode.wrappedValue.dismiss()
                         }
                     }
-                    .onAppear {
-                        withAnimation(.linear(duration: 0.25).delay(0.1)) {
-                            yOffset = frame.minY
-                        }
-                    }
-                    .onChange(of: dismissView) {
-                        if dismissView == true {
-                            dismissView = false
-                            withAnimation(.linear(duration: 0.25)) {
-                                yOffset = initialYOffset
-                            }
-                            Utility.executeAfter(delay: 0.25) {
-                                presentationMode.wrappedValue.dismiss()
-                            }
-                        }
-                    }
-                    if inputType {
-                        popoverView(parentGeometry: geometry)
-                    }
+                }
+                if inputType {
+                    popoverView()
                 }
             }
             .offset(x: frame.minX, y: yOffset)
@@ -108,7 +106,7 @@ struct ScorecardDetailView: View {
         }
     }
     
-    private func popoverView(parentGeometry: GeometryProxy) -> some View {
+    private func popoverView() -> some View {
         ZStack {
             Palette.maskBackground
                 .cornerRadius(8)
@@ -117,7 +115,7 @@ struct ScorecardDetailView: View {
                 Spacer()
                 HStack {
                     Spacer()
-                    ScorecardTypeView(id: id, type: $scorecard.type, dismiss: $dismissTypeView, alternateGeometry: parentGeometry)
+                    ScorecardTypeView(id: id, type: $scorecard.type, dismiss: $dismissTypeView)
                     Spacer()
                 }
                 Spacer()
@@ -226,7 +224,9 @@ struct ScorecardDetailsView: View {
             InsetView(title: "Options") {
                 VStack(spacing: 0) {
                     
-                    typePrompt()
+                    ScorecardTypePrompt(type: $scorecard.type) {
+                        inputType = true
+                    }
                     
                     Separator(thickness: 1)
                     
@@ -298,35 +298,6 @@ struct ScorecardDetailsView: View {
             locationIndex = locations.firstIndex(where: {$0 == scorecard.location}) ?? 0
             playerIndex = players.firstIndex(where: {$0 == scorecard.partner}) ?? 0
             manualTotalsIndex = (scorecard.manualTotals ? TotalCalculation.manual : TotalCalculation.automatic).rawValue
-        }
-    }
-    
-    func typePrompt() -> some View {
-        HStack {
-            HStack {
-                Spacer().frame(width: 8)
-                Text("Scoring")
-                Spacer()
-            }
-            .frame(width: 180)
-            Spacer().frame(width: 20)
-            Text(scorecard.type.string)
-                .foregroundColor(!Scorecard.current.isImported ? Palette.input.themeText : Palette.input.text)
-                .font(inputFont)
-                .frame(maxHeight: inputDefaultHeight)
-            Spacer()
-            Image(systemName: "chevron.right")
-                .foregroundColor(!Scorecard.current.isImported ? Palette.input.themeText : Palette.input.text)
-            Spacer().frame(width: 16)
-        }
-        .frame(height: 45)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            if !Scorecard.current.isImported {
-                withAnimation(.linear(duration: 0.25)) {
-                    inputType = true
-                }
-            }
         }
     }
     

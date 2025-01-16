@@ -551,8 +551,25 @@ class ImportedScorecard: NSObject, ObservableObject {
                         }
                     }
                 }
-                let aggregateType = (session == nil || tablesPlayed > 1 ? scorecard.type.matchAggregate : scorecard.type.tableAggregate)
-                ranking.score = aggregateType.aggregate(total: tableScores, count: tablesPlayed, boards: scorecard.boardsSession, places: scorecard.type.matchPlaces) ?? 0
+                var places: Int
+                var aggregateType: AggregateType
+                if session == nil {
+                    aggregateType = scorecard.type.matchAggregate
+                    places = scorecard.type.matchScoreType.places
+                } else {
+                    // Total tables for session
+                    let tableScoreType = scorecard.type.tableScoreType
+                    switch tableScoreType {
+                    case .imp, .butlerImp, .xImp, .aggregate, .vp:
+                        aggregateType = .total
+                    case .percent:
+                        aggregateType = .average
+                    case .unknown:
+                        aggregateType = .unknown
+                    }
+                    places = tableScoreType.places
+                }
+                ranking.score = aggregateType.aggregate(total: tableScores, count: tablesPlayed, boards: scorecard.boardsSession, places: places) ?? 0
             }
         }
         if let session = session { 

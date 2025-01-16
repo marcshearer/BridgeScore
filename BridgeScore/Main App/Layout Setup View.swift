@@ -21,11 +21,13 @@ struct LayoutSetupView: View {
             VStack(spacing: 0) {
                 
                 Banner(title: $title, bottomSpace: false, back: true, backEnabled: { return selected.canSave }, optionMode: .buttons, options: UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo))
-                DoubleColumnView(leftWidth: 350) {
+                DoubleColumnView(leftWidth: 350, separator: true) {
                     LayoutSelectionView(selected: selected, changeSelected: changeSelection, removeSelected: removeSelection, addLayout: addLayout)
                 } rightView: {
                     LayoutDetailView(id: id, selected: selected)
                 }
+                .ignoresSafeArea()
+                .background(.blue)
             }
             .undoManager(canUndo: $canUndo, canRedo: $canRedo)
         }
@@ -126,6 +128,7 @@ struct LayoutSelectionView : View {
             }
             .disabled(disabled)
             Spacer()
+            Separator(direction: .horizontal, thickness: 2.0, color: Palette.banner.background)
             ToolbarView(canAdd: {selected.canSave}, canRemove: {selected.isNew || MasterData.shared.layouts.count > 1}, addAction: addLayout, removeAction: { removeSelected(selected)})
         }
         .background(Palette.background.background)
@@ -151,110 +154,142 @@ struct LayoutDetailView : View {
     @State private var players: [PlayerViewModel] = []
     @State private var playerIndex: Int?
     
+    @State private var inputType: Bool = false
+    @State private var dismissTypeView: Bool = false
+    @State var typeViewXOffset: CGFloat = 0
+    
     var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                VStack(spacing: 0) {
-                    InsetView(title: "Main Details") {
-                        VStack(spacing: 0) {
-                            
-                            Input(title: "Description", field: $selected.desc, message: $selected.descMessage, inlineTitleWidth: 200)
-                            
-                            Separator()
-                            
-                            PickerInput(id: id, title: "Location", field: $locationIndex, values: {locations.map{$0.name}}, inlineTitleWidth: 200)
-                            { index in
-                                if let index = index {
-                                    selected.location = locations[index]
-                                }
-                            }
-                            
-                            Separator()
-                            
-                            if selected.type.players > 1 {
-                                PickerInput(id: id, title: "Partner", field: $playerIndex, values: {players.map{$0.name}}, inlineTitleWidth: 200)
+        ZStack {
+            VStack(spacing: 0) {
+                HStack {
+                    VStack(spacing: 0) {
+                        InsetView(title: "Main Details") {
+                            VStack(spacing: 0) {
+                                
+                                Input(title: "Description", field: $selected.desc, message: $selected.descMessage, inlineTitleWidth: 200)
+                                
+                                Separator()
+                                
+                                PickerInput(id: id, title: "Location", field: $locationIndex, values: {locations.map{$0.name}}, inlineTitleWidth: 200)
                                 { index in
                                     if let index = index {
-                                        selected.partner = players[index]
+                                        selected.location = locations[index]
                                     }
                                 }
                                 
                                 Separator()
-                            }
-                            
-                            PickerInput(id: id, title: "Regular day", field: $dayIndex, values: {days.map{$0.string}}, inlineTitleWidth: 200)
-                            { index in
-                                if let index = index {
-                                    selected.regularDay = days[index]
+                                
+                                if selected.type.players > 1 {
+                                    PickerInput(id: id, title: "Partner", field: $playerIndex, values: {players.map{$0.name}}, inlineTitleWidth: 200)
+                                    { index in
+                                        if let index = index {
+                                            selected.partner = players[index]
+                                        }
+                                    }
+                                    
+                                    Separator()
                                 }
+                                
+                                PickerInput(id: id, title: "Regular day", field: $dayIndex, values: {days.map{$0.string}}, inlineTitleWidth: 200)
+                                { index in
+                                    if let index = index {
+                                        selected.regularDay = days[index]
+                                    }
+                                }
+                                
+                                Separator()
+                                
+                                Input(title: "Default description", field: $selected.scorecardDesc, inlineTitleWidth: 200)
+                                
                             }
-                            
-                            Separator()
-                            
-                            Input(title: "Default description", field: $selected.scorecardDesc, inlineTitleWidth: 200)
-                            
                         }
-                    }
-                    
-                    InsetView(title: "Options") {
-                        VStack(spacing: 0) {
-                            
-                            PickerInput(id: id, title: "Scoring Method", field: $typeIndex, values: {types.map{$0.string}}, inlineTitleWidth: 200)
-                            { index in
-                                if let index = index {
-                                    selected.type = types[index]
+                        
+                        InsetView(title: "Options") {
+                            VStack(spacing: 0) {
+                                
+                                ScorecardTypePrompt(type: $selected.type, inLineTitleWidth: 200) {
+                                    inputType = true
                                 }
+                                
+                                Separator()
+                                                                
+                                PickerInput(id: id, title: "Total calculation", field: $manualTotalsIndex, values: { TotalCalculation.allCases.map{$0.string}}, inlineTitleWidth: 200)
+                                { (index) in
+                                    if let index = index {
+                                        selected.manualTotals = (index == TotalCalculation.manual.rawValue)
+                                    }
+                                }
+                                
+                                Separator()
+                                
+                                StepperInputAdditional(title: "Boards per table", field: $selected.boardsTable, label: { value in "\(value) boards per table" }, inlineTitleWidth: 200, additionalBinding: $selected.boardsTable, onChange: { (newValue) in
+                                    setBoards(boardsTable: newValue)
+                                })
+                                
+                                Separator()
+                                
+                                    // Note this is inputting the number of boards even though prompting for tables
+                                StepperInput(title: "Tables\(selected.sessions <= 1 ? "" : " per session")", field: $selected.boards, label: boardsLabel, minValue: {selected.boardsTable}, increment: {selected.boardsTable * selected.sessions}, inlineTitleWidth: 200)
+                                
+                                Separator()
+                                
+                                StepperInput(title: "Sessions", field: $selected.sessions, label: { value in "\(value) \(plural("session", value))" }, maxValue: {8}, inlineTitleWidth: 200, onChange: { (sessions) in
+                                        // Make sure total boards still makes sense
+                                    let tablesPerSession = (selected.boards / selected.boardsTable) / sessions
+                                    selected.boards = selected.boardsTable * max(1, tablesPerSession) * sessions
+                                    if sessions <= 1 {
+                                        selected.resetNumbers = false
+                                    } else if selected.sessions <= 1 {
+                                        selected.resetNumbers = true
+                                    }
+                                })
+                                
+                                Separator()
+                                
+                                InputToggle(title: "Reset board numbers", field: $selected.resetNumbers, disabled: Binding.constant(selected.sessions <= 1), inlineTitleWidth: 200)
+                                
                             }
-
-                            Separator()
-
-                            PickerInput(id: id, title: "Total calculation", field: $manualTotalsIndex, values: { TotalCalculation.allCases.map{$0.string}}, inlineTitleWidth: 200)
-                            { (index) in
-                                if let index = index {
-                                    selected.manualTotals = (index == TotalCalculation.manual.rawValue)
-                                }
-                            }
-                            
-                            Separator()
-                            
-                            StepperInputAdditional(title: "Boards per table", field: $selected.boardsTable, label: { value in "\(value) boards per table" }, inlineTitleWidth: 200, additionalBinding: $selected.boardsTable, onChange: { (newValue) in
-                                setBoards(boardsTable: newValue)
-                                 })
-
-                            Separator()
-                            
-                            // Note this is inputting the number of boards even though prompting for tables
-                            StepperInput(title: "Tables\(selected.sessions <= 1 ? "" : " per session")", field: $selected.boards, label: boardsLabel, minValue: {selected.boardsTable}, increment: {selected.boardsTable * selected.sessions}, inlineTitleWidth: 200)
-                            
-                            Separator()
-                            
-                            StepperInput(title: "Sessions", field: $selected.sessions, label: { value in "\(value) \(plural("session", value))" }, maxValue: {8}, inlineTitleWidth: 200, onChange: { (sessions) in
-                                // Make sure total boards still makes sense
-                                let tablesPerSession = (selected.boards / selected.boardsTable) / sessions
-                                selected.boards = selected.boardsTable * max(1, tablesPerSession) * sessions
-                                if sessions <= 1 {
-                                    selected.resetNumbers = false
-                                } else if selected.sessions <= 1 {
-                                    selected.resetNumbers = true
-                                }
-                            })
-                            
-                            Separator()
-                            
-                            InputToggle(title: "Reset board numbers", field: $selected.resetNumbers, disabled: Binding.constant(selected.sessions <= 1), inlineTitleWidth: 200)
-                            
                         }
+                        
+                        Spacer()
                     }
-                    
+                    .onChange(of: selected.layoutId, initial: true) { (_, layoutId) in
+                        setIndexes()
+                    }
+                }
+                Spacer()
+            }
+            .ignoresSafeArea()
+            .background(Palette.alternate.background)
+            if inputType {
+                popoverView()
+            }
+        }
+    }
+    
+    private func popoverView() -> some View {
+        ZStack {
+            Palette.maskBackground
+                .ignoresSafeArea()
+            
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    ScorecardTypeView(id: id, type: $selected.type, dismiss: $dismissTypeView)
                     Spacer()
                 }
-                .onChange(of: selected.layoutId, initial: true) { (_, layoutId) in
-                    setIndexes()
+                Spacer()
+            }
+            .onChange(of: dismissTypeView, initial: false) {
+                if dismissTypeView == true {
+                    withAnimation(.linear(duration: 0.5)) {
+                        inputType = false
+                        dismissTypeView = false
+                    }
                 }
             }
-            Spacer()
         }
-        .background(Palette.alternate.background)
     }
     
     func setIndexes() {

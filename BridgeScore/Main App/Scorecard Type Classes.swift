@@ -43,6 +43,17 @@ public enum VpType: Int, CaseIterable {
             "Unknown VPs"
         }
     }
+    
+    public var verbose: String {
+        switch self {
+        case .wbfContinuous:
+            "Continuous VPs"
+        case .wbfDiscrete:
+            "Discrete VPs"
+        default:
+            string
+        }
+    }
 }
 
 public enum AggregateType: CaseIterable, Equatable {
@@ -68,8 +79,17 @@ public enum AggregateType: CaseIterable, Equatable {
     
     public var string: String {
         switch self {
-        case .vp(let vpType):
+        case .vp:
             "VPs"
+        default:
+            "\(self)".capitalized
+        }
+    }
+    
+    public var verbose: String {
+        switch self {
+        case .vp(let vpType):
+            vpType.verbose
         default:
             "\(self)".capitalized
         }
@@ -239,7 +259,7 @@ public enum ScoreType: Equatable, CaseIterable {
    public var string: String {
         switch self {
         case .percent:
-            return "MPs"
+            return "Match Points %"
         case .xImp:
             return "Cross-IMPs"
         case .butlerImp:
@@ -463,7 +483,7 @@ public class ScorecardType: Equatable {
         case .percent:
             [.average, .vp(type: .unknown)]
         case .xImp, .butlerImp:
-            [.total]
+            [.total, .vp(type: .unknown)]
         case .imp:
             [.vp(type: .unknown), .total]
         case .aggregate:
@@ -473,12 +493,12 @@ public class ScorecardType: Equatable {
         }
     }
     
-    public var validVpTypes: [VpType] {
-        switch aggregateType {
+    public func validVpTypes(overrideType: AggregateType? = nil) -> [VpType] {
+        switch overrideType ?? aggregateType {
         case .vp:
             switch boardScoreType {
             case .percent:
-                [.wbfContinuous, .wbfDiscrete]
+                [.wbfDiscrete, .wbfContinuous]
             default:
                 VpType.validCases
             }
@@ -501,8 +521,8 @@ public class ScorecardType: Equatable {
     
     public var tableScoreType: ScoreType {
         switch tableAggregate {
-        case .vp:
-            .vp(type: .unknown)
+        case .vp(let vpType):
+            .vp(type: vpType)
         case .total:
             boardScoreType
         case .average:
@@ -514,8 +534,8 @@ public class ScorecardType: Equatable {
     
     public var matchScoreType: ScoreType {
         switch matchAggregate {
-        case .vp:
-            .vp(type: .unknown)
+        case .vp(let vpType):
+            .vp(type: vpType)
         case .total:
             tableScoreType
         case .average:
@@ -557,11 +577,13 @@ public class ScorecardType: Equatable {
         if matchAggregate == .average && boardScoreType == .percent {
             100
         } else if matchAggregate == .total {
-            if (tableAggregate.isVp) {
+            if tableAggregate.isVp {
                 Float(tables * 20)
             } else {
-                20
+                nil
             }
+        } else if matchAggregate.isVp {
+            20
         } else {
             nil
         }
@@ -673,7 +695,7 @@ public enum OldScorecardType: Int, CaseIterable {
         case .vpMatchTeam:
             eventType = .teams
             boardScoreType = .imp
-            aggregateType = .total
+            aggregateType = .vp(type: .wbfContinuous)
             headToHead = true
         case .sbuVpTableTeam:
             eventType = .teams

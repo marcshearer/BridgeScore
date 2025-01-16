@@ -82,9 +82,10 @@ class MasterData: ObservableObject {
         }
         
         // TODO: - Remove when definitely not needed again
+        /*
+        // Convert old scorecard types to new type
         convertScorecardTypes()
         
-        /*
         // Convert layouts for changes to multi-sessions
         convertLayouts()
         
