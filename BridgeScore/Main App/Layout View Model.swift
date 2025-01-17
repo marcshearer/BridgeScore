@@ -25,6 +25,7 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
     @Published public var manualTotals: Bool = false
     @Published public var resetNumbers: Bool = false
     @Published public var regularDay: RegularDay = .none
+    @Published public var displayDetail: Bool = false
 
     public var tables: Int { get { boards / max(1, boardsTable) } }
     
@@ -56,7 +57,8 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
                 self.type != mo.type ||
                 self.manualTotals != mo.manualTotals ||
                 self.resetNumbers != mo.resetNumbers ||
-                self.regularDay != mo.regularDay {
+                self.regularDay != mo.regularDay ||
+                self.displayDetail != mo.displayDetail {
                     result = true
             }
         } else {
@@ -130,6 +132,7 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
             self.manualTotals = mo.manualTotals
             self.resetNumbers = mo.resetNumbers
             self.regularDay = mo.regularDay
+            self.displayDetail = mo.displayDetail
         }
     }
     
@@ -147,6 +150,7 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
         self.manualTotals = from.manualTotals
         self.resetNumbers = from.resetNumbers
         self.regularDay = from.regularDay
+        self.displayDetail = from.displayDetail
         self.layoutMO = from.layoutMO
     }
     
@@ -163,6 +167,7 @@ public class LayoutViewModel : ObservableObject, Identifiable, Equatable, Custom
         self.layoutMO!.manualTotals = self.manualTotals
         self.layoutMO!.resetNumbers = self.resetNumbers
         self.layoutMO!.regularDay = self.regularDay
+        self.layoutMO!.displayDetail = self.displayDetail
         self.layoutMO!.sequence = self.sequence
     }
     

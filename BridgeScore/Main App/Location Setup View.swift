@@ -93,7 +93,7 @@ struct LocationSelectionView : View {
     var body: some View {
         let disabled = !selected.canSave
         
-        VStack {
+        VStack(spacing: 0) {
             HStack {
                 List {
                     ForEach(MasterData.shared.locations) { location in
@@ -128,6 +128,7 @@ struct LocationSelectionView : View {
             }
             .disabled(disabled)
             Spacer()
+            Separator(direction: .horizontal, thickness: 2.0, color: Palette.banner.background)
             ToolbarView(canAdd: {selected.canSave}, canRemove: {selected.isNew || MasterData.shared.locations.count > 1}, addAction: addLocation, removeAction: { removeSelected(selected)})
         }
         .background(Palette.background.background)

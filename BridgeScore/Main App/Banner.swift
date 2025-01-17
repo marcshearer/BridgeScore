@@ -232,6 +232,9 @@ struct Banner_Buttons : View {
                                     }
                                     if option.text != nil {
                                         Text(option.text ?? "").foregroundColor(foregroundColor)
+                                            .if(option.likeBack) { view in
+                                                view.bold()
+                                            }
                                     }
                                     if !option.likeBack {
                                         Spacer().frame(width: 16)

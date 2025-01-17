@@ -264,9 +264,11 @@ struct ImportBBOScorecard: View {
                     .onTapGesture {
                         selected = fileData[index].fileName
                         if checkImport() {
-                            if let imported = ImportBBO.createImportedScorecardFrom(fileURL: URL(string: selected!)!, scorecard: scorecard) {
+                            if let imported = ImportBBO.createImportedScorecardFrom(fileURL:  fileData[index].path, scorecard: scorecard) {
                                 importSequence = 0
                                 importedBBOScorecards = [imported]
+                            } else {
+                                selected = nil
                             }
                         }
                     }

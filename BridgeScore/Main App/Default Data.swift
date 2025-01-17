@@ -16,6 +16,7 @@ class DefaultData {
         layout1.scorecardDesc = "St Andrews Pairs"
         layout1.location = locations.first(where: {$0.name == "St Andrews"})
         layout1.partner = players.first(where: {$0.name == "George Watson"})
+        layout1.regularDay = .tuesday
         layout1.sequence = 1
         layout1.boards = 24
         layout1.boardsTable = 3
@@ -29,6 +30,7 @@ class DefaultData {
         layout2.scorecardDesc = "Dundee Online Pairs"
         layout2.location = locations.first(where: {$0.name == "Dundee"})
         layout2.partner = players.first(where: {$0.name == "Jack Shearer"})
+        layout2.regularDay = .wednesday
         layout2.sequence = 0
         layout2.boards = 24
         layout2.boardsTable = 3
@@ -55,10 +57,11 @@ class DefaultData {
         layout4.scorecardDesc = "SOL v "
         layout4.location = locations.first(where: {$0.name == "SBU"})
         layout4.partner = players.first(where: {$0.name == "George Watson"})
+        layout4.regularDay = .monday
         layout4.sequence = 0
         layout4.boards = 24
         layout4.boardsTable = 12
-        layout3.sessions = 2
+        layout4.sessions = 2
         layout4.type = ScorecardType(eventType: .teams, boardScoreType: .imp, aggregateType: .vp(type: .wbfContinuous), headToHead: true)
         layout4.resetNumbers = true
         layout4.sequence = 3
@@ -68,6 +71,7 @@ class DefaultData {
         layout5.scorecardDesc = "Saturday Swiss Pairs"
         layout5.location = locations.first(where: {$0.name == "SBU"})
         layout5.partner = players.first(where: {$0.name == "Michele Grainger"})
+        layout5.regularDay = .saturday
         layout5.sequence = 0
         layout5.boards = 25
         layout5.boardsTable = 5
@@ -94,10 +98,11 @@ class DefaultData {
         layout7.scorecardDesc = "New Melville Pairs"
         layout7.location = locations.first(where: {$0.name == "New Melville"})
         layout7.partner = players.first(where: {$0.name == "Michele Grainger"})
+        layout7.regularDay = .thursday
         layout7.sequence = 0
         layout7.boards = 24
         layout7.boardsTable = 3
-        layout3.sessions = 1
+        layout7.sessions = 1
         layout7.type = ScorecardType(eventType: .pairs, boardScoreType: .xImp, aggregateType: .total, headToHead: false)
         layout7.resetNumbers = false
         layout7.sequence = 6

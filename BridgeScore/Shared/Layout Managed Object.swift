@@ -32,6 +32,7 @@ public class LayoutMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var sessions16: Int16
     @NSManaged public var resetNumbers: Bool
     @NSManaged public var regularDay16: Int16
+    @NSManaged public var displayDetail: Bool
     
     public convenience init() {
         self.init(context: CoreData.context)

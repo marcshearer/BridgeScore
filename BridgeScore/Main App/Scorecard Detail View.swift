@@ -24,19 +24,24 @@ struct ScorecardDetailView: View {
     @State private var inputType: Bool = false
     @State private var dismissTypeView: Bool = false
     @State var typeViewXOffset: CGFloat = 0
+    @State var showResults: Bool = true
+    @State var cancelButton: Bool = false
     private let undoManagerObserver = NotificationCenter.default.publisher(for: .NSUndoManagerDidOpenUndoGroup)
     private let undoObserver = NotificationCenter.default.publisher(for: .NSUndoManagerDidRedoChange)
     private let redoObserver = NotificationCenter.default.publisher(for: .NSUndoManagerDidUndoChange)
 
-    init(scorecard: ScorecardViewModel, deleted: Binding<Bool>, tableRefresh: Binding<Bool>, title: String, frame: CGRect, initialYOffset: CGFloat, dismissView: Binding<Bool>) {
+    init(scorecard: ScorecardViewModel, deleted: Binding<Bool>, tableRefresh: Binding<Bool> = Binding.constant(false), title: String, frame: CGRect, initialYOffset: CGFloat? = nil, dismissView: Binding<Bool>, showResults: Bool = true, cancelButton: Bool = false) {
         self.scorecard = scorecard
         _deleted = deleted
         _tableRefresh = tableRefresh
         _title = State(initialValue: title)
         _frame = State(initialValue: frame)
+        let initialYOffset = initialYOffset ?? frame.minY
         _initialYOffset = State(initialValue: initialYOffset)
         _yOffset = State(initialValue: initialYOffset)
         _dismissView = dismissView
+        _showResults = State(initialValue: showResults)
+        _cancelButton = State(initialValue: cancelButton)
     }
     
     var body: some View {
@@ -44,11 +49,12 @@ struct ScorecardDetailView: View {
             ZStack {
                 VStack(spacing: 0) {
                     
-                    Banner(title: $title, alternateStyle: true, back: true, backText: "Done", backAction: backAction, optionMode: .buttons, options: UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo))
+                    var bannerOptions = UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo) + cancelOption()
+                    Banner(title: $title, alternateStyle: true, back: true, backText: cancelButton ? "Continue" : "Done", backAction: backAction, optionMode: .buttons, options: bannerOptions)
                     
                     ScrollView(showsIndicators: false) {
                         
-                        ScorecardDetailsView(id: id, scorecard: scorecard, tableRefresh: $tableRefresh, inputType: $inputType)
+                        ScorecardDetailsView(id: id, scorecard: scorecard, tableRefresh: $tableRefresh, inputType: $inputType, showResults: showResults)
                     }
                 }
                 .background(Palette.alternate.background)
@@ -88,7 +94,20 @@ struct ScorecardDetailView: View {
         }
     }
     
+    func cancelOption() -> [BannerOption] {
+        if cancelButton {
+            return [BannerOption(text: "Cancel", likeBack: true, action: {
+                scorecard.remove()
+                deleted = true
+                dismissView = true
+            })]
+        } else {
+            return []
+        }
+    }
+    
     func backAction() -> Bool {
+        deleted = false
         if scorecard.saveMessage != "" {
             MessageBox.shared.show(scorecard.saveMessage, cancelText: "Re-edit", okText: "Delete", okAction: {
                 MessageBox.shared.show("This will delete the scorecard permanently.\nAre you sure you want to do this?", if: Scorecard.current.hasData, cancelText: "Re-edit", okText: "Delete", okDestructive: true, okAction: {
@@ -115,7 +134,9 @@ struct ScorecardDetailView: View {
                 Spacer()
                 HStack {
                     Spacer()
-                    ScorecardTypeView(id: id, type: $scorecard.type, dismiss: $dismissTypeView)
+                    ScorecardTypeView(id: id, type: $scorecard.type, dismiss: $dismissTypeView) { (from, to) in
+                        scorecard.objectWillChange.send()
+                    }
                     Spacer()
                 }
                 Spacer()
@@ -148,6 +169,7 @@ struct ScorecardDetailsView: View {
     @State private var players: [PlayerViewModel] = []
     @State private var playerIndex: Int?
     @State private var datePicker: Bool = false
+    @State var showResults: Bool
     
     var body: some View {
         VStack(spacing: 0) {
@@ -184,40 +206,42 @@ struct ScorecardDetailsView: View {
                 }
             }
             
-            InsetView(title: "Results") {
-                VStack(spacing: 0) {
-                    HStack {
-                        InputFloat(title: scorecard.type.matchScoreType.title, field: $scorecard.score, width: 100, places: scorecard.type.matchPlaces, maxCharacters: 7)
-                            .disabled(!scorecard.manualTotals || Scorecard.current.isImported)
-                        
-                        if scorecard.manualTotals && !Scorecard.current.isImported {
-                            Text(" / ")
-                            InputFloat(field: $scorecard.maxScore, width: 100, places: scorecard.type.matchPlaces, maxCharacters: 7)
-                        } else {
-                            Text(scorecard.type.matchSuffix(scorecard: scorecard))
+            if showResults {
+                InsetView(title: "Results") {
+                    VStack(spacing: 0) {
+                        HStack {
+                            InputFloat(title: scorecard.type.matchScoreType.title, field: $scorecard.score, width: 100, places: scorecard.type.matchPlaces, maxCharacters: 7)
+                                .disabled(!scorecard.manualTotals || Scorecard.current.isImported)
+                            
+                            if scorecard.manualTotals && !Scorecard.current.isImported {
+                                Text(" / ")
+                                InputFloat(field: $scorecard.maxScore, width: 100, places: scorecard.type.matchPlaces, maxCharacters: 7)
+                            } else {
+                                Text(scorecard.type.matchSuffix(scorecard: scorecard))
+                            }
+                            
+                            Spacer()
                         }
                         
-                        Spacer()
+                        Separator(thickness: 1)
+                        
+                        HStack {
+                            
+                            InputInt(title: "Position", field: $scorecard.position, width: 65, maxCharacters: 5)
+                                .disabled(Scorecard.current.isImported)
+                            
+                            Text(" of ")
+                            
+                            InputInt(field: $scorecard.entry, leadingSpace: 0, width: 65, maxCharacters: 5, inlineTitle: false)
+                                .disabled(Scorecard.current.isImported)
+                            
+                            Spacer()
+                        }
+                        
+                        Separator(thickness: 1)
+                        
+                        Input(title: "Comments", field: $scorecard.comment)
                     }
-                    
-                    Separator(thickness: 1)
-                    
-                    HStack {
-                        
-                        InputInt(title: "Position", field: $scorecard.position, width: 65, maxCharacters: 5)
-                            .disabled(Scorecard.current.isImported)
-                        
-                        Text(" of ")
-                        
-                        InputInt(field: $scorecard.entry, leadingSpace: 0, width: 65, maxCharacters: 5, inlineTitle: false)
-                            .disabled(Scorecard.current.isImported)
-                        
-                        Spacer()
-                    }
-                    
-                    Separator(thickness: 1)
-                    
-                    Input(title: "Comments", field: $scorecard.comment)
                 }
             }
             
@@ -241,7 +265,7 @@ struct ScorecardDetailsView: View {
                     
                     StepperInputAdditional(title: "Boards per table", field: $scorecard.boardsTable, label: { value in "\(value) boards per table" }, isEnabled: !Scorecard.current.isImported, additionalBinding: $scorecard.boards, onChange: { (newValue) in
                         Utility.mainThread {
-                                // Need to do this on main thread to avoid multiple updates in parallel
+                            // Need to do this on main thread to avoid multiple updates in parallel
                             setBoards(boardsTable: newValue, sessions: scorecard.sessions)
                             tableRefresh = true
                         }

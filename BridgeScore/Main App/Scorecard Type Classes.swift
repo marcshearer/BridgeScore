@@ -409,7 +409,7 @@ public class ScorecardType: Equatable {
     public var aggregateType: AggregateType
     public var headToHead: Bool
     
-    init(eventType: EventType = .unknown, boardScoreType: ScoreType = .unknown, aggregateType: AggregateType = .unknown, matchAggregate: AggregateType = .unknown, headToHead: Bool = false) {
+    init(eventType: EventType = .pairs, boardScoreType: ScoreType = .percent, aggregateType: AggregateType = .total, headToHead: Bool = false) {
         self.eventType = eventType
         self.boardScoreType = boardScoreType
         self.aggregateType = aggregateType
@@ -418,6 +418,17 @@ public class ScorecardType: Equatable {
 
     public static func == (lhs: ScorecardType, rhs: ScorecardType) -> Bool {
         return lhs.eventType == rhs.eventType && lhs.boardScoreType == rhs.boardScoreType && lhs.aggregateType == rhs.aggregateType && (lhs.eventType != .teams || lhs.headToHead == rhs.headToHead)
+    }
+    
+    public func copy() -> ScorecardType {
+        return ScorecardType(eventType: self.eventType, boardScoreType: self.boardScoreType, aggregateType: self.aggregateType, headToHead: self.headToHead)
+    }
+    
+    public func copy(from: ScorecardType) {
+        self.eventType = from.eventType
+        self.boardScoreType = from.boardScoreType
+        self.aggregateType = from.aggregateType
+        self.headToHead = from.headToHead
     }
     
     public var tableAggregate: AggregateType {

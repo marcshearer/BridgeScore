@@ -130,6 +130,7 @@ struct PlayerSelectionView : View {
             }
             .disabled(disabled)
             Spacer()
+            Separator(direction: .horizontal, thickness: 2.0, color: Palette.banner.background)
             ToolbarView(canAdd: {selected.canSave}, canRemove: {selected.isNew || MasterData.shared.players.count > 1}, addAction: addPlayer, removeAction: { removeSelected(selected)})
         }
         .background(Palette.background.background)

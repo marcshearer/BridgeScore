@@ -22,6 +22,7 @@ struct ScorecardListView: View, DropDelegate {
     @State private var layoutSelected = false
     @State private var linkToNew = false
     @State private var linkToEdit = false
+    @State private var linkToDetails = false
     @State private var linkToLayouts = false
     @State private var linkToPlayers = false
     @State private var linkToLocations = false
@@ -34,6 +35,8 @@ struct ScorecardListView: View, DropDelegate {
     @State private var importTapped: ImportSource = .none
     @State private var dropEntered: Bool = false
     @State private var tileColor = Palette.contrastTile
+    @State private var deleted = false
+    @State private var dismissDetailView = false
     var dropColor: Binding<PaletteColor> {
         Binding {
             tileColor
@@ -61,98 +64,126 @@ struct ScorecardListView: View, DropDelegate {
                           [BannerOption(text: "About \(appName)", action: { MessageBox.shared.show("A Bridge scoring app from\nShearer Online Ltd", showIcon: true, showVersion: true) })])
         
         return StandardView("Scorecard List", slideInId: id, navigation: true) {
-            
-            VStack {
-                Banner(title: $title, back: false, optionMode: .menu, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: "Setup", menuId: id, options: menuOptions)
-                Spacer().frame(height: 8)
-                
-                ListTileView(color: dropColor) {
-                    HStack {
-                        Image(systemName: "plus.square")
-                        Text("New Scorecard")
+            GeometryReader { geometry in
+                VStack {
+                    Banner(title: $title, back: false, optionMode: .menu, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: "Setup", menuId: id, options: menuOptions)
+                    Spacer().frame(height: 8)
+                    
+                    ListTileView(color: dropColor) {
+                        HStack {
+                            Image(systemName: "plus.square")
+                            Text("New Scorecard")
+                        }
                     }
-                }
-                /*.onDrop(of: uttypes, delegate: self)
-                    In case you ever need to drop import files on this list
-                */
-                .onTapGesture {
-                    self.linkToNew = true
-                }
-                
-                ScrollView {
-                    Spacer().frame(height: 4)
-                    ScorecardFilterView(id: id, filterValues: filterValues, closeFilter: $closeFilter)
-                    ScrollViewReader { scrollViewProxy in
-                        LazyVStack {
-                            ForEach(scorecards) { (scorecard) in
-                                ScorecardSummaryView(slideInId: id, scorecard: scorecard, highlighted: highlighted, selected: selected, importTapped: $importTapped)
-                                    .id(scorecard.scorecardId)
-                                    .onTapGesture {
-                                        // Copy this entry to current scorecard
-                                        self.selected.copy(from: scorecard)
-                                        linkAction()
+                    /*.onDrop(of: uttypes, delegate: self)
+                     In case you ever need to drop import files on this list
+                     */
+                    .onTapGesture {
+                        self.linkToNew = true
+                    }
+                    
+                    ScrollView {
+                        Spacer().frame(height: 4)
+                        ScorecardFilterView(id: id, filterValues: filterValues, closeFilter: $closeFilter)
+                        ScrollViewReader { scrollViewProxy in
+                            LazyVStack {
+                                ForEach(scorecards) { (scorecard) in
+                                    ScorecardSummaryView(slideInId: id, scorecard: scorecard, highlighted: highlighted, selected: selected, importTapped: $importTapped)
+                                        .id(scorecard.scorecardId)
+                                        .onTapGesture {
+                                                // Copy this entry to current scorecard
+                                            self.selected.copy(from: scorecard)
+                                            linkAction()
+                                        }
+                                }
+                            }
+                            .onChange(of: importTapped, initial: false) { (_, newValue) in
+                                if newValue != .none {
+                                    linkAction(importTapped: newValue)
+                                }
+                                importTapped = .none
+                            }
+                            .onChange(of: self.startAt, initial: false) { (_, newValue) in
+                                if let newValue = newValue {
+                                    scrollViewProxy.scrollTo(newValue, anchor: .top)
+                                    startAt = nil
+                                }
+                            }
+                            .onChange(of: self.closeFilter, initial: false) { (_, newValue) in
+                                if newValue {
+                                    if let scorecard = data.scorecards.first {
+                                        self.startAt = scorecard.scorecardId
                                     }
+                                    closeFilter = false
+                                }
                             }
                         }
-                        .onChange(of: importTapped, initial: false) { (_, newValue) in
-                            if newValue != .none {
-                                linkAction(importTapped: newValue)
-                            }
-                            importTapped = .none
-                        }
-                        .onChange(of: self.startAt, initial: false) { (_, newValue) in
-                            if let newValue = newValue {
-                                scrollViewProxy.scrollTo(newValue, anchor: .top)
-                                startAt = nil
-                            }
-                        }
-                        .onChange(of: self.closeFilter, initial: false) { (_, newValue) in
-                            if newValue {
-                                if let scorecard = data.scorecards.first {
+                    }
+                    Spacer()
+                }
+                .onAppear {
+                    if selected.scorecardId == nullUUID {
+                        Utility.mainThread {
+                            if let scorecard = scorecards.first {
+                                if  filterValues.isClear {
                                     self.startAt = scorecard.scorecardId
                                 }
-                                closeFilter = false
                             }
+                        }
+                        if UserDefault.currentUnsaved.bool {
+                            // Unsaved version - restore it and link to it
+                            let scorecard = ScorecardViewModel()
+                            scorecard.restoreCurrent()
+                            self.selected.copy(from: scorecard)
+                            Scorecard.current.load(scorecard: scorecard)
+                            linkToEdit = true
                         }
                     }
                 }
-                Spacer()
-            }
-            .onAppear {
-                if selected.scorecardId == nullUUID {
-                    Utility.mainThread {
-                        if let scorecard = scorecards.first {
-                            if  filterValues.isClear {
-                                self.startAt = scorecard.scorecardId
+                .navigationDestination(isPresented: $linkToLayouts) { LayoutSetupView() }
+                .navigationDestination(isPresented: $linkToPlayers) { PlayerSetupView() }
+                .navigationDestination(isPresented: $linkToLocations) { LocationSetupView() }
+                .navigationDestination(isPresented: $linkToStats) { StatsView() }
+                .navigationDestination(isPresented: $linkToEdit) { ScorecardInputView(scorecard: selected, importScorecard: importScorecard) }
+                .sheet(isPresented: $linkToNew, onDismiss: {
+                    if layoutSelected {
+                        self.selected.reset(from: layout)
+                        Scorecard.current.load(scorecard: selected)
+                        selected.saveScorecard()
+                        importScorecard = .none
+                        var transaction = Transaction(animation: .linear(duration: 0.01))
+                        transaction.disablesAnimations = true
+                        withTransaction(transaction) {
+                            if layout.displayDetail {
+                                linkToDetails = true
+                            } else {
+                                linkToEdit = true
                             }
                         }
+                        
                     }
-                    if UserDefault.currentUnsaved.bool {
-                        // Unsaved version - restore it and link to it
-                        let scorecard = ScorecardViewModel()
-                        scorecard.restoreCurrent()
-                        self.selected.copy(from: scorecard)
-                        Scorecard.current.load(scorecard: scorecard)
+                }) {
+                    LayoutListView(selected: $layoutSelected, layout: $layout)
+                }
+                .fullScreenCover(isPresented: $linkToDetails, onDismiss: {
+                    if !deleted {
                         linkToEdit = true
                     }
+                }) {
+                    ZStack {
+                        Color.black.opacity(0.4)
+                        let width = min(704, geometry.size.width) // Allow for safe area
+                        let height = min(610, (geometry.size.height))
+                        let frame = CGRect(x: (geometry.size.width - width) / 2,
+                                           y: ((geometry.size.height - height) / 2) + 20,
+                                           width: width,
+                                           height: height)
+                        ScorecardDetailView(scorecard: selected, deleted: $deleted, title: "Scorecard Details", frame: frame, dismissView: $dismissDetailView, showResults: false, cancelButton: true)
+                    }
+                    .background(BackgroundBlurView(opacity: 0.0))
+                    .edgesIgnoringSafeArea(.all)
                 }
             }
-            .navigationDestination(isPresented: $linkToLayouts) { LayoutSetupView() }
-            .navigationDestination(isPresented: $linkToPlayers) { PlayerSetupView() }
-            .navigationDestination(isPresented: $linkToLocations) { LocationSetupView() }
-            .navigationDestination(isPresented: $linkToStats) { StatsView() }
-            .navigationDestination(isPresented: $linkToEdit) { ScorecardInputView(scorecard: selected, importScorecard: importScorecard) }
-        }
-        .sheet(isPresented: $linkToNew, onDismiss: {
-            if layoutSelected {
-                self.selected.reset(from: layout)
-                Scorecard.current.load(scorecard: selected)
-                selected.saveScorecard()
-                importScorecard = .none
-                linkToEdit = true
-            }
-        }) {
-            LayoutListView(selected: $layoutSelected, layout: $layout)
         }
     }
     

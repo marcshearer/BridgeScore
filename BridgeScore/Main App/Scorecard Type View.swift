@@ -65,12 +65,14 @@ struct ScorecardTypeView: View {
     @State var id: UUID
     @Binding var type: ScorecardType
     @Binding var dismiss: Bool
+    @State var onChange: (ScorecardType, ScorecardType)->()
     @State var eventTypes: [CompositeEventType] = []
     @State var eventTypeIndex:Int? = 0
     @State var scoreTypes: [ScoreType] = []
     @State var scoreTypeIndex:Int? = 0
     @State var aggregateTypes: [AggregateType] = []
     @State var aggregateTypeIndex:Int? = 0
+    @State var undoBefore: ScorecardType!
     
     var body : some View {
         VStack(spacing: 0) {
@@ -116,7 +118,7 @@ struct ScorecardTypeView: View {
                     HStack {
                         Spacer()
                         Button {
-                            print("\(type.aggregateType.string)")
+                            registerUndo()
                             dismiss = true
                         } label: {
                             VStack {
@@ -142,7 +144,24 @@ struct ScorecardTypeView: View {
         .background(Palette.alternate.background)
         .cornerRadius(10)
         .onAppear {
+            undoBefore = type.copy()
             updateData(from: .all)
+        }
+    }
+    
+    func registerUndo() {
+        let after = type.copy()
+        if after != undoBefore {
+            MyApp.undoManager.registerUndo(withTarget: type) { handler in
+                type.copy(from: undoBefore)
+                onChange(type, undoBefore)
+                // Register redo
+                MyApp.undoManager.registerUndo(withTarget: type) { handler in
+                    type.copy(from: after)
+                    onChange(type, after)
+                }
+            }
+            onChange(undoBefore, type)
         }
     }
     

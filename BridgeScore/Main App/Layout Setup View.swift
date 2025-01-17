@@ -26,8 +26,6 @@ struct LayoutSetupView: View {
                 } rightView: {
                     LayoutDetailView(id: id, selected: selected)
                 }
-                .ignoresSafeArea()
-                .background(.blue)
             }
             .undoManager(canUndo: $canUndo, canRedo: $canRedo)
         }
@@ -201,10 +199,14 @@ struct LayoutDetailView : View {
                                 
                                 Input(title: "Default description", field: $selected.scorecardDesc, inlineTitleWidth: 200)
                                 
+                                Separator()
+                                
+                                InputToggle(title: "Show details on create", field: $selected.displayDetail, disabled: Binding.constant(false), inlineTitleWidth: 200)
+                                
                             }
                         }
                         
-                        InsetView(title: "Options") {
+                        InsetView(title: "Event Options") {
                             VStack(spacing: 0) {
                                 
                                 ScorecardTypePrompt(type: $selected.type, inLineTitleWidth: 200) {
@@ -276,7 +278,9 @@ struct LayoutDetailView : View {
                 Spacer()
                 HStack {
                     Spacer()
-                    ScorecardTypeView(id: id, type: $selected.type, dismiss: $dismissTypeView)
+                    ScorecardTypeView(id: id, type: $selected.type, dismiss: $dismissTypeView) { (from, to) in
+                        selected.objectWillChange.send()
+                    }
                     Spacer()
                 }
                 Spacer()

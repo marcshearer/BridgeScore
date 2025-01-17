@@ -23,7 +23,7 @@ class MasterData: ObservableObject {
         /// **Builds in-memory mirror of layouts, scorecards, players and locations with pointers to managed objects**
         /// Note that this infers that there will only ever be 1 instance of the app accessing the database
     
-        let createDefaultData = false
+        let createDefaultData = true
         
         // Read current data
         let layoutMOs = CoreData.fetch(from: LayoutMO.tableName, sort: (key: #keyPath(LayoutMO.sequence16), direction: .ascending)) as! [LayoutMO]

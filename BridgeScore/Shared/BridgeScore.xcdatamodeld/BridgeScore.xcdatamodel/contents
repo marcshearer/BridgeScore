@@ -47,6 +47,7 @@
         <attribute name="boardScoreVpType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="boardsTable16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="desc" optional="YES" attributeType="String"/>
+        <attribute name="displayDetail" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="eventType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="headToHead" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="layoutId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
