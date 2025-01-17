@@ -57,7 +57,7 @@ struct PlayerSetupView: View {
                 })
             } else {
                 // It is used - retire it by setting the flag and moving it to the bottom of the list
-                MessageBox.shared.show("As this player is used in scorecards or layouts it cannot be deleted. Instead it will be marked as retired. Are you sure you want to do this?", cancelText: "Cancel", okText: "Retire", okAction: {
+                MessageBox.shared.show("As this player is used in scorecards or templates it cannot be deleted. Instead it will be marked as retired. Are you sure you want to do this?", cancelText: "Cancel", okText: "Retire", okAction: {
                     selected.retired = true
                     save(player: selected)
                     if let index = MasterData.shared.players.firstIndex(where: {$0 == selected}) {

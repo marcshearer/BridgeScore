@@ -55,7 +55,7 @@ struct LocationSetupView: View {
                 })
             } else {
                 // It is used - retire it by setting the flag and moving it to the bottom of the list
-                MessageBox.shared.show("As this location is used in scorecards or layouts it cannot be deleted. Instead it will be marked as retired. Are you sure you want to do this?", cancelText: "Cancel", okText: "Retire", okAction: {
+                MessageBox.shared.show("As this location is used in scorecards or templates it cannot be deleted. Instead it will be marked as retired. Are you sure you want to do this?", cancelText: "Cancel", okText: "Retire", okAction: {
                     selected.retired = true
                     save(location: selected)
                     if let index = MasterData.shared.locations.firstIndex(where: {$0 == selected}) {
