@@ -9,8 +9,9 @@ import UIKit
 
 protocol AutoCompleteDelegate {
     func replace(with: String, textInput: ScorecardInputTextInput, positionAt: NSRange)
+    func autoCompleteDidMoveToSuperview(autoComplete: AutoComplete)
+    func autoCompleteWillMoveToSuperview(autoComplete: AutoComplete)
 }
-
 enum AutoCompleteConsider {
     case lastWord
     case trailingAlpha
@@ -38,7 +39,8 @@ class AutoCompleteElement: Hashable {
     }
 }
 
-class AutoComplete: UIView, UITableViewDataSource, UITableViewDelegate {
+class AutoComplete: UIView, ObservableObject, UITableViewDataSource, UITableViewDelegate {
+    var id = UUID()
     var tableView = UITableView()
     var text: String = ""
     var list: [AutoCompleteElement] = []
@@ -68,6 +70,14 @@ class AutoComplete: UIView, UITableViewDataSource, UITableViewDelegate {
         tableView.separatorStyle = .none
     }
     
+    override func didMoveToSuperview() {
+        delegate?.autoCompleteDidMoveToSuperview(autoComplete: self)
+    }
+    
+    override func willMove(toSuperview: UIView?) {
+        delegate?.autoCompleteWillMoveToSuperview(autoComplete: self)
+    }
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -82,6 +92,8 @@ class AutoComplete: UIView, UITableViewDataSource, UITableViewDelegate {
     
     public func set(text: String, textInput: ScorecardInputTextInput?, at range: NSRange) -> Int {
         self.textInput = textInput
+        self.superview?.bringSubviewToFront(self)
+        self.bringSubviewToFront(tableView)
         self.text = text
         self.range = range
         let string: NSString = NSString(string: text)
@@ -172,6 +184,7 @@ class AutoComplete: UIView, UITableViewDataSource, UITableViewDelegate {
         cell.set(text: filteredList[indexPath.row].replace, description: filteredList[indexPath.row].description, selected: indexPath.row == selectedRow)
         return cell
     }
+    
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if let textInput = textInput {

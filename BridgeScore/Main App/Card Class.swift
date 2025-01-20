@@ -98,6 +98,10 @@ class Card : CustomStringConvertible, CustomDebugStringConvertible, Hashable {
         return "\(self.rankString)\(self.suit.string)"
     }
     
+    public var compact: String {
+        return "\(self.rankString)\(self.suit.contrast)"
+    }
+    
     public var colorString: AttributedString {
         return AttributedString(self.string, color: self.suit.color)
     }

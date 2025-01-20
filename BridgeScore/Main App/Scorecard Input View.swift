@@ -2447,6 +2447,10 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         return true
     }
     
+    func autoCompleteDidMoveToSuperview(autoComplete: AutoComplete) { }
+    
+    func autoCompleteWillMoveToSuperview(autoComplete: AutoComplete) { }
+    
     internal func inputTextDidBeginEditing(_ textInput: ScorecardInputTextInput) {
         var clear = false
         switch column.type {
@@ -3052,7 +3056,6 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     
     @discardableResult public func keyPressed(keyAction: KeyAction?, characters: String = "") -> Bool {
         var handled = false
-        print("Key pressed \(description)")
         while true {
             if let keyAction = keyAction {
                 handled = false

@@ -124,15 +124,24 @@ public enum Suit: Int, ContractEnumType, Equatable, Comparable {
         case .blank:
             return ""
         case .clubs:
-            return "♣︎"
+            return "􀊽"
         case .diamonds:
-            return "♦︎"
+            return "􀊿"
         case .hearts:
-            return "♥︎"
+            return "􀊼"
         case .spades:
-            return "♠︎"
+            return "􀊾"
         case .noTrumps:
             return "NT"
+        }
+    }
+    
+    var contrast: String {
+        switch self {
+        case .spades:
+            "􀒅"
+        default:
+            string
         }
     }
     
@@ -174,8 +183,16 @@ public enum Suit: Int, ContractEnumType, Equatable, Comparable {
         return AttributedString(self.string, color: self.color)
     }
     
+    var colorContrast: AttributedString {
+        return AttributedString(self.contrast, color: self.color)
+    }
+    
     var attributedString: NSAttributedString {
         return NSAttributedString(self.string, color: UIColor(self.color))
+    }
+    
+    var attributedContrast: NSAttributedString {
+        return NSAttributedString(self.contrast, color: UIColor(self.color))
     }
     
     public var color: Color {
@@ -405,7 +422,18 @@ public class Contract: Equatable, Comparable, Hashable {
             return NSAttributedString(level.short) + suit.attributedString + NSAttributedString(double.short)
         }
     }
-    
+
+    public var attributedContrast: NSAttributedString {
+        switch level {
+        case .blank:
+            return NSAttributedString("")
+        case .passout:
+            return NSAttributedString("Pass Out")
+        default:
+            return NSAttributedString(level.short) + suit.attributedContrast + NSAttributedString(double.short)
+        }
+    }
+
     public var attributedString: NSAttributedString {
         switch level {
         case .blank:
@@ -425,6 +453,17 @@ public class Contract: Equatable, Comparable, Hashable {
             return "Pass Out"
         default:
             return AttributedString(level.short) + suit.colorString + AttributedString(double.short)
+        }
+    }
+    
+    public var colorContrast: AttributedString {
+        switch level {
+        case .blank:
+            return ""
+        case .passout:
+            return "Pass Out"
+        default:
+            return AttributedString(level.short) + suit.colorContrast + AttributedString(double.short)
         }
     }
     

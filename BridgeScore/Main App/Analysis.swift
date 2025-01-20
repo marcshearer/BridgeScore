@@ -20,7 +20,7 @@ class AnalysisOverride: ObservableObject, Equatable {
             if board.override[declarer] == nil {
                 board.override[declarer] = [:]
             }
-            if let override = board.override[declarer]![suit] {
+            if let override = board.override[declarer]![suit], value != nil {
                 override.made = value
             } else {
                 board.override[declarer]![suit] = (value == nil ? nil : OverrideViewModel(scorecard: scorecard, board: board.boardIndex, declarer: declarer, suit: suit, made: value!))
@@ -682,7 +682,7 @@ class Analysis {
                                 if made == medianTraveller.tricksMade {
                                     // Equal median
                                     shortText = NSAttributedString("=Median")
-                                    verboseText = NSAttributedString("Equal to median for ") + combination.suit.attributedString
+                                    verboseText = NSAttributedString("Equal to median for ") + combination.suit.attributedContrast
                                 } else {
                                     // Not median
                                     let better = ((made - medianTraveller.tricksMade) * invert > 0)
@@ -690,7 +690,7 @@ class Analysis {
                                     let extremePercent = (Float(extremeTravellers.count)/Float(combinationTravellers.count)*100)
                                     withMethod = .median
                                     withTricks = tricksMade[combination]?.made[.median] ?? 0
-                                    verboseText = NSAttributedString("\(better ? "Better" : "Worse") than \(extremePercent.toString(places: 0))% of field in ") + combination.suit.attributedString + NSAttributedString(" (\(extremeTravellers.count))")
+                                    verboseText = NSAttributedString("\(better ? "Better" : "Worse") than \(extremePercent.toString(places: 0))% of field in ") + combination.suit.attributedContrast + NSAttributedString(" (\(extremeTravellers.count))")
                                     shortText = NSAttributedString("\(better ? ">" : "<")\(extremePercent.toString(places: 0))%")
                                 }
                             }
@@ -909,8 +909,8 @@ enum AnalysisActionType: Int, CaseIterable {
     func description(otherTable: Bool = false, contract: Contract, otherContract: Contract?, declarer: Bool, verbose: Bool) -> NSAttributedString {
         let undoubledContract = Contract(copying: contract)
         undoubledContract.double = .undoubled
-        let undoubled = undoubledContract.attributedCompact
-        let actual = contract.attributedCompact
+        let undoubled = undoubledContract.attributedContrast
+        let actual = contract.attributedContrast
         
         return switch self {
         case .noAction:

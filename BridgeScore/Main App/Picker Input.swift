@@ -121,7 +121,7 @@ struct PickerInputAdditional<Additional>: View where Additional: Equatable  {
             }
         }
         .if(width != nil) { (view) in
-            view.frame(width: width!)
+            view.frame(width: max(0, width!))
         }
         .frame(height: height)
         .background(color.background)

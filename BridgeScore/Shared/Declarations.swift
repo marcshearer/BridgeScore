@@ -56,6 +56,7 @@ var tinyCellFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 
 var replaceFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 30.0 : 20.0)) }
 var replaceTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 30.0 : 20.0)) }
 var analysisFont: UIFont { UIFont.systemFont(ofSize: (MyApp.format != .phone ? 16.0 : 12.0)) }
+var analysisCommentFont: UIFont { UIFont.systemFont(ofSize: (MyApp.format != .phone ? 20.0 : 12.0)) }
 
 // Slide in IDs - Need to be declared here as there seem to be multiple instances of views
 let scorecardListViewId = UUID()

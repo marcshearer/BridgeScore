@@ -420,7 +420,7 @@ class Utility {
     
     static public var sendingMessage = false
     
-    class func debugMessage(_ from: String, _ message: String, showDevice: Bool = false, force: Bool = false, mainThread: Bool = true) {
+    class func debugMessage(_ from: String, _ message: String, showDevice: Bool = false, force: Bool = true, mainThread: Bool = true) {
         
         func closure() {
             var outputMessage: String

@@ -172,7 +172,7 @@ struct OptionalDatePickerInput : View {
             }
             .frame(height: self.height + self.topSpace + (title == nil || inlineTitle ? 0 : 30))
             .if(width != nil) { (view) in
-                view.frame(width: width!)
+                view.frame(width: max(0, width!))
             }
             .foregroundColor(color.text)
             .background(color.background)

@@ -86,7 +86,6 @@ struct AnalysisViewer: View {
     @StateObject var analysisData: AnalysisData
     @State var bidAnnounce = ""
     @State var summaryMode = true
-    @State var focused = false
     @State var stopEdit = false
     @State var formatInt: Int
     @State var responsiblePicker = false
@@ -94,6 +93,7 @@ struct AnalysisViewer: View {
     @State var initialYOffset: CGFloat
     @State var yOffset: CGFloat
     @Binding var dismissView: Bool
+    static public var autoComplete: AutoComplete?
     
     init(board: BoardViewModel, traveller: TravellerViewModel, sitting: Seat, frame: CGRect, initialYOffset: CGFloat, dismissView: Binding<Bool>, from: UIView) {
         self._analysisData = StateObject(wrappedValue: AnalysisData(analysis: Scorecard.current.analysis(board: board, traveller: traveller, sitting: sitting), otherAnalysis: nil))
@@ -109,53 +109,60 @@ struct AnalysisViewer: View {
         _formatInt = State(initialValue: UserDefault.analysisOptionFormat.int)
         _dismissView = dismissView
     }
-
+    
     var body: some View {
         GeometryReader { viewGeometry in
             HStack {
                 Spacer().layoutPriority(999)
-                VStack {
-                    AnalysisBanner(nextTraveller: nextTraveller, updateOptions: updateAnalysisData, board: $board, traveller: $traveller, handTraveller: $handTraveller, sitting: $sitting, rotated: $rotated, initialSitting: $initialSitting, bidAnnounce: $bidAnnounce, summaryMode: $summaryMode, stopEdit: $stopEdit, responsiblePicker: $responsiblePicker, dismissView: $dismissView)
-                    GeometryReader { bodyGeometry in
-                        VStack(spacing: 0) {
-                            HStack(spacing: 0) {
-                                Spacer().frame(width: 8)
-                                let handWidth = bodyGeometry.size.height * 0.8
-                                HandViewer(board: $board, traveller: $handTraveller, sitting: $sitting, rotated: $rotated, from: from, bidAnnounce: $bidAnnounce, stopEdit: $stopEdit)
-                                    .cornerRadius(analysisCornerSize)
-                                    .ignoresSafeArea(.keyboard)
-                                    .frame(width: handWidth)
-                                Spacer().frame(width: 8)
-                                VStack {
-                                    AnalysisWrapper(label: "Summary", height: 88, teamsHeight: 149, stopEdit: $stopEdit) {
-                                        AnalysisSummary(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData)
+                ZStack {
+                    VStack {
+                        AnalysisBanner(nextTraveller: nextTraveller, updateOptions: updateAnalysisData, board: $board, traveller: $traveller, handTraveller: $handTraveller, sitting: $sitting, rotated: $rotated, initialSitting: $initialSitting, bidAnnounce: $bidAnnounce, summaryMode: $summaryMode, stopEdit: $stopEdit, responsiblePicker: $responsiblePicker, dismissView: $dismissView)
+                        GeometryReader { bodyGeometry in
+                            VStack(spacing: 0) {
+                                HStack(spacing: 0) {
+                                    Spacer().frame(width: 8)
+                                    let handWidth = bodyGeometry.size.height * 0.8
+                                    HandViewer(board: $board, traveller: $handTraveller, sitting: $sitting, rotated: $rotated, from: from, bidAnnounce: $bidAnnounce, stopEdit: $stopEdit)
+                                        .cornerRadius(analysisCornerSize)
+                                        .ignoresSafeArea(.keyboard)
+                                        .frame(width: handWidth)
+                                    Spacer().frame(width: 8)
+                                    VStack {
+                                        AnalysisWrapper(label: "Summary", height: 88, teamsHeight: 149, stopEdit: $stopEdit) {
+                                            AnalysisSummary(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData)
+                                        }
+                                            // Grow up to size for 5 entries with no scroll
+                                        let height = 130 + min(50, max(0, (frame.height - 794) / 3))
+                                        AnalysisWrapper(label: "Tricks Made", height: height, stopEdit: $stopEdit) {
+                                            AnalysisCombinationTricks(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData)
+                                        }
+                                        AnalysisWrapper(label: "Suggest", height: 70, teamsHeight: 90, stopEdit: $stopEdit) {
+                                            AnalysisSuggestionView(board: $board, traveller: $traveller, sitting: $sitting, formatInt: $formatInt, analysisData: analysisData)
+                                        }
+                                        AnalysisWrapper(label: "Bidding Options", height: 150, stopEdit: $stopEdit) {
+                                            AnalysisBiddingOptions(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData, formatInt: $formatInt)
+                                        }
+                                        AnalysisWrapper(label: "Travellers", stopEdit: $stopEdit) {
+                                            AnalysisTravellerView(board: $board, traveller: $handTraveller, sitting: $sitting, summaryMode: $summaryMode, stopEdit: $stopEdit)
+                                        }
                                     }
-                                    // Grow up to size for 5 entries with no scroll
-                                    let height = 130 + min(50, max(0, (frame.height - 794) / 3))
-                                    AnalysisWrapper(label: "Tricks Made", height: height, stopEdit: $stopEdit) {
-                                        AnalysisCombinationTricks(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData)
-                                    }
-                                    AnalysisWrapper(label: "Suggest", height: 70, teamsHeight: 90, stopEdit: $stopEdit) {
-                                        AnalysisSuggestionView(board: $board, traveller: $traveller, sitting: $sitting, formatInt: $formatInt, analysisData: analysisData)
-                                    }
-                                    AnalysisWrapper(label: "Bidding Options", height: 150, stopEdit: $stopEdit) {
-                                        AnalysisBiddingOptions(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData, formatInt: $formatInt)
-                                    }
-                                    AnalysisWrapper(label: "Travellers", stopEdit: $stopEdit) {
-                                        AnalysisTravellerView(board: $board, traveller: $handTraveller, sitting: $sitting, summaryMode: $summaryMode, stopEdit: $stopEdit)
-                                    }
+                                    .frame(width: bodyGeometry.size.width - 24 - handWidth)
                                 }
-                                .frame(width: bodyGeometry.size.width - 24 - handWidth)
+                                Spacer().frame(height: 8)
                             }
-                            Spacer().frame(height: 8)
                         }
                     }
-                }
-                .background(Palette.windowBackground.background)
-                .cornerRadius(10)
-                .frame(width: frame.width)
-                .onTapGesture {
-                    stopEdit = true
+                    .background(Palette.windowBackground.background)
+                    .cornerRadius(10)
+                    .frame(width: frame.width)
+                    .onTapGesture {
+                        stopEdit = true
+                    }
+                    VStack {
+                        AutoCompleteWrapper(frame: CGRect(origin: CGPoint(), size: CGSize(width: 400, height: 200)))
+                            .frame(width: 400, height: 200)
+                        Spacer()
+                    }
                 }
                 Spacer().layoutPriority(999)
             }
@@ -164,6 +171,7 @@ struct AnalysisViewer: View {
                 withAnimation(.linear(duration: 0.25).delay(0.1)) {
                     yOffset = frame.minY
                 }
+                updateAnalysisData()
             }
             .frame(width: frame.width, height: frame.height)
             .onReceive(analysisViewerValueChange) { (source) in
@@ -180,13 +188,10 @@ struct AnalysisViewer: View {
                     }
                 }
             }
-            .onChange(of: board.boardIndex, initial: true) {
-                updateAnalysisData()
-            }
             .onSwipe() { direction in
                 nextTraveller(direction == .left ? 1 : -1)
             }
-
+            
         }
     }
     
@@ -216,13 +221,14 @@ struct AnalysisViewer: View {
                                                               bottomLeading: 0,
                                                               bottomTrailing: 0,
                                                               topTrailing: 10),
-                                                              style: .continuous)
-                        .foregroundColor(Palette.windowBanner.background)
+                                           style: .continuous)
+                    .foregroundColor(Palette.windowBanner.background)
                     VStack {
                         Spacer()
                         HStack {
                             Spacer().frame(width: 20)
                             Text("Board \(board.boardNumberText)\(scorecard.isMultiSession ? "(\(board.session))" : "")")
+                                .frame(minWidth: 150)
                             if traveller.rankingNumber == handTraveller.rankingNumber {
                                 HStack {
                                     Spacer().frame(width: 20)
@@ -343,6 +349,7 @@ struct AnalysisViewer: View {
                 break
             }
         } while boardIndex > 1 && boardIndex < boards
+        updateAnalysisData()
     }
     
     struct AnalysisResponsible : View {
@@ -352,28 +359,28 @@ struct AnalysisViewer: View {
         @State var scrollId: Int?
         @State var changed = false
         let show = (((Responsible.validCases.count - 1) / 2) * 2) + 1 // Must be odd
-
+        
         var body : some View {
             AnalysisResponsibleElement(responsible: $board.responsible, changed: $changed, unknown: "Resp")
-            .palette(.windowBannerShadow)
-            .cornerRadius(analysisCornerSize)
-            .frame(width: 70, height: 60)
-            .onTapGesture {
-                stopEdit = true
-                responsiblePicker = true
-            }
-            .popover(isPresented: $responsiblePicker) {
-                ZStack {
-                    Palette.windowBannerShadow.background.scaleEffect(1.5)
-                    AnalysisResponsiblePicker(board: $board, show: show, scrollId: $scrollId, changed: $changed)
-                        .palette(.windowBannerShadow)
+                .palette(.windowBannerShadow)
+                .cornerRadius(analysisCornerSize)
+                .frame(width: 70, height: 60)
+                .onTapGesture {
+                    stopEdit = true
+                    responsiblePicker = true
                 }
-            }
-            .onChange(of: changed, initial: false) {
-                if changed {
-                    changed = false
+                .popover(isPresented: $responsiblePicker) {
+                    ZStack {
+                        Palette.windowBannerShadow.background.scaleEffect(1.5)
+                        AnalysisResponsiblePicker(board: $board, show: show, scrollId: $scrollId, changed: $changed)
+                            .palette(.windowBannerShadow)
+                    }
                 }
-            }
+                .onChange(of: changed, initial: false) {
+                    if changed {
+                        changed = false
+                    }
+                }
         }
     }
     
@@ -527,6 +534,7 @@ struct AnalysisViewer: View {
     }
     
     func updateAnalysisData() {
+        Utility.debugMessage("", "Update", force: true)
         analysisData.analysis = Scorecard.current.analysis(board: board, traveller: traveller, sitting: sitting)
         analysisData.analysis.invalidateCache()
         if let otherTraveller = analysisData.analysis.otherTraveller {
@@ -539,734 +547,650 @@ struct AnalysisViewer: View {
         analysisData.otherAnalysis?.refreshOptions()
         analysisData.update()
     }
-}
-
-enum AnalysisSource {
-    case override
-    case rejected
-}
-
-let analysisViewerValueChange = PassthroughSubject<AnalysisSource, Never>()
-
-struct AnalysisWrapper <Content> : View where Content : View {
-    @State var stopEdit: Binding<Bool>
-    var label: String
-    var height: CGFloat?
-    var teamsHeight: CGFloat?
-    var content: ()->Content
     
-    init(label: String, height: CGFloat? = nil, teamsHeight: CGFloat? = nil, stopEdit: Binding<Bool>, @ViewBuilder content: @escaping ()->Content) {
-        self.label = label
-        self.height = height
-        self.teamsHeight = teamsHeight
-        self.stopEdit = stopEdit
-        self.content = content
-    }
-    
-    var body: some View {
-        let type = Scorecard.current.scorecard?.type
-        let teams = type?.players == 4
-        let height = (teams && teamsHeight != nil ? teamsHeight! : height)
-        
-        HStack(spacing: 0) {
-            ZStack {
-                UnevenRoundedRectangle(cornerRadii: .init(topLeading: analysisCornerSize,
-                                                          bottomLeading: analysisCornerSize,
-                                                          bottomTrailing: 0,
-                                                          topTrailing: 0),
-                                       style: .continuous)
-                .foregroundColor(Palette.background.background)
-                .if(height != nil) { view in
-                    view.frame(height: height)
-                }
-                
-                content()
-                    .if(height != nil) { view in
-                        view.frame(height: height!)
-                    }
-                    .font(inputFont).minimumScaleFactor(0.6)
-            }
-            
-            ZStack {
-                UnevenRoundedRectangle(cornerRadii: .init(topLeading: 0,
-                                                          bottomLeading: 0,
-                                                          bottomTrailing: analysisCornerSize,
-                                                          topTrailing: analysisCornerSize),
-                                       style: .continuous)
-                .foregroundColor(Palette.windowBanner.background)
-                .frame(width: 20)
-                .if(height != nil) { view in
-                    view.frame(height: height!)
-                }
-                
-                HStack(spacing: 0) {
-                    Spacer()
-                    Text(label)
-                        .foregroundColor(Palette.windowBanner.text)
-                        .font(smallFont)
-                        .minimumScaleFactor(0.5)
-                    Spacer()
-                }
-                .frame(width: height, height: 20)
-                .fixedSize()
-                .frame(width: 20)
-                .if(height != nil) { view in
-                    view.frame(height: height!)
-                }
-                .rotationEffect(.degrees(90))
-            }
-        }
-        .onTapGesture {
-            stopEdit.wrappedValue = true
-        }
-        .ignoresSafeArea(.keyboard, edges: .bottom)
-    }
-}
-
-struct AnalysisSummary : View {
-    let scorecard = Scorecard.current.scorecard!
-    @Binding var board: BoardViewModel
-    @Binding var traveller: TravellerViewModel
-    @Binding var sitting: Seat
-    @ObservedObject var analysisData: AnalysisData
-    
-    var body: some View {
-        let type = scorecard.type
-        let teams = (type.players == 4)
-        ZStack {
-            VStack {
-                UnevenRoundedRectangle(cornerRadii: .init(topLeading: analysisCornerSize), style: .continuous)
-                    .frame(height: 30).foregroundColor(Palette.tile.background)
-                Spacer()
-            }
-            let tableColumns = (teams ? [GridItem(.fixed(60), spacing: 0), 
-                                         GridItem(.fixed(2), spacing: 0)] : [])
-            let columns = tableColumns + [GridItem(.flexible(minimum: 100), spacing: 0), 
-                                          GridItem(.fixed(2), spacing: 0),
-                                          GridItem(.flexible(minimum: 100), spacing: 0)]
-            VStack {
-                LazyVGrid(columns: columns, spacing: 0) {
-                    GridRow {
-                        if teams {
-                            CenteredText("Table")
-                            Text("")
-                        }
-                        CenteredText("Bidding")
-                        Text("")
-                        CenteredText("Play")
-                    }
-                    .bold()
-                    .frame(height: 30)
-                    .foregroundColor(Palette.tile.text)
-                    ForEach(0..<2) { otherTable in
-                        let otherTable = (otherTable == 1)
-                        if !otherTable || scorecard.type.players == 4 {
-                            GridRow {
-                                if teams {
-                                    CenteredText(otherTable ? "Other" : "This")
-                                    Separator(direction: .vertical, thickness: 2).background(Palette.tile.background)
-                                }
-                                ForEach(0..<2) { phase in
-                                    let phase: AnalysisPhase = (phase == 0 ? .bidding : .play)
-                                    AnalysisSummaryDetail(board: $board, traveller: $traveller, sitting: $sitting, phase: phase, otherTable: otherTable, analysisData: analysisData)
-                                    if phase == .bidding {
-                                        Separator(direction: .vertical, thickness: 2).background(Palette.tile.background)
-                                    }
-                                }
-                                .frame(height: 58)
-                                if !otherTable && teams {
-                                    GridRow {
-                                        ForEach(columns.indices, id: \.self) { _ in
-                                            Separator(direction: .horizontal, thickness: 3).background(Palette.tile.background)
-                                        }
-                                    }
-                                    .frame(height: 3)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    
-    struct AnalysisSummaryDetail : View {
-        @Binding var board: BoardViewModel
-        @Binding var traveller: TravellerViewModel
-        @Binding var sitting: Seat
-        @State var phase: AnalysisPhase
-        @State var otherTable: Bool
-        @ObservedObject var analysisData: AnalysisData
-        @State var status: AnalysisSummaryStatus = .ok
-        @State var text: AttributedString = ""
-        @State var impact: String = ""
-        
-        var body: some View {
-            VStack {
-                Spacer()
-                HStack(spacing: 0) {
-                    Spacer().frame(width: 8)
-                    status.image.font(inputTitleFont)
-                    Spacer().frame(width: 4)
-                    HStack {
-                        Text(text)
-                        Spacer()
-                    }
-                    if status < .ok {
-                        HStack {
-                            Spacer()
-                            Text(impact)
-                            Spacer()
-                        }
-                        .frame(width: 80)
-                        .bold()
-                    }
-                    Spacer().frame(width: 2)
-                }
-                .opacity(status == .rejected ? 0.4 : 1)
-                Spacer()
-            }
-            .font(smallFont)
-            .minimumScaleFactor(0.6)
-            .onChange(of: board, initial: true) {
-                updateSummary()
-            }
-            .onChange(of: sitting, initial: true) {
-                updateSummary()
-            }
-            .onReceive(analysisViewerValueChange) { (_) in
-                updateSummary()
-            }
-        }
-        func updateSummary() {
-            if let analysis = (otherTable ? analysisData.otherAnalysis : analysisData.analysis) {
-                let summaryValues = analysis.summary(phase: phase, otherTable: otherTable, verbose: true)
-                status = summaryValues.status
-                text = summaryValues.text
-                impact = summaryValues.impactDescription
-            }
-        }
-    }
-}
-    
-struct AnalysisCombinationTricks : View {
-    @Binding var board: BoardViewModel
-    @Binding var traveller: TravellerViewModel
-    @Binding var sitting: Seat
-    @ObservedObject var analysisData: AnalysisData
-    @State var made: Int = 0
-    @State var method: AnalysisAssessmentMethod = .override
-    @State var refresh: Bool = true
-    
-    var body: some View {
-        let columns = [GridItem(.fixed(50), spacing: 0), 
-                       GridItem(.fixed(50), spacing: 0),
-                       GridItem(.fixed(80), spacing: 0),
-                       GridItem(.flexible(minimum: 100), spacing: 0),
-                       GridItem(.fixed(90), spacing: 0),
-                       GridItem(.fixed(130), spacing: 0)]
-        
-        ZStack {
-            VStack {
-                UnevenRoundedRectangle(cornerRadii: .init(topLeading: analysisCornerSize), style: .continuous)
-                    .frame(height: 30).foregroundColor(Palette.tile.background)
-                Spacer()
-            }
-            HStack {
-                VStack {
-                    LazyVGrid(columns: columns, spacing: 0) {
-                        GridRow {
-                            CenteredText("Suit")
-                            CenteredText("By")
-                            CenteredText("Using")
-                            CenteredText("Made")
-                            CenteredText("Compare")
-                            CenteredText("Impact")
-                        }
-                    }
-                    .bold()
-                    .frame(height: 30)
-                    .foregroundColor(Palette.tile.text)
-                    ScrollView {
-                        ForEach(analysisData.combinations, id: \.self) { combination in
-                            AnalysisCombination(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData, columns: columns, combination: combination)
-                        }
-                        Spacer().frame(height: 4)
-                    }
-                }
-            }
-        }
-        .onReceive(analysisViewerValueChange) { (_) in
-            refresh.toggle()
-        }
-        .onChange(of: sitting) {
-            refresh.toggle()
-        }
-    }
-    
-    struct AnalysisCombination : View {
-        @Binding var board: BoardViewModel
-        @Binding var traveller: TravellerViewModel
-        @Binding var sitting: Seat
-        @ObservedObject var analysisData: AnalysisData
-        let columns: [GridItem]
-        @State var combination: AnalysisTrickCombination
-        @State var made: Int?
-        @State var method: AnalysisAssessmentMethod?
-        @State var compare: AttributedString?
-        
-        var body : some View {
-            LazyVGrid(columns: columns, spacing: 0) {
-                GridRow {
-                    CenteredAttributedText(combination.suit.colorString)
-                    CenteredText(combination.declarer.short)
-                    if let method = method {
-                        HStack {
-                            Spacer()
-                            Text(method.string)
-                            Spacer()
-                        }
-                        madeView(board: $board, sitting: $sitting, analysisData: analysisData, combination: $combination, method: $method, made: $made)
-                        if let compare = compare {
-                            HStack(spacing: 0) {
-                                Spacer()
-                                Text(compare)
-                                Spacer()
-                            }
-                            AnalysisCombinationReject(board: $board, traveller: $traveller, analysisData: analysisData, combination: combination, method: $method)
-                        } else {
-                            Text("")
-                        }
-                    } else {
-                        Text("")
-                        Text("")
-                        Text("")
-                        Text("")
-                    }
-                }
-                .foregroundColor(Palette.background.text)
-            }
-            .onChange(of: board, initial: true) {
-                updateState()
-            }
-            .onChange(of: sitting, initial: false) {
-                updateState()
-            }
-            .onReceive(analysisViewerValueChange) { (_) in
-                updateState()
-            }
-        }
-        
-        func updateState() {
-            let (analysis, otherPage, matched) = analysisData.getAnalysis(combination: combination)
-            if let (method, made) = analysis.useMethodMadeValue(combination: combination, overrideRegardless: true) {
-                self.method = (method == .play && otherPage ? .other : method)
-                self.made = made
-                self.compare = nil
-                if matched {
-                    if let (compare, _, _) = analysis.compare(combination: combination) {
-                        self.compare = AttributedString(compare)
-                    }
-                }
-            } else {
-                self.method = nil
-                self.made = nil
-                self.compare = nil
-            }
-        }
-    }
-    
-    struct AnalysisCombinationReject : View {
+    struct AnalysisSummary : View {
         let scorecard = Scorecard.current.scorecard!
         @Binding var board: BoardViewModel
         @Binding var traveller: TravellerViewModel
+        @Binding var sitting: Seat
+        @ObservedObject var analysisData: AnalysisData
+        
+        var body: some View {
+            let type = scorecard.type
+            let teams = (type.players == 4)
+            ZStack {
+                VStack {
+                    UnevenRoundedRectangle(cornerRadii: .init(topLeading: analysisCornerSize), style: .continuous)
+                        .frame(height: 30).foregroundColor(Palette.tile.background)
+                    Spacer()
+                }
+                let tableColumns = (teams ? [GridItem(.fixed(60), spacing: 0),
+                                             GridItem(.fixed(2), spacing: 0)] : [])
+                let columns = tableColumns + [GridItem(.flexible(minimum: 100), spacing: 0),
+                                              GridItem(.fixed(2), spacing: 0),
+                                              GridItem(.flexible(minimum: 100), spacing: 0)]
+                VStack {
+                    LazyVGrid(columns: columns, spacing: 0) {
+                        GridRow {
+                            if teams {
+                                CenteredText("Table")
+                                Text("")
+                            }
+                            CenteredText("Bidding")
+                            Text("")
+                            CenteredText("Play")
+                        }
+                        .bold()
+                        .frame(height: 30)
+                        .foregroundColor(Palette.tile.text)
+                        ForEach(0..<2) { otherTable in
+                            let otherTable = (otherTable == 1)
+                            if !otherTable || scorecard.type.players == 4 {
+                                GridRow {
+                                    if teams {
+                                        CenteredText(otherTable ? "Other" : "This")
+                                        Separator(direction: .vertical, thickness: 2).background(Palette.tile.background)
+                                    }
+                                    ForEach(0..<2) { phase in
+                                        let phase: AnalysisPhase = (phase == 0 ? .bidding : .play)
+                                        AnalysisSummaryDetail(board: $board, traveller: $traveller, sitting: $sitting, phase: phase, otherTable: otherTable, analysisData: analysisData)
+                                        if phase == .bidding {
+                                            Separator(direction: .vertical, thickness: 2).background(Palette.tile.background)
+                                        }
+                                    }
+                                    .frame(height: 58)
+                                    if !otherTable && teams {
+                                        GridRow {
+                                            ForEach(columns.indices, id: \.self) { _ in
+                                                Separator(direction: .horizontal, thickness: 3).background(Palette.tile.background)
+                                            }
+                                        }
+                                        .frame(height: 3)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        struct AnalysisSummaryDetail : View {
+            @Binding var board: BoardViewModel
+            @Binding var traveller: TravellerViewModel
+            @Binding var sitting: Seat
+            @State var phase: AnalysisPhase
+            @State var otherTable: Bool
+            @ObservedObject var analysisData: AnalysisData
+            @State var status: AnalysisSummaryStatus = .ok
+            @State var text: AttributedString = ""
+            @State var impact: String = ""
+            
+            var body: some View {
+                VStack {
+                    Spacer()
+                    HStack(spacing: 0) {
+                        Spacer().frame(width: 8)
+                        status.image.font(inputTitleFont)
+                        Spacer().frame(width: 4)
+                        HStack {
+                            Text(text)
+                            Spacer()
+                        }
+                        if status < .ok {
+                            HStack {
+                                Spacer()
+                                Text(impact)
+                                Spacer()
+                            }
+                            .frame(width: 80)
+                            .bold()
+                        }
+                        Spacer().frame(width: 2)
+                    }
+                    .opacity(status == .rejected ? 0.4 : 1)
+                    Spacer()
+                }
+                .font(smallFont)
+                .minimumScaleFactor(0.6)
+                .onChange(of: board, initial: true) {
+                    updateSummary()
+                }
+                .onChange(of: sitting, initial: true) {
+                    updateSummary()
+                }
+                .onReceive(analysisViewerValueChange) { (_) in
+                    updateSummary()
+                }
+            }
+            func updateSummary() {
+                if let analysis = (otherTable ? analysisData.otherAnalysis : analysisData.analysis) {
+                    let summaryValues = analysis.summary(phase: phase, otherTable: otherTable, verbose: true)
+                    status = summaryValues.status
+                    text = summaryValues.text
+                    impact = summaryValues.impactDescription
+                    print(analysis.board.boardIndex)
+                }
+            }
+        }
+    }
+    
+    struct AnalysisCombinationTricks : View {
+        @Binding var board: BoardViewModel
+        @Binding var traveller: TravellerViewModel
+        @Binding var sitting: Seat
+        @ObservedObject var analysisData: AnalysisData
+        @State var made: Int = 0
+        @State var method: AnalysisAssessmentMethod = .override
+        @State var refresh: Bool = true
+        
+        var body: some View {
+            let columns = [GridItem(.fixed(50), spacing: 0),
+                           GridItem(.fixed(50), spacing: 0),
+                           GridItem(.fixed(80), spacing: 0),
+                           GridItem(.flexible(minimum: 100), spacing: 0),
+                           GridItem(.fixed(90), spacing: 0),
+                           GridItem(.fixed(130), spacing: 0)]
+            
+            ZStack {
+                VStack {
+                    UnevenRoundedRectangle(cornerRadii: .init(topLeading: analysisCornerSize), style: .continuous)
+                        .frame(height: 30).foregroundColor(Palette.tile.background)
+                    Spacer()
+                }
+                HStack {
+                    VStack {
+                        LazyVGrid(columns: columns, spacing: 0) {
+                            GridRow {
+                                CenteredText("Suit")
+                                CenteredText("By")
+                                CenteredText("Using")
+                                CenteredText("Made")
+                                CenteredText("Compare")
+                                CenteredText("Impact")
+                            }
+                        }
+                        .bold()
+                        .frame(height: 30)
+                        .foregroundColor(Palette.tile.text)
+                        ScrollView {
+                            ForEach(analysisData.combinations, id: \.self) { combination in
+                                AnalysisCombination(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData, columns: columns, combination: combination)
+                            }
+                            Spacer().frame(height: 4)
+                        }
+                    }
+                }
+            }
+            .onReceive(analysisViewerValueChange) { (_) in
+                refresh.toggle()
+            }
+            .onChange(of: sitting) {
+                refresh.toggle()
+            }
+        }
+        
+        struct AnalysisCombination : View {
+            @Binding var board: BoardViewModel
+            @Binding var traveller: TravellerViewModel
+            @Binding var sitting: Seat
+            @ObservedObject var analysisData: AnalysisData
+            let columns: [GridItem]
+            @State var combination: AnalysisTrickCombination
+            @State var made: Int?
+            @State var method: AnalysisAssessmentMethod?
+            @State var compare: AttributedString?
+            
+            var body : some View {
+                LazyVGrid(columns: columns, spacing: 0) {
+                    GridRow {
+                        CenteredAttributedText(combination.suit.colorContrast)
+                        CenteredText(combination.declarer.short)
+                        if let method = method {
+                            HStack {
+                                Spacer()
+                                Text(method.string)
+                                Spacer()
+                            }
+                            madeView(board: $board, sitting: $sitting, analysisData: analysisData, combination: $combination, method: $method, made: $made)
+                            if let compare = compare {
+                                HStack(spacing: 0) {
+                                    Spacer()
+                                    Text(compare)
+                                    Spacer()
+                                }
+                                AnalysisCombinationReject(board: $board, traveller: $traveller, analysisData: analysisData, combination: combination, method: $method)
+                            } else {
+                                Text("")
+                            }
+                        } else {
+                            Text("")
+                            Text("")
+                            Text("")
+                            Text("")
+                        }
+                    }
+                    .foregroundColor(Palette.background.text)
+                }
+                .onChange(of: board, initial: true) {
+                    updateState()
+                }
+                .onChange(of: sitting, initial: false) {
+                    updateState()
+                }
+                .onReceive(analysisViewerValueChange) { (_) in
+                    updateState()
+                }
+            }
+            
+            func updateState() {
+                let (analysis, otherPage, matched) = analysisData.getAnalysis(combination: combination)
+                if let (method, made) = analysis.useMethodMadeValue(combination: combination, overrideRegardless: true) {
+                    self.method = (method == .play && otherPage ? .other : method)
+                    self.made = made
+                    self.compare = nil
+                    if matched {
+                        if let (compare, _, _) = analysis.compare(combination: combination) {
+                            self.compare = AttributedString(compare)
+                        }
+                    }
+                } else {
+                    self.method = nil
+                    self.made = nil
+                    self.compare = nil
+                }
+            }
+        }
+        
+        struct AnalysisCombinationReject : View {
+            let scorecard = Scorecard.current.scorecard!
+            @Binding var board: BoardViewModel
+            @Binding var traveller: TravellerViewModel
+            @ObservedObject var analysisData: AnalysisData
+            @State var combination: AnalysisTrickCombination
+            @Binding var method: AnalysisAssessmentMethod?
+            @State var rejected = false
+            @State var impact: Float = 0
+            @State var analysis: Analysis?
+            
+            var body : some View {
+                HStack {
+                    HStack(spacing: 0) {
+                        Spacer()
+                        Text(impact < 0.5 ? "No change" : impact.toString(places: 0) + scorecard.type.boardScoreType.suffix)
+                            .foregroundColor(Palette.background.textColor(rejected ? .faint : .normal))
+                        Spacer()
+                        if impact >= 0.5 {
+                            Analysis.checkBoxImage(rejected: rejected).font(inputTitleFont)
+                                .onTapGesture {
+                                    rejected.toggle()
+                                    analysis?.set(rejected: rejected, phase: .play)
+                                    analysisViewerValueChange.send(.rejected)
+                                    updateImpact()
+                                }
+                            Spacer().frame(width: 2)
+                        }
+                    }
+                }
+                .onChange(of: board, initial: true) {
+                    updateImpact()
+                }
+                .onChange(of: traveller, initial: false) {
+                    updateImpact()
+                }
+                .onReceive(analysisViewerValueChange) { (_) in
+                    updateImpact()
+                }
+            }
+            
+            func updateImpact() {
+                (analysis, _, _) = analysisData.getAnalysis(combination: combination)
+                
+                if let (_, optionalImpact, _) = analysis?.compare(combination: combination) {
+                    impact = optionalImpact ?? 0
+                } else {
+                    impact = 0
+                }
+                
+                rejected = analysis?.rejected(phase: .play) ?? false
+            }
+        }
+    }
+    
+    struct madeView : View {
+        @Binding var board: BoardViewModel
+        @Binding var sitting: Seat
+        @ObservedObject var analysisData: AnalysisData
+        @Binding var combination: AnalysisTrickCombination
+        @Binding var method: AnalysisAssessmentMethod?
+        @Binding var made: Int?
+        @State var showOverride = false
+        
+        var body: some View {
+            HStack(spacing: 0) {
+                if let made = made {
+                    HStack {
+                        Spacer()
+                        Text("\(made)")
+                        Spacer()
+                    }
+                    .frame(width: 40)
+                    .popover(isPresented: $showOverride) {
+                        overridePopover(board: $board, analysisData: analysisData, combination: combination, method: $method, made: $made, showOverride: $showOverride)
+                    }
+                    Spacer().frame(width: 10)
+                    AnalysisSmallButton(label: "Change") {
+                        showOverride = true
+                    }
+                }
+            }
+        }
+    }
+    
+    struct AnalysisSmallButton : View {
+        @State var prefix: String?
+        @State var label: String
+        @State var action: ()->()
+        
+        var body : some View {
+            Button {
+                action()
+            } label: {
+                VStack {
+                    HStack(spacing: 0) {
+                        Spacer().frame(width: 4)
+                        if let prefix = prefix {
+                            Image(systemName: prefix)
+                        }
+                        Text(label).minimumScaleFactor(0.5).font(tinyFont)
+                        Spacer().frame(width: 4)
+                    }
+                    .frame(height: 20)
+                    .palette(.disabledButton)
+                    .cornerRadius(4)
+                }
+            }
+        }
+    }
+    
+    struct overridePopover : View {
+        @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
+        @Binding var board: BoardViewModel
         @ObservedObject var analysisData: AnalysisData
         @State var combination: AnalysisTrickCombination
         @Binding var method: AnalysisAssessmentMethod?
-        @State var rejected = false
-        @State var impact: Float = 0
-        @State var analysis: Analysis?
+        @Binding var made: Int?
+        @Binding var showOverride: Bool
+        @State var newMethod: AnalysisAssessmentMethod = .override
+        @State var newMade: Int = 0
         
-        var body : some View {
+        var body: some View {
             HStack {
-                HStack(spacing: 0) {
-                    Spacer()
-                    Text(impact < 0.5 ? "No change" : impact.toString(places: 0) + scorecard.type.boardScoreType.suffix)
-                        .foregroundColor(Palette.background.textColor(rejected ? .faint : .normal))
-                    Spacer()
-                    if impact >= 0.5 {
-                        Analysis.checkBoxImage(rejected: rejected).font(inputTitleFont)
-                            .onTapGesture {
-                                rejected.toggle()
-                                analysis?.set(rejected: rejected, phase: .play)
-                                analysisViewerValueChange.send(.rejected)
-                                updateImpact()
+                VStack {
+                    Spacer().frame(height: 10)
+                    HStack {
+                        Spacer().frame(width: 30)
+                        VStack {
+                            Spacer().frame(height: 10)
+                            HStack {
+                                Text("Based on:")
+                                Spacer()
                             }
-                        Spacer().frame(width: 2)
+                            .frame(width: 100)
+                            Spacer()
+                        }
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 6)
+                                .foregroundColor(Palette.alternate.background)
+                            HStack {
+                                Spacer().frame(width: 10)
+                                VStack {
+                                    Spacer().frame(height: 8)
+                                    ForEach(analysisData.analysis.allMethods(includeOverride: false), id: \.self) { inputMethod in
+                                        Button {
+                                            newMethod = inputMethod
+                                        } label: {
+                                            HStack {
+                                                Text(inputMethod.string)
+                                                    .padding(8)
+                                                Spacer()
+                                            }
+                                            .palette(inputMethod == newMethod ? .tile : .clear)
+                                            .cornerRadius(6)
+                                        }
+                                        Spacer().frame(height: 5)
+                                    }
+                                    Spacer().frame(height: 8)
+                                }
+                                .frame(width: 200)
+                                Spacer().frame(width: 10)
+                            }
+                        }
+                        Spacer().frame(width: 50)
                     }
-                }
-            }
-            .onChange(of: board, initial: true) {
-                updateImpact()
-            }
-            .onChange(of: traveller, initial: false) {
-                updateImpact()
-            }
-            .onReceive(analysisViewerValueChange) { (_) in
-                updateImpact()
-            }
-        }
-        
-        func updateImpact() {
-            (analysis, _, _) = analysisData.getAnalysis(combination: combination)
-            
-            if let (_, optionalImpact, _) = analysis?.compare(combination: combination) {
-                impact = optionalImpact ?? 0
-            } else {
-                impact = 0
-            }
-
-            rejected = analysis?.rejected(phase: .play) ?? false
-        }
-    }
-}
-
-struct madeView : View {
-    @Binding var board: BoardViewModel
-    @Binding var sitting: Seat
-    @ObservedObject var analysisData: AnalysisData
-    @Binding var combination: AnalysisTrickCombination
-    @Binding var method: AnalysisAssessmentMethod?
-    @Binding var made: Int?
-    @State var showOverride = false
-    
-    var body: some View {
-        HStack(spacing: 0) {
-            if let made = made {
-                HStack {
-                    Spacer()
-                    Text("\(made)")
-                    Spacer()
-                }
-                .frame(width: 40)
-                .popover(isPresented: $showOverride) {
-                    overridePopover(board: $board, analysisData: analysisData, combination: combination, method: $method, made: $made, showOverride: $showOverride)
-                }
-                Spacer().frame(width: 10)
-                AnalysisSmallButton(label: "Change") {
-                    showOverride = true
-                }
-            }
-        }
-    }
-}
-
-struct AnalysisSmallButton : View {
-    @State var prefix: String?
-    @State var label: String
-    @State var action: ()->()
-    
-    var body : some View {
-        Button {
-            action()
-        } label: {
-            VStack {
-                HStack(spacing: 0) {
-                    Spacer().frame(width: 4)
-                    if let prefix = prefix {
-                        Image(systemName: prefix)
-                    }
-                    Text(label).minimumScaleFactor(0.5).font(tinyFont)
-                    Spacer().frame(width: 4)
-                }
-                .frame(height: 20)
-                .palette(.disabledButton)
-                .cornerRadius(4)
-            }
-        }
-    }
-}
-    
-struct overridePopover : View {
-    @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
-    @Binding var board: BoardViewModel
-    @ObservedObject var analysisData: AnalysisData
-    @State var combination: AnalysisTrickCombination
-    @Binding var method: AnalysisAssessmentMethod?
-    @Binding var made: Int?
-    @Binding var showOverride: Bool
-    @State var newMethod: AnalysisAssessmentMethod = .override
-    @State var newMade: Int = 0
-
-    var body: some View {
-        HStack {
-            VStack {
-                Spacer().frame(height: 10)
-                HStack {
-                    Spacer().frame(width: 30)
-                    VStack {
-                        Spacer().frame(height: 10)
+                    Spacer().frame(height: 20)
+                    HStack(spacing: 0) {
+                        Spacer().frame(width: 30)
                         HStack {
-                            Text("Based on:")
+                            Text("Tricks:")
                             Spacer()
                         }
                         .frame(width: 100)
-                        Spacer()
-                    }
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 6)
-                            .foregroundColor(Palette.alternate.background)
                         HStack {
-                            Spacer().frame(width: 10)
-                            VStack {
-                                Spacer().frame(height: 8)
-                                ForEach(analysisData.analysis.allMethods(includeOverride: false), id: \.self) { inputMethod in
-                                    Button {
-                                        newMethod = inputMethod
-                                    } label: {
-                                        HStack {
-                                            Text(inputMethod.string)
-                                                .padding(8)
-                                            Spacer()
-                                        }
-                                        .palette(inputMethod == newMethod ? .tile : .clear)
-                                        .cornerRadius(6)
-                                    }
-                                    Spacer().frame(height: 5)
-                                }
-                                Spacer().frame(height: 8)
-                            }
-                            .frame(width: 200)
-                            Spacer().frame(width: 10)
+                            Spacer()
+                            Text("\(newMade)")
+                                .padding(8)
                         }
-                    }
-                    Spacer().frame(width: 50)
-                }
-                Spacer().frame(height: 20)
-                HStack(spacing: 0) {
-                    Spacer().frame(width: 30)
-                    HStack {
-                        Text("Tricks:")
+                        .frame(width: 80)
+                        .palette(.alternate)
+                        .cornerRadius(6)
+                        Spacer().frame(width: 10)
+                        button(label: "+", combination: combination, method: $newMethod, value: $newMade, change: +1, disabled: newMade >= 13, color: .enabledButton, font: inputTitleFont).frame(width: 60).font(inputTitleFont)
+                        button(label: "-", combination: combination, method: $newMethod, value: $newMade, change: -1, disabled: newMade <= 0, color: .enabledButton, font: inputTitleFont).frame(width: 60).font(inputTitleFont)
                         Spacer()
                     }
-                    .frame(width: 100)
+                    Spacer().frame(height: 20)
+                    Separator(thickness: 2)
+                    Spacer().frame(height: 20)
                     HStack {
                         Spacer()
-                        Text("\(newMade)")
-                            .padding(8)
+                        button(label: "Cancel", combination: combination, color: .enabledButton) {
+                            showOverride = false
+                        }
+                        Spacer().frame(width: 40)
+                        button(label: "Reset", combination: combination, disabled: newMethod != .override, color: .enabledButton) {
+                            setValue(combination: combination, value: nil)
+                            showOverride = false
+                        }
+                        Spacer().frame(width: 40)
+                        button(label: "Confirm", combination: combination, disabled: newMade == made && newMethod == method, color: .highlightButton) {
+                            made = newMade
+                            setValue(combination: combination, value: newMade)
+                            showOverride = false
+                        }
+                        Spacer()
                     }
-                    .frame(width: 80)
-                    .palette(.alternate)
-                    .cornerRadius(6)
-                    Spacer().frame(width: 10)
-                    button(label: "+", combination: combination, method: $newMethod, value: $newMade, change: +1, disabled: newMade >= 13, color: .enabledButton, font: inputTitleFont).frame(width: 60).font(inputTitleFont)
-                    button(label: "-", combination: combination, method: $newMethod, value: $newMade, change: -1, disabled: newMade <= 0, color: .enabledButton, font: inputTitleFont).frame(width: 60).font(inputTitleFont)
-                    Spacer()
+                    Spacer().frame(height: 20)
                 }
-                Spacer().frame(height: 20)
-                Separator(thickness: 2)
-                Spacer().frame(height: 20)
-                HStack {
-                    Spacer()
-                    button(label: "Cancel", combination: combination, color: .enabledButton) {
-                        showOverride = false
-                    }
-                    Spacer().frame(width: 40)
-                    button(label: "Reset", combination: combination, disabled: newMethod != .override, color: .enabledButton) {
-                        setValue(combination: combination, value: nil)
-                        showOverride = false
-                    }
-                    Spacer().frame(width: 40)
-                    button(label: "Confirm", combination: combination, disabled: newMade == made && newMethod == method, color: .highlightButton) {
-                        made = newMade
-                        setValue(combination: combination, value: newMade)
-                        showOverride = false
-                    }
-                    Spacer()
+            }
+            .onAppear {
+                newMade = made!
+                newMethod = method!
+            }
+            .onChange(of: newMethod, initial: true) {
+                let newValue = getValue(combination: combination, method: newMethod) ?? made!
+                if newMethod != .override {
+                    newMade = newValue
                 }
-                Spacer().frame(height: 20)
             }
         }
-        .onAppear {
-            newMade = made!
-            newMethod = method!
-        }
-        .onChange(of: newMethod, initial: true) {
-            let newValue = getValue(combination: combination, method: newMethod) ?? made!
-            if newMethod != .override {
-                newMade = newValue
-            }
-        }
-    }
-    
-    func button(label: String, combination: AnalysisTrickCombination, method: Binding<AnalysisAssessmentMethod>? = nil, value: Binding<Int>? = nil, change: Int? = nil, disabled: Bool = false, color: ThemeBackgroundColorName = .background, font: Font = defaultFont, completion: (()->())? = nil) -> some View {
         
-        return Button {
-            if value != nil {
-                let newValue = (value?.wrappedValue ?? 0) + (change ?? 0)
-                method?.wrappedValue = .override
-                value?.wrappedValue = newValue
-            }
-            completion?()
+        func button(label: String, combination: AnalysisTrickCombination, method: Binding<AnalysisAssessmentMethod>? = nil, value: Binding<Int>? = nil, change: Int? = nil, disabled: Bool = false, color: ThemeBackgroundColorName = .background, font: Font = defaultFont, completion: (()->())? = nil) -> some View {
             
-        } label: {
-            VStack {
-                Spacer()
-                HStack {
-                    Spacer().frame(width: 20)
-                    Text(label).font(font).minimumScaleFactor(0.5)
-                    Spacer().frame(width: 20)
+            return Button {
+                if value != nil {
+                    let newValue = (value?.wrappedValue ?? 0) + (change ?? 0)
+                    method?.wrappedValue = .override
+                    value?.wrappedValue = newValue
                 }
-                Spacer()
-            }
-            .frame(height: 30)
-            .palette(color).cornerRadius(6).opacity(disabled ? 0.4 : 1)
-        }
-        .disabled(disabled)
-    }
-    
-    func setValue(combination: AnalysisTrickCombination, value: Int?) {
-        analysisData.override.setValue(board: board.boardIndex, suit: combination.suit, declarer: combination.declarer, value: value)
-        Scorecard.current.save(board: board)
-        if value != nil {
-            method = .override
-            made = value!
-        } else {
-            if let (newMethod, newValue) = analysisData.analysis.useMethodMadeValue(combination: combination) {
-                method = newMethod
-                made = newValue
-            }
-        }
-        analysisViewerValueChange.send(.override)
-    }
-    
-    func getValue(combination: AnalysisTrickCombination, method: AnalysisAssessmentMethod = .override) -> Int? {
-        analysisData.analysis.madeValue(combination: combination, method: method)
-    }
-}
-
-struct AnalysisBiddingOptions : View {
-    let scorecard = Scorecard.current.scorecard!
-    @Binding var board: BoardViewModel
-    @Binding var traveller: TravellerViewModel
-    @Binding var sitting: Seat
-    @ObservedObject var analysisData: AnalysisData
-    @Binding var formatInt: Int
-    
-    var format: AnalysisOptionFormat { AnalysisOptionFormat(rawValue: formatInt) ?? .score }
-    
-    var body: some View {
-        let allMethods = analysisData.analysis.allMethods()
-        let columns = Array(repeating: GridItem(.fixed(CGFloat(305/allMethods.count)), spacing: 0), count: allMethods.count)
-        let headerColumns = [GridItem(.fixed(180), spacing: 0)] + columns
-        let bodyColumns = [GridItem(.fixed(105), spacing: 0), 
-                           GridItem(.fixed(40), spacing: 0),
-                           GridItem(.fixed(35), spacing: 0)] + columns
-        ZStack {
-            VStack {
-                UnevenRoundedRectangle(cornerRadii: .init(topLeading: analysisCornerSize), style: .continuous)
-                    .frame(height: 30).foregroundColor(Palette.tile.background)
-                Spacer()
-            }
-            HStack {
-                Spacer().frame(width: 10)
+                completion?()
+                
+            } label: {
                 VStack {
-                    LazyVGrid(columns: headerColumns, spacing: 0) {
-                        GridRow {
-                            HStack {
-                                PickerInputSimple(title: "Show", field: $formatInt, values: AnalysisOptionFormat.allCases.map{$0.string}, topSpace: 5, width: 90, height: 25, titleWidth: 40) { newValue in
-                                    UserDefault.analysisOptionFormat.set(newValue)
-                                }.frame(width: 180)
-                                Spacer()
-                            }
-                            ForEach(allMethods, id: \.self) { method in
-                                if format == .made {
-                                    CenteredText(method.short)
-                                } else {
-                                    TrailingText(method.short)
-                                }
-                            }.bold().minimumScaleFactor(0.5)
-                        }
+                    Spacer()
+                    HStack {
+                        Spacer().frame(width: 20)
+                        Text(label).font(font).minimumScaleFactor(0.5)
+                        Spacer().frame(width: 20)
                     }
-                    .frame(height: 30)
-                    .foregroundColor(Palette.tile.text)
-                    .font(smallFont)
-                    ScrollView {
-                            // TODO These are wrong way round - should be Grid above ForEach
-                        ForEach(analysisData.analysis.options) { option in
-                            if !option.removed {
-                                LazyVGrid(columns: bodyColumns, spacing: 0) {
-                                    GridRow {
-                                        let type = option.displayType
-                                        let doubleString = (option.double ? AnalysisOptionType.doubleString(option.linked?.displayType) : nil)
-                                        LeadingText(doubleString ?? type.string)
-                                        LeadingAttributedText(option.contract.colorCompact)
-                                        LeadingText(option.declarer.short)
-                                        ForEach(analysisData.analysis.allMethods(), id: \.self) { method in
-                                            HStack {
-                                                Spacer()
-                                                let compare = analysisData.analysis.options.first?.assessments[.play]
-                                                Text(option.valueString(method: method, format: format, compare: compare))
-                                                if format == .made {
+                    Spacer()
+                }
+                .frame(height: 30)
+                .palette(color).cornerRadius(6).opacity(disabled ? 0.4 : 1)
+            }
+            .disabled(disabled)
+        }
+        
+        func setValue(combination: AnalysisTrickCombination, value: Int?) {
+            analysisData.override.setValue(board: board.boardIndex, suit: combination.suit, declarer: combination.declarer, value: value)
+            Scorecard.current.save(board: board)
+            if value != nil {
+                method = .override
+                made = value!
+            } else {
+                if let (newMethod, newValue) = analysisData.analysis.useMethodMadeValue(combination: combination) {
+                    method = newMethod
+                    made = newValue
+                }
+            }
+            analysisViewerValueChange.send(.override)
+        }
+        
+        func getValue(combination: AnalysisTrickCombination, method: AnalysisAssessmentMethod = .override) -> Int? {
+            analysisData.analysis.madeValue(combination: combination, method: method)
+        }
+    }
+    
+    struct AnalysisBiddingOptions : View {
+        let scorecard = Scorecard.current.scorecard!
+        @Binding var board: BoardViewModel
+        @Binding var traveller: TravellerViewModel
+        @Binding var sitting: Seat
+        @ObservedObject var analysisData: AnalysisData
+        @Binding var formatInt: Int
+        
+        var format: AnalysisOptionFormat { AnalysisOptionFormat(rawValue: formatInt) ?? .score }
+        
+        var body: some View {
+            let allMethods = analysisData.analysis.allMethods()
+            let columns = Array(repeating: GridItem(.fixed(CGFloat(305/allMethods.count)), spacing: 0), count: allMethods.count)
+            let headerColumns = [GridItem(.fixed(180), spacing: 0)] + columns
+            let bodyColumns = [GridItem(.fixed(105), spacing: 0),
+                               GridItem(.fixed(40), spacing: 0),
+                               GridItem(.fixed(35), spacing: 0)] + columns
+            ZStack {
+                VStack {
+                    UnevenRoundedRectangle(cornerRadii: .init(topLeading: analysisCornerSize), style: .continuous)
+                        .frame(height: 30).foregroundColor(Palette.tile.background)
+                    Spacer()
+                }
+                HStack {
+                    Spacer().frame(width: 10)
+                    VStack {
+                        LazyVGrid(columns: headerColumns, spacing: 0) {
+                            GridRow {
+                                HStack {
+                                    PickerInputSimple(title: "Show", field: $formatInt, values: AnalysisOptionFormat.allCases.map{$0.string}, topSpace: 5, width: 90, height: 25, titleWidth: 40) { newValue in
+                                        UserDefault.analysisOptionFormat.set(newValue)
+                                    }.frame(width: 180)
+                                    Spacer()
+                                }
+                                ForEach(allMethods, id: \.self) { method in
+                                    if format == .made {
+                                        CenteredText(method.short)
+                                    } else {
+                                        TrailingText(method.short)
+                                    }
+                                }.bold().minimumScaleFactor(0.5)
+                            }
+                        }
+                        .frame(height: 30)
+                        .foregroundColor(Palette.tile.text)
+                        .font(smallFont)
+                        ScrollView {
+                                // TODO These are wrong way round - should be Grid above ForEach
+                            ForEach(analysisData.analysis.options) { option in
+                                if !option.removed {
+                                    LazyVGrid(columns: bodyColumns, spacing: 0) {
+                                        GridRow {
+                                            let type = option.displayType
+                                            let doubleString = (option.double ? AnalysisOptionType.doubleString(option.linked?.displayType) : nil)
+                                            LeadingText(doubleString ?? type.string)
+                                            LeadingAttributedText(option.contract.colorContrast)
+                                            LeadingText(option.declarer.short)
+                                            ForEach(analysisData.analysis.allMethods(), id: \.self) { method in
+                                                HStack {
                                                     Spacer()
-                                                } else {
-                                                    Spacer().frame(width: 2)
+                                                    let compare = analysisData.analysis.options.first?.assessments[.play]
+                                                    Text(option.valueString(method: method, format: format, compare: compare))
+                                                    if format == .made {
+                                                        Spacer()
+                                                    } else {
+                                                        Spacer().frame(width: 2)
+                                                    }
                                                 }
                                             }
                                         }
+                                        .minimumScaleFactor(0.5)
+                                        .foregroundColor(option.removed ? Palette.background.strongText : Palette.background.text)
+                                        .frame(height: 20)
                                     }
-                                    .minimumScaleFactor(0.5)
-                                    .foregroundColor(option.removed ? Palette.background.strongText : Palette.background.text)
-                                    .frame(height: 20)
                                 }
                             }
                         }
                     }
+                    Spacer()
                 }
                 Spacer()
             }
-            Spacer()
+            .font(smallFont)
         }
-        .font(smallFont)
     }
-}
-
-struct AnalysisCommentView: View {
-    @Binding var board: BoardViewModel
-    @Binding var stopEdit: Bool
-    @State var comment: String = ""
-    @FocusState var focused: Bool
-    @State var editing: Bool = false
-    @State var showClear = false
-    @State var color: ThemeBackgroundColorName = .clear
-    
-    var body: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: analysisCornerSize).foregroundColor(PaletteColor(color).background)
-            HStack {
-                Spacer().frame(width: 16)
-                ZStack {
+        
+    struct AnalysisCommentView: View {
+        @Binding var board: BoardViewModel
+        @Binding var stopEdit: Bool
+        @State var comment: String = ""
+        @FocusState var focused: Bool
+        @State var commentFocused: Bool = false
+        @State var editing: Bool = false
+        @State var showClear = false
+        @State var color: ThemeBackgroundColorName = .clear
+        
+        var body: some View {
+            ZStack {
+                RoundedRectangle(cornerRadius: analysisCornerSize).foregroundColor(PaletteColor(color).background)
+                HStack {
+                    Spacer().frame(width: 16)
+                    ZStack {
                         HStack {
                             VStack {
-                                Spacer().frame(height: 4)
-                                TextEditor(text: $comment)
-                                    .onChange(of: comment, initial: false) {
-                                        if comment.contains("\n") || comment.contains("\n") {
-                                            board.comment = comment.replacingOccurrences(of: "\n", with: "").replacingOccurrences(of: "\t", with: "")
-                                            comment = board.comment
-                                            focused = false
-                                        } else {
-                                            board.comment = comment
-                                        }
-                                        showClear = (comment != "")
+                                GeometryReader { geometry in
+                                    let frame = geometry.frame(in: .global)
+                                    TextViewWrapper(frame: frame, field: $comment, focused: $commentFocused, color: color)
+                                }
+                                .onChange(of: comment, initial: false) {
+                                    if comment.contains("\n") || comment.contains("\n") {
+                                        board.comment = comment.replacingOccurrences(of: "\n", with: "").replacingOccurrences(of: "\t", with: "")
+                                        comment = board.comment
+                                        focused = false
+                                        commentFocused = false
+                                    } else {
+                                        board.comment = comment
                                     }
-                                    .scrollContentBackground(.hidden)
-                                    .focused($focused)
-                                    .padding(.all, 2)
-                                    .font(inputFont)
-                                    .minimumScaleFactor(0.8)
-                                    .lineLimit(2, reservesSpace: true)
-                                Spacer().frame(height: 4)
+                                    showClear = (comment != "")
+                                }
+                                .focused($focused)
                             }
                             if showClear {
                                 Spacer().frame(width: 6)
@@ -1274,9 +1198,11 @@ struct AnalysisCommentView: View {
                                     Spacer()
                                     Button {
                                         focused = false
+                                        commentFocused = false
                                         comment = ""
                                         Utility.mainThread {
                                             focused = true
+                                            commentFocused = true
                                         }
                                     } label: {
                                         Image(systemName: "x.circle.fill").font(inputTitleFont).foregroundColor(Palette.banner.background)
@@ -1289,196 +1215,59 @@ struct AnalysisCommentView: View {
                         }
                         VStack {
                             Spacer()
+                                .frame(height: 8)
                             HStack {
-                                Spacer().frame(width:3)
+                                Spacer().frame(width: 8)
                                 Text(comment == "" && !editing ? "Enter comment" : "")
                                     .foregroundColor(PaletteColor(color).textColor(.normal))
-                                    .opacity(focused ? 0.3 : 0.5)
+                                    .opacity(commentFocused ? 0.3 : 0.5)
                                     .font(inputTitleFont)
                                     .lineLimit(2)
                                 Spacer()
                             }
                             Spacer()
                         }
+                    }
                 }
-            }
-            .onTapGesture {
-                focused = true
-                editing = true
-                showClear = (comment != "")
-                color = .bannerInput
-            }
-            .onChange(of: stopEdit, initial: false) {
-                if stopEdit {
-                    focused = false
-                    editing = false
-                    color = .clear
-                    stopEdit = false
+                .onChange(of: $focused.wrappedValue) {
+                    if focused {
+                        commentFocused = true
+                        editing = true
+                        showClear = (comment != "")
+                        color = .bannerInput
+                    } else {
+                        stopEdit = true
+                    }
                 }
-            }
-            .onChange(of: board, initial: true) {
-                comment = board.comment
-                showClear = (comment != "" && focused)
+                .onChange(of: stopEdit, initial: false) {
+                    if stopEdit {
+                        commentFocused = false
+                        focused = false
+                        editing = false
+                        color = .clear
+                        stopEdit = false
+                    }
+                }
+                .onChange(of: board, initial: true) {
+                    comment = board.comment
+                    showClear = (comment != "" && commentFocused)
+                }
             }
         }
     }
-}
-
-struct AnalysisSuggestionView: View {
-    let scorecard = Scorecard.current.scorecard!
-    @Binding var board: BoardViewModel
-    @Binding var traveller: TravellerViewModel
-    @Binding var sitting: Seat
-    @Binding var formatInt: Int
-    @ObservedObject var analysisData: AnalysisData
-    let tableWidth: CGFloat = 55
-    let contractWidth: CGFloat = 110
-    let impactWidth: CGFloat = 135
     
-    var body: some View {
-        ZStack {
-            VStack {
-                UnevenRoundedRectangle(cornerRadii: .init(topLeading: analysisCornerSize), style: .continuous)
-                    .frame(height: 30).foregroundColor(Palette.tile.background)
-                Spacer()
-            }
-            HStack {
-                Spacer().frame(width: 10)
-                VStack {
-                    VStack(spacing: 0) {
-                        Spacer()
-                        HStack(spacing: 0) {
-                            if scorecard.type.players == 4 {
-                                LeadingText("Table").frame(width: tableWidth)
-                            }
-                            CenteredText("Contract").frame(width: contractWidth)
-                            CenteredText("Description")
-                            CenteredText("Impact").frame(width: impactWidth)
-                        }
-                        .foregroundColor(Palette.tile.text).bold()
-                        .frame(height: 25)
-                        Spacer()
-                    }.frame(height: 30)
-                    Suggestion(board: $board, traveller: $traveller, table: "This", analysisData: analysisData, formatInt: $formatInt, otherTable: false, tableWidth: tableWidth, contractWidth: contractWidth, impactWidth: impactWidth)
-                    if Scorecard.current.scorecard?.type.players == 4 {
-                        Spacer().frame(height: 10)
-                        Suggestion(board: $board, traveller: $traveller, table: "Other", analysisData: analysisData, formatInt: $formatInt, otherTable: true, tableWidth: tableWidth, contractWidth: contractWidth, impactWidth: impactWidth)
-                    }
-                    Spacer()
-                }
-                Spacer().frame(width: 4)
-            }
-        }.font(inputFont)
-    }
-    
-    struct Suggestion: View {
+    struct AnalysisSuggestionView: View {
         let scorecard = Scorecard.current.scorecard!
         @Binding var board: BoardViewModel
         @Binding var traveller: TravellerViewModel
-        @State var table: String
-        @ObservedObject var analysisData: AnalysisData
+        @Binding var sitting: Seat
         @Binding var formatInt: Int
-        @State var otherTable: Bool
-        @State var rejected: Bool = false
-        @State var tableWidth: CGFloat
-        @State var contractWidth: CGFloat
-        @State var impactWidth: CGFloat
-        @State var option: AnalysisOption?
-        @State var method: AnalysisAssessmentMethod?
-        @State var actionDescription: AttributedString?
-        @State var impactDescription: String?
+        @ObservedObject var analysisData: AnalysisData
+        let tableWidth: CGFloat = 55
+        let contractWidth: CGFloat = 110
+        let impactWidth: CGFloat = 135
         
         var body: some View {
-            VStack {
-                if let option = option, let method = method, let impactDescription = impactDescription, let actionDescription = actionDescription {
-                    HStack(spacing: 0) {
-                        if scorecard.type.players == 4 {
-                            LeadingText(table).frame(width: tableWidth)
-                        }
-                        HStack {
-                            Spacer()
-                            Text(option.contract.colorCompact + option.valueString(method: method, format: .made, colorCode: false) + AttributedString("  " + option.declarer.short))
-                            Spacer()
-                        }.frame(width: contractWidth)
-                        HStack {
-                            Spacer()
-                            Text(actionDescription)
-                            Spacer()
-                        }
-                        HStack {
-                            Spacer()
-                            Text("\(impactDescription ==  "" ? "No change" : impactDescription)")
-                                .foregroundColor(Palette.background.textColor(rejected && impactDescription != "" ? .faint : .normal))
-                            Spacer()
-                            if impactDescription != "" {
-                                Analysis.checkBoxImage(rejected: rejected)
-                                    .onTapGesture {
-                                        rejected.toggle()
-                                    }
-                            }
-                            Spacer().frame(width: 2)
-                        }.frame(width: impactWidth)
-                    }
-                }
-            }
-            .onChange(of: rejected, initial: false) {
-                if rejected != analysisData.analysis.rejected(phase: .bidding, otherTable: otherTable) {
-                    analysisData.analysis.set(rejected: rejected, phase: .bidding, otherTable: otherTable)
-                    analysisViewerValueChange.send(.rejected)
-                }
-            }
-            .onChange(of: board, initial: true) {
-                updateState()
-            }
-            .onChange(of: traveller, initial: false) {
-                updateState()
-            }
-            .onReceive(analysisViewerValueChange) { (_) in
-                updateState()
-            }
-        }
-        
-        func updateState() {
-            let analysis = (otherTable ? analysisData.otherAnalysis : analysisData.analysis)!
-            option = analysis.bestOption
-            if let option = option {
-                method = option.useMethod
-                let summaryValues = analysis.summary(phase: .bidding, otherTable: otherTable)
-                actionDescription = summaryValues.text
-                impactDescription = summaryValues.impactDescription
-                rejected = analysisData.analysis.rejected(phase: .bidding, otherTable: otherTable)
-            }
-        }
-    }
-}
-
-struct AnalysisTravellerView: View {
-    let scorecard = Scorecard.current.scorecard!
-    @Binding var board: BoardViewModel
-    @Binding var traveller: TravellerViewModel
-    @State var myTraveller: TravellerExtension!
-    @State var handTraveller: TravellerExtension!
-    @State var handSummary: TravellerSummary!
-    @State var selectedSummary: TravellerSummary?
-    @Binding var sitting: Seat
-    @Binding var summaryMode: Bool
-    @Binding var stopEdit: Bool
-    @State var travellers: [TravellerExtension] = []
-    @State var summary: [TravellerSummary] = []
-    
-    var body: some View {
-        let headToHead = (scorecard.type.players == 4 && travellers.count <= 2)
-        let columns = [GridItem(.flexible(minimum: headToHead ? 116 : 90), spacing: 0),
-                       GridItem(.fixed(40), spacing: 0),
-                       GridItem(.fixed(60), spacing: 0),
-                       GridItem(.fixed(60), spacing: 0),
-                       GridItem(.fixed(headToHead ? 80 : 60), spacing: 0),
-                       GridItem(.flexible(minimum: 70), spacing: 0)]
-        let summaryColumns = [GridItem(.fixed(56), spacing: 0), 
-                              GridItem(.fixed(50), spacing: 0)] + columns
-        let detailColumns = [GridItem(.fixed(headToHead ? 60 : 106), spacing: 0)] + columns
-        
-        VStack {
             ZStack {
                 VStack {
                     UnevenRoundedRectangle(cornerRadii: .init(topLeading: analysisCornerSize), style: .continuous)
@@ -1486,217 +1275,361 @@ struct AnalysisTravellerView: View {
                     Spacer()
                 }
                 HStack {
-                    Spacer()
-                    if summaryMode && !headToHead {
-                        VStack {
-                            LazyVGrid(columns: summaryColumns, spacing: 0) {
-                                GridRow {
-                                    LeadingText("")
-                                    CenteredText("Rep")
-                                    CenteredText("Contract")
-                                    CenteredText("By")
-                                    CenteredText("Lead")
-                                    CenteredText("Made")
-                                    HStack {
-                                        Spacer()
-                                        Text(sitting.pair.short)
-                                    }
-                                    HStack {
-                                        Spacer()
-                                        Text("\(sitting.pair.short)\(scorecard.type.boardScoreType.suffix)")
-                                    }
+                    Spacer().frame(width: 10)
+                    VStack {
+                        VStack(spacing: 0) {
+                            Spacer()
+                            HStack(spacing: 0) {
+                                if scorecard.type.players == 4 {
+                                    LeadingText("Table").frame(width: tableWidth)
                                 }
-                                .foregroundColor(Palette.tile.text).bold()
-                                .frame(height: 25)
+                                CenteredText("Contract").frame(width: contractWidth)
+                                CenteredText("Description")
+                                CenteredText("Impact").frame(width: impactWidth)
                             }
-                            ScrollView {
-                                LazyVGrid(columns: summaryColumns, spacing: 3) {
-                                    ForEach(summary, id: \.self) { summary in
-                                        GridRow {
-                                            if !(handTraveller == summary) {
-                                                HStack {
-                                                    Spacer()
-                                                    AnalysisSmallButton(label: "Show") {
-                                                        if let newTraveller = travellers.first(where: { $0 == summary }) {
-                                                            traveller = newTraveller
-                                                            reflectSelectionChange(traveller: newTraveller)
-                                                        }
-                                                    }
-                                                    .palette(.clear)
-                                                    Spacer()
-                                                }
-                                            } else {
-                                                CenteredText("")
-                                            }
-                                            CenteredText(summary.frequency <= 1 ? "" : "x\(summary.frequency)")
-                                            CenteredAttributedText(summary.contractStringPlus)
-                                            CenteredText(summary.declarer.short)
-                                            CenteredAttributedText(summary.leadStringPlus)
-                                            CenteredText(summary.madeString)
-                                            TrailingText(summary.pointsString)
-                                            TrailingText(summary.scoreString)
-                                        }
-                                        .frame(height: 25)
-                                        .if(myTraveller == summary) { view in
-                                            view.palette(.handPlayer, .contrast)
-                                        }
-                                        .if(handTraveller == summary && !(myTraveller == summary)) { view in
-                                            view.palette(.alternate)
-                                        }
-                                        .foregroundColor(summary.made >= 0 ? Palette.background.text : Palette.background.faintText)
-                                        .onTapGesture {
-                                            if summary.frequency > 1 {
-                                                selectedSummary = summary
-                                                summaryMode.toggle()
-                                            }
-                                            stopEdit = true
-                                        }
-                                    }
-                                }
-                            }
+                            .foregroundColor(Palette.tile.text).bold()
+                            .frame(height: 25)
+                            Spacer()
+                        }.frame(height: 30)
+                        Suggestion(board: $board, traveller: $traveller, table: "This", analysisData: analysisData, formatInt: $formatInt, otherTable: false, tableWidth: tableWidth, contractWidth: contractWidth, impactWidth: impactWidth)
+                        if Scorecard.current.scorecard?.type.players == 4 {
+                            Spacer().frame(height: 10)
+                            Suggestion(board: $board, traveller: $traveller, table: "Other", analysisData: analysisData, formatInt: $formatInt, otherTable: true, tableWidth: tableWidth, contractWidth: contractWidth, impactWidth: impactWidth)
                         }
-                    } else {
-                        VStack {
-                            LazyVGrid(columns: detailColumns, spacing: 0) {
-                                GridRow {
-                                    if headToHead {
-                                        LeadingText("Table")
-                                    } else {
-                                        AnalysisSmallButton(prefix: "chevron.backward.2", label: "Back") {
-                                            summaryMode = true
-                                        }
-                                    }
-                                    CenteredText("Contract")
-                                    CenteredText("By")
-                                    CenteredText("Lead")
-                                    Text("Made").gridColumnAlignment(.trailing)
-                                    if headToHead {
-                                        TrailingText("Team Pts")
-                                        HStack {
-                                            Spacer()
-                                            Text("\(scorecard.type.boardScoreType.suffix)")
-                                        }
-                                    } else {
-                                        HStack {
-                                            Spacer()
-                                            Text(sitting.pair.short).gridColumnAlignment(.trailing)
-                                        }
-                                        HStack {
-                                            Spacer()
-                                            Text("\(sitting.pair.short)\(scorecard.type.boardScoreType.suffix)").gridColumnAlignment(.trailing)
-                                        }
-                                    }
-                                }
-                                .foregroundColor(Palette.tile.text).bold()
-                                .frame(height: 25)
+                        Spacer()
+                    }
+                    Spacer().frame(width: 4)
+                }
+            }.font(inputFont)
+        }
+        
+        struct Suggestion: View {
+            let scorecard = Scorecard.current.scorecard!
+            @Binding var board: BoardViewModel
+            @Binding var traveller: TravellerViewModel
+            @State var table: String
+            @ObservedObject var analysisData: AnalysisData
+            @Binding var formatInt: Int
+            @State var otherTable: Bool
+            @State var rejected: Bool = false
+            @State var tableWidth: CGFloat
+            @State var contractWidth: CGFloat
+            @State var impactWidth: CGFloat
+            @State var option: AnalysisOption?
+            @State var method: AnalysisAssessmentMethod?
+            @State var actionDescription: AttributedString?
+            @State var impactDescription: String?
+            
+            var body: some View {
+                VStack {
+                    if let option = option, let method = method, let impactDescription = impactDescription, let actionDescription = actionDescription {
+                        HStack(spacing: 0) {
+                            if scorecard.type.players == 4 {
+                                LeadingText(table).frame(width: tableWidth)
                             }
-                            ScrollView {
-                                LazyVGrid(columns: detailColumns, spacing: 3) {
-                                    ForEach(travellers.filter({headToHead || $0 == selectedSummary!}), id: \.self) { traveller in
-                                        GridRow {
-                                            let myTraveller = (traveller.rankingNumber == handTraveller.rankingNumber)
-                                            if headToHead {
-                                                LeadingText(myTraveller ? "This" : "Other")
-                                            } else if traveller.rankingNumber != handTraveller.rankingNumber {
-                                                HStack {
-                                                    Spacer()
-                                                    AnalysisSmallButton(label: "Show") {
-                                                        self.traveller = traveller
-                                                        reflectSelectionChange(traveller: traveller)
-                                                    }
-                                                    .palette(.clear)
-                                                    Spacer()
-                                                }
-                                            } else {
-                                                CenteredText("")
-                                            }
-                                            CenteredAttributedText(traveller.contract.colorCompact)
-                                            CenteredText(traveller.declarer.short)
-                                            CenteredAttributedText(traveller.leadString)
-                                            TrailingText(traveller.tricksMadeString)
-                                            TrailingText(traveller.pointsString(board: board, sitting: myTraveller || !headToHead ? sitting : sitting.equivalent))
-                                            if !headToHead || myTraveller {
-                                                TrailingText(traveller.scoreString(sitting: sitting))
-                                            } else {
-                                                Text("")
-                                            }
-                                        }
-                                        .frame(height: 25)
-                                        .foregroundColor(headToHead || traveller.made >= 0 ? Palette.background.text : Palette.background.faintText)
-                                        .if(!headToHead && handTraveller.rankingNumber == traveller.rankingNumber && !(myTraveller.rankingNumber == traveller.rankingNumber)) { view in
-                                            view.palette(.alternate)
-                                        }
-                                        .if(!headToHead && traveller.rankingNumber == myTraveller.rankingNumber) { view in
-                                            view.palette(.handPlayer, .contrast)
-                                        }
+                            HStack {
+                                Spacer()
+                                Text(option.contract.colorContrast + option.valueString(method: method, format: .made, colorCode: false) + AttributedString("  " + option.declarer.short))
+                                Spacer()
+                            }.frame(width: contractWidth)
+                            HStack {
+                                Spacer()
+                                Text(actionDescription)
+                                Spacer()
+                            }
+                            HStack {
+                                Spacer()
+                                Text("\(impactDescription ==  "" ? "No change" : impactDescription)")
+                                    .foregroundColor(Palette.background.textColor(rejected && impactDescription != "" ? .faint : .normal))
+                                Spacer()
+                                if impactDescription != "" {
+                                    Analysis.checkBoxImage(rejected: rejected)
                                         .onTapGesture {
-                                            summaryMode.toggle()
+                                            rejected.toggle()
                                         }
-                                    }
                                 }
-                            }
-                        }
-                        .onTapGesture {
-                            summaryMode = true
-                            stopEdit = true
+                                Spacer().frame(width: 2)
+                            }.frame(width: impactWidth)
                         }
                     }
-                    Spacer()
+                }
+                .onChange(of: rejected, initial: false) {
+                    if rejected != analysisData.analysis.rejected(phase: .bidding, otherTable: otherTable) {
+                        analysisData.analysis.set(rejected: rejected, phase: .bidding, otherTable: otherTable)
+                        analysisViewerValueChange.send(.rejected)
+                    }
+                }
+                .onChange(of: board, initial: true) {
+                    updateState()
+                }
+                .onChange(of: traveller, initial: false) {
+                    updateState()
+                }
+                .onReceive(analysisViewerValueChange) { (_) in
+                    updateState()
                 }
             }
-            Spacer().frame(height: 4)
+            
+            func updateState() {
+                let analysis = (otherTable ? analysisData.otherAnalysis : analysisData.analysis)!
+                option = analysis.bestOption
+                if let option = option {
+                    method = option.useMethod
+                    let summaryValues = analysis.summary(phase: .bidding, otherTable: otherTable)
+                    actionDescription = summaryValues.text
+                    impactDescription = summaryValues.impactDescription
+                    rejected = analysisData.analysis.rejected(phase: .bidding, otherTable: otherTable)
+                }
+            }
         }
-        .onChange(of: board.boardIndex, initial: true) {
-            reflectChange()
+    }
+    
+    struct AnalysisTravellerView: View {
+        let scorecard = Scorecard.current.scorecard!
+        @Binding var board: BoardViewModel
+        @Binding var traveller: TravellerViewModel
+        @State var myTraveller: TravellerExtension!
+        @State var handTraveller: TravellerExtension!
+        @State var handSummary: TravellerSummary!
+        @State var selectedSummary: TravellerSummary?
+        @Binding var sitting: Seat
+        @Binding var summaryMode: Bool
+        @Binding var stopEdit: Bool
+        @State var travellers: [TravellerExtension] = []
+        @State var summary: [TravellerSummary] = []
+        
+        var body: some View {
+            let headToHead = (scorecard.type.players == 4 && travellers.count <= 2)
+            let columns = [GridItem(.flexible(minimum: headToHead ? 116 : 90), spacing: 0),
+                           GridItem(.fixed(40), spacing: 0),
+                           GridItem(.fixed(60), spacing: 0),
+                           GridItem(.fixed(60), spacing: 0),
+                           GridItem(.fixed(headToHead ? 80 : 60), spacing: 0),
+                           GridItem(.flexible(minimum: 70), spacing: 0)]
+            let summaryColumns = [GridItem(.fixed(56), spacing: 0),
+                                  GridItem(.fixed(50), spacing: 0)] + columns
+            let detailColumns = [GridItem(.fixed(headToHead ? 60 : 106), spacing: 0)] + columns
+            
+            VStack {
+                ZStack {
+                    VStack {
+                        UnevenRoundedRectangle(cornerRadii: .init(topLeading: analysisCornerSize), style: .continuous)
+                            .frame(height: 30).foregroundColor(Palette.tile.background)
+                        Spacer()
+                    }
+                    HStack {
+                        Spacer()
+                        if summaryMode && !headToHead {
+                            VStack {
+                                LazyVGrid(columns: summaryColumns, spacing: 0) {
+                                    GridRow {
+                                        LeadingText("")
+                                        CenteredText("Rep")
+                                        CenteredText("Contract")
+                                        CenteredText("By")
+                                        CenteredText("Lead")
+                                        CenteredText("Made")
+                                        HStack {
+                                            Spacer()
+                                            Text(sitting.pair.short)
+                                        }
+                                        HStack {
+                                            Spacer()
+                                            Text("\(sitting.pair.short)\(scorecard.type.boardScoreType.suffix)")
+                                        }
+                                    }
+                                    .foregroundColor(Palette.tile.text).bold()
+                                    .frame(height: 25)
+                                }
+                                ScrollView {
+                                    LazyVGrid(columns: summaryColumns, spacing: 3) {
+                                        ForEach(summary, id: \.self) { summary in
+                                            GridRow {
+                                                if !(handTraveller == summary) {
+                                                    HStack {
+                                                        Spacer()
+                                                        AnalysisSmallButton(label: "Show") {
+                                                            if let newTraveller = travellers.first(where: { $0 == summary }) {
+                                                                traveller = newTraveller
+                                                                reflectSelectionChange(traveller: newTraveller)
+                                                            }
+                                                        }
+                                                        .palette(.clear)
+                                                        Spacer()
+                                                    }
+                                                } else {
+                                                    CenteredText("")
+                                                }
+                                                CenteredText(summary.frequency <= 1 ? "" : "x\(summary.frequency)")
+                                                CenteredAttributedText(summary.contractStringPlus)
+                                                CenteredText(summary.declarer.short)
+                                                CenteredAttributedText(summary.leadStringPlus)
+                                                CenteredText(summary.madeString)
+                                                TrailingText(summary.pointsString)
+                                                TrailingText(summary.scoreString)
+                                            }
+                                            .frame(height: 25)
+                                            .if(myTraveller == summary) { view in
+                                                view.palette(.handPlayer, .contrast)
+                                            }
+                                            .if(handTraveller == summary && !(myTraveller == summary)) { view in
+                                                view.palette(.alternate)
+                                            }
+                                            .foregroundColor(summary.made >= 0 ? Palette.background.text : Palette.background.faintText)
+                                            .onTapGesture {
+                                                if summary.frequency > 1 {
+                                                    selectedSummary = summary
+                                                    summaryMode.toggle()
+                                                }
+                                                stopEdit = true
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            VStack {
+                                LazyVGrid(columns: detailColumns, spacing: 0) {
+                                    GridRow {
+                                        if headToHead {
+                                            LeadingText("Table")
+                                        } else {
+                                            AnalysisSmallButton(prefix: "chevron.backward.2", label: "Back") {
+                                                summaryMode = true
+                                            }
+                                        }
+                                        CenteredText("Contract")
+                                        CenteredText("By")
+                                        CenteredText("Lead")
+                                        Text("Made").gridColumnAlignment(.trailing)
+                                        if headToHead {
+                                            TrailingText("Team Pts")
+                                            HStack {
+                                                Spacer()
+                                                Text("\(scorecard.type.boardScoreType.suffix)")
+                                            }
+                                        } else {
+                                            HStack {
+                                                Spacer()
+                                                Text(sitting.pair.short).gridColumnAlignment(.trailing)
+                                            }
+                                            HStack {
+                                                Spacer()
+                                                Text("\(sitting.pair.short)\(scorecard.type.boardScoreType.suffix)").gridColumnAlignment(.trailing)
+                                            }
+                                        }
+                                    }
+                                    .foregroundColor(Palette.tile.text).bold()
+                                    .frame(height: 25)
+                                }
+                                ScrollView {
+                                    LazyVGrid(columns: detailColumns, spacing: 3) {
+                                        ForEach(travellers.filter({headToHead || $0 == selectedSummary!}), id: \.self) { traveller in
+                                            GridRow {
+                                                let myTraveller = (traveller.rankingNumber == handTraveller.rankingNumber)
+                                                if headToHead {
+                                                    LeadingText(myTraveller ? "This" : "Other")
+                                                } else if traveller.rankingNumber != handTraveller.rankingNumber {
+                                                    HStack {
+                                                        Spacer()
+                                                        AnalysisSmallButton(label: "Show") {
+                                                            self.traveller = traveller
+                                                            reflectSelectionChange(traveller: traveller)
+                                                        }
+                                                        .palette(.clear)
+                                                        Spacer()
+                                                    }
+                                                } else {
+                                                    CenteredText("")
+                                                }
+                                                CenteredAttributedText(traveller.contract.colorContrast)
+                                                CenteredText(traveller.declarer.short)
+                                                CenteredAttributedText(traveller.leadString)
+                                                TrailingText(traveller.tricksMadeString)
+                                                TrailingText(traveller.pointsString(board: board, sitting: myTraveller || !headToHead ? sitting : sitting.equivalent))
+                                                if !headToHead || myTraveller {
+                                                    TrailingText(traveller.scoreString(sitting: sitting))
+                                                } else {
+                                                    Text("")
+                                                }
+                                            }
+                                            .frame(height: 25)
+                                            .foregroundColor(headToHead || traveller.made >= 0 ? Palette.background.text : Palette.background.faintText)
+                                            .if(!headToHead && handTraveller.rankingNumber == traveller.rankingNumber && !(myTraveller.rankingNumber == traveller.rankingNumber)) { view in
+                                                view.palette(.alternate)
+                                            }
+                                            .if(!headToHead && traveller.rankingNumber == myTraveller.rankingNumber) { view in
+                                                view.palette(.handPlayer, .contrast)
+                                            }
+                                            .onTapGesture {
+                                                summaryMode.toggle()
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            .onTapGesture {
+                                summaryMode = true
+                                stopEdit = true
+                            }
+                        }
+                        Spacer()
+                    }
+                }
+                Spacer().frame(height: 4)
+            }
+            .onChange(of: board.boardIndex, initial: true) {
+                reflectChange()
+            }
+            .onChange(of: traveller.rankingNumber, initial: false) {
+                reflectSelectionChange(traveller: TravellerExtension(scorecard: scorecard, traveller: traveller))
+            }
+            .onChange(of: sitting, initial: false) {
+                reflectChange()
+            }
         }
-        .onChange(of: traveller.rankingNumber, initial: false) {
+        
+        func reflectChange() {
+            summaryMode = true
+            travellers = buildTravellers(board: self.board, sitting: self.sitting)
+            summary = buildSummary()
+            myTraveller = TravellerExtension(scorecard: scorecard, traveller: traveller)
             reflectSelectionChange(traveller: TravellerExtension(scorecard: scorecard, traveller: traveller))
         }
-        .onChange(of: sitting, initial: false) {
-            reflectChange()
+        
+        func reflectSelectionChange(traveller: TravellerExtension) {
+            handTraveller = traveller
+            handSummary = summary.first(where: {traveller == $0})
         }
-    }
-    
-    func reflectChange() {
-        summaryMode = true
-        travellers = buildTravellers(board: self.board, sitting: self.sitting)
-        summary = buildSummary()
-        myTraveller = TravellerExtension(scorecard: scorecard, traveller: traveller)
-        reflectSelectionChange(traveller: TravellerExtension(scorecard: scorecard, traveller: traveller))
-    }
-    
-    func reflectSelectionChange(traveller: TravellerExtension) {
-        handTraveller = traveller
-        handSummary = summary.first(where: {traveller == $0})
-    }
-    
-    func buildTravellers(board: BoardViewModel, sitting: Seat) -> [TravellerExtension] {
-        var result: [TravellerExtension] = []
-        for traveller in Scorecard.current.travellers(board: board.boardIndex) {
-            result.append(TravellerExtension(scorecard: scorecard, traveller: traveller))
-        }
-        let headToHead = (scorecard.type.players == 4 && travellers.count <= 2)
-        return result.sorted(by: {headToHead ? ($0 == traveller) : TravellerExtension.sort($0, $1, sitting: sitting)})
-    }
-    
-    func buildSummary() -> [TravellerSummary] {
-        var result: [TravellerSummary] = []
-        for traveller in self.travellers {
-            let summary = TravellerSummary(board: board, traveller: traveller, sitting: sitting)
-            if let existing = result.first(where: {$0 == summary}) {
-                existing.frequency += 1
-                if !existing.levelRange && existing.contract.level != summary.contract.level {
-                    existing.levelRange = true
-                    existing.contract.level = ContractLevel(rawValue: min(existing.contract.level.rawValue, summary.contract.level.rawValue))!
-                }
-                if !existing.leadRange && existing.lead != summary.lead {
-                    existing.leadRange = true
-                }
-            } else {
-                result.append(summary)
+        
+        func buildTravellers(board: BoardViewModel, sitting: Seat) -> [TravellerExtension] {
+            var result: [TravellerExtension] = []
+            for traveller in Scorecard.current.travellers(board: board.boardIndex) {
+                result.append(TravellerExtension(scorecard: scorecard, traveller: traveller))
             }
+            let headToHead = (scorecard.type.players == 4 && travellers.count <= 2)
+            return result.sorted(by: {headToHead ? ($0 == traveller) : TravellerExtension.sort($0, $1, sitting: sitting)})
         }
-        return result
+        
+        func buildSummary() -> [TravellerSummary] {
+            var result: [TravellerSummary] = []
+            for traveller in self.travellers {
+                let summary = TravellerSummary(board: board, traveller: traveller, sitting: sitting)
+                if let existing = result.first(where: {$0 == summary}) {
+                    existing.frequency += 1
+                    if !existing.levelRange && existing.contract.level != summary.contract.level {
+                        existing.levelRange = true
+                        existing.contract.level = ContractLevel(rawValue: min(existing.contract.level.rawValue, summary.contract.level.rawValue))!
+                    }
+                    if !existing.leadRange && existing.lead != summary.lead {
+                        existing.leadRange = true
+                    }
+                } else {
+                    result.append(summary)
+                }
+            }
+            return result
+        }
     }
 }
 
@@ -1749,9 +1682,9 @@ class TravellerSummary: Equatable, Identifiable, Hashable {
     
     public var contractStringPlus: AttributedString {
         if levelRange {
-            return AttributedString(contract.level.string) + contract.suit.colorString + AttributedString(contract.double.short + (levelRange ? "+" : ""))
+            return AttributedString(contract.level.string) + contract.suit.colorContrast + AttributedString(contract.double.short + (levelRange ? "+" : ""))
         } else {
-            return contract.colorCompact
+            return contract.colorContrast
         }
     }
     
@@ -1803,7 +1736,7 @@ class TravellerExtension: TravellerViewModel {
     var leadString: AttributedString {
         let suitString = lead.right(1)
         let suit = Suit(string: suitString)
-        let card = lead == "" ? "" : (lead.left(lead.count - 1) + suit.string)
+        let card = lead == "" ? "" : (lead.left(lead.count - 1) + suit.contrast)
         return AttributedString(card, color: suit.color)
     }
     
@@ -1958,5 +1891,87 @@ struct TrailingAttributedText: View {
             Text(text)
             Spacer().frame(width: 2)
         }
+    }
+}
+
+enum AnalysisSource {
+    case override
+    case rejected
+}
+
+let analysisViewerValueChange = PassthroughSubject<AnalysisSource, Never>()
+
+struct AnalysisWrapper <Content> : View where Content : View {
+    @State var stopEdit: Binding<Bool>
+    var label: String
+    var height: CGFloat?
+    var teamsHeight: CGFloat?
+    var content: ()->Content
+    
+    init(label: String, height: CGFloat? = nil, teamsHeight: CGFloat? = nil, stopEdit: Binding<Bool>, @ViewBuilder content: @escaping ()->Content) {
+        self.label = label
+        self.height = height
+        self.teamsHeight = teamsHeight
+        self.stopEdit = stopEdit
+        self.content = content
+    }
+    
+    var body: some View {
+        let type = Scorecard.current.scorecard?.type
+        let teams = type?.players == 4
+        let height = (teams && teamsHeight != nil ? teamsHeight! : height)
+        
+        HStack(spacing: 0) {
+            ZStack {
+                UnevenRoundedRectangle(cornerRadii: .init(topLeading: analysisCornerSize,
+                                                          bottomLeading: analysisCornerSize,
+                                                          bottomTrailing: 0,
+                                                          topTrailing: 0),
+                                       style: .continuous)
+                .foregroundColor(Palette.background.background)
+                .if(height != nil) { view in
+                    view.frame(height: height)
+                }
+                
+                content()
+                    .if(height != nil) { view in
+                        view.frame(height: height!)
+                    }
+                    .font(inputFont).minimumScaleFactor(0.6)
+            }
+            
+            ZStack {
+                UnevenRoundedRectangle(cornerRadii: .init(topLeading: 0,
+                                                          bottomLeading: 0,
+                                                          bottomTrailing: analysisCornerSize,
+                                                          topTrailing: analysisCornerSize),
+                                       style: .continuous)
+                .foregroundColor(Palette.windowBanner.background)
+                .frame(width: 20)
+                .if(height != nil) { view in
+                    view.frame(height: height!)
+                }
+                
+                HStack(spacing: 0) {
+                    Spacer()
+                    Text(label)
+                        .foregroundColor(Palette.windowBanner.text)
+                        .font(smallFont)
+                        .minimumScaleFactor(0.5)
+                    Spacer()
+                }
+                .frame(width: height, height: 20)
+                .fixedSize()
+                .frame(width: 20)
+                .if(height != nil) { view in
+                    view.frame(height: height!)
+                }
+                .rotationEffect(.degrees(90))
+            }
+        }
+        .onTapGesture {
+            stopEdit.wrappedValue = true
+        }
+        .ignoresSafeArea(.keyboard, edges: .bottom)
     }
 }

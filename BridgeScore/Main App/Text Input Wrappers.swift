@@ -193,7 +193,7 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
             if !(textInputDelegate?.inputTextSpecialCharacters(self, text: text) ?? false) {
                 result = textInputDelegate?.inputTextShouldChangeCharacters(self, in: range, replacementString: text) ?? true
             } else {
-                result = true
+                result = false
             }
         }
         return result

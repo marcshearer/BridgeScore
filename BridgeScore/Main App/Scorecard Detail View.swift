@@ -49,7 +49,7 @@ struct ScorecardDetailView: View {
             ZStack {
                 VStack(spacing: 0) {
                     
-                    var bannerOptions = UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo) + cancelOption()
+                    let bannerOptions = UndoManager.undoBannerOptions(canUndo: $canUndo, canRedo: $canRedo) + cancelOption()
                     Banner(title: $title, alternateStyle: true, back: true, backText: cancelButton ? "Continue" : "Done", backAction: backAction, optionMode: .buttons, options: bannerOptions)
                     
                     ScrollView(showsIndicators: false) {
