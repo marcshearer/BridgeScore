@@ -404,51 +404,66 @@ struct AnalysisViewer: View {
         @State var refresh = false
         
         var body : some View {
+            let scrollIndicators = (MyApp.target == .macOS)
+            let scrollHeight: CGFloat = (scrollIndicators ? 10 : 0)
             let cases = Responsible.validCases.count
             let blanks = (cases / 2)
             let list = (Array(repeating: .blank, count: blanks) + Responsible.validCases + Array(repeating: .blank, count: blanks)).enumerated().map{AnalysisResponsibleEnumeration(index: $0.0, responsible: $0.1)}
             
-            return ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(spacing: 0) {
-                    ForEach(list) { (item) in
-                        HStack(spacing: 0) {
-                            if item.responsible != .blank {
-                                if refresh { EmptyView() }
-                                AnalysisResponsibleElement(responsible: Binding.constant(item.responsible), changed: $changed)
-                                    .foregroundColor(item.responsible == board.responsible ? Palette.banner.contrastText : Palette.banner.text)
-                                    .onTapGesture {
-                                        scrollId = item.id
-                                        board.responsible = item.responsible
-                                        changed = true
-                                        presentationMode.wrappedValue.dismiss()
+            VStack {
+                ScrollView(.horizontal, showsIndicators: true) {
+                    LazyHStack(spacing: 0) {
+                        ForEach(list) { (item) in
+                            VStack {
+                                HStack(spacing: 0) {
+                                    if item.responsible != .blank {
+                                        if refresh { EmptyView() }
+                                        AnalysisResponsibleElement(responsible: Binding.constant(item.responsible), changed: $changed)
+                                            .foregroundColor(item.responsible == board.responsible ? Palette.banner.contrastText : Palette.banner.text)
+                                            .contentShape(Rectangle())
+                                            .onTapGesture {
+                                                scrollId = item.id
+                                                Utility.executeAfter(delay: scrollIndicators ? 0.8 : 0.0) {
+                                                    presentationMode.wrappedValue.dismiss()
+                                                }
+                                            }
+                                        Rectangle().foregroundColor(.black).frame(width: 1, height: 60)
+                                    } else {
+                                        Spacer()
+                                        if item.index == blanks - 1 {
+                                            Rectangle().foregroundColor(.black).frame(width: 1, height: 60)
+                                        }
                                     }
-                                Rectangle().foregroundColor(.black).frame(width: 1, height: 60)
-                            } else {
-                                Spacer()
-                                if item.index == blanks - 1 {
-                                    Rectangle().foregroundColor(.black).frame(width: 1, height: 60)
                                 }
+                                .frame(width: 70, height: 60)
+                                Spacer().frame(height: scrollHeight)
                             }
                         }
-                        .frame(width: 70, height: 60)
+                    }
+                    .scrollTargetLayout()
+                }
+                .scrollIndicators(scrollIndicators ? .visible : .never, axes: [.horizontal])
+                .scrollPosition(id: $scrollId, anchor: .center)
+                .scrollTargetBehavior(.viewAligned)
+                .onChange(of: scrollId, initial: false) {
+                    if let scrollId = scrollId {
+                        board.responsible = list[scrollId].responsible
+                        changed = true
+                        refresh.toggle()
                     }
                 }
-                .scrollTargetLayout()
-            }
-            .scrollPosition(id: $scrollId, anchor: .center)
-            .scrollTargetBehavior(.viewAligned)
-            .onChange(of: scrollId, initial: false) {
-                if let scrollId = scrollId {
-                    board.responsible = list[scrollId].responsible
-                    changed = true
-                    refresh.toggle()
+                .onAppear {
+                    Utility.executeAfter(delay: 0.5) {
+                        scrollId = (list.first(where: {$0.responsible == board.responsible}))?.id
+                    }
                 }
+                .if(scrollIndicators) { view in
+                    view.animation(.easeInOut(duration: 1), value: scrollId)
+                }
+                .palette(.windowBannerShadow)
+                .frame(width: (70 * CGFloat(show)), height: 60 + scrollHeight)
+                Spacer().frame(height: scrollIndicators ? 2 : 0) // Need some space to make them appear
             }
-            .onAppear {
-                scrollId = (list.first(where: {$0.responsible == board.responsible}))?.id
-            }
-            .palette(.windowBannerShadow)
-            .frame(width: (70 * CGFloat(show)), height: 60)
         }
     }
     
@@ -534,7 +549,6 @@ struct AnalysisViewer: View {
     }
     
     func updateAnalysisData() {
-        Utility.debugMessage("", "Update", force: true)
         analysisData.analysis = Scorecard.current.analysis(board: board, traveller: traveller, sitting: sitting)
         analysisData.analysis.invalidateCache()
         if let otherTraveller = analysisData.analysis.otherTraveller {
@@ -669,7 +683,6 @@ struct AnalysisViewer: View {
                     status = summaryValues.status
                     text = summaryValues.text
                     impact = summaryValues.impactDescription
-                    print(analysis.board.boardIndex)
                 }
             }
         }

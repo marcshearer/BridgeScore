@@ -43,7 +43,6 @@ struct LayoutSetupView: View {
         if !awaitingSelection {
             save(layout: selected)
         }
-        Utility.debugMessage("", "change", force: true)
         selected.copy(from: newLayout)
         awaitingSelection = false
         UndoManager.clearActions()

@@ -8,6 +8,8 @@
 import UIKit
 import SwiftUI
 
+// Note this is specifically configured for the Analysis view
+
 typealias TextViewWrapperDelegate = ScorecardInputDelegate & AutoCompleteDelegate
 
 struct TextViewWrapper: UIViewRepresentable {
@@ -28,9 +30,9 @@ struct TextViewWrapper: UIViewRepresentable {
         if focused {
             textViewContainer.textView.becomeFirstResponder()
         } else {
+            textViewContainer.textView.setContentOffset(.zero, animated: false)
             textViewContainer.textView.resignFirstResponder()
         }
-        textViewContainer.textView.setContentOffset(.zero, animated: false)
     }
     
     func makeCoordinator() -> Coordinator {
@@ -170,9 +172,11 @@ class TextViewContainer: UIView {
         self.textView.backgroundColor = UIColor(PaletteColor(color).background)
         self.textView.textColor = UIColor(PaletteColor(color).textColor(.normal))
         self.textView.tintColor = UIColor(PaletteColor(color).textColor(.strong))
+        self.textView.autocorrectionType = .no
+        self.textView.autocapitalizationType = .sentences
+        self.textView.inlinePredictionType = .no    
         self.textView.tintColorDidChange()
         self.textView.showsVerticalScrollIndicator = false
-        textView.setContentOffset(.zero, animated: false)
         textView.isScrollEnabled = false
         self.addSubview(textView, anchored: .top, .leading, .trailing)
         Constraint.setHeight(control: textView, height: frame.height)
