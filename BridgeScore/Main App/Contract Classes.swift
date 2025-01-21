@@ -122,24 +122,24 @@ public enum Suit: Int, ContractEnumType, Equatable, Comparable {
     var string: String {
         switch self {
         case .blank:
-            return ""
+            ""
         case .clubs:
-            return "􀊽"
+            "♣︎"
         case .diamonds:
-            return "􀊿"
+            "♦︎"
         case .hearts:
-            return "􀊼"
+            "♥︎"
         case .spades:
-            return "􀊾"
+            "♠︎"
         case .noTrumps:
-            return "NT"
+            "NT"
         }
     }
     
     var contrast: String {
         switch self {
         case .spades:
-            "􀒅"
+            "♤"
         default:
             string
         }
