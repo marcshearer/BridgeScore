@@ -72,6 +72,7 @@ extension String {
         let leadingWhitespace = self.range(of: "^\\s*", options: .regularExpression)
         return self.replacingCharacters(in: leadingWhitespace!, with: "")
     }
+    #if !widget
     #if canImport(UIKit)
     func labelHeight(width: CGFloat? = nil, font: UIFont? = nil) -> CGFloat {
         return NSAttributedString(self).labelHeight(width: width, font: font)
@@ -80,6 +81,7 @@ extension String {
     func labelWidth(height: CGFloat? = nil, font: UIFont? = nil) -> CGFloat {
         return NSAttributedString(self).labelWidth(height: height, font: font)
     }
+    #endif
     #endif
     
     var splitCapitals: String {

@@ -132,7 +132,7 @@ class ImportedScorecard: NSObject, ObservableObject {
                     if scorecard.isMultiSession, let session = session {
                         let tables = scorecard.sessionTables(session: session)
                         for tableNumber in tables {
-                            importTable(tableNumber: tableNumber, boardOffset: (session - 1) * scorecard.boardsSession)
+                            importTable(tableNumber: tableNumber, boardOffset: (scorecard.resetNumbers ? (session - 1) * scorecard.boardsSession : 0))
                         }
                         importRankings(session: session)
                         for table in tables {

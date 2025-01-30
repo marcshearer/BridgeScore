@@ -50,6 +50,7 @@ struct MyScene: Scene {
         }
         .onChange(of: scenePhase, initial: false) { (_, phase) in
             if phase == .active {
+                #if !widget
                 if let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
                     #if targetEnvironment(macCatalyst)
                         if let titlebar = scene.titlebar {
@@ -58,6 +59,7 @@ struct MyScene: Scene {
                         }
                     #endif
                 }
+                #endif
             }
         }
     }

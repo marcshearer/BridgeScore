@@ -17,10 +17,11 @@ struct TextViewWrapper: UIViewRepresentable {
     @State var frame: CGRect
     @Binding var field: String
     @Binding var focused: Bool
-    @State var color: ThemeBackgroundColorName = .input
+    @State var disabledColor: ThemeBackgroundColorName = .input
+    @State var enabledColor: ThemeBackgroundColorName = .input
     
     func makeUIView(context: Context) -> TextViewContainer {
-        let textViewContainer = TextViewContainer(frame: frame, field: $field, color: color, coordinator: context.coordinator)
+        let textViewContainer = TextViewContainer(frame: frame, field: $field, disabledColor: disabledColor, enabledColor: enabledColor, coordinator: context.coordinator)
         context.coordinator.textViewContainer = textViewContainer
         return textViewContainer
     }
@@ -33,6 +34,7 @@ struct TextViewWrapper: UIViewRepresentable {
             textViewContainer.textView.setContentOffset(.zero, animated: false)
             textViewContainer.textView.resignFirstResponder()
         }
+        textViewContainer.set(focused: focused)
     }
     
     func makeCoordinator() -> Coordinator {
@@ -154,7 +156,7 @@ struct TextViewWrapper: UIViewRepresentable {
     
     public func paletteColor(_ color: ThemeBackgroundColorName) -> some View {
         var view = self
-        view._color = State(initialValue: color)
+        view._disabledColor = State(initialValue: color)
         return view.id(UUID())
     }
 }
@@ -162,21 +164,23 @@ struct TextViewWrapper: UIViewRepresentable {
 class TextViewContainer: UIView {
     var textView: ScorecardInputTextView!
     var field: Binding<String>
+    var disabledColor: ThemeBackgroundColorName
+    var enabledColor: ThemeBackgroundColorName
     
-    init(frame: CGRect, field: Binding<String>, color: ThemeBackgroundColorName, coordinator: TextViewWrapperDelegate) {
+    init(frame: CGRect, field: Binding<String>, disabledColor: ThemeBackgroundColorName, enabledColor: ThemeBackgroundColorName, coordinator: TextViewWrapperDelegate) {
         self.field = field
+        self.disabledColor = disabledColor
+        self.enabledColor = enabledColor
         super.init(frame: frame)
         self.textView = ScorecardInputTextView(delegate: coordinator)
         self.textView.frame = frame
         self.textView.font = analysisCommentFont
-        self.textView.backgroundColor = UIColor(PaletteColor(color).background)
-        self.textView.textColor = UIColor(PaletteColor(color).textColor(.normal))
-        self.textView.tintColor = UIColor(PaletteColor(color).textColor(.strong))
         self.textView.autocorrectionType = .no
         self.textView.autocapitalizationType = .sentences
         self.textView.inlinePredictionType = .no    
         self.textView.tintColorDidChange()
         self.textView.showsVerticalScrollIndicator = false
+        self.set(focused: false)
         textView.isScrollEnabled = false
         self.addSubview(textView, anchored: .top, .leading, .trailing)
         Constraint.setHeight(control: textView, height: frame.height)
@@ -185,6 +189,13 @@ class TextViewContainer: UIView {
     
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+                                          
+    func set(focused: Bool) {
+        self.textView.backgroundColor = .clear
+        let color = (focused ? enabledColor : disabledColor)
+        self.textView.textColor = UIColor(PaletteColor(color).textColor(.normal))
+        self.textView.tintColor = UIColor(PaletteColor(color).textColor(.strong))
     }
     
 }

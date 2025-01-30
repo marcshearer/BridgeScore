@@ -26,12 +26,14 @@ struct ScorecardDetailView: View {
     @State var typeViewXOffset: CGFloat = 0
     @State var showResults: Bool = true
     @State var cancelButton: Bool = false
+    let completion: (()->())?
     private let undoManagerObserver = NotificationCenter.default.publisher(for: .NSUndoManagerDidOpenUndoGroup)
     private let undoObserver = NotificationCenter.default.publisher(for: .NSUndoManagerDidRedoChange)
     private let redoObserver = NotificationCenter.default.publisher(for: .NSUndoManagerDidUndoChange)
 
-    init(scorecard: ScorecardViewModel, deleted: Binding<Bool>, tableRefresh: Binding<Bool> = Binding.constant(false), title: String, frame: CGRect, initialYOffset: CGFloat? = nil, dismissView: Binding<Bool>, showResults: Bool = true, cancelButton: Bool = false) {
+    init(scorecard: ScorecardViewModel, deleted: Binding<Bool>, tableRefresh: Binding<Bool> = Binding.constant(false), title: String, frame: CGRect, initialYOffset: CGFloat? = nil, dismissView: Binding<Bool>, showResults: Bool = true, cancelButton: Bool = false, completion: (()->())? = nil) {
         self.scorecard = scorecard
+        self.completion = completion
         _deleted = deleted
         _tableRefresh = tableRefresh
         _title = State(initialValue: title)
@@ -64,6 +66,7 @@ struct ScorecardDetailView: View {
                 .onSwipe { (direction) in
                     if direction != .left {
                         if backAction() {
+                            completion?()
                             presentationMode.wrappedValue.dismiss()
                         }
                     }
@@ -76,6 +79,7 @@ struct ScorecardDetailView: View {
                 .onChange(of: dismissView) {
                     if dismissView == true {
                         dismissView = false
+                        completion?()
                         withAnimation(.linear(duration: 0.25)) {
                             yOffset = initialYOffset
                         }
@@ -97,9 +101,13 @@ struct ScorecardDetailView: View {
     func cancelOption() -> [BannerOption] {
         if cancelButton {
             return [BannerOption(text: "Cancel", likeBack: true, action: {
-                scorecard.remove()
-                deleted = true
-                dismissView = true
+                Utility.mainThread {
+                    if !scorecard.isNew {
+                        scorecard.remove()
+                    }
+                    deleted = true
+                    dismissView = true
+                }
             })]
         } else {
             return []

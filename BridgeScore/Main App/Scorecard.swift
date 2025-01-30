@@ -7,7 +7,7 @@
 
 import UIKit
 
-enum ScorecardEntity {
+enum ScorecardItemType {
     case table
     case board
 }
@@ -209,13 +209,13 @@ class Scorecard {
     }
     
     
-    private var lastEntity: ScorecardEntity?
+    private var lastItemType: ScorecardItemType?
     private var lastItemNumber: Int?
     
-    public func interimSave(entity: ScorecardEntity? = nil, itemNumber: Int? = nil) {
-        if entity == nil || entity != lastEntity || itemNumber != lastItemNumber {
+    public func interimSave(itemType: ScorecardItemType? = nil, itemNumber: Int? = nil) {
+        if itemType == nil || itemType != lastItemType || itemNumber != lastItemNumber {
             if let lastItemNumber = lastItemNumber {
-                switch lastEntity {
+                switch lastItemType {
                 case .table:
                     if let table = tables[lastItemNumber] {
                         if table.isNew || table.changed {
@@ -232,7 +232,7 @@ class Scorecard {
                     break
                 }
             }
-            lastEntity = entity
+            lastItemType = itemType
             lastItemNumber = itemNumber
         }
     }

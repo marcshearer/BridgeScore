@@ -28,9 +28,15 @@ struct PersistenceController {
     }()
 
     let container: NSPersistentContainer
+    let database = "BridgeScore"
 
+    var sharedStoreURL: URL {
+        let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup)!
+        return container.appendingPathComponent("\(database).sqlite")
+    }
+    
     init(inMemory: Bool = false) {
-        container = NSPersistentContainer(name: "BridgeScore")
+        container = NSPersistentContainer(name: database)
           
         if inMemory {
             container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
@@ -55,6 +61,7 @@ struct PersistenceController {
 
             container.persistentStoreDescriptions = [ storeDescription ]
             */
+            container.persistentStoreDescriptions.first!.url = sharedStoreURL
         }
         container.loadPersistentStores(completionHandler: { (storeDescription, error) in
             if let error = error as NSError? {

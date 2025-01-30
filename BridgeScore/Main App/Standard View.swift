@@ -10,27 +10,36 @@ import SwiftUI
 struct StandardView <Content> : View where Content : View {
     @ObservedObject private var messageBox = MessageBox.shared
     var slideInId: UUID?
+    var path: Binding<[Destination]>?
     var navigation: Bool
     var animate = false
     var content: ()->Content
     var info: String
     var backgroundColor: PaletteColor
 
-    init(_ info: String, slideInId: UUID? = nil, navigation: Bool = false, animate: Bool = false, backgroundColor: PaletteColor = Palette.background, @ViewBuilder content: @escaping ()->Content) {
+    init(_ info: String, slideInId: UUID? = nil, navigation: Bool = false, path: Binding<[Destination]>? = nil, animate: Bool = false, backgroundColor: PaletteColor = Palette.background, @ViewBuilder content: @escaping ()->Content) {
         self.info = info
         self.slideInId = slideInId
         self.navigation = navigation
         self.animate = animate
         self.backgroundColor = backgroundColor
         self.content = content
+        self.path = path
     }
         
     var body: some View {
         if navigation {
-            NavigationStack {
-                contentView()
+            if let path = path {
+                NavigationStack(path: path) {
+                    contentView()
+                }
+                .navigationViewStyle(IosStackNavigationViewStyle())
+            } else {
+                NavigationStack() {
+                    contentView()
+                }
+                .navigationViewStyle(IosStackNavigationViewStyle())
             }
-            .navigationViewStyle(IosStackNavigationViewStyle())
         } else {
             contentView()
         }

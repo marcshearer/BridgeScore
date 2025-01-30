@@ -1178,7 +1178,9 @@ struct AnalysisViewer: View {
         @State var commentFocused: Bool = false
         @State var editing: Bool = false
         @State var showClear = false
-        @State var color: ThemeBackgroundColorName = .clear
+        @State var disabledColor: ThemeBackgroundColorName = .windowBannerShadow
+        @State var enabledColor: ThemeBackgroundColorName = .bannerInput
+        @State var color: ThemeBackgroundColorName = .windowBannerShadow
         
         var body: some View {
             ZStack {
@@ -1190,7 +1192,7 @@ struct AnalysisViewer: View {
                             VStack {
                                 GeometryReader { geometry in
                                     let frame = geometry.frame(in: .global)
-                                    TextViewWrapper(frame: frame, field: $comment, focused: $commentFocused, color: color)
+                                    TextViewWrapper(frame: frame, field: $comment, focused: $commentFocused, disabledColor: disabledColor, enabledColor: enabledColor)
                                 }
                                 .onChange(of: comment, initial: false) {
                                     if comment.contains("\n") || comment.contains("\n") {
@@ -1247,7 +1249,7 @@ struct AnalysisViewer: View {
                         commentFocused = true
                         editing = true
                         showClear = (comment != "")
-                        color = .bannerInput
+                        color = enabledColor
                     } else {
                         stopEdit = true
                     }
@@ -1257,7 +1259,7 @@ struct AnalysisViewer: View {
                         commentFocused = false
                         focused = false
                         editing = false
-                        color = .clear
+                        color = disabledColor
                         stopEdit = false
                     }
                 }

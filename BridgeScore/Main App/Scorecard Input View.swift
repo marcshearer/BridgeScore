@@ -65,12 +65,12 @@ enum RowType: Int {
         }
     }
     
-    var entity: ScorecardEntity? {
+    var entity: ScorecardItemType? {
         switch self {
         case .table:
-            ScorecardEntity.table
+            ScorecardItemType.table
         case .board:
-            ScorecardEntity.board
+            ScorecardItemType.board
         default:
             nil
         }
@@ -892,7 +892,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                     break
                 }
             }
-            Scorecard.current.interimSave(entity: .board, itemNumber: itemNumber)
+            Scorecard.current.interimSave(itemType: .board, itemNumber: itemNumber)
 
         case .table:
             if let column = column {
@@ -911,7 +911,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                     break
                 }
             }
-            Scorecard.current.interimSave(entity: .table, itemNumber: itemNumber)
+            Scorecard.current.interimSave(itemType: .table, itemNumber: itemNumber)
             
         default:
             break
@@ -969,7 +969,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     private func updateScore(section: Int){
         if Scorecard.updateTableScore(scorecard: scorecard, tableNumber: section + 1) {
             updateTableCell(section: section, columnType: .tableScore)
-            Scorecard.current.interimSave(entity: .table, itemNumber: section + 1)
+            Scorecard.current.interimSave(itemType: .table, itemNumber: section + 1)
         }
         if Scorecard.updateTotalScore(scorecard: scorecard) {
             if let score = Scorecard.current.scorecard?.score {
@@ -1470,6 +1470,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     // MARK: - Utility Routines ======================================================================== -
     
     func keyboardMoved(_ keyboardHeight: CGFloat) {
+        #if !widget
         if !ignoreKeyboard {
             if scorecardInputControlInset == 0 {
                 getInputControlInset()
@@ -1497,6 +1498,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 }
             }
         }
+        #endif
     }
     
     func getInputControlInset() {
@@ -2903,7 +2905,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             if currentFocusCell != self {
                 currentFocusCell?.loseFocus()
                 if let entity = rowType.entity {
-                    Scorecard.current.interimSave(entity: entity, itemNumber: itemNumber)
+                    Scorecard.current.interimSave(itemType: entity, itemNumber: itemNumber)
                 }
             }
             scorecardDelegate?.scorecardFocusCell = self
