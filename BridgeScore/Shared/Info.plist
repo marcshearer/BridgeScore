@@ -15,6 +15,14 @@
 			</array>
 		</dict>
 	</array>
+	<key>INIntentsSupported</key>
+	<array>
+		<string>BridgeScoreConfiguration</string>
+	</array>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>com.sheareronline.bridgescore.openScorecard</string>
+	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

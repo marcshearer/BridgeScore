@@ -31,8 +31,8 @@ struct MyScene: Scene {
     @Environment(\.scenePhase) private var scenePhase
     
     var body: some Scene {
-        WindowGroup {GeometryReader
-            { (geometry) in
+        WindowGroup {
+            GeometryReader { (geometry) in
                 ScorecardListView()
                 .onAppear() {
                     MyApp.format = (min(geometry.size.width, geometry.size.height) < 600 ? .phone : .tablet)
@@ -102,7 +102,19 @@ class SceneDelegate: NSObject, UIWindowSceneDelegate, ObservableObject {
         if let url = URLContexts.first?.url,
            url.scheme == "file" && url.pathExtension == "bsjson",
            let data = try? Data(contentsOf: url) {
-            let data = String(data: data, encoding: .utf8)
+            let _ = String(data: data, encoding: .utf8)
+        }
+    }
+    
+    func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
+        Utility.mainThread {
+            if let intent = userActivity.widgetConfigurationIntent(of: BridgeScoreConfiguration.self) {
+                if let scorecardMO = ScorecardEntity.getLastScorecard(for: intent.filter) {
+                    let scorecard = ScorecardViewModel(scorecardMO: scorecardMO)
+                    let details = ScorecardDetails(scorecard: scorecard)
+                    ScorecardListViewChange.send(details)
+                }
+            }
         }
     }
 }

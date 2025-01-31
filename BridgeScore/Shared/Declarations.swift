@@ -11,8 +11,10 @@ import SwiftUI
 // Parameters
 
 public let maxRetention = 366
-public let appGroup = "group.com.sheareronline.bridgescore" // Has to match entitlements
-public let widgetKind = "com.sheareronline.bridgescore"
+public let appId = "com.sheareronline.bridgescore"
+public let appGroup = "group.\(appId)" // Has to match entitlements
+public let widgetKind = appId
+public let openScorecardActivity = "\(appId).openScorecard"
 
 // Sizes
 

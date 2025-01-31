@@ -275,6 +275,25 @@ public enum ScoreType: Equatable, CaseIterable {
         }
     }
     
+    public var brief: String {
+         switch self {
+         case .percent:
+             return "MP %"
+         case .xImp:
+             return "XImps"
+         case .butlerImp:
+             return "Butler IMPs"
+         case .imp:
+             return "Imps"
+         case .vp:
+             return "VPs"
+         case .aggregate:
+             return "Aggregate"
+         case .unknown:
+             return ""
+         }
+     }
+    
     public var title: String {
         switch self {
         case .percent:
@@ -471,6 +490,28 @@ public class ScorecardType: Equatable {
                 result += " as"
             }
             result += " " + vpType.string
+        }
+
+        return result
+    }
+    
+    public var brief: String {
+        var vpType: VpType? = nil
+        if case let .vp(aggregateVpType) = aggregateType {
+            vpType = aggregateVpType
+        } else {
+            vpType = nil
+        }
+        
+        var result = eventType.string
+        if eventType != .teams || vpType == nil {
+            result += " " + boardScoreType.brief
+        }
+        if vpType != nil {
+            if eventType != .teams {
+                result += " as"
+            }
+            result += " VPs"
         }
 
         return result

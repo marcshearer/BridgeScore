@@ -466,6 +466,12 @@ extension Int {
     var sign: Int {
         return (self == 0 ? 0 : (self > 0 ? 1 : -1))
     }
+    
+    var ordinal: String? {
+        let ordinalFormatter = NumberFormatter()
+        ordinalFormatter.numberStyle = .ordinal
+        return ordinalFormatter.string(from: NSNumber(value: self))
+    }
 }
 
 extension View {

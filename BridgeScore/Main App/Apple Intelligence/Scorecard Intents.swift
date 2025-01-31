@@ -11,8 +11,7 @@ struct CreateScorecard : AppIntent, OpenIntent {
 
     static let title: LocalizedStringResource = "Create Scorecard"
     
-    @Parameter(title: "Template", description: "The template to use for the Scorecard")
-    var target: LayoutEntity
+    @Parameter(title: "Template", description: "The template to use for the Scorecard") var target: LayoutEntity
     
     func perform() async throws -> some IntentResult {
         let layoutId = target.id
@@ -45,8 +44,7 @@ struct LayoutEntity : AppEntity {
     
     static var defaultQuery = LayoutEntityQuery()
     
-    @Property(title: "Template name")
-    var name: String
+    @Property(title: "Template name") var name: String
     
     public static let typeDisplayRepresentation: TypeDisplayRepresentation = "Template"
     
@@ -73,10 +71,7 @@ struct OpenScorecard : AppIntent, OpenIntent {
     
     static let title: LocalizedStringResource = "Open Scorecard"
     
-    /*@Parameter(title: "Location", description: "Location of scorecard")
-    var location: LocationEntity*/
-    @Parameter(title: "Scorecard", description: "The Scorecard to Open")
-    var target: ScorecardEntity
+    @Parameter(title: "Scorecard", description: "Scorecard to Open") var target: ScorecardEntity
 
     init() {
         
@@ -121,8 +116,7 @@ struct LocationEntity : AppEntity {
     
     static var defaultQuery = LocationEntityQuery()
     
-    @Property(title: "Location name")
-    var name: String
+    @Property(title: "Location name") var name: String
     
     public static let typeDisplayRepresentation: TypeDisplayRepresentation = "Location"
     
@@ -149,6 +143,15 @@ extension LocationEntityQuery: EnumerableEntityQuery {
     }
 }
 
+struct ScorecardEntityDetails {
+    var date: Date? = nil
+    var location: LocationEntity? = nil
+    var score: String? = nil
+    var position: String? = nil
+    var scorecardId: UUID? = nil
+    var notFound: Bool = true
+}
+
 struct ScorecardEntity : AppEntity {
     public var id: UUID
     
@@ -171,6 +174,16 @@ struct ScorecardEntity : AppEntity {
     public var displayRepresentation: DisplayRepresentation {
         DisplayRepresentation(title: "\(desc)")
     }
+    
+    public static func getLastScorecard(for location: LocationEntity?) -> ScorecardMO? {
+        // Find location
+        var scorecardFilter: NSPredicate?
+        if let location = location, let locationMO = CoreData.fetch(from: LocationMO.tableName, filter: NSPredicate(format: "name = %@", location.name)).first as? LocationMO {
+            scorecardFilter = NSPredicate(format: "%K = %@", #keyPath(ScorecardMO.locationId), locationMO.locationId as CVarArg)
+        }
+        return (CoreData.fetch(from: ScorecardMO.tableName, filter: scorecardFilter, limit: 1, sort: [("date", .descending)]) as? [ScorecardMO])?.first
+    }
+
 }
 
 
@@ -189,4 +202,15 @@ extension ScorecardEntityQuery: EnumerableEntityQuery {
     public func allEntities() async throws -> [ScorecardEntity] {
         return [ScorecardEntity(id: nullUUID)] + MasterData.shared.scorecards.map{ScorecardEntity(id: $0.scorecardId)}
     }
+}
+
+public struct BridgeScoreConfiguration: WidgetConfigurationIntent {
+    
+    public static var title: LocalizedStringResource = "Scorecard Details"
+    
+    public init() {
+        
+    }
+    
+    @Parameter(title: "Location: ") var filter: LocationEntity?
 }

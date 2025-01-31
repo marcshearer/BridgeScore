@@ -40,7 +40,6 @@ let ScorecardListViewChange = PassthroughSubject<ScorecardDetails, Never>()
 struct ScorecardListView: View, DropDelegate {
     @Environment(\.verticalSizeClass) var sizeClass
     private let id = scorecardListViewId
-    public static var view: ScorecardListView?
     private let inputId = UUID()
     private let uttypes = [UTType.fileURL]
     @StateObject private var selected = ScorecardViewModel(scorecardId: nullUUID)
@@ -69,52 +68,19 @@ struct ScorecardListView: View, DropDelegate {
     var body: some View {
         let scorecards = MasterData.shared.scorecards.filter({filterValues.filter($0)})
         
-        var menuOptions = [BannerOption(text: "Statistics", action: { destination = .stats }),
-                           BannerOption(text: "Templates", action: { destination = .layoutSetup }),
-                           BannerOption(text: "Players",  action: { destination = .playerSetup }),
-                           BannerOption(text: "Locations", action: { destination = .locationSetup }),
-                           BannerOption(text: "Import BBO Names", action: { ImportBBO.importNames() }),
-                           BannerOption(text: "Backup", action: { MessageBox.shared.show("Backing up", cancelText: "Cancel", okText: "Continue", okAction: {Backup.shared.backup() ; MessageBox.shared.hide()})})]
-        if Utility.isSimulator {
-            menuOptions.append(
-                           BannerOption(text: "Restore", action: {
-                              Backup.shared.restore(dateString: "Latest") }))
-        }
-        menuOptions.append(contentsOf:
-                          [BannerOption(text: "About \(appName)", action: { MessageBox.shared.show("A Bridge scoring app from\nShearer Online Ltd", showIcon: true, showVersion: true) })])
-        
         return StandardView("Scorecard List", slideInId: id, navigation: true, path: $path) {
             GeometryReader { geometry in
                 VStack {
-                    Banner(title: $title, back: false, optionMode: .menu, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: "Setup", menuId: id, options: menuOptions)
+                    Banner(title: $title, back: false, optionMode: .menu, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: "Setup", menuId: id, options: bannerMenuOptions())
                     Spacer().frame(height: 8)
-                    
-                    ListTileView(color: dropColor) {
-                        HStack {
-                            Image(systemName: "plus.square")
-                            Text("New Scorecard")
-                        }
-                    }
-                    /*.onDrop(of: uttypes, delegate: self)
-                     In case you ever need to drop import files on this list
-                     */
-                    .onTapGesture {
-                        self.destination = .layoutSelect
-                    }
-                    
+                    newScorecardTileView()
                     ScrollView {
                         Spacer().frame(height: 4)
                         ScorecardFilterView(id: id, filterValues: filterValues, closeFilter: $closeFilter)
                         ScrollViewReader { scrollViewProxy in
                             LazyVStack {
                                 ForEach(scorecards) { (scorecard) in
-                                    ScorecardSummaryView(slideInId: id, scorecard: scorecard, highlighted: highlighted, selected: selected, importTapped: $importTapped)
-                                        .id(scorecard.scorecardId)
-                                        .onTapGesture {
-                                                // Copy this entry to current scorecard
-                                            self.selected.copy(from: scorecard)
-                                            linkAction()
-                                        }
+                                    existingScorecardTileView(scorecard: scorecard)
                                 }
                             }
                             .onChange(of: importTapped, initial: false) { (_, newValue) in
@@ -142,80 +108,18 @@ struct ScorecardListView: View, DropDelegate {
                     Spacer()
                 }
                 .onAppear {
-                    ScorecardListView.view = self
-                    if selected.scorecardId == nullUUID {
-                        Utility.mainThread {
-                            if let scorecard = scorecards.first {
-                                if  filterValues.isClear {
-                                    self.startAt = scorecard.scorecardId
-                                }
-                            }
-                        }
-                        if UserDefault.currentUnsaved.bool {
-                            // Unsaved version - restore it and link to it
-                            let scorecard = ScorecardViewModel()
-                            scorecard.restoreCurrent()
-                            self.selected.copy(from: scorecard)
-                            Scorecard.current.load(scorecard: scorecard)
-                            destination = .scorecardInput
-                        }
-                    }
+                    initialiseView(scorecards: scorecards)
                 }
                 .onReceive(ScorecardListViewChange) { (details) in
-                    Utility.mainThread {
-                        // Clear any pre-existing view
-                        path = []
-                        cancelled = true
-                        self.destination = .root
-                        layoutSelected = false
-                        // Link to new view
-                        if details.newScorecard {
-                            if let layout = details.layout {
-                                createScorecard(from: layout)
-                                if layout.displayDetail {
-                                    self.destination = .scorecardParameters
-                                } else {
-                                    destination = .scorecardInput
-                                }
-                            } else {
-                                layoutSelected = false
-                                destination = .layoutSelect
-                            }
-                        } else if let scorecard = details.scorecard {
-                            self.selected.copy(from: scorecard)
-                            linkAction()
-                        }
-                    }
+                    // Probably from Widget / AppIntent
+                    receiveViewChange(details: details)
                 }
                 .navigationDestination(for: Destination.self) { (destination) in
-                    switch destination {
-                    case .layoutSetup:
-                        LayoutSetupView()
-                    case .playerSetup:
-                        PlayerSetupView()
-                    case .locationSetup:
-                        LocationSetupView()
-                    case .stats:
-                        StatsView()
-                    case .scorecardInput:
-                        ScorecardInputView(scorecard: selected, importScorecard: importScorecard)
-                    default:
-                        fatalError()
-                    }
+                    AnyView(navigateToDestinationView())
                 }
                 .sheet(isPresented: linkToLayoutSelect, onDismiss: {
-                    if layoutSelected {
-                        createScorecard(from: layout)
-                        var transaction = Transaction(animation: .linear(duration: 0.01))
-                        transaction.disablesAnimations = true
-                        withTransaction(transaction) {
-                            if layout.displayDetail {
-                                destination = .scorecardParameters
-                            } else {
-                                destination = .scorecardInput
-                            }
-                        }
-                    }
+                    // Completed
+                    linkToParametersOrInput()
                 }) {
                     LayoutListView(selected: $layoutSelected, layout: $layout, completion: {
                         destination = .root
@@ -226,23 +130,74 @@ struct ScorecardListView: View, DropDelegate {
                         destination = .scorecardInput
                     }
                 }) {
-                    ZStack {
-                        Color.black.opacity(0.4)
-                        let width = min(704, geometry.size.width) // Allow for safe area
-                        let height = min(610, (geometry.size.height))
-                        let frame = CGRect(x: (geometry.size.width - width) / 2,
-                                           y: ((geometry.size.height - height) / 2) + 20,
-                                           width: width,
-                                           height: height)
-                        ScorecardDetailView(scorecard: selected, deleted: $deleted, title: "Scorecard Details", frame: frame, dismissView: $dismissDetailView, showResults: false, cancelButton: true, completion: {
-                                destination = .root
-                            })
-                    }
-                    .background(BackgroundBlurView(opacity: 0.0))
-                    .edgesIgnoringSafeArea(.all)
+                    scorecardDetailView(geometry: geometry)
+                        .onAppear {
+                            cancelled = false
+                        }
                 }
             }
         }
+    }
+    
+    func initialiseView(scorecards: [ScorecardViewModel]) {
+        if selected.scorecardId == nullUUID {
+            Utility.mainThread {
+                if let scorecard = scorecards.first {
+                    if filterValues.isClear {
+                        self.startAt = scorecard.scorecardId
+                    }
+                }
+            }
+            if UserDefault.currentUnsaved.bool {
+                // Unsaved version - restore it and link to it
+                let scorecard = ScorecardViewModel()
+                scorecard.restoreCurrent()
+                self.selected.copy(from: scorecard)
+                Scorecard.current.load(scorecard: scorecard)
+                destination = .scorecardInput
+            }
+        }
+    }
+    
+    func newScorecardTileView() -> some View {
+        return ListTileView(color: dropColor) {
+            HStack {
+                Image(systemName: "plus.square")
+                Text("New Scorecard")
+            }
+        }
+        .onTapGesture {
+            self.destination = .layoutSelect
+        }
+    }
+    
+    func navigateToDestinationView() -> any View {
+        var result: any View
+        switch destination {
+        case .layoutSetup:
+            result = LayoutSetupView()
+        case .playerSetup:
+            result = PlayerSetupView()
+        case .locationSetup:
+            result = LocationSetupView()
+        case .stats:
+            result = StatsView()
+        case .scorecardInput:
+            result = ScorecardInputView(scorecard: selected, importScorecard: importScorecard)
+        default:
+            result = EmptyView()
+        }
+        return result
+    }
+    
+    func existingScorecardTileView(scorecard: ScorecardViewModel) -> some View {
+        ScorecardSummaryView(slideInId: id, scorecard: scorecard, highlighted: highlighted, selected: selected, importTapped: $importTapped)
+            .id(scorecard.scorecardId)
+            .onTapGesture {
+                    // Copy this entry to current scorecard
+                self.selected.copy(from: scorecard)
+                linkAction()
+            }
     }
     
     private func linkAction(importTapped: ImportSource = .none) {
@@ -262,11 +217,90 @@ struct ScorecardListView: View, DropDelegate {
         }
     }
     
+    private func linkToParametersOrInput() {
+        if layoutSelected {
+            createScorecard(from: layout)
+            var transaction = Transaction(animation: .linear(duration: 0.01))
+            transaction.disablesAnimations = true
+            withTransaction(transaction) {
+                if layout.displayDetail {
+                    destination = .scorecardParameters
+                } else {
+                    destination = .scorecardInput
+                }
+            }
+        }
+    }
+    
+    private func scorecardDetailView(geometry: GeometryProxy) -> some View {
+        return ZStack {
+            Color.black.opacity(0.4)
+            let width = min(704, geometry.size.width) // Allow for safe area
+            let height = min(610, (geometry.size.height))
+            let frame = CGRect(x: (geometry.size.width - width) / 2,
+                               y: ((geometry.size.height - height) / 2) + 20,
+                               width: width,
+                               height: height)
+            ScorecardDetailView(scorecard: selected, deleted: $deleted, title: "Scorecard Details", frame: frame, dismissView: $dismissDetailView, showResults: false, cancelButton: true, completion: {
+                destination = .root
+            })
+        }
+        .background(BackgroundBlurView(opacity: 0.0))
+        .edgesIgnoringSafeArea(.all)
+    }
+    
     private func createScorecard(from layout: LayoutViewModel) {
         self.selected.reset(from: layout)
         Scorecard.current.load(scorecard: selected)
         selected.saveScorecard()
         importScorecard = .none
+    }
+    
+    func receiveViewChange(details: ScorecardDetails) {
+        Utility.mainThread {
+            // Clear any pre-existing view
+            path = []
+            cancelled = true
+            self.destination = .root
+            layoutSelected = false
+                // Link to new view
+            Utility.executeAfter(delay: 0.1) {
+                if details.newScorecard {
+                    if let layout = details.layout {
+                        createScorecard(from: layout)
+                        if layout.displayDetail {
+                            self.destination = .scorecardParameters
+                        } else {
+                            destination = .scorecardInput
+                        }
+                    } else {
+                        layoutSelected = false
+                        destination = .layoutSelect
+                    }
+                } else if let scorecard = details.scorecard {
+                    self.selected.copy(from: scorecard)
+                    linkAction()
+                }
+            }
+        }
+    }
+    
+    func bannerMenuOptions() -> [BannerOption] {
+        var menuOptions: [BannerOption] = []
+        menuOptions = [BannerOption(text: "Statistics", action: { destination = .stats }),
+                           BannerOption(text: "Templates", action: { destination = .layoutSetup }),
+                           BannerOption(text: "Players",  action: { destination = .playerSetup }),
+                           BannerOption(text: "Locations", action: { destination = .locationSetup }),
+                           BannerOption(text: "Import BBO Names", action: { ImportBBO.importNames() }),
+                           BannerOption(text: "Backup", action: { MessageBox.shared.show("Backing up", cancelText: "Cancel", okText: "Continue", okAction: {Backup.shared.backup() ; MessageBox.shared.hide()})})]
+        if Utility.isSimulator {
+            menuOptions.append(
+                BannerOption(text: "Restore", action: {
+                    Backup.shared.restore(dateString: "Latest") }))
+        }
+        menuOptions.append(contentsOf:
+                            [BannerOption(text: "About \(appName)", action: { MessageBox.shared.show("A Bridge scoring app from\nShearer Online Ltd", showIcon: true, showVersion: true) })])
+        return menuOptions
     }
     
     // MARK: - Drop delegates
