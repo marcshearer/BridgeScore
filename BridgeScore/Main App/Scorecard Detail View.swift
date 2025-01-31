@@ -271,22 +271,16 @@ struct ScorecardDetailsView: View {
                     
                     Separator(thickness: 1)
                     
-                    StepperInputAdditional(title: "Boards per table", field: $scorecard.boardsTable, label: { value in "\(value) boards per table" }, isEnabled: !Scorecard.current.isImported, additionalBinding: $scorecard.boards, onChange: { (newValue) in
-                        Utility.mainThread {
-                            // Need to do this on main thread to avoid multiple updates in parallel
-                            setBoards(boardsTable: newValue, sessions: scorecard.sessions)
-                            tableRefresh = true
-                        }
+                    StepperInputAdditional(title: "Boards per table", field: $scorecard.boardsTable, label: { value in "\(value) boards per table" }, isEnabled: !Scorecard.current.isImported, minValue: {1}, additionalBinding: $scorecard.boards, onChange: { (newValue) in
+                        setBoards(boardsTable: newValue, sessions: scorecard.sessions)
+                        tableRefresh = true
                     })
                     
                     Separator(thickness: 1)
                     
                         // Note this is inputting the number of boards even though prompting for tables
                     StepperInput(title: "Tables\(scorecard.sessions <= 1 ? "" : " per session")", field: $scorecard.boards, label: boardsLabel, isEnabled: !Scorecard.current.isImported, minValue: {scorecard.boardsTable * scorecard.sessions}, increment: {scorecard.boardsTable * scorecard.sessions}, onChange:  { (boards) in
-                        Utility.mainThread {
-                                // Need to do this on main thread to avoid multiple updates in parallel
-                            tableRefresh = true
-                        }
+                        tableRefresh = true
                     })
                     .disabled(Scorecard.current.isImported)
                     
@@ -294,17 +288,14 @@ struct ScorecardDetailsView: View {
                     
                     StepperInput(title: "Sessions\(scorecard.sessions <= 1 ? "" : " per session")", field: $scorecard.sessions, label: { value in "\(value) \(plural("session", value))" }, isEnabled: !Scorecard.current.isImported, minValue: {1}, maxValue: {8}, onChange: { (sessions) in
                             // Make sure total boards still makes sense
-                        Utility.mainThread {
-                                // Need to do this on main thread to avoid multiple updates in parallel
-                            let tablesPerSession = (scorecard.boards / scorecard.boardsTable) / sessions
-                            scorecard.boards = scorecard.boardsTable * max(1, tablesPerSession) * sessions
-                            if sessions <= 1 {
-                                scorecard.resetNumbers = false
-                            } else if scorecard.sessions <= 1 {
-                                scorecard.resetNumbers = true
-                            }
-                            tableRefresh = true
+                        let tablesPerSession = (scorecard.boards / scorecard.boardsTable) / sessions
+                        scorecard.boards = scorecard.boardsTable * max(1, tablesPerSession) * sessions
+                        if sessions <= 1 {
+                            scorecard.resetNumbers = false
+                        } else if scorecard.sessions <= 1 {
+                            scorecard.resetNumbers = true
                         }
+                        tableRefresh = true
                     })
                     .disabled(Scorecard.current.isImported)
                     
@@ -312,10 +303,7 @@ struct ScorecardDetailsView: View {
                     
                     InputToggle(title: "Reset board number", field: $scorecard.resetNumbers, disabled: Binding.constant(scorecard.sessions <= 1), onChange:
                                     { (newValue) in
-                        Utility.mainThread {
-                                // Need to do this on main thread to avoid multiple updates in parallel
-                            tableRefresh = true
-                        }
+                        tableRefresh = true
                     })
                     .disabled(Scorecard.current.isImported)
                 }

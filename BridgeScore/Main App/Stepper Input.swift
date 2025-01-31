@@ -95,25 +95,30 @@ struct StepperInputAdditional<Additional>: View where Additional: Equatable {
                             }
                             Spacer()
                             if isEnabled {
+                                let plusDisabled = field.wrappedValue + (increment?() ?? 1) > (maxValue?() ?? Int.max)
+                                let minusDisabled = field.wrappedValue - (increment?() ?? 1) < (minValue?() ?? -Int.max)
                                 Button {
                                     change(field, direction: +1)
                                 } label: {
+                                    let palette = (plusDisabled ? Palette.disabledButton : Palette.enabledButton)
                                     Image(systemName: "plus")
                                         .frame(width: buttonWidth(), height: buttonHeight())
-                                        .background(Palette.disabledButton.background)
-                                        .foregroundColor(Palette.disabledButton.themeText)
+                                        .background(palette.background)
+                                        .foregroundColor(palette.text)
                                         .cornerRadius(4)
                                 }
-                                .frame(width: buttonWidth(), height: buttonHeight())
+                                .disabled(plusDisabled)
                                 Button {
                                     change(field, direction: -1)
                                 } label: {
+                                    let palette = (minusDisabled ? Palette.disabledButton : Palette.enabledButton)
                                     Image(systemName: "minus")
                                         .frame(width: buttonWidth(), height: buttonHeight())
-                                        .background(Palette.disabledButton.background)
-                                        .foregroundColor(Palette.disabledButton.themeText)
+                                        .background(palette.background)
+                                        .foregroundColor(palette.text)
                                         .cornerRadius(4)
                                 }
+                                .disabled(minusDisabled)
                             }
                         }
                         .if(labelWidth != nil) { (view) in
@@ -140,8 +145,11 @@ struct StepperInputAdditional<Additional>: View where Additional: Equatable {
         let maxValue = self.maxValue?() ?? Int.max
         
         let newValue = max(min(field.wrappedValue + increment, maxValue), minValue)
-        onChange?(newValue)
-        field.wrappedValue = newValue
-        refresh.toggle()
+        Utility.mainThread {
+            // Need to do this on main thread to avoid multiple updates in parallel
+            onChange?(newValue)
+            field.wrappedValue = newValue
+            refresh.toggle()
+        }
     }
 }

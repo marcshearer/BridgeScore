@@ -84,10 +84,7 @@ struct BridgeScoreWidgetEntryView : View {
                         Text(desc).lineLimit(1).font(bannerFont).bold()
                     }
                     HStack(spacing: 0) {
-                        Text(DayNumber(from: entry.date).toNearbyString()).font(.title3)
-                        if let location = entry.location?.name, entry.filter == nil || (entry.filter!.id == nullUUID) {
-                            Text(" at \(location)")
-                        }
+                        Text(dateLocation).font(.title2)
                     }
                     if let type = entry.type {
                         Text(type).font(.title2)
@@ -113,6 +110,15 @@ struct BridgeScoreWidgetEntryView : View {
             .minimumScaleFactor(0.75)
         }
     }
+    
+    var dateLocation: String {
+        var dateLocation = DayNumber(from: entry.date).toNearbyString()
+        if let location = entry.location?.name, entry.filter == nil || (entry.filter!.id == nullUUID) {
+            dateLocation += " at \(location)"
+        }
+        return dateLocation
+    }
+    
 }
 
 struct BridgeScoreWidgetContainer<Content>: View where Content: View {

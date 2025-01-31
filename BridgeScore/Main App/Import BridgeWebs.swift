@@ -32,6 +32,7 @@ struct ImportBridgeWebsScorecard: View {
         case getList
         case dropZone
         case select
+        case checkOffset
         case getFile
         case confirm
         case importing
@@ -54,6 +55,7 @@ struct ImportBridgeWebsScorecard: View {
     @State private var selected: FileNameElement? = nil
     @State private var dropZoneEntered = false
     @State private var droppedText: [String] = []
+    @State private var sourceOffset: Int? = nil
     
     var body: some View {
         StandardView("Detail") {
@@ -64,6 +66,8 @@ struct ImportBridgeWebsScorecard: View {
                 dropZone
             case .select:
                 showFileList
+            case .checkOffset:
+                checkOffset
             case .getFile:
                 downloadingFile
             case .confirm:
@@ -141,8 +145,10 @@ struct ImportBridgeWebsScorecard: View {
                     for text in droppedText {
                         if let file = parseURL(text: text) {
                             selected = file
-                            phase = .getFile
-                            downloadFile(file: selected!)
+                            phase = ( scorecard.isMultiSession && sourceOffset == nil ? .checkOffset : .getFile )
+                            if phase == .getFile {
+                                downloadFile(file: selected!)
+                            }
                         }
                     }
                     droppedText = []
@@ -170,11 +176,71 @@ struct ImportBridgeWebsScorecard: View {
                 .background((file == selected ? Palette.alternate : Palette.background).background)
                 .onTapGesture {
                     selected = file
-                    phase = .getFile
-                    downloadFile(file: selected!)
+                    phase = ( scorecard.isMultiSession && sourceOffset == nil ? .checkOffset : .getFile )
+                    if phase == .getFile {
+                        downloadFile(file: selected!)
+                    }
                 }
             }
             Spacer()
+        }
+    }
+    
+    var checkOffset: some View {
+        var editOffset: Binding<Int> {
+            Binding {
+                sourceOffset ?? 0
+            } set: { (newValue) in
+                sourceOffset = newValue
+            }
+        }
+        
+        return VStack(spacing: 0) {
+            Banner(title: Binding.constant("Download from BridgeWebs"), backImage: Banner.crossImage)
+            Spacer().frame(height: 16)
+            InsetView(title: "Import Section Offset") {
+                VStack(spacing: 0) {
+                    
+                    StepperInput(title: "Offset", field: editOffset, label: offsetLabel, minValue: {0}, maxValue: {9}, onChange: { (newValue) in
+                        editOffset.wrappedValue = newValue
+                    })
+                    
+                    Spacer()
+                }
+            }
+            VStack {
+                Spacer().frame(height: 16)
+                HStack {
+                    Spacer()
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            Text("Continue")
+                            Spacer()
+                        }
+                        Spacer()
+                    }
+                    .foregroundColor(Palette.highlightButton.text)
+                    .background(Palette.highlightButton.background)
+                    .frame(width: 120, height: 40)
+                    .cornerRadius(10)
+                    .onTapGesture {
+                        Utility.mainThread {
+                            downloadFile(file: selected!)
+                            phase = .getFile
+                        }
+                    }
+                    Spacer()
+                }
+                Spacer().frame(height: 16)
+            }
+            
+        }
+        .background(Palette.alternate.background)
+        
+        func offsetLabel(value: Int) -> String {
+            (value == 0 ? "No offset" : "Offset by \(value)")
         }
     }
     
@@ -272,8 +338,11 @@ struct ImportBridgeWebsScorecard: View {
                         errorMessage = "No files available for this location on this date"
                         phase = .dropZone
                     case 1:
-                        downloadFile(file: fileList[0])
-                        phase = .getFile
+                        selected = fileList.first
+                        phase = ( scorecard.isMultiSession && sourceOffset == nil ? .checkOffset : .getFile )
+                        if phase == .getFile {
+                            downloadFile(file: selected!)
+                        }
                     default:
                         phase = .select
                     }
@@ -284,7 +353,7 @@ struct ImportBridgeWebsScorecard: View {
     }
     
     private func downloadFile(file: FileNameElement) {
-        let urlString = "https://www.bridgewebs.com/cgi-bin/bwop/bw.cgi?xml=1&club=\(file.locationId ?? scorecard.location!.bridgeWebsId)&pid=xml_results_travs&msec=\(scorecard.isMultiSession ? 1 + scorecard.importNext : 1)&mod=Results&ekey=\(file.event)"
+        let urlString = "https://www.bridgewebs.com/cgi-bin/bwop/bw.cgi?xml=1&club=\(file.locationId ?? scorecard.location!.bridgeWebsId)&pid=xml_results_travs&msec=\(scorecard.isMultiSession ? 1 + scorecard.importNext + (sourceOffset ?? 0) : 1)&mod=Results&ekey=\(file.event)"
         
         let url = URL(string: urlString)!
 

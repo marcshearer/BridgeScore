@@ -741,7 +741,7 @@ class ImportedScorecard: NSObject, ObservableObject {
                 InsetView(title: "Import Settings") {
                     VStack(spacing: 0) {
                 
-                        StepperInput(title: "Import for session", field: editSession, label: stepperLabel, minValue: {1}, maxValue: { self.scorecard.sessions}, onChange: { (value) in
+                        StepperInput(title: "Import for session", field: editSession, label: sessionLabel, minValue: {1}, maxValue: { self.scorecard.sessions}, onChange: { (value) in
                             self.session = value
                         })
                         
@@ -823,7 +823,7 @@ class ImportedScorecard: NSObject, ObservableObject {
         .background(Palette.alternate.background)
     }
     
-    private func stepperLabel(value: Int) -> String {
+    private func sessionLabel(value: Int) -> String {
         return "Session \(value) of \(scorecard.sessions)"
     }
     

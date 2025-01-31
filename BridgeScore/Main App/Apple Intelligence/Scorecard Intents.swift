@@ -15,8 +15,8 @@ struct CreateScorecard : AppIntent, OpenIntent {
     
     func perform() async throws -> some IntentResult {
         let layoutId = target.id
-        if let layout = MasterData.shared.layouts.first(where: {$0.layoutId == layoutId}) {
-            let details = ScorecardDetails(layout: layout, newScorecard: true)
+        if let layoutMO = LayoutEntity.layouts(id: layoutId).first {
+            let details = ScorecardDetails(layout: LayoutViewModel(layoutMO: layoutMO), newScorecard: true)
             Utility.mainThread {
                 ScorecardListViewChange.send(details)
             }
@@ -35,7 +35,7 @@ struct LayoutEntity : AppEntity {
     
     public init(id: UUID) {
         self.id = id
-        if let layout = MasterData.shared.layouts.first(where : {$0.layoutId == id}) {
+        if let layout = LayoutEntity.layouts(id: id).first {
             name = layout.desc
         } else {
             name = "Unknown"
@@ -51,6 +51,14 @@ struct LayoutEntity : AppEntity {
     public var displayRepresentation: DisplayRepresentation {
         DisplayRepresentation(title: "\(name)")
     }
+    
+    static func layouts(id layoutId: UUID? = nil) -> [LayoutMO] {
+        var filter: NSPredicate?
+        if let layoutId = layoutId {
+            filter = NSPredicate(format: "%K = %@", #keyPath(LayoutMO.layoutId), layoutId as CVarArg)
+        }
+        return (CoreData.fetch(from: LayoutMO.tableName, filter: filter, sort: [("sequence16", .ascending)]) as! [LayoutMO])
+    }
 }
 
 
@@ -63,7 +71,7 @@ struct LayoutEntityQuery : EntityQuery {
 extension LayoutEntityQuery: EnumerableEntityQuery {
     
     public func allEntities() async throws -> [LayoutEntity] {
-        return MasterData.shared.layouts.map{LayoutEntity(id: $0.layoutId)}
+        return LayoutEntity.layouts().map{LayoutEntity(id: $0.layoutId)}
     }
 }
 
@@ -85,8 +93,8 @@ struct OpenScorecard : AppIntent, OpenIntent {
     
     func perform() async throws -> some IntentResult {
         let scorecardId = target.id
-        if let scorecard = MasterData.shared.scorecards.first(where: {$0.scorecardId == scorecardId}) {
-            let details = ScorecardDetails(scorecard: scorecard)
+        if let scorecardMO = ScorecardEntity.scorecards(id: scorecardId).first {
+            let details = ScorecardDetails(scorecard: ScorecardViewModel(scorecardMO: scorecardMO))
             Utility.mainThread {
                 ScorecardListViewChange.send(details)
             }
@@ -107,7 +115,7 @@ struct LocationEntity : AppEntity {
     
     public init(id: UUID) {
         self.id = id
-        if let location = MasterData.shared.locations.first(where : {$0.locationId == id}) {
+        if let location = LocationEntity.locations(id: id).first {
             name = location.name
         } else {
             name = "All locations"
@@ -123,6 +131,14 @@ struct LocationEntity : AppEntity {
     public var displayRepresentation: DisplayRepresentation {
         DisplayRepresentation(title: "\(name)")
     }
+    
+    static func locations(id locationId: UUID? = nil) -> [LocationMO] {
+        var filter: NSPredicate?
+        if let locationId = locationId {
+            filter = NSPredicate(format: "%K = %@", #keyPath(LocationMO.locationId), locationId as CVarArg)
+        }
+        return (CoreData.fetch(from: LocationMO.tableName, filter: filter, sort: [("sequence16", .ascending)]) as! [LocationMO])
+    }
 }
 
 
@@ -132,14 +148,14 @@ struct LocationEntityQuery : EntityQuery {
     }
     
     public func suggestedEntities() async throws -> [LocationEntity] {
-        return [LocationEntity(id: nullUUID)] + MasterData.shared.locations.map{LocationEntity(id: $0.locationId)}
+        return [LocationEntity(id: nullUUID)] + LocationEntity.locations().map{LocationEntity(id: $0.locationId)}
     }
 }
 
 extension LocationEntityQuery: EnumerableEntityQuery {
     
     public func allEntities() async throws -> [LocationEntity] {
-        return [LocationEntity(id: nullUUID)] + MasterData.shared.locations.map{LocationEntity(id: $0.locationId)}
+        return [LocationEntity(id: nullUUID)] + LocationEntity.locations().map{LocationEntity(id: $0.locationId)}
     }
 }
 
@@ -157,7 +173,7 @@ struct ScorecardEntity : AppEntity {
     
     public init(id: UUID) {
         self.id = id
-        if let scorecard = MasterData.shared.scorecards.first(where : {$0.scorecardId == id}) {
+        if let scorecard = ScorecardEntity.scorecards(id: id).first {
             desc = scorecard.desc
         } else {
             desc = "Invalid Scorecard"
@@ -175,17 +191,26 @@ struct ScorecardEntity : AppEntity {
         DisplayRepresentation(title: "\(desc)")
     }
     
+    public static func scorecards(id scorecardId: UUID? = nil, locationId: UUID? = nil, limit: Int = 0) -> [ScorecardMO] {
+        var filter: NSPredicate?
+        if let scorecardId = scorecardId {
+            filter = NSPredicate(format: "%K = %@", #keyPath(ScorecardMO.scorecardId), scorecardId as CVarArg)
+        } else if let locationId = locationId {
+            filter = NSPredicate(format: "%K = %@", #keyPath(ScorecardMO.locationId), locationId as CVarArg)
+        }
+        return (CoreData.fetch(from: ScorecardMO.tableName, filter: filter, limit: limit, sort: [("date", .descending)]) as! [ScorecardMO])
+    }
+    
     public static func getLastScorecard(for location: LocationEntity?) -> ScorecardMO? {
         // Find location
-        var scorecardFilter: NSPredicate?
-        if let location = location, let locationMO = CoreData.fetch(from: LocationMO.tableName, filter: NSPredicate(format: "name = %@", location.name)).first as? LocationMO {
-            scorecardFilter = NSPredicate(format: "%K = %@", #keyPath(ScorecardMO.locationId), locationMO.locationId as CVarArg)
+        var locationId: UUID?
+        if let location = location, let locationMO = LocationEntity.locations(id: location.id).first {
+            locationId = locationMO.locationId
         }
-        return (CoreData.fetch(from: ScorecardMO.tableName, filter: scorecardFilter, limit: 1, sort: [("date", .descending)]) as? [ScorecardMO])?.first
+        return ScorecardEntity.scorecards(locationId: locationId, limit: 1).first
     }
 
 }
-
 
 struct ScorecardEntityQuery : EntityQuery {
     public func entities(for identifiers: [UUID]) async throws -> [ScorecardEntity] {
@@ -193,14 +218,14 @@ struct ScorecardEntityQuery : EntityQuery {
     }
     
     public func suggestedEntities() async throws -> [ScorecardEntity] {
-        return [ScorecardEntity(id: nullUUID)] + MasterData.shared.scorecards.map{ScorecardEntity(id: $0.scorecardId)}
+        return [ScorecardEntity(id: nullUUID)] + ScorecardEntity.scorecards().map{ScorecardEntity(id: $0.scorecardId)}
     }
 }
 
 extension ScorecardEntityQuery: EnumerableEntityQuery {
     
     public func allEntities() async throws -> [ScorecardEntity] {
-        return [ScorecardEntity(id: nullUUID)] + MasterData.shared.scorecards.map{ScorecardEntity(id: $0.scorecardId)}
+        return [ScorecardEntity(id: nullUUID)] + ScorecardEntity.scorecards().map{ScorecardEntity(id: $0.scorecardId)}
     }
 }
 

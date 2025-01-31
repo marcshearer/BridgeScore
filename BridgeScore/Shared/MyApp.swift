@@ -70,9 +70,9 @@ class MyApp {
     public static var format: Format = .tablet
  
     public func start() {
-        // #if !widget
+        #if !widget
             MasterData.shared.load()
-        // #endif
+        #endif
         Themes.selectTheme(.standard)
         self.registerDefaults()
         #if !widget

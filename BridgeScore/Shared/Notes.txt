@@ -7,7 +7,6 @@ To Do Urgently
 ==============
 Allow selection of other player on import if self not in scorecard
 Invalidate List of scorecards if change self
-In AppIntents need to replace MasterData with CoreData and stop MasterData being loaded in Widgets
 
 Bugs
 ====

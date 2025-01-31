@@ -2133,14 +2133,18 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             if sessionCaption {
                 caption.isHidden = false
                 captionHeight.constant = 24
-                caption.text = "Session \(((table.session - 1) / scorecard.tablesSession) + 1)"
+                caption.text = "Session \(table.session)"
             }
             label.font = boardTitleFont.bold
             if Scorecard.current.isImported && scorecard.type.players != 4 {
                 // No space on imported pairs view
                 label.text = ""
             } else {
-                label.text = "\(!sessionCaption && scorecard.tablesSession == 1 ? "Session" : "Table")  \(table.table)"
+                var table = table.table
+                if sessionCaption && scorecard.resetNumbers {
+                    table = ((table - 1) % scorecard.tablesSession) + 1
+                }
+                label.text = "\(!sessionCaption && scorecard.tablesSession == 1 ? "Session" : "Table")  \(table)"
             }
             
             label.isUserInteractionEnabled = true
