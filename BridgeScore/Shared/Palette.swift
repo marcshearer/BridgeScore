@@ -132,7 +132,7 @@ class Palette {
     }
 }
 
-class PaletteColor: Equatable {
+final class PaletteColor: Equatable, Sendable {
     let background: Color
     let text: Color
     let contrastText: Color

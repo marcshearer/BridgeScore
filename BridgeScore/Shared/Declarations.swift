@@ -7,6 +7,7 @@
 
 import CoreGraphics
 import SwiftUI
+import Combine
 
 // Parameters
 
@@ -43,6 +44,7 @@ var tinyFont: Font { Font.system(size: (MyApp.format != .phone ? 12.0 : 8.0)) }
 var responsibleTitleFont: Font {  Font.system(size: (MyApp.format != .phone ? 30.0 : 18.0)) }
 var responsibleCaptionFont: Font {  Font.system(size: (MyApp.format != .phone ? 12.0 : 8.0)) }
 
+#if canImport(UIKit)
 // Fonts in scorecard (UIFont)
 var titleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 16.0 : 10.0)) }
 var titleCaptionFont: UIFont { UIFont.systemFont(ofSize: (MyApp.format != .phone ? 16.0 : 10.0)) }
@@ -59,6 +61,7 @@ var replaceFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 3
 var replaceTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 30.0 : 20.0)) }
 var analysisFont: UIFont { UIFont.systemFont(ofSize: (MyApp.format != .phone ? 16.0 : 12.0)) }
 var analysisCommentFont: UIFont { UIFont.systemFont(ofSize: (MyApp.format != .phone ? 20.0 : 12.0)) }
+#endif
 
 // Slide in IDs - Need to be declared here as there seem to be multiple instances of views
 let scorecardListViewId = UUID()
@@ -90,6 +93,7 @@ public let appName = "Bridge Scorecard"
 public let appImage = "bridge score"
 
 public let dateFormat = "EEEE d MMMM yyyy"
+public let shortDateFormat = "EEE d MMM"
 
 public enum UIMode {
     case uiKit
@@ -98,10 +102,16 @@ public enum UIMode {
 }
 
 public var isLandscape: Bool {
+#if widget
+    true
+    #else
     UIScreen.main.bounds.width > UIScreen.main.bounds.height
+#endif
 }
 
 // Application specific types
+
+let ScorecardListViewChange = PassthroughSubject<ScorecardDetails, Never>()
 
 public enum TotalCalculation: Int, CaseIterable {
     case automatic = 0
@@ -143,6 +153,7 @@ public enum RegularDay: Int, CaseIterable {
     }
 }
 
+#if !widget
 public enum Responsible: Int, EnumPickerType, Identifiable {
     public var id: Int { rawValue }
     
@@ -320,6 +331,25 @@ public enum SeatPlayer: Int {
     var isOpponent: Bool {
         self == .lhOpponent || self == .rhOpponent
     }
+}
+
+protocol EnumPickerDelegate {
+    func enumPickerDidChange(to: Any, allowPopup: Bool)
+}
+
+extension EnumPickerDelegate {
+    func enumPickerDidChange(to: Any) {
+        enumPickerDidChange(to: to, allowPopup: false)
+    }
+}
+
+protocol EnumPickerType : CaseIterable, Equatable {
+    static var validCases: [Self] {get}
+    static var allCases: [Self] {get}
+    var string: String {get}
+    var short: String {get}
+    var rawValue: Int {get}
+    init?(rawValue: Int)
 }
 
 public enum Seat: Int, EnumPickerType, ContractEnumType, Identifiable {
@@ -537,11 +567,12 @@ public enum Values {
     public static var smallSlamLevel: ContractLevel { .six }
     public static var grandSlamLevel: ContractLevel { .seven }
 }
+#endif
 
 #if canImport(UIKit)
 public let target: UIMode = .uiKit
 #elseif canImport(appKit)
 public let target: UIMode = .appKit
 #else
-public let target: UIMode = .unknow
+public let target: UIMode = .unknown
 #endif

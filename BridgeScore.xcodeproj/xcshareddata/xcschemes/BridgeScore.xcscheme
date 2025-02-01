@@ -74,5 +74,14 @@
    <ArchiveAction
       buildConfiguration = "Release"
       revealArchiveInOrganizer = "YES">
+      <PreActions>
+         <ExecutionAction
+            ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
+            <ActionContent
+               title = "Run Script"
+               scriptText = "cd &quot;${WORKSPACE_PATH}&quot; &gt;/tmp/log 2&gt;&amp;1&#10;cd ../.. &gt;&gt;/tmp/log 2&gt;&amp;1&#10;echo `pwd` &gt;&gt; /tmp/log&#10;agvtool next-version -all &gt;&gt;/tmp/log 2&gt;&amp;1&#10;">
+            </ActionContent>
+         </ExecutionAction>
+      </PreActions>
    </ArchiveAction>
 </Scheme>

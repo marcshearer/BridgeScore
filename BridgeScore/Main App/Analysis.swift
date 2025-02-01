@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-import UIKit
+
 
 class AnalysisOverride: ObservableObject, Equatable {
     @Published var board: BoardViewModel

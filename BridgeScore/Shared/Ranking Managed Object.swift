@@ -105,9 +105,11 @@ public class RankingMO: NSManagedObject, ManagedObject, Identifiable {
             ewXImps = newValue[.ew] ?? 0
         }
     }
-    
+
+#if !widget
     public override var description: String {
         return "Scorecard: \(MasterData.shared.scorecard(id: self.scorecardId)?.desc ?? ""), Table: \(session) Section: \(section), Number: \(number)"
     }
     public override var debugDescription: String { self.description }
+    #endif
 }

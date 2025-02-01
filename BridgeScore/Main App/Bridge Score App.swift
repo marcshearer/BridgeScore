@@ -108,11 +108,9 @@ class SceneDelegate: NSObject, UIWindowSceneDelegate, ObservableObject {
     
     func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
         Utility.mainThread {
-            print("Intent received")
             if let intent = userActivity.widgetConfigurationIntent(of: BridgeScoreConfiguration.self) {
                 if let scorecardMO = ScorecardEntity.getLastScorecard(for: intent.filter) {
-                    let scorecard = ScorecardViewModel(scorecardMO: scorecardMO)
-                    let details = ScorecardDetails(scorecard: scorecard)
+                    let details = ScorecardDetails(scorecard: scorecardMO)
                     ScorecardListViewChange.send(details)
                 }
             }

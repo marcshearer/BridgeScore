@@ -141,8 +141,10 @@ public class TravellerMO: NSManagedObject, ManagedObject, Identifiable {
         }
     }
     
+#if !widget
     public override var description: String {
         "Traveller: \(self.boardIndex), North \(self.rankingNumber[.north] ?? 0) South \(self.rankingNumber[.south] ?? 0) East \(self.rankingNumber[.east] ?? 0) West \(self.rankingNumber[.west] ?? 0)of Section \(self.section) of Scorecard: \(MasterData.shared.scorecard(id: self.scorecardId)?.desc ?? "")"
     }
     public override var debugDescription: String { self.description }
+#endif
 }

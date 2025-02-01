@@ -7,6 +7,32 @@
 
 import AppIntents
 
+struct ScorecardDetails {
+    var layout: LayoutMO?
+    var scorecard: ScorecardMO?
+    var newScorecard: Bool = false
+    
+    init(scorecard: ScorecardMO? = nil, layout: LayoutMO? = nil, newScorecard: Bool = false) {
+        self.layout = layout
+        self.scorecard = scorecard
+        self.newScorecard = newScorecard
+    }
+}
+
+public struct BridgeScoreConfiguration: WidgetConfigurationIntent {
+    
+    public static var title: LocalizedStringResource = "Scorecard Details"
+    
+    public init() {
+        
+    }
+    
+    @Parameter(title: "Location: ") var filter: LocationEntity?
+    @Parameter(title: "Colour scheme") var palette: PaletteEntity?
+
+}
+
+
 struct CreateScorecard : AppIntent, OpenIntent {
 
     static let title: LocalizedStringResource = "Create Scorecard"
@@ -16,7 +42,7 @@ struct CreateScorecard : AppIntent, OpenIntent {
     func perform() async throws -> some IntentResult {
         let layoutId = target.id
         if let layoutMO = LayoutEntity.layouts(id: layoutId).first {
-            let details = ScorecardDetails(layout: LayoutViewModel(layoutMO: layoutMO), newScorecard: true)
+            let details = ScorecardDetails(layout: layoutMO, newScorecard: true)
             Utility.mainThread {
                 ScorecardListViewChange.send(details)
             }
@@ -94,7 +120,7 @@ struct OpenScorecard : AppIntent, OpenIntent {
     func perform() async throws -> some IntentResult {
         let scorecardId = target.id
         if let scorecardMO = ScorecardEntity.scorecards(id: scorecardId).first {
-            let details = ScorecardDetails(scorecard: ScorecardViewModel(scorecardMO: scorecardMO))
+            let details = ScorecardDetails(scorecard: scorecardMO)
             Utility.mainThread {
                 ScorecardListViewChange.send(details)
             }
@@ -136,6 +162,8 @@ struct LocationEntity : AppEntity {
         var filter: NSPredicate?
         if let locationId = locationId {
             filter = NSPredicate(format: "%K = %@", #keyPath(LocationMO.locationId), locationId as CVarArg)
+        } else {
+            filter = NSPredicate(format: "retired = false" )
         }
         return (CoreData.fetch(from: LocationMO.tableName, filter: filter, sort: [("sequence16", .ascending)]) as! [LocationMO])
     }
@@ -229,13 +257,60 @@ extension ScorecardEntityQuery: EnumerableEntityQuery {
     }
 }
 
-public struct BridgeScoreConfiguration: WidgetConfigurationIntent {
+let paletteEntityList: [PaletteEntity] = [
+    PaletteEntity(name: "Default", barPalette: .bannerButton, detailPalette: .filterUsed),
+    PaletteEntity(name: "Inverse", barPalette: .filterUsed, detailPalette: .bannerButton),
+    PaletteEntity(name: "Standout", barPalette: .highlightTile, detailPalette: .bannerButton),
+]
+
+struct PaletteEntity : AppEntity {
+    public var id: String
+    var containerPalette: ThemeBackgroundColorName
+    var detailPalette: ThemeBackgroundColorName
     
-    public static var title: LocalizedStringResource = "Scorecard Details"
-    
-    public init() {
-        
+    public init(name: String, barPalette: ThemeBackgroundColorName, detailPalette: ThemeBackgroundColorName) {
+        self.id = name
+        self.containerPalette = barPalette
+        self.detailPalette = detailPalette
     }
     
-    @Parameter(title: "Location: ") var filter: LocationEntity?
+    public init?(id: String) {
+        if let entity = PaletteEntity.color(id: id) {
+            self.id = entity.id
+            self.containerPalette = entity.containerPalette
+            self.detailPalette = entity.detailPalette
+        } else {
+            return nil
+        }
+    }
+    
+    static var defaultQuery = PaletteEntityQuery()
+        
+    public static let typeDisplayRepresentation: TypeDisplayRepresentation = "Color"
+    
+    public var displayRepresentation: DisplayRepresentation {
+        DisplayRepresentation(title: "\(id)")
+    }
+    
+    static func color(id: String) -> PaletteEntity? {
+        return paletteEntityList.first(where: {$0.id == id})
+    }
+}
+
+
+struct PaletteEntityQuery : EntityQuery {
+    public func entities(for identifiers: [String]) async throws -> [PaletteEntity] {
+        identifiers.map({PaletteEntity(id: $0)!})
+    }
+    
+    public func suggestedEntities() async throws -> [PaletteEntity] {
+        return paletteEntityList
+    }
+}
+
+extension PaletteEntityQuery: EnumerableEntityQuery {
+    
+    public func allEntities() async throws -> [PaletteEntity] {
+        return paletteEntityList
+    }
 }

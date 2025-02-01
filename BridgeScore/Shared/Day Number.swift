@@ -55,7 +55,7 @@ public class DayNumber: CustomStringConvertible, Equatable, Comparable, Hashable
         hasher.combine(self.value)
     }
     
-    public func toNearbyString(supressDateThisWeek: Bool = true) -> String {
+    public func toNearbyString(supressDateThisWeek: Bool = true, brief: Bool = false) -> String {
         var result = ""
         
         let offset = self - DayNumber.today
@@ -69,6 +69,8 @@ public class DayNumber: CustomStringConvertible, Equatable, Comparable, Hashable
             result = self.date.toString(format: "EEEE")
         } else if supressDateThisWeek && offset < 0 && offset >= -6 {
             result = "Last \(self.date.toString(format: "EEEE"))"
+        } else if brief {
+            result = self.date.toString(format: shortDateFormat)
         } else {
             result = self.date.toString(format: dateFormat)
         }

@@ -37,6 +37,7 @@ class MyApp {
     public static let publicDatabase = cloudContainer.publicCloudDatabase
     public static let privateDatabase = cloudContainer.privateCloudDatabase
     
+    #if !widget
     static let databaseTables: [NSEntityDescription] = [
         ScorecardMO.entity(),
         BoardMO.entity(),
@@ -50,6 +51,7 @@ class MyApp {
         BBONameMO.entity(),
         OverrideMO.entity(),
         DoubleDummyMO.entity()]
+    #endif
     
     static let shared = MyApp()
     
@@ -100,12 +102,9 @@ class MyApp {
         // Get saved database
         MyApp.database = Database(rawValue: UserDefault.database.string) ?? .unknown
         
-        #if !widget
             // Check which database we are connected to
-        #endif
     }
      
-    #if !widget
     private func setupPreviewData() {
         let viewContext = CoreData.context!
         
@@ -115,19 +114,20 @@ class MyApp {
             fatalError()
         }
     }
-    #endif
     
     private func registerDefaults() {
         var initial: [String:Any] = [:]
         for value in UserDefault.allCases {
             initial[value.name] = value.defaultValue ?? ""
         }
+#if !widget
         for type in FilterType.allCases {
             for value in FilterUserDefault.allCases {
                 initial[value.name(type)] = value.defaultValue ?? ""
             }
             MyApp.defaults.register(defaults: initial)
         }
+    #endif
         MyApp.defaults.register(defaults: initial)
     }
 }

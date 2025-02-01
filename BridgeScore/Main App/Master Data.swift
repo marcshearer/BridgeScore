@@ -92,6 +92,15 @@ class MasterData: ObservableObject {
         // Convert scorecards to changes for multi-sessions
         convertScorecards()
         */
+        
+        for scorecard in scorecards {
+            if scorecard.location?.name == "SBU" && scorecard.type.headToHead && scorecard.importSource == .bbo {
+                scorecard.location = locations.first(where: {$0.name == "SOL"})!
+                CoreData.update {
+                    scorecard.updateMO()
+                }
+            }
+        }
     }
     
     func convertScorecardTypes() {

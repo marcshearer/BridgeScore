@@ -575,8 +575,13 @@ class ImportedScorecard: NSObject, ObservableObject {
         if let session = session { 
             updateRankingPositions(session: session)
             mergedSessionRankings()
+            if scorecard.importNext == scorecard.sessions {
+                // Last session - update the total
+                updateRankingPositions(session: 0)
+            }
+        } else {
+            updateRankingPositions(session: 0)
         }
-        updateRankingPositions(session: 0)
     }
     
     func mergedSessionRankings() {

@@ -8,25 +8,6 @@
 import UIKit
 import SwiftUI
 
-protocol EnumPickerDelegate {
-    func enumPickerDidChange(to: Any, allowPopup: Bool)
-}
-
-extension EnumPickerDelegate {
-    func enumPickerDidChange(to: Any) {
-        enumPickerDidChange(to: to, allowPopup: false)
-    }
-}
-
-protocol EnumPickerType : CaseIterable, Equatable {
-    static var validCases: [Self] {get}
-    static var allCases: [Self] {get}
-    var string: String {get}
-    var short: String {get}
-    var rawValue: Int {get}
-    init?(rawValue: Int)
-}
-
 class EnumPicker<EnumType> : UIView, ScrollPickerDelegate where EnumType : EnumPickerType {
     private var scrollPicker: ScrollPicker
     private var accumulatedView: ScrollPickerView!

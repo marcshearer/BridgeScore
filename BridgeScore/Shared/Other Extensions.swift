@@ -8,6 +8,7 @@
 import SwiftUI
 
 #if canImport(UIKit)
+#if !widget
 class SearchBar : UISearchBar {
     
     required init(coder aDecoder: NSCoder) {
@@ -159,6 +160,7 @@ extension UIView {
         return false
     }
 }
+#endif
 #endif
 extension CGPoint {
     
@@ -415,7 +417,6 @@ extension NSAttributedString {
         return bboNameLabel.frame.width
     }
 }
-#endif
 
 extension UIFont {
     
@@ -430,6 +431,7 @@ extension UIFont {
     }
 
 }
+#endif
 
 extension NSMutableAttributedString {
     

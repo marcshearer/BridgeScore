@@ -51,7 +51,11 @@ enum UserDefault: String, CaseIterable {
         case .infoMessage:
             return ""
         case .analysisOptionFormat:
+#if widget
+            return 0
+#else
             return AnalysisOptionFormat.score.rawValue
+#endif
         case .currentUnsaved:
             return false
         case .currentId:
@@ -137,9 +141,11 @@ enum UserDefault: String, CaseIterable {
         return UserDefault.type(forKey: self.name)
     }
     
+#if !widget
     public var importSource: ImportSource? {
         return UserDefault.importSource(forKey: self.name)
     }
+#endif
     
     public static func set(_ value: Any?, forKey name: String) {
         if value == nil {
@@ -257,11 +263,13 @@ enum UserDefault: String, CaseIterable {
         return VpType(rawValue: Int(MyApp.defaults.string(forKey: "\(name)") ?? "") ?? -1) ?? .unknown
     }
     
+#if !widget
     public static func importSource(forKey name: String) -> ImportSource? {
         return ImportSource(rawValue: Int(MyApp.defaults.string(forKey: name) ?? "") ?? -1)
     }
+#endif
 }
-
+#if !widget
 enum FilterType: CaseIterable {
     case list
     case stats
@@ -358,3 +366,4 @@ enum FilterUserDefault: String, CaseIterable {
         return UserDefault.date(forKey: self.name(type))
     }
 }
+#endif

@@ -73,10 +73,12 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
         set { self.entry16 = Int16(newValue)}
     }
     
+#if !widget
     public var importSource: ImportSource {
         get { ImportSource(rawValue: Int(self.importSource16)) ?? .none }
         set { self.importSource16 = Int16(newValue.rawValue)}
     }
+#endif
     
     public var importNext: Int {
         get { Int(self.importNext16) }

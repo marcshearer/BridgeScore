@@ -186,8 +186,10 @@ public class BoardMO: NSManagedObject, ManagedObject, Identifiable {
         }
     }
 
+#if !widget
     public override var description: String {
         "Board: \(self.boardIndex) of Scorecard: \(MasterData.shared.scorecard(id: self.scorecardId)?.desc ?? "")"
     }
     public override var debugDescription: String { self.description }
+#endif
 }

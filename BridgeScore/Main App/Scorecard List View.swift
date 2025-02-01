@@ -9,18 +9,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 import AudioToolbox
 import Combine
-
-struct ScorecardDetails {
-    var layout: LayoutViewModel?
-    var scorecard: ScorecardViewModel?
-    var newScorecard: Bool = false
-    
-    init(scorecard: ScorecardViewModel? = nil, layout: LayoutViewModel? = nil, newScorecard: Bool = false) {
-        self.layout = layout
-        self.scorecard = scorecard
-        self.newScorecard = newScorecard
-    }
-}
+import WidgetKit
 
 enum Destination: Int {
     case root
@@ -34,8 +23,6 @@ enum Destination: Int {
     
     var navigate: Bool { [.layoutSetup, .playerSetup, .locationSetup, .stats, .scorecardInput].contains(self)}
 }
-
-let ScorecardListViewChange = PassthroughSubject<ScorecardDetails, Never>()
 
 struct ScorecardListView: View, DropDelegate {
     @Environment(\.verticalSizeClass) var sizeClass
@@ -219,7 +206,7 @@ struct ScorecardListView: View, DropDelegate {
     
     private func linkToParametersOrInput() {
         if layoutSelected {
-            createScorecard(from: layout)
+            createScorecard(from: layout.layoutMO!)
             var transaction = Transaction(animation: .linear(duration: 0.01))
             transaction.disablesAnimations = true
             withTransaction(transaction) {
@@ -249,7 +236,8 @@ struct ScorecardListView: View, DropDelegate {
         .edgesIgnoringSafeArea(.all)
     }
     
-    private func createScorecard(from layout: LayoutViewModel) {
+    private func createScorecard(from layoutMO: LayoutMO) {
+        let layout = LayoutViewModel(layoutMO: layoutMO)
         self.selected.reset(from: layout)
         Scorecard.current.load(scorecard: selected)
         selected.saveScorecard()
@@ -277,7 +265,8 @@ struct ScorecardListView: View, DropDelegate {
                         layoutSelected = false
                         destination = .layoutSelect
                     }
-                } else if let scorecard = details.scorecard {
+                } else if let scorecardMO = details.scorecard {
+                    let scorecard = ScorecardViewModel(scorecardMO: scorecardMO)
                     self.selected.copy(from: scorecard)
                     linkAction()
                 }
@@ -532,6 +521,7 @@ struct ScorecardSummaryView: View {
             }, okAction: {
                 highlighted = false
                 scorecard.remove()
+                WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
             })
         }
     }

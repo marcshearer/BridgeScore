@@ -23,14 +23,14 @@ struct Provider: AppIntentTimelineProvider {
     
     func timeline(for configuration: BridgeScoreConfiguration, in context: Context) async -> Timeline<BridgeScoreWidgetEntry> {
         if let id = configuration.filter?.id {
-            return Timeline(entries: [BridgeScoreWidgetEntry(filter: LocationEntity(id: id))], policy: .atEnd)
+            return Timeline(entries: [BridgeScoreWidgetEntry(filter: LocationEntity(id: id), palette: configuration.palette)], policy: .atEnd)
         } else {
             return Timeline(entries: [BridgeScoreWidgetEntry()], policy: .atEnd)
         }
     }
     
     func snapshot(for configuration: BridgeScoreConfiguration, in context: Context) async -> BridgeScoreWidgetEntry {
-        return BridgeScoreWidgetEntry(filter: configuration.filter)
+        return BridgeScoreWidgetEntry(filter: configuration.filter, palette: configuration.palette)
     }
 }
 
@@ -38,6 +38,7 @@ struct BridgeScoreWidgetEntry: TimelineEntry {
     var date: Date
     var desc: String?
     var filter: LocationEntity? = nil
+    var palette: PaletteEntity? = nil
     var location: LocationEntity? = nil
     var score: String? = nil
     var position: String? = nil
@@ -45,8 +46,10 @@ struct BridgeScoreWidgetEntry: TimelineEntry {
     var scorecardId: UUID? = nil
     var noDate: Bool = true
     
-    init(date: Date? = nil, filter: LocationEntity? = nil) {
+    init(date: Date? = nil, filter: LocationEntity? = nil, palette: PaletteEntity? = nil) {
+        let palette = palette ?? paletteEntityList.first!
         self.filter = filter
+        self.palette = palette
         if let scorecardMO = ScorecardEntity.getLastScorecard(for: filter) {
             self.scorecardId = scorecardMO.scorecardId
             self.desc = scorecardMO.desc
@@ -73,15 +76,16 @@ struct BridgeScoreWidgetEntryView : View {
     var entry: Provider.Entry
 
     var body: some View {
-        let theme = Palette.filterUsed
+        let paletteEntity = entry.palette ?? paletteEntityList.first!
+        let theme = PaletteColor(paletteEntity.detailPalette)
         let label = (entry.filter == nil || (entry.filter!.id == nullUUID) ? "Most recent" : entry.filter!.name)
-        BridgeScoreWidgetContainer(label: label) {
+        BridgeScoreWidgetContainer(label: label, palette: PaletteColor(paletteEntity.containerPalette)) {
             VStack(spacing: 0) {
                 if entry.noDate {
                     Text("No Scorecard found").font(.title3)
                 } else {
                     if let desc = entry.desc {
-                        Text(desc).lineLimit(1).font(bannerFont).bold()
+                        Text(desc).font(bannerFont).bold()
                     }
                     HStack(spacing: 0) {
                         Text(dateLocation).font(.title2)
@@ -105,6 +109,7 @@ struct BridgeScoreWidgetEntryView : View {
                 }
                 
             }
+            .lineLimit(1)
             .foregroundColor(theme.text)
             .containerBackground(theme.background, for: .widget)
             .minimumScaleFactor(0.75)
@@ -112,8 +117,9 @@ struct BridgeScoreWidgetEntryView : View {
     }
     
     var dateLocation: String {
-        var dateLocation = DayNumber(from: entry.date).toNearbyString()
-        if let location = entry.location?.name, entry.filter == nil || (entry.filter!.id == nullUUID) {
+        let noLocation = entry.filter == nil || (entry.filter!.id == nullUUID)
+        var dateLocation = (DayNumber(from: entry.date)-14).toNearbyString(brief: noLocation)
+        if let location = entry.location?.name, noLocation {
             dateLocation += " at \(location)"
         }
         return dateLocation
@@ -123,6 +129,7 @@ struct BridgeScoreWidgetEntryView : View {
 
 struct BridgeScoreWidgetContainer<Content>: View where Content: View {
     var label: String
+    var palette: PaletteColor
     var content: ()->Content
     let titleWidth: CGFloat = 40
     
@@ -131,13 +138,13 @@ struct BridgeScoreWidgetContainer<Content>: View where Content: View {
             HStack {
                 ZStack {
                     Rectangle()
-                        .foregroundColor(Palette.bannerButton.background)
+                        .foregroundColor(palette.background)
                         .frame(width: titleWidth)
                     HStack(spacing: 0) {
                         Spacer()
                         Spacer().frame(width: 20)
                         Text(label)
-                            .foregroundColor(Palette.bannerButton.text)
+                            .foregroundColor(palette.text)
                             .font(.title2).bold()
                             .minimumScaleFactor(0.5)
                         Spacer().frame(width: 20)
@@ -166,8 +173,8 @@ struct BridgeScoreWidget: Widget {
             kind: widgetKind,
             intent: BridgeScoreConfiguration.self,
             provider: Provider()
-        ) { (config) in
-            BridgeScoreWidgetEntryView(entry: BridgeScoreWidgetEntry(filter: config.filter))
+        ) { (configuration) in
+            BridgeScoreWidgetEntryView(entry: BridgeScoreWidgetEntry(filter: configuration.filter, palette: configuration.palette))
         }
         .contentMarginsDisabled()
         .configurationDisplayName("Latest Scorecard")

@@ -8,6 +8,7 @@
 import UIKit
 import SwiftUI
 import Combine
+import WidgetKit
 
 public class ScorecardColumn: Codable, Equatable {
     var type: ColumnType
@@ -422,6 +423,7 @@ struct ScorecardInputView: View {
     
     func backAction() -> Bool {
         scorecard.saveScorecard()
+        WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
         return true
     }
 }
