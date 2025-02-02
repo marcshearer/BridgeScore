@@ -5,7 +5,6 @@
         <attribute name="name" optional="YES" attributeType="String"/>
     </entity>
     <entity name="Board" representedClassName="BoardMO" syncable="YES">
-        <attribute name="board16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="boardIndex16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="boardNumber16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="comment" optional="YES" attributeType="String"/>
@@ -32,7 +31,6 @@
         <attribute name="vulnerability16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
     <entity name="DoubleDummy" representedClassName="DoubleDummyMO" syncable="YES">
-        <attribute name="board16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="boardIndex16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="declarer16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="made16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
@@ -69,7 +67,6 @@
         <attribute name="sequence16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
     </entity>
     <entity name="Override" representedClassName="OverrideMO" syncable="YES">
-        <attribute name="board16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="boardIndex16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="declarer16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="made16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
@@ -99,7 +96,6 @@
         <attribute name="section16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="session16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="south" optional="YES" attributeType="String"/>
-        <attribute name="table16" optional="YES" attributeType="Integer 16" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="tie" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="way16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="west" optional="YES" attributeType="String"/>
@@ -153,7 +149,6 @@
     </entity>
     <entity name="Traveller" representedClassName="TravellerMO" syncable="YES">
         <attribute name="biddingRejected" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
-        <attribute name="board16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="boardIndex16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="contractDouble16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="contractLevel16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>

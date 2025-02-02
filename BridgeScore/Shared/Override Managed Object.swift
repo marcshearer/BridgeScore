@@ -14,7 +14,6 @@ public class OverrideMO: NSManagedObject, ManagedObject, Identifiable {
     
     public var id: (UUID, Int) { (self.scorecardId, self.boardIndex) }
     @NSManaged public var scorecardId: UUID
-    @NSManaged public var board16: Int16 // TODO: - Remove when converted
     @NSManaged public var boardIndex16: Int16
     @NSManaged public var declarer16: Int16
     @NSManaged public var suit16: Int16

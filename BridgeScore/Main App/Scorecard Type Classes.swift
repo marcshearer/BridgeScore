@@ -432,7 +432,7 @@ public class ScorecardType: Equatable {
         self.eventType = eventType
         self.boardScoreType = boardScoreType
         self.aggregateType = aggregateType
-        self.headToHead = headToHead
+        self.headToHead = (eventType == .teams ? headToHead : false)
     }
 
     public static func == (lhs: ScorecardType, rhs: ScorecardType) -> Bool {

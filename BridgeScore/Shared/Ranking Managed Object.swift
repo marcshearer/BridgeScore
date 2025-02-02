@@ -15,7 +15,6 @@ public class RankingMO: NSManagedObject, ManagedObject, Identifiable {
     
     public var id: (UUID, Int, Int, Int) { (self.scorecardId, self.session, self.section, self.number) }
     @NSManaged public var scorecardId: UUID
-    @NSManaged public var table16: Int16 // TODO: - Remove when converted
     @NSManaged public var session16: Int16
     @NSManaged public var section16: Int16
     @NSManaged public var number16: Int16

@@ -14,7 +14,6 @@ public class TravellerMO: NSManagedObject, ManagedObject, Identifiable {
     
     public var id: (UUID, Int, [Seat:Int], Int16) { (self.scorecardId, self.boardIndex, self.rankingNumber, self.northSection16) }
     @NSManaged public var scorecardId: UUID
-    @NSManaged public var board16: Int16 // TODO: - Remove when converted
     @NSManaged public var boardIndex16: Int16
     @NSManaged public var contractLevel16: Int16
     @NSManaged public var contractSuit16: Int16
