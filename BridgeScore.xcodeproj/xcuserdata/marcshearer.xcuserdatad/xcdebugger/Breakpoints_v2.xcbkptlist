@@ -14,8 +14,8 @@
             filePath = "BridgeScore/Main App/Import Framework.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "655"
-            endingLineNumber = "655"
+            startingLineNumber = "613"
+            endingLineNumber = "613"
             landmarkName = "updateRankingPositions(session:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -30,8 +30,8 @@
             filePath = "BridgeScore/Main App/Import Framework.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "646"
-            endingLineNumber = "646"
+            startingLineNumber = "604"
+            endingLineNumber = "604"
             landmarkName = "updateRankingPositions(session:)"
             landmarkType = "7">
          </BreakpointContent>

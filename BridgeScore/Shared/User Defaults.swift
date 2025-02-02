@@ -51,11 +51,7 @@ enum UserDefault: String, CaseIterable {
         case .infoMessage:
             return ""
         case .analysisOptionFormat:
-#if widget
-            return 0
-#else
             return AnalysisOptionFormat.score.rawValue
-#endif
         case .currentUnsaved:
             return false
         case .currentId:
@@ -141,11 +137,9 @@ enum UserDefault: String, CaseIterable {
         return UserDefault.type(forKey: self.name)
     }
     
-#if !widget
     public var importSource: ImportSource? {
         return UserDefault.importSource(forKey: self.name)
     }
-#endif
     
     public static func set(_ value: Any?, forKey name: String) {
         if value == nil {
@@ -263,13 +257,11 @@ enum UserDefault: String, CaseIterable {
         return VpType(rawValue: Int(MyApp.defaults.string(forKey: "\(name)") ?? "") ?? -1) ?? .unknown
     }
     
-#if !widget
     public static func importSource(forKey name: String) -> ImportSource? {
         return ImportSource(rawValue: Int(MyApp.defaults.string(forKey: name) ?? "") ?? -1)
     }
-#endif
 }
-#if !widget
+
 enum FilterType: CaseIterable {
     case list
     case stats
@@ -305,47 +297,6 @@ enum FilterUserDefault: String, CaseIterable {
         }
     }
     
-    public static func load(filterValues: ScorecardFilterValues, type: FilterType) {
-
-        // Partners
-        if let partners = FilterUserDefault.filterPartners.array(type) as? [String] {
-            filterValues.partners.setArray(partners)
-        }
-        
-        // Locations
-        if let locations = FilterUserDefault.filterLocations.array(type) as? [String] {
-            filterValues.locations.setArray(locations)
-        }
-
-        // Types
-        if let types = FilterUserDefault.filterTypes.array(type) as? [Int] {
-            filterValues.types.setArray(types)
-        }
-            
-        // Date from
-        if let dateFrom = FilterUserDefault.filterDateFrom.date(type) {
-            filterValues.dateFrom = dateFrom
-        }
-
-        // Date to
-        if let dateTo = FilterUserDefault.filterDateTo.date(type) {
-            filterValues.dateTo = dateTo
-        }
-                    
-        // Search text
-        filterValues.searchText = FilterUserDefault.filterSearchText.string(type)
-         
-    }
-    
-    public static func save(filterValues: ScorecardFilterValues, type: FilterType) {
-        FilterUserDefault.filterPartners.set(filterValues.partners.trueValues, type: type)
-        FilterUserDefault.filterLocations.set(filterValues.locations.trueValues, type: type)
-        FilterUserDefault.filterTypes.set(filterValues.types.trueValues, type: type)
-        FilterUserDefault.filterDateFrom.set(filterValues.dateFrom, type: type)
-        FilterUserDefault.filterDateTo.set(filterValues.dateTo, type: type)
-        FilterUserDefault.filterSearchText.set(filterValues.searchText, type: type)
-    }
-    
     public func name(_ type: FilterType) -> String {
         return type.string + "\(self)".capitalized
     }
@@ -366,4 +317,4 @@ enum FilterUserDefault: String, CaseIterable {
         return UserDefault.date(forKey: self.name(type))
     }
 }
-#endif
+

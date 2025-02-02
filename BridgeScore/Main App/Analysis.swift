@@ -1054,17 +1054,6 @@ class AnalysisAssessment : Hashable {
     }
 }
 
-enum AnalysisOptionFormat: Int, CaseIterable, Identifiable {
-    case tricks = 0
-    case made = 1
-    case points = 2
-    case score = 3
-    
-    public var id: Self { self }
-    
-    var string: String { "\(self)".capitalized }
-}
-
 class AnalysisOption : Identifiable, Equatable, Hashable {
     private(set) var id: UUID = UUID()
     public var board: Int

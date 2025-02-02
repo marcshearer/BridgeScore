@@ -608,11 +608,10 @@ public class ScorecardType: Equatable {
         matchScoreType.places
     }
     
-#if widget
-    public func matchSuffix(scorecard: ScorecardMO) -> String {
+    public func matchSuffix(maxScore: Float?) -> String {
         switch matchScoreType {
         case .vp:
-            if let maxScore = scorecard.maxScore {
+            if let maxScore = maxScore {
                 return " / \(maxScore.toString(places: matchPlaces))"
             } else {
                 return ""
@@ -622,27 +621,9 @@ public class ScorecardType: Equatable {
         }
     }
     
-    public func matchPrefix(scorecard: ScorecardMO) -> String {
-        return matchScoreType.prefix(score: scorecard.score ?? 0)
+    public func matchPrefix(score: Float?) -> String {
+        return matchScoreType.prefix(score: score ?? 0)
     }
-#else
-    public func matchSuffix(scorecard: ScorecardViewModel) -> String {
-        switch matchScoreType {
-        case .vp:
-            if let maxScore = scorecard.maxScore {
-                return " / \(maxScore.toString(places: matchPlaces))"
-            } else {
-                return ""
-            }
-        default:
-            return matchScoreType.suffix
-        }
-    }
-    
-    public func matchPrefix(scorecard: ScorecardViewModel) -> String {
-        return matchScoreType.prefix(score: scorecard.score ?? 0)
-    }
-#endif
     
     public func maxScore(tables: Int) -> Float? {
         if matchAggregate == .average && boardScoreType == .percent {

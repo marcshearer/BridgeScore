@@ -392,7 +392,7 @@ fileprivate enum Row: Int, CaseIterable {
         case .date:
             return scorecard.date.toString(format: dateFormat, localized: true)
         case .score:
-            return scorecard.score == nil ? "" : "\(scorecard.score!.toString(places: min(1, scorecard.type.matchPlaces)))\(scorecard.type.matchSuffix(scorecard:scorecard))"
+            return scorecard.score == nil ? "" : "\(scorecard.score!.toString(places: min(1, scorecard.type.matchPlaces)))\(scorecard.type.matchSuffix(maxScore: scorecard.maxScore))"
         case .position:
             return "\(scorecard.position) of \(scorecard.entry)"
         case .scoring:

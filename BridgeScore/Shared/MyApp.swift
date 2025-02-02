@@ -64,9 +64,9 @@ class MyApp {
     public static var undoManager = UndoManager()
     
     #if targetEnvironment(macCatalyst)
-    public static let target: Target = .macOS
+        public static let target: Target = .macOS
     #else
-    public static let target: Target = .iOS
+        public static let target: Target = .iOS
     #endif
 
     public static var format: Format = .tablet
@@ -78,22 +78,25 @@ class MyApp {
         Themes.selectTheme(.standard)
         self.registerDefaults()
         #if !widget
-        Version.current.load()
-        // Remove comment (CAREFULLY) if you want to clear the iCloud DB
-        // DatabaseUtilities.initialiseAllCloud() {
-        // Remove (CAREFULLY) if you want to clear the Core Data DB
-        // And always set a trap on this line
-        // DatabaseUtilities.initialiseAllCoreData()
-        self.setupDatabase()
-        // self.setupPreviewData()
-        //}
-              
-        #if canImport(UIKit)
-        UITextView.appearance().backgroundColor = .clear
-        UITextView.appearance().borderStyle = .none
-        UITextField.appearance().backgroundColor = .clear
-        UISegmentedControl.appearance().selectedSegmentTintColor = UIColor(Palette.tile.background)
-        #endif
+            Version.current.load()
+        
+            // Remove comment (CAREFULLY) if you want to clear the iCloud DB
+            // DatabaseUtilities.initialiseAllCloud() {
+            // Remove (CAREFULLY) if you want to clear the Core Data DB
+            // And always set a trap on this line
+            // DatabaseUtilities.initialiseAllCoreData()
+        
+            self.setupDatabase()
+        
+            // self.setupPreviewData()
+            //}
+                  
+            #if canImport(UIKit)
+                UITextView.appearance().backgroundColor = .clear
+                UITextView.appearance().borderStyle = .none
+                UITextField.appearance().backgroundColor = .clear
+                UISegmentedControl.appearance().selectedSegmentTintColor = UIColor(Palette.tile.background)
+            #endif
         #endif
     }
     
@@ -120,14 +123,14 @@ class MyApp {
         for value in UserDefault.allCases {
             initial[value.name] = value.defaultValue ?? ""
         }
-#if !widget
+
         for type in FilterType.allCases {
             for value in FilterUserDefault.allCases {
                 initial[value.name(type)] = value.defaultValue ?? ""
             }
             MyApp.defaults.register(defaults: initial)
         }
-    #endif
+
         MyApp.defaults.register(defaults: initial)
     }
 }

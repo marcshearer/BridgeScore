@@ -7,53 +7,23 @@
 
 import AppIntents
 
+enum ScorecardDetailsAction {
+    case openScorecard
+    case createScorecard
+}
+
 struct ScorecardDetails {
+    var action: ScorecardDetailsAction
     var layout: LayoutMO?
     var scorecard: ScorecardMO?
-    var newScorecard: Bool = false
+    var forceDisplayDetail: Bool
     
-    init(scorecard: ScorecardMO? = nil, layout: LayoutMO? = nil, newScorecard: Bool = false) {
+    init(action: ScorecardDetailsAction, scorecard: ScorecardMO? = nil, layout: LayoutMO? = nil, forceDisplayDetail: Bool = false) {
+        self.action = action
         self.layout = layout
         self.scorecard = scorecard
-        self.newScorecard = newScorecard
+        self.forceDisplayDetail = forceDisplayDetail
     }
-}
-
-public struct BridgeScoreConfiguration: WidgetConfigurationIntent {
-    
-    public static var title: LocalizedStringResource = "Scorecard Details"
-    
-    public init() {
-        
-    }
-    
-    @Parameter(title: "Location: ") var filter: LocationEntity?
-    @Parameter(title: "Colour scheme") var palette: PaletteEntity?
-
-}
-
-
-struct CreateScorecard : AppIntent, OpenIntent {
-
-    static let title: LocalizedStringResource = "Create Scorecard"
-    
-    @Parameter(title: "Template", description: "The template to use for the Scorecard") var target: LayoutEntity
-    
-    func perform() async throws -> some IntentResult {
-        let layoutId = target.id
-        if let layoutMO = LayoutEntity.layouts(id: layoutId).first {
-            let details = ScorecardDetails(layout: layoutMO, newScorecard: true)
-            Utility.mainThread {
-                ScorecardListViewChange.send(details)
-            }
-        }
-        return .result()
-    }
-    
-    static var parameterSummary: some ParameterSummary {
-        Summary("Create scorecard for \(\.$target)")
-    }
-    
 }
 
 struct LayoutEntity : AppEntity {
@@ -64,7 +34,7 @@ struct LayoutEntity : AppEntity {
         if let layout = LayoutEntity.layouts(id: id).first {
             name = layout.desc
         } else {
-            name = "Unknown"
+            name = "Choose template"
         }
     }
     
@@ -120,7 +90,7 @@ struct OpenScorecard : AppIntent, OpenIntent {
     func perform() async throws -> some IntentResult {
         let scorecardId = target.id
         if let scorecardMO = ScorecardEntity.scorecards(id: scorecardId).first {
-            let details = ScorecardDetails(scorecard: scorecardMO)
+            let details = ScorecardDetails(action: .openScorecard, scorecard: scorecardMO)
             Utility.mainThread {
                 ScorecardListViewChange.send(details)
             }
@@ -144,7 +114,7 @@ struct LocationEntity : AppEntity {
         if let location = LocationEntity.locations(id: id).first {
             name = location.name
         } else {
-            name = "All locations"
+            name = "Any location"
         }
     }
     

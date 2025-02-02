@@ -423,7 +423,7 @@ struct ScorecardInputView: View {
     
     func backAction() -> Bool {
         scorecard.saveScorecard()
-        WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
+        WidgetCenter.shared.reloadTimelines(ofKind: openScorecardWidgetKind)
         return true
     }
 }
@@ -1472,7 +1472,6 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     // MARK: - Utility Routines ======================================================================== -
     
     func keyboardMoved(_ keyboardHeight: CGFloat) {
-        #if !widget
         if !ignoreKeyboard {
             if scorecardInputControlInset == 0 {
                 getInputControlInset()
@@ -1500,7 +1499,6 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 }
             }
         }
-        #endif
     }
     
     func getInputControlInset() {

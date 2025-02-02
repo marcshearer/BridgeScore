@@ -8,48 +8,6 @@
 import CoreData
 import SwiftUI
 
-public enum ImportSource: Int, Equatable, CaseIterable {
-    case none = 0
-    case bbo = 1
-    case bridgeWebs = 2
-    case pbn = 3
-    case usebio = 4
-    
-    static var validCases: [ImportSource] {
-        return ImportSource.allCases.filter({$0 != .none})
-    }
-    
-    var string: String {
-        switch self {
-        case .none:
-            return "No import"
-        case .bbo:
-            return "Import from BBO"
-        case .bridgeWebs:
-            return "Import from BridgeWebs"
-        case .pbn:
-            return "Import PBN file"
-        case .usebio:
-            return "Import Usebio file"
-        }
-    }
-    
-    var from: String {
-        switch self {
-        case .none:
-            return ""
-        case .bbo:
-            return "BBO"
-        case .bridgeWebs:
-            return "BridgeWebs"
-        case .pbn:
-            return "PBN file"
-        case .usebio:
-            return "Usebio file"
-        }
-    }
-}
-
 class ImportedScorecard: NSObject, ObservableObject {
     var id = UUID()
     var importSource: ImportSource?

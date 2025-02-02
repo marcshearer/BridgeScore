@@ -304,7 +304,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     }
     
     public var scoreString: String {
-        "\(type.matchPrefix(scorecard: self))\((score ?? 0).toString(places: min(1, type.matchPlaces)))\(type.matchSuffix(scorecard: self))"
+        "\(type.matchPrefix(score: score))\((score ?? 0).toString(places: min(1, type.matchPlaces)))\(type.matchSuffix(maxScore: maxScore))"
     }
     
     public var description: String {

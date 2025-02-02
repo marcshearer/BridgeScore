@@ -38,7 +38,6 @@ class Version {
         infoMessage = UserDefault.infoMessage.string
     }
     
-    #if !widget
     public func check(upgrade: Bool = false) {
         if upgrade {
             if Double(self.lastVersion) == 0.0 {
@@ -95,5 +94,5 @@ class Version {
     private func compare(_ version1: String, _ version2: String) -> Utility.CompareResult {
         return Utility.compareVersions(version1: version1, version2: version2)
     }
-    #endif
+
 }

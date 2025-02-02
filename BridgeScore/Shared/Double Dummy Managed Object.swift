@@ -44,10 +44,9 @@ public class DoubleDummyMO: NSManagedObject, ManagedObject, Identifiable {
         set { self.suit16 = Int16(newValue.rawValue) }
     }
 
-#if !widget
     public override var description: String {
         "Double Dummy: Board: \(self.boardIndex) of Scorecard: \(MasterData.shared.scorecard(id: self.scorecardId)?.desc ?? ""), Declarer: \(self.declarer.string) ,Suit: \(self.suit.string)"
     }
+    
     public override var debugDescription: String { self.description }
-#endif
 }

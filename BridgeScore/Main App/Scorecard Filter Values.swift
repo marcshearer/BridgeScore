@@ -55,11 +55,11 @@ class ScorecardFilterValues: ObservableObject {
     }
     
     public func load() {
-        FilterUserDefault.load(filterValues: self, type: self.filterType)
+        ScorecardFilterValues.load(filterValues: self, type: self.filterType)
     }
     
     public func save() {
-        FilterUserDefault.save(filterValues: self, type: self.filterType)
+        ScorecardFilterValues.save(filterValues: self, type: self.filterType)
     }
     
     public var isClear: Bool {
@@ -131,5 +131,46 @@ class ScorecardFilterValues: ObservableObject {
         
         return result
         
+    }
+    
+    public static func load(filterValues: ScorecardFilterValues, type: FilterType) {
+
+        // Partners
+        if let partners = FilterUserDefault.filterPartners.array(type) as? [String] {
+            filterValues.partners.setArray(partners)
+        }
+        
+        // Locations
+        if let locations = FilterUserDefault.filterLocations.array(type) as? [String] {
+            filterValues.locations.setArray(locations)
+        }
+
+        // Types
+        if let types = FilterUserDefault.filterTypes.array(type) as? [Int] {
+            filterValues.types.setArray(types)
+        }
+            
+        // Date from
+        if let dateFrom = FilterUserDefault.filterDateFrom.date(type) {
+            filterValues.dateFrom = dateFrom
+        }
+
+        // Date to
+        if let dateTo = FilterUserDefault.filterDateTo.date(type) {
+            filterValues.dateTo = dateTo
+        }
+                    
+        // Search text
+        filterValues.searchText = FilterUserDefault.filterSearchText.string(type)
+         
+    }
+    
+    public static func save(filterValues: ScorecardFilterValues, type: FilterType) {
+        FilterUserDefault.filterPartners.set(filterValues.partners.trueValues, type: type)
+        FilterUserDefault.filterLocations.set(filterValues.locations.trueValues, type: type)
+        FilterUserDefault.filterTypes.set(filterValues.types.trueValues, type: type)
+        FilterUserDefault.filterDateFrom.set(filterValues.dateFrom, type: type)
+        FilterUserDefault.filterDateTo.set(filterValues.dateTo, type: type)
+        FilterUserDefault.filterSearchText.set(filterValues.searchText, type: type)
     }
 }

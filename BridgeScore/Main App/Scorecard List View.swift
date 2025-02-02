@@ -47,6 +47,7 @@ struct ScorecardListView: View, DropDelegate {
     @State private var deleted = false
     @State private var cancelled = false
     @State private var dismissDetailView = false
+    @State private var forceDisplayDetail = false
     @State private var path: [Destination] = []
     var dropColor: Binding<PaletteColor> { Binding { tileColor } set: { (newValue) in tileColor = newValue } }
     var linkToLayoutSelect: Binding<Bool> { Binding { destination == .layoutSelect } set: { (_) in } }
@@ -154,6 +155,7 @@ struct ScorecardListView: View, DropDelegate {
             }
         }
         .onTapGesture {
+            self.forceDisplayDetail = false
             self.destination = .layoutSelect
         }
     }
@@ -253,10 +255,12 @@ struct ScorecardListView: View, DropDelegate {
             layoutSelected = false
                 // Link to new view
             Utility.executeAfter(delay: 0.1) {
-                if details.newScorecard {
+                switch details.action {
+                case .createScorecard:
+                    forceDisplayDetail = details.forceDisplayDetail
                     if let layout = details.layout {
                         createScorecard(from: layout)
-                        if layout.displayDetail {
+                        if layout.displayDetail || forceDisplayDetail {
                             self.destination = .scorecardParameters
                         } else {
                             destination = .scorecardInput
@@ -265,10 +269,12 @@ struct ScorecardListView: View, DropDelegate {
                         layoutSelected = false
                         destination = .layoutSelect
                     }
-                } else if let scorecardMO = details.scorecard {
-                    let scorecard = ScorecardViewModel(scorecardMO: scorecardMO)
-                    self.selected.copy(from: scorecard)
-                    linkAction()
+                case .openScorecard:
+                    if let scorecardMO = details.scorecard {
+                        let scorecard = ScorecardViewModel(scorecardMO: scorecardMO)
+                        self.selected.copy(from: scorecard)
+                        linkAction()
+                    }
                 }
             }
         }
@@ -521,7 +527,7 @@ struct ScorecardSummaryView: View {
             }, okAction: {
                 highlighted = false
                 scorecard.remove()
-                WidgetCenter.shared.reloadTimelines(ofKind: widgetKind)
+                WidgetCenter.shared.reloadTimelines(ofKind: openScorecardWidgetKind)
             })
         }
     }

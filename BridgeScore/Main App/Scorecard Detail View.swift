@@ -225,7 +225,7 @@ struct ScorecardDetailsView: View {
                                 Text(" / ")
                                 InputFloat(field: $scorecard.maxScore, width: 100, places: scorecard.type.matchPlaces, maxCharacters: 7)
                             } else {
-                                Text(scorecard.type.matchSuffix(scorecard: scorecard))
+                                Text(scorecard.type.matchSuffix(maxScore: scorecard.maxScore))
                             }
                             
                             Spacer()

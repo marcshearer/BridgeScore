@@ -38,14 +38,10 @@ struct KeyboardAdaptive: ViewModifier {
                 if keyboardHeight == 0 {
                     offset = 0
                 } else {
-                    #if widget
-                    offset = 0
-                    #else
                     let keyboardTop = geometry.frame(in: .global).height - keyboardHeight
                     let focusedTextInputBottom = (UIResponder.currentFirstResponder?.globalFrame?.maxY ?? 0) + offset
                     bottomPadding = max(0, focusedTextInputBottom - keyboardTop - geometry.safeAreaInsets.bottom)
                     offset = bottomPadding
-                    #endif
                 }
             }
             .offset(y: -offset)
@@ -59,7 +55,6 @@ extension View {
     }
 }
 
-#if !widget
 extension UIResponder {
     static var currentFirstResponder: UIResponder? {
         _currentFirstResponder = nil
@@ -78,4 +73,3 @@ extension UIResponder {
         return view.superview?.convert(view.frame, to: nil)
     }
 }
-#endif

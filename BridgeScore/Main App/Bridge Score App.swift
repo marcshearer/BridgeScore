@@ -50,7 +50,6 @@ struct MyScene: Scene {
         }
         .onChange(of: scenePhase, initial: false) { (_, phase) in
             if phase == .active {
-                #if !widget
                 if let scene = UIApplication.shared.connectedScenes.first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene {
                     #if targetEnvironment(macCatalyst)
                         if let titlebar = scene.titlebar {
@@ -59,7 +58,6 @@ struct MyScene: Scene {
                         }
                     #endif
                 }
-                #endif
             }
         }
     }
@@ -108,11 +106,18 @@ class SceneDelegate: NSObject, UIWindowSceneDelegate, ObservableObject {
     
     func scene(_ scene: UIScene, continue userActivity: NSUserActivity) {
         Utility.mainThread {
-            if let intent = userActivity.widgetConfigurationIntent(of: BridgeScoreConfiguration.self) {
+            if let intent = userActivity.widgetConfigurationIntent(of: OpenScorecardWidgetConfiguration.self) {
                 if let scorecardMO = ScorecardEntity.getLastScorecard(for: intent.filter) {
-                    let details = ScorecardDetails(scorecard: scorecardMO)
+                    let details = ScorecardDetails(action: .openScorecard, scorecard: scorecardMO)
                     ScorecardListViewChange.send(details)
                 }
+            } else if let intent = userActivity.widgetConfigurationIntent(of: CreateScorecardWidgetConfiguration.self) {
+                var layoutMO: LayoutMO?
+                if let layoutId = intent.layout?.id, let layout = MasterData.shared.layouts.first(where: {$0.layoutId == layoutId}) {
+                    layoutMO = layout.layoutMO
+                }
+                let details = ScorecardDetails(action: .createScorecard, layout: layoutMO, forceDisplayDetail: (intent.forceDisplayDetail))
+                ScorecardListViewChange.send(details)
             }
         }
     }

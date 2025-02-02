@@ -23,6 +23,7 @@
 	</array>
 	<key>NSUserActivityTypes</key>
 	<array>
+		<string>com.sheareronline.bridgescore.createScorecard</string>
 		<string>com.sheareronline.bridgescore.openScorecard</string>
 	</array>
 	<key>UIBackgroundModes</key>

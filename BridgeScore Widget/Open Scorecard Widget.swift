@@ -1,5 +1,5 @@
 //
-//  BridgeScore_Widget.swift
+//  Open Scorecard Widget.swift
 //  BridgeScore Widget
 //
 //  Created by Marc Shearer on 29/01/2025.
@@ -9,7 +9,37 @@ import WidgetKit
 import SwiftUI
 import AppIntents
 
-struct Provider: AppIntentTimelineProvider {
+struct OpenScorecardWidget: Widget {
+    var body: some WidgetConfiguration {
+        AppIntentConfiguration(
+            kind: openScorecardWidgetKind,
+            intent: OpenScorecardWidgetConfiguration.self,
+            provider: OpenScorecardWidgetProvider()
+        ) { (configuration) in
+            OpenScorecardWidgetEntryView(entry: OpenScorecardWidgetEntry(filter: configuration.filter, palette: configuration.palette))
+        }
+        .contentMarginsDisabled()
+        .configurationDisplayName("Latest Scorecard")
+        .description("Displays the latest Scorecard for a location")
+        .supportedFamilies([.systemMedium])
+    }
+}
+
+public struct OpenScorecardWidgetConfiguration: WidgetConfigurationIntent {
+    
+    public static var title: LocalizedStringResource = "Scorecard Details"
+    
+    public init() { }
+    
+    @Parameter(title: "Location: ") var filter: LocationEntity?
+    @Parameter(title: "Colour scheme") var palette: PaletteEntity?
+    
+    public static var parameterSummary: some ParameterSummary {
+        Summary("Create scorecard for \(\.$filter) \(\.$palette)")
+    }
+}
+
+struct OpenScorecardWidgetProvider: AppIntentTimelineProvider {
     
     init() {
         // Set up core data stack
@@ -17,24 +47,24 @@ struct Provider: AppIntentTimelineProvider {
         MyApp.shared.start()
     }
     
-    func placeholder(in context: Context) -> BridgeScoreWidgetEntry {
-        BridgeScoreWidgetEntry()
+    func placeholder(in context: Context) -> OpenScorecardWidgetEntry {
+        OpenScorecardWidgetEntry()
     }
     
-    func timeline(for configuration: BridgeScoreConfiguration, in context: Context) async -> Timeline<BridgeScoreWidgetEntry> {
+    func timeline(for configuration: OpenScorecardWidgetConfiguration, in context: Context) async -> Timeline<OpenScorecardWidgetEntry> {
         if let id = configuration.filter?.id {
-            return Timeline(entries: [BridgeScoreWidgetEntry(filter: LocationEntity(id: id), palette: configuration.palette)], policy: .atEnd)
+            return Timeline(entries: [OpenScorecardWidgetEntry(filter: LocationEntity(id: id), palette: configuration.palette)], policy: .atEnd)
         } else {
-            return Timeline(entries: [BridgeScoreWidgetEntry()], policy: .atEnd)
+            return Timeline(entries: [OpenScorecardWidgetEntry()], policy: .atEnd)
         }
     }
     
-    func snapshot(for configuration: BridgeScoreConfiguration, in context: Context) async -> BridgeScoreWidgetEntry {
-        return BridgeScoreWidgetEntry(filter: configuration.filter, palette: configuration.palette)
+    func snapshot(for configuration: OpenScorecardWidgetConfiguration, in context: Context) async -> OpenScorecardWidgetEntry {
+        return OpenScorecardWidgetEntry(filter: configuration.filter, palette: configuration.palette)
     }
 }
 
-struct BridgeScoreWidgetEntry: TimelineEntry {
+struct OpenScorecardWidgetEntry: TimelineEntry {
     var date: Date
     var desc: String?
     var filter: LocationEntity? = nil
@@ -72,14 +102,14 @@ struct BridgeScoreWidgetEntry: TimelineEntry {
     }
 }
 
-struct BridgeScoreWidgetEntryView : View {
-    var entry: Provider.Entry
+struct OpenScorecardWidgetEntryView : View {
+    var entry: OpenScorecardWidgetProvider.Entry
 
     var body: some View {
         let paletteEntity = entry.palette ?? paletteEntityList.first!
         let theme = PaletteColor(paletteEntity.detailPalette)
         let label = (entry.filter == nil || (entry.filter!.id == nullUUID) ? "Most recent" : entry.filter!.name)
-        BridgeScoreWidgetContainer(label: label, palette: PaletteColor(paletteEntity.containerPalette)) {
+        WidgetContainer(label: label, palette: PaletteColor(paletteEntity.containerPalette), titlePosition: .left) {
             VStack(spacing: 0) {
                 if entry.noDate {
                     Text("No Scorecard found").font(.title3)
@@ -125,59 +155,4 @@ struct BridgeScoreWidgetEntryView : View {
         return dateLocation
     }
     
-}
-
-struct BridgeScoreWidgetContainer<Content>: View where Content: View {
-    var label: String
-    var palette: PaletteColor
-    var content: ()->Content
-    let titleWidth: CGFloat = 40
-    
-    var body: some View {
-        HStack {
-            HStack {
-                ZStack {
-                    Rectangle()
-                        .foregroundColor(palette.background)
-                        .frame(width: titleWidth)
-                    HStack(spacing: 0) {
-                        Spacer()
-                        Spacer().frame(width: 20)
-                        Text(label)
-                            .foregroundColor(palette.text)
-                            .font(.title2).bold()
-                            .minimumScaleFactor(0.5)
-                        Spacer().frame(width: 20)
-                        Spacer()
-                    }
-                    .fixedSize()
-                    .frame(height: titleWidth)
-                    .rotationEffect(.degrees(270))
-                    .ignoresSafeArea()
-                }
-                .ignoresSafeArea()
-                .frame(width: titleWidth)
-                Spacer()
-            }
-            .frame(width: titleWidth)
-            Spacer()
-            content()
-            Spacer()
-        }
-    }
-}
-
-struct BridgeScoreWidget: Widget {
-    var body: some WidgetConfiguration {
-        AppIntentConfiguration(
-            kind: widgetKind,
-            intent: BridgeScoreConfiguration.self,
-            provider: Provider()
-        ) { (configuration) in
-            BridgeScoreWidgetEntryView(entry: BridgeScoreWidgetEntry(filter: configuration.filter, palette: configuration.palette))
-        }
-        .contentMarginsDisabled()
-        .configurationDisplayName("Latest Scorecard")
-        .description("Displays the latest Scorecard for a location")
-    }
 }

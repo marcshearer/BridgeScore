@@ -445,22 +445,20 @@ class Themes {
     ]
     
     public static func selectTheme(_ themeName: ThemeName, changeIcon: Bool = false) {
-        #if !widget
-            let oldIcon = Themes.currentTheme?.icon
-        #endif
+        let oldIcon = Themes.currentTheme?.icon
         Themes.currentTheme = Theme(themeName: themeName)
-        #if !widget
-            let newIcon = Themes.currentTheme.icon
-            #if canImport(UIKit)
-                if UIApplication.shared.supportsAlternateIcons && changeIcon && oldIcon != newIcon {
-                    Themes.setApplicationIconName(Themes.currentTheme.icon)
-                }
-            #endif
-        #endif
+        let newIcon = Themes.currentTheme.icon
+#if canImport(UIKit)
+#if !widget
+        if UIApplication.shared.supportsAlternateIcons && changeIcon && oldIcon != newIcon {
+            Themes.setApplicationIconName(Themes.currentTheme.icon)
+        }
+#endif
+#endif
     }
     
-    #if !widget
-        #if canImport(UIKit)
+#if !widget
+#if canImport(UIKit)
             private static func setApplicationIconName(_ iconName: String?) {
                 if UIApplication.shared.responds(to: #selector(getter: UIApplication.supportsAlternateIcons)) && UIApplication.shared.supportsAlternateIcons {
                     
@@ -474,6 +472,6 @@ class Themes {
                     newMethod(UIApplication.shared, selector, iconName as NSString?, { _ in })
                 }
             }
-        #endif
-    #endif
+#endif
+#endif
 }
