@@ -38,3 +38,9 @@ Stats
 Slide in needs to be a popover
 Initial content offset (to hide filter) seems to go wrong when rotate
 Font too small in banner?
+
+Renaming Widgets
+================
+
+If you rename widgets it can cause problems.
+Need to edit scheme for widgets and change Arguments - WidgetKit - Kind, in run phase

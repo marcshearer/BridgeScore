@@ -7,6 +7,57 @@
 
 import AppIntents
 
+struct CreateScorecardAppIntent: AppIntent, OpenIntent {
+    
+    static let title: LocalizedStringResource = "Create Scorecard"
+    
+    @Parameter(title: "Template", description: "The template to use for the Scorecard") var target: LayoutEntity
+    @Parameter(title: "Templates", description: "Templates to choose from") var layouts: [LayoutEntity]
+    @Parameter(title: "Force Details", description: "Force display of detail") var forceDisplayDetail: Bool
+    
+    init() {
+        self.init(layouts: [], forceDisplayDetail: false)
+    }
+
+    init(layouts: [LayoutEntity] = [], forceDisplayDetail: Bool = false) {
+        target = layouts.first ?? LayoutEntity()
+        self.layouts = layouts
+        self.forceDisplayDetail = forceDisplayDetail
+    }
+    
+    // Note perform is in extension not visible to widget
+    
+    static var parameterSummary: some ParameterSummary {
+        Summary("Create scorecard for \(\.$target)")
+    }
+}
+
+struct LastScorecardAppIntent : AppIntent, OpenIntent {
+    
+    static let title: LocalizedStringResource = "Open Scorecard"
+    
+    @Parameter(title: "Scorecard", description: "Scorecard to Open") var target: ScorecardEntity
+
+    init() {
+        
+    }
+    
+    init(id: UUID? = nil) {
+        if let id = id {
+            self.target = ScorecardEntity(id: id)
+        }
+    }
+    
+    // Note perform is in extension not visible to widget
+    
+    static var parameterSummary: some ParameterSummary {
+        Summary("Create scorecard for \(\.$target)")
+    }
+    
+    static let openAppWhenRun: Bool = true
+    
+}
+
 struct LayoutEntity : AppEntity {
     public var id: UUID
     
@@ -135,23 +186,19 @@ struct ScorecardEntity : AppEntity {
         DisplayRepresentation(title: "\(desc)")
     }
     
-    public static func scorecards(id scorecardId: UUID? = nil, locationId: UUID? = nil, limit: Int = 0) -> [ScorecardMO] {
+    public static func scorecards(id scorecardId: UUID? = nil, locationIds: [UUID]? = nil, limit: Int = 0) -> [ScorecardMO] {
         var filter: NSPredicate?
         if let scorecardId = scorecardId {
             filter = NSPredicate(format: "%K = %@", #keyPath(ScorecardMO.scorecardId), scorecardId as CVarArg)
-        } else if let locationId = locationId {
-            filter = NSPredicate(format: "%K = %@", #keyPath(ScorecardMO.locationId), locationId as CVarArg)
+        } else if let locationIds = locationIds {
+            let locationIds = locationIds.map{$0 as CVarArg}
+            filter = NSPredicate(format: "%K IN %@", #keyPath(ScorecardMO.locationId), locationIds)
         }
         return (CoreData.fetch(from: ScorecardMO.tableName, filter: filter, limit: limit, sort: [("date", .descending)]) as! [ScorecardMO])
     }
     
-    public static func getLastScorecard(for location: LocationEntity?) -> ScorecardMO? {
-        // Find location
-        var locationId: UUID?
-        if let location = location, let locationMO = LocationEntity.locations(id: location.id).first {
-            locationId = locationMO.locationId
-        }
-        return ScorecardEntity.scorecards(locationId: locationId, limit: 1).first
+    public static func getLastScorecard(for locations: [LocationEntity]?) -> ScorecardMO? {
+        return ScorecardEntity.scorecards(locationIds: locations?.map({$0.id}), limit: 1).first
     }
 
 }

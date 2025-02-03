@@ -214,7 +214,7 @@ struct ScorecardListView: View, DropDelegate {
             var transaction = Transaction(animation: .linear(duration: 0.01))
             transaction.disablesAnimations = true
             withTransaction(transaction) {
-                if layout.displayDetail {
+                if layout.displayDetail || forceDisplayDetail {
                     destination = .scorecardParameters
                 } else {
                     destination = .scorecardInput
@@ -278,7 +278,7 @@ struct ScorecardListView: View, DropDelegate {
                         filterLayouts = nil
                         destination = .layoutSelect
                     }
-                case .openScorecard:
+                case .scorecardDetails:
                     if let scorecard = details.scorecard {
                         self.selected.copy(from: scorecard)
                         linkAction()
@@ -532,7 +532,7 @@ struct ScorecardSummaryView: View {
             }, okAction: {
                 highlighted = false
                 scorecard.remove()
-                WidgetCenter.shared.reloadTimelines(ofKind: openScorecardWidgetKind)
+                WidgetCenter.shared.reloadTimelines(ofKind: lastScorecardWidgetKind)
             })
         }
     }

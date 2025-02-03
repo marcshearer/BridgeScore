@@ -32,7 +32,7 @@ public struct CreateScorecardWidgetConfiguration: WidgetConfigurationIntent {
     
     @Parameter(title: "Templates: ") var layouts: [LayoutEntity]?
     @Parameter(title: "Edit parameters: ", default: false) var forceDisplayDetail: Bool
-    @Parameter(title: "Palette: ") var palette: PaletteEntity?
+    @Parameter(title: "Colour scheme: ") var palette: PaletteEntity?
     @Parameter(title: "Title: ") var title: String?
     @Parameter(title: "Title position: ", default: .top) var titlePosition: WidgetTitlePosition
 }
@@ -88,14 +88,24 @@ struct CreateScorecardWidgetEntryView : View {
         let theme = PaletteColor(paletteEntity.detailPalette)
         let layout = entry.layouts?.first ?? LayoutEntity()
         VStack(spacing: 0) {
-            WidgetContainer(label: entry.title ?? layout.name, palette: PaletteColor(paletteEntity.containerPalette), titlePosition: entry.titlePosition) {
-                VStack(spacing: 0) {
-                    Image(systemName: "plus").font(bigFont).bold()
+            Button(intent: CreateScorecardAppIntent(layouts: entry.layouts ?? [], forceDisplayDetail: entry.forceDisplayDetail), label: {
+                WidgetContainer(label: entry.title ?? layout.name, palette: PaletteColor(paletteEntity.containerPalette), titlePosition: entry.titlePosition) {
+                    VStack(spacing: 0) {
+                        Spacer()
+                        HStack(spacing: 0) {
+                            Spacer()
+                            Image(systemName: "plus").font(bigFont).bold()
+                            Spacer()
+                        }
+                        Spacer()
+                    }
+                    .foregroundColor(theme.text)
+                    .containerBackground(theme.background, for: .widget)
+                    .minimumScaleFactor(0.75)
                 }
-                .foregroundColor(theme.text)
-                .containerBackground(theme.background, for: .widget)
-                .minimumScaleFactor(0.75)
-            }
+            })
+            .buttonStyle(RectangleButtonStyle())
+            .ignoresSafeArea()
         }
     }
 }

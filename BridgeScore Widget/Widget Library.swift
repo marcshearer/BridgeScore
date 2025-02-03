@@ -26,7 +26,7 @@ struct WidgetContainer<Content>: View where Content: View {
     let titleWidth: CGFloat = 40
     
     var body: some View {
-        HStack {
+        HStack(spacing: 0) {
             if titlePosition == .left {
                 widgetContainerLeft
             } else {
@@ -37,12 +37,12 @@ struct WidgetContainer<Content>: View where Content: View {
         
     var widgetContainerLeft: some View {
         GeometryReader { geometry in
-            HStack {
+            HStack(spacing: 0) {
                 ZStack {
                     Rectangle()
                         .foregroundColor(palette.background)
                         .frame(width: titleWidth)
-                    HStack {
+                    HStack(spacing: 0) {
                         HStack(spacing: 0) {
                             Spacer().frame(minWidth: 20)
                             Text(label)
@@ -59,11 +59,7 @@ struct WidgetContainer<Content>: View where Content: View {
                     }
                     .frame(width: titleWidth)
                 }
-                HStack {
-                    Spacer()
-                    content()
-                    Spacer()
-                }
+                content().frame(width: geometry.size.width - titleWidth, height: geometry.size.height)
             }
         }
     }
@@ -103,4 +99,12 @@ struct WidgetContainer<Content>: View where Content: View {
             }
         }
     }
+}
+
+struct RectangleButtonStyle: ButtonStyle {
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .foregroundStyle(.tint)
+      .background(.clear, in: Rectangle())
+  }
 }

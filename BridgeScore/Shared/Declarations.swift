@@ -14,7 +14,7 @@ import Combine
 public let maxRetention = 366
 public let appId = "com.sheareronline.bridgescore"
 public let appGroup = "group.\(appId)" // Has to match entitlements
-public let openScorecardWidgetKind = "\(appId).openScorecard"
+public let lastScorecardWidgetKind = "\(appId).lastScorecard"
 public let createScorecardWidgetKind = "\(appId).createScorecard"
 
 // Sizes

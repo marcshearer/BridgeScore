@@ -423,7 +423,7 @@ struct ScorecardInputView: View {
     
     func backAction() -> Bool {
         scorecard.saveScorecard()
-        WidgetCenter.shared.reloadTimelines(ofKind: openScorecardWidgetKind)
+        WidgetCenter.shared.reloadTimelines(ofKind: lastScorecardWidgetKind)
         return true
     }
 }

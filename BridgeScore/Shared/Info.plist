@@ -2,8 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
@@ -21,11 +19,15 @@
 	<array>
 		<string>BridgeScoreConfiguration</string>
 	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSUserActivityTypes</key>
 	<array>
 		<string>com.sheareronline.bridgescore.createScorecard</string>
-		<string>com.sheareronline.bridgescore.openScorecard</string>
+		<string>com.sheareronline.bridgescore.lastScorecard</string>
 	</array>
+	<key>UIApplicationSceneManifest</key>
+	<false/>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
@@ -33,6 +35,8 @@
 	</array>
 	<key>UIFileSharingEnabled</key>
 	<true/>
+	<key>UILaunchScreen</key>
+	<false/>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>
