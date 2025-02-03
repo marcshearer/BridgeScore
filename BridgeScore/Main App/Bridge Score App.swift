@@ -108,17 +108,28 @@ class SceneDelegate: NSObject, UIWindowSceneDelegate, ObservableObject {
         Utility.mainThread {
             if let intent = userActivity.widgetConfigurationIntent(of: OpenScorecardWidgetConfiguration.self) {
                 if let scorecardMO = ScorecardEntity.getLastScorecard(for: intent.filter) {
-                    let details = ScorecardDetails(action: .openScorecard, scorecard: scorecardMO)
+                    let scorecard = ScorecardViewModel(scorecardMO: scorecardMO)
+                    let details = ScorecardDetails(action: .openScorecard, scorecard: scorecard)
                     ScorecardListViewChange.send(details)
                 }
             } else if let intent = userActivity.widgetConfigurationIntent(of: CreateScorecardWidgetConfiguration.self) {
-                var layoutMO: LayoutMO?
-                if let layoutId = intent.layout?.id, let layout = MasterData.shared.layouts.first(where: {$0.layoutId == layoutId}) {
-                    layoutMO = layout.layoutMO
+                // Convert layout entities into layout view models
+                var layouts: [LayoutViewModel]? = []
+                if let layoutEntities = intent.layouts {
+                    for layoutEntity in layoutEntities {
+                        if let layout = MasterData.shared.layout(id: layoutEntity.id) {
+                            layouts!.append(layout)
+                        }
+                    }
+                } else {
+                    layouts = nil
                 }
-                let details = ScorecardDetails(action: .createScorecard, layout: layoutMO, forceDisplayDetail: (intent.forceDisplayDetail))
+                let details = ScorecardDetails(action: .createScorecard, layouts: layouts, forceDisplayDetail: (intent.forceDisplayDetail))
                 ScorecardListViewChange.send(details)
             }
+        }
+        func layout(id: UUID) -> LayoutViewModel? {
+            MasterData.shared.layout(id: id)
         }
     }
 }

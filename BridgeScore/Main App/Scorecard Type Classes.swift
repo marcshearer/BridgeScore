@@ -641,7 +641,6 @@ public class ScorecardType: Equatable {
         }
     }
     
-    #if !widget
     public func invertScore(score: Float, pair: Pair = .ew, type: ScoreType? = nil) -> Float {
         if pair == .ns {
             return score
@@ -664,7 +663,6 @@ public class ScorecardType: Equatable {
     public func invertMatchScore(score: Float, pair: Pair = .ew) -> Float {
         return invertScore(score: score, pair: pair, type: matchScoreType)
     }
-    #endif
 
     public var description: String {
         switch players {
@@ -674,6 +672,23 @@ public class ScorecardType: Equatable {
             return "Team"
         default:
             return "Pair"
+        }
+    }
+    
+    public func scoreString(score: Float?, maxScore: Float?) -> String {
+        "\(matchPrefix(score: score))\((score ?? 0).toString(places: min(1, matchPlaces)))\(matchSuffix(maxScore: maxScore))"
+    }
+        
+    public func positionString(score: Float?, position: Int, entry: Int) -> String {
+        if let score = score, let ordinal = position.ordinal, position > 0 {
+            if headToHead {
+                let draw = (score == invertMatchScore(score: score))
+                return (draw ? "Draw" : position == 1 ? "Win" : "Loss")
+            } else {
+                return "\(ordinal) of \(entry)"
+            }
+        } else {
+            return ""
         }
     }
 }

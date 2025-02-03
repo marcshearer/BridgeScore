@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		B20095E02D4A00830051B8E3 /* Scorecard Intents.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20095DE2D4A00830051B8E3 /* Scorecard Intents.swift */; };
 		B20095E12D4A00830051B8E3 /* Scorecard Intents.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20095DE2D4A00830051B8E3 /* Scorecard Intents.swift */; };
 		B20095E42D4A02180051B8E3 /* Scorecard Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */; };
 		B20095E62D4A02180051B8E3 /* Player Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D67279D65CC00D64225 /* Player Managed Object.swift */; };
@@ -162,6 +161,8 @@
 		B2CD8E722D3BE80F00E0B3DD /* UITextView Wrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CD8E712D3BE80700E0B3DD /* UITextView Wrapper.swift */; };
 		B2DADE5127E7A06E009F7572 /* Import BBO.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2DADE5027E7A06E009F7572 /* Import BBO.swift */; };
 		B2E1B76827DC71E300204CAC /* User Defaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E1B76727DC71E300204CAC /* User Defaults.swift */; };
+		B2E2FDBF2D4FBA220044B9AB /* Scorecard Entities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E2FDBE2D4FBA1B0044B9AB /* Scorecard Entities.swift */; };
+		B2E2FDC02D4FBA220044B9AB /* Scorecard Entities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E2FDBE2D4FBA1B0044B9AB /* Scorecard Entities.swift */; };
 		B2EB3D66279D54D500D64225 /* Board Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D65279D54D500D64225 /* Board Managed Object.swift */; };
 		B2EB3D68279D65CC00D64225 /* Player Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D67279D65CC00D64225 /* Player Managed Object.swift */; };
 		B2EB3D6A279D666800D64225 /* Location Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2EB3D69279D666800D64225 /* Location Managed Object.swift */; };
@@ -343,6 +344,7 @@
 		B2CD8E712D3BE80700E0B3DD /* UITextView Wrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UITextView Wrapper.swift"; sourceTree = "<group>"; };
 		B2DADE5027E7A06E009F7572 /* Import BBO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Import BBO.swift"; sourceTree = "<group>"; };
 		B2E1B76727DC71E300204CAC /* User Defaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "User Defaults.swift"; sourceTree = "<group>"; };
+		B2E2FDBE2D4FBA1B0044B9AB /* Scorecard Entities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Entities.swift"; sourceTree = "<group>"; };
 		B2EB3D65279D54D500D64225 /* Board Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Board Managed Object.swift"; sourceTree = "<group>"; };
 		B2EB3D67279D65CC00D64225 /* Player Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Player Managed Object.swift"; sourceTree = "<group>"; };
 		B2EB3D69279D666800D64225 /* Location Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Location Managed Object.swift"; sourceTree = "<group>"; };
@@ -383,6 +385,7 @@
 			isa = PBXGroup;
 			children = (
 				B20095DE2D4A00830051B8E3 /* Scorecard Intents.swift */,
+				B2E2FDBE2D4FBA1B0044B9AB /* Scorecard Entities.swift */,
 			);
 			path = "Apple Intelligence";
 			sourceTree = "<group>";
@@ -832,6 +835,7 @@
 				B20096062D4A02430051B8E3 /* Other Extensions.swift in Sources */,
 				B20096072D4A02430051B8E3 /* Utility Extension.swift in Sources */,
 				B256101E2D4E75BB005DB22F /* Create Scorecard Widget.swift in Sources */,
+				B2E2FDC02D4FBA220044B9AB /* Scorecard Entities.swift in Sources */,
 				B20096082D4A02430051B8E3 /* iCloud.swift in Sources */,
 				B20096092D4A02430051B8E3 /* String Extensions.swift in Sources */,
 				B200960A2D4A02430051B8E3 /* Date Extensions.swift in Sources */,
@@ -842,7 +846,6 @@
 				B20095F42D4A02280051B8E3 /* BridgeScore.xcdatamodeld in Sources */,
 				B20095E92D4A02180051B8E3 /* Location Managed Object.swift in Sources */,
 				B20095EB2D4A02180051B8E3 /* Layout Managed Object.swift in Sources */,
-				B20095E02D4A00830051B8E3 /* Scorecard Intents.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -901,6 +904,7 @@
 				B2A2053D27B13F2F00C83C88 /* Keyboard Adaptive.swift in Sources */,
 				B2A5A42627E2582F00754061 /* BBO Name Managed Object.swift in Sources */,
 				B2B1D58B2B04C29F007A2977 /* Ranking Table Managed Object.swift in Sources */,
+				B2E2FDBF2D4FBA220044B9AB /* Scorecard Entities.swift in Sources */,
 				B26BCE482799AD8900B73501 /* Day Number.swift in Sources */,
 				B213A33D2AB8616700EA098F /* import PBN.swift in Sources */,
 				B26BCE6F279AEB6C00B73501 /* Scorecard List View.swift in Sources */,

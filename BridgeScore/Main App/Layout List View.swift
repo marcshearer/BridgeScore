@@ -12,13 +12,14 @@ struct LayoutListView: View {
     @Environment(\.dismiss) var dismiss
     @Binding var selected: Bool
     @Binding var layout: LayoutViewModel
+    @State var filterLayouts: [LayoutViewModel]?
     @State private var title = "Select Template"
     @State private var linkToEdit = false
     var completion: (()->())? = nil
     @ObservedObject private var data = MasterData.shared
     
     var body: some View {
-        let layouts = data.layouts
+        let layouts = (filterLayouts == nil ? data.layouts : data.layouts.filter( {filterLayouts!.contains($0)}))
         
         StandardView("Layout List", slideInId: id) {
             VStack(spacing: 0) {

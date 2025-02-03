@@ -112,8 +112,6 @@ public var isLandscape: Bool {
 
 // Application specific types
 
-let ScorecardListViewChange = PassthroughSubject<ScorecardDetails, Never>()
-
 public enum TotalCalculation: Int, CaseIterable {
     case automatic = 0
     case manual = 1
@@ -205,6 +203,73 @@ public enum ImportSource: Int, Equatable, CaseIterable {
             return "Usebio file"
         }
     }
+}
+
+public enum Pair: Int, CaseIterable, Identifiable, Equatable {
+    case ns
+    case ew
+    case unknown
+    
+    public var id: Self { self }
+    
+    init(string: String) {
+        switch string.uppercased() {
+        case "NS", "N", "S":
+            self = .ns
+        case "EW", "E", "W":
+            self = .ew
+        default:
+            self = .unknown
+        }
+    }
+    
+    var string: String {
+        switch self {
+        case .ns:
+            return "North / South"
+        case .ew:
+            return "East / West"
+        default:
+            return "Unknown"
+        }
+    }
+    
+    var short: String {
+        return "\(self)".uppercased()
+    }
+    
+    static var validCases: [Pair] {
+        return Pair.allCases.filter{$0 != .unknown}
+    }
+    
+    var other: Pair {
+        switch self {
+        case .ns:
+            return .ew
+        case .ew:
+            return .ns
+        default:
+            return .unknown
+        }
+    }
+    
+
+    
+    var sign: Int {
+        switch self {
+        case .ns:
+            return 1
+        case .ew:
+            return -1
+        default:
+            return 0
+        }
+    }
+    
+    public static func < (lhs: Pair, rhs: Pair) -> Bool {
+        return lhs.rawValue < rhs.rawValue
+    }
+    
 }
 
 #if canImport(UIKit)

@@ -48,6 +48,7 @@ struct ScorecardListView: View, DropDelegate {
     @State private var cancelled = false
     @State private var dismissDetailView = false
     @State private var forceDisplayDetail = false
+    @State private var filterLayouts: [LayoutViewModel]? = nil
     @State private var path: [Destination] = []
     var dropColor: Binding<PaletteColor> { Binding { tileColor } set: { (newValue) in tileColor = newValue } }
     var linkToLayoutSelect: Binding<Bool> { Binding { destination == .layoutSelect } set: { (_) in } }
@@ -109,7 +110,7 @@ struct ScorecardListView: View, DropDelegate {
                     // Completed
                     linkToParametersOrInput()
                 }) {
-                    LayoutListView(selected: $layoutSelected, layout: $layout, completion: {
+                    LayoutListView(selected: $layoutSelected, layout: $layout, filterLayouts: filterLayouts, completion: {
                         destination = .root
                     })
                 }
@@ -156,6 +157,7 @@ struct ScorecardListView: View, DropDelegate {
         }
         .onTapGesture {
             self.forceDisplayDetail = false
+            self.filterLayouts = nil
             self.destination = .layoutSelect
         }
     }
@@ -208,7 +210,7 @@ struct ScorecardListView: View, DropDelegate {
     
     private func linkToParametersOrInput() {
         if layoutSelected {
-            createScorecard(from: layout.layoutMO!)
+            createScorecard(from: layout)
             var transaction = Transaction(animation: .linear(duration: 0.01))
             transaction.disablesAnimations = true
             withTransaction(transaction) {
@@ -238,8 +240,7 @@ struct ScorecardListView: View, DropDelegate {
         .edgesIgnoringSafeArea(.all)
     }
     
-    private func createScorecard(from layoutMO: LayoutMO) {
-        let layout = LayoutViewModel(layoutMO: layoutMO)
+    private func createScorecard(from layout: LayoutViewModel) {
         self.selected.reset(from: layout)
         Scorecard.current.load(scorecard: selected)
         selected.saveScorecard()
@@ -258,20 +259,27 @@ struct ScorecardListView: View, DropDelegate {
                 switch details.action {
                 case .createScorecard:
                     forceDisplayDetail = details.forceDisplayDetail
-                    if let layout = details.layout {
-                        createScorecard(from: layout)
-                        if layout.displayDetail || forceDisplayDetail {
-                            self.destination = .scorecardParameters
+                    if let layouts = details.layouts, !layouts.isEmpty {
+                        if layouts.count == 1 {
+                            let layout = layouts.first!
+                            createScorecard(from: layout)
+                            if layout.displayDetail || forceDisplayDetail {
+                                self.destination = .scorecardParameters
+                            } else {
+                                destination = .scorecardInput
+                            }
                         } else {
-                            destination = .scorecardInput
+                            layoutSelected = false
+                            filterLayouts = layouts
+                            destination = .layoutSelect
                         }
                     } else {
                         layoutSelected = false
+                        filterLayouts = nil
                         destination = .layoutSelect
                     }
                 case .openScorecard:
-                    if let scorecardMO = details.scorecard {
-                        let scorecard = ScorecardViewModel(scorecardMO: scorecardMO)
+                    if let scorecard = details.scorecard {
                         self.selected.copy(from: scorecard)
                         linkAction()
                     }
@@ -448,10 +456,7 @@ struct ScorecardSummaryView: View {
     
     var position: some View {
         HStack {
-            if scorecard.position != 0 && scorecard.entry != 0 {
-                Text("\(scorecard.position) / \(scorecard.entry)")
-                    
-            }
+            Text(scorecard.positionString)
         }
     }
     

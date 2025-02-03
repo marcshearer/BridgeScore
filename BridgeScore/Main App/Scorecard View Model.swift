@@ -304,7 +304,11 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     }
     
     public var scoreString: String {
-        "\(type.matchPrefix(score: score))\((score ?? 0).toString(places: min(1, type.matchPlaces)))\(type.matchSuffix(maxScore: maxScore))"
+        type.scoreString(score: score, maxScore: maxScore)
+    }
+    
+    public var positionString: String {
+        type.positionString(score: score, position: position, entry: entry)
     }
     
     public var description: String {
@@ -322,7 +326,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         }
         return result
     }
-    
+        
     public var debugDescription: String { self.description }
     
     public func backupCurrent() {

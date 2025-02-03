@@ -86,15 +86,12 @@ struct OpenScorecardWidgetEntry: TimelineEntry {
             self.date = scorecardMO.date
             self.noDate = false
             self.location = LocationEntity(id: scorecardMO.locationId)
-            let type = scorecardMO.type.matchScoreType
+            let type = scorecardMO.type
+            let matchType = type.matchScoreType
             self.type = scorecardMO.type.brief
             if let score = scorecardMO.score {
-                self.score = "\(type.prefix(score: score))\(score.toString(places: min(1,type.places)))\(type.suffix)"
-            }
-            let position = scorecardMO.position
-            let entry = scorecardMO.entry
-            if let position = position.ordinal, entry != 0 {
-                self.position = "\(position) of \(entry)"
+                self.score = type.scoreString(score: score, maxScore: scorecardMO.maxScore)
+                position = type.positionString(score: score, position: scorecardMO.position, entry: scorecardMO.entry)
             }
         } else {
             self.date = Date()
