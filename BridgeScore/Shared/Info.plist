@@ -15,16 +15,13 @@
 			</array>
 		</dict>
 	</array>
-	<key>INIntentsSupported</key>
-	<array>
-		<string>BridgeScoreConfiguration</string>
-	</array>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>NSUserActivityTypes</key>
 	<array>
 		<string>com.sheareronline.bridgescore.createScorecard</string>
 		<string>com.sheareronline.bridgescore.lastScorecard</string>
+		<string>com.sheareronline.bridgescore.stats</string>
 	</array>
 	<key>UIApplicationSceneManifest</key>
 	<false/>

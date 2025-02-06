@@ -29,7 +29,7 @@ class MasterData: ObservableObject {
         let layoutMOs = CoreData.fetch(from: LayoutMO.tableName, sort: (key: #keyPath(LayoutMO.sequence16), direction: .ascending)) as! [LayoutMO]
         let playerMOs = CoreData.fetch(from: PlayerMO.tableName, sort: (key: #keyPath(PlayerMO.sequence16), direction: .ascending)) as! [PlayerMO]
         let locationMOs = CoreData.fetch(from: LocationMO.tableName, sort: (key: #keyPath(LocationMO.sequence16), direction: .ascending)) as! [LocationMO]
-        let scorecardMOs = CoreData.fetch(from: ScorecardMO.tableName, sort: (key: #keyPath(ScorecardMO.date), direction: .descending)) as! [ScorecardMO]
+        let scorecardMOs = CoreData.fetch(from: ScorecardMO.tableName, sort: [(key: #keyPath(ScorecardMO.date), direction: .descending), (key: #keyPath(ScorecardMO.sequence16), direction: .descending)]) as! [ScorecardMO]
         let bboNameMOs = CoreData.fetch(from: BBONameMO.tableName, sort: (key: #keyPath(BBONameMO.bboName), direction: .ascending)) as! [BBONameMO]
         
         // Setup players
@@ -155,8 +155,7 @@ extension MasterData {
         CoreData.update {
             scorecard.scorecardMO = ScorecardMO()
             scorecard.updateMO()
-            let index = self.scorecards.firstIndex(where: {$0.date < scorecard.date}) ?? scorecards.endIndex
-            Utility.debugMessage("MasterData", "Inserting \(scorecard.scorecardId.uuidString)", force: true)
+            let index = sortedIndex(scorecard: scorecard)
             self.scorecards.insert(scorecard, at: index)
         }
     }
@@ -180,9 +179,17 @@ extension MasterData {
                 scorecard.updateMO()
             }
             if let index = self.scorecards.firstIndex(where: {$0 == scorecard}) {
+                let dateChanged = (self.scorecards[index].date != scorecard.date)
                 self.scorecards[index] = scorecard
+                if dateChanged {
+                    self.scorecards.move(fromOffsets: IndexSet(integer: index), toOffset: sortedIndex(scorecard: scorecard))
+                }
             }
         }
+    }
+    
+    public func sortedIndex(scorecard: ScorecardViewModel) -> Int {
+        self.scorecards.firstIndex(where: {$0.date < scorecard.date || ($0.date == scorecard.date && $0.sequence < scorecard.sequence)}) ?? scorecards.endIndex
     }
        
     public func scorecard(id scorecardId: UUID?) -> ScorecardViewModel? {

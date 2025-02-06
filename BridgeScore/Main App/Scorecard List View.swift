@@ -254,7 +254,7 @@ struct ScorecardListView: View, DropDelegate {
             cancelled = true
             self.destination = .root
             layoutSelected = false
-                // Link to new view
+            // Link to new view
             Utility.executeAfter(delay: 0.1) {
                 switch details.action {
                 case .createScorecard:
@@ -283,6 +283,8 @@ struct ScorecardListView: View, DropDelegate {
                         self.selected.copy(from: scorecard)
                         linkAction()
                     }
+                case .stats:
+                    self.destination = .stats
                 }
             }
         }
@@ -296,7 +298,7 @@ struct ScorecardListView: View, DropDelegate {
                            BannerOption(text: "Locations", action: { destination = .locationSetup }),
                            BannerOption(text: "Import BBO Names", action: { ImportBBO.importNames() }),
                            BannerOption(text: "Backup", action: { MessageBox.shared.show("Backing up", cancelText: "Cancel", okText: "Continue", okAction: {Backup.shared.backup() ; MessageBox.shared.hide()})})]
-        if Utility.isSimulator {
+        if Utility.isSimulator || MyApp.target == .iOS {
             menuOptions.append(
                 BannerOption(text: "Restore", action: {
                     Backup.shared.restore(dateString: "Latest") }))
@@ -478,11 +480,12 @@ struct ScorecardSummaryView: View {
     
     var playedWith: some View {
         HStack {
-            if scorecard.type.players > 1 {
-                HStack {
+            HStack {
+                if scorecard.type.players > 1 {
                     Text("With: ")
                     Text(scorecard.partner?.name ?? "").font(.callout).bold()
-                    Spacer()
+                } else {
+                    Text("Individual")
                 }
             }
         }

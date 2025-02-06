@@ -18,20 +18,20 @@ class CoreData {
     static var context: NSManagedObjectContext!
 
     class func fetch<MO: NSManagedObject>(from entityName: String,
-                                          filter: NSPredicate! = nil, filter2: NSPredicate! = nil, limit: Int = 0,
+                                          filter: NSPredicate! = nil, filterAdditional: [NSPredicate]? = nil, limit: Int = 0,
                                           sort: [(key: String, direction: SortDirection)]) -> [MO] {
         var filterArray: [NSPredicate]? = nil
-        if filter != nil {
+        if let filter = filter {
             filterArray = [filter]
         }
-        if filter2 != nil {
-            filterArray?.append(filter2)
+        if let filterAdditional = filterAdditional {
+            filterArray = (filterArray ?? []) + filterAdditional
         }
         return CoreData.fetch(from: entityName, filter: filterArray, limit:limit, sort: sort)
     }
     
-    class func fetch<MO: NSManagedObject>(from entityName: String, filter: NSPredicate! = nil, filter2: NSPredicate! = nil, limit: Int = 0, sort: (key: String, direction: SortDirection)...) -> [MO] {
-        return CoreData.fetch(from: entityName, filter: filter, filter2: filter2, limit:limit, sort: sort)
+    class func fetch<MO: NSManagedObject>(from entityName: String, filter: NSPredicate? = nil, filterAdditional: [NSPredicate]? = nil, limit: Int = 0, sort: (key: String, direction: SortDirection)...) -> [MO] {
+        return CoreData.fetch(from: entityName, filter: filter, filterAdditional: filterAdditional, limit:limit, sort: sort)
     }
     
     class func fetch<MO: NSManagedObject>(from entityName: String, filter: [NSPredicate]! = nil, limit: Int = 0,

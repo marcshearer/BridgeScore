@@ -10,6 +10,7 @@ import AppIntents
 enum ScorecardDetailsAction {
     case scorecardDetails
     case createScorecard
+    case stats
 }
 
 struct ScorecardDetails {
@@ -48,7 +49,7 @@ extension CreateScorecardAppIntent {
 extension LastScorecardAppIntent {
     func perform() async throws -> some IntentResult {
         let scorecardId = target.id
-        if let scorecardMO = ScorecardEntity.scorecards(id: scorecardId).first {
+        if let scorecardMO = ScorecardEntity.scorecard(id: scorecardId) {
             let scorecard = ScorecardViewModel(scorecardMO: scorecardMO)
             let details = ScorecardDetails(action: .scorecardDetails, scorecard: scorecard)
             Utility.mainThread {
@@ -58,3 +59,31 @@ extension LastScorecardAppIntent {
         return .result()
     }
 }
+
+extension StatsAppIntent {
+    func perform() async throws -> some IntentResult {
+        let filterValues = ScorecardFilterValues(.stats)
+        filterValues.clear()
+        if !locations.isEmpty && !locations.contains(where: {$0.id == nullUUID}) {
+            filterValues.locations.setArray(locations.map{$0.id.uuidString})
+        }
+        if !players.isEmpty && !players.contains(where: {$0.id == nullUUID}) {
+            filterValues.partners.setArray(players.map{$0.id.uuidString})
+        }
+        if !eventTypes.isEmpty {
+            filterValues.types.setArray(eventTypes.map{$0.eventType.rawValue})
+        }
+        if dateRange != .all {
+            filterValues.dateFrom = dateRange.startDate
+        }
+        filterValues.save()
+        
+        let details = ScorecardDetails(action: .stats)
+        Utility.mainThread {
+            ScorecardListViewChange.send(details)
+        }
+        
+        return .result()
+    }
+}
+

@@ -11,7 +11,8 @@ import SwiftUI
 @main
 struct BridgeScoreWidgetBundle: WidgetBundle {
     @WidgetBundleBuilder var body: some Widget {
-        CreateScorecardWidget()
         LastScorecardWidget()
+        StatsWidget()
+        CreateScorecardWidget()
     }
 }

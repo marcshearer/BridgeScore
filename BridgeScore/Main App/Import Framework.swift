@@ -527,7 +527,7 @@ class ImportedScorecard: NSObject, ObservableObject {
                     }
                     places = tableScoreType.places
                 }
-                ranking.score = aggregateType.aggregate(total: tableScores, count: tablesPlayed, boards: scorecard.boardsSession, places: places) ?? 0
+                ranking.score = aggregateType.aggregate(total: tableScores, count: tablesPlayed, boards: scorecard.boardsSession, places: places, boardScoreType: scorecard.type.boardScoreType) ?? 0
             }
         }
         if let session = session { 
@@ -554,7 +554,8 @@ class ImportedScorecard: NSObject, ObservableObject {
                 // Add this ranking to the list
                 lastCount += 1
                 lastTotal += ranking.score
-                lastRanking.score = scorecard.type.matchAggregate.aggregate(total: lastTotal, count: lastCount, boards: scorecard.boardsSession * lastCount, places: scorecard.type.matchPlaces) ?? 0
+                let type = scorecard.type
+                lastRanking.score = type.matchAggregate.aggregate(total: lastTotal, count: lastCount, boards: scorecard.boardsSession * lastCount, places: type.matchPlaces, boardScoreType: type.boardScoreType) ?? 0
                 for pair in Pair.validCases {
                     if let pairXImps = ranking.xImps[pair] {
                         if lastRanking.xImps[pair] == nil {

@@ -8,7 +8,6 @@
 import WidgetKit
 import SwiftUI
 import AppIntents
-import Charts
 
 struct LastScorecardWidget: Widget {
     var body: some WidgetConfiguration {
@@ -20,9 +19,9 @@ struct LastScorecardWidget: Widget {
             LastScorecardWidgetEntryView(entry: LastScorecardWidgetEntry(filters: configuration.filters, palette: configuration.palette, title: configuration.title))
         }
         .contentMarginsDisabled()
-        .configurationDisplayName("Scorecard Details")
-        .description("Displays information about selected locations")
-        .supportedFamilies([.systemMedium, .systemLarge, .systemExtraLarge])
+        .configurationDisplayName("Last Scorecard Details")
+        .description("Displays information about last Scorecard at selected locations")
+        .supportedFamilies([.systemMedium])
     }
 }
 
@@ -135,9 +134,6 @@ struct LastScorecardWidgetEntryView : View {
                                 Text(position)
                             }
                         }
-                        Chart {
-                            
-                        }
                         .font(defaultFont).bold()
                         .foregroundColor(theme.themeText)
                     }
@@ -155,7 +151,7 @@ struct LastScorecardWidgetEntryView : View {
     
     var dateLocation: String {
         let multiLocation = (entry.filters?.first == nil || entry.filters!.count > 1 || entry.filters!.first!.id == nullUUID)
-        var dateLocation = (DayNumber(from: entry.date)-14).toNearbyString(brief: multiLocation)
+        var dateLocation = (DayNumber(from: entry.date)).toNearbyString(brief: multiLocation)
         if let location = entry.location?.name, multiLocation {
             dateLocation += " at \(location)"
         }

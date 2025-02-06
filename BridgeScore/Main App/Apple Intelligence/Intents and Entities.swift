@@ -58,6 +58,35 @@ struct LastScorecardAppIntent : AppIntent, OpenIntent {
     
 }
 
+struct StatsAppIntent: AppIntent, OpenIntent {
+    
+    static let title: LocalizedStringResource = "Statistics"
+    
+    @Parameter(title: "Location", description: "The main location to use for the Stats") var target: LocationEntity
+    @Parameter(title: "Locations", description: "Locations to include in Stats") var locations: [LocationEntity]
+    @Parameter(title: "Players", description: "Players to in include in Stats") var players: [PlayerEntity]
+    @Parameter(title: "Event types", description: "Event types to include in Stats") var eventTypes: [WidgetEventType]
+    @Parameter(title: "Date range", description: "Date range for Stats") var dateRange: WidgetDateRange
+        
+    init() {
+        self.init(locations: [], players: [], eventTypes: [], dateRange: .all)
+    }
+
+    init(locations: [LocationEntity] = [], players: [PlayerEntity], eventTypes: [WidgetEventType], dateRange: WidgetDateRange) {
+        target = locations.first ?? LocationEntity()
+        self.locations = locations
+        self.players = players
+        self.eventTypes = eventTypes
+        self.dateRange = dateRange
+    }
+    
+    // Note perform is in extension not visible to widget
+    
+    static var parameterSummary: some ParameterSummary {
+        Summary("Create scorecard for \(\.$locations) \(\.$players) \(\.$eventTypes) \(\.$dateRange)")
+    }
+}
+
 struct LayoutEntity : AppEntity {
     public var id: UUID
     
@@ -106,12 +135,12 @@ extension LayoutEntityQuery: EnumerableEntityQuery {
 struct LocationEntity : AppEntity {
     public var id: UUID
     
-    public init(id: UUID) {
-        self.id = id
+    public init(id: UUID? = nil) {
+        self.id = id ?? nullUUID
         if let location = LocationEntity.locations(id: id).first {
             name = location.name
         } else {
-            name = "Any location"
+            name = "All locations"
         }
     }
     
@@ -154,6 +183,57 @@ extension LocationEntityQuery: EnumerableEntityQuery {
     }
 }
 
+struct PlayerEntity : AppEntity {
+    public var id: UUID
+    
+    public init(id: UUID? = nil) {
+        self.id = id ?? nullUUID
+        if let player = PlayerEntity.players(id: id).first {
+            name = player.name
+        } else {
+            name = "All players"
+        }
+    }
+    
+    static var defaultQuery = PlayerEntityQuery()
+    
+    @Property(title: "Player name") var name: String
+    
+    public static let typeDisplayRepresentation: TypeDisplayRepresentation = "Player"
+    
+    public var displayRepresentation: DisplayRepresentation {
+        DisplayRepresentation(title: "\(name)")
+    }
+    
+    static func players(id playerId: UUID? = nil) -> [PlayerMO] {
+        var filter: NSPredicate?
+        if let playerId = playerId {
+            filter = NSPredicate(format: "%K = %@", #keyPath(PlayerMO.playerId), playerId as CVarArg)
+        } else {
+            filter = NSPredicate(format: "retired = false" )
+        }
+        return (CoreData.fetch(from: PlayerMO.tableName, filter: filter, sort: [("sequence16", .ascending)]) as! [PlayerMO])
+    }
+}
+
+
+struct PlayerEntityQuery : EntityQuery {
+    public func entities(for identifiers: [UUID]) async throws -> [PlayerEntity] {
+        identifiers.map({PlayerEntity(id: $0)})
+    }
+    
+    public func suggestedEntities() async throws -> [PlayerEntity] {
+        return [PlayerEntity(id: nullUUID)] + PlayerEntity.players().map{PlayerEntity(id: $0.playerId)}
+    }
+}
+
+extension PlayerEntityQuery: EnumerableEntityQuery {
+    
+    public func allEntities() async throws -> [PlayerEntity] {
+        return [PlayerEntity(id: nullUUID)] + PlayerEntity.players().map{PlayerEntity(id: $0.playerId)}
+    }
+}
+
 struct ScorecardEntityDetails {
     var date: Date? = nil
     var location: LocationEntity? = nil
@@ -168,7 +248,7 @@ struct ScorecardEntity : AppEntity {
     
     public init(id: UUID) {
         self.id = id
-        if let scorecard = ScorecardEntity.scorecards(id: id).first {
+        if let scorecard = ScorecardEntity.scorecard(id: id) {
             desc = scorecard.desc
         } else {
             desc = "Invalid Scorecard"
@@ -186,21 +266,53 @@ struct ScorecardEntity : AppEntity {
         DisplayRepresentation(title: "\(desc)")
     }
     
-    public static func scorecards(id scorecardId: UUID? = nil, locationIds: [UUID]? = nil, limit: Int = 0) -> [ScorecardMO] {
-        var filter: NSPredicate?
-        if let scorecardId = scorecardId {
-            filter = NSPredicate(format: "%K = %@", #keyPath(ScorecardMO.scorecardId), scorecardId as CVarArg)
-        } else if let locationIds = locationIds {
-            let locationIds = locationIds.map{$0 as CVarArg}
-            filter = NSPredicate(format: "%K IN %@", #keyPath(ScorecardMO.locationId), locationIds)
+    public static func scorecard(id scorecardId: UUID) -> ScorecardMO? {
+        let filter = NSPredicate(format: "%K = %@", #keyPath(ScorecardMO.scorecardId), scorecardId as CVarArg)
+        return (CoreData.fetch(from: ScorecardMO.tableName, filter: filter, limit: 1) as! [ScorecardMO]).first
+    }
+    
+    public static func scorecards(locationIds: [UUID]? = nil, playerIds: [UUID]? = nil, eventTypes: [WidgetEventType]? = nil, dateRange: WidgetDateRange = .all, scored: Bool = false, limit: Int = 0, preData: Int? = nil) -> [ScorecardMO] {
+        var filter: [NSPredicate] = []
+        var limit = limit
+        
+        if dateRange == .all && preData != nil {
+            return []
+        } else {
+            if let locationIds = locationIds {
+                if !locationIds.contains(nullUUID) {
+                    let locationIds = locationIds.map{$0 as CVarArg}
+                    filter.append(NSPredicate(format: "%K IN %@", #keyPath(ScorecardMO.locationId), locationIds))
+                }
+            }
+            if let playerIds = playerIds {
+                if !playerIds.contains(nullUUID) {
+                    let playerIds = playerIds.map{$0 as CVarArg}
+                    filter.append(NSPredicate(format: "%K IN %@", #keyPath(ScorecardMO.partnerId), playerIds))
+                }
+            }
+            if let eventTypes = eventTypes {
+                filter.append(NSPredicate(format: "eventType16 IN %@", eventTypes.map{$0.eventType.rawValue}))
+                
+            }
+            if dateRange != .all {
+                if let preData = preData {
+                    filter.append(NSPredicate(format: "date < %@", dateRange.startDate as CVarArg))
+                    limit = preData
+                } else {
+                    filter.append(NSPredicate(format: "date >= %@", dateRange.startDate as CVarArg))
+                }
+            }
+            if scored {
+                filter.append(NSPredicate(format: "scoreEntered = true and maxScoreEntered = true"))
+            }
+            
+            return (CoreData.fetch(from: ScorecardMO.tableName, filter: filter, limit: limit, sort: [("date", .descending)]) as! [ScorecardMO])
         }
-        return (CoreData.fetch(from: ScorecardMO.tableName, filter: filter, limit: limit, sort: [("date", .descending)]) as! [ScorecardMO])
     }
     
     public static func getLastScorecard(for locations: [LocationEntity]?) -> ScorecardMO? {
         return ScorecardEntity.scorecards(locationIds: locations?.map({$0.id}), limit: 1).first
     }
-
 }
 
 struct ScorecardEntityQuery : EntityQuery {
@@ -209,7 +321,7 @@ struct ScorecardEntityQuery : EntityQuery {
     }
     
     public func suggestedEntities() async throws -> [ScorecardEntity] {
-        return [ScorecardEntity(id: nullUUID)] + ScorecardEntity.scorecards().map{ScorecardEntity(id: $0.scorecardId)}
+        return [ScorecardEntity(id: nullUUID)] + ScorecardEntity.scorecards(limit: 10).map{ScorecardEntity(id: $0.scorecardId)}
     }
 }
 
@@ -221,9 +333,11 @@ extension ScorecardEntityQuery: EnumerableEntityQuery {
 }
 
 let paletteEntityList: [PaletteEntity] = [
-    PaletteEntity(name: "Default", barPalette: .bannerButton, detailPalette: .filterUsed),
-    PaletteEntity(name: "Inverse", barPalette: .filterUsed, detailPalette: .bannerButton),
-    PaletteEntity(name: "Standout", barPalette: .highlightTile, detailPalette: .bannerButton),
+    PaletteEntity(name: "Default", barPalette: .widgetBar, detailPalette: .widgetDetail),
+    PaletteEntity(name: "Inverse", barPalette: .widgetDetail, detailPalette: .widgetBar),
+    PaletteEntity(name: "Standout", barPalette: .highlightTile, detailPalette: .widgetBar),
+    PaletteEntity(name: "Full Default", barPalette: .widgetDetail, detailPalette: .widgetDetail),
+    PaletteEntity(name: "Full Inverse", barPalette: .widgetBar, detailPalette: .widgetBar)
 ]
 
 struct PaletteEntity : AppEntity {

@@ -19,6 +19,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     @Published public var location: LocationViewModel?
     @Published public var desc: String = ""
     @Published public var comment: String = ""
+    @Published public var sequence: Int = 0
     @Published public var scorer: PlayerViewModel?
     @Published public var partner: PlayerViewModel?
     @Published public var boards: Int = 0
@@ -71,7 +72,8 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
                 self.position != mo.position ||
                 self.entry != mo.entry ||
                 self.importSource != mo.importSource ||
-                self.importNext != mo.importNext
+                self.importNext != mo.importNext ||
+                self.sequence != mo.sequence
             {
                     result = true
             }
@@ -155,6 +157,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.entry = 0
         self.importSource = .none
         self.importNext = 1
+        self.sequence = 0
         self.scorecardMO = nil
     }
     
@@ -178,6 +181,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.entry = from.entry
         self.importSource = from.importSource
         self.importNext = from.importNext
+        self.sequence = from.sequence
         self.scorecardMO = from.scorecardMO
     }
     
@@ -210,12 +214,16 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             self.entry = mo.entry
             self.importSource = mo.importSource
             self.importNext = mo.importNext
+            self.sequence = mo.sequence
         }
     }
     
     public func updateMO() {
         if let mo = self.scorecardMO {
             mo.scorecardId = self.scorecardId
+            if mo.date != self.date {
+                sequence = 0
+            }
             mo.date = self.date
             mo.locationId = self.location?.locationId
             mo.desc = self.desc
@@ -234,6 +242,10 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             mo.entry = self.entry
             mo.importSource = self.importSource
             mo.importNext = self.importNext
+            if sequence == 0 {
+                updateSequence()
+            }
+            mo.sequence = self.sequence
         } else {
             fatalError("No managed object")
         }
@@ -259,6 +271,11 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             master.insert()
             self.copy(from: master)
         }
+    }
+    
+    public func updateSequence() {
+        let newSequence = (MasterData.shared.scorecards.filter({DayNumber(from: $0.date) == DayNumber(from: date)}).map({$0.sequence}).max() ?? 0) + 1
+        sequence = newSequence
     }
     
     private func save() {

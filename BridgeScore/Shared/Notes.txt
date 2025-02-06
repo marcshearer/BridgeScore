@@ -44,3 +44,4 @@ Renaming Widgets
 
 If you rename widgets it can cause problems.
 Need to edit scheme for widgets and change Arguments - WidgetKit - Kind, in run phase
+Also the widget in the scheme should be the first one in the bundle and that widget should support the size mentioned in the scheme

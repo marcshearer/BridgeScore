@@ -209,8 +209,11 @@ struct ScorecardDetailsView: View {
                         Separator(thickness: 1)
                     }
                     
-                    DatePickerInput(title: "Date", field: $scorecard.date, to: Date(), textType: Scorecard.current.isImported ? .normal : .theme)
-                        .disabled(Scorecard.current.isImported)
+                    DatePickerInput(title: "Date", field: $scorecard.date, to: Date(), textType: Scorecard.current.isImported ? .normal : .theme, onChange: { newValue in
+                        scorecard.date = Date.startOfDay(from: scorecard.date)!
+                    })
+                    .disabled(Scorecard.current.isImported)
+                    
                 }
             }
             

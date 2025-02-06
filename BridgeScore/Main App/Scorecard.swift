@@ -735,8 +735,8 @@ class Scorecard {
                 }
             } else {
                 for index in 1...boards {
-                    let board = ((tableNumber - 1) * boards) + index
-                    if let board = Scorecard.current.boards[board] {
+                    let boardIndex = ((tableNumber - 1) * boards) + index
+                    if let board = Scorecard.current.boards[boardIndex] {
                         if let score = board.score {
                             count += 1
                             total += score
@@ -751,7 +751,7 @@ class Scorecard {
                     if count == 0 {
                         newScore = nil
                     } else {
-                        newScore = type.tableAggregate.aggregate(total: total, count: count, boards: count, places: places)
+                        newScore = type.tableAggregate.aggregate(total: total, count: count, boards: count, places: places, boardScoreType: type.boardScoreType)
                     }
                 }
                 if newScore != table.score {
@@ -791,7 +791,7 @@ class Scorecard {
             if count == 0 {
                 newScore = nil
             } else {
-                newScore = type.matchAggregate.aggregate(total: total, count: count, boards: completedBoards, places: places)
+                newScore = type.matchAggregate.aggregate(total: total, count: count, boards: completedBoards, places: places, boardScoreType: type.boardScoreType)
             }
         }
         if newScore != scorecard.score {

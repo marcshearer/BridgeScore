@@ -61,7 +61,7 @@ public enum AggregateType: CaseIterable, Equatable {
     case total
     case vp(type: VpType)
     case unknown
-
+    
     init?(rawValue: Int, vpType: VpType = .unknown) {
         switch rawValue {
         case 1:
@@ -151,29 +151,39 @@ public enum AggregateType: CaseIterable, Equatable {
         }
     }
     
-    public func aggregate(total: Float, count: Int, boards: Int, places: Int) -> Float? {
-        let average = (count == 0 ? 0 : Utility.round(total / Float(count), places: 2))
-        return switch self {
+    public func aggregate(total: Float, count: Int, boards: Int, places: Int, boardScoreType: ScoreType) -> Float? {
+        var result: Float?
+        let average: Float = (count == 0 ? 0 : Utility.round(total / Float(count), places: 2))
+        switch self {
         case .average:
-            Utility.round(average, places: places)
+            result = Utility.round(average, places: places)
         case .total:
-            Utility.round(total, places: places)
+            result =  Utility.round(total, places: places)
         case .vp(let type):
-            switch type {
-            case .wbfContinuous:
-                BridgeImps(Int(Utility.round(total))).vp(boards: boards, places: places)
-            case .wbfDiscrete:
-                Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: boards))
-            case .sbuDiscrete:
-                Float(BridgeImps(Int(Utility.round(total))).sbuDiscreteVp(boards: boards))
-            case .acblDiscrete:
-                Float(BridgeImps(Int(Utility.round(total))).acblDiscreteVp(boards: boards))
-            case .unknown:
-                nil
+            if boardScoreType == .percent {
+                if let vps = BridgeMatchPoints(average).vp(boards: boards) {
+                    result =  Float(vps)
+                } else {
+                    result =  nil
+                }
+            } else {
+                switch type {
+                case .wbfContinuous:
+                    result =  BridgeImps(Int(Utility.round(total))).vp(boards: boards, places: places)
+                case .wbfDiscrete:
+                    result =  Float(BridgeImps(Int(Utility.round(total))).discreteVp(boards: boards))
+                case .sbuDiscrete:
+                    result =  Float(BridgeImps(Int(Utility.round(total))).sbuDiscreteVp(boards: boards))
+                case .acblDiscrete:
+                    result =  Float(BridgeImps(Int(Utility.round(total))).acblDiscreteVp(boards: boards))
+                case .unknown:
+                    result =  nil
+                }
             }
         case .unknown:
-            nil
+            result =  nil
         }
+        return result
     }
 }
 

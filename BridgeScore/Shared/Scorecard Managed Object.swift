@@ -20,6 +20,7 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var locationId: UUID!
     @NSManaged public var desc: String
     @NSManaged public var comment: String
+    @NSManaged public var sequence16: Int16
     @NSManaged public var scorerId: UUID!
     @NSManaged public var partnerId: UUID!
     @NSManaged public var boards16: Int16
@@ -46,6 +47,7 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
     convenience init() {
         self.init(context: CoreData.context)
         self.scorecardId = UUID()
+        self.date = Date(timeIntervalSinceReferenceDate: 0)
     }
     
     public var boards: Int {
@@ -66,6 +68,11 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
     public var position: Int {
         get { Int(self.position16) }
         set { self.position16 = Int16(newValue)}
+    }
+    
+    public var sequence: Int {
+        get { Int(self.sequence16) }
+        set { self.sequence16 = Int16(newValue)}
     }
     
     public var entry: Int {

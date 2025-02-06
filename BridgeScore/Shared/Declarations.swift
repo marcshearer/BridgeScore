@@ -16,6 +16,7 @@ public let appId = "com.sheareronline.bridgescore"
 public let appGroup = "group.\(appId)" // Has to match entitlements
 public let lastScorecardWidgetKind = "\(appId).lastScorecard"
 public let createScorecardWidgetKind = "\(appId).createScorecard"
+public let statsWidgetKind = "\(appId).stats"
 
 // Sizes
 
@@ -147,7 +148,7 @@ public enum RegularDay: Int, CaseIterable {
             let todayNumber = DayNumber.today
             let dayOfWeek = (todayNumber.value + 1 % 7) + 1
             let offset = (7 + dayOfWeek - rawValue) % 7
-            return (todayNumber - offset).date
+            return DayNumber(from: (todayNumber - offset).date).date
         }
     }
 }

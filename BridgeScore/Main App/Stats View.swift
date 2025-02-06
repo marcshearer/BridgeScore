@@ -65,7 +65,7 @@ struct StatsFilterView: View {
     @State private var refresh = false
     let players = MasterData.shared.players.filter{!$0.retired && !$0.isSelf}
     let locations = MasterData.shared.locations.filter{!$0.retired}
-    let types = EventType.allCases
+    let types = EventType.validCases
     
     var body: some View {
         
@@ -377,6 +377,10 @@ fileprivate enum Row: Int, CaseIterable {
     case scoring = 6
     case comment = 7
     
+    static func relevantCases(individual: Bool = true) -> [Row] {
+        Row.allCases.filter({$0 != .partner || !individual})
+    }
+    
     var label: String {
         return "\(self)".capitalized
     }
@@ -454,7 +458,7 @@ class StatsDetailView: UIView, UICollectionViewDelegate, UICollectionViewDataSou
     }
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return Row.allCases.count
+        return Row.relevantCases(individual: scorecard.type.eventType == .individual).count
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
@@ -463,7 +467,7 @@ class StatsDetailView: UIView, UICollectionViewDelegate, UICollectionViewDataSou
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let width = indexPath.item == 0 ? 120 : collectionView.frame.width - 120
-        return CGSize(width: width, height: collectionView.frame.height / CGFloat(Row.allCases.count))
+        return CGSize(width: width, height: collectionView.frame.height / CGFloat(Row.relevantCases(individual: scorecard.type.eventType == .individual).count))
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
@@ -493,7 +497,8 @@ class StatsDetailCell: UICollectionViewCell {
     }
     
     public func set(scorecard: ScorecardViewModel, indexPath: IndexPath) {
-        if let row = Row(rawValue: indexPath.section), let column = Column(rawValue: indexPath.item) {
+        let row = Row.relevantCases(individual: scorecard.type.eventType == .individual)[indexPath.section]
+        if let column = Column(rawValue: indexPath.item) {
             switch column {
             case .label:
                 label.text = "\(row.label):"

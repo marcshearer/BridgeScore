@@ -61,6 +61,8 @@ class Palette {
     @BackgroundColor(.handBidding) static var handBidding
     @BackgroundColor(.handButtonPanel) static var handButtonPanel
     @BackgroundColor(.card) static var card
+    @BackgroundColor(.widgetDetail) static var widgetDetail
+    @BackgroundColor(.widgetBar) static var widgetBar
     
     // Specific colors
     @SpecificColor(.bannerBackButton) static var bannerBackButton
