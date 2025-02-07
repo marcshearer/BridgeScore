@@ -31,7 +31,10 @@ extension CreateScorecardAppIntent {
     func perform() async throws -> some IntentResult {
         var layoutViewModels: [LayoutViewModel]? = []
         for layoutEntity in layouts {
-            if let layout = MasterData.shared.layout(id: layoutEntity.id) {
+            if layoutEntity.id == nullUUID {
+                layoutViewModels = nil
+                break
+            } else if let layout = MasterData.shared.layout(id: layoutEntity.id) {
                 layoutViewModels!.append(layout)
             }
         }

@@ -19,9 +19,13 @@ struct CreateScorecardAppIntent: AppIntent, OpenIntent {
         self.init(layouts: [], forceDisplayDetail: false)
     }
 
-    init(layouts: [LayoutEntity] = [], forceDisplayDetail: Bool = false) {
+    init(allLayouts: Bool = true, layouts: [LayoutEntity] = [], forceDisplayDetail: Bool = false) {
         target = layouts.first ?? LayoutEntity()
-        self.layouts = layouts
+        if allLayouts {
+            self.layouts = []
+        } else {
+            self.layouts = layouts
+        }
         self.forceDisplayDetail = forceDisplayDetail
     }
     
@@ -95,7 +99,7 @@ struct LayoutEntity : AppEntity {
         if let layout = LayoutEntity.layouts(id: id).first {
             name = layout.desc
         } else {
-            name = "Choose template"
+            name = "Choose each time"
         }
     }
     
@@ -120,6 +124,11 @@ struct LayoutEntity : AppEntity {
 
 
 struct LayoutEntityQuery : EntityQuery {
+    @IntentParameterDependency<CreateScorecardWidgetConfiguration>(
+            \.$allLayouts
+        )
+    var createScorecard
+    
     public func entities(for identifiers: [UUID]) async throws -> [LayoutEntity] {
         identifiers.map{LayoutEntity(id: $0)}
     }
@@ -128,7 +137,11 @@ struct LayoutEntityQuery : EntityQuery {
 extension LayoutEntityQuery: EnumerableEntityQuery {
     
     public func allEntities() async throws -> [LayoutEntity] {
-        return LayoutEntity.layouts().map{LayoutEntity(id: $0.layoutId)}
+        if let createScorecard = createScorecard, createScorecard.allLayouts {
+            return []
+        } else {
+            return LayoutEntity.layouts().map{LayoutEntity(id: $0.layoutId)}
+        }
     }
 }
 
@@ -172,14 +185,14 @@ struct LocationEntityQuery : EntityQuery {
     }
     
     public func suggestedEntities() async throws -> [LocationEntity] {
-        return [LocationEntity(id: nullUUID)] + LocationEntity.locations().map{LocationEntity(id: $0.locationId)}
+        return LocationEntity.locations().map{LocationEntity(id: $0.locationId)}
     }
 }
 
 extension LocationEntityQuery: EnumerableEntityQuery {
     
     public func allEntities() async throws -> [LocationEntity] {
-        return [LocationEntity(id: nullUUID)] + LocationEntity.locations().map{LocationEntity(id: $0.locationId)}
+        return LocationEntity.locations().map{LocationEntity(id: $0.locationId)}
     }
 }
 
@@ -223,14 +236,14 @@ struct PlayerEntityQuery : EntityQuery {
     }
     
     public func suggestedEntities() async throws -> [PlayerEntity] {
-        return [PlayerEntity(id: nullUUID)] + PlayerEntity.players().map{PlayerEntity(id: $0.playerId)}
+        return PlayerEntity.players().map{PlayerEntity(id: $0.playerId)}
     }
 }
 
 extension PlayerEntityQuery: EnumerableEntityQuery {
     
     public func allEntities() async throws -> [PlayerEntity] {
-        return [PlayerEntity(id: nullUUID)] + PlayerEntity.players().map{PlayerEntity(id: $0.playerId)}
+        return PlayerEntity.players().map{PlayerEntity(id: $0.playerId)}
     }
 }
 
@@ -271,24 +284,20 @@ struct ScorecardEntity : AppEntity {
         return (CoreData.fetch(from: ScorecardMO.tableName, filter: filter, limit: 1) as! [ScorecardMO]).first
     }
     
-    public static func scorecards(locationIds: [UUID]? = nil, playerIds: [UUID]? = nil, eventTypes: [WidgetEventType]? = nil, dateRange: WidgetDateRange = .all, scored: Bool = false, limit: Int = 0, preData: Int? = nil) -> [ScorecardMO] {
+    public static func scorecards(locationIds: [UUID]? = nil, playerIds: [UUID]? = nil, eventTypes: [WidgetEventType]? = nil, dateRange: WidgetDateRange = .all, maxScoreEntered: Bool = false, limit: Int = 0, preData: Int? = nil) -> [ScorecardMO] {
         var filter: [NSPredicate] = []
         var limit = limit
         
         if dateRange == .all && preData != nil {
             return []
         } else {
-            if let locationIds = locationIds {
-                if !locationIds.contains(nullUUID) {
-                    let locationIds = locationIds.map{$0 as CVarArg}
-                    filter.append(NSPredicate(format: "%K IN %@", #keyPath(ScorecardMO.locationId), locationIds))
-                }
+            if let locationIds = locationIds, !locationIds.isEmpty {
+                let locationIds = locationIds.map{$0 as CVarArg}
+                filter.append(NSPredicate(format: "%K IN %@", #keyPath(ScorecardMO.locationId), locationIds))
             }
-            if let playerIds = playerIds {
-                if !playerIds.contains(nullUUID) {
-                    let playerIds = playerIds.map{$0 as CVarArg}
-                    filter.append(NSPredicate(format: "%K IN %@", #keyPath(ScorecardMO.partnerId), playerIds))
-                }
+            if let playerIds = playerIds, !playerIds.isEmpty {
+                let playerIds = playerIds.map{$0 as CVarArg}
+                filter.append(NSPredicate(format: "%K IN %@", #keyPath(ScorecardMO.partnerId), playerIds))
             }
             if let eventTypes = eventTypes {
                 filter.append(NSPredicate(format: "eventType16 IN %@", eventTypes.map{$0.eventType.rawValue}))
@@ -302,9 +311,10 @@ struct ScorecardEntity : AppEntity {
                     filter.append(NSPredicate(format: "date >= %@", dateRange.startDate as CVarArg))
                 }
             }
-            if scored {
-                filter.append(NSPredicate(format: "scoreEntered = true and maxScoreEntered = true"))
+            if maxScoreEntered {
+                filter.append(NSPredicate(format: "maxScoreEntered = true"))
             }
+            filter.append(NSPredicate(format: "scoreEntered = true"))
             
             return (CoreData.fetch(from: ScorecardMO.tableName, filter: filter, limit: limit, sort: [("date", .descending)]) as! [ScorecardMO])
         }
@@ -321,14 +331,14 @@ struct ScorecardEntityQuery : EntityQuery {
     }
     
     public func suggestedEntities() async throws -> [ScorecardEntity] {
-        return [ScorecardEntity(id: nullUUID)] + ScorecardEntity.scorecards(limit: 10).map{ScorecardEntity(id: $0.scorecardId)}
+        return ScorecardEntity.scorecards(limit: 10).map{ScorecardEntity(id: $0.scorecardId)}
     }
 }
 
 extension ScorecardEntityQuery: EnumerableEntityQuery {
     
     public func allEntities() async throws -> [ScorecardEntity] {
-        return [ScorecardEntity(id: nullUUID)] + ScorecardEntity.scorecards().map{ScorecardEntity(id: $0.scorecardId)}
+        return ScorecardEntity.scorecards().map{ScorecardEntity(id: $0.scorecardId)}
     }
 }
 

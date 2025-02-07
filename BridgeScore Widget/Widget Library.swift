@@ -87,10 +87,10 @@ struct WidgetContainer<Content>: View where Content: View {
     }
         
     var widgetContainerLeft: some View {
-        let titleWidth: CGFloat = (label == nil ? 0 : 40)
+        let titleWidth: CGFloat = (label == nil || label!.trimmingCharacters(in: .whitespaces).isEmpty ? 0 : 40)
         return GeometryReader { geometry in
             HStack(spacing: 0) {
-                if let label = label {
+                if let label = label, titleWidth != 0 {
                     ZStack {
                         Rectangle()
                             .foregroundColor(palette.background)
@@ -119,10 +119,10 @@ struct WidgetContainer<Content>: View where Content: View {
     }
     
     var widgetContainerTop: some View {
-        let titleHeight: CGFloat = (label == nil ? 0 : 40)
+        let titleHeight: CGFloat = (label == nil || label!.trimmingCharacters(in: .whitespaces).isEmpty ? 0 : 40)
         return GeometryReader { geometry in
             VStack {
-                if let label = label {
+                if let label = label, titleHeight != 0 {
                     ZStack {
                         Rectangle()
                             .foregroundColor(palette.background)
@@ -146,7 +146,7 @@ struct WidgetContainer<Content>: View where Content: View {
                         .frame(height: titleHeight)
                     }
                 }
-                content().frame(width: geometry.size.width, height: geometry.size.height - titleHeight)
+                content()
             }
         }
     }

@@ -16,7 +16,7 @@ struct LastScorecardWidget: Widget {
             intent: LastScorecardWidgetConfiguration.self,
             provider: LastScorecardWidgetProvider()
         ) { (configuration) in
-            LastScorecardWidgetEntryView(entry: LastScorecardWidgetEntry(filters: configuration.filters, palette: configuration.palette, title: configuration.title))
+            LastScorecardWidgetEntryView(entry: LastScorecardWidgetEntry(allLocations: configuration.allLocations, filters: configuration.filters, palette: configuration.palette, title: configuration.title))
         }
         .contentMarginsDisabled()
         .configurationDisplayName("Last Scorecard Details")
@@ -31,12 +31,17 @@ public struct LastScorecardWidgetConfiguration: WidgetConfigurationIntent {
     
     public init() { }
     
-    @Parameter(title: "Locations: ") var filters: [LocationEntity]?
-    @Parameter(title: "Colour scheme") var palette: PaletteEntity?
+    @Parameter(title: "All locations: ", default: true) var allLocations: Bool
+    @Parameter(title: "Filter locations: " ) var filters: [LocationEntity]?
+    @Parameter(title: "Colour scheme: ") var palette: PaletteEntity?
     @Parameter(title: "Title: ") var title: String?
     
     public static var parameterSummary: some ParameterSummary {
-        Summary("Create scorecard for \(\.$filters) \(\.$palette) \(\.$title)")
+        When(\.$allLocations, .equalTo, true) {
+            Summary("Last scorecard \(\.$allLocations) \(\.$palette) \(\.$title)")
+        } otherwise: {
+            Summary("Last scorecard \(\.$allLocations) \(\.$filters) \(\.$palette) \(\.$title)")
+        }
     }
 }
 
@@ -54,20 +59,21 @@ struct LastScorecardWidgetProvider: AppIntentTimelineProvider {
     
     func timeline(for configuration: LastScorecardWidgetConfiguration, in context: Context) async -> Timeline<LastScorecardWidgetEntry> {
         if let filters = configuration.filters {
-            return Timeline(entries: [LastScorecardWidgetEntry(filters: filters, palette: configuration.palette, title: configuration.title)], policy: .atEnd)
+            return Timeline(entries: [LastScorecardWidgetEntry(allLocations: configuration.allLocations, filters: filters, palette: configuration.palette, title: configuration.title)], policy: .atEnd)
         } else {
             return Timeline(entries: [LastScorecardWidgetEntry()], policy: .atEnd)
         }
     }
     
     func snapshot(for configuration: LastScorecardWidgetConfiguration, in context: Context) async -> LastScorecardWidgetEntry {
-        return LastScorecardWidgetEntry(filters: configuration.filters, palette: configuration.palette, title: configuration.title)
+        return LastScorecardWidgetEntry(allLocations: configuration.allLocations, filters: configuration.filters, palette: configuration.palette, title: configuration.title)
     }
 }
 
 struct LastScorecardWidgetEntry: TimelineEntry {
     var date: Date
     var desc: String?
+    var allLocations: Bool = true
     var filters: [LocationEntity]? = nil
     var palette: PaletteEntity? = nil
     var title: String? = nil
@@ -78,12 +84,13 @@ struct LastScorecardWidgetEntry: TimelineEntry {
     var scorecardId: UUID? = nil
     var noDate: Bool = true
     
-    init(date: Date? = nil, filters: [LocationEntity]? = nil, palette: PaletteEntity? = nil, title: String? = nil) {
+    init(date: Date? = nil, allLocations: Bool = true, filters: [LocationEntity]? = nil, palette: PaletteEntity? = nil, title: String? = nil) {
         let palette = palette ?? paletteEntityList.first!
+        self.allLocations = allLocations
         self.filters = filters
         self.palette = palette
         self.title = title
-        if let scorecardMO = ScorecardEntity.getLastScorecard(for: filters) {
+        if let scorecardMO = ScorecardEntity.getLastScorecard(for: (allLocations ? nil : filters)) {
             self.scorecardId = scorecardMO.scorecardId
             self.desc = scorecardMO.desc
             self.date = scorecardMO.date
@@ -107,7 +114,7 @@ struct LastScorecardWidgetEntryView : View {
     var body: some View {
         let paletteEntity = entry.palette ?? paletteEntityList.first!
         let theme = PaletteColor(paletteEntity.detailPalette)
-        let label = entry.title ?? (entry.filters?.first == nil || entry.filters!.count > 1 || entry.filters!.first!.id == nullUUID ? "Most recent" : entry.filters!.first!.name)
+        let label = (entry.title != nil && entry.title != "" ? entry.title : (entry.location != nil ? entry.location!.name : (entry.allLocations ? "Most recent" : entry.filters!.first!.name)))
         Button(intent: LastScorecardAppIntent(id: entry.scorecardId ?? nullUUID), label: {
             WidgetContainer(label: label, palette: PaletteColor(paletteEntity.containerPalette), titlePosition: .left) {
                 VStack(spacing: 0) {
@@ -125,14 +132,16 @@ struct LastScorecardWidgetEntryView : View {
                         }
                         Spacer().frame(height: 5)
                         HStack {
+                            Spacer().frame(width: 8)
                             if let score = entry.score {
                                 Text(score)
                             }
                             
                             if let position = entry.position {
-                                Spacer().frame(width: 50)
+                                Spacer().frame(maxWidth: 50)
                                 Text(position)
                             }
+                            Spacer().frame(width: 8)
                         }
                         .font(defaultFont).bold()
                         .foregroundColor(theme.themeText)
@@ -150,7 +159,7 @@ struct LastScorecardWidgetEntryView : View {
     }
     
     var dateLocation: String {
-        let multiLocation = (entry.filters?.first == nil || entry.filters!.count > 1 || entry.filters!.first!.id == nullUUID)
+        let multiLocation = (entry.allLocations || entry.filters!.count > 1)
         var dateLocation = (DayNumber(from: entry.date)).toNearbyString(brief: multiLocation)
         if let location = entry.location?.name, multiLocation {
             dateLocation += " at \(location)"

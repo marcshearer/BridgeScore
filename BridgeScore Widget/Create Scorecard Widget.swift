@@ -16,7 +16,7 @@ struct CreateScorecardWidget: Widget {
             intent: CreateScorecardWidgetConfiguration.self,
             provider: CreateScorecardWidgetProvider()
         ) { (configuration) in
-            CreateScorecardWidgetEntryView(entry: CreateScorecardWidgetEntry(layouts: configuration.layouts, forceDisplayDetail: configuration.forceDisplayDetail, palette: configuration.palette, title: configuration.title, titlePosition: configuration.titlePosition))
+            CreateScorecardWidgetEntryView(entry: CreateScorecardWidgetEntry(allLayouts: configuration.allLayouts, layouts: configuration.layouts, forceDisplayDetail: configuration.forceDisplayDetail, palette: configuration.palette, title: configuration.title, titlePosition: configuration.titlePosition))
         }
         .contentMarginsDisabled()
         .configurationDisplayName("Create Scorecard")
@@ -30,11 +30,20 @@ public struct CreateScorecardWidgetConfiguration: WidgetConfigurationIntent {
     
     public init() { }
     
-    @Parameter(title: "Templates: ") var layouts: [LayoutEntity]?
-    @Parameter(title: "Edit parameters: ", default: false) var forceDisplayDetail: Bool
+    @Parameter(title: "All templates: ", default: true) var allLayouts: Bool
+    @Parameter(title: "Specific templates: ") var layouts: [LayoutEntity]?
+    @Parameter(title: "Display parameters: ", default: false) var forceDisplayDetail: Bool
     @Parameter(title: "Colour scheme: ") var palette: PaletteEntity?
     @Parameter(title: "Title: ") var title: String?
     @Parameter(title: "Title position: ", default: .top) var titlePosition: WidgetTitlePosition
+    
+    public static var parameterSummary: some ParameterSummary {
+        When(\.$allLayouts, .equalTo, true) {
+            Summary("Create scorecard \(\.$allLayouts) \(\.$forceDisplayDetail) \(\.$palette) \(\.$title) \(\.$titlePosition)")
+        } otherwise: {
+            Summary("Create scorecard \(\.$allLayouts) \(\.$layouts) \(\.$forceDisplayDetail) \(\.$palette) \(\.$title) \(\.$titlePosition)")
+        }
+    }
 }
 
 struct CreateScorecardWidgetProvider: AppIntentTimelineProvider {
@@ -51,26 +60,28 @@ struct CreateScorecardWidgetProvider: AppIntentTimelineProvider {
     
     func timeline(for configuration: CreateScorecardWidgetConfiguration, in context: Context) async -> Timeline<CreateScorecardWidgetEntry> {
         if let layouts = configuration.layouts {
-            return Timeline(entries: [CreateScorecardWidgetEntry(layouts: layouts, forceDisplayDetail: configuration.forceDisplayDetail, palette: configuration.palette, title: configuration.title, titlePosition: configuration.titlePosition)], policy: .atEnd)
+            return Timeline(entries: [CreateScorecardWidgetEntry(allLayouts: configuration.allLayouts, layouts: layouts, forceDisplayDetail: configuration.forceDisplayDetail, palette: configuration.palette, title: configuration.title, titlePosition: configuration.titlePosition)], policy: .atEnd)
         } else {
             return Timeline(entries: [CreateScorecardWidgetEntry()], policy: .atEnd)
         }
     }
     
     func snapshot(for configuration: CreateScorecardWidgetConfiguration, in context: Context) async -> CreateScorecardWidgetEntry {
-        return CreateScorecardWidgetEntry(layouts: configuration.layouts, forceDisplayDetail: configuration.forceDisplayDetail, palette: configuration.palette, title: configuration.title, titlePosition: configuration.titlePosition)
+        return CreateScorecardWidgetEntry(allLayouts: configuration.allLayouts, layouts: configuration.layouts, forceDisplayDetail: configuration.forceDisplayDetail, palette: configuration.palette, title: configuration.title, titlePosition: configuration.titlePosition)
     }
 }
 
 struct CreateScorecardWidgetEntry: TimelineEntry {
     var date: Date
+    var allLayouts: Bool = true
     var layouts: [LayoutEntity]? = nil
     var forceDisplayDetail: Bool = false
     var palette: PaletteEntity? = nil
     var title: String?
     var titlePosition: WidgetTitlePosition = .top
     
-    init(date: Date? = nil, layouts: [LayoutEntity]? = nil, forceDisplayDetail: Bool = false, palette: PaletteEntity? = nil, title: String? = nil, titlePosition: WidgetTitlePosition = .top) {
+    init(date: Date? = nil, allLayouts: Bool = true, layouts: [LayoutEntity]? = nil, forceDisplayDetail: Bool = false, palette: PaletteEntity? = nil, title: String? = nil, titlePosition: WidgetTitlePosition = .top) {
+        self.allLayouts = allLayouts
         self.layouts = layouts
         self.forceDisplayDetail = forceDisplayDetail
         self.palette = palette ?? paletteEntityList.first!
@@ -88,7 +99,7 @@ struct CreateScorecardWidgetEntryView : View {
         let theme = PaletteColor(paletteEntity.detailPalette)
         let layout = entry.layouts?.first ?? LayoutEntity()
         VStack(spacing: 0) {
-            Button(intent: CreateScorecardAppIntent(layouts: entry.layouts ?? [], forceDisplayDetail: entry.forceDisplayDetail), label: {
+            Button(intent: CreateScorecardAppIntent(allLayouts: entry.allLayouts, layouts: entry.layouts ?? [], forceDisplayDetail: entry.forceDisplayDetail), label: {
                 WidgetContainer(label: entry.title ?? layout.name, palette: PaletteColor(paletteEntity.containerPalette), titlePosition: entry.titlePosition) {
                     VStack(spacing: 0) {
                         Spacer()

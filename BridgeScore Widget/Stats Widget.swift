@@ -16,7 +16,7 @@ struct StatsWidget: Widget {
             intent: StatsWidgetConfiguration.self,
             provider: StatsWidgetProvider()
         ) { (configuration) in
-            StatsWidgetEntryView(entry: StatsWidgetEntry(locations: configuration.locations, players: configuration.players, eventTypes: configuration.eventTypes, dateRange: configuration.dateRange, palette: configuration.palette, title: configuration.title))
+            StatsWidgetEntryView(entry: StatsWidgetEntry(allLocations: configuration.allLocations, locations: configuration.locations, allPartners: configuration.allPartners, players: configuration.players, eventTypes: configuration.eventTypes, dateRange: configuration.dateRange, palette: configuration.palette, title: configuration.title))
         }
         .contentMarginsDisabled()
         .configurationDisplayName("Statistics")
@@ -31,7 +31,9 @@ public struct StatsWidgetConfiguration: WidgetConfigurationIntent {
     
     public init() { }
     
+    @Parameter(title: "All locations: ", default: true) var allLocations: Bool
     @Parameter(title: "Locations: ") var locations: [LocationEntity]?
+    @Parameter(title: "All partners: ", default: true) var allPartners: Bool
     @Parameter(title: "Partners: ") var players: [PlayerEntity]?
     @Parameter(title: "Event types: ") var eventTypes: [WidgetEventType]?
     @Parameter(title: "Date range: ") var dateRange: WidgetDateRange?
@@ -39,7 +41,20 @@ public struct StatsWidgetConfiguration: WidgetConfigurationIntent {
     @Parameter(title: "Title: ") var title: String?
     
     public static var parameterSummary: some ParameterSummary {
-        Summary("Create scorecard for \(\.$locations) \(\.$players) \(\.$eventTypes) \(\.$dateRange) \(\.$palette) \(\.$title)")
+        // Need to switch on every possible combination of allLocations and allPartners
+        When(\.$allLocations, .equalTo, true) {
+            When(\.$allPartners, .equalTo, true) {
+                Summary("Stats for \(\.$allLocations) \(\.$allPartners) \(\.$eventTypes) \(\.$dateRange) \(\.$palette) \(\.$title)")
+            } otherwise: {
+                Summary("Stats for \(\.$allLocations) \(\.$allPartners) \(\.$players) \(\.$eventTypes) \(\.$dateRange) \(\.$palette) \(\.$title)")
+            }
+        } otherwise: {
+            When(\.$allPartners, .equalTo, true) {
+                Summary("Stats for \(\.$allLocations) \(\.$locations) \(\.$allPartners) \(\.$eventTypes) \(\.$dateRange) \(\.$palette) \(\.$title)")
+            } otherwise: {
+                Summary("Stats for \(\.$allLocations) \(\.$locations) \(\.$allPartners) \(\.$players) \(\.$eventTypes) \(\.$dateRange) \(\.$palette) \(\.$title)")
+            }
+        }
     }
 }
 
@@ -56,17 +71,19 @@ struct StatsWidgetProvider: AppIntentTimelineProvider {
     }
     
     func timeline(for configuration: StatsWidgetConfiguration, in context: Context) async -> Timeline<StatsWidgetEntry> {
-        return Timeline(entries: [StatsWidgetEntry(locations: configuration.locations, players: configuration.players, eventTypes: configuration.eventTypes, dateRange: configuration.dateRange, palette: configuration.palette, title: configuration.title)], policy: .atEnd)
+        return Timeline(entries: [StatsWidgetEntry(allLocations: configuration.allLocations, locations: configuration.locations, allPartners: configuration.allPartners, players: configuration.players, eventTypes: configuration.eventTypes, dateRange: configuration.dateRange, palette: configuration.palette, title: configuration.title)], policy: .atEnd)
     }
     
     func snapshot(for configuration: StatsWidgetConfiguration, in context: Context) async -> StatsWidgetEntry {
-        return StatsWidgetEntry(locations: configuration.locations, players: configuration.players, eventTypes: configuration.eventTypes, dateRange: configuration.dateRange, palette: configuration.palette, title: configuration.title)
+        return StatsWidgetEntry(allLocations: configuration.allLocations, locations: configuration.locations, allPartners: configuration.allPartners, players: configuration.players, eventTypes: configuration.eventTypes, dateRange: configuration.dateRange, palette: configuration.palette, title: configuration.title)
     }
 }
 
 struct StatsWidgetEntry: TimelineEntry {
     var date: Date
+    var allLocations: Bool = true
     var locations: [LocationEntity]? = nil
+    var allPartners: Bool = true
     var players: [PlayerEntity]? = nil
     var eventTypes: [WidgetEventType]? = nil
     var dateRange: WidgetDateRange = .all
@@ -75,10 +92,12 @@ struct StatsWidgetEntry: TimelineEntry {
     var data: [WidgetGraphValue] = []
     var running: [WidgetGraphValue] = []
     
-    init(date: Date? = nil, locations: [LocationEntity]? = nil, players: [PlayerEntity]? = nil, eventTypes: [WidgetEventType]? = nil, dateRange: WidgetDateRange? = nil, palette: PaletteEntity? = nil, title: String? = nil) {
+    init(date: Date? = nil, allLocations: Bool = true, locations: [LocationEntity]? = nil, allPartners: Bool = true, players: [PlayerEntity]? = nil, eventTypes: [WidgetEventType]? = nil, dateRange: WidgetDateRange? = nil, palette: PaletteEntity? = nil, title: String? = nil) {
         let palette = palette ?? paletteEntityList.first!
         self.date = Date()
+        self.allLocations = allLocations
         self.locations = locations
+        self.allPartners = allPartners
         self.players = players
         self.eventTypes = eventTypes
         self.dateRange = dateRange ?? .all
@@ -88,11 +107,13 @@ struct StatsWidgetEntry: TimelineEntry {
     }
     
     mutating func getData() {
-        data = ScorecardEntity.scorecards(locationIds: locations?.map({$0.id}), playerIds: players?.map({$0.id}), eventTypes: eventTypes, dateRange: dateRange, scored: true).reversed().enumerated().map({WidgetGraphValue(sequence: $0, value: ($1.scoreValue/$1.maxScoreValue) * 100, date: $1.date)})
+        let locationIds = allLocations ? nil : locations?.map({$0.id})
+        let playerIds = allPartners ? nil: players?.map({$0.id})
+        data = ScorecardEntity.scorecards(locationIds: locationIds, playerIds: playerIds, eventTypes: eventTypes, dateRange: dateRange, maxScoreEntered: true).reversed().enumerated().map({WidgetGraphValue(sequence: $0, value: ($1.scoreValue/$1.maxScoreValue) * 100, date: $1.date)})
         
         let averageCount = (Int(data.count / 4) * 2) + 3
 
-        let preData = ScorecardEntity.scorecards(locationIds: locations?.map({$0.id}), playerIds: players?.map({$0.id}), eventTypes: eventTypes, dateRange: dateRange, scored: true, preData: averageCount - 1).reversed().enumerated().map({WidgetGraphValue(sequence: $0 - averageCount + 1, value: ($1.scoreValue/$1.maxScoreValue) * 100)})
+        let preData = ScorecardEntity.scorecards(locationIds: locationIds, playerIds: playerIds, eventTypes: eventTypes, dateRange: dateRange, maxScoreEntered: true, preData: averageCount - 1).reversed().enumerated().map({WidgetGraphValue(sequence: $0 - averageCount + 1, value: ($1.scoreValue/$1.maxScoreValue) * 100)})
         
         let combined = preData + data
         
