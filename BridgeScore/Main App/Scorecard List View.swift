@@ -50,6 +50,7 @@ struct ScorecardListView: View, DropDelegate {
     @State private var forceDisplayDetail = false
     @State private var filterLayouts: [LayoutViewModel]? = nil
     @State private var path: [Destination] = []
+    
     var dropColor: Binding<PaletteColor> { Binding { tileColor } set: { (newValue) in tileColor = newValue } }
     var linkToLayoutSelect: Binding<Bool> { Binding { destination == .layoutSelect } set: { (_) in } }
     var linkToScorecardParameters: Binding<Bool> { Binding { destination == .scorecardParameters } set: { (_) in } }
@@ -123,6 +124,9 @@ struct ScorecardListView: View, DropDelegate {
                         .onAppear {
                             cancelled = false
                         }
+                }
+                .transaction { transaction in
+                    transaction.disablesAnimations = true
                 }
             }
         }
@@ -224,7 +228,7 @@ struct ScorecardListView: View, DropDelegate {
     }
     
     private func scorecardDetailView(geometry: GeometryProxy) -> some View {
-        return ZStack {
+        ZStack {
             Color.black.opacity(0.4)
             let width = min(704, geometry.size.width) // Allow for safe area
             let height = min(610, (geometry.size.height))
@@ -236,6 +240,7 @@ struct ScorecardListView: View, DropDelegate {
                 destination = .root
             })
         }
+        .presentationBackground(.clear)
         .background(BackgroundBlurView(opacity: 0.0))
         .edgesIgnoringSafeArea(.all)
     }
