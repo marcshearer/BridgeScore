@@ -54,10 +54,6 @@ struct LastScorecardAppIntent : AppIntent, OpenIntent {
     
     // Note perform is in extension not visible to widget
     
-    static var parameterSummary: some ParameterSummary {
-        Summary("Create scorecard for \(\.$target)")
-    }
-    
     static let openAppWhenRun: Bool = true
     
 }
@@ -284,7 +280,7 @@ struct ScorecardEntity : AppEntity {
         return (CoreData.fetch(from: ScorecardMO.tableName, filter: filter, limit: 1) as! [ScorecardMO]).first
     }
     
-    public static func scorecards(locationIds: [UUID]? = nil, playerIds: [UUID]? = nil, eventTypes: [WidgetEventType]? = nil, dateRange: WidgetDateRange = .all, maxScoreEntered: Bool = false, limit: Int = 0, preData: Int? = nil) -> [ScorecardMO] {
+    public static func scorecards(locationIds: [UUID]? = [], playerIds: [UUID]? = [], eventTypes: [WidgetEventType]? = nil, dateRange: WidgetDateRange = .all, maxScoreEntered: Bool = false, limit: Int = 0, preData: Int? = nil) -> [ScorecardMO] {
         var filter: [NSPredicate] = []
         var limit = limit
         
@@ -299,7 +295,7 @@ struct ScorecardEntity : AppEntity {
                 let playerIds = playerIds.map{$0 as CVarArg}
                 filter.append(NSPredicate(format: "%K IN %@", #keyPath(ScorecardMO.partnerId), playerIds))
             }
-            if let eventTypes = eventTypes {
+            if let eventTypes = eventTypes, !eventTypes.isEmpty {
                 filter.append(NSPredicate(format: "eventType16 IN %@", eventTypes.map{$0.eventType.rawValue}))
                 
             }
@@ -316,12 +312,12 @@ struct ScorecardEntity : AppEntity {
             }
             filter.append(NSPredicate(format: "scoreEntered = true"))
             
-            return (CoreData.fetch(from: ScorecardMO.tableName, filter: filter, limit: limit, sort: [("date", .descending)]) as! [ScorecardMO])
+            return (CoreData.fetch(from: ScorecardMO.tableName, filter: filter, limit: limit, sort: [("date", .descending), ("sequence16", .descending)]) as! [ScorecardMO])
         }
     }
     
-    public static func getLastScorecard(for locations: [LocationEntity]?) -> ScorecardMO? {
-        return ScorecardEntity.scorecards(locationIds: locations?.map({$0.id}), limit: 1).first
+    public static func getLastScorecards(for locations: [LocationEntity]?, eventTypes: [WidgetEventType]? = nil, limit: Int = 1) -> [ScorecardMO] {
+        return ScorecardEntity.scorecards(locationIds: locations?.map({$0.id}), eventTypes: eventTypes, limit: limit)
     }
 }
 

@@ -16,7 +16,7 @@ struct StatsWidget: Widget {
             intent: StatsWidgetConfiguration.self,
             provider: StatsWidgetProvider()
         ) { (configuration) in
-            StatsWidgetEntryView(entry: StatsWidgetEntry(allLocations: configuration.allLocations, locations: configuration.locations, allPartners: configuration.allPartners, players: configuration.players, eventTypes: configuration.eventTypes, dateRange: configuration.dateRange, palette: configuration.palette, title: configuration.title))
+            StatsWidgetEntryView(entry: StatsWidgetEntry(date: Date(), allLocations: configuration.allLocations, locations: configuration.locations, allPartners: configuration.allPartners, players: configuration.players, eventTypes: configuration.eventTypes, dateRange: configuration.dateRange, palette: configuration.palette, title: configuration.title))
         }
         .contentMarginsDisabled()
         .configurationDisplayName("Statistics")
@@ -71,11 +71,11 @@ struct StatsWidgetProvider: AppIntentTimelineProvider {
     }
     
     func timeline(for configuration: StatsWidgetConfiguration, in context: Context) async -> Timeline<StatsWidgetEntry> {
-        return Timeline(entries: [StatsWidgetEntry(allLocations: configuration.allLocations, locations: configuration.locations, allPartners: configuration.allPartners, players: configuration.players, eventTypes: configuration.eventTypes, dateRange: configuration.dateRange, palette: configuration.palette, title: configuration.title)], policy: .atEnd)
+        return Timeline(entries: [StatsWidgetEntry(date: Date(), allLocations: configuration.allLocations, locations: configuration.locations, allPartners: configuration.allPartners, players: configuration.players, eventTypes: configuration.eventTypes, dateRange: configuration.dateRange, palette: configuration.palette, title: configuration.title)], policy: .atEnd)
     }
     
     func snapshot(for configuration: StatsWidgetConfiguration, in context: Context) async -> StatsWidgetEntry {
-        return StatsWidgetEntry(allLocations: configuration.allLocations, locations: configuration.locations, allPartners: configuration.allPartners, players: configuration.players, eventTypes: configuration.eventTypes, dateRange: configuration.dateRange, palette: configuration.palette, title: configuration.title)
+        return StatsWidgetEntry(date: Date(), allLocations: configuration.allLocations, locations: configuration.locations, allPartners: configuration.allPartners, players: configuration.players, eventTypes: configuration.eventTypes, dateRange: configuration.dateRange, palette: configuration.palette, title: configuration.title)
     }
 }
 
@@ -94,16 +94,20 @@ struct StatsWidgetEntry: TimelineEntry {
     
     init(date: Date? = nil, allLocations: Bool = true, locations: [LocationEntity]? = nil, allPartners: Bool = true, players: [PlayerEntity]? = nil, eventTypes: [WidgetEventType]? = nil, dateRange: WidgetDateRange? = nil, palette: PaletteEntity? = nil, title: String? = nil) {
         let palette = palette ?? paletteEntityList.first!
-        self.date = Date()
-        self.allLocations = allLocations
-        self.locations = locations
-        self.allPartners = allPartners
-        self.players = players
-        self.eventTypes = eventTypes
-        self.dateRange = dateRange ?? .all
-        self.palette = palette
-        self.title = title
-        getData()
+        if let date = date {
+            self.date = date
+            self.allLocations = allLocations
+            self.locations = locations
+            self.allPartners = allPartners
+            self.players = players
+            self.eventTypes = eventTypes
+            self.dateRange = dateRange ?? .all
+            self.palette = palette
+            self.title = title
+            getData()
+        } else {
+            self.date = Date(timeIntervalSinceReferenceDate: 0)
+        }
     }
     
     mutating func getData() {

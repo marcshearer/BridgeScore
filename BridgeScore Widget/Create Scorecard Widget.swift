@@ -16,7 +16,7 @@ struct CreateScorecardWidget: Widget {
             intent: CreateScorecardWidgetConfiguration.self,
             provider: CreateScorecardWidgetProvider()
         ) { (configuration) in
-            CreateScorecardWidgetEntryView(entry: CreateScorecardWidgetEntry(allLayouts: configuration.allLayouts, layouts: configuration.layouts, forceDisplayDetail: configuration.forceDisplayDetail, palette: configuration.palette, title: configuration.title, titlePosition: configuration.titlePosition))
+            CreateScorecardWidgetEntryView(entry: CreateScorecardWidgetEntry(date: Date(), allLayouts: configuration.allLayouts, layouts: configuration.layouts, forceDisplayDetail: configuration.forceDisplayDetail, palette: configuration.palette, title: configuration.title, titlePosition: configuration.titlePosition))
         }
         .contentMarginsDisabled()
         .configurationDisplayName("Create Scorecard")
@@ -59,15 +59,11 @@ struct CreateScorecardWidgetProvider: AppIntentTimelineProvider {
     }
     
     func timeline(for configuration: CreateScorecardWidgetConfiguration, in context: Context) async -> Timeline<CreateScorecardWidgetEntry> {
-        if let layouts = configuration.layouts {
-            return Timeline(entries: [CreateScorecardWidgetEntry(allLayouts: configuration.allLayouts, layouts: layouts, forceDisplayDetail: configuration.forceDisplayDetail, palette: configuration.palette, title: configuration.title, titlePosition: configuration.titlePosition)], policy: .atEnd)
-        } else {
-            return Timeline(entries: [CreateScorecardWidgetEntry()], policy: .atEnd)
-        }
+        return Timeline(entries: [CreateScorecardWidgetEntry(date: Date(), allLayouts: configuration.allLayouts, layouts: configuration.layouts, forceDisplayDetail: configuration.forceDisplayDetail, palette: configuration.palette, title: configuration.title, titlePosition: configuration.titlePosition)], policy: .atEnd)
     }
     
     func snapshot(for configuration: CreateScorecardWidgetConfiguration, in context: Context) async -> CreateScorecardWidgetEntry {
-        return CreateScorecardWidgetEntry(allLayouts: configuration.allLayouts, layouts: configuration.layouts, forceDisplayDetail: configuration.forceDisplayDetail, palette: configuration.palette, title: configuration.title, titlePosition: configuration.titlePosition)
+        return CreateScorecardWidgetEntry(date: Date(), allLayouts: configuration.allLayouts, layouts: configuration.layouts, forceDisplayDetail: configuration.forceDisplayDetail, palette: configuration.palette, title: configuration.title, titlePosition: configuration.titlePosition)
     }
 }
 
@@ -81,13 +77,17 @@ struct CreateScorecardWidgetEntry: TimelineEntry {
     var titlePosition: WidgetTitlePosition = .top
     
     init(date: Date? = nil, allLayouts: Bool = true, layouts: [LayoutEntity]? = nil, forceDisplayDetail: Bool = false, palette: PaletteEntity? = nil, title: String? = nil, titlePosition: WidgetTitlePosition = .top) {
-        self.allLayouts = allLayouts
-        self.layouts = layouts
-        self.forceDisplayDetail = forceDisplayDetail
-        self.palette = palette ?? paletteEntityList.first!
-        self.title = title
-        self.titlePosition = titlePosition
-        self.date = Date()
+        if let date = date {
+            self.allLayouts = allLayouts
+            self.layouts = layouts
+            self.forceDisplayDetail = forceDisplayDetail
+            self.palette = palette ?? paletteEntityList.first!
+            self.title = title
+            self.titlePosition = titlePosition
+            self.date = date
+        } else {
+            self.date = Date(timeIntervalSinceReferenceDate: 0)
+        }
     }
 }
 

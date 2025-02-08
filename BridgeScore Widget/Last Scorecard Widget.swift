@@ -16,7 +16,7 @@ struct LastScorecardWidget: Widget {
             intent: LastScorecardWidgetConfiguration.self,
             provider: LastScorecardWidgetProvider()
         ) { (configuration) in
-            LastScorecardWidgetEntryView(entry: LastScorecardWidgetEntry(allLocations: configuration.allLocations, filters: configuration.filters, palette: configuration.palette, title: configuration.title))
+            LastScorecardWidgetEntryView(entry: LastScorecardWidgetEntry(date: Date(), allLocations: configuration.allLocations, filters: configuration.filters, eventTypes: configuration.eventTypes, offsetBy: configuration.offsetBy, palette: configuration.palette, title: configuration.title))
         }
         .contentMarginsDisabled()
         .configurationDisplayName("Last Scorecard Details")
@@ -33,14 +33,16 @@ public struct LastScorecardWidgetConfiguration: WidgetConfigurationIntent {
     
     @Parameter(title: "All locations: ", default: true) var allLocations: Bool
     @Parameter(title: "Filter locations: " ) var filters: [LocationEntity]?
+    @Parameter(title: "Offset by: ", default: 0) var offsetBy: Int
+    @Parameter(title: "Event types: ") var eventTypes: [WidgetEventType]?
     @Parameter(title: "Colour scheme: ") var palette: PaletteEntity?
     @Parameter(title: "Title: ") var title: String?
     
     public static var parameterSummary: some ParameterSummary {
         When(\.$allLocations, .equalTo, true) {
-            Summary("Last scorecard \(\.$allLocations) \(\.$palette) \(\.$title)")
+            Summary("Last scorecard \(\.$allLocations) \(\.$eventTypes) \(\.$offsetBy) \(\.$palette) \(\.$title)")
         } otherwise: {
-            Summary("Last scorecard \(\.$allLocations) \(\.$filters) \(\.$palette) \(\.$title)")
+            Summary("Last scorecard \(\.$allLocations) \(\.$filters) \(\.$eventTypes) \(\.$offsetBy) \(\.$palette) \(\.$title)")
         }
     }
 }
@@ -58,15 +60,11 @@ struct LastScorecardWidgetProvider: AppIntentTimelineProvider {
     }
     
     func timeline(for configuration: LastScorecardWidgetConfiguration, in context: Context) async -> Timeline<LastScorecardWidgetEntry> {
-        if let filters = configuration.filters {
-            return Timeline(entries: [LastScorecardWidgetEntry(allLocations: configuration.allLocations, filters: filters, palette: configuration.palette, title: configuration.title)], policy: .atEnd)
-        } else {
-            return Timeline(entries: [LastScorecardWidgetEntry()], policy: .atEnd)
-        }
+        return Timeline(entries: [LastScorecardWidgetEntry(date: Date(), allLocations: configuration.allLocations, filters: configuration.filters, eventTypes: configuration.eventTypes, offsetBy: configuration.offsetBy, palette: configuration.palette, title: configuration.title)], policy: .atEnd)
     }
     
     func snapshot(for configuration: LastScorecardWidgetConfiguration, in context: Context) async -> LastScorecardWidgetEntry {
-        return LastScorecardWidgetEntry(allLocations: configuration.allLocations, filters: configuration.filters, palette: configuration.palette, title: configuration.title)
+        return LastScorecardWidgetEntry(date: Date(), allLocations: configuration.allLocations, filters: configuration.filters, eventTypes: configuration.eventTypes, offsetBy: configuration.offsetBy, palette: configuration.palette, title: configuration.title)
     }
 }
 
@@ -75,6 +73,8 @@ struct LastScorecardWidgetEntry: TimelineEntry {
     var desc: String?
     var allLocations: Bool = true
     var filters: [LocationEntity]? = nil
+    var eventTypes: [WidgetEventType]? = nil
+    var offsetBy: Int = 0
     var palette: PaletteEntity? = nil
     var title: String? = nil
     var location: LocationEntity? = nil
@@ -84,26 +84,34 @@ struct LastScorecardWidgetEntry: TimelineEntry {
     var scorecardId: UUID? = nil
     var noDate: Bool = true
     
-    init(date: Date? = nil, allLocations: Bool = true, filters: [LocationEntity]? = nil, palette: PaletteEntity? = nil, title: String? = nil) {
-        let palette = palette ?? paletteEntityList.first!
-        self.allLocations = allLocations
-        self.filters = filters
-        self.palette = palette
-        self.title = title
-        if let scorecardMO = ScorecardEntity.getLastScorecard(for: (allLocations ? nil : filters)) {
-            self.scorecardId = scorecardMO.scorecardId
-            self.desc = scorecardMO.desc
-            self.date = scorecardMO.date
-            self.noDate = false
-            self.location = LocationEntity(id: scorecardMO.locationId)
-            let type = scorecardMO.type
-            self.type = scorecardMO.type.brief
-            if let score = scorecardMO.score {
-                self.score = type.scoreString(score: score, maxScore: scorecardMO.maxScore)
-                position = type.positionString(score: score, position: scorecardMO.position, entry: scorecardMO.entry)
+    init(date: Date? = nil, allLocations: Bool = true, filters: [LocationEntity]? = nil, eventTypes: [WidgetEventType]? = nil, offsetBy: Int = 0, palette: PaletteEntity? = nil, title: String? = nil) {
+        if let date = date {
+            self.date = date
+            self.allLocations = allLocations
+            self.filters = filters
+            self.eventTypes = eventTypes
+            self.offsetBy = offsetBy
+            let palette = palette ?? paletteEntityList.first!
+            self.palette = palette
+            self.title = title
+            let scorecardMOs = ScorecardEntity.getLastScorecards(for: (allLocations ? nil : filters), eventTypes: eventTypes, limit: offsetBy + 1)
+            print("Offset: \(offsetBy) Title: '\(title ?? "none")' Filter count:\(filters != nil ? filters!.count : -2) Result count: \(scorecardMOs.count)")
+            if scorecardMOs.count >= offsetBy + 1 {
+                let scorecardMO = scorecardMOs[offsetBy]
+                self.scorecardId = scorecardMO.scorecardId
+                self.desc = scorecardMO.desc
+                self.date = scorecardMO.date
+                self.noDate = false
+                self.location = LocationEntity(id: scorecardMO.locationId)
+                let type = scorecardMO.type
+                self.type = scorecardMO.type.brief
+                if let score = scorecardMO.score {
+                    self.score = type.scoreString(score: score, maxScore: scorecardMO.maxScore)
+                    position = type.positionString(score: score, position: scorecardMO.position, entry: scorecardMO.entry)
+                }
             }
         } else {
-            self.date = Date()
+            self.date = Date(timeIntervalSinceReferenceDate: 0)
         }
     }
 }
@@ -147,6 +155,9 @@ struct LastScorecardWidgetEntryView : View {
                         .foregroundColor(theme.themeText)
                     }
                     
+                }
+                .onAppear{
+                    print("Appearing - Offset: \(entry.offsetBy) Title: \(entry.title ?? "nil")")
                 }
                 .lineLimit(1)
                 .foregroundColor(theme.text)
