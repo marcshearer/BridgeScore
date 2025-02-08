@@ -95,7 +95,6 @@ struct LastScorecardWidgetEntry: TimelineEntry {
             self.palette = palette
             self.title = title
             let scorecardMOs = ScorecardEntity.getLastScorecards(for: (allLocations ? nil : filters), eventTypes: eventTypes, limit: offsetBy + 1)
-            print("Offset: \(offsetBy) Title: '\(title ?? "none")' Filter count:\(filters != nil ? filters!.count : -2) Result count: \(scorecardMOs.count)")
             if scorecardMOs.count >= offsetBy + 1 {
                 let scorecardMO = scorecardMOs[offsetBy]
                 self.scorecardId = scorecardMO.scorecardId
@@ -130,16 +129,16 @@ struct LastScorecardWidgetEntryView : View {
             WidgetContainer(label: label, palette: PaletteColor(paletteEntity.containerPalette), titlePosition: .left) {
                 VStack(spacing: 0) {
                     if entry.noDate {
-                        Text("No Scorecard found").font(.title3)
+                        Text("No Scorecard found").font(WidgetMessageFont)
                     } else {
                         if let desc = entry.desc {
-                            Text(desc).font(bannerFont).bold()
+                            Text(desc).font(widgetHeadingFont).bold()
                         }
                         HStack(spacing: 0) {
-                            Text(dateLocation).font(.title2)
+                            Text(dateLocation).font(WidgetTextFont)
                         }
                         if let type = entry.type {
-                            Text(type).font(.title2)
+                            Text(type).font(WidgetTextFont)
                         }
                         Spacer().frame(height: 5)
                         HStack {
@@ -162,13 +161,9 @@ struct LastScorecardWidgetEntryView : View {
                             }
                             Spacer().frame(width: 8)
                         }
-                        .font(defaultFont).bold()
+                        .font(widgetSubHeadingFont).bold()
                         .foregroundColor(theme.themeText)
                     }
-                    
-                }
-                .onAppear{
-                    print("Appearing - Offset: \(entry.offsetBy) Title: \(entry.title ?? "nil")")
                 }
                 .lineLimit(1)
                 .foregroundColor(theme.text)

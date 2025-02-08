@@ -105,7 +105,7 @@ struct CreateScorecardWidgetEntryView : View {
                         Spacer()
                         HStack(spacing: 0) {
                             Spacer()
-                            Image(systemName: "plus").font(bigFont).bold()
+                            Image(systemName: "plus").font(widgetBigFont).bold()
                             Spacer()
                         }
                         Spacer()

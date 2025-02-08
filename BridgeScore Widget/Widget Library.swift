@@ -159,3 +159,21 @@ struct RectangleButtonStyle: ButtonStyle {
       .background(.clear, in: Rectangle())
   }
 }
+
+struct WidgetFont {
+    let macOSSize: CGFloat
+    let iOSSize: CGFloat
+    let phoneSize: CGFloat
+    
+    var font: Font {
+        Font.system(size: (MyApp.format == .phone ? phoneSize : (MyApp.target == .macOS ? macOSSize : iOSSize)))
+    }
+}
+
+
+var widgetBigFont =         WidgetFont(macOSSize: 40, iOSSize: 40, phoneSize: 24).font
+var widgetTitleFont =       WidgetFont(macOSSize: 22, iOSSize: 22, phoneSize: 18).font
+var widgetHeadingFont =     WidgetFont(macOSSize: 28, iOSSize: 28, phoneSize: 20).font
+var widgetSubHeadingFont =  WidgetFont(macOSSize: 26, iOSSize: 26, phoneSize: 20).font
+var WidgetTextFont =        WidgetFont(macOSSize: 20, iOSSize: 20, phoneSize: 17).font
+var WidgetMessageFont =     WidgetFont(macOSSize: 22, iOSSize: 22, phoneSize: 18).font
