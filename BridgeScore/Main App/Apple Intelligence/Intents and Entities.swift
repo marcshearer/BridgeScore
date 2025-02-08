@@ -308,9 +308,8 @@ struct ScorecardEntity : AppEntity {
                 }
             }
             if maxScoreEntered {
-                filter.append(NSPredicate(format: "maxScoreEntered = true"))
+                filter.append(NSPredicate(format: "scoreEntered = true and maxScoreEntered = true"))
             }
-            filter.append(NSPredicate(format: "scoreEntered = true"))
             
             return (CoreData.fetch(from: ScorecardMO.tableName, filter: filter, limit: limit, sort: [("date", .descending), ("sequence16", .descending)]) as! [ScorecardMO])
         }

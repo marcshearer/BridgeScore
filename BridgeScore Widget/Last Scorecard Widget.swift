@@ -107,7 +107,10 @@ struct LastScorecardWidgetEntry: TimelineEntry {
                 self.type = scorecardMO.type.brief
                 if let score = scorecardMO.score {
                     self.score = type.scoreString(score: score, maxScore: scorecardMO.maxScore)
-                    position = type.positionString(score: score, position: scorecardMO.position, entry: scorecardMO.entry)
+                    self.position = type.positionString(score: score, position: scorecardMO.position, entry: scorecardMO.entry)
+                } else {
+                    self.score = nil
+                    self.position = nil
                 }
             }
         } else {
@@ -142,12 +145,20 @@ struct LastScorecardWidgetEntryView : View {
                         HStack {
                             Spacer().frame(width: 8)
                             if let score = entry.score {
+                                if (entry.position ?? "") == "" {
+                                    Spacer()
+                                }
                                 Text(score)
-                            }
-                            
-                            if let position = entry.position {
-                                Spacer().frame(maxWidth: 50)
-                                Text(position)
+                                if (entry.position ?? "") == "" {
+                                    Spacer()
+                                }
+                                
+                                if let position = entry.position {
+                                    Spacer().frame(maxWidth: 50)
+                                    Text(position)
+                                }
+                            } else {
+                                Text("No score entered")
                             }
                             Spacer().frame(width: 8)
                         }
