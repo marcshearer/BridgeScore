@@ -150,8 +150,10 @@ struct StatsWidgetEntryView : View {
     var body: some View {
         let paletteEntity = entry.palette ?? paletteEntityList.first!
         let theme = PaletteColor(paletteEntity.detailPalette)
+        let locations = entry.allLocations ? [] : (entry.locations ?? [])
+        let players = entry.allPartners ? [] : (entry.players ?? [])
         let label = entry.title
-        Button(intent: StatsAppIntent(locations: entry.locations ?? [], players: entry.players ?? [], eventTypes: entry.eventTypes ?? [], dateRange: entry.dateRange), label: {
+        Button(intent: StatsAppIntent(locations: locations, players: entry.players ?? [], eventTypes: entry.eventTypes ?? [], dateRange: entry.dateRange), label: {
             WidgetContainer(label: label, palette: PaletteColor(paletteEntity.containerPalette), titlePosition: .top) {
                 WidgetGraph(values: entry.data, running: entry.running, palette: entry.palette ?? paletteEntityList.first!)
                 .containerBackground(theme.background, for: .widget)

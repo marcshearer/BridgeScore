@@ -54,11 +54,15 @@ class Utility {
     public static var isSimulator: Bool {
         get {
             if _isSimulator == nil {
-                #if arch(i386) || arch(x86_64)
-                    _isSimulator = true
-                #else
+                if MyApp.target == .iOS {
+                    #if arch(i386) || arch(x86_64)
+                        _isSimulator = true
+                    #else
+                        _isSimulator = false
+                    #endif
+                } else {
                     _isSimulator = false
-                #endif
+                }
             }
             return _isSimulator
         }

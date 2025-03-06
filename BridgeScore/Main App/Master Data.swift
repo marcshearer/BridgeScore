@@ -21,7 +21,7 @@ class MasterData: ObservableObject {
     public func load() {
         
         /// **Builds in-memory mirror of layouts, scorecards, players and locations with pointers to managed objects**
-        /// Note that this infers that there will only ever be 1 instance of the app accessing the database
+        /// Note that this infers that there will only ever be 1 instance of the app updating the database
     
         let createDefaultData = true
         

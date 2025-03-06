@@ -127,43 +127,48 @@ struct LastScorecardWidgetEntryView : View {
         let label = (entry.title != nil && entry.title != "" ? entry.title : (entry.location != nil ? entry.location!.name : (entry.allLocations ? "Most recent" : entry.filters!.first!.name)))
         Button(intent: LastScorecardAppIntent(id: entry.scorecardId ?? nullUUID), label: {
             WidgetContainer(label: label, palette: PaletteColor(paletteEntity.containerPalette), titlePosition: .left) {
-                VStack(spacing: 0) {
-                    if entry.noDate {
-                        Text("No Scorecard found").font(WidgetMessageFont)
-                    } else {
-                        if let desc = entry.desc {
-                            Text(desc).font(widgetHeadingFont).bold()
-                        }
-                        HStack(spacing: 0) {
-                            Text(dateLocation).font(WidgetTextFont)
-                        }
-                        if let type = entry.type {
-                            Text(type).font(WidgetTextFont)
-                        }
-                        Spacer().frame(height: 5)
-                        HStack {
-                            Spacer().frame(width: 8)
-                            if let score = entry.score {
-                                if (entry.position ?? "") == "" {
-                                    Spacer()
-                                }
-                                Text(score)
-                                if (entry.position ?? "") == "" {
-                                    Spacer()
-                                }
-                                
-                                if let position = entry.position {
-                                    Spacer().frame(maxWidth: 50)
-                                    Text(position)
-                                }
-                            } else {
-                                Text("No score entered")
+                HStack {
+                    Spacer().frame(width: 4)
+                    VStack(spacing: 0) {
+                        if entry.noDate {
+                            Text("No Scorecard found").font(WidgetMessageFont)
+                        } else {
+                            if let desc = entry.desc {
+                                Text(desc).font(widgetHeadingFont).bold()
                             }
-                            Spacer().frame(width: 8)
+                            Spacer().frame(height: 10)
+                            HStack(spacing: 0) {
+                                Text(dateLocation).font(WidgetTextFont)
+                            }
+                            if let type = entry.type {
+                                Text(type).font(WidgetTextFont)
+                            }
+                            Spacer().frame(height: 5)
+                            HStack {
+                                Spacer().frame(width: 4)
+                                if let score = entry.score {
+                                    if (entry.position ?? "") == "" {
+                                        Spacer()
+                                    }
+                                    Text(score)
+                                    if (entry.position ?? "") == "" {
+                                        Spacer()
+                                    }
+                                    
+                                    if let position = entry.position {
+                                        Spacer().frame(maxWidth: 50)
+                                        Text(position)
+                                    }
+                                } else {
+                                    Text("No score entered")
+                                }
+                                Spacer().frame(width: 4)
+                            }
+                            .font(widgetSubHeadingFont).bold()
+                            .foregroundColor(theme.themeText)
                         }
-                        .font(widgetSubHeadingFont).bold()
-                        .foregroundColor(theme.themeText)
                     }
+                    Spacer().frame(width: 4)
                 }
                 .lineLimit(1)
                 .foregroundColor(theme.text)

@@ -189,7 +189,7 @@ struct ImportBridgeWebsScorecard: View {
     var checkOffset: some View {
         var editOffset: Binding<Int> {
             Binding {
-                sourceOffset ?? 0
+                sourceOffset ?? 1
             } set: { (newValue) in
                 sourceOffset = newValue
             }
@@ -353,7 +353,7 @@ struct ImportBridgeWebsScorecard: View {
     }
     
     private func downloadFile(file: FileNameElement) {
-        let urlString = "https://www.bridgewebs.com/cgi-bin/bwop/bw.cgi?xml=1&club=\(file.locationId ?? scorecard.location!.bridgeWebsId)&pid=xml_results_travs&msec=\(scorecard.isMultiSession ? 1 + scorecard.importNext + (sourceOffset ?? 0) : 1)&mod=Results&ekey=\(file.event)"
+        let urlString = "https://www.bridgewebs.com/cgi-bin/bwop/bw.cgi?xml=1&club=\(file.locationId ?? scorecard.location!.bridgeWebsId)&pid=xml_results_travs&msec=\(scorecard.isMultiSession ? 0 + scorecard.importNext + (sourceOffset ?? 1) : 1)&mod=Results&ekey=\(file.event)"
         
         let url = URL(string: urlString)!
 

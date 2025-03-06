@@ -798,7 +798,7 @@ class Scorecard {
             scorecard.score = newScore
             if let newScore = newScore {
                 if scorecard.entry == 2 {
-                    scorecard.position = (newScore >= scorecard.type.invertScore(score: newScore) ? 1 : 2)
+                    scorecard.position = (newScore >= scorecard.type.invertScore(score: newScore, type: scorecard.type.matchScoreType) ? 1 : 2)
                 }
             }
             changed = true

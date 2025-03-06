@@ -42,13 +42,15 @@ struct PersistenceController {
             container.persistentStoreDescriptions.first!.url = URL(fileURLWithPath: "/dev/null")
         } else {
             /* Remove comment to synchronise with iCloud
-               Also would need to re-create App Groups in entitlements
+             // However it doesn't really work - too much chatter
+             // Would probably need to start with an empty database and then build it
+             // up gradually
             container.viewContext.automaticallyMergesChangesFromParent = true
             // Get core data directory and append Development or Production
             let storeDirectory = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup)!
             
             // Create a store description for a local store
-            let storeLocation = storeDirectory.appendingPathComponent("BridgeScore-\(MyApp.expectedDatabase.name).sqlite")
+            let storeLocation = sharedStoreURL // storeDirectory.appendingPathComponent("BridgeScore-\(MyApp.expectedDatabase.name).sqlite")
             let storeDescription = NSPersistentStoreDescription(url: storeLocation)
             storeDescription.cloudKitContainerOptions =
                 NSPersistentCloudKitContainerOptions(

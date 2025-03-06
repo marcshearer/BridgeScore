@@ -20,7 +20,7 @@ struct CreateScorecardAppIntent: AppIntent, OpenIntent {
     }
 
     init(allLayouts: Bool = true, layouts: [LayoutEntity] = [], forceDisplayDetail: Bool = false) {
-        target = layouts.first ?? LayoutEntity()
+        self.target = layouts.first ?? LayoutEntity()
         if allLayouts {
             self.layouts = []
         } else {

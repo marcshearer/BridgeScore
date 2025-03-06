@@ -113,7 +113,9 @@ struct WidgetContainer<Content>: View where Content: View {
                         .frame(width: titleWidth)
                     }
                 }
-                content().frame(width: geometry.size.width - titleWidth, height: geometry.size.height)
+                content()
+                    .frame(width: geometry.size.width - titleWidth, height: geometry.size.height)
+                    .ignoresSafeArea()
             }
         }
     }
@@ -171,7 +173,7 @@ struct WidgetFont {
 }
 
 
-var widgetBigFont =         WidgetFont(macOSSize: 40, iOSSize: 40, phoneSize: 24).font
+var widgetBigFont =         WidgetFont(macOSSize: 60, iOSSize: 60, phoneSize: 30).font
 var widgetTitleFont =       WidgetFont(macOSSize: 22, iOSSize: 22, phoneSize: 18).font
 var widgetHeadingFont =     WidgetFont(macOSSize: 28, iOSSize: 28, phoneSize: 20).font
 var widgetSubHeadingFont =  WidgetFont(macOSSize: 26, iOSSize: 26, phoneSize: 20).font

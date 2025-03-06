@@ -120,3 +120,13 @@ struct CreateScorecardWidgetEntryView : View {
         }
     }
 }
+
+struct CreateScoreardShortcuts: AppShortcutsProvider {
+    
+    static var appShortcuts: [AppShortcut] {
+        AppShortcut(intent: CreateScorecardAppIntent(),
+                    phrases: ["Create \(\.$target) with \(.applicationName)"],
+                    shortTitle: "Create scorecard",
+                    systemImageName: "plus.square")
+    }
+}

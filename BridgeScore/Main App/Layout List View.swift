@@ -26,26 +26,28 @@ struct LayoutListView: View {
                 
                 Banner(title: $title, back: true, backAction: { self.selected = false ; completion?() ; return true }, optionMode: .none)
                 
-                LazyVStack {
-                    ForEach(layouts) { (selectedLayout) in
-                        VStack {
-                            Spacer().frame(height: 16)
-                            HStack {
-                                Spacer().frame(width: 40)
-                                Text(selectedLayout.desc)
-                                    .font(.largeTitle)
-                                Spacer()
+                ScrollView {
+                    LazyVStack {
+                        ForEach(layouts) { (selectedLayout) in
+                            VStack {
+                                Spacer().frame(height: 16)
+                                HStack {
+                                    Spacer().frame(width: 40)
+                                    Text(selectedLayout.desc)
+                                        .font(.largeTitle)
+                                    Spacer()
+                                }
+                                Spacer().frame(height: 16)
+                                Separator()
                             }
-                            Spacer().frame(height: 16)
-                            Separator()
-                        }
-                        .background(Rectangle().fill(Palette.background.background))
-                        .onTapGesture {
-                            // Return this layout
-                            completion?()
-                            layout = selectedLayout
-                            selected = true
-                            dismiss()
+                            .background(Rectangle().fill(Palette.background.background))
+                            .onTapGesture {
+                                    // Return this layout
+                                completion?()
+                                layout = selectedLayout
+                                selected = true
+                                dismiss()
+                            }
                         }
                     }
                 }

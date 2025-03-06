@@ -30,12 +30,18 @@ struct ScorecardDetails {
 extension CreateScorecardAppIntent {
     func perform() async throws -> some IntentResult {
         var layoutViewModels: [LayoutViewModel]? = []
-        for layoutEntity in layouts {
-            if layoutEntity.id == nullUUID {
-                layoutViewModels = nil
-                break
-            } else if let layout = MasterData.shared.layout(id: layoutEntity.id) {
+        if target.id != nullUUID {
+            if let layout = MasterData.shared.layout(id: target.id) {
                 layoutViewModels!.append(layout)
+            }
+        } else {
+            for layoutEntity in layouts {
+                if layoutEntity.id == nullUUID {
+                    layoutViewModels = nil
+                    break
+                } else if let layout = MasterData.shared.layout(id: layoutEntity.id) {
+                    layoutViewModels!.append(layout)
+                }
             }
         }
         if layoutViewModels?.isEmpty ?? true {

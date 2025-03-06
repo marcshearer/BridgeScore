@@ -560,7 +560,7 @@ public class ScorecardType: Equatable {
         case .vp:
             switch boardScoreType {
             case .percent:
-                [.wbfDiscrete, .wbfContinuous]
+                [.wbfDiscrete]
             default:
                 VpType.validCases
             }
