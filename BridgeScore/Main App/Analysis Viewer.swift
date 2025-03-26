@@ -1485,7 +1485,7 @@ struct AnalysisViewer: View {
                                             }
                                             .frame(height: 25)
                                             .if(myTraveller == summary) { view in
-                                                view.palette(.handPlayer, .contrast)
+                                                view.palette(.handButtonPanel, .contrast)
                                             }
                                             .if(handTraveller == summary && !(myTraveller == summary)) { view in
                                                 view.palette(.alternate)
@@ -1509,7 +1509,7 @@ struct AnalysisViewer: View {
                                         if headToHead {
                                             LeadingText("Table")
                                         } else {
-                                            AnalysisSmallButton(prefix: "chevron.backward.2", label: "Back") {
+                                            AnalysisSmallButton(prefix: "chevron.backward.2", label: " Back") {
                                                 summaryMode = true
                                             }
                                         }
@@ -1574,7 +1574,7 @@ struct AnalysisViewer: View {
                                                 view.palette(.alternate)
                                             }
                                             .if(!headToHead && traveller.rankingNumber == myTraveller.rankingNumber) { view in
-                                                view.palette(.handPlayer, .contrast)
+                                                view.palette(.handButtonPanel, .contrast)
                                             }
                                             .onTapGesture {
                                                 summaryMode.toggle()

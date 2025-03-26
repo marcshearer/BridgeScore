@@ -140,6 +140,12 @@ public enum Suit: Int, ContractEnumType, Equatable, Comparable {
         switch self {
         case .spades:
             "♤"
+        case .hearts:
+            "♡"
+        case .diamonds:
+            "♢"
+        case .clubs:
+            "♧"
         default:
             string
         }

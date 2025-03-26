@@ -80,6 +80,18 @@ class MasterData: ObservableObject {
         for bboNameMO in bboNameMOs {
             bboNames.append(BBONameViewModel(bboNameMO: bboNameMO))
         }
+        
+        /*
+        let location = locations.first(where: { $0.name == "EBU 12-Board" })!
+        for scorecard in scorecards {
+            if scorecard.desc == "EBU No Robot Pairs" && scorecard.location != location {
+                scorecard.location = location
+                CoreData.update {
+                    scorecard.updateMO()
+                }
+            }
+        }
+        */
     }
 }
 
