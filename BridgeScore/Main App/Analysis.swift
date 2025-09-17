@@ -759,7 +759,7 @@ class Analysis {
             if phase == .bidding {
                 let playOption = options.first?.assessments[.play]
                 
-                    // Check if already shown some values on the play and subtract them out
+                // Check if already shown some values on the play and subtract them out
                 let (_, alreadyShown, _) = compare(combination: AnalysisTrickCombination(board: board.boardIndex, suit: bestOption.contract.suit, declarer: bestOption.declarer), positiveOnly: true) ?? (NSAttributedString(""), nil, nil)
                 if let (impact, impactDescription) = bestOption.value(method: useMethod, format: .score, compare: playOption, verbose: true, showVariance: true, colorCode: false, alreadyShown: alreadyShown, positiveOnly: true) {
                     
@@ -770,12 +770,15 @@ class Analysis {
                 }
             } else {
                 if let (text, impact, _) = compare(combination: AnalysisTrickCombination(board: board.boardIndex, suit: traveller.contract.suit, declarer: traveller.declarer.pair), positiveOnly: true, verbose: true) {
-                        
+                    
+                    let role = (traveller.declarer.pair == sitting ? "Declarer" : "Defence")
+                    let roleText = NSAttributedString("\(role) ") + text
+                    
                     let rejected = traveller.playRejected
                         
                     let impactDescription = (impact == nil ? "" : impact!.toString(places: 0) + boardScoreType.suffix)
                         
-                    result = AnalysisSummaryData(status: (rejected ? .rejected : .ok), text: text, impact: impact ?? 0, impactDescription: impactDescription)
+                    result = AnalysisSummaryData(status: (rejected ? .rejected : .ok), text: roleText, impact: impact ?? 0, impactDescription: impactDescription)
                     
                 }
             }
