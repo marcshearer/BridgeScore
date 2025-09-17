@@ -664,12 +664,20 @@ class Analysis {
                 } else {
                     if Scorecard.current.scorecard?.type.players == 4 && boardTravellers.count == 2 {
                         if useTraveller == traveller {
-                                // Head to head - compare to other table if in same suit played the same way
+                                // Head to head - compare to double dummy and then other table if in same suit played the same way
                             if let otherTraveller = otherTraveller {
                                 if otherTraveller.contract.suit == combination.suit && otherTraveller.declarer.pair == combination.declarer {
-                                    withMethod = .other
-                                    withTricks = otherTraveller.tricksMade
-                                    (shortText, verboseText) = compareValues(made, withTricks!, invert: invert, shortText: "Other", verboseText: "other table")
+                                    if let ddMade = board.doubleDummy[useTraveller.declarer]?[combination.suit]?.made {
+                                        // Use double dummy if have it
+                                        withMethod = .doubleDummy
+                                        withTricks = ddMade
+                                        (shortText, verboseText) = compareValues(made, withTricks!, invert: invert, shortText: "DD", verboseText: "Double Dummy")
+                                    } else {
+                                        // Otherwise compare to other table
+                                        withMethod = .other
+                                        withTricks = otherTraveller.tricksMade
+                                        (shortText, verboseText) = compareValues(made, withTricks!, invert: invert, shortText: "Other", verboseText: "other table")
+                                    }
                                 }
                             }
                         }
@@ -1239,7 +1247,7 @@ class AnalysisOption : Identifiable, Equatable, Hashable {
                     let type = Scorecard.current.scorecard!.type
                     places = verbose && !showVariance ? type.boardPlaces : 0
                     result = type.boardScoreType.prefix(score: score) + score.toString(places: places)
-                    suffix = type.boardScoreType.shortSuffix
+                    suffix = type.boardScoreType.suffix
                     result += suffix
                 } else {
                     result = "N/A"

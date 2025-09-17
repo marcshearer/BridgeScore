@@ -35,7 +35,7 @@ extension CreateScorecardAppIntent {
                 layoutViewModels!.append(layout)
             }
         } else {
-            for layoutEntity in layouts {
+            for layoutEntity in (layouts ?? []) {
                 if layoutEntity.id == nullUUID {
                     layoutViewModels = nil
                     break
@@ -47,7 +47,7 @@ extension CreateScorecardAppIntent {
         if layoutViewModels?.isEmpty ?? true {
             layoutViewModels = nil
         }
-        let details = ScorecardDetails(action: .createScorecard, layouts: layoutViewModels, forceDisplayDetail: forceDisplayDetail)
+        let details = ScorecardDetails(action: .createScorecard, layouts: layoutViewModels, forceDisplayDetail: (forceDisplayDetail ?? false))
         Utility.mainThread {
             ScorecardListViewChange.send(details)
         }
@@ -73,17 +73,17 @@ extension StatsAppIntent {
     func perform() async throws -> some IntentResult {
         let filterValues = ScorecardFilterValues(.stats)
         filterValues.clear()
-        if !locations.isEmpty && !locations.contains(where: {$0.id == nullUUID}) {
-            filterValues.locations.setArray(locations.map{$0.id.uuidString})
+        if !(locations ?? []).isEmpty && !locations!.contains(where: {$0.id == nullUUID}) {
+            filterValues.locations.setArray(locations!.map{$0.id.uuidString})
         }
-        if !players.isEmpty && !players.contains(where: {$0.id == nullUUID}) {
-            filterValues.partners.setArray(players.map{$0.id.uuidString})
+        if !(players ?? []).isEmpty && !players!.contains(where: {$0.id == nullUUID}) {
+            filterValues.partners.setArray(players!.map{$0.id.uuidString})
         }
-        if !eventTypes.isEmpty {
-            filterValues.types.setArray(eventTypes.map{$0.eventType.rawValue})
+        if !(eventTypes ?? []).isEmpty {
+            filterValues.types.setArray(eventTypes!.map{$0.eventType.rawValue})
         }
         if dateRange != .all {
-            filterValues.dateFrom = dateRange.startDate
+            filterValues.dateFrom = (dateRange ?? WidgetDateRange.last6Months).startDate
         }
         filterValues.save()
         

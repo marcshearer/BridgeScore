@@ -12,8 +12,8 @@ struct CreateScorecardAppIntent: AppIntent, OpenIntent {
     static let title: LocalizedStringResource = "Create Scorecard"
     
     @Parameter(title: "Template", description: "The template to use for the Scorecard") var target: LayoutEntity
-    @Parameter(title: "Templates", description: "Templates to choose from") var layouts: [LayoutEntity]
-    @Parameter(title: "Force Details", description: "Force display of detail") var forceDisplayDetail: Bool
+    @Parameter(title: "Templates", description: "Templates to choose from") var layouts: [LayoutEntity]?
+    @Parameter(title: "Force Details", description: "Force display of detail") var forceDisplayDetail: Bool?
     
     init() {
         self.init(layouts: [], forceDisplayDetail: false)
@@ -63,10 +63,10 @@ struct StatsAppIntent: AppIntent, OpenIntent {
     static let title: LocalizedStringResource = "Statistics"
     
     @Parameter(title: "Location", description: "The main location to use for the Stats") var target: LocationEntity
-    @Parameter(title: "Locations", description: "Locations to include in Stats") var locations: [LocationEntity]
-    @Parameter(title: "Players", description: "Players to in include in Stats") var players: [PlayerEntity]
-    @Parameter(title: "Event types", description: "Event types to include in Stats") var eventTypes: [WidgetEventType]
-    @Parameter(title: "Date range", description: "Date range for Stats") var dateRange: WidgetDateRange
+    @Parameter(title: "Locations", description: "Locations to include in Stats") var locations: [LocationEntity]?
+    @Parameter(title: "Players", description: "Players to in include in Stats") var players: [PlayerEntity]?
+    @Parameter(title: "Event types", description: "Event types to include in Stats") var eventTypes: [WidgetEventType]?
+    @Parameter(title: "Date range", description: "Date range for Stats") var dateRange: WidgetDateRange?
         
     init() {
         self.init(locations: [], players: [], eventTypes: [], dateRange: .all)

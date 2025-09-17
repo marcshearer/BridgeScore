@@ -1333,7 +1333,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     
     func scorecardSetCommentBoardIndex(boardIndex: Int) {
         // -1 is used to show all comments
-        
+            
         let oldCommentBoardIndex = self.scorecardCommentBoardIndex
         self.scorecardCommentBoardIndex = (boardIndex == oldCommentBoardIndex || oldCommentBoardIndex == -1 ? nil : boardIndex)
         if let oldCommentBoardIndex = oldCommentBoardIndex {
@@ -2219,7 +2219,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         textClearWidth.constant = 34
         textClearPadding.forEach { (constraint) in constraint.setIndent(in: self, constant: inputControlInset * 2) }
         firstResponderLabel.textAlignment = (centered ? .center : .left)
-        set(tap: .textInput)
+        set(tap: .textInput, regardless: true)
     }
     
     private func textInputStringLabelTapped() {
@@ -2295,8 +2295,8 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         }
     }
     
-    func set(tap newTapControl: TapControl?) {
-        if newTapControl != currentTapControl {
+    func set(tap newTapControl: TapControl?, regardless: Bool = false) {
+        if newTapControl != currentTapControl || regardless {
             if let currentTapControl = currentTapControl {
                 execute(on: currentTapControl) { (control, _) in
                     control.removeGestureRecognizer(tapGesture)
@@ -2954,7 +2954,8 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         // Main action takes place when another cell gets focus and hence this cell loses focus
         if let textControl = textControl {
             if textControl == responder {
-                getFocus(becomeFirstResponder: MyApp.target == .macOS)
+                // TODO: Removed this to avoid looping on exit from analysis
+                // getFocus(becomeFirstResponder: MyApp.target == .macOS)
             }
         }
     }

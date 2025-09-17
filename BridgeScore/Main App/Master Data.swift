@@ -82,9 +82,9 @@ class MasterData: ObservableObject {
         }
         
         /*
-        let location = locations.first(where: { $0.name == "EBU 12-Board" })!
+        let location = locations.first(where: { $0.name.uppercased() == "SBU non-National".uppercased() })!
         for scorecard in scorecards {
-            if scorecard.desc == "EBU No Robot Pairs" && scorecard.location != location {
+            if scorecard.desc.uppercased() == "Saturday Swiss Pairs".uppercased() && scorecard.location != location {
                 scorecard.location = location
                 CoreData.update {
                     scorecard.updateMO()
@@ -92,6 +92,7 @@ class MasterData: ObservableObject {
             }
         }
         */
+        
     }
 }
 

@@ -351,17 +351,18 @@ struct ImportBridgeWebsScorecard: View {
         }
         task.resume()
     }
-    
     private func downloadFile(file: FileNameElement) {
-        let urlString = "https://www.bridgewebs.com/cgi-bin/bwop/bw.cgi?xml=1&club=\(file.locationId ?? scorecard.location!.bridgeWebsId)&pid=xml_results_travs&msec=\(scorecard.isMultiSession ? 0 + scorecard.importNext + (sourceOffset ?? 1) : 1)&mod=Results&ekey=\(file.event)"
+        let urlString = "https://www.bridgewebs.com/cgi-bin/bwop/bw.cgi?xml=1&club=\(file.locationId ?? scorecard.location!.bridgeWebsId)&pid=xml_results_travs&msec=1&mod=Results&ekey=\(file.event)"
+        // TODO: Need to have a flag 'Increment by session'
         
+        // \(scorecard.isMultiSession ? 0 + scorecard.importNext + (sourceOffset ?? 1) : 1)
         let url = URL(string: urlString)!
 
         let task = URLSession.shared.dataTask(with: url) {(data, response, error) in
             if error != nil {
                 downloadError = true
             } else if let data = data {
-                parser = ImportedBridgeWebsScorecard(scorecard: scorecard, title: file.desc, data: data, date: file.date, location: file.location, completion: completion)
+                parser = ImportedBridgeWebsScorecard(scorecard: scorecard, title: file.desc, data: data, date: file.date, location: file.location, session: (scorecard.isMultiSession ? scorecard.importNext : nil), completion: completion)
             }
         }
         task.resume()
@@ -409,12 +410,11 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
     private var element = Element.unknown
     private var parser: XMLParser!
     private let replacingSingleQuote = "@@replacingSingleQuote@@"
-    private var sessionNumber: Int?
-    private var nextBoard: [Int:Int] = [:] // sessionNumber
     private var boardNumber: Int!
     private var tag: String?
+    private var skipSession: Bool = true
 
-    init(scorecard: ScorecardViewModel, title: String, data: Data, date: Date?, location: LocationViewModel?, completion: @escaping (ImportedBridgeWebsScorecard?, String?)->()) {
+    init(scorecard: ScorecardViewModel, title: String, data: Data, date: Date?, location: LocationViewModel?, session: Int? = nil, completion: @escaping (ImportedBridgeWebsScorecard?, String?)->()) {
         self.namesElement = false
         self.completion = completion
         super.init()
@@ -425,6 +425,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         self.title = title
         self.date = date ?? scorecard.date
         self.location = location ?? scorecard.location
+        self.session = session
         self.type = scorecard.type.boardScoreType
         let string = String(decoding: data, as: UTF8.self)
         let replacedQuote = string.replacingOccurrences(of: "&#39;", with: replacingSingleQuote)
@@ -725,7 +726,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
             element = .type
         case "hand":
             element = .hand
-        case "session":
+        case "session", "sess":
             element = .session
         case "bd":
             element = .board
@@ -746,31 +747,32 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
 
     func parser(_ parser: XMLParser, foundCharacters string: String) {
         let string = string.replacingOccurrences(of: replacingSingleQuote, with: "'")
-        switch element {
-        case .view:
+        if element == .session {
+            skipSession = false
+            if let foundSession = Int(string) {
+                if scorecard.isMultiSession {
+                    if let session = session {
+                        if session != foundSession {
+                            skipSession = true
+                        }
+                    }
+                }
+            }
+        } else if element == .view {
+            skipSession = false
             if let view = Int(string) {
                 zone = Zone(rawValue: view) ?? .unknown
                 hand = nil
                 dealer = nil
                 vulnerability = nil
             }
-        case .session:
-            if let number = Int(string) {
-                session = number
-            }
+        } else if !skipSession {
+        switch element {
         case .board:
             switch zone {
             case .travellers:
                 if let number = Int(string) {
-                    if let sessionNumber = sessionNumber {
-                        if let next =  nextBoard[sessionNumber] {
-                            nextBoard[sessionNumber] = next + 1
-                        } else {
-                            nextBoard[sessionNumber] = 1
-                        }
-                    } else {
-                        boardNumber = number
-                    }
+                    boardNumber = number
                     if boards[boardNumber] == nil {
                         boards[boardNumber] = ImportedBoard(boardNumber: number)
                     }
@@ -860,6 +862,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
             }
         default:
             break
+        }
         }
     }
     

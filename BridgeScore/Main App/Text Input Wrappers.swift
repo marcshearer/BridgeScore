@@ -112,7 +112,7 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
     }
     
     func set(text: String? = nil, numeric: Bool? = nil, unsigned: Bool? = nil, decimalPlaces: Int? = nil, useLabel: Bool? = nil, formattedText: (()->String)? = nil) {
-        if let text = text {
+        if let text = text, self.textValue != text {
             self.textValue = text
         }
         if let numeric = numeric {
