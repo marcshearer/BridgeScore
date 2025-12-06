@@ -189,7 +189,7 @@ struct ScorecardDetailsView: View {
                     
                     Separator(thickness: 1)
                     
-                    PickerInput(id: id, title: "Location", field: $locationIndex, values: {locations.map{$0.name}}, disabled: Scorecard.current.isImported)
+                    PickerInput(id: id, title: "Location", field: $locationIndex, values: {locations.map{$0.name}})
                     { index in
                         if let index = index {
                             scorecard.location = locations[index]
@@ -199,7 +199,7 @@ struct ScorecardDetailsView: View {
                     Separator(thickness: 1)
                     
                     if scorecard.type.players > 1 {
-                        PickerInput(id: id, title: "Partner", field: $playerIndex, values: {players.map{$0.name}}, disabled: Scorecard.current.isImported)
+                        PickerInput(id: id, title: "Partner", field: $playerIndex, values: {players.map{$0.name}})
                         { index in
                             if let index = index {
                                 scorecard.partner = players[index]
