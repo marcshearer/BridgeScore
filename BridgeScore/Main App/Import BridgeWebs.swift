@@ -13,6 +13,7 @@ struct FileNameElement: Hashable {
     var desc: String
     var locationId: String?
     var event: String
+    var data: Data?
     var date: Date? {
         Date(from: event.left(8), format: "yyyyMMdd")
     }
@@ -20,19 +21,20 @@ struct FileNameElement: Hashable {
         MasterData.shared.locations.first(where: {$0.bridgeWebsId == locationId})
     }
     
-    init(event: String, desc: String, locationId: String? = nil) {
+    init(event: String, desc: String, locationId: String? = nil, data: Data? = nil) {
         self.event = event
         self.desc = desc
         self.locationId = locationId
+        self.data = data
     }
 }
 
 struct ImportBridgeWebsScorecard: View {
     enum Phase {
+        case checkOffset
         case getList
         case dropZone
         case select
-        case checkOffset
         case getFile
         case confirm
         case importing
@@ -50,24 +52,28 @@ struct ImportBridgeWebsScorecard: View {
     @State private var importedBridgeWebsScorecard: ImportedBridgeWebsScorecard!
     @State private var fileList: [FileNameElement] = []
     @State private var parser: ImportedBridgeWebsScorecard!
-    @State private var phase: Phase = .getList
+    @State private var phase: Phase = .checkOffset
     @State private var errorMessage: String? = nil
     @State private var selected: FileNameElement? = nil
     @State private var dropZoneEntered = false
     @State private var droppedText: [String] = []
     @State private var sourceOffset: Int? = nil
+    @State private var sourceOffsetIncrement: Int? = nil
+    @State private var singleFile: Bool = false
+    @State private var matchSessionId: Bool = false
+    @State private var downloadedFile: FileNameElement? = nil
     
     var body: some View {
         StandardView("Detail") {
             switch phase {
+            case .checkOffset:
+                    checkOffset
             case .getList:
                 downloadingList
             case .dropZone:
                 dropZone
             case .select:
                 showFileList
-            case .checkOffset:
-                checkOffset
             case .getFile:
                 downloadingFile
             case .confirm:
@@ -82,6 +88,9 @@ struct ImportBridgeWebsScorecard: View {
             case .error:
                 showErrorMessage
             }
+        }
+        .onAppear {
+            phase = (scorecard.isMultiSession ? .checkOffset : .getList)
         }
     }
     
@@ -189,21 +198,75 @@ struct ImportBridgeWebsScorecard: View {
     var checkOffset: some View {
         var editOffset: Binding<Int> {
             Binding {
-                sourceOffset ?? 1
+                sourceOffset ?? 2
             } set: { (newValue) in
                 sourceOffset = newValue
+            }
+        }
+        var editOffsetIncrement: Binding<Int> {
+            Binding {
+                sourceOffsetIncrement ?? 0
+            } set: { (newValue) in
+                sourceOffsetIncrement = newValue
+            }
+        }
+        var editSingleFile: Binding<Bool> {
+            Binding {
+                singleFile
+            } set: { (newValue) in
+                singleFile = newValue
+            }
+        }
+        var editMatchSessionId: Binding<Bool> {
+            Binding {
+                matchSessionId
+            } set: { (newValue) in
+                matchSessionId = newValue
+            }
+        }
+        var matchSessionIdEnabled = (singleFile && (sourceOffsetIncrement ?? 1) == 0)
+        var editMatchSessionIdEnabled: Binding<Bool> {
+            Binding {
+                matchSessionIdEnabled
+            } set: { (newValue) in
+                matchSessionIdEnabled = newValue
             }
         }
         
         return VStack(spacing: 0) {
             Banner(title: Binding.constant("Download from BridgeWebs"), backImage: Banner.crossImage)
             Spacer().frame(height: 16)
-            InsetView(title: "Import Section Offset") {
+            InsetView(title: "Import Session Sequence (msec)") {
                 VStack(spacing: 0) {
                     
-                    StepperInput(title: "Offset", field: editOffset, label: offsetLabel, minValue: {0}, maxValue: {9}, onChange: { (newValue) in
-                        editOffset.wrappedValue = newValue
+                    InputToggle(title: "Same file for all sessions:", field: editSingleFile, disabled: Binding.constant(false), inlineTitleWidth: 300, onChange: { (newValue) in
+                        if newValue == true  {
+                            sourceOffset = 1
+                            sourceOffsetIncrement = 1
+                        } else if newValue == false {
+                            sourceOffset = 2
+                            sourceOffsetIncrement = 0
+                        }
                     })
+                    
+                    StepperInput(title: "Initial session sequence:", field: editOffset, label: offsetLabel, minValue: {0}, maxValue: {9}, inlineTitleWidth: 300)
+                    
+                    Spacer().frame(height:10)
+                    
+
+                    StepperInput(title: "Session sequence increment:", field: editOffsetIncrement, label: incrementLabel, minValue: {0}, maxValue: {9}, inlineTitleWidth: 300, onChange: { (newValue) in
+                        if newValue == 0 && singleFile == true {
+                            matchSessionId = true
+                        }
+                    })
+                    
+                    Spacer().frame(height:10)
+                    
+                    InputToggle(title: "Match session ID:", field: editMatchSessionId, disabled: editMatchSessionIdEnabled, inlineTitleWidth: 300)
+                    
+                    Spacer().frame(height:20)
+                    
+                    Text("If results come from a single file this will normally require an initial value of 2 (sometimes 1) and an increment of 0.\n\nIf the session results are in separate files this will normally require an initial value of 2 (sometimes 1) and an increment of 1.")
                     
                     Spacer()
                 }
@@ -227,8 +290,7 @@ struct ImportBridgeWebsScorecard: View {
                     .cornerRadius(10)
                     .onTapGesture {
                         Utility.mainThread {
-                            downloadFile(file: selected!)
-                            phase = .getFile
+                            phase = .getList
                         }
                     }
                     Spacer()
@@ -240,7 +302,11 @@ struct ImportBridgeWebsScorecard: View {
         .background(Palette.alternate.background)
         
         func offsetLabel(value: Int) -> String {
-            (value == 0 ? "No offset" : "Offset by \(value)")
+            "Start at \(value)"
+        }
+        
+        func incrementLabel(value: Int) -> String {
+            (value == 0 ? "No increment" : "Increment by \(value)")
         }
     }
     
@@ -290,7 +356,19 @@ struct ImportBridgeWebsScorecard: View {
                 } else {
                     MessageBox.shared.show("Session \(scorecard.importNext) imported successfully", okText: "Continue", okAction: {
                         importedBridgeWebsScorecard!.prepareForNext()
-                        phase = .getList
+                        if singleFile {
+                            if sourceOffsetIncrement != 0 {
+                                // Re-use URL with a different msec
+                                phase = .getFile
+                                downloadFile(file: downloadedFile!)
+                            } else {
+                                // Same file - just reprocess matching different session number
+                                phase = .importing
+                                processFile()
+                            }
+                        } else {
+                            phase = .getList
+                        }
                     })
                 }
             }
@@ -339,10 +417,8 @@ struct ImportBridgeWebsScorecard: View {
                         phase = .dropZone
                     case 1:
                         selected = fileList.first
-                        phase = ( scorecard.isMultiSession && sourceOffset == nil ? .checkOffset : .getFile )
-                        if phase == .getFile {
-                            downloadFile(file: selected!)
-                        }
+                        downloadFile(file: selected!)
+                        phase = .getFile
                     default:
                         phase = .select
                     }
@@ -352,20 +428,32 @@ struct ImportBridgeWebsScorecard: View {
         task.resume()
     }
     private func downloadFile(file: FileNameElement) {
-        let urlString = "https://www.bridgewebs.com/cgi-bin/bwop/bw.cgi?xml=1&club=\(file.locationId ?? scorecard.location!.bridgeWebsId)&pid=xml_results_travs&msec=1&mod=Results&ekey=\(file.event)"
-        // TODO: Need to have a flag 'Increment by session'
+        var bridgeWebsMsec: Int = 1
+        if scorecard.isMultiSession {
+            bridgeWebsMsec = (sourceOffset ?? 1) + ((scorecard.importNext - 1) * (sourceOffsetIncrement ?? 1))
+        }
         
-        // \(scorecard.isMultiSession ? 0 + scorecard.importNext + (sourceOffset ?? 1) : 1)
+        let urlString = "https://www.bridgewebs.com/cgi-bin/bwop/bw.cgi?xml=1&club=\(file.locationId ?? scorecard.location!.bridgeWebsId)&pid=xml_results_travs&msec=\(bridgeWebsMsec)&mod=Results&ekey=\(file.event)"
+
         let url = URL(string: urlString)!
 
         let task = URLSession.shared.dataTask(with: url) {(data, response, error) in
             if error != nil {
                 downloadError = true
             } else if let data = data {
-                parser = ImportedBridgeWebsScorecard(scorecard: scorecard, title: file.desc, data: data, date: file.date, location: file.location, session: (scorecard.isMultiSession ? scorecard.importNext : nil), completion: completion)
+                self.downloadedFile = FileNameElement(event: file.event, desc: file.desc, locationId: file.locationId, data: data)
+                processFile()
             }
         }
         task.resume()
+    }
+    
+    private func processFile() {
+        if let file = downloadedFile, let data = file.data {
+            parser = ImportedBridgeWebsScorecard(scorecard: scorecard, title: file.desc, data: data, date: file.date, location: file.location, session: (scorecard.isMultiSession ? scorecard.importNext : nil), matchSessionId: matchSessionId, completion: completion)
+        } else {
+            downloadError = true
+        }
     }
     
     private func completion(importedScorecard: ImportedBridgeWebsScorecard?, message: String?) {
@@ -413,9 +501,11 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
     private var boardNumber: Int!
     private var tag: String?
     private var skipSession: Bool = true
+    private var matchSessionId: Bool
 
-    init(scorecard: ScorecardViewModel, title: String, data: Data, date: Date?, location: LocationViewModel?, session: Int? = nil, completion: @escaping (ImportedBridgeWebsScorecard?, String?)->()) {
+    init(scorecard: ScorecardViewModel, title: String, data: Data, date: Date?, location: LocationViewModel?, session: Int? = nil, matchSessionId: Bool, completion: @escaping (ImportedBridgeWebsScorecard?, String?)->()) {
         self.namesElement = false
+        self.matchSessionId = matchSessionId
         self.completion = completion
         super.init()
         self.importSource = .bridgeWebs
@@ -752,7 +842,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
             if let foundSession = Int(string) {
                 if scorecard.isMultiSession {
                     if let session = session {
-                        if session != foundSession {
+                        if session != foundSession && matchSessionId {
                             skipSession = true
                         }
                     }

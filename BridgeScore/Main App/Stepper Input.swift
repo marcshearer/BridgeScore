@@ -13,6 +13,7 @@ struct StepperInput: View {
     var title: String?
     var field: Binding<Int>
     var label: ((Int)->String)?
+    var labelColor: Color = Palette.background.themeText
     var isEnabled: Bool = true
     var minValue: (()->Int)? = nil
     var maxValue: (()->Int)? = nil
@@ -30,7 +31,7 @@ struct StepperInput: View {
     var onChange: ((Int)->())? = nil
     
     var body: some View {
-            StepperInputAdditional<Int>(title: title, field: field, label: label, isEnabled: isEnabled, minValue: minValue, maxValue: maxValue, increment: increment, message: message, topSpace: topSpace, leadingSpace: leadingSpace, height: height, width: width, labelWidth: labelWidth, buttonWidth: buttonWidth, buttonHeight: buttonHeight, inlineTitle: inlineTitle, inlineTitleWidth: inlineTitleWidth, setAdditional: { (_, _) in}, onChange: onChange)
+        StepperInputAdditional<Int>(title: title, field: field, label: label, labelColor: labelColor, isEnabled: isEnabled, minValue: minValue, maxValue: maxValue, increment: increment, message: message, topSpace: topSpace, leadingSpace: leadingSpace, height: height, width: width, labelWidth: labelWidth, buttonWidth: buttonWidth, buttonHeight: buttonHeight, inlineTitle: inlineTitle, inlineTitleWidth: inlineTitleWidth, setAdditional: { (_, _) in}, onChange: onChange)
     }
 }
 
@@ -40,6 +41,7 @@ struct StepperInputAdditional<Additional>: View where Additional: Equatable {
     var title: String?
     var field: Binding<Int>
     var label: ((Int)->String)?
+    var labelColor: Color = Palette.background.themeText
     var isEnabled: Bool = true
     var minValue: (()->Int)? = nil
     var maxValue: (()->Int)? = nil
@@ -90,8 +92,10 @@ struct StepperInputAdditional<Additional>: View where Additional: Equatable {
                         HStack(spacing: 2) {
                             if let label = label {
                                 Text(label(field.wrappedValue))
+                                    .foregroundColor(labelColor)
                             } else {
                                 Text(String(field.wrappedValue))
+                                    .foregroundColor(labelColor)
                             }
                             Spacer()
                             if isEnabled {

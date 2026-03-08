@@ -638,6 +638,8 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         switch column.type {
         case .number:
             switch Scorecard.current.scorecard!.type.players {
+            case 1:
+                label.text = "Player"
             case 2:
                 label.text = "Pair"
             case 4:
@@ -680,19 +682,21 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         case .players:
             var text = NSAttributedString(string: "")
             for (index, seat) in Seat.paired.enumerated() {
-                if let player = ranking.players[seat] {
-                    if index > 0 {
-                        if index % 2 == 0 {
-                            text = text + "\n"
-                        } else {
-                            text = text + " & "
+                if index < Scorecard.current.scorecard!.type.players {
+                    if let player = ranking.players[seat] {
+                        if index > 0 {
+                            if index % 2 == 0 {
+                                text = text + "\n"
+                            } else {
+                                text = text + " & "
+                            }
                         }
-                    }
-                    let name = (MasterData.shared.realName(bboName: player) ?? player)
-                    if name == player {
-                        text = text + NSAttributedString(name, color: UIColor(Palette.background.themeText))
-                    } else {
-                        text = text + name
+                        let name = (MasterData.shared.realName(bboName: player) ?? player)
+                        if name == player {
+                            text = text + NSAttributedString(name, color: UIColor(Palette.background.themeText))
+                        } else {
+                            text = text + name
+                        }
                     }
                 }
             }
