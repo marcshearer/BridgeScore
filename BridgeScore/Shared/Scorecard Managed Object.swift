@@ -43,6 +43,8 @@ public class ScorecardMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var entry16: Int16
     @NSManaged public var importSource16: Int16
     @NSManaged public var importNext16: Int16
+    @NSManaged public var sharedWith: String
+    @NSManaged public var sharedBy: String
     
     convenience init() {
         self.init(context: CoreData.context)

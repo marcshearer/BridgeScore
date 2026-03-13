@@ -66,7 +66,7 @@ struct MyScene: Scene {
 class AppDelegate: UIResponder, UIApplicationDelegate {
         
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
-        
+            application.isStatusBarHidden = true
         return true
     }
     
@@ -75,7 +75,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let sceneConfig = UISceneConfiguration(name: nil, sessionRole: connectingSceneSession.role)
         sceneConfig.delegateClass = SceneDelegate.self
         return sceneConfig
-      }
+    }
     
     override func buildMenu(with builder: UIMenuBuilder) {
         super.buildMenu(with: builder)
@@ -98,9 +98,21 @@ class SceneDelegate: NSObject, UIWindowSceneDelegate, ObservableObject {
     
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
         if let url = URLContexts.first?.url,
-           url.scheme == "file" && url.pathExtension == "bsjson",
-           let data = try? Data(contentsOf: url) {
-            let _ = String(data: data, encoding: .utf8)
+           url.scheme == "file" && url.pathExtension == "bsjson" {
+            let _ = url.startAccessingSecurityScopedResource()
+            if let data = try? Data(contentsOf: url) {
+                let (scorecardId, errorMessage) = Export.restore(data : data)
+                if let errorMessage = errorMessage {
+                    MessageBox.shared.show(errorMessage)
+                } else {
+                    if let scorecard = MasterData.shared.scorecard(id: scorecardId) {
+                        Utility.mainThread {}
+                        ScorecardListViewChange.send(ScorecardDetails(action: .scorecardDetails, scorecard: scorecard))
+                    }
+                }
+            }
+            url.stopAccessingSecurityScopedResource()
         }
     }
 }
+

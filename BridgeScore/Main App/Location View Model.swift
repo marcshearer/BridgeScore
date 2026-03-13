@@ -54,7 +54,7 @@ public class LocationViewModel : ObservableObject, Identifiable, Equatable, Cust
     
     public init() {
         self.locationId = UUID()
-        self.sequence = Int.max
+        self.sequence = Int(Int16.max - 1)
         self.name = ""
         self.bridgeWebsId = ""
         self.retired = false

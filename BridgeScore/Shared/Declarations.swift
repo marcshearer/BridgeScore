@@ -17,7 +17,9 @@ public let appGroup = "group.\(appId)" // Has to match entitlements
 public let lastScorecardWidgetKind = "\(appId).lastScorecard"
 public let createScorecardWidgetKind = "\(appId).createScorecard"
 public let statsWidgetKind = "\(appId).stats"
-
+public let otherPlayer = "Other"
+public let otherLocation = "Other"
+public let schemaVersion = 1
 // Sizes
 
 var inputTopHeight: CGFloat { MyApp.format != .phone ? 20.0 : 10.0 }
@@ -173,6 +175,21 @@ public enum ImportSource: Int, Equatable, CaseIterable {
     
     static var validCases: [ImportSource] {
         return ImportSource.allCases.filter({$0 != .none})
+    }
+    
+    var sequence: Int {
+        switch self {
+        case .none:
+            return 0
+        case .bbo:
+            return 3
+        case .bridgeWebs:
+            return 4
+        case .pbn:
+            return 1
+        case .usebio:
+            return 2
+        }
     }
     
     var string: String {

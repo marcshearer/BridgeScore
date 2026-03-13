@@ -584,7 +584,7 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
         roundCollectionView = UICollectionView(frame: frame, collectionViewLayout: layout)
-        roundCollectionView.showsHorizontalScrollIndicator = false
+        roundCollectionView.showsHorizontalScrollIndicator = (MyApp.target == .macOS)
         layout.minimumInteritemSpacing = 0
         layout.minimumLineSpacing = 0
         addSubview(roundCollectionView, anchored: .all)

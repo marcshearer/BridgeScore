@@ -23,14 +23,14 @@ struct ShareScorecardView: View {
     @State private var includeComment = false
     @State private var includeResponsible = false
     @State var attachmentData: Data?
-    @State var frame: CGRect
+    @State var frame: CGRect?
     @State var dismissView: Bool = false
     @State var playerName: String?
     @State var responsibleDisabled: Bool = true
     @State var firstTime: Bool = true
     var playerNames: [String] = []
     
-    init(scorecard: ScorecardViewModel, frame: CGRect, initialYOffset: CGFloat) {
+    init(scorecard: ScorecardViewModel, frame: CGRect? = nil, initialYOffset: CGFloat = 0) {
         self.scorecard = scorecard
         _frame = State(initialValue: frame)
         _initialYOffset = State(initialValue: initialYOffset)
@@ -40,172 +40,212 @@ struct ShareScorecardView: View {
     
     var body: some View {
         PopupStandardView("Detail", slideInId: id) {
-            VStack {
-                Banner(title: Binding.constant("Share Scorecard"), alternateStyle: true, back: true, backText: "Cancel", backAction: { dismissView
-                    = true ; return false })
-                if MFMailComposeViewController.canSendMail() {
-                    InsetView(title: "Recipient Details") {
-                        VStack {
-                            HStack {
-                                Spacer().frame(width: 14)
-                                if players.count > 0 {
-                                    PickerInputSimple(title: "Send to", field: $playerIndex, values: players.map{$0.name} + ["Other"], topSpace: 20, width: 200, titleWidth: 206)
-                                }
-                                Spacer()
-                            }
-                            Spacer().frame(height: 10)
-                            HStack {
-                                Spacer().frame(width: 14)
-                                VStack {
-                                    LeadingText("Viewed as").frame(width: 200)
+            GeometryReader { geometry in
+                VStack {
+                    Banner(title: Binding.constant("Share Scorecard"), alternateStyle: true, back: true, backText: "Cancel", backAction: { dismissView
+                        = true ; return false })
+                    if MFMailComposeViewController.canSendMail() {
+                        InsetView(title: "Recipient Details") {
+                            VStack {
+                                HStack {
+                                    Spacer().frame(width: 14)
+                                    if players.count > 0 {
+                                        PickerInputSimple(title: "Send to", field: $playerIndex, values: players.map{$0.name} + ["Other"], topSpace: 20, width: 200, titleWidth: 206)
+                                    }
                                     Spacer()
                                 }
-                                .frame(height: 150)
-                                ScrollViewReader { proxy in
-                                    ScrollView {
-                                        VStack(spacing: 0) {
-                                            ForEach(playerNames.indices, id: \.self) { index in
-                                                let playerName = playerNames[index]
-                                                VStack(spacing: 0) {
-                                                    Spacer()
-                                                    HStack {
-                                                        Spacer().frame(width: 4)
-                                                        Text(playerName)
+                                Spacer().frame(height: 10)
+                                HStack {
+                                    Spacer().frame(width: 14)
+                                    VStack {
+                                        LeadingText("Viewed as").frame(width: 200)
+                                        Spacer()
+                                    }
+                                    .if(frame != nil) { view in
+                                        view.frame(height: 150)
+                                    }
+                                    ScrollViewReader { proxy in
+                                        ScrollView {
+                                            VStack(spacing: 0) {
+                                                ForEach(playerNames.indices, id: \.self) { index in
+                                                    let playerName = playerNames[index]
+                                                    VStack(spacing: 0) {
                                                         Spacer()
+                                                        HStack {
+                                                            Spacer().frame(width: 4)
+                                                            Text(playerName)
+                                                            Spacer()
+                                                        }
+                                                        Spacer()
+                                                        Rectangle().frame(height: 1).foregroundColor(Palette.separator.background)
                                                     }
-                                                    Spacer()
-                                                    Rectangle().frame(height: 1).foregroundColor(Palette.separator.background)
-                                                }
-                                                .id(playerName)
-                                                .frame(height: 36)
-                                                .if(playerName == self.playerName) { view in
-                                                    view.palette(.alternate)
-                                                }
-                                                .contentShape(Rectangle())
-                                                .onTapGesture {
-                                                    self.playerName = playerName
-                                                    responsibleDisabled = (rotateTo == nil)
+                                                    .id(playerName)
+                                                    .frame(height: 36)
+                                                    .if(playerName == self.playerName) { view in
+                                                        view.palette(.alternate)
+                                                    }
+                                                    .contentShape(Rectangle())
+                                                    .onTapGesture {
+                                                        self.playerName = playerName
+                                                        responsibleDisabled = (rotateTo == nil)
+                                                    }
                                                 }
                                             }
                                         }
+                                        .onChange(of: playerName, initial: false) {
+                                            proxy.scrollTo(playerName, anchor: (firstTime ? .center : nil))
+                                            firstTime = false
+                                        }
+                                        .frame(width: 200)
+                                        .if(frame != nil) { view in
+                                            view.frame(height: 150)
+                                        }
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .stroke(Palette.contrastTile.background, lineWidth: 1)
+                                        )
                                     }
-                                    .onChange(of: playerName, initial: false) {
-                                        proxy.scrollTo(playerName, anchor: (firstTime ? .center : nil))
-                                        firstTime = false
-                                    }
-                                    .frame(width: 200, height: 150)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Palette.contrastTile.background, lineWidth: 1)
-                                    )
+                                    Spacer()
                                 }
-                                Spacer()
+                                Spacer().frame(height: 10)
                             }
-                            Spacer().frame(height: 10)
                         }
-                    }
-                    InsetView(title: "Content") {
-                        VStack {
-                            HStack {
-                                Spacer().frame(width: 14)
-                                InputToggle(title: "Include comments", field: $includeComment, disabled: Binding.constant(false), topSpace: 30, width: 40, inlineTitleWidth: 200)
-                                Spacer()
-                            }
-                            HStack {
-                                Spacer().frame(width: 14)
-                                InputToggle(title: "Include responsible", field: $includeResponsible, disabled: $responsibleDisabled, topSpace: 10, width: 40, inlineTitleWidth: 200)
-                                Spacer()
-                            }
-                            Spacer().frame(height: 20)
-                        }
-                    }
-                    VStack {
-                        Spacer()
-                        Button {
-                            if let playerName = playerName, let json = Export.export(scorecard: scorecard, playerName: playerName, includeComment: includeComment, includeResponsible: includeResponsible, rotateTo: rotateTo), let data = json.data(using: .utf8) {
-                                attachmentData = data
-                                showMail = true
-                            } else {
-                                MessageBox.shared.show("Error Exporting Scorecard")
-                            }
-                        } label: {
+                        InsetView(title: "Content") {
                             VStack {
-                                Spacer()
                                 HStack {
-                                    Spacer()
-                                    Text("Send")
+                                    Spacer().frame(width: 14)
+                                    InputToggle(title: "Include comments", field: $includeComment, disabled: Binding.constant(false), topSpace: 30, width: 40, inlineTitleWidth: 200)
                                     Spacer()
                                 }
-                                Spacer()
+                                HStack {
+                                    Spacer().frame(width: 14)
+                                    InputToggle(title: "Include responsible", field: $includeResponsible, disabled: $responsibleDisabled, topSpace: 10, width: 40, inlineTitleWidth: 200)
+                                    Spacer()
+                                }
+                                Spacer().frame(height: 20)
                             }
-                            .frame(width: 100, height: 40)
-                            .palette(.enabledButton)
-                            .cornerRadius(10)
                         }
-                        Spacer()
-                    }
-                    if showMail {
-                        ScorecardMailView(scorecard: scorecard, toEmail: toPlayer?.email ?? "", fromEmail: MasterData.shared.scorer!.email, attachmentData: attachmentData, isShowing: $showMail, result: $result)
-                    }
-                } else {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        Text("Mail not supported")
-                        Spacer()
-                    }
-                    Spacer()
-                }
-                Spacer()
-            }
-            .background(Palette.alternate.background)
-            .cornerRadius(10)
-            .onAppear {
-                players = MasterData.shared.players.filter({(!$0.retired || $0 == scorecard.partner!) && $0.email != ""})
-                playerIndex = players.firstIndex(where: {$0.playerId == scorecard.partner?.playerId}) ?? 0
-                updatePlayerName()
-                withAnimation(.linear(duration: 0.25).delay(0.1)) {
-                    yOffset = frame.minY
-                }
-            }
-            .onChange(of: playerIndex, initial: false) {
-                updatePlayerName()
-            }
-            .onChange(of: showMail, initial: false) {
-                if !showMail {
-                    if case .success(let reason) = result {
-                        if reason == .cancelled {
-                            // Allow retry
-                        } else {
-                            // Success - close
-                            presentationMode.wrappedValue.dismiss()
+                        VStack {
+                            if frame == nil {
+                                Spacer()
+                            } else {
+                                Spacer().frame(height: 20)
+                            }
+                            Button {
+                                if let playerName = playerName, let data = Export.export(scorecard: scorecard, playerName: playerName, includeComment: includeComment, includeResponsible: includeResponsible, rotateTo: rotateTo) {
+                                    attachmentData = data
+                                    showMail = true
+                                } else {
+                                    MessageBox.shared.show("Error Exporting Scorecard")
+                                }
+                            } label: {
+                                VStack {
+                                    Spacer()
+                                    HStack {
+                                        Spacer()
+                                        Text("Send")
+                                        Spacer()
+                                    }
+                                    Spacer()
+                                }
+                                .frame(width: 100, height: 40)
+                                .font(.callout)
+                                .palette(.enabledButton)
+                                .cornerRadius(10)
+                            }
+                            Spacer()
                         }
+                        .frame(height: 60)
                     } else {
-                        // Error - report and close
-                        MessageBox.shared.show("Error sending mail", okAction: {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            Text("Mail not supported")
+                            Spacer()
+                        }
+                        Spacer()
+                    }
+                    Spacer()
+                }
+                .sheet(isPresented: $showMail) {
+                    ScorecardMailView(scorecard: scorecard, toEmail: toPlayer?.email ?? "", fromEmail: MasterData.shared.scorer!.email, attachmentData: attachmentData, isShowing: $showMail, result: $result)
+                }
+                .background(Palette.alternate.background)
+                .cornerRadius(10)
+                .onAppear {
+                    players = MasterData.shared.players.filter({(!$0.retired || $0 == scorecard.partner!) && $0.email != ""})
+                    playerIndex = players.firstIndex(where: {$0.playerId == scorecard.partner?.playerId}) ?? 0
+                    updatePlayerName()
+                    if frame != nil {
+                        withAnimation(.linear(duration: 0.25).delay(0.1)) {
+                            yOffset = frame!.minY
+                        }
+                    }
+                }
+                .onChange(of: playerIndex, initial: false) {
+                    updatePlayerName()
+                }
+                .onChange(of: showMail, initial: false) {
+                    if !showMail {
+                        if case .success(let reason) = result {
+                            if reason == .cancelled {
+                                    // Allow retry
+                            } else {
+                                    // Success - close
+                                presentationMode.wrappedValue.dismiss()
+                            }
+                        } else {
+                                // Error - report and close
+                            MessageBox.shared.show("Error sending mail", okAction: {
+                                presentationMode.wrappedValue.dismiss()
+                            })
+                        }
+                    }
+                }
+                .offset(x: frame?.minX ?? 0, y: yOffset)
+                .frame(width: (frame?.width ?? geometry.size.width), height: (frame?.height ?? geometry.size.height))
+                .onChange(of: dismissView) {
+                    if dismissView == true {
+                        dismissView = false
+                        withAnimation(.linear(duration: 0.25)) {
+                            yOffset = initialYOffset
+                        }
+                        Utility.executeAfter(delay: 0.25) {
                             presentationMode.wrappedValue.dismiss()
-                        })
+                        }
                     }
                 }
             }
-            .offset(x: frame.minX, y: yOffset)
-            .onChange(of: dismissView) {
-                if dismissView == true {
-                    dismissView = false
-                    withAnimation(.linear(duration: 0.25)) {
-                        yOffset = initialYOffset
-                    }
-                    Utility.executeAfter(delay: 0.25) {
-                        presentationMode.wrappedValue.dismiss()
-                    }
-                }
-            }
-            .frame(width: frame.width, height: frame.height)
         }
     }
     
     func getPlayerNames() -> [String] {
-        var names = Array(Set(Scorecard.current.rankingList.map({$0.players}).flatMap({$0.values}))).sorted(by: {$0 < $1})
+        var scorer : PlayerViewModel? = nil
+        var myNames: [String] = []
+        // Add myself
+        scorer = Scorecard.current.scorecard?.scorer
+        if let scorer = scorer {
+            myNames.append(scorer.name)
+            // Add my teams names next
+            if let myRanking = Scorecard.myRanking(session: 1) {
+                for (index, seat) in Seat.paired.enumerated() {
+                    if index < Scorecard.current.scorecard!.type.players {
+                        if let player = myRanking.players[seat], player.uppercased() != scorer.name.uppercased() && player.uppercased() != scorer.bboName.uppercased() {
+                            myNames.append(player)
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Now build other names
+        let otherNames = Array(Set(Scorecard.current.rankingList.map({$0.players}).flatMap({$0.values}))).filter({!myNames.contains($0) && scorer?.name.uppercased() != $0.uppercased() && scorer?.bboName.uppercased() != $0.uppercased()}).sorted(by: {$0 < $1})
+        
+        return replaceBboNames(myNames) + replaceBboNames(otherNames.sorted(by: {$0.uppercased() < $1.uppercased()}))
+    }
+    
+    func replaceBboNames(_ names: [String]) -> [String] {
+        var names = names
         if Scorecard.current.isImported && scorecard.importSource == .bbo {
             for index in names.indices {
                 if let realName = MasterData.shared.realName(bboName: names[index]) {
@@ -213,8 +253,9 @@ struct ShareScorecardView: View {
                 }
             }
         }
-        return names.sorted(by: {$0 < $1})
+        return names
     }
+    
     
     func updatePlayerName() {
         toPlayer = (playerIndex <= players.count - 1 ? players[playerIndex] : nil)
@@ -261,11 +302,17 @@ struct ScorecardMailView: UIViewControllerRepresentable {
     class Coordinator: NSObject, MFMailComposeViewControllerDelegate {
 
         @Binding var isShowing: Bool
+        @Binding var scorecard: ScorecardViewModel
+        @Binding var toEmail: String
         @Binding var result: Result<MFMailComposeResult, Error>?
 
         init(isShowing: Binding<Bool>,
+             scorecard: Binding<ScorecardViewModel>,
+             toEmail: Binding<String>,
              result: Binding<Result<MFMailComposeResult, Error>?>) {
             _isShowing = isShowing
+            _scorecard = scorecard
+            _toEmail = toEmail
             _result = result
         }
 
@@ -277,13 +324,18 @@ struct ScorecardMailView: UIViewControllerRepresentable {
             }
             if let error = error {
                 self.result = .failure(error)
+            } else {
+                self.result = .success(result)
+                if result == .sent {
+                    scorecard.sharedWith = toEmail
+                    scorecard.saveScorecard()
+                }
             }
-            self.result = .success(result)
         }
     }
 
     func makeCoordinator() -> Coordinator {
-        return Coordinator(isShowing: $isShowing,
+        return Coordinator(isShowing: $isShowing, scorecard: $scorecard, toEmail: $toEmail,
                            result: $result)
     }
 
@@ -294,7 +346,7 @@ struct ScorecardMailView: UIViewControllerRepresentable {
         mailViewController.setToRecipients([toEmail])
         mailViewController.setSubject("Sharing: \(scorecard.desc)")
         mailViewController.setMessageBody("<html><head/><body><p>Attached is a copy of the \(scorecard.desc) event as played by \(scorecard.scorer!.name) and \(scorecard.partner!.name) in the \(scorecard.location!.name) on \(Utility.dateString(scorecard.date, style: .full)).</p><p>Click on the attachment to import it into your Bridge Score history.</p><p>Regards,<br/>\(scorecard.scorer!.name)</p></body></html>", isHTML: true)
-        mailViewController.addAttachmentData(attachmentData!, mimeType: "application/json", fileName: "\(scorecard.desc).bsjson")
+        mailViewController.addAttachmentData(attachmentData!, mimeType: "json", fileName: "\(scorecard.desc).bsjson")
         return mailViewController
     }
 

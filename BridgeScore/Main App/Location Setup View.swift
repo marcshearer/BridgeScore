@@ -69,7 +69,7 @@ struct LocationSetupView: View {
     func addLocation() {
         save(location: selected)
         selected.copy(from: LocationViewModel())
-        selected.sequence = MasterData.shared.locations.last!.sequence + 1
+        selected.sequence = MasterData.shared.locations.filter{$0.name != otherLocation}.last!.sequence + 1
     }
     
     func save(location: LocationViewModel) {
@@ -96,7 +96,7 @@ struct LocationSelectionView : View {
         VStack(spacing: 0) {
             HStack {
                 List {
-                    ForEach(MasterData.shared.locations) { location in
+                    ForEach(MasterData.shared.locations.filter({$0.name != otherLocation})) { location in
                         
                         let thisSelected = (selected == location)
                         let color = (thisSelected ? Palette.tile : Palette.background)

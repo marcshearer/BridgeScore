@@ -158,6 +158,7 @@
 		B2C4338C27B6646700796F24 /* Scorecard Input View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C4338B27B6646700796F24 /* Scorecard Input View.swift */; };
 		B2C4338E27B7B56200796F24 /* Custom Collection View Flow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C4338D27B7B56200796F24 /* Custom Collection View Flow.swift */; };
 		B2C4339027B7B59700796F24 /* Custom View Animations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C4338F27B7B59700796F24 /* Custom View Animations.swift */; };
+		B2CC17482F617F67000B89E6 /* Import.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CC17472F617F63000B89E6 /* Import.swift */; };
 		B2CC509927BE21060050F22C /* Scroll Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CC509827BE21060050F22C /* Scroll Picker.swift */; };
 		B2CC509E27BE22210050F22C /* Enum Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CC509D27BE22210050F22C /* Enum Picker.swift */; };
 		B2CD8E722D3BE80F00E0B3DD /* UITextView Wrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CD8E712D3BE80700E0B3DD /* UITextView Wrapper.swift */; };
@@ -338,6 +339,7 @@
 		B2C4338B27B6646700796F24 /* Scorecard Input View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Input View.swift"; sourceTree = "<group>"; };
 		B2C4338D27B7B56200796F24 /* Custom Collection View Flow.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Custom Collection View Flow.swift"; sourceTree = "<group>"; };
 		B2C4338F27B7B59700796F24 /* Custom View Animations.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Custom View Animations.swift"; sourceTree = "<group>"; };
+		B2CC17472F617F63000B89E6 /* Import.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Import.swift; sourceTree = "<group>"; };
 		B2CC509827BE21060050F22C /* Scroll Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Scroll Picker.swift"; path = "../Main App/Scroll Picker.swift"; sourceTree = "<group>"; };
 		B2CC509D27BE22210050F22C /* Enum Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Enum Picker.swift"; sourceTree = "<group>"; };
 		B2CC509F27BE22900050F22C /* Obsolete Contract Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Obsolete Contract Picker.swift"; sourceTree = "<group>"; };
@@ -613,6 +615,7 @@
 				B26BCE552799AE6400B73501 /* Preview Data.swift */,
 				B2EB3D7A279DCBCB00D64225 /* Default Data.swift */,
 				B2AC53A92B11032D00B07D20 /* Export.swift */,
+				B2CC17472F617F63000B89E6 /* Import.swift */,
 				B24BC3A027F42DD200576D50 /* Scorecard Filter Values.swift */,
 			);
 			name = "Standard Components";
@@ -931,6 +934,7 @@
 				B2EB3D6A279D666800D64225 /* Location Managed Object.swift in Sources */,
 				B26BCE622799AED700B73501 /* Target View Modifiers.swift in Sources */,
 				B28D3F5E2ACE6FD60060DAA1 /* Override Managed Object.swift in Sources */,
+				B2CC17482F617F67000B89E6 /* Import.swift in Sources */,
 				B26BCE4F2799AD8900B73501 /* Utility Extension.swift in Sources */,
 				B26BCE522799AD8900B73501 /* Themes.swift in Sources */,
 				B2EB3D71279D717F00D64225 /* Player View Model.swift in Sources */,
@@ -1021,7 +1025,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 44;
+				CURRENT_PROJECT_VERSION = 52;
 				DEVELOPMENT_TEAM = 3T7CT2S464;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
@@ -1061,7 +1065,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 44;
+				CURRENT_PROJECT_VERSION = 52;
 				DEVELOPMENT_TEAM = 3T7CT2S464;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
@@ -1214,7 +1218,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 44;
+				CURRENT_PROJECT_VERSION = 52;
 				DEVELOPMENT_ASSET_PATHS = "\"BridgeScore/Main App/Preview Content\"";
 				DEVELOPMENT_TEAM = 3T7CT2S464;
 				ENABLE_PREVIEWS = YES;
@@ -1259,7 +1263,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 44;
+				CURRENT_PROJECT_VERSION = 52;
 				DEVELOPMENT_ASSET_PATHS = "\"BridgeScore/Main App/Preview Content\"";
 				DEVELOPMENT_TEAM = 3T7CT2S464;
 				ENABLE_PREVIEWS = YES;

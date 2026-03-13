@@ -112,6 +112,10 @@ class DefaultData {
     
     public class var players: [PlayerViewModel] {
         get {
+            let player0 = PlayerViewModel()
+            player0.name = otherPlayer
+            player0.sequence = Int(Int16.max)
+            
             let player1 = PlayerViewModel()
             player1.name = "Michele Grainger"
             player1.bboName = "mjg2507"
@@ -138,12 +142,16 @@ class DefaultData {
             player5.isSelf = true
             player5.sequence = 5
             
-            return [player1, player2, player3, player4, player5]
+            return [player0, player1, player2, player3, player4, player5]
         }
     }
     
     public class var locations: [LocationViewModel] {
         get {
+            let location0 = LocationViewModel()
+            location0.name = "Other"
+            location0.sequence = Int(Int16.max)
+            
             let location1 = LocationViewModel()
             location1.name = "St Andrews"
             location1.bridgeWebsId = "standrews"
@@ -182,7 +190,7 @@ class DefaultData {
             location9.bridgeWebsId = "newmelville"
             location9.sequence = 8
             
-            return [location1, location2, location3, location5, location6, location7, location8, location9]
+            return [location0, location1, location2, location3, location5, location6, location7, location8, location9]
         }
     }
 

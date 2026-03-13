@@ -79,13 +79,15 @@ struct Input : View {
                     HStack {
                         Spacer().frame(width: 8)
                         VStack(spacing: 0) {
+                            Spacer()
                             Text(title!)
                                 .frame(height: height - 8)
-                            Spacer().frame(height: 8)
+                            Spacer()
                         }
                         Spacer()
                     }
-                    .frame(width: inlineTitleWidth, height: height)
+                    .frame(width: inlineTitleWidth)
+                    .frame(height: height).layoutPriority(999)
                     Spacer().frame(width: 14)
                 }
                 HStack {
@@ -107,12 +109,15 @@ struct Input : View {
                         VStack(spacing: 0) {
                             Spacer().frame(height: 4)
                             if asText {
-                                Text(field.wrappedValue)
-                                    .truncationMode(.tail)
-                                    .foregroundColor(color.text)
-                                    .if(multiLine) { view in
-                                        view.lineLimit(1)
-                                    }
+                                HStack {
+                                    Spacer().frame(width: 6)
+                                    Text(field.wrappedValue)
+                                        .truncationMode(.tail)
+                                        .foregroundColor(color.text)
+                                        .if(multiLine) { view in
+                                            view.lineLimit(1)
+                                        }
+                                }
                             } else {
                                 UndoWrapper(field) { field in
                                     TextEditor(text: field)

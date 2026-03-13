@@ -231,7 +231,7 @@ struct ScorecardListView: View, DropDelegate {
         ZStack {
             Color.black.opacity(0.4)
             let width = min(704, geometry.size.width) // Allow for safe area
-            let height = min(610, (geometry.size.height))
+            let height = min(620, (geometry.size.height))
             let frame = CGRect(x: (geometry.size.width - width) / 2,
                                y: ((geometry.size.height - height) / 2) + 20,
                                width: width,
@@ -357,6 +357,7 @@ struct ScorecardSummaryView: View {
     @Binding var importTapped: ImportSource
     @State var selectImport = false
     @State var importSelected: Int?
+    @State private var shareScorecard = false
     
     var body: some View {
         if MyApp.format == .phone && !isLandscape {
@@ -400,8 +401,12 @@ struct ScorecardSummaryView: View {
                         Spacer().frame(height: 12)
                     }
                     importButton
+                    shareButton
                     deleteButton
                 }
+            }
+            .sheet(isPresented: $shareScorecard) {
+                ShareScorecardView(scorecard: selected, frame: nil, initialYOffset: 0)
             }
         }
     }
@@ -513,7 +518,7 @@ struct ScorecardSummaryView: View {
                 GeometryReader { geometry in
                     VStack {
                         Spacer()
-                        PopupMenu(id: slideInId, field: $importSelected, values: ImportSource.validCases.map{$0.string}, animation: .none, top: geometry.frame(in: .global).minY - 30, left: geometry.frame(in: .global).minX - 290, width: 300) { (selectedIndex) in
+                        PopupMenu(id: slideInId, field: $importSelected, values: ImportSource.validCases.sorted(by: {$0.sequence < $1.sequence}).map{$0.string}, animation: .none, top: geometry.frame(in: .global).minY - 30, left: geometry.frame(in: .global).minX - 290, width: 300) { (selectedIndex) in
                             if let selectedIndex = selectedIndex {
                                 importTapped = ImportSource.validCases[selectedIndex]
                                 selected.copy(from: scorecard)
@@ -542,6 +547,39 @@ struct ScorecardSummaryView: View {
                 scorecard.remove()
                 WidgetCenter.shared.reloadTimelines(ofKind: lastScorecardWidgetKind)
             })
+        }
+    }
+    
+    var shareButton: some View {
+        if scorecard.sharedWith != "" {
+            var player: String
+            if let sharedWith = MasterData.shared.players.first(where: {$0.email == scorecard.sharedWith}) {
+                player = sharedWith.name
+            } else {
+                player = scorecard.sharedWith
+            }
+            return button("square.and.arrow.up.circle.fill") {
+                MessageBox.shared.show("Shared by you with \(player)")
+            }
+            .help("Shared by you with \(player)")
+        } else if scorecard.sharedBy != "" {
+            var player: String
+            if let sharedBy = MasterData.shared.players.first(where: {$0.email == scorecard.sharedBy}) {
+                player = sharedBy.name
+            } else {
+                player = scorecard.sharedBy
+            }
+            return button("sharedwithyou.circle.fill") {
+                MessageBox.shared.show("Shared with you by \(player)")
+            }
+            .help("Shared with you by \(player)")
+        } else {
+            return button("paperplane.circle.fill") {
+                self.selected.copy(from: scorecard)
+                Scorecard.current.load(scorecard: self.selected)
+                shareScorecard = true
+            }
+            .help("Not shared")
         }
     }
     

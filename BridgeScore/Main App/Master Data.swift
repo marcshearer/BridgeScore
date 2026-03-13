@@ -32,6 +32,24 @@ class MasterData: ObservableObject {
         let scorecardMOs = CoreData.fetch(from: ScorecardMO.tableName, sort: [(key: #keyPath(ScorecardMO.date), direction: .descending), (key: #keyPath(ScorecardMO.sequence16), direction: .descending)]) as! [ScorecardMO]
         let bboNameMOs = CoreData.fetch(from: BBONameMO.tableName, sort: (key: #keyPath(BBONameMO.bboName), direction: .ascending)) as! [BBONameMO]
         
+        /* Check for orphans
+        for entity in MyApp.databaseTables {
+            if entity.name! != "Scorecard" {
+                if entity.attributesByName.contains(where: {$0.key == "scorecardId"}) {
+                    let rows = CoreData.fetch(from: entity.name!)
+                    for row in rows {
+                        if let scorecardId = row.value(forKey: "scorecardId") as? UUID {
+                            if !scorecardMOs.contains(where: {$0.scorecardId == scorecardId}) {
+                                row.managedObjectContext?.delete(row)
+                                try? CoreData.context.save()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        */
+        
         // Setup players
         self.players = []
         for playerMO in playerMOs {
@@ -161,13 +179,15 @@ extension MasterData {
     
     /// Methods for scorecards
     
-    public func insert(scorecard: ScorecardViewModel) {
-        assert(scorecard.isNew, "Cannot insert a scorecard which already has a managed object")
+    public func insert(scorecard: ScorecardViewModel, useExistingMO: Bool = false) {
+        assert(scorecard.isNew || useExistingMO, "Cannot insert a scorecard which already has a managed object")
         assert(self.scorecard(id: scorecard.scorecardId) == nil, "Scorecard already exists and cannot be created")
         assert(self.scorecard(id: scorecard.scorecardId)?.desc == nil, "Scorecard must have a non-blank description")
         CoreData.update {
-            scorecard.scorecardMO = ScorecardMO()
-            scorecard.updateMO()
+            if !useExistingMO {
+                scorecard.scorecardMO = ScorecardMO()
+                scorecard.updateMO()
+            }
             let index = sortedIndex(scorecard: scorecard)
             self.scorecards.insert(scorecard, at: index)
         }
@@ -258,16 +278,22 @@ extension MasterData {
     public func updatePlayerSequence() {
         var last = 0
         for player in self.players {
-            if player.sequence != last + 1 {
-                player.sequence = last + 1
-                player.save()
+            if player.name != otherPlayer {
+                if player.sequence != last + 1 {
+                    player.sequence = last + 1
+                    player.save()
+                }
+                last = player.sequence
             }
-            last = player.sequence
         }
     }
     
     public func player(id playerId: UUID?) -> PlayerViewModel? {
         return (playerId == nil ? nil : self.players.first(where: {$0.playerId == playerId}))
+    }
+    
+    public func player(name: String) -> PlayerViewModel? {
+        return (self.players.first(where: {$0.name == name}))
     }
     
     public var scorer: PlayerViewModel? {
@@ -323,17 +349,24 @@ extension MasterData {
     public func updateLocationSequence() {
         var last = 0
         for location in self.locations {
-            if location.sequence != last + 1 {
-                location.sequence = last + 1
-                location.save()
+            if location.name != otherLocation {
+                if location.sequence != last + 1 {
+                    location.sequence = last + 1
+                    location.save()
+                }
+                last = location.sequence
             }
-            last = location.sequence
         }
     }
     
     public func location(id locationId: UUID?) -> LocationViewModel? {
         return (locationId == nil ? nil : self.locations.first(where: {$0.locationId == locationId}))
     }
+    
+    public func location(name: String) -> LocationViewModel? {
+        return (self.locations.first(where: {$0.name == name}))
+    }
+
 }
 
 extension MasterData {

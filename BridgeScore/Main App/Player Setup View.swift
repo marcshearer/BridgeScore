@@ -71,7 +71,7 @@ struct PlayerSetupView: View {
     func addPlayer() {
         save(player: selected)
         selected.copy(from: PlayerViewModel())
-        selected.sequence = MasterData.shared.players.last!.sequence + 1
+        selected.sequence = MasterData.shared.players.filter{$0.name != otherPlayer}.last!.sequence + 1
     }
     
     func save(player: PlayerViewModel) {
@@ -98,7 +98,7 @@ struct PlayerSelectionView : View {
         VStack(spacing: 0) {
             HStack {
                 List {
-                    ForEach(MasterData.shared.players) { player in
+                    ForEach(MasterData.shared.players.filter({$0.name != otherPlayer})) { player in
                         
                         let thisSelected = (selected == player)
                         let color = (thisSelected ? Palette.tile : Palette.background)

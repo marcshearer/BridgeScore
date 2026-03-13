@@ -214,6 +214,21 @@ struct ScorecardDetailsView: View {
                     })
                     .disabled(Scorecard.current.isImported)
                     
+                    if scorecard.sharedBy != "" {
+                        Separator(thickness: 1)
+                        
+                        Input(title: "Shared by", field: $scorecard.sharedBy, topSpace: 0, asText: true)
+                            .disabled(true)
+                    }
+                    
+                    if scorecard.sharedWith != "" {
+                        Separator(thickness: 1)
+                        
+                        Input(title: "Shared with", field: $scorecard.sharedWith, topSpace: 0, asText: true)
+                            .disabled(true)
+                    }
+                    
+                    Spacer().frame(height: 5)
                 }
             }
             
@@ -252,6 +267,8 @@ struct ScorecardDetailsView: View {
                         Separator(thickness: 1)
                         
                         Input(title: "Comments", field: $scorecard.comment)
+                        
+                        Spacer().frame(height: 5)
                     }
                 }
             }

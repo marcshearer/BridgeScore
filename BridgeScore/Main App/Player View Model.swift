@@ -61,7 +61,7 @@ public class PlayerViewModel : ObservableObject, Identifiable, Equatable, Custom
     
     public init() {
         self.playerId = UUID()
-        self.sequence = Int.max
+        self.sequence = Int(Int16.max - 1)
         self.name = ""
         self.bboName = ""
         self.email = ""

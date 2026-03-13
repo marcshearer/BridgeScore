@@ -34,6 +34,8 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
     @Published public var entry: Int = 0
     @Published public var importSource: ImportSource = .none
     @Published public var importNext: Int = 0
+    @Published public var sharedWith: String = ""
+    @Published public var sharedBy: String = ""
     
     public var tables: Int { get { boards / max(1, boardsTable) } }
     public var tablesSession: Int { get { tables / max(1, sessions) } }
@@ -73,7 +75,9 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
                 self.entry != mo.entry ||
                 self.importSource != mo.importSource ||
                 self.importNext != mo.importNext ||
-                self.sequence != mo.sequence
+                self.sequence != mo.sequence ||
+                self.sharedBy != mo.sharedBy ||
+                self.sharedWith != mo.sharedWith
             {
                     result = true
             }
@@ -158,6 +162,8 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.importSource = .none
         self.importNext = 1
         self.sequence = 0
+        self.sharedBy = ""
+        self.sharedWith = ""
         self.scorecardMO = nil
     }
     
@@ -182,6 +188,8 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.importSource = from.importSource
         self.importNext = from.importNext
         self.sequence = from.sequence
+        self.sharedBy = from.sharedBy
+        self.sharedWith = from.sharedWith
         self.scorecardMO = from.scorecardMO
     }
     
@@ -215,6 +223,8 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             self.importSource = mo.importSource
             self.importNext = mo.importNext
             self.sequence = mo.sequence
+            self.sharedBy = mo.sharedBy
+            self.sharedWith = mo.sharedWith
         }
     }
     
@@ -242,6 +252,8 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
             mo.entry = self.entry
             mo.importSource = self.importSource
             mo.importNext = self.importNext
+            mo.sharedBy = self.sharedBy
+            mo.sharedWith = self.sharedWith
             if sequence == 0 {
                 updateSequence()
             }
@@ -372,6 +384,8 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         UserDefault.currentEntry.set(self.entry)
         UserDefault.currentImportSource.set(self.importSource)
         UserDefault.currentImportNext.set(self.importNext)
+        UserDefault.currentSharedBy.set(self.sharedBy)
+        UserDefault.currentSharedWith.set(self.sharedWith)
     }
     
     public func restoreCurrent() {
@@ -401,5 +415,7 @@ public class ScorecardViewModel : ObservableObject, Identifiable, Equatable, Cus
         self.position = UserDefault.currentPosition.int
         self.importSource = UserDefault.currentImportSource.importSource ?? .none
         self.importNext = UserDefault.currentImportNext.int
+        self.sharedBy = UserDefault.currentSharedBy.string
+        self.sharedWith = UserDefault.currentSharedWith.string
     }
 }
