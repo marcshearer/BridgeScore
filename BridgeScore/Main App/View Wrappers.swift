@@ -20,6 +20,7 @@ struct LeadingAttributedText: View {
             Text(text)
             Spacer()
         }
+        .contentShape(Rectangle())
     }
 }
 
@@ -36,6 +37,7 @@ struct LeadingText: View {
             Text(text)
             Spacer()
         }
+        .contentShape(Rectangle())
     }
 }
 
@@ -52,6 +54,7 @@ struct CenteredAttributedText: View {
             Text(text)
             Spacer()
         }
+        .contentShape(Rectangle())
     }
 }
 
@@ -68,6 +71,7 @@ struct CenteredText: View {
             Text(text)
             Spacer()
         }
+        .contentShape(Rectangle())
     }
 }
 
@@ -80,6 +84,7 @@ struct BindCenteredText: View {
             Text(text)
             Spacer()
         }
+        .contentShape(Rectangle())
     }
 }
 
@@ -96,6 +101,7 @@ struct TrailingText: View {
             Text(text)
             Spacer().frame(width: 2)
         }
+        .contentShape(Rectangle())
     }
 }
 
@@ -112,6 +118,7 @@ struct TrailingAttributedText: View {
             Text(text)
             Spacer().frame(width: 2)
         }
+        .contentShape(Rectangle())
     }
 }
 
@@ -128,5 +135,6 @@ struct MiddleCentered<Content>: View where Content: View {
             }
             Spacer()
         }
+        .contentShape(Rectangle())
     }
 }

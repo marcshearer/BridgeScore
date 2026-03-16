@@ -61,13 +61,16 @@ struct ImportBridgeWebsScorecard: View {
     @State private var sourceOffsetIncrement: Int? = nil
     @State private var singleFile: Bool = false
     @State private var matchSessionId: Bool = false
+    @State private var swapPartner: Bool = false
+    @State private var swapTeamMates: Bool = false
     @State private var downloadedFile: FileNameElement? = nil
+    @State private var useSettings: Bool = false
     
     var body: some View {
         StandardView("Detail") {
             switch phase {
             case .checkOffset:
-                    checkOffset
+                checkOffset
             case .getList:
                 downloadingList
             case .dropZone:
@@ -78,7 +81,7 @@ struct ImportBridgeWebsScorecard: View {
                 downloadingFile
             case .confirm:
                 let importedScorecard = Binding.constant(importedBridgeWebsScorecard as ImportedScorecard)
-                importedBridgeWebsScorecard.confirmDetails(importedScorecard: importedScorecard, onError: {
+                importedBridgeWebsScorecard.confirmDetails(importedScorecard: importedScorecard, settings: (scorecard.isMultiSession ? nil : settings), onError: {
                     presentationMode.wrappedValue.dismiss()
                 }, completion: {
                     phase = .importing
@@ -92,6 +95,11 @@ struct ImportBridgeWebsScorecard: View {
         .onAppear {
             phase = (scorecard.isMultiSession ? .checkOffset : .getList)
         }
+    }
+    
+    func settings() {
+        useSettings = true
+        phase = .checkOffset
     }
     
     var downloadingList: some View {
@@ -224,6 +232,20 @@ struct ImportBridgeWebsScorecard: View {
                 matchSessionId = newValue
             }
         }
+        var editSwapPartner: Binding<Bool> {
+            Binding {
+                swapPartner
+            } set: { (newValue) in
+                swapPartner = newValue
+            }
+        }
+        var editSwapTeamMates: Binding<Bool> {
+            Binding {
+                swapTeamMates
+            } set: { (newValue) in
+                swapTeamMates = newValue
+            }
+        }
         var matchSessionIdEnabled = (singleFile && (sourceOffsetIncrement ?? 1) == 0)
         var editMatchSessionIdEnabled: Binding<Bool> {
             Binding {
@@ -236,37 +258,55 @@ struct ImportBridgeWebsScorecard: View {
         return VStack(spacing: 0) {
             Banner(title: Binding.constant("Download from BridgeWebs"), backImage: Banner.crossImage)
             Spacer().frame(height: 16)
-            InsetView(title: "Import Session Sequence (msec)") {
+            InsetView(title: "Import Session Sequence (msec)", info: scorecard.isMultiSession ? "If results come from a single url this will normally require an initial value of 2 (sometimes 1) and an increment of 0.\n\nIf the session results are in separate urls this will normally require an initial value of 2 (sometimes 1) and an increment of 1.": nil) {
+                
                 VStack(spacing: 0) {
                     
-                    InputToggle(title: "Same file for all sessions:", field: editSingleFile, disabled: Binding.constant(false), inlineTitleWidth: 300, onChange: { (newValue) in
-                        if newValue == true  {
-                            sourceOffset = 1
-                            sourceOffsetIncrement = 1
-                        } else if newValue == false {
-                            sourceOffset = 2
-                            sourceOffsetIncrement = 0
-                        }
-                    })
+                    if scorecard.isMultiSession {
+                        
+                        InputToggle(title: "Same file for all sessions:", field: editSingleFile, disabled: Binding.constant(false), inlineTitleWidth: 300, onChange: { (newValue) in
+                            if newValue == true  {
+                                sourceOffset = 1
+                                sourceOffsetIncrement = 1
+                            } else if newValue == false {
+                                sourceOffset = 2
+                                sourceOffsetIncrement = 0
+                            }
+                        })
+                        
+                    }
                     
                     StepperInput(title: "Initial session sequence:", field: editOffset, label: offsetLabel, minValue: {0}, maxValue: {9}, inlineTitleWidth: 300)
                     
                     Spacer().frame(height:10)
                     
-
-                    StepperInput(title: "Session sequence increment:", field: editOffsetIncrement, label: incrementLabel, minValue: {0}, maxValue: {9}, inlineTitleWidth: 300, onChange: { (newValue) in
-                        if newValue == 0 && singleFile == true {
-                            matchSessionId = true
-                        }
-                    })
+                    if scorecard.isMultiSession {
+                        
+                        StepperInput(title: "Session sequence increment:", field: editOffsetIncrement, label: incrementLabel, minValue: {0}, maxValue: {9}, inlineTitleWidth: 300, onChange: { (newValue) in
+                            if newValue == 0 && singleFile == true {
+                                matchSessionId = true
+                            }
+                        })
+                        
+                        Spacer().frame(height:10)
+                        
+                        InputToggle(title: "Match session ID:", field: editMatchSessionId, disabled: editMatchSessionIdEnabled, inlineTitleWidth: 300)
+                        
+                        Spacer().frame(height:10)
+                        
+                    }
+                }
+            }
+            InsetView(title: "Data manipulation") {
+                VStack(spacing: 0) {
                     
-                    Spacer().frame(height:10)
+                    InputToggle(title: "Swap self with partner:", field: editSwapPartner, disabled: Binding.constant(false), inlineTitleWidth: 300)
                     
-                    InputToggle(title: "Match session ID:", field: editMatchSessionId, disabled: editMatchSessionIdEnabled, inlineTitleWidth: 300)
-                    
-                    Spacer().frame(height:20)
-                    
-                    Text("If results come from a single file this will normally require an initial value of 2 (sometimes 1) and an increment of 0.\n\nIf the session results are in separate files this will normally require an initial value of 2 (sometimes 1) and an increment of 1.")
+                    if scorecard.type.eventType == .teams {
+                        
+                        InputToggle(title: "Swap team mates:", field: editSwapTeamMates, disabled: Binding.constant(false), topSpace: 0, inlineTitleWidth: 300)
+                        
+                    }
                     
                     Spacer()
                 }
@@ -429,7 +469,7 @@ struct ImportBridgeWebsScorecard: View {
     }
     private func downloadFile(file: FileNameElement) {
         var bridgeWebsMsec: Int = 1
-        if scorecard.isMultiSession {
+        if scorecard.isMultiSession || useSettings {
             bridgeWebsMsec = (sourceOffset ?? 1) + ((scorecard.importNext - 1) * (sourceOffsetIncrement ?? 1))
         }
         
@@ -450,7 +490,7 @@ struct ImportBridgeWebsScorecard: View {
     
     private func processFile() {
         if let file = downloadedFile, let data = file.data {
-            parser = ImportedBridgeWebsScorecard(scorecard: scorecard, title: file.desc, data: data, date: file.date, location: file.location, session: (scorecard.isMultiSession ? scorecard.importNext : nil), matchSessionId: matchSessionId, completion: completion)
+            parser = ImportedBridgeWebsScorecard(scorecard: scorecard, title: file.desc, data: data, date: file.date, location: file.location, session: (scorecard.isMultiSession ? scorecard.importNext : nil), matchSessionId: matchSessionId, swapPartner: swapPartner, swapTeamMates: swapTeamMates, completion: completion)
         } else {
             downloadError = true
         }
@@ -503,11 +543,13 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
     private var skipSession: Bool = true
     private var matchSessionId: Bool
 
-    init(scorecard: ScorecardViewModel, title: String, data: Data, date: Date?, location: LocationViewModel?, session: Int? = nil, matchSessionId: Bool, completion: @escaping (ImportedBridgeWebsScorecard?, String?)->()) {
+    init(scorecard: ScorecardViewModel, title: String, data: Data, date: Date?, location: LocationViewModel?, session: Int? = nil, matchSessionId: Bool, swapPartner: Bool = false, swapTeamMates: Bool = false, completion: @escaping (ImportedBridgeWebsScorecard?, String?)->()) {
         self.namesElement = false
         self.matchSessionId = matchSessionId
         self.completion = completion
         super.init()
+        self.swapPartner = swapPartner
+        self.swapTeamMates = swapTeamMates
         self.importSource = .bridgeWebs
         self.scorecard = scorecard
         let scorer = scorecard.scorer
@@ -584,12 +626,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
     }
     
     func switchPlayers(importedRanking: ImportedRanking, sitting: Seat) {
-        /* Change as appropriate
-        let names = ["Peter Thommeny", "George Watson", "Jack Shearer", "Marc Shearer"]
-        if let index = names.firstIndex(where: {$0 == importedRanking.players[sitting]}) {
-            importedRanking.players[sitting] = names[(index + 2) % 4]
-        }
-         */
+        
     }
     
     func initTraveller(columns: [String]) {
@@ -720,6 +757,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         scoreTravellers()
         recalculateTravellers()
         validate()
+        swapPlayers()
         completion(self, nil)
     }
     

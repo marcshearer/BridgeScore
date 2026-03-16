@@ -338,6 +338,7 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
             scoreTravellers()
             recalculateTravellers()
             validate()
+            swapPlayers()
         }
         completion?(error)
     }

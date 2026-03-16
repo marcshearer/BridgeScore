@@ -35,6 +35,8 @@ class ImportedScorecard: NSObject, ObservableObject {
     var vulnerability: Vulnerability?
     var doubleDummyTricks: [Seat:[Suit:Int]] = [:]
     var identifySelf = false
+    var swapPartner: Bool = false
+    var swapTeamMates: Bool = false
     
     public static let documentsUrl: URL = FileManager.default.urls(for: FileManager.SearchPathDirectory.documentDirectory, in: FileManager.SearchPathDomainMask.userDomainMask).last! as URL
     public static let importsURL = documentsUrl.appendingPathComponent("imports")
@@ -679,7 +681,22 @@ class ImportedScorecard: NSObject, ObservableObject {
         checkRankings()
     }
     
-    public func confirmDetails(importedScorecard: Binding<ImportedScorecard>, suffix: String = "", onError: @escaping ()->(), completion: @escaping ()->()) -> some View {
+    func swapPlayers() {
+        if let myRanking = rankings.first(where: {$0.players.contains(where: {$0.value.lowercased() == myName})}), let myRankingSeat = myRanking.players.first(where: {$0.value.lowercased() == myName})?.key {
+            if swapPartner {
+                let keep = myRanking.players[myRankingSeat]!
+                myRanking.players[myRankingSeat] = myRanking.players[myRankingSeat.partner]
+                myRanking.players[myRankingSeat.partner] = keep
+            }
+            if eventType != .teams || swapTeamMates {
+                let keep = myRanking.players[myRankingSeat.leftOpponent]!
+                myRanking.players[myRankingSeat.leftOpponent] = myRanking.players[myRankingSeat.rightOpponent]
+                myRanking.players[myRankingSeat.rightOpponent] = keep
+            }
+        }
+    }
+    
+    public func confirmDetails(importedScorecard: Binding<ImportedScorecard>, suffix: String = "", settings: (()->())? = nil, onError: @escaping ()->(), completion: @escaping ()->()) -> some View {
         @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
         @OptionalStringBinding(importedScorecard.wrappedValue.title) var titleBinding
         @OptionalStringBinding(Utility.dateString(importedScorecard.wrappedValue.date, format: "EEEE d MMMM yyyy")) var dateBinding
@@ -697,7 +714,7 @@ class ImportedScorecard: NSObject, ObservableObject {
         
         return VStack(spacing: 0) {
             
-            Banner(title: Binding.constant("Confirm Import Details\(suffix)"), backImage: Banner.crossImage)
+            Banner(title: Binding.constant("Confirm Import Details\(suffix)"), backImage: Banner.crossImage, optionMode: (settings == nil ? .none : .buttons), options: (settings != nil ? settingsOption(settings!) : nil))
             Spacer().frame(height: 16)
             
             if scorecard.isMultiSession {
@@ -789,6 +806,10 @@ class ImportedScorecard: NSObject, ObservableObject {
     
     private func sessionLabel(value: Int) -> String {
         return "Session \(value) of \(scorecard.sessions)"
+    }
+    
+    private func settingsOption(_ action: @escaping ()->()) -> [BannerOption] {
+        [BannerOption(image: AnyView(Image(systemName: "gearshape")), likeBack: true, action: action)]
     }
     
     internal func checkRankings() {

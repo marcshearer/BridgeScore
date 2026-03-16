@@ -389,6 +389,7 @@ class ImportedBBOScorecard: ImportedScorecard {
             scoreTravellers()
             recalculateTravellers()
             validate()
+            swapPlayers()
         }
     }
     

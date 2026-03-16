@@ -52,6 +52,7 @@ struct InputToggle : View {
                         Text(text ?? "")
                             .font(inputFont)
                     }
+                    .focusable(false)
                     .fixedSize()
                     .scaleEffect(0.8)
                     .offset(x: 5)

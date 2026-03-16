@@ -446,6 +446,7 @@ class ImportedPBNScorecard: ImportedScorecard {
             scoreTravellers()
             recalculateTravellers()
             validate()
+            swapPlayers()
         }
     }
     
