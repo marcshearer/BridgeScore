@@ -512,15 +512,17 @@ struct ScorecardSummaryView: View {
     }
     
     var importButton: some View {
+        let cases = ImportSource.validCases.sorted(by: {$0.sequence < $1.sequence})
         let color = (highlighted ? Palette.highlightTile : Palette.tile)
         return HStack {
+            Spacer()
             if scorecard.importSource == .none && !scorecard.manualTotals {
                 GeometryReader { geometry in
                     VStack {
                         Spacer()
-                        PopupMenu(id: slideInId, field: $importSelected, values: ImportSource.validCases.sorted(by: {$0.sequence < $1.sequence}).map{$0.string}, animation: .none, top: geometry.frame(in: .global).minY - 30, left: geometry.frame(in: .global).minX - 290, width: 300) { (selectedIndex) in
+                        PopupMenu(id: slideInId, field: $importSelected, values: cases.map{$0.string}, animation: .none, top: geometry.frame(in: .global).minY - 30, left: geometry.frame(in: .global).minX - 290, width: 300) { (selectedIndex) in
                             if let selectedIndex = selectedIndex {
-                                importTapped = ImportSource.validCases[selectedIndex]
+                                importTapped = cases[selectedIndex]
                                 selected.copy(from: scorecard)
                             }
                             importSelected = nil
