@@ -131,13 +131,13 @@ class Export {
         }
     }
         
-    static public func restore(data: Data) -> (UUID?, String?) {
+    static public func restore(data: Data) -> (UUID?, String?, String?) {
         let scorecardId = UUID()
         let importDictionary = try! JSONSerialization.jsonObject(with: data, options: []) as! [String:Any?]
         let parameters = importDictionary["parameters"] as! [String:String]
         let importSchemaVersion = Int(parameters["schemaVersion"] ?? "999") ?? 999
         if importSchemaVersion > schemaVersion {
-            return (nil, "Import version is higher than current version. Please upgrade to latest version.")
+            return (nil, "Import version is higher than current version. Please upgrade to latest version.", nil)
         } else {
             let contents = importDictionary["data"] as! [[String:[[String:Any?]]]]
             for table in contents {
@@ -147,7 +147,7 @@ class Export {
                     }
                 }
             }
-            return (scorecardId, nil)
+            return (scorecardId, nil, parameters["scorerName"])
         }
     }
     

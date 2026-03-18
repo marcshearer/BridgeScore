@@ -125,6 +125,7 @@
 		B26C555727C7EA9200015D0A /* Table with Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26C555627C7EA9200015D0A /* Table with Collection.swift */; };
 		B26C555927C8BCBC00015D0A /* Scroll Picker Popup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26C555827C8BCBC00015D0A /* Scroll Picker Popup View.swift */; };
 		B273C1442B0BC2120061CF04 /* Scorecard Drop Delegates.swift in Sources */ = {isa = PBXBuildFile; fileRef = B273C1432B0BC2120061CF04 /* Scorecard Drop Delegates.swift */; };
+		B27AD1332F693AE600890600 /* Rescore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B27AD1322F693ADF00890600 /* Rescore.swift */; };
 		B27CFA4E27CDFE8400B976E0 /* Popup Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = B27CFA4D27CDFE8400B976E0 /* Popup Menu.swift */; };
 		B28D3F5E2ACE6FD60060DAA1 /* Override Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28D3F5D2ACE6FD60060DAA1 /* Override Managed Object.swift */; };
 		B28D3F602ACE70850060DAA1 /* Override View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28D3F5F2ACE70850060DAA1 /* Override View Model.swift */; };
@@ -305,6 +306,7 @@
 		B26C555627C7EA9200015D0A /* Table with Collection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Table with Collection.swift"; sourceTree = "<group>"; };
 		B26C555827C8BCBC00015D0A /* Scroll Picker Popup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Scroll Picker Popup View.swift"; path = "../Main App/Scroll Picker Popup View.swift"; sourceTree = "<group>"; };
 		B273C1432B0BC2120061CF04 /* Scorecard Drop Delegates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Drop Delegates.swift"; sourceTree = "<group>"; };
+		B27AD1322F693ADF00890600 /* Rescore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Rescore.swift; sourceTree = "<group>"; };
 		B27CFA4D27CDFE8400B976E0 /* Popup Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Popup Menu.swift"; sourceTree = "<group>"; };
 		B28D3F5D2ACE6FD60060DAA1 /* Override Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Override Managed Object.swift"; sourceTree = "<group>"; };
 		B28D3F5F2ACE70850060DAA1 /* Override View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Override View Model.swift"; sourceTree = "<group>"; };
@@ -609,6 +611,7 @@
 				B26BCE532799AE4D00B73501 /* Master Data.swift */,
 				B2EB3D78279DB80000D64225 /* Scorecard.swift */,
 				B2AB6ECA2AC2CCA900ED002A /* Analysis.swift */,
+				B27AD1322F693ADF00890600 /* Rescore.swift */,
 				B29BBA772D33D0A10032BC2F /* Scorecard Type Classes.swift */,
 				B29BBA792D33D1540032BC2F /* Contract Classes.swift */,
 				B2F3C3A32AA1E72200A58E89 /* Card Class.swift */,
@@ -978,6 +981,7 @@
 				B217314427D026050096DAE8 /* Undo Handler.swift in Sources */,
 				B250412E2ABD9A0E00C58CAD /* Picker Input Simple.swift in Sources */,
 				B2AB6ECB2AC2CCA900ED002A /* Analysis.swift in Sources */,
+				B27AD1332F693AE600890600 /* Rescore.swift in Sources */,
 				B2C4338C27B6646700796F24 /* Scorecard Input View.swift in Sources */,
 				B22D1C332AFA2C6200C8897F /* Key Action Enumeration.swift in Sources */,
 				B26BCE4E2799AD8900B73501 /* Link Presentation.swift in Sources */,

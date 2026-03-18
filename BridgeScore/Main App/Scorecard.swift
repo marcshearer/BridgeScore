@@ -208,6 +208,19 @@ class Scorecard {
         scorecard = nil
     }
     
+    public func iterateTables(action: (TableViewModel)->()) {
+        for (_, table) in tables.sorted(by: {$0.value.table < $1.value.table}) {
+            action(table)
+        }
+    }
+    
+    func iterateBoards(action: (TableViewModel, BoardViewModel)->()) {
+        iterateTables { table in
+            for board in table.boards.sorted(by: {$0.boardIndex < $1.boardIndex}) {
+                action(table,board)
+            }
+        }
+    }
     
     private var lastItemType: ScorecardItemType?
     private var lastItemNumber: Int?

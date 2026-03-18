@@ -176,6 +176,12 @@ struct ScorecardInputView: View {
     @State private var analysisViewer = false
     @State private var dismissView = false
     
+    private var title: Binding<String> {
+        Binding {
+            scorecard.desc + (scorecard.comment == "" || portraitPhone ? "" : " (\(scorecard.comment))") + (scorecard.scorer?.isSelf ?? true || portraitPhone ? "" : " as \(scorecard.scorer!.name)")
+        } set: { (newValue) in }
+    }
+    
     init(scorecard: ScorecardViewModel, importScorecard: ImportSource = .none) {
         _scorecard = ObservedObject(initialValue: scorecard)
         _importScorecard = State(initialValue: importScorecard)
@@ -189,7 +195,7 @@ struct ScorecardInputView: View {
                 if refreshTableTotals { EmptyView() }
                 
                 // Banner
-                Banner(title: $scorecard.desc, back: true, backAction: backAction, leftTitle: true, optionMode: .both, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: nil, menuId: id, options: bannerOptions(isNotImported: $isNotImported), disabled: $disableBanner)
+                Banner(title: title, back: true, backAction: backAction, leftTitle: true, optionMode: .both, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: nil, menuId: id, options: bannerOptions(isNotImported: $isNotImported), disabled: $disableBanner)
                     .disabled(disableBanner)
                 GeometryReader { geometry in
                     ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), refreshTableTotals: $refreshTableTotals, viewType: $viewType, hideRejected: $hideRejected, inputDetail: $inputDetail, tableRefresh: $tableRefresh, showRankings: $showRankings, disableBanner: $disableBanner, handViewer: $handViewer, handBoard: $handBoard, handTraveller: $handTraveller, handSitting: $handSitting, uiView: $uiView, analysisViewer: $analysisViewer)
@@ -212,7 +218,7 @@ struct ScorecardInputView: View {
             }
         }) {
             ZStack {
-                let title = "Details" + (Scorecard.current.isImported ? " - Imported from \(Scorecard.current.scorecard!.importSource.from)" : "") + (Scorecard.current.scorecard!.scorer!.isSelf ? "" : " as \(Scorecard.current.scorecard!.scorer!.name)")
+                let title = "Details" + (Scorecard.current.isImported && Scorecard.current.scorecard!.scorer!.isSelf ? " - Imported from \(Scorecard.current.scorecard!.importSource.from)" : "") + (Scorecard.current.scorecard!.scorer!.isSelf ? "" : " Viewed As \(Scorecard.current.scorecard!.scorer!.name)")
                 let backgroundView = UIView(frame: uiView.superview!.superview!.frame)
                 let width = min(704, backgroundView.frame.width) // Allow for safe area
                 let height = min(800 + (Scorecard.current.scorecard!.sharedBy != "" ? 45 : 0) + (Scorecard.current.scorecard!.sharedWith != "" ? 45 : 0), (backgroundView.frame.height))
@@ -359,6 +365,10 @@ struct ScorecardInputView: View {
                 break
             }
         }
+    }
+    
+    var portraitPhone: Bool {
+        MyApp.format == .phone && !isLandscape
     }
     
     func bannerOptions(isNotImported: Binding<Bool>) -> [BannerOption] {

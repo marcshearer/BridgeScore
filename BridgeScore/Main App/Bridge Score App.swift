@@ -101,13 +101,18 @@ class SceneDelegate: NSObject, UIWindowSceneDelegate, ObservableObject {
            url.scheme == "file" && url.pathExtension == "bsjson" {
             let _ = url.startAccessingSecurityScopedResource()
             if let data = try? Data(contentsOf: url) {
-                let (scorecardId, errorMessage) = Export.restore(data : data)
+                let (scorecardId, errorMessage, scorerName) = Export.restore(data : data)
                 if let errorMessage = errorMessage {
                     MessageBox.shared.show(errorMessage)
                 } else {
                     if let scorecard = MasterData.shared.scorecard(id: scorecardId) {
-                        Utility.mainThread {}
-                        ScorecardListViewChange.send(ScorecardDetails(action: .scorecardDetails, scorecard: scorecard))
+                        Utility.mainThread {
+                            Scorecard.current.load(scorecard: scorecard)
+                            if let currentScorer = scorecard.scorer, let scorerName = scorerName, currentScorer.name != scorerName && currentScorer.bboName != scorerName {
+                                _ = Scorecard.current.rescore(as: scorerName, checkUpdate: {true})
+                            }
+                            ScorecardListViewChange.send(ScorecardDetails(action: .scorecardDetails, scorecard: scorecard))
+                        }
                     }
                 }
             }

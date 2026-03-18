@@ -26,6 +26,7 @@ class Palette {
     @BackgroundColor(.tile) static var tile
     @BackgroundColor(.contrastTile) static var contrastTile
     @BackgroundColor(.highlightTile) static var highlightTile
+    @BackgroundColor(.mutedTile) static var mutedTile
     @BackgroundColor(.inset) static var inset
     @BackgroundColor(.header) static var header
     @BackgroundColor(.subHeader) static var subHeader

@@ -177,18 +177,22 @@ public enum ImportSource: Int, Equatable, CaseIterable {
         return ImportSource.allCases.filter({$0 != .none})
     }
     
+    static var sortedValidCases: [ImportSource] {
+        ImportSource.allCases.filter({$0 != .none}).sorted(by: {$0.sequence < $1.sequence})
+    }
+    
     var sequence: Int {
         switch self {
         case .none:
             return 0
-        case .bbo:
-            return 3
-        case .bridgeWebs:
-            return 4
         case .pbn:
             return 1
         case .usebio:
             return 2
+        case .bbo:
+            return 3
+        case .bridgeWebs:
+            return 4
         }
     }
     

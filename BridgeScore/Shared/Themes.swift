@@ -86,6 +86,7 @@ enum ThemeBackgroundColorName: CaseIterable {
     case tile
     case contrastTile
     case highlightTile
+    case mutedTile
     case inset
     case header
     case subHeader
@@ -393,6 +394,7 @@ class Themes {
                 .contrastTile                : ThemeColor(#colorLiteral(red: 0, green: 0.5690457821, blue: 0.5746168494, alpha: 1), #colorLiteral(red: 0.4756349325, green: 0.4756467342, blue: 0.4756404161, alpha: 1), .darkBackground, .darkBackground),
                 .tile                        : ThemeColor(#colorLiteral(red: 0.5, green: 0.8086761682, blue: 0.8080882377, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1), .midBackground, .darkBackground),
                 .highlightTile               : ThemeColor(#colorLiteral(red: 0.9981788993, green: 0.2295429707, blue: 0.1891850233, alpha: 1), nil, .midBackground, .darkBackground),
+                .mutedTile                   : ThemeColor(#colorLiteral(red: 0.390437714, green: 0.704545175, blue: 0.7042515511, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1), .midBackground, .darkBackground),
                 .inset                       : ThemeColor(#colorLiteral(red: 1, green: 0.9999999404, blue: 1, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1), .lightBackground, .lightBackground),
                 .header                      : ThemeColor(#colorLiteral(red: 0.3921568627, green: 0.5490196078, blue: 0.5490196078, alpha: 1), #colorLiteral(red: 0.6286649108, green: 0.6231410503, blue: 0.6192827821, alpha: 1), .darkBackground,  .lightBackground),
                 .subHeader                   : ThemeColor(#colorLiteral(red: 0.4705882353, green: 0.7058823529, blue: 0.7843137255, alpha: 1), #colorLiteral(red: 0.3921568627, green: 0.5490196078, blue: 0.5490196078, alpha: 1), .darkBackground,  .lightBackground),

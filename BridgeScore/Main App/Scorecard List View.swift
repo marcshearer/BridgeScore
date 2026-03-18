@@ -368,7 +368,7 @@ struct ScorecardSummaryView: View {
     }
     
     var normalView: some View {
-        let color = (highlighted ? Palette.highlightTile : Palette.tile)
+        let color = (highlighted ? Palette.highlightTile : ((scorecard.scorer?.isSelf ?? true) ? Palette.tile : Palette.mutedTile))
         return ListTileView(color: Binding.constant(color)) {
             GeometryReader { geometry in
                 HStack {
@@ -512,7 +512,7 @@ struct ScorecardSummaryView: View {
     }
     
     var importButton: some View {
-        let cases = ImportSource.validCases.sorted(by: {$0.sequence < $1.sequence})
+        let importSources = ImportSource.sortedValidCases
         let color = (highlighted ? Palette.highlightTile : Palette.tile)
         return HStack {
             Spacer()
@@ -520,9 +520,9 @@ struct ScorecardSummaryView: View {
                 GeometryReader { geometry in
                     VStack {
                         Spacer()
-                        PopupMenu(id: slideInId, field: $importSelected, values: cases.map{$0.string}, animation: .none, top: geometry.frame(in: .global).minY - 30, left: geometry.frame(in: .global).minX - 290, width: 300) { (selectedIndex) in
+                        PopupMenu(id: slideInId, field: $importSelected, values: importSources.map{$0.string}, animation: .none, top: geometry.frame(in: .global).minY - 30, left: geometry.frame(in: .global).minX - 290, width: 300) { (selectedIndex) in
                             if let selectedIndex = selectedIndex {
-                                importTapped = cases[selectedIndex]
+                                importTapped = importSources[selectedIndex]
                                 selected.copy(from: scorecard)
                             }
                             importSelected = nil
