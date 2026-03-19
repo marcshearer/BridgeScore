@@ -17,7 +17,7 @@ struct ShareScorecardView: View {
     @State var yOffset: CGFloat = 0
     @State private var result: Result<MFMailComposeResult, Error>?
     @State private var players: [PlayerViewModel] = []
-    @State private var playerIndex: Int = 0
+    @State private var playerIndex: Int = -1
     @State private var showMail = false
     @State private var toPlayer: PlayerViewModel! = nil
     @State private var includeComment = false
@@ -50,7 +50,7 @@ struct ShareScorecardView: View {
                                 HStack {
                                     Spacer().frame(width: 14)
                                     if players.count > 0 {
-                                        PickerInputSimple(title: "Send to", field: $playerIndex, values: players.map{$0.name} + ["Other"], topSpace: 20, width: 200, titleWidth: 206)
+                                        PickerInputSimple(title: "Send to", field: $playerIndex, values: players.map{$0.name}, topSpace: 20, width: 200, titleWidth: 206)
                                     }
                                     Spacer()
                                 }
@@ -88,6 +88,7 @@ struct ShareScorecardView: View {
                                                     .onTapGesture {
                                                         self.playerName = playerName
                                                         responsibleDisabled = (rotateTo == nil)
+                                                        includeResponsible = (playerIndex == 0 || includeResponsible) && !responsibleDisabled
                                                     }
                                                 }
                                             }
@@ -174,16 +175,15 @@ struct ShareScorecardView: View {
                 .cornerRadius(10)
                 .onAppear {
                     players = MasterData.shared.players.filter({(!$0.retired || $0 == scorecard.partner!) && $0.email != ""})
-                    playerIndex = players.firstIndex(where: {$0.playerId == scorecard.partner?.playerId}) ?? 0
-                    updatePlayerName()
+                    playerIndex = players.firstIndex(where: {$0.playerId == scorecard.scorer?.playerId}) ?? 0
                     if frame != nil {
                         withAnimation(.linear(duration: 0.25).delay(0.1)) {
                             yOffset = frame!.minY
                         }
                     }
                 }
-                .onChange(of: playerIndex, initial: false) {
-                    updatePlayerName()
+                .onChange(of: playerIndex, initial: false) { (from, to) in
+                    updatePlayerName(from: from, to: to)
                 }
                 .onChange(of: showMail, initial: false) {
                     if !showMail {
@@ -257,12 +257,23 @@ struct ShareScorecardView: View {
     }
     
     
-    func updatePlayerName() {
-        toPlayer = (playerIndex <= players.count - 1 ? players[playerIndex] : nil)
+    func updatePlayerName(from: Int, to: Int) {
+        print("from \(from) to \(to)")
+        toPlayer = ((to >= 0 && to < players.count) ? players[to] : nil)
         if let toPlayer = toPlayer {
-            if let playerName = playerNames.first(where: {$0.folding(options: .diacriticInsensitive, locale: nil).lowercased() == toPlayer.name.folding(options: .diacriticInsensitive, locale: nil).lowercased()}) {
+            if let playerName = playerNames.first(where: {$0.isEquivalent(to: toPlayer.name)}) {
                 self.playerName = playerName
                 responsibleDisabled = (rotateTo == nil)
+                if responsibleDisabled {
+                    includeResponsible = false
+                }
+            }
+            if (to != 0 && from == 0) {
+                includeComment = false
+                includeResponsible = false
+            } else if from != 0 && to == 0 {
+                includeComment = true
+                includeResponsible = !responsibleDisabled
             }
         }
     }
@@ -270,15 +281,15 @@ struct ShareScorecardView: View {
     var rotateTo: SeatPlayer? {
         var result: SeatPlayer? = nil
         if let playerName = playerName {
-            let bboName = MasterData.shared.bboNames.first(where: {$0.name.lowercased() == playerName.lowercased()})?.bboName
-            if let ranking = Scorecard.current.rankings(player: (bboName: bboName ?? "", name: playerName)).first {
+            let bboName = MasterData.shared.bboNames.first(where: {$0.name.isEquivalent(to: playerName)})?.bboName ?? ""
+            if let ranking = Scorecard.current.rankings(player: (bboName: bboName, name: playerName)).first {
                 var playerSeat: Seat?
                 var mySeat: Seat?
                 for seat in Seat.validCases {
-                    if ranking.players[seat] == playerName || ranking.players[seat] == bboName {
+                    if ranking.players[seat]?.isEquivalent(to: playerName) ?? false || ranking.players[seat]?.isEquivalent(to: bboName) ?? false {
                         playerSeat = seat
                     }
-                    if ranking.players[seat] == scorecard.scorer?.name || ranking.players[seat] == scorecard.scorer?.bboName {
+                    if ranking.players[seat]?.isEquivalent(to: scorecard.scorer!.name) ?? false || ranking.players[seat]?.isEquivalent(to: scorecard.scorer!.bboName) ?? false {
                         mySeat = seat
                     }
                 }

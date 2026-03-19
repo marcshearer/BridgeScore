@@ -91,6 +91,11 @@ extension String {
         regex.replaceMatches(in: value, range: NSRange(location: 0, length: value.length), withTemplate: " $0")
         return (value as String).capitalized
     }
+    
+    
+    func isEquivalent(to compare: String) -> Bool{
+        self.folding(options: .diacriticInsensitive, locale: nil).lowercased() == compare.folding(options: .diacriticInsensitive, locale: nil).lowercased()
+    }
 }
 
 @propertyWrapper public final class OptionalStringBinding {

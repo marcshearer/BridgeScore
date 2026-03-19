@@ -96,7 +96,12 @@ class MasterData: ObservableObject {
         // Setup BBO names
         self.bboNames = []
         for bboNameMO in bboNameMOs {
-            bboNames.append(BBONameViewModel(bboNameMO: bboNameMO))
+            if bboNameMO.name == bboNameMO.bboName {
+                CoreData.context.delete(bboNameMO)
+                _ = try? CoreData.context.save()
+            } else {
+                bboNames.append(BBONameViewModel(bboNameMO: bboNameMO))
+            }
         }
         
         /*

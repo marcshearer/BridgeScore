@@ -390,8 +390,10 @@ struct ScorecardInputView: View {
             bannerOptions += [
                 BannerOption(image: AnyView(Image(systemName: hideRejected ? "plus" : "minus")), text: hideRejected ? "Show rejected" : "Hide rejected", likeBack: true, menu: true, action: { hideRejected.toggle() })]
         }
-        bannerOptions += [
-            BannerOption(image: AnyView(Image(systemName: "square.and.arrow.up")), text: "Share scorecard", likeBack: true, menu: true, action: { shareScorecard = true })]
+        if scorecard.scorer?.email ?? "" != "" {
+            bannerOptions += [
+                BannerOption(image: AnyView(Image(systemName: "square.and.arrow.up")), text: "Share scorecard", likeBack: true, menu: true, action: { shareScorecard = true })]
+        }
         if isNotImported.wrappedValue || (scorecard.isMultiSession && scorecard.importNext <= scorecard.sessions) {
             let importMatch = (!isNotImported.wrappedValue ? scorecard.importSource : nil)
             if importMatch == nil || importMatch == .pbn {
