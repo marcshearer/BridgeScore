@@ -682,16 +682,24 @@ class ImportedScorecard: NSObject, ObservableObject {
     }
     
     func swapPlayers() {
-        if let myRanking = rankings.first(where: {$0.players.contains(where: {$0.value.lowercased() == myName})}), let myRankingSeat = myRanking.players.first(where: {$0.value.lowercased() == myName})?.key {
-            if swapPartner {
-                let keep = myRanking.players[myRankingSeat]!
-                myRanking.players[myRankingSeat] = myRanking.players[myRankingSeat.partner]
-                myRanking.players[myRankingSeat.partner] = keep
-            }
-            if eventType != .teams || swapTeamMates {
-                let keep = myRanking.players[myRankingSeat.leftOpponent]!
-                myRanking.players[myRankingSeat.leftOpponent] = myRanking.players[myRankingSeat.rightOpponent]
-                myRanking.players[myRankingSeat.rightOpponent] = keep
+        if let myRanking = rankings.first(where: {$0.players.contains(where: {$0.value.lowercased() == myName})}) {
+            for pair in Pair.validCases {
+                for seat in pair.seats {
+                    if myRanking.players[seat]?.isEquivalent(to: myName) ?? false {
+                        if swapPartner {
+                            let keep = myRanking.players[seat]!
+                            myRanking.players[seat] = myRanking.players[seat.partner]
+                            myRanking.players[seat.partner] = keep
+                        }
+                        if eventType == .teams && swapTeamMates {
+                            let keep = myRanking.players[seat.leftOpponent]!
+                            myRanking.players[seat.leftOpponent] = myRanking.players[seat.rightOpponent]
+                            myRanking.players[seat.rightOpponent] = keep
+                        }
+                        // Don't do anything more to this pair
+                        break
+                    }
+                }
             }
         }
     }
