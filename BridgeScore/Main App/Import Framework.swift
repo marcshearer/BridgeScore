@@ -696,7 +696,7 @@ class ImportedScorecard: NSObject, ObservableObject {
                             myRanking.players[seat.leftOpponent] = myRanking.players[seat.rightOpponent]
                             myRanking.players[seat.rightOpponent] = keep
                         }
-                        // Don't do anything more to this pair
+                        // Don't do anything more to this pair - otherwise you'll swap it back
                         break
                     }
                 }

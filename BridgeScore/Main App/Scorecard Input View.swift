@@ -3052,7 +3052,14 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 default:
                     false
                 }
-            case .escape, .enter, .backspace, .delete:
+            case .delete:
+                switch column.type {
+                case .contract, .declarer, .made, .responsible, .sitting:
+                    true
+                default:
+                    false
+                }
+            case .escape, .enter, .backspace:
                 switch column.type {
                 case .contract, .declarer, .made, .responsible, .sitting, .score, .comment, .tableScore, .versus:
                     true
