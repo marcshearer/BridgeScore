@@ -98,6 +98,7 @@ class AnalysisSummaryView: UIView {
             impactLabel.attributedText = NSAttributedString(summary.impactDescription)
             impactLabel.textColor = UIColor(Palette.background.text).withAlphaComponent(opacity)
         }
+        layoutSubviews()
     }
     
     private func loadAnalysisView() {
