@@ -1910,7 +1910,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         focusLineViews.forEach { line in line.isHidden = true }
     }
     
-    func prepareLabelForReuse(label: UILabel) {
+    func prepareLabelForReuse(label: UILabel, minScale: CGFloat? = nil, numberOfLines: Int = 1) {
         label.backgroundColor = UIColor.clear
         label.textColor = UIColor(Palette.background.text)
         label.text = ""
@@ -1919,6 +1919,8 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         label.isUserInteractionEnabled = false
         label.numberOfLines = 1
         label.isHidden = true
+        label.minimumScaleFactor = 1
+        label.adjustsFontSizeToFitWidth = false
     }
     
     func setTitle(scorecard: ScorecardViewModel, column: ScorecardColumn) {
@@ -2099,7 +2101,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         case .points:
             analysisSplitPoints(isEnabled: isEnabled)
         case .comment:
-            setTextInputString(value: board.comment, font: scorecardDelegate?.scorecardViewType == .analysis ? smallCellFont : cellFont, centered: true, attributed: colorSuits)
+            setTextInputString(value: board.comment, font: scorecardDelegate?.scorecardViewType == .analysis ? smallCellFont : cellFont, centered: true, numberOfLines: 2, adjustsFontSizeToFitWidth: true, minimumScaleFactor: 0.8, attributed: colorSuits)
         case .responsible:
             responsiblePicker.isHidden = (Scorecard.current.isImported && board.score == nil)
             responsiblePicker.set(board.responsible, defaultValue: .unknown, color: Palette.gridBoard, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
@@ -2240,7 +2242,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         }
     }
     
-    private func setTextInputString(value: String, font: UIFont = cellFont, centered: Bool = true, offset: CGFloat = 0, attributed: ((String)->NSAttributedString)? = nil) {
+    private func setTextInputString(value: String, font: UIFont = cellFont, centered: Bool = true, offset: CGFloat = 0, numberOfLines: Int = 1, adjustsFontSizeToFitWidth: Bool = false, minimumScaleFactor: CGFloat = 1.0, attributed: ((String)->NSAttributedString)? = nil) {
         textControl?.set(text: value, useLabel: true, formattedText: nil, attributed: attributed)
         textControl?.textAlignment = .left
         textControl?.autocapitalizationType = .sentences
@@ -2252,6 +2254,9 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         textClearWidth.constant = 34
         textClearPadding.forEach { (constraint) in constraint.setIndent(in: self, constant: inputControlInset * 2) }
         firstResponderLabel.textAlignment = (centered ? .center : .left)
+        firstResponderLabel.numberOfLines = numberOfLines
+        firstResponderLabel.adjustsFontSizeToFitWidth = adjustsFontSizeToFitWidth
+        firstResponderLabel.minimumScaleFactor = minimumScaleFactor
         set(tap: .textInput, regardless: true)
     }
     
