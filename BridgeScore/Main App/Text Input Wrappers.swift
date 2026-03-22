@@ -246,7 +246,7 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
 
     
     // Don't seem to need this anymore!
-    /*override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+    override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
         if !processPressedKeys(presses, with: event, action: { (keyAction, _) in
             keyAction.navigationKey || keyAction.upDownKey || keyAction == .enter
         }) {
@@ -261,7 +261,6 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
             }
         }
     }
-*/
 }
 
 class ScorecardInputTextField : UITextField, ScorecardInputTextInput, UITextFieldDelegate {
