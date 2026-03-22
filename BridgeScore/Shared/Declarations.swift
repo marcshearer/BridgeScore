@@ -60,6 +60,7 @@ var pickerCaptionFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .pho
 var windowTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 30.0 : 20.0)) }
 var sectionTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 24.0 : 16.0)) } 
 var smallCellFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 22.0 : 12.0)) }
+var smallerCellFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 14.0 : 10.0)) }
 var tinyCellFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 8.0 : 6.0)) }
 var replaceFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 30.0 : 20.0)) }
 var replaceTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 30.0 : 20.0)) }

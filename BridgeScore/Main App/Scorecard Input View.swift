@@ -764,10 +764,18 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 boardColumns = [
                     ScorecardColumn(type: .board, heading: "Board", size: .fixed([70]), phoneSize: .fixed([40])),
                     ScorecardColumn(type: .teamTable, heading: "Team", size: .fixed([60]), omit: !teams || phone),
-                    ScorecardColumn(type: .combined, heading: "Contract", size: .fixed([(teams ? 100 : 120)]), phoneSize: .fixed([90])),
-                    ScorecardColumn(type: .points, heading: "Points", size: .fixed([(teams ? 70 : 90)]), omit: phone),
-                    ScorecardColumn(type: .score, heading: "Score", size: .fixed([(teams ? 70 : 90)]), phoneSize: .fixed([70])),
-                    ScorecardColumn(type: .xImps, heading: "X Imps", size: .fixed([(teams ? 70 : 90)]), omit: phone || !teams || (Scorecard.current.travellerList.count / scorecard.boards) <= 2),
+                    ScorecardColumn(type: .combined, heading: "Contract", size: .fixed([(teams ? 100 : 120)]), phoneSize: .fixed([90]))]
+                if MyApp.target != .iOS {
+                    boardColumns = boardColumns + [
+                        ScorecardColumn(type: .points, heading: "Points", size: .fixed([(teams ? 70 : 90)]), omit: phone)]
+                }
+                boardColumns = boardColumns + [
+                    ScorecardColumn(type: .score, heading: "Score", size: .fixed([(teams ? 70 : 90)]), phoneSize: .fixed([70]))]
+                if MyApp.target != .iOS {
+                    boardColumns = boardColumns + [
+                        ScorecardColumn(type: .xImps, heading: "X Imps", size: .fixed([(teams ? 70 : 90)]), omit: phone || !teams || (Scorecard.current.travellerList.count / scorecard.boards) <= 2)]
+                }
+                boardColumns = boardColumns + [
                     ScorecardColumn(type: .responsible, heading: "Resp", size: .fixed([70]), omit: phone)]
                 boardAnalysisCommentColumns = boardColumns
                 
@@ -783,7 +791,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 tableColumns = [
                     ScorecardColumn(type: .table, heading: "", size: .fixed([70, teams ? 60 : 0]), phoneSize: .fixed([40])),
                     ScorecardColumn(type: .sitting, heading: "Sitting", size: .fixed([(teams ? 100 : 120)]), phoneSize: .fixed([90])),
-                    ScorecardColumn(type: .tableScore, heading: "", size: .fixed([(teams ? 70 : 90), (teams ? 70 : 90)]), phoneSize: .fixed([70])),
+                    ScorecardColumn(type: .tableScore, heading: "", size: .fixed([(teams ? 70 : (MyApp.target != .iOS ? 90 : 70)), (teams ? 70 : 90)]), phoneSize: .fixed([70])),
                     ScorecardColumn(type: .versus, heading: "Versus", size: .flexible)]
             } else if viewType == .detail {
                 boardColumns = [
@@ -2101,7 +2109,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         case .points:
             analysisSplitPoints(isEnabled: isEnabled)
         case .comment:
-            setTextInputString(value: board.comment, font: scorecardDelegate?.scorecardViewType == .analysis ? smallCellFont : cellFont, centered: true, numberOfLines: 2, adjustsFontSizeToFitWidth: true, minimumScaleFactor: 0.8, attributed: colorSuits)
+            setTextInputString(value: board.comment, font: commentFont, centered: true, numberOfLines: 2, adjustsFontSizeToFitWidth: true, minimumScaleFactor: 0.8, attributed: colorSuits)
         case .responsible:
             responsiblePicker.isHidden = (Scorecard.current.isImported && board.score == nil)
             responsiblePicker.set(board.responsible, defaultValue: .unknown, color: Palette.gridBoard, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
@@ -2185,6 +2193,14 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         }
     }
     
+    private var commentFont: UIFont {
+        if scorecardDelegate?.scorecardViewType == .analysis {
+            smallCellFont
+        } else {
+            MyApp.target == .iOS ? smallCellFont : cellFont
+        }
+    }
+    
     private func colorSuits(text: String) -> NSAttributedString {
         let attributed = NSMutableAttributedString(string: text)
         
@@ -2242,13 +2258,13 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         }
     }
     
-    private func setTextInputString(value: String, font: UIFont = cellFont, centered: Bool = true, offset: CGFloat = 0, numberOfLines: Int = 1, adjustsFontSizeToFitWidth: Bool = false, minimumScaleFactor: CGFloat = 1.0, attributed: ((String)->NSAttributedString)? = nil) {
+    private func setTextInputString(value: String, font: UIFont? = nil, centered: Bool = true, offset: CGFloat = 0, numberOfLines: Int = 1, adjustsFontSizeToFitWidth: Bool = false, minimumScaleFactor: CGFloat = 1.0, attributed: ((String)->NSAttributedString)? = nil) {
         textControl?.set(text: value, useLabel: true, formattedText: nil, attributed: attributed)
         textControl?.textAlignment = .left
         textControl?.autocapitalizationType = .sentences
         textControl?.adjustsFontForContentSizeCategory = true
         textControl?.isUserInteractionEnabled = true
-        textControl?.font = cellFont
+        textControl?.font = font ?? (MyApp.target == .iOS ? smallCellFont : cellFont)
         textClear.isHidden = (value == "")
         textClearTapGesture.isEnabled = true
         textClearWidth.constant = 34
