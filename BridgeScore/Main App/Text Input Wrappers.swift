@@ -90,6 +90,7 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
     private var formattedText: (()->String)? = nil
     
     public var textValue: String! { get { text } set { text = newValue} }
+    override var text: String? { didSet { label?.text = text } }
     override var isUserInteractionEnabled: Bool { didSet { enableControls() } }
     private var firstResponder: Bool = false { didSet { enableControls() } }
     private(set) var isActive: Bool = false { didSet { enableControls() } }
@@ -106,6 +107,7 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
 
     init(delegate: ScorecardInputDelegate? = nil, label: FirstResponderLabel? = nil) {
         self.textInputDelegate = delegate
+        self.label = label
         super.init(frame: CGRect(), textContainer: nil)
         label?.backgroundColor = .lightGray
         self.delegate = self
@@ -174,6 +176,13 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
     
     // MARK: - Text View Delegates
     
+    override var keyCommands: [UIKeyCommand]? {
+        return [ UIKeyCommand(input: "\t", modifierFlags: .shift, action: #selector(handleShiftTab)) ]
+    }
+    
+    @objc func handleShiftTab(sender: UIKeyCommand) {
+    }
+    
     func textViewDidChange(_ textView: UITextView) {
         textInputDelegate?.inputTextChanged(self)
     }
@@ -218,6 +227,8 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
         if !isFirstResponder {
             result = super.becomeFirstResponder()
         }
+        label?.isHidden = true
+        self.isHidden = false
         firstResponder = isFirstResponder
         forceFirstResponder = false
         return result
@@ -233,9 +244,11 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
         return result
     }
 
-    override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+    
+    // Don't seem to need this anymore!
+    /*override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
         if !processPressedKeys(presses, with: event, action: { (keyAction, _) in
-            keyAction.navigationKey
+            keyAction.navigationKey || keyAction.upDownKey || keyAction == .enter
         }) {
             super.pressesBegan(presses, with: event)
         }
@@ -248,6 +261,7 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
             }
         }
     }
+*/
 }
 
 class ScorecardInputTextField : UITextField, ScorecardInputTextInput, UITextFieldDelegate {
