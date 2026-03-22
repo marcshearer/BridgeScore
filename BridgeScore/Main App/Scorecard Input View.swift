@@ -2099,7 +2099,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         case .points:
             analysisSplitPoints(isEnabled: isEnabled)
         case .comment:
-            setTextInputString(value: board.comment, font: scorecardDelegate?.scorecardViewType == .analysis ? smallCellFont : cellFont, centered: true)
+            setTextInputString(value: board.comment, font: scorecardDelegate?.scorecardViewType == .analysis ? smallCellFont : cellFont, centered: true, attributed: colorSuits)
         case .responsible:
             responsiblePicker.isHidden = (Scorecard.current.isImported && board.score == nil)
             responsiblePicker.set(board.responsible, defaultValue: .unknown, color: Palette.gridBoard, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
@@ -2183,6 +2183,27 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         }
     }
     
+    private func colorSuits(text: String) -> NSAttributedString {
+        let attributed = NSMutableAttributedString(string: text)
+        
+        for suit in Suit.validCases {
+            var searchRange = NSRange(location: 0, length: attributed.length)
+            if suit.color != .black {
+                while searchRange.location < attributed.length {
+                    let suitRange = (attributed.string as NSString).range(of: suit.string, options: [], range: searchRange)
+                    if suitRange.location != NSNotFound {
+                        attributed.addAttribute(.foregroundColor, value: UIColor(suit.color), range: suitRange)
+                        let suitLocation = suitRange.location + suitRange.length
+                        searchRange = NSRange(location: suitLocation, length: attributed.length - suitLocation)
+                    } else {
+                        break
+                    }
+                }
+            }
+        }
+        return attributed
+    }
+    
     private func formattedScore() -> String {
         if let score = board?.score {
             return "\(scorecard.type.boardScoreType.prefix(score: score))\(score.toString(places: min(1, scorecard.type.boardPlaces)))\(scorecard.type.boardScoreType.shortSuffix)"
@@ -2219,8 +2240,8 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         }
     }
     
-    private func setTextInputString(value: String, font: UIFont = cellFont, centered: Bool = true, offset: CGFloat = 0) {
-        textControl?.set(text: value, useLabel: true, formattedText: nil)
+    private func setTextInputString(value: String, font: UIFont = cellFont, centered: Bool = true, offset: CGFloat = 0, attributed: ((String)->NSAttributedString)? = nil) {
+        textControl?.set(text: value, useLabel: true, formattedText: nil, attributed: attributed)
         textControl?.textAlignment = .left
         textControl?.autocapitalizationType = .sentences
         textControl?.adjustsFontForContentSizeCategory = true
