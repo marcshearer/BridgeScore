@@ -65,12 +65,12 @@ class MyApp {
     
     #if targetEnvironment(macCatalyst)
         public static let target: Target = .macOS
+        public static let format: Format = .computer
     #else
         public static let target: Target = .iOS
+        public static var format: Format = UIDevice.current.userInterfaceIdiom == .phone ? .phone : .tablet
     #endif
 
-    public static var format: Format = .tablet
- 
     public func start() {
         #if !widget
             MasterData.shared.load()

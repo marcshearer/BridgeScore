@@ -192,6 +192,10 @@ extension CGRect {
     func grownBy(dx: CGFloat = 0.0, dy: CGFloat = 0.0) -> CGRect {
         return CGRect(x: self.minX - dx, y: self.minY - dy, width: self.width + (2 * dx), height: self.height + (2 * dy))
     }
+    
+    func with(height: CGFloat) -> CGRect {
+        return CGRect(origin: self.origin, size: CGSize(width: self.width, height: height))
+    }
 }
 
 extension CGPoint {

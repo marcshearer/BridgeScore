@@ -33,39 +33,39 @@ var bannerBottom: CGFloat { (MyApp.format != .phone ? 30.0 : (isLandscape ? 5.0 
 var slideInMenuRowHeight: CGFloat { MyApp.target == .iOS ? 50 : 40 }
 
 // Fonts (Font)
-var bigFont: Font { Font.system(size: (MyApp.format != .phone ? 50.0 : 24.0)) }
-var bannerFont: Font { Font.system(size: (MyApp.format != .phone ? 32.0 : 24.0)) }
-var alternateBannerFont: Font { Font.system(size: (MyApp.format != .phone ? 20.0 : 18.0)) }
-var defaultFont: Font { Font.system(size: (MyApp.format != .phone ? 28.0 : 24.0)) }
-var toolbarFont: Font { Font.system(size: (MyApp.format != .phone ? 16.0 : 14.0)) }
-var captionFont: Font { Font.system(size: (MyApp.format != .phone ? 20.0 : 18.0)) }
-var inputTitleFont: Font { Font.system(size: (MyApp.format != .phone ? 20.0 : 18.0)) }
-var inputFont: Font { Font.system(size: (MyApp.format != .phone ? 16.0 : 14.0)) }
-var messageFont: Font { Font.system(size: (MyApp.format != .phone ? 16.0 : 14.0)) }
-var searchFont: Font { Font.system(size: (MyApp.format != .phone ? 20.0 : 16.0)) }
-var smallFont: Font { Font.system(size: (MyApp.format != .phone ? 14.0 : 12.0)) }
-var tinyFont: Font { Font.system(size: (MyApp.format != .phone ? 12.0 : 8.0)) }
-var responsibleTitleFont: Font {  Font.system(size: (MyApp.format != .phone ? 30.0 : 18.0)) }
-var responsibleCaptionFont: Font {  Font.system(size: (MyApp.format != .phone ? 12.0 : 8.0)) }
+var bigFont =                   Set.font(computer: 50, phone:  24)
+var bannerFont =                Set.font(computer: 32, phone:  24)
+var alternateBannerFont =       Set.font(computer: 20, phone:  18)
+var defaultFont =               Set.font(computer: 28, phone:  24)
+var toolbarFont =               Set.font(computer: 16, phone:  14)
+var captionFont =               Set.font(computer: 20, phone:  18)
+var inputTitleFont =            Set.font(computer: 20, phone:  18)
+var inputFont =                 Set.font(computer: 16, phone:  14)
+var messageFont =               Set.font(computer: 16, phone:  14)
+var searchFont =                Set.font(computer: 20, phone:  16)
+var smallFont =                 Set.font(computer: 14, phone:  12)
+var tinyFont =                  Set.font(computer: 12, phone:   8)
+var responsibleTitleFont =      Set.font(computer: 30, phone:  18)
+var responsibleCaptionFont =    Set.font(computer: 12, phone:   8)
 
 #if canImport(UIKit)
 // Fonts in scorecard (UIFont)
-var titleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 16.0 : 10.0)) }
-var titleCaptionFont: UIFont { UIFont.systemFont(ofSize: (MyApp.format != .phone ? 16.0 : 10.0)) }
-var cellFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 28.0 : 16.0)) }
-var boardFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 28.0 : 18.0)) }
-var boardTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 28.0 : 14.0)) }
-var pickerTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 30.0 : 18.0)) }
-var pickerCaptionFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 12.0 : 8.0)) }
-var windowTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 30.0 : 20.0)) }
-var sectionTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 24.0 : 16.0)) } 
-var smallCellFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 22.0 : 12.0)) }
-var smallerCellFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 14.0 : 10.0)) }
-var tinyCellFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 8.0 : 6.0)) }
-var replaceFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 30.0 : 20.0)) }
-var replaceTitleFont: UIFont {  UIFont.systemFont(ofSize: (MyApp.format != .phone ? 30.0 : 20.0)) }
-var analysisFont: UIFont { UIFont.systemFont(ofSize: (MyApp.format != .phone ? 16.0 : 12.0)) }
-var analysisCommentFont: UIFont { UIFont.systemFont(ofSize: (MyApp.format != .phone ? 20.0 : 12.0)) }
+var titleFont =                 Set.uiFont(computer: 16, phone:  10)
+var titleCaptionFont =          Set.uiFont(computer: 16, phone:  10)
+var cellFont =                  Set.uiFont(computer: 28, phone:  16)
+var boardFont =                 Set.uiFont(computer: 28, phone:  18)
+var boardTitleFont =            Set.uiFont(computer: 28, phone:  14)
+var pickerTitleFont =           Set.uiFont(computer: 30, phone:  18)
+var pickerCaptionFont =         Set.uiFont(computer: 12, phone:   8)
+var windowTitleFont =           Set.uiFont(computer: 30, phone:  20)
+var sectionTitleFont =          Set.uiFont(computer: 24, phone:  16)
+var smallCellFont =             Set.uiFont(computer: 22, phone:  12)
+var smallerCellFont =           Set.uiFont(computer: 14, phone:  10)
+var tinyCellFont =              Set.uiFont(computer:  8, phone:   6)
+var replaceFont =               Set.uiFont(computer: 30, phone:  20)
+var replaceTitleFont =          Set.uiFont(computer: 30, phone:  20)
+var analysisFont =              Set.uiFont(computer: 16, phone:  12)
+var analysisCommentFont =       Set.uiFont(computer: 24, tablet: 20, phone: 12)
 #endif
 
 // Slide in IDs - Need to be declared here as there seem to be multiple instances of views
@@ -106,13 +106,7 @@ public enum UIMode {
     case unknown
 }
 
-public var isLandscape: Bool {
-#if canImport(UIKit)
-    UIScreen.main.bounds.width > UIScreen.main.bounds.height
-#else
-    true
-#endif
-}
+public var isLandscape: Bool = (MyApp.format == .phone ? false : true)
 
 // Application specific types
 
@@ -302,3 +296,31 @@ public let target: UIMode = .appKit
 #else
 public let target: UIMode = .unknown
 #endif
+
+fileprivate class Set {
+    
+#if canImport(UIKit)
+    static func uiFont(font: UIFont? = nil, computer: CGFloat, tablet: CGFloat? = nil, phone: CGFloat? = nil) -> UIFont {
+        let size = switch MyApp.format {
+        case .computer: computer
+        case .tablet:   tablet ?? computer
+        case .phone:    phone ?? tablet ?? computer
+        }
+        return font?.withSize(size) ?? UIFont.systemFont(ofSize: size)
+    }
+#endif
+    
+    static func font(fontName: String? = nil, computer: CGFloat, tablet: CGFloat? = nil, phone: CGFloat? = nil) -> Font {
+        let size = switch MyApp.format {
+        case .computer: computer
+        case .tablet:   tablet ?? computer
+        case .phone:    phone ?? tablet ?? computer
+        }
+        if let fontName = fontName {
+            return Font.custom(fontName, size: size)
+        } else {
+            return Font.system(size: size)
+        }
+    }
+}
+

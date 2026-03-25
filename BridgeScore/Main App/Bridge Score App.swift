@@ -34,18 +34,18 @@ struct MyScene: Scene {
         WindowGroup {
             GeometryReader { (geometry) in
                 ScorecardListView()
-                .onAppear() {
-                    MyApp.format = (min(geometry.size.width, geometry.size.height) < 600 ? .phone : .tablet)
-                }
-                .onReceive(NotificationCenter.default.publisher(for: UIScene.willConnectNotification)) { _ in
-                    #if targetEnvironment(macCatalyst)
-                        // prevent window in macOS from being resized down
+                    .onReceive(NotificationCenter.default.publisher(for: UIScene.willConnectNotification)) { _ in
+#if targetEnvironment(macCatalyst)
+                            // prevent window in macOS from being resized down
                         UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.forEach { windowScene in
                             windowScene.sizeRestrictions?.minimumSize = CGSize(width: 1200, height: 880)
                             windowScene.sizeRestrictions?.allowsFullScreen = false
                         }
-                    #endif
-                }
+#endif
+                    }
+                    .onAppear {
+                        isLandscape = (geometry.size.width > geometry.size.height)
+                    }
             }
         }
         .onChange(of: scenePhase, initial: false) { (_, phase) in

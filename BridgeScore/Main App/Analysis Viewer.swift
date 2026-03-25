@@ -115,8 +115,10 @@ struct AnalysisViewer: View {
             HStack {
                 Spacer().layoutPriority(999)
                 ZStack {
+                    AnalysisBanner(nextTraveller: nextTraveller, updateOptions: updateAnalysisData, board: $board, traveller: $traveller, handTraveller: $handTraveller, sitting: $sitting, rotated: $rotated, initialSitting: $initialSitting, bidAnnounce: $bidAnnounce, summaryMode: $summaryMode, stopEdit: $stopEdit, responsiblePicker: $responsiblePicker, dismissView: $dismissView)
+                        .zIndex(1)
                     VStack {
-                        AnalysisBanner(nextTraveller: nextTraveller, updateOptions: updateAnalysisData, board: $board, traveller: $traveller, handTraveller: $handTraveller, sitting: $sitting, rotated: $rotated, initialSitting: $initialSitting, bidAnnounce: $bidAnnounce, summaryMode: $summaryMode, stopEdit: $stopEdit, responsiblePicker: $responsiblePicker, dismissView: $dismissView)
+                        Spacer().frame(height: 88)
                         GeometryReader { bodyGeometry in
                             VStack(spacing: 0) {
                                 HStack(spacing: 0) {
@@ -152,17 +154,12 @@ struct AnalysisViewer: View {
                             }
                         }
                     }
-                    .background(Palette.windowBackground.background)
-                    .cornerRadius(10)
-                    .frame(width: frame.width)
-                    .onTapGesture {
-                        stopEdit = true
-                    }
-                    VStack {
-                        AutoCompleteWrapper(frame: CGRect(origin: CGPoint(), size: CGSize(width: 400, height: 200)))
-                            .frame(width: 400, height: 200)
-                        Spacer()
-                    }
+                }
+                .background(Palette.windowBackground.background)
+                .cornerRadius(10)
+                .frame(width: frame.width)
+                .onTapGesture {
+                    stopEdit = true
                 }
                 Spacer().layoutPriority(999)
             }
@@ -191,8 +188,13 @@ struct AnalysisViewer: View {
             .onSwipe() { direction in
                 nextTraveller(direction == .left ? 1 : -1)
             }
-            
         }
+        .statusBar(hidden: true)
+    }
+    
+    fileprivate enum FocusField {
+        case comment
+        case responsible
     }
     
     struct AnalysisBanner : View {
@@ -210,83 +212,105 @@ struct AnalysisViewer: View {
         @Binding var summaryMode: Bool
         @Binding var stopEdit: Bool
         @Binding var responsiblePicker: Bool
-        @State var keyboardAdjust: CGFloat = 0
         @Binding var dismissView: Bool
+        @FocusState fileprivate var focusField: FocusField?
+        @Namespace private var autoComplete
         
         var body : some View {
-            VStack {
-                Spacer().frame(height: keyboardAdjust != 0 ? 89 : 0)
+            VStack(spacing: 0) {
                 ZStack {
-                    UnevenRoundedRectangle(cornerRadii: .init(topLeading: 10,
-                                                              bottomLeading: 0,
-                                                              bottomTrailing: 0,
-                                                              topTrailing: 10),
-                                           style: .continuous)
-                    .foregroundColor(Palette.windowBanner.background)
                     VStack {
+                        UnevenRoundedRectangle(cornerRadii: .init(topLeading: 10,
+                                                                  bottomLeading: 0,
+                                                                  bottomTrailing: 0,
+                                                                  topTrailing: 10),
+                                               style: .continuous)
+                        .foregroundColor(Palette.windowBanner.background)
+                        .frame(height: 80)
                         Spacer()
-                        HStack {
-                            Spacer().frame(width: 20)
-                            Text("Board \(board.boardNumberText)\(scorecard.isMultiSession ? "(\(board.session))" : "")")
-                                .frame(minWidth: 150)
-                            if traveller.rankingNumber == handTraveller.rankingNumber {
-                                HStack {
-                                    Spacer().frame(width: 20)
-                                    AnalysisCommentView(board: $board, stopEdit: $stopEdit)
-                                        .palette(.windowBannerShadow)
-                                        .cornerRadius(analysisCornerSize)
-                                    Spacer().frame(width: 20)
-                                }
-                            } else {
-                                Text(" Other table ")
-                                Button {
-                                    handTraveller = traveller
-                                    summaryMode = true
-                                } label: {
-                                    HStack {
-                                        Spacer()
-                                        Image(systemName: "chevron.backward.2")
-                                        Text(" Back")
-                                        Spacer()
-                                    }
-                                    .frame(width: 160, height: 40)
-                                    .palette(.bannerButton)
-                                    .cornerRadius(8)
-                                }
-                            }
+                    }
+                    VStack {
+                        VStack {
                             Spacer()
-                            AnalysisResponsible(board: $board, stopEdit: $stopEdit, responsiblePicker: $responsiblePicker)
-                            Spacer().frame(width: 40)
-                            VStack {
-                                HStack {
-                                    Spacer().frame(width: 20)
-                                    let score = sitting.pair == .ns ? traveller.nsScore : scorecard.type.invertScore(score: traveller.nsScore)
-                                    let places = min(1, scorecard.type.boardPlaces)
-                                    Text("\(scorecard.type.boardScoreType.prefix(score: score))\(score.toString(places: places))\(scorecard.type.boardScoreType.suffix)")
-                                    Spacer().frame(width: 20)
+                            HStack {
+                                Spacer().frame(width: 20)
+                                Text("Board \(board.boardNumberText)\(scorecard.isMultiSession ? "(\(board.session))" : "")")
+                                    .frame(minWidth: 150)
+                                if traveller.rankingNumber == handTraveller.rankingNumber {
+                                    HStack {
+                                        Spacer().frame(width: 20)
+                                        AnalysisCommentView(board: $board, stopEdit: $stopEdit)
+                                            .palette(.windowBannerShadow)
+                                            .cornerRadius(analysisCornerSize)
+                                            .focused($focusField, equals: .comment)
+                                            .matchedGeometryEffect(id: FocusField.comment, in: autoComplete, anchor: .bottomTrailing)
+                                        Spacer().frame(width: 20)
+                                    }
+                                } else {
+                                    Text(" Other table ")
+                                    Button {
+                                        handTraveller = traveller
+                                        summaryMode = true
+                                    } label: {
+                                        HStack {
+                                            Spacer()
+                                            Image(systemName: "chevron.backward.2")
+                                            Text(" Back")
+                                            Spacer()
+                                        }
+                                        .frame(width: 160, height: 40)
+                                        .palette(.bannerButton)
+                                        .cornerRadius(8)
+                                    }
                                 }
-                                .minimumScaleFactor(0.5)
-                                .frame(width: (scorecard.type.players == 4 ? 150 : 230), height: 50)
-                                .palette(.windowBannerShadow)
-                                .cornerRadius(analysisCornerSize)
-                                .opacity(0.7)
+                                Spacer()
+                                AnalysisResponsible(board: $board, stopEdit: $stopEdit, responsiblePicker: $responsiblePicker)
+                                    .focused($focusField, equals: .responsible)
+                                Spacer().frame(width: 40)
+                                VStack {
+                                    HStack {
+                                        Spacer().frame(width: 20)
+                                        let score = sitting.pair == .ns ? traveller.nsScore : scorecard.type.invertScore(score: traveller.nsScore)
+                                        let places = min(1, scorecard.type.boardPlaces)
+                                        Text("\(scorecard.type.boardScoreType.prefix(score: score))\(score.toString(places: places))\(scorecard.type.boardScoreType.suffix)")
+                                        Spacer().frame(width: 20)
+                                    }
+                                    .minimumScaleFactor(0.5)
+                                    .frame(width: (scorecard.type.players == 4 ? 150 : 230), height: 50)
+                                    .palette(.windowBannerShadow)
+                                    .cornerRadius(analysisCornerSize)
+                                    .opacity(0.7)
+                                }
+                                Spacer().frame(width: 50)
+                                ButtonBar(nextTraveller: nextTraveller, otherTable: otherTable, save: save, board: $board, traveller: $handTraveller, sitting: $sitting, initialSitting: initialSitting, bidAnnounce: $bidAnnounce, summaryMode: $summaryMode, dismissView: $dismissView)
+                                Spacer().frame(width: 20)
                             }
-                            Spacer().frame(width: 50)
-                            ButtonBar(nextTraveller: nextTraveller, otherTable: otherTable, save: save, board: $board, traveller: $handTraveller, sitting: $sitting, initialSitting: initialSitting, bidAnnounce: $bidAnnounce, summaryMode: $summaryMode, dismissView: $dismissView)
-                            Spacer().frame(width: 20)
-                        }.font(bannerFont).foregroundColor(Palette.banner.text)
+                            .font(bannerFont).foregroundColor(Palette.banner.text)
+                            Spacer()
+                        }
+                        .cornerRadius(10)
+                        .onTapGesture {
+                            stopEdit = true
+                        }
+                        .frame(height: 80)
                         Spacer()
                     }
-                    .cornerRadius(10)
-                    .onTapGesture {
-                        stopEdit = true
+                    VStack {
+                        AutoCompleteWrapper(frame: CGRect(origin: CGPoint(), size: CGSize(width: 400, height: 200)), onCreated: { autoComplete in AnalysisViewer.autoComplete = autoComplete })
+                            .frame(width: 400, height: 0)
+                            .matchedGeometryEffect(
+                                id: FocusField.comment,
+                                in: autoComplete,
+                                properties: .position,
+                                anchor: .topTrailing,
+                                isSource: false)
+                            .zIndex(2)
+                        Spacer()
                     }
+                    .frame(height: 220)
                 }
+                Spacer()
             }
-            .onReceive(Publishers.keyboardHeight) { (keyboardHeight) in
-                keyboardAdjust = keyboardHeight
-            }
-            .frame(height: keyboardAdjust != 0 ? 169 : 80)
         }
         
         func save() {

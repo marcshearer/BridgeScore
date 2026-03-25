@@ -79,7 +79,7 @@ struct StandardView <Content> : View where Content : View {
             }
             .animation(animate || messageBox.isShown ? .easeInOut(duration: 1.0) : .none, value: messageBox.isShown)
             .noNavigationBar
-            .statusBarHidden(true)
+            .statusBar(hidden: true)
         }
     }
 }

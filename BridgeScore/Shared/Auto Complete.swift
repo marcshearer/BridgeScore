@@ -54,6 +54,8 @@ class AutoComplete: UIView, ObservableObject, UITableViewDataSource, UITableView
     var selectedRow: Int?
     var adjustReplace: ((String, Bool, Bool)->String)?
     var delegate: AutoCompleteDelegate?
+    var keepSuperview: UIView?
+    var onCreated: ((AutoComplete)->())?
     var isActive: Bool = false {
         didSet {
             isHidden = !isActive
@@ -70,7 +72,14 @@ class AutoComplete: UIView, ObservableObject, UITableViewDataSource, UITableView
         tableView.separatorStyle = .none
     }
     
+    convenience init(onCreated: ((AutoComplete)->())?) {
+        self.init()
+        self.onCreated = onCreated
+    }
+    
     override func didMoveToSuperview() {
+        self.keepSuperview = superview
+        self.onCreated?(self)
         delegate?.autoCompleteDidMoveToSuperview(autoComplete: self)
     }
     
@@ -184,7 +193,6 @@ class AutoComplete: UIView, ObservableObject, UITableViewDataSource, UITableView
         cell.set(text: filteredList[indexPath.row].replace, description: filteredList[indexPath.row].description, selected: indexPath.row == selectedRow)
         return cell
     }
-    
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if let textInput = textInput {

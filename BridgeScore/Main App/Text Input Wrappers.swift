@@ -28,7 +28,7 @@ extension ScorecardResponderDelegate {
         keyPressed(keyAction: keyAction, characters: "")
     }
     @discardableResult func getFocus() -> Bool {
-        getFocus(becomeFirstResponder: true)
+        getFocus(becomeFirstResponder: false)
     }
 }
 
@@ -90,7 +90,7 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
     private var numeric: Bool = false
     private var unsigned: Bool = false
     private var decimalPlaces: Int = 0
-    public var updateFocus: Bool = true
+    public var updateFocus: Bool = false
     private var label: FirstResponderLabel?
     public var forceFirstResponder: Bool = false
     private var validCharacters: String = ""
@@ -126,6 +126,7 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
         self.label = label
         super.init(frame: CGRect(), textContainer: nil)
         label?.backgroundColor = .lightGray
+        self.updateFocus = true
         self.delegate = self
     }
     
@@ -270,7 +271,7 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
     // Don't seem to need this anymore!
     override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
         if !processPressedKeys(presses, with: event, action: { (keyAction, _) in
-            keyAction.navigationKey || keyAction.upDownKey || keyAction == .enter
+            keyAction.navigationKey || keyAction == .enter
         }) {
             super.pressesBegan(presses, with: event)
         }

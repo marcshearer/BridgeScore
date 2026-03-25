@@ -27,7 +27,7 @@ struct TextViewWrapper: UIViewRepresentable {
     }
     
     func updateUIView(_ textViewContainer: TextViewContainer, context: Context) {
-        textViewContainer.textView.set(text: field)
+        textViewContainer.textView.set(text: field, useLabel: true)
         if focused {
             textViewContainer.textView.becomeFirstResponder()
         } else {
@@ -73,6 +73,12 @@ struct TextViewWrapper: UIViewRepresentable {
                     }
                 }
             }
+            if !handled {
+                if keyAction == .escape || keyAction == .enter || (keyAction?.navigationKey ?? false) {
+                    handled = true
+                    textViewContainer.set(focused: false)
+                }
+            }
             return handled
         }
         
@@ -88,10 +94,6 @@ struct TextViewWrapper: UIViewRepresentable {
         
         private func textAutoComplete(_ textInput: any ScorecardInputTextInput,replacing original: String, range: NSRange, with: String) {
             if let autoComplete = AnalysisViewer.autoComplete {
-                if autoComplete.superview == nil {
-                    // Bodge - view seems to be dropped out of hierarchy so re-insert it here
-                    textInput.superview?.superview?.superview?.superview?.addSubview(autoComplete)
-                }
                 if autoComplete.superview != nil {
                     let text = (original as NSString).replacingCharacters(in: range, with: with)
                     let range = NSRange(location: range.location + NSString(string: with).length, length: 0)
@@ -103,11 +105,7 @@ struct TextViewWrapper: UIViewRepresentable {
                     } else {
                         autoComplete.isActive = true
                         let height = CGFloat(min(5, listSize) * 40)
-                        var point = textViewContainer.convert(CGPoint(x: textViewContainer.textView.frame.minX, y: textViewContainer.textView.frame.maxY), to: autoComplete.superview!)
-                        if point.y + 200 >= UIScreen.main.bounds.height {
-                            point = point.offsetBy(dy: -textViewContainer.frame.height - textViewContainer.frame.height)
-                        }
-                        autoComplete.frame = CGRect(x: point.x, y: point.y, width: textViewContainer.frame.width, height: height)
+                        autoComplete.frame = autoComplete.frame.with(height: height)
                         autoComplete.superview!.bringSubviewToFront(autoComplete)
                         textViewContainer.isHidden = false
                     }
@@ -144,6 +142,9 @@ struct TextViewWrapper: UIViewRepresentable {
         }
         
         func resignedFirstResponder(from: any ScorecardResponder) {
+            if let autoComplete = AnalysisViewer.autoComplete {
+                autoComplete.isActive = false
+            }
         }
         
         func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
@@ -151,7 +152,6 @@ struct TextViewWrapper: UIViewRepresentable {
         
         func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
         }
-        
     }
     
     public func paletteColor(_ color: ThemeBackgroundColorName) -> some View {
@@ -163,28 +163,51 @@ struct TextViewWrapper: UIViewRepresentable {
 
 class TextViewContainer: UIView {
     var textView: ScorecardInputTextView!
+    var label: FirstResponderLabel!
     var field: Binding<String>
     var disabledColor: ThemeBackgroundColorName
     var enabledColor: ThemeBackgroundColorName
+    var tapGesture: UITapGestureRecognizer!
     
     init(frame: CGRect, field: Binding<String>, disabledColor: ThemeBackgroundColorName, enabledColor: ThemeBackgroundColorName, coordinator: TextViewWrapperDelegate) {
         self.field = field
         self.disabledColor = disabledColor
         self.enabledColor = enabledColor
         super.init(frame: frame)
-        self.textView = ScorecardInputTextView(delegate: coordinator)
+        self.label = FirstResponderLabel()
+        self.textView = ScorecardInputTextView(delegate: coordinator, label: label)
         self.textView.frame = frame
         self.textView.font = analysisCommentFont
         self.textView.autocorrectionType = .no
         self.textView.autocapitalizationType = .sentences
         self.textView.inlinePredictionType = .no    
         self.textView.tintColorDidChange()
+        self.textView.isScrollEnabled = true
+        self.textView.allowsKeyboardScrolling = true
         self.textView.showsVerticalScrollIndicator = false
+        self.textView.set(attributed: Suit.colorSuits)
         self.set(focused: false)
-        textView.isScrollEnabled = false
         self.addSubview(textView, anchored: .top, .leading, .trailing)
+        label.textAlignment = .center
+        label.numberOfLines = 2
+        label.adjustsFontSizeToFitWidth = true
+        label.minimumScaleFactor = 0.9
+        label.font = analysisCommentFont
+        label.backgroundColor = .clear
+        label.textColor = UIColor(PaletteColor(disabledColor).textColor(.normal))
+        tapGesture = UITapGestureRecognizer(target: self, action: #selector(TextViewContainer.labelTapped(_:)))
+        label.addGestureRecognizer(tapGesture)
+        tapGesture.isEnabled = true
+        label.isUserInteractionEnabled = true
+        self.addSubview(label, anchored: .top, .leading, .trailing)
         Constraint.setHeight(control: textView, height: frame.height)
+        Constraint.setHeight(control: label, height: frame.height)
+        self.bringSubviewToFront(label)
         self.clipsToBounds = false
+    }
+    
+    @objc func labelTapped(_ from: UIView) {
+        self.set(focused: true)
     }
     
     required init?(coder: NSCoder) {
@@ -196,16 +219,37 @@ class TextViewContainer: UIView {
         let color = (focused ? enabledColor : disabledColor)
         self.textView.textColor = UIColor(PaletteColor(color).textColor(.normal))
         self.textView.tintColor = UIColor(PaletteColor(color).textColor(.strong))
+        self.label.isHidden = focused
+        self.textView.isHidden = !focused
+        if focused {
+            self.textView.becomeFirstResponder()
+        }
     }
     
+    override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        if !processPressedKeys(presses, with: event, allowCharacters: true, action: { (keyAction, _) in
+            keyAction == .characters || keyAction == .escape || keyAction == .enter || keyAction.navigationKey
+        }) {
+            super.pressesBegan(presses, with: event)
+        }
+    }
+    
+    override func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+        if !processPressedKeys(presses, with: event, allowCharacters: true, action: { (keyAction, _) in
+            keyAction == .characters || keyAction == .escape || keyAction == .enter || keyAction.navigationKey
+        }) {
+            super.pressesEnded(presses, with: event)
+        }
+    }
 }
 
 struct AutoCompleteWrapper: UIViewRepresentable {
     typealias UIViewType = AutoComplete
     @State var frame: CGRect
+    @State var onCreated: ((AutoComplete)->())? = nil
     
     func makeUIView(context: Context) -> AutoComplete {
-        let autoComplete = AutoComplete()
+        let autoComplete = AutoComplete(onCreated: onCreated)
         return autoComplete
     }
     
@@ -227,7 +271,6 @@ struct AutoCompleteWrapper: UIViewRepresentable {
         }
         
         func autoCompleteDidMoveToSuperview(autoComplete: AutoComplete) {
-            AnalysisViewer.autoComplete = autoComplete
         }
         
         func autoCompleteWillMoveToSuperview(autoComplete: AutoComplete) {

@@ -2109,7 +2109,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         case .points:
             analysisSplitPoints(isEnabled: isEnabled)
         case .comment:
-            setTextInputString(value: board.comment, font: commentFont, centered: true, numberOfLines: 2, adjustsFontSizeToFitWidth: true, minimumScaleFactor: 0.8, attributed: colorSuits)
+            setTextInputString(value: board.comment, font: commentFont, centered: true, numberOfLines: 2, adjustsFontSizeToFitWidth: true, minimumScaleFactor: 0.8, attributed: Suit.colorSuits)
         case .responsible:
             responsiblePicker.isHidden = (Scorecard.current.isImported && board.score == nil)
             responsiblePicker.set(board.responsible, defaultValue: .unknown, color: Palette.gridBoard, titleFont: pickerTitleFont, captionFont: pickerCaptionFont)
@@ -2199,27 +2199,6 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         } else {
             MyApp.target == .iOS ? smallCellFont : cellFont
         }
-    }
-    
-    private func colorSuits(text: String) -> NSAttributedString {
-        let attributed = NSMutableAttributedString(string: text)
-        
-        for suit in Suit.validCases {
-            var searchRange = NSRange(location: 0, length: attributed.length)
-            if suit.color != .black {
-                while searchRange.location < attributed.length {
-                    let suitRange = (attributed.string as NSString).range(of: suit.string, options: [], range: searchRange)
-                    if suitRange.location != NSNotFound {
-                        attributed.addAttribute(.foregroundColor, value: UIColor(suit.color), range: suitRange)
-                        let suitLocation = suitRange.location + suitRange.length
-                        searchRange = NSRange(location: suitLocation, length: attributed.length - suitLocation)
-                    } else {
-                        break
-                    }
-                }
-            }
-        }
-        return attributed
     }
     
     private func formattedScore() -> String {
