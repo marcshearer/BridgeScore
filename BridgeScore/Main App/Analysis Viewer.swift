@@ -93,7 +93,6 @@ struct AnalysisViewer: View {
     @State var initialYOffset: CGFloat
     @State var yOffset: CGFloat
     @Binding var dismissView: Bool
-    static public var autoComplete: AutoComplete?
     
     init(board: BoardViewModel, traveller: TravellerViewModel, sitting: Seat, frame: CGRect, initialYOffset: CGFloat, dismissView: Binding<Bool>, from: UIView) {
         self._analysisData = StateObject(wrappedValue: AnalysisData(analysis: Scorecard.current.analysis(board: board, traveller: traveller, sitting: sitting), otherAnalysis: nil))
@@ -213,8 +212,9 @@ struct AnalysisViewer: View {
         @Binding var stopEdit: Bool
         @Binding var responsiblePicker: Bool
         @Binding var dismissView: Bool
+        @StateObject private var autoComplete = AutoComplete(list: AutoComplete.suitReplaceList(), consider: .trailingAlphaNumeric)
+        @Namespace private var autoCompleteNameSpace
         @FocusState fileprivate var focusField: FocusField?
-        @Namespace private var autoComplete
         
         var body : some View {
             VStack(spacing: 0) {
@@ -239,11 +239,11 @@ struct AnalysisViewer: View {
                                 if traveller.rankingNumber == handTraveller.rankingNumber {
                                     HStack {
                                         Spacer().frame(width: 20)
-                                        AnalysisCommentView(board: $board, stopEdit: $stopEdit)
+                                        AnalysisCommentView(board: $board, stopEdit: $stopEdit, autoComplete: autoComplete) { _ in }
                                             .palette(.windowBannerShadow)
                                             .cornerRadius(analysisCornerSize)
                                             .focused($focusField, equals: .comment)
-                                            .matchedGeometryEffect(id: FocusField.comment, in: autoComplete, anchor: .bottomTrailing)
+                                            .matchedGeometryEffect(id: FocusField.comment, in: autoCompleteNameSpace, anchor: .bottomTrailing, isSource: true)
                                         Spacer().frame(width: 20)
                                     }
                                 } else {
@@ -296,18 +296,16 @@ struct AnalysisViewer: View {
                         Spacer()
                     }
                     VStack {
-                        AutoCompleteWrapper(frame: CGRect(origin: CGPoint(), size: CGSize(width: 400, height: 200)), onCreated: { autoComplete in AnalysisViewer.autoComplete = autoComplete })
-                            .frame(width: 400, height: 0)
-                            .matchedGeometryEffect(
-                                id: FocusField.comment,
-                                in: autoComplete,
-                                properties: .position,
-                                anchor: .topTrailing,
-                                isSource: false)
+                        Spacer().frame(height: 80)
+                        if !autoComplete.filteredList.isEmpty && focusField == .comment {
+                            AutoCompleteView(autoComplete: autoComplete, nameSpace: autoCompleteNameSpace, field: FocusField.comment, selected: $autoComplete.selected, codeWidth: 100, valid: true, width: 400, elementHeight: 32, maxElements: 6, selectAction: { (newValue) in
+                                autoComplete.replace(with: newValue.with)
+                            })
+                            .focusable(false)
                             .zIndex(2)
+                        }
                         Spacer()
                     }
-                    .frame(height: 220)
                 }
                 Spacer()
             }
@@ -1205,6 +1203,8 @@ struct AnalysisViewer: View {
         @State var disabledColor: ThemeBackgroundColorName = .windowBannerShadow
         @State var enabledColor: ThemeBackgroundColorName = .bannerInput
         @State var color: ThemeBackgroundColorName = .windowBannerShadow
+        @ObservedObject var autoComplete: AutoComplete
+        var onChange: (String) -> ()
         
         var body: some View {
             ZStack {
@@ -1216,7 +1216,7 @@ struct AnalysisViewer: View {
                             VStack {
                                 GeometryReader { geometry in
                                     let frame = geometry.frame(in: .global)
-                                    TextViewWrapper(frame: frame, field: $comment, focused: $commentFocused, disabledColor: disabledColor, enabledColor: enabledColor)
+                                    TextViewWrapper(autoComplete: autoComplete, frame: frame, field: $comment, focused: $commentFocused, disabledColor: disabledColor, enabledColor: enabledColor)
                                 }
                                 .onChange(of: comment, initial: false) {
                                     if comment.contains("\n") || comment.contains("\n") {
@@ -1906,3 +1906,4 @@ struct AnalysisWrapper <Content> : View where Content : View {
         .ignoresSafeArea(.keyboard, edges: .bottom)
     }
 }
+

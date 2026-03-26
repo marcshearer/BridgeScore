@@ -14,6 +14,7 @@ typealias TextViewWrapperDelegate = ScorecardInputDelegate & AutoCompleteDelegat
 
 struct TextViewWrapper: UIViewRepresentable {
     typealias UIViewType = TextViewContainer
+    @ObservedObject var autoComplete: AutoComplete
     @State var frame: CGRect
     @Binding var field: String
     @Binding var focused: Bool
@@ -21,8 +22,9 @@ struct TextViewWrapper: UIViewRepresentable {
     @State var enabledColor: ThemeBackgroundColorName = .input
     
     func makeUIView(context: Context) -> TextViewContainer {
-        let textViewContainer = TextViewContainer(frame: frame, field: $field, disabledColor: disabledColor, enabledColor: enabledColor, coordinator: context.coordinator)
+        let textViewContainer = TextViewContainer(frame: frame, field: $field, disabledColor: disabledColor, enabledColor: enabledColor, coordinator: context.coordinator, autoComplete: autoComplete)
         context.coordinator.textViewContainer = textViewContainer
+        autoComplete.delegate = context.coordinator
         return textViewContainer
     }
     
@@ -47,30 +49,26 @@ struct TextViewWrapper: UIViewRepresentable {
         
         init(_ parent: TextViewWrapper) {
             self.parent = parent
+            super.init()
         }
         
-        func autoCompleteDidMoveToSuperview(autoComplete: AutoComplete) { }
-        
-        func autoCompleteWillMoveToSuperview(autoComplete: AutoComplete) { }
-        
-        internal func replace(with text: String, textInput: ScorecardInputTextInput, positionAt: NSRange) {
-            if let autoComplete = AnalysisViewer.autoComplete {
+        func replace(with text: String, positionAt: NSRange) {
+            if let textInput = textViewContainer.textView {
                 textInput.textValue = text
                 inputTextChanged(textInput)
                 if let location = textInput.position(from: textInput.beginningOfDocument, offset: positionAt.location) {
                     textInput.selectedTextRange = textInput.textRange(from: location, to: location)
                 }
-                autoComplete.isActive = false
+                parent.autoComplete.set(text: text, at: positionAt)
             }
         }
 
         func keyPressed(keyAction: KeyAction?, characters: String) -> Bool {
             var handled = false
-            if let autoComplete = AnalysisViewer.autoComplete {
-                if let keyAction = keyAction, autoComplete.isActive {
-                    if keyAction.upDownKey || keyAction == .enter {
-                        handled = autoComplete.keyPressed(keyAction: keyAction)
-                    }
+            if let keyAction = keyAction, !parent.autoComplete.filteredList.isEmpty {
+                if keyAction.upDownKey || keyAction == .enter {
+                    parent.autoComplete.keyPressed(keyAction: keyAction)
+                    handled = true
                 }
             }
             if !handled {
@@ -86,31 +84,19 @@ struct TextViewWrapper: UIViewRepresentable {
             parent.field = textInput.textValue
         }
         
+        func inputTextRangeChanged(_ textInput: any ScorecardInputTextInput) {
+        }
+        
         func inputTextShouldChangeCharacters(_ textInput: any ScorecardInputTextInput, in range: NSRange, replacementString string: String) -> Bool {
             textAutoComplete(textInput, replacing: textInput.textValue!, range: range, with: string)
             return true
             
         }
         
-        private func textAutoComplete(_ textInput: any ScorecardInputTextInput,replacing original: String, range: NSRange, with: String) {
-            if let autoComplete = AnalysisViewer.autoComplete {
-                if autoComplete.superview != nil {
-                    let text = (original as NSString).replacingCharacters(in: range, with: with)
-                    let range = NSRange(location: range.location + NSString(string: with).length, length: 0)
-                    autoComplete.delegate = self
-                    let listSize = autoComplete.set(text: text, textInput: textInput, at: range)
-                    if listSize == 0 {
-                        autoComplete.isActive = false
-                        autoComplete.delegate = nil
-                    } else {
-                        autoComplete.isActive = true
-                        let height = CGFloat(min(5, listSize) * 40)
-                        autoComplete.frame = autoComplete.frame.with(height: height)
-                        autoComplete.superview!.bringSubviewToFront(autoComplete)
-                        textViewContainer.isHidden = false
-                    }
-                }
-            }
+        private func textAutoComplete(_ textInput: any ScorecardInputTextInput, replacing original: String, range: NSRange, with: String) {
+            let text = (original as NSString).replacingCharacters(in: range, with: with)
+            let range = NSRange(location: range.location + NSString(string: with).length, length: 0)
+            parent.autoComplete.set(text: text, at: range)
         }
         
         func inputTextDidBeginEditing(_ textInput: any ScorecardInputTextInput) {
@@ -142,9 +128,6 @@ struct TextViewWrapper: UIViewRepresentable {
         }
         
         func resignedFirstResponder(from: any ScorecardResponder) {
-            if let autoComplete = AnalysisViewer.autoComplete {
-                autoComplete.isActive = false
-            }
         }
         
         func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
@@ -169,13 +152,13 @@ class TextViewContainer: UIView {
     var enabledColor: ThemeBackgroundColorName
     var tapGesture: UITapGestureRecognizer!
     
-    init(frame: CGRect, field: Binding<String>, disabledColor: ThemeBackgroundColorName, enabledColor: ThemeBackgroundColorName, coordinator: TextViewWrapperDelegate) {
+    init(frame: CGRect, field: Binding<String>, disabledColor: ThemeBackgroundColorName, enabledColor: ThemeBackgroundColorName, coordinator: TextViewWrapperDelegate, autoComplete: AutoComplete? = nil) {
         self.field = field
         self.disabledColor = disabledColor
         self.enabledColor = enabledColor
         super.init(frame: frame)
         self.label = FirstResponderLabel()
-        self.textView = ScorecardInputTextView(delegate: coordinator, label: label)
+        self.textView = ScorecardInputTextView(delegate: coordinator, label: label, autoComplete: autoComplete)
         self.textView.frame = frame
         self.textView.font = analysisCommentFont
         self.textView.autocorrectionType = .no
@@ -240,56 +223,5 @@ class TextViewContainer: UIView {
         }) {
             super.pressesEnded(presses, with: event)
         }
-    }
-}
-
-struct AutoCompleteWrapper: UIViewRepresentable {
-    typealias UIViewType = AutoComplete
-    @State var frame: CGRect
-    @State var onCreated: ((AutoComplete)->())? = nil
-    
-    func makeUIView(context: Context) -> AutoComplete {
-        let autoComplete = AutoComplete(onCreated: onCreated)
-        return autoComplete
-    }
-    
-    func updateUIView(_ autoComplete: AutoComplete, context: Context) {
-        context.coordinator.autoComplete = autoComplete
-        setupAutoComplete(autoComplete: autoComplete, delegate: context.coordinator)
-    }
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-    
-    class Coordinator: NSObject, AutoCompleteDelegate {
-        var parent: AutoCompleteWrapper
-        var autoComplete: AutoComplete!
-        
-        init(_ parent: AutoCompleteWrapper) {
-            self.parent = parent
-        }
-        
-        func autoCompleteDidMoveToSuperview(autoComplete: AutoComplete) {
-        }
-        
-        func autoCompleteWillMoveToSuperview(autoComplete: AutoComplete) {
-            
-        }
-        
-        func replace(with: String, textInput: any ScorecardInputTextInput, positionAt: NSRange) {
-            
-        }
-    }
-    
-    func setupAutoComplete(autoComplete: AutoComplete, delegate: AutoCompleteDelegate) {
-        var list:[(String, String, String)] = []
-        for rank in CardRank.allCases {
-            list.append(contentsOf: Suit.realSuits.map({(rank.short + $0.short.uppercased(), rank.short + $0.string, "\(rank.string) \(rank.rawValue > 7 ? "of" : "") \($0.words)")}))
-        }
-        list.append(contentsOf: Suit.realSuits.map({($0.short.uppercased(), $0.string, $0.words)}))
-        list.append(contentsOf: Suit.realSuits.map({("1" + $0.short.uppercased(), "1" + $0.string, "1 " + $0.singular)}))
-        autoComplete.set(list: list, consider: .trailingAlphaNumeric)
-        autoComplete.delegate = delegate
     }
 }

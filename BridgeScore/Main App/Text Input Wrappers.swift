@@ -34,6 +34,7 @@ extension ScorecardResponderDelegate {
 
 protocol ScorecardInputDelegate: ScorecardResponderDelegate {
     func inputTextChanged(_ textInput: ScorecardInputTextInput)
+    func inputTextRangeChanged(_ textInput: ScorecardInputTextInput)
     func inputTextShouldChangeCharacters(_ textInput: ScorecardInputTextInput, in range: NSRange, replacementString string: String) -> Bool
     func inputTextDidBeginEditing(_ textInput: ScorecardInputTextInput)
     func inputTextDidEndEditing(_ textInput: ScorecardInputTextInput)
@@ -44,6 +45,7 @@ protocol ScorecardInputDelegate: ScorecardResponderDelegate {
 protocol ScorecardInputTextInput : ScorecardResponder, UITextInput, ScorecardInputResponder {
     var textValue: String! {get set}
     var textAlignment: NSTextAlignment {get set}
+    var autoComplete: AutoComplete? {get set}
     var autocapitalizationType: UITextAutocapitalizationType {get set}
     var isHidden: Bool {get set}
     var adjustsFontForContentSizeCategory: Bool {get set}
@@ -86,6 +88,7 @@ extension ScorecardInputTextInput {
 }
 
 class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInputResponder, UITextViewDelegate {
+    public var autoComplete: AutoComplete? = nil
     public var textOnEntry: String?
     private var numeric: Bool = false
     private var unsigned: Bool = false
@@ -100,11 +103,7 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
     public var textValue: String! { get { text } set { text = newValue} }
     override var text: String? {
         didSet {
-            if let attributed = attributed, let text = text {
-                label?.attributedText = attributed(text)
-            } else {
-                label?.text = text
-            }
+            updateLabel()
         }
     }
     override var isUserInteractionEnabled: Bool { didSet { enableControls() } }
@@ -121,12 +120,13 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
         set { adjustsFontForContentSizeCategory = newValue}
     }
 
-    init(delegate: ScorecardInputDelegate? = nil, label: FirstResponderLabel? = nil) {
+    init(delegate: ScorecardInputDelegate? = nil, label: FirstResponderLabel? = nil, autoComplete: AutoComplete? = nil) {
         self.textInputDelegate = delegate
         self.label = label
         super.init(frame: CGRect(), textContainer: nil)
         label?.backgroundColor = .lightGray
         self.updateFocus = true
+        self.autoComplete = autoComplete
         self.delegate = self
     }
     
@@ -179,11 +179,20 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
         textContainer.lineBreakMode = .byWordWrapping
         isUserInteractionEnabled = false
         formattedText = nil
+        autoComplete = nil
     }
     
     func enableControls() {
         label?.isHidden = !showLabel || !isActive
         isHidden = showLabel || !isActive
+    }
+    
+    func updateLabel() {
+        if let attributed = attributed, let text = text {
+            label?.attributedText = attributed(text)
+        }
+        label?.text = text
+        enableControls()
     }
     
     required init?(coder: NSCoder) {
@@ -197,14 +206,22 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
     // MARK: - Text View Delegates
     
     override var keyCommands: [UIKeyCommand]? {
-        return [ UIKeyCommand(input: "\t", modifierFlags: .shift, action: #selector(handleShiftTab)) ]
+        return [ UIKeyCommand(input: "\t", modifierFlags: .shift, action: #selector(handleShiftTab)),
+                 UIKeyCommand(input: UIKeyCommand.inputEscape, modifierFlags: [], action: #selector(handleEscape))
+        ]
     }
     
     @objc func handleShiftTab(sender: UIKeyCommand) {
+
+    }
+    
+    @objc func handleEscape(sender: UIKeyCommand) {
+        
     }
     
     func textViewDidChange(_ textView: UITextView) {
         textInputDelegate?.inputTextChanged(self)
+        updateLabel()
     }
     
     func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
@@ -240,6 +257,19 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
         }
     }
     
+    func textViewDidChangeSelection(_ textView: UITextView) {
+        if let autoComplete = autoComplete {
+            if let textRange = textView.selectedTextRange {
+                let location = textView.offset(from: textView.beginningOfDocument, to: textRange.end)
+                let range = NSRange(location: location, length: 0)
+                Utility.mainThread {
+                    autoComplete.set(text: textView.text, at: range)
+                }
+            }
+        }
+        textInputDelegate?.inputTextRangeChanged(self)
+    }
+    
     // MARK: - First responders and presses
     
     @discardableResult override func becomeFirstResponder() -> Bool {
@@ -254,6 +284,7 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
         self.isHidden = false
         firstResponder = isFirstResponder
         forceFirstResponder = false
+        textInputDelegate?.inputTextRangeChanged(self)
         return result
     }
     
@@ -264,14 +295,14 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
         }
         firstResponder = isFirstResponder
         forceFirstResponder = false
+        textInputDelegate?.inputTextRangeChanged(self)
         return result
     }
-
     
     // Don't seem to need this anymore!
     override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
         if !processPressedKeys(presses, with: event, action: { (keyAction, _) in
-            keyAction.navigationKey || keyAction == .enter
+            keyAction.navigationKey || keyAction == .enter || (!(autoComplete?.filteredList.isEmpty ?? true) && keyAction.upDownKey)
         }) {
             super.pressesBegan(presses, with: event)
         }
@@ -287,6 +318,7 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
 }
 
 class ScorecardInputTextField : UITextField, ScorecardInputTextInput, UITextFieldDelegate {
+    public var autoComplete: AutoComplete?
     public var textOnEntry: String?
     private var numeric: Bool = false
     private var unsigned: Bool = false
@@ -398,8 +430,35 @@ class ScorecardInputTextField : UITextField, ScorecardInputTextInput, UITextFiel
     
     // MARK: - Text Field Delegates
     
+    override var keyCommands: [UIKeyCommand]? {
+        return [ UIKeyCommand(input: "\t", modifierFlags: .shift, action: #selector(handleShiftTab)),
+                 UIKeyCommand(input: UIKeyCommand.inputEscape, modifierFlags: [], action: #selector(handleEscape))
+        ]
+    }
+    
+    @objc func handleShiftTab(sender: UIKeyCommand) {
+        
+    }
+    
+    @objc func handleEscape(sender: UIKeyCommand) {
+        
+    }
+        
     @objc internal func textFieldChanged(_ textField: UITextField) {
         textInputDelegate?.inputTextChanged(self)
+    }
+    
+    @objc internal func textFieldDidChangeSelection(_ textField: UITextField) {
+        if let autoComplete = autoComplete {
+            if let textRange = textField.selectedTextRange {
+                let location = textField.offset(from: textField.beginningOfDocument, to: textRange.end)
+                let range = NSRange(location: location, length: 0)
+                Utility.mainThread {
+                    autoComplete.set(text: textField.text!, at: range)
+                }
+            }
+        }
+        textInputDelegate?.inputTextRangeChanged(self)
     }
     
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
@@ -447,6 +506,7 @@ class ScorecardInputTextField : UITextField, ScorecardInputTextInput, UITextFiel
         }
         firstResponder = isFirstResponder
         forceFirstResponder = false
+        textInputDelegate?.inputTextRangeChanged(self)
         return result
     }
     
@@ -457,12 +517,13 @@ class ScorecardInputTextField : UITextField, ScorecardInputTextInput, UITextFiel
         }
         firstResponder = isFirstResponder
         forceFirstResponder = false
+        textInputDelegate?.inputTextRangeChanged(self)
         return result
     }
 
     override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
         if !processPressedKeys(presses, with: event, action: { (keyAction, _) in
-            keyAction.navigationKey || keyAction.upDownKey || keyAction == .enter
+            keyAction.movementKey || keyAction == .enter
         }) {
             super.pressesBegan(presses, with: event)
         }
@@ -476,3 +537,4 @@ class ScorecardInputTextField : UITextField, ScorecardInputTextInput, UITextFiel
         }
     }
 }
+

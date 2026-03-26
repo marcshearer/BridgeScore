@@ -542,7 +542,7 @@ protocol ScorecardDelegate {
     var scorecardViewType: ViewType {get}
     var scorecardHideRejected: Bool {get}
     var scorecardCommentBoardIndex: Int? {get}
-    var scorecardAutoComplete: [ColumnType:AutoComplete] {get}
+    var scorecardAutoComplete: [ColumnType:AutoCompleteListView] {get}
     var scorecardKeyboardHeight: CGFloat {get}
     var scorecardInputControlInset: CGFloat {get}
     var scorecardFocusCell: ScorecardInputCollectionCell? {get set}
@@ -695,24 +695,18 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         
         // Setup auto-complete views
         for columnType in [ColumnType.versus, .comment] {
-            let autoComplete = AutoComplete()
+            let autoCompleteListView = AutoCompleteListView(autoComplete: AutoComplete())
             switch columnType {
             case .versus:
-                let nameList = MasterData.shared.bboNames.map{($0.bboName, $0.name, $0.name)}
-                autoComplete.set(list: nameList, consider: .lastWord, adjustReplace: versusAdjustReplace, mustStart: false, searchDescription: true)
+                let nameList = MasterData.shared.bboNames.map{AutoCompleteElement(replace: $0.bboName, with: $0.name, description: $0.name)}
+                autoCompleteListView.set(list: nameList, consider: .lastWord, adjustReplace: versusAdjustReplace, mustStart: false, searchDescription: true)
             case .comment:
-                var list:[(String, String, String)] = []
-                for rank in CardRank.allCases {
-                    list.append(contentsOf: Suit.realSuits.map({(rank.short + $0.short.uppercased(), rank.short + $0.string, "\(rank.string) \(rank.rawValue > 7 ? "of" : "") \($0.words)")}))
-                }
-                list.append(contentsOf: Suit.realSuits.map({($0.short.uppercased(), $0.string, $0.words)}))
-                list.append(contentsOf: Suit.realSuits.map({("1" + $0.short.uppercased(), "1" + $0.string, "1 " + $0.singular)}))
-                autoComplete.set(list: list, consider: .trailingAlphaNumeric)
+                autoCompleteListView.set(list: AutoComplete.suitReplaceList(), consider: .trailingAlphaNumeric)
             default:
                 break
             }
-            scorecardAutoComplete[columnType] = autoComplete
-            self.addSubview(autoComplete)
+            scorecardAutoComplete[columnType] = autoCompleteListView
+            self.addSubview(autoCompleteListView)
         }
                 
         subscription = Publishers.keyboardHeight.sink { (keyboardHeight) in
@@ -721,7 +715,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     }
     
     func versusAdjustReplace(text: String, start: Bool, end: Bool) -> String {
-        start && end ? text + " & " : text
+        start && end ? text + " & " : text + " "
     }
     
     required init?(coder: NSCoder) {
@@ -885,7 +879,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     
     // MARK: - Scorecard delegates
     
-    internal var scorecardAutoComplete: [ColumnType:AutoComplete] = [:]
+    internal var scorecardAutoComplete: [ColumnType:AutoCompleteListView] = [:]
     
     internal func scorecardChanged(type: RowType, itemNumber: Int, column: ColumnType?, refresh: Bool) {
         switch type {
@@ -1671,7 +1665,7 @@ class ScorecardInputBoardTableCell: TableViewCellWithCollectionView {
 
 // MARK: - Board Collection View Cell ================================================================ -
 
-class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, EnumPickerDelegate, AutoCompleteDelegate, ScorecardInputDelegate {
+class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, EnumPickerDelegate, AutoCompleteListViewDelegate, ScorecardInputDelegate {
     fileprivate var indexPath: IndexPath!
     fileprivate var label = UILabel()
     fileprivate var firstResponderLabel: FirstResponderLabel!
@@ -2237,13 +2231,16 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         }
     }
     
-    private func setTextInputString(value: String, font: UIFont? = nil, centered: Bool = true, offset: CGFloat = 0, numberOfLines: Int = 1, adjustsFontSizeToFitWidth: Bool = false, minimumScaleFactor: CGFloat = 1.0, attributed: ((String)->NSAttributedString)? = nil) {
+    private func setTextInputString(value: String, font: UIFont? = nil, centered: Bool = true, offset: CGFloat = 0, numberOfLines: Int = 1, adjustsFontSizeToFitWidth: Bool = false, minimumScaleFactor: CGFloat = 1.0, attributed: ((String)->NSAttributedString)? = nil, autoComplete: AutoComplete? = nil) {
         textControl?.set(text: value, useLabel: true, formattedText: nil, attributed: attributed)
         textControl?.textAlignment = .left
         textControl?.autocapitalizationType = .sentences
         textControl?.adjustsFontForContentSizeCategory = true
         textControl?.isUserInteractionEnabled = true
         textControl?.font = font ?? (MyApp.target == .iOS ? smallCellFont : cellFont)
+        if let autoComplete = scorecardDelegate?.scorecardAutoComplete[column.type] {
+            textControl?.autoComplete = autoComplete.autoComplete
+        }
         textClear.isHidden = (value == "")
         textClearTapGesture.isEnabled = true
         textClearWidth.constant = 34
@@ -2479,6 +2476,17 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         }
     }
     
+    internal func inputTextRangeChanged(_ textInput: ScorecardInputTextInput) {
+        var range: NSRange? = nil
+        if textInput.isFirstResponder, let textRange = textInput.selectedTextRange {
+            let location = textView.offset(from: textView.beginningOfDocument, to: textRange.end)
+            range = NSRange(location: location, length: 0)
+        }
+        Utility.mainThread {
+            self.textAutoCompleteUpdate(text: textInput.textValue!, range: range)
+        }
+    }
+    
     func inputTextShouldChangeCharacters(_ textInput: ScorecardInputTextInput, in range: NSRange, replacementString string: String) -> Bool {
         if scorecardDelegate?.scorecardAutoComplete[column.type] != nil {
             textAutoComplete(replacing: textInput.textValue!, range: range, with: string)
@@ -2486,9 +2494,9 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         return true
     }
     
-    func autoCompleteDidMoveToSuperview(autoComplete: AutoComplete) { }
+    func autoCompleteDidMoveToSuperview(autoComplete: AutoCompleteListView) { }
     
-    func autoCompleteWillMoveToSuperview(autoComplete: AutoComplete) { }
+    func autoCompleteWillMoveToSuperview(autoComplete: AutoCompleteListView) { }
     
     internal func inputTextDidBeginEditing(_ textInput: ScorecardInputTextInput) {
         var clear = false
@@ -2594,25 +2602,32 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     }
     
     private func textAutoComplete(replacing original: String, range: NSRange, with: String) {
-       if let autoComplete = scorecardDelegate?.scorecardAutoComplete[column.type] {
-           let text = (original as NSString).replacingCharacters(in: range, with: with)
-           let range = NSRange(location: range.location + NSString(string: with).length, length: 0)
-           autoComplete.delegate = self
-           let listSize = autoComplete.set(text: text, textInput: textControl, at: range)
-           if listSize == 0 {
-               autoComplete.isActive = false
-               autoComplete.delegate = nil
-           } else {
-               autoComplete.isActive = true
-               let height = CGFloat(min(5, listSize) * 40)
-               var point = self.superview!.convert(CGPoint(x: frame.minX, y: frame.maxY), to: autoComplete.superview!)
-               if point.y + 200 >= UIScreen.main.bounds.height - (scorecardDelegate?.scorecardKeyboardHeight ?? 0) {
-                   point = point.offsetBy(dy: -frame.height - height)
-               }
-               autoComplete.frame = CGRect(x: point.x, y: point.y, width: self.frame.width, height: height)
-           }
-       }
+       let text = (original as NSString).replacingCharacters(in: range, with: with)
+       let range = NSRange(location: range.location + NSString(string: with).length, length: 0)
+        textAutoCompleteUpdate(text: text, range: range)
     }
+    
+    func textAutoCompleteUpdate(text: String, range: NSRange?) {
+        if let autoComplete = scorecardDelegate?.scorecardAutoComplete[column.type] {
+            autoComplete.delegate = self
+            let listSize = autoComplete.set(text: text, textInput: textControl, at: range)
+            if listSize == 0 {
+                autoComplete.isActive = false
+                autoComplete.delegate = nil
+            } else {
+                autoComplete.isActive = true
+                let height = CGFloat(min(5, listSize) * 40)
+                let collectionView = superview!
+                let cellBottomLeft = CGPoint(x: frame.minX, y: frame.maxY)
+                var point = collectionView.convert(cellBottomLeft, to: autoComplete.superview!)
+                if point.y + 200 >= UIScreen.main.bounds.height - (scorecardDelegate?.scorecardKeyboardHeight ?? 0) {
+                    point = point.offsetBy(dy: -frame.height - height)
+                }
+                autoComplete.frame = CGRect(x: point.x, y: point.y, width: self.frame.width, height: height)
+            }
+        }
+    }
+    
     
     internal func enumPickerDidChange(to value: Any, allowPopup: Bool = false) {
         var undoValue: Any?
@@ -3145,8 +3160,10 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                                     handled = true
                                 }
                             } else {
-                                if keyAction == .enter {
+                                if keyAction == .enter || keyAction == .escape {
                                     handled = true
+                                    textControl.resignFirstResponder()
+                                    loseFocus()
                                 }
                             }
                         }

@@ -50,7 +50,7 @@
 		B22D1C2F2AFA2B8300C8897F /* Text Input Wrappers.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22D1C2E2AFA2B8300C8897F /* Text Input Wrappers.swift */; };
 		B22D1C312AFA2C0400C8897F /* First Responder Label.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22D1C302AFA2C0400C8897F /* First Responder Label.swift */; };
 		B22D1C332AFA2C6200C8897F /* Key Action Enumeration.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22D1C322AFA2C6200C8897F /* Key Action Enumeration.swift */; };
-		B22D1C352AFA2DB200C8897F /* Auto Complete.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22D1C342AFA2DB200C8897F /* Auto Complete.swift */; };
+		B22D1C352AFA2DB200C8897F /* Auto Complete List View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22D1C342AFA2DB200C8897F /* Auto Complete List View.swift */; };
 		B22D40A227A2CF3E002F2470 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B22D40A127A2CF3E002F2470 /* Assets.xcassets */; };
 		B22F55452A9CF33F0058443D /* Hand Viewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22F55442A9CF33F0058443D /* Hand Viewer.swift */; };
 		B2356FA42D511E2B00FC7376 /* Widget Graph.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2356FA32D511E2700FC7376 /* Widget Graph.swift */; };
@@ -59,6 +59,7 @@
 		B23ADBF227B25356001B6B38 /* List Tile View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23ADBF127B25356001B6B38 /* List Tile View.swift */; };
 		B23ADBF427B28D68001B6B38 /* Local Authentication.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23ADBF327B28D68001B6B38 /* Local Authentication.swift */; };
 		B240141A27CCBF2400C3117F /* Scorecard Filter View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B240141927CCBF2400C3117F /* Scorecard Filter View.swift */; };
+		B24BA1E72F73ABEF00A92738 /* Auto Complete View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24BA1E62F73ABEF00A92738 /* Auto Complete View.swift */; };
 		B24BC3A127F42DD200576D50 /* Scorecard Filter Values.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24BC3A027F42DD200576D50 /* Scorecard Filter Values.swift */; };
 		B24BC3A327F42EEA00576D50 /* Flags.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24BC3A227F42EEA00576D50 /* Flags.swift */; };
 		B24BC3CA27F5A07800576D50 /* Import BridgeWebs.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24BC3C927F5A07800576D50 /* Import BridgeWebs.swift */; };
@@ -79,6 +80,7 @@
 		B256D42527EC578500F47322 /* Ranking View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B256D42427EC578500F47322 /* Ranking View Model.swift */; };
 		B256D42727EC5B1700F47322 /* Traveller View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B256D42627EC5B1700F47322 /* Traveller View Model.swift */; };
 		B256D42927ECB15700F47322 /* BBO Name Replace View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B256D42827ECB15700F47322 /* BBO Name Replace View.swift */; };
+		B259CCE52F73EEB200AFBCD0 /* Auto Complete.swift in Sources */ = {isa = PBXBuildFile; fileRef = B259CCE32F73EEB200AFBCD0 /* Auto Complete.swift */; };
 		B25ADA5E27AEB279007062AA /* Double Column View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25ADA5D27AEB279007062AA /* Double Column View.swift */; };
 		B25AE9E52AA7021600F04229 /* Double Dummy Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25AE9E42AA7021600F04229 /* Double Dummy Managed Object.swift */; };
 		B25AE9E72AA704BE00F04229 /* Double Dummy View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25AE9E62AA704BE00F04229 /* Double Dummy View Model.swift */; };
@@ -231,7 +233,7 @@
 		B22D1C2E2AFA2B8300C8897F /* Text Input Wrappers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Text Input Wrappers.swift"; path = "../Main App/Text Input Wrappers.swift"; sourceTree = "<group>"; };
 		B22D1C302AFA2C0400C8897F /* First Responder Label.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "First Responder Label.swift"; sourceTree = "<group>"; };
 		B22D1C322AFA2C6200C8897F /* Key Action Enumeration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Key Action Enumeration.swift"; sourceTree = "<group>"; };
-		B22D1C342AFA2DB200C8897F /* Auto Complete.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Auto Complete.swift"; sourceTree = "<group>"; };
+		B22D1C342AFA2DB200C8897F /* Auto Complete List View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Auto Complete List View.swift"; sourceTree = "<group>"; };
 		B22D40A127A2CF3E002F2470 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B22F55442A9CF33F0058443D /* Hand Viewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Hand Viewer.swift"; sourceTree = "<group>"; };
 		B2356FA32D511E2700FC7376 /* Widget Graph.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Widget Graph.swift"; sourceTree = "<group>"; };
@@ -239,6 +241,7 @@
 		B23ADBF127B25356001B6B38 /* List Tile View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "List Tile View.swift"; sourceTree = "<group>"; };
 		B23ADBF327B28D68001B6B38 /* Local Authentication.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Local Authentication.swift"; sourceTree = "<group>"; };
 		B240141927CCBF2400C3117F /* Scorecard Filter View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Filter View.swift"; sourceTree = "<group>"; };
+		B24BA1E62F73ABEF00A92738 /* Auto Complete View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Auto Complete View.swift"; sourceTree = "<group>"; };
 		B24BC3A027F42DD200576D50 /* Scorecard Filter Values.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Filter Values.swift"; sourceTree = "<group>"; };
 		B24BC3A227F42EEA00576D50 /* Flags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Flags.swift; sourceTree = "<group>"; };
 		B24BC3C927F5A07800576D50 /* Import BridgeWebs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Import BridgeWebs.swift"; sourceTree = "<group>"; };
@@ -258,6 +261,7 @@
 		B256D42427EC578500F47322 /* Ranking View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Ranking View Model.swift"; sourceTree = "<group>"; };
 		B256D42627EC5B1700F47322 /* Traveller View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Traveller View Model.swift"; sourceTree = "<group>"; };
 		B256D42827ECB15700F47322 /* BBO Name Replace View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BBO Name Replace View.swift"; sourceTree = "<group>"; };
+		B259CCE32F73EEB200AFBCD0 /* Auto Complete.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Auto Complete.swift"; sourceTree = "<group>"; };
 		B25ADA5D27AEB279007062AA /* Double Column View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Double Column View.swift"; sourceTree = "<group>"; };
 		B25AE9E42AA7021600F04229 /* Double Dummy Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Double Dummy Managed Object.swift"; sourceTree = "<group>"; };
 		B25AE9E62AA704BE00F04229 /* Double Dummy View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Double Dummy View Model.swift"; sourceTree = "<group>"; };
@@ -555,6 +559,7 @@
 				B2100D9727DA449D00CC0130 /* Graph View Class.swift */,
 				B24BC3A227F42EEA00576D50 /* Flags.swift */,
 				B2A4282D2AE790BB000A97AA /* iCloud.swift */,
+				B259CCE32F73EEB200AFBCD0 /* Auto Complete.swift */,
 			);
 			name = Libraries;
 			sourceTree = "<group>";
@@ -563,6 +568,7 @@
 			isa = PBXGroup;
 			children = (
 				B2CD8E712D3BE80700E0B3DD /* UITextView Wrapper.swift */,
+				B24BA1E62F73ABEF00A92738 /* Auto Complete View.swift */,
 				B26BCE5B2799AED700B73501 /* Banner.swift */,
 				B26BCE582799AED700B73501 /* Image Capture.swift */,
 				B26BCE5E2799AED700B73501 /* Input String.swift */,
@@ -704,7 +710,7 @@
 				B22D1C2E2AFA2B8300C8897F /* Text Input Wrappers.swift */,
 				B22D1C302AFA2C0400C8897F /* First Responder Label.swift */,
 				B22D1C322AFA2C6200C8897F /* Key Action Enumeration.swift */,
-				B22D1C342AFA2DB200C8897F /* Auto Complete.swift */,
+				B22D1C342AFA2DB200C8897F /* Auto Complete List View.swift */,
 			);
 			name = "Reusable UIKit Components";
 			sourceTree = "<group>";
@@ -888,6 +894,7 @@
 				B21CC0BC279FDD3A001AECC1 /* Scorecard Detail View.swift in Sources */,
 				B2EB3D68279D65CC00D64225 /* Player Managed Object.swift in Sources */,
 				B2CC509E27BE22210050F22C /* Enum Picker.swift in Sources */,
+				B259CCE52F73EEB200AFBCD0 /* Auto Complete.swift in Sources */,
 				B26BCE672799AED700B73501 /* Swipe Gestures.swift in Sources */,
 				B2EB3D73279D734700D64225 /* Location View Model.swift in Sources */,
 				B2BBC8BA27BBF6BC00D51A26 /* Table View Model.swift in Sources */,
@@ -921,6 +928,7 @@
 				B2B1D58B2B04C29F007A2977 /* Ranking Table Managed Object.swift in Sources */,
 				B2E2FDBF2D4FBA220044B9AB /* Intents and Entities.swift in Sources */,
 				B26BCE482799AD8900B73501 /* Day Number.swift in Sources */,
+				B24BA1E72F73ABEF00A92738 /* Auto Complete View.swift in Sources */,
 				B213A33D2AB8616700EA098F /* import PBN.swift in Sources */,
 				B26BCE6F279AEB6C00B73501 /* Scorecard List View.swift in Sources */,
 				B256101F2D4E75BB005DB22F /* Create Scorecard Widget.swift in Sources */,
@@ -996,7 +1004,7 @@
 				B2EBA8B62D52569200360ED5 /* View Wrappers.swift in Sources */,
 				B26BCE362799AD1700B73501 /* Config.swift in Sources */,
 				B2AF750F27AD384900233693 /* Layout Setup View.swift in Sources */,
-				B22D1C352AFA2DB200C8897F /* Auto Complete.swift in Sources */,
+				B22D1C352AFA2DB200C8897F /* Auto Complete List View.swift in Sources */,
 				B28E4EE827B55F9A0059819C /* Backup.swift in Sources */,
 				B26BCE6B2799AED700B73501 /* Input Title.swift in Sources */,
 				B2BAD9BB27F75895008D0160 /* Import Framework.swift in Sources */,
