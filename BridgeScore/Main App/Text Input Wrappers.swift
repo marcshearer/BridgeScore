@@ -66,28 +66,29 @@ protocol ScorecardInputTextInput : ScorecardResponder, UITextInput, ScorecardInp
     func becomeFirstResponder() -> Bool
     func resignFirstResponder() -> Bool
     func prepareForReuse()
-    func set(text: String?, numeric: Bool?, unsigned: Bool?, decimalPlaces: Int?, useLabel: Bool?, formattedText: (()->String)?, attributed: ((String)->NSAttributedString)?)
+    func set(text: String?, numeric: Bool?, unsigned: Bool?, decimalPlaces: Int?, useLabel: Bool?, formattedText: (()->String)?, attributed: ((String)->NSAttributedString)?, columnType: ColumnType?)
 }
 
 extension ScorecardInputTextInput {
-    func set(text: String?) {
-        set(text: text, numeric: nil, unsigned: nil, decimalPlaces: nil, useLabel: nil, formattedText: nil, attributed: nil)
+    func set(text: String?, columnType: ColumnType?) {
+        set(text: text, numeric: nil, unsigned: nil, decimalPlaces: nil, useLabel: nil, formattedText: nil, attributed: nil, columnType: columnType)
     }
-    func set(text: String?, numeric: Bool?, unsigned: Bool?, decimalPlaces: Int?) {
-        set(text: text, numeric: numeric, unsigned: unsigned, decimalPlaces: decimalPlaces, useLabel: nil, formattedText: nil, attributed: nil)
+    func set(text: String?, numeric: Bool?, unsigned: Bool?, decimalPlaces: Int?, columnType: ColumnType?) {
+        set(text: text, numeric: numeric, unsigned: unsigned, decimalPlaces: decimalPlaces, useLabel: nil, formattedText: nil, attributed: nil, columnType: columnType)
     }
-    func set(text: String?, useLabel: Bool?, formattedText: (()->String)?) {
-        set(text: text, numeric: nil, unsigned: nil, decimalPlaces: nil, useLabel: useLabel, formattedText: formattedText, attributed: nil)
+    func set(text: String?, useLabel: Bool?, formattedText: (()->String)?, columnType: ColumnType?) {
+        set(text: text, numeric: nil, unsigned: nil, decimalPlaces: nil, useLabel: useLabel, formattedText: formattedText, attributed: nil, columnType: columnType)
     }
-    func set(text: String?, useLabel: Bool?, formattedText: (()->String)?, attributed: ((String)->NSAttributedString)?) {
-        set(text: text, numeric: nil, unsigned: nil, decimalPlaces: nil, useLabel: useLabel, formattedText: formattedText, attributed: attributed)
+    func set(text: String?, useLabel: Bool?, formattedText: (()->String)?, attributed: ((String)->NSAttributedString)?, columnType: ColumnType?) {
+        set(text: text, numeric: nil, unsigned: nil, decimalPlaces: nil, useLabel: useLabel, formattedText: formattedText, attributed: attributed, columnType: columnType)
     }
-    func set(text: String?, numeric: Bool?, unsigned: Bool?, decimalPlaces: Int?, useLabel: Bool?, formattedText: (()->String)?) {
-        set(text: text, numeric: nil, unsigned: nil, decimalPlaces: nil, useLabel: useLabel, formattedText: formattedText, attributed: nil)
+    func set(text: String?, numeric: Bool?, unsigned: Bool?, decimalPlaces: Int?, useLabel: Bool?, formattedText: (()->String)?, columnType: ColumnType?) {
+        set(text: text, numeric: nil, unsigned: nil, decimalPlaces: nil, useLabel: useLabel, formattedText: formattedText, attributed: nil, columnType: columnType)
     }
 }
 
 class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInputResponder, UITextViewDelegate {
+    public var columnType: ColumnType? = nil
     public var autoComplete: AutoComplete? = nil
     public var textOnEntry: String?
     private var numeric: Bool = false
@@ -100,7 +101,10 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
     private var formattedText: (()->String)? = nil
     internal var attributed: ((String)->NSAttributedString)? = nil
     
-    public var textValue: String! { get { text } set { text = newValue} }
+    public var textValue: String! { get { text } set {
+            text = newValue
+        }
+    }
     override var text: String? {
         didSet {
             updateLabel()
@@ -130,11 +134,14 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
         self.delegate = self
     }
     
-    func set(text: String? = nil, numeric: Bool? = nil, unsigned: Bool? = nil, decimalPlaces: Int? = nil, useLabel: Bool? = nil, formattedText: (()->String)? = nil, attributed: ((String)->NSAttributedString)? = nil) {
+    func set(text: String? = nil, numeric: Bool? = nil, unsigned: Bool? = nil, decimalPlaces: Int? = nil, useLabel: Bool? = nil, formattedText: (()->String)? = nil, attributed: ((String)->NSAttributedString)? = nil, columnType: ColumnType? = nil) {
         if let attributed = attributed {
             self.attributed = attributed
         }
-        if let text = text, self.textValue != text {
+        if let columnType = columnType {
+            self.columnType = columnType
+        }
+        if let text = text, text != textValue {
             self.textValue = text
         }
         if let numeric = numeric {
@@ -166,6 +173,7 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
     }
     
     func prepareForReuse() {
+        columnType = nil
         firstResponder = false
         forceFirstResponder = false
         numeric = false
@@ -190,8 +198,9 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
     func updateLabel() {
         if let attributed = attributed, let text = text {
             label?.attributedText = attributed(text)
+        } else {
+            label?.text = text
         }
-        label?.text = text
         enableControls()
     }
     
@@ -318,6 +327,7 @@ class ScorecardInputTextView : UITextView, ScorecardInputTextInput, ScorecardInp
 }
 
 class ScorecardInputTextField : UITextField, ScorecardInputTextInput, UITextFieldDelegate {
+    public var columnType: ColumnType? = nil
     public var autoComplete: AutoComplete?
     public var textOnEntry: String?
     private var numeric: Bool = false
@@ -357,13 +367,16 @@ class ScorecardInputTextField : UITextField, ScorecardInputTextInput, UITextFiel
         addTarget(self, action: #selector(ScorecardInputTextField.textFieldChanged), for: .editingChanged)
     }
     
-    func set(text: String? = nil, numeric: Bool? = nil, unsigned: Bool? = nil, decimalPlaces: Int? = nil, useLabel: Bool? = nil, formattedText: (()->String)? = nil, attributed: ((String)->(NSAttributedString))? = nil) {
+    func set(text: String? = nil, numeric: Bool? = nil, unsigned: Bool? = nil, decimalPlaces: Int? = nil, useLabel: Bool? = nil, formattedText: (()->String)? = nil, attributed: ((String)->(NSAttributedString))? = nil, columnType: ColumnType? = nil) {
         if let attributed = attributed {
             self.attributed = attributed
         }
-        if let text = text {
+        if let columnType = columnType {
+            self.columnType = columnType
+        }
+        if let text = text, textValue != text {
             self.textValue = text
-            label?.text = formattedText?() ?? text
+            updateLabel()
         }
         if let numeric = numeric {
             self.numeric = numeric
@@ -394,6 +407,7 @@ class ScorecardInputTextField : UITextField, ScorecardInputTextInput, UITextFiel
     }
     
     func prepareForReuse() {
+        columnType = nil
         firstResponder = false
         forceFirstResponder = false
         numeric = false
@@ -416,6 +430,15 @@ class ScorecardInputTextField : UITextField, ScorecardInputTextInput, UITextFiel
     func enableControls() {
         label?.isHidden = !showLabel || !isActive
         isHidden = showLabel || !isActive
+    }
+    
+    func updateLabel() {
+        if let attributed = attributed, let text = text {
+            label?.attributedText = attributed(text)
+        } else {
+            label?.text = text
+        }
+        enableControls()
     }
     
     override var canBecomeFocused : Bool { false }

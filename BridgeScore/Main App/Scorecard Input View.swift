@@ -100,6 +100,10 @@ enum ColumnType: Int, Codable {
     case analysis2 = 17
     case commentAvailable = 18
     case combined = 19
+    
+    var string: String {
+        "\(self)"
+    }
 }
 
 // Controls that need tap gesture
@@ -2084,7 +2088,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             set(tap: isEnabled ? .made : .label)
         case .score:
             label.isHidden = true
-            textControl?.set(text: board.score == nil ? "" : "\(board.score!.toString(places: scorecard.type.boardPlaces))", numeric: true, unsigned: scorecard.type.boardScoreType.unsigned, decimalPlaces: scorecard.type.boardPlaces, useLabel: true, formattedText: formattedScore)
+            textControl?.set(text: board.score == nil ? "" : "\(board.score!.toString(places: scorecard.type.boardPlaces))", numeric: true, unsigned: scorecard.type.boardScoreType.unsigned, decimalPlaces: scorecard.type.boardPlaces, useLabel: true, formattedText: formattedScore, columnType: column.type)
             setTextInput(centered: true)
             textControl?.textAlignment = .center
             textControl?.isUserInteractionEnabled = isEnabled
@@ -2171,7 +2175,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             label.isUserInteractionEnabled = !isEnabled
             set(tap: isEnabled ? .seat : nil)
         case .tableScore:
-            textControl?.set(text: table.score == nil ? "" : "\(table.score!.toString(places: scorecard.type.tablePlaces))", numeric: true, unsigned: scorecard.type.boardScoreType.unsigned, decimalPlaces: scorecard.type.boardPlaces, useLabel: true, formattedText: formattedTableScore)
+            textControl?.set(text: table.score == nil ? "" : "\(table.score!.toString(places: scorecard.type.tablePlaces))", numeric: true, unsigned: scorecard.type.boardScoreType.unsigned, decimalPlaces: scorecard.type.boardPlaces, useLabel: true, formattedText: formattedTableScore, columnType: column.type)
             setTextInput(centered: true)
             textControl?.textAlignment = .center
             textControl?.isUserInteractionEnabled = scorecard.manualTotals
@@ -2232,7 +2236,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     }
     
     private func setTextInputString(value: String, font: UIFont? = nil, centered: Bool = true, offset: CGFloat = 0, numberOfLines: Int = 1, adjustsFontSizeToFitWidth: Bool = false, minimumScaleFactor: CGFloat = 1.0, attributed: ((String)->NSAttributedString)? = nil, autoComplete: AutoComplete? = nil) {
-        textControl?.set(text: value, useLabel: true, formattedText: nil, attributed: attributed)
+        textControl?.set(text: value, useLabel: true, formattedText: nil, attributed: attributed, columnType: column.type)
         textControl?.textAlignment = .left
         textControl?.autocapitalizationType = .sentences
         textControl?.adjustsFontForContentSizeCategory = true

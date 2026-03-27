@@ -258,7 +258,6 @@ struct ShareScorecardView: View {
     
     
     func updatePlayerName(from: Int, to: Int) {
-        print("from \(from) to \(to)")
         toPlayer = ((to >= 0 && to < players.count) ? players[to] : nil)
         if let toPlayer = toPlayer {
             if let playerName = playerNames.first(where: {$0.isEquivalent(to: toPlayer.name)}) {

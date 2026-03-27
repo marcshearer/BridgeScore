@@ -53,12 +53,10 @@ class AutoComplete: ObservableObject {
     var delegate: AutoCompleteDelegate? = nil
     
     init() {
-        print("creating: \(id.uuidString)")
     }
     
     init(list: [AutoCompleteElement], consider: AutoCompleteConsider = .lastWord, adjustReplace: ((String, Bool, Bool)->String)? = nil, mustStart: Bool = true, searchDescription: Bool = false) {
         self.set(list: list, consider: consider, adjustReplace: adjustReplace, mustStart: mustStart, searchDescription: searchDescription)
-        print("creating and setting: \(id.uuidString)")
     }
     
     func set(list: [AutoCompleteElement], consider: AutoCompleteConsider = .lastWord, adjustReplace: ((String, Bool, Bool)->String)? = nil, mustStart: Bool = true, searchDescription: Bool = false) {
