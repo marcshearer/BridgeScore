@@ -21,7 +21,7 @@ class EnumPicker<EnumType> : UIView, ScrollPickerDelegate where EnumType : EnumP
     
     init(frame: CGRect, color: PaletteColor? = nil, allCases: Bool = false) {
         list = (allCases ? EnumType.allCases : EnumType.validCases).map{$0}
-        entryList = list.map{ScrollPickerEntry(title: $0.short, caption: $0.string)}
+        entryList = list.map{ScrollPickerEntry(show: $0.show, title: $0.short, caption: $0.string)}
         scrollPicker = ScrollPicker(frame: frame, list: entryList, color: color)
         super.init(frame: frame)
         scrollPicker.delegate = self

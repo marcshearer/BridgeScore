@@ -655,11 +655,11 @@ struct HandViewer: View {
         
         var body: some View {
             VStack {
-                Centered(deal: $deal, sitting: sitting.partner)
+                Centered(deal: $deal, sitting: $sitting, player: .partner)
                     .frame(height: 20)
                 Spacer()
                 HStack {
-                    Centered(deal: $deal, sitting: sitting.leftOpponent).fixedSize()
+                    Centered(deal: $deal, sitting: $sitting, player: .lhOpponent).fixedSize()
                         .frame(width: 20, height: 140).rotationEffect(.degrees(-90))
                     Spacer()
                     VStack {
@@ -698,11 +698,11 @@ struct HandViewer: View {
                         Spacer()
                     }
                     Spacer()
-                    Centered(deal: $deal, sitting: sitting.rightOpponent).fixedSize()
+                    Centered(deal: $deal, sitting: $sitting, player: .rhOpponent).fixedSize()
                         .frame(width: 20, height: 140).rotationEffect(.degrees(90))
                 }
                 Spacer()
-                Centered(deal: $deal, sitting: sitting)
+                Centered(deal: $deal, sitting: $sitting, player: .player)
                     .frame(height: 20)
             }
             .foregroundColor(Palette.handTable.contrastText)
@@ -710,11 +710,12 @@ struct HandViewer: View {
         
         struct Centered: View {
             @Binding var deal: Deal
-            @State var sitting: Seat
+            @Binding var sitting: Seat
+            @State var player: SeatPlayer
             
             var body: some View {
                 HStack {
-                    if let hand = deal.hands[sitting] {
+                    if let hand = deal.hands[sitting.seatPlayer(player)] {
                         Spacer()
                         Text("\(hand.hcp) HCP")
                         Spacer().frame(width: 20)

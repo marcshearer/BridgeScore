@@ -19,16 +19,18 @@ extension ScrollPickerDelegate {
 }
 
 struct ScrollPickerEntry: Equatable {
+    var show: String
     var title: String
     var caption: String?
     
-    init(title: String = "", caption: String? = nil) {
+    init(show: String = "", title: String = "", caption: String? = nil) {
+        self.show = show
         self.title = title
         self.caption = caption
     }
     
     public static func ==(lhs: ScrollPickerEntry, rhs: ScrollPickerEntry) -> Bool {
-        return (lhs.title == rhs.title && lhs.caption == rhs.caption)
+        return (lhs.show == rhs.show && lhs.title == rhs.title && lhs.caption == rhs.caption)
     }
 }
 
@@ -185,7 +187,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = ScrollPickerCell.dequeue(collectionView, for: indexPath)
         let item = (selected == nil && defaultEntry != nil ? defaultEntry! : list[indexPath.item])
-        cell.set(titleText: item.title, captionText: item.caption ?? "", color: color, titleFont: titleFont, captionFont: captionFont, clearBackground: clearBackground)
+        cell.set(titleText: item.show, captionText: item.caption ?? "", color: color, titleFont: titleFont, captionFont: captionFont, clearBackground: clearBackground)
         return cell
     }
     
@@ -229,7 +231,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
             set(selected)
             return false
         } else {
-            return ScrollPicker.processKeys(keyAction: keyAction, characters: characters, accumulatedCharacters: accumulatedCharacters, selected: selected, defaultValue: defaultValue, values: list.map({ $0.title}), completion: { [self] (characters, newSelected, keyAction) in
+            return ScrollPicker.processKeys(keyAction: keyAction, characters: characters, accumulatedCharacters: accumulatedCharacters, selected: selected, defaultValue: defaultValue, values: list.map({ $0.show}), completion: { [self] (characters, newSelected, keyAction) in
                 
                 accumulatedCharacters = characters
                 if accumulatedCharacters != "" && keyAction == .characters && newSelected == nil {

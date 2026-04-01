@@ -271,6 +271,17 @@ class ImportedUsebioRankingTable {
 class ImportedUsebioBoard {
     var boardNumber: Int!
     var travellers: [ImportedTraveller] = []
+    var hands: [[String]] = []
+}
+
+class ImportedUsebioDeal {
+    var boardNumber: Int!
+    var deal = Deal()
+}
+
+class ImportedUsebioHand {
+    var seat: Seat!
+    var hand = Hand()
 }
 
 class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
@@ -284,6 +295,9 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
     private var currentRanking: ImportedUsebioRanking!
     private var currentMatch: ImportedUsebioRankingTable!
     private var currentBoard: ImportedUsebioBoard!
+    private var currentDeal: ImportedUsebioDeal!
+    private var currentHand: ImportedUsebioHand!
+    private var deals: [Int:ImportedUsebioDeal] = [:]           // Board number
     private var completion: ((String?)->())?
     private var multiSession = false
     private var sessionId: String? = ""
@@ -412,6 +426,8 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
             }
         case "SECTION":
             current = current?.add(child: Node(name: name, process: processEvent))
+        case "HANDSET":
+            current = current?.add(child: Node(name: name, process: processHandSet))
         case "BOARD":
             if currentMatch == nil {
                 currentMatch = ImportedUsebioRankingTable()
@@ -666,6 +682,70 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
                 traveller.playData = value
             }))
 
+        default:
+            current = current?.add(child: Node(name: name))
+        }
+    }
+
+    private func processHandSet(name: String, attributes: [String : String]) {
+        switch name {
+        case "BOARD":
+            currentDeal = ImportedUsebioDeal()
+            current = current?.add(child: Node(name: name, process: processHandSetBoard, completion: { [self] _ in
+                if let boardNumber = currentDeal.boardNumber {
+                    var handString = ""
+                    for seat in [Seat.north, .east, .south, .west] {
+                        for suit in [Suit.spades, .hearts, .diamonds, .clubs] {
+                            if handString != "" {
+                                handString += ","
+                            }
+                            for card in currentDeal.deal.hands[seat]!.cards.filter({$0.suit == suit}) {
+                                handString.append(card.compactRankString)
+                            }
+                        }
+                    }
+                    if boards[boardNumber] == nil {
+                        boards[boardNumber] = ImportedBoard(boardNumber: boardNumber)
+                    }
+                    boards[boardNumber]!.hand = handString
+                }
+            }))
+        default:
+            current = current?.add(child: Node(name: name))
+        }
+    }
+    
+    private func processHandSetBoard(name: String, attributes: [String : String]) {
+        switch name {
+        case "BOARD_NUMBER":
+            current = current?.add(child: Node(name: name, completion: { [self] (value) in
+                if let boardNumber = Int(value) {
+                    currentDeal.boardNumber = boardNumber + boardNumberOffset
+                    deals[currentDeal.boardNumber] = currentDeal
+                }
+            }))
+        case "HAND":
+            currentHand = ImportedUsebioHand()
+            current = current?.add(child: Node(name: name, process: processHandSetDeal, completion: { [self] _ in
+                currentDeal.deal.hands[currentHand.seat] = currentHand.hand
+            }))
+        default:
+            current = current?.add(child: Node(name: name))
+        }
+    }
+    
+    private func processHandSetDeal(name: String, attributes: [String : String]) {
+        switch name {
+        case "DIRECTION":
+            current = current?.add(child: Node(name: name, completion: { [self] (value) in
+                currentHand.seat = Seat(string: value.prefix(1).uppercased())
+                }))
+        case "SPADES", "HEARTS", "DIAMONDS", "CLUBS":
+            current = current?.add(child: Node(name: name, completion: { [self] (value) in
+                for char in value {
+                    currentHand.hand.add(card: Card(rankString: String(char), suitString: String(name.prefix(1))), sorted: true)
+                }
+                }))
         default:
             current = current?.add(child: Node(name: name))
         }

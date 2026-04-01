@@ -18,6 +18,7 @@ public enum Responsible: Int, EnumPickerType, Identifiable {
     case partnerMinus = -2
     case scorerMinus = -1
     case unknown = 0
+    case query = 99
     case scorerPlus = 1
     case partnerPlus = 2
     case teamPlus = 4
@@ -41,6 +42,8 @@ public enum Responsible: Int, EnumPickerType, Identifiable {
             return "Lucky"
         case .luckMinus:
             return "Unlucky"
+        case .query:
+            return "Discuss"
         }
     }
     
@@ -63,6 +66,17 @@ public enum Responsible: Int, EnumPickerType, Identifiable {
             return "\(string.left(1))-"
         case .scorerPlus, .partnerPlus, .opponentPlus, .teamPlus, .luckPlus:
             return "\(string.left(1))+"
+        case .query:
+            return "\(string.left(1))"
+        }
+    }
+        
+    public var show: String {
+        switch self {
+        case .query:
+            "􀯩"
+        default:
+            short
         }
     }
     
@@ -139,6 +153,7 @@ protocol EnumPickerType : CaseIterable, Equatable {
     static var validCases: [Self] {get}
     static var allCases: [Self] {get}
     var string: String {get}
+    var show: String {get}
     var short: String {get}
     var rawValue: Int {get}
     init?(rawValue: Int)
@@ -152,6 +167,8 @@ public enum Seat: Int, EnumPickerType, ContractEnumType, Identifiable {
     case west = 4
     
     public var id: Self { self }
+    
+    public var show: String { short }
     
     init(string: String) {
         switch string.uppercased() {

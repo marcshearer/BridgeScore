@@ -41,6 +41,7 @@
 		B213998C27D8AA830098E4A4 /* Seat Picker Popup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B213998B27D8AA830098E4A4 /* Seat Picker Popup View.swift */; };
 		B213A33D2AB8616700EA098F /* import PBN.swift in Sources */ = {isa = PBXBuildFile; fileRef = B213A33C2AB8616700EA098F /* import PBN.swift */; };
 		B217314427D026050096DAE8 /* Undo Handler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B217314327D026050096DAE8 /* Undo Handler.swift */; };
+		B217C8D32F7D156F006F02A3 /* Comment Options View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B217C8D22F7D1566006F02A3 /* Comment Options View.swift */; };
 		B21CC0BC279FDD3A001AECC1 /* Scorecard Detail View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */; };
 		B21CC0BE27A01293001AECC1 /* Date Picker Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21CC0BD27A01292001AECC1 /* Date Picker Input.swift */; };
 		B21CC0C027A02A2A001AECC1 /* Stepper Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21CC0BF27A02A2A001AECC1 /* Stepper Input.swift */; };
@@ -223,6 +224,7 @@
 		B213998B27D8AA830098E4A4 /* Seat Picker Popup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Seat Picker Popup View.swift"; sourceTree = "<group>"; };
 		B213A33C2AB8616700EA098F /* import PBN.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "import PBN.swift"; sourceTree = "<group>"; };
 		B217314327D026050096DAE8 /* Undo Handler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Undo Handler.swift"; sourceTree = "<group>"; };
+		B217C8D22F7D1566006F02A3 /* Comment Options View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Comment Options View.swift"; sourceTree = "<group>"; };
 		B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Detail View.swift"; sourceTree = "<group>"; };
 		B21CC0BD27A01292001AECC1 /* Date Picker Input.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date Picker Input.swift"; sourceTree = "<group>"; };
 		B21CC0BF27A02A2A001AECC1 /* Stepper Input.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Stepper Input.swift"; sourceTree = "<group>"; };
@@ -703,6 +705,7 @@
 		B2CC509C27BE21D10050F22C /* Reusable UIKit Components */ = {
 			isa = PBXGroup;
 			children = (
+				B217C8D22F7D1566006F02A3 /* Comment Options View.swift */,
 				B2CC509827BE21060050F22C /* Scroll Picker.swift */,
 				B26C555827C8BCBC00015D0A /* Scroll Picker Popup View.swift */,
 				B2CC509D27BE22210050F22C /* Enum Picker.swift */,
@@ -945,6 +948,7 @@
 				B2EB3D6A279D666800D64225 /* Location Managed Object.swift in Sources */,
 				B26BCE622799AED700B73501 /* Target View Modifiers.swift in Sources */,
 				B28D3F5E2ACE6FD60060DAA1 /* Override Managed Object.swift in Sources */,
+				B217C8D32F7D156F006F02A3 /* Comment Options View.swift in Sources */,
 				B2CC17482F617F67000B89E6 /* Import.swift in Sources */,
 				B26BCE4F2799AD8900B73501 /* Utility Extension.swift in Sources */,
 				B26BCE522799AD8900B73501 /* Themes.swift in Sources */,
@@ -1037,7 +1041,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 64;
+				CURRENT_PROJECT_VERSION = 66;
 				DEVELOPMENT_TEAM = 3T7CT2S464;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
@@ -1077,7 +1081,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 64;
+				CURRENT_PROJECT_VERSION = 66;
 				DEVELOPMENT_TEAM = 3T7CT2S464;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu17;
@@ -1230,7 +1234,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 64;
+				CURRENT_PROJECT_VERSION = 66;
 				DEVELOPMENT_ASSET_PATHS = "\"BridgeScore/Main App/Preview Content\"";
 				DEVELOPMENT_TEAM = 3T7CT2S464;
 				ENABLE_PREVIEWS = YES;
@@ -1275,7 +1279,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 64;
+				CURRENT_PROJECT_VERSION = 66;
 				DEVELOPMENT_ASSET_PATHS = "\"BridgeScore/Main App/Preview Content\"";
 				DEVELOPMENT_TEAM = 3T7CT2S464;
 				ENABLE_PREVIEWS = YES;

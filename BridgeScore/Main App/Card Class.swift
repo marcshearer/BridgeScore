@@ -94,6 +94,26 @@ class Card : CustomStringConvertible, CustomDebugStringConvertible, Hashable {
         return rankString
     }
     
+    public var compactRankString: String {
+        var rankString = ""
+        switch rank {
+        case 9:
+            rankString = "T"
+        case 10:
+            rankString = "J"
+        case 11:
+            rankString = "Q"
+        case 12:
+            rankString = "K"
+        case 13:
+            rankString = "A"
+        default:
+            rankString = "\(rank+1)"
+        }
+        
+        return rankString
+    }
+    
     public var string: String {
         return "\(self.rankString)\(self.suit.string)"
     }
@@ -197,6 +217,16 @@ class Hand : NSObject, NSCopying {
             }
         }
         return result
+    }
+    
+    public func add(card: Card, sorted: Bool = false) {
+        cards.append(card)
+        if let handSuit = self.xrefSuit[card.suit] {
+            handSuit.cards.append(card)
+        }
+        if sorted {
+            self.sort()
+        }
     }
     
     public func remove(card: Card) -> Bool {

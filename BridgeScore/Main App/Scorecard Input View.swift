@@ -542,10 +542,12 @@ protocol ScorecardDelegate {
     func scorecardUpdateDeclarers(tableNumber: Int, to: [Seat]?)
     func scorecardSelectNext(rowType: RowType, itemNumber: Int, columnType: ColumnType?, action: KeyAction)
     func scorecardEndEditing(_ force: Bool)
-    func scorecardSetCommentBoardIndex(boardIndex: Int)
+    func scorecardSetComment(option: CommentOption, boardIndex: Int?)
+    func scorecardPositionCommentOptions(frame: CGRect)
+    func scorecardSetCommentOptions(visible: Bool)
     var scorecardViewType: ViewType {get}
     var scorecardHideRejected: Bool {get}
-    var scorecardCommentBoardIndex: Int? {get}
+    var scorecardCommentVisible: [Int:Bool] {get}
     var scorecardAutoComplete: [ColumnType:AutoCompleteListView] {get}
     var scorecardKeyboardHeight: CGFloat {get}
     var scorecardInputControlInset: CGFloat {get}
@@ -646,7 +648,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     private var ignoreKeyboard = false
     private var titleHeightConstraint: NSLayoutConstraint!
     private var orientation: UIDeviceOrientation?
-    internal var scorecardCommentBoardIndex: Int?
+    internal var scorecardCommentVisible: [Int:Bool] = [:] // BoardIndex
     internal var scorecardInputControlInset: CGFloat = 0
     private var viewController: UIViewController!
     private var maskBackgroundView: UIView!
@@ -654,6 +656,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     internal var focusTable: Int?
     internal var focusBoard: Int?
     internal var focusColumnType: ColumnType?
+    internal var commentOptions: CommentOptionsView!
     
     var boardColumns: [ScorecardColumn] = []
     var boardAnalysisCommentColumns: [ScorecardColumn] = []
@@ -672,9 +675,12 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         self.contractEntryView = ScorecardContractEntryView(frame: CGRect())
         self.scrollPickerPopupView = ScrollPickerPopupView(frame: CGRect())
         self.declarerPickerPopupView = DeclarerPickerPopupView(frame: CGRect())
-        
+
         super.init(frame: frame)
     
+        // Create comment options view
+        self.commentOptions = CommentOptionsView(completion: commentOptionsCompletion)
+        
         // Set up view
         change(viewType: scorecardViewType, force: true)
                     
@@ -696,6 +702,12 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         self.mainTableView.bounces = false
         ScorecardInputTableSectionHeaderView.register(mainTableView)
         ScorecardInputBoardTableCell.register(mainTableView)
+        
+        // Setup comment available selection view and select non-blank
+        self.addSubview(commentOptions)
+        commentOptions.set(visible: false)
+        commentOptions.set(selected: .hideIfBlank)
+        scorecardSetComment(option: .hideIfBlank, boardIndex: nil)
         
         // Setup auto-complete views
         for columnType in [ColumnType.versus, .comment] {
@@ -877,7 +889,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         maskBackgroundView.isHidden = false
     }
     
-    public func hidMaskBackground() {
+    public func hideMaskBackground() {
         maskBackgroundView.isHidden = true
     }
     
@@ -944,7 +956,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         var cell: ScorecardInputCollectionCell?
         switch rowType {
         case .board:
-            let boardColumns = getBoardColumns(board: itemNumber)
+            let boardColumns = getBoardColumns(boardIndex: itemNumber)
             if let columnNumber = boardColumns.firstIndex(where: {$0.type == columnType}) {
                 let section = (itemNumber - 1) / scorecard.boardsTable
                 let row = (itemNumber - 1) % scorecard.boardsTable
@@ -972,7 +984,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     private func updateBoardCell(section: Int, row: Int, columnType: ColumnType) {
         if let rowCell = self.mainTableView.cellForRow(at: IndexPath(row: row, section: section)) as? ScorecardInputBoardTableCell {
             let boardIndex = (section * scorecard.boardsTable) + (row + 1)
-            if let columnNumber = getBoardColumns(board: boardIndex).firstIndex(where: {$0.type == columnType}) {
+            if let columnNumber = getBoardColumns(boardIndex: boardIndex).firstIndex(where: {$0.type == columnType}) {
                 rowCell.collectionView.reloadItems(at: [IndexPath(item: columnNumber, section: 0)])
             }
         }
@@ -980,7 +992,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     
     private func updateBoardTitleCell(columnType: ColumnType) {
         if let rowCell = self.titleView {
-            if let columnNumber = getBoardColumns(board: -1).firstIndex(where: {$0.type == columnType}) {
+            if let columnNumber = getBoardColumns(boardIndex: -1).firstIndex(where: {$0.type == columnType}) {
                 rowCell.collectionView.reloadItems(at: [IndexPath(item: columnNumber, section: 0)])
             }
         }
@@ -1303,7 +1315,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     }
     
     func getColumns(rowType: RowType, itemNumber: Int) -> [ScorecardColumn] {
-        return (rowType == .table ? tableColumns : getBoardColumns(board: itemNumber))
+        return (rowType == .table ? tableColumns : getBoardColumns(boardIndex: itemNumber))
     }
     
     func getColumnNumber(rowType: RowType, itemNumber: Int, type: ColumnType, findNearest: Bool = false) -> Int? {
@@ -1349,33 +1361,44 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         self.mainTableView
     }
     
-    func scorecardSetCommentBoardIndex(boardIndex: Int) {
-        // -1 is used to show all comments
-            
-        let oldCommentBoardIndex = self.scorecardCommentBoardIndex
-        self.scorecardCommentBoardIndex = (boardIndex == oldCommentBoardIndex || oldCommentBoardIndex == -1 ? nil : boardIndex)
-        if let oldCommentBoardIndex = oldCommentBoardIndex {
-            // Close up previously selected row
-            if oldCommentBoardIndex == -1 {
-                tableRefresh()
-            } else {
-                let oldSection = (oldCommentBoardIndex - 1) / scorecard.boardsTable
-                let oldRow = (oldCommentBoardIndex - 1) % scorecard.boardsTable
-                mainTableView.reloadRows(at: [IndexPath(row: oldRow, section: oldSection)], with: .automatic)
-            }
-        }
-        if let newBoardIndex = self.scorecardCommentBoardIndex {
-            // Open up new selected row(s)
-            if newBoardIndex == -1 {
-                tableRefresh()
-            } else {
-                let section = (newBoardIndex - 1) / scorecard.boardsTable
-                let row = (newBoardIndex - 1) % scorecard.boardsTable
-                mainTableView.reloadRows(at: [IndexPath(row: row, section: section)], with: .automatic)
+    func scorecardSetComment(option: CommentOption, boardIndex: Int?) {
+        // nil is used to show/hide all comments
+        
+        for (_, board) in Scorecard.current.boards {
+            if boardIndex == nil || board.boardIndex == boardIndex {
+                let isVisible = scorecardCommentVisible[board.boardIndex] ?? false
+                let shouldBeVisible = (option == .show || (option == .hideIfBlank && !board.comment.isEmpty) || (option == .toggle && !isVisible))
+                if isVisible != shouldBeVisible {
+                    // Visibility has changed
+                    scorecardCommentVisible[board.boardIndex] = shouldBeVisible
+
+                    // Refresh this row
+                    let section = (board.boardIndex - 1) / scorecard.boardsTable
+                    let row = (board.boardIndex - 1) % scorecard.boardsTable
+                    mainTableView.reloadRows(at: [IndexPath(row: row, section: section)], with: .automatic)
+                }
             }
         }
     }
-
+    
+    func scorecardPositionCommentOptions(frame: CGRect) {
+        commentOptions.set(position: CGPoint(x: frame.maxX, y: frame.maxY))
+    }
+    
+    func scorecardSetCommentOptions(visible: Bool) {
+        if visible {
+            disableBanner.wrappedValue = true
+        }
+        commentOptions.set(visible: visible)
+    }
+    
+    func commentOptionsCompletion(selected commentOption: CommentOption?) {
+        if let commentOption = commentOption {
+            self.scorecardSetComment(option: commentOption, boardIndex: nil)
+        }
+        disableBanner.wrappedValue = false
+    }
+    
     
    // MARK: - TableView Delegates ===================================================================== -
     
@@ -1417,7 +1440,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
             switch type {
             case .board, .boardTitle:
                 let boardIndex = collectionView.tag % tagMultiplier
-                columns = getBoardColumns(board: boardIndex).count
+                columns = getBoardColumns(boardIndex: boardIndex).count
             case .table:
                 columns = tableColumns.count
             }
@@ -1433,14 +1456,14 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
             case .board:
                 let boardIndex = collectionView.tag % tagMultiplier
                 height = boardRowHeight
-                column = getBoardColumns(board: boardIndex)[indexPath.item]
+                column = getBoardColumns(boardIndex: boardIndex)[indexPath.item]
             case .table:
                 height = tableRowHeight
                 column = tableColumns[indexPath.item]
             case .boardTitle:
                 let boardIndex = collectionView.tag % tagMultiplier
                 height = titleRowHeight
-                column = getBoardColumns(board: boardIndex)[indexPath.item]
+                column = getBoardColumns(boardIndex: boardIndex)[indexPath.item]
             }
         } else {
             fatalError()
@@ -1461,7 +1484,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 if let board = Scorecard.current.boards[boardIndex] {
                     let tableNumber = ((boardIndex - 1) / scorecard.boardsTable) + 1
                     if let table = Scorecard.current.tables[tableNumber] {
-                        let column = getBoardColumns(board: boardIndex)[indexPath.item]
+                        let column = getBoardColumns(boardIndex: boardIndex)[indexPath.item]
                         cell.set(scorecard: scorecard, table: table, board: board, itemNumber: boardIndex, rowType: .board, column: column)
                     }
                 }
@@ -1470,7 +1493,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 let cell = ScorecardInputCollectionCell.dequeue(collectionView, from: self, for: indexPath)
                 let boardIndex = collectionView.tag % tagMultiplier
                 var column: ScorecardColumn
-                column = getBoardColumns(board: boardIndex)[indexPath.item]
+                column = getBoardColumns(boardIndex: boardIndex)[indexPath.item]
                 cell.setTitle(scorecard: scorecard, column: column)
                 return cell
             case .table:
@@ -1584,9 +1607,9 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         return Float(filteredText)
     }
     
-    private func getBoardColumns(board: Int) -> [ScorecardColumn] {
+    private func getBoardColumns(boardIndex: Int) -> [ScorecardColumn] {
         var columns: [ScorecardColumn]
-        if scorecardViewType == .analysis && (scorecardCommentBoardIndex == board || scorecardCommentBoardIndex == -1) {
+        if scorecardViewType == .analysis && scorecardCommentVisible[boardIndex] ?? false {
             columns = boardAnalysisCommentColumns
         } else {
             columns = boardColumns
@@ -1966,10 +1989,9 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             self.isUserInteractionEnabled = true
             label.attributedText = Scorecard.commentAvailableText(exists: Scorecard.current.boards.map({$0.value.comment != ""}).contains(true))
             label.isUserInteractionEnabled = true
-            let color = scorecardDelegate?.scorecardCommentBoardIndex == -1 ? Palette.enabledButton : Palette.background
-            label.backgroundColor = UIColor(color.background)
-            label.textColor = UIColor(color.text)
             set(tap: .label)
+            let frame = self.frame
+            scorecardDelegate?.scorecardPositionCommentOptions(frame: frame)
         default:
             label.text = column.heading
         }
@@ -2142,9 +2164,6 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             }
         case .commentAvailable:
             label.isHidden = (Scorecard.current.isImported && board?.score == nil)
-            let color = (scorecardDelegate?.scorecardCommentBoardIndex == board.boardIndex ? Palette.enabledButton : Palette.background)
-            label.backgroundColor = UIColor(color.background)
-            label.textColor = UIColor(color.contrastText)
             label.attributedText = Scorecard.commentAvailableText(exists: board.comment != "")
             label.isUserInteractionEnabled = true
             set(tap: .label)
@@ -2461,8 +2480,10 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                         }
                     }
                 }
+                var refresh = false
                 switch columnType {
                 case .comment:
+                    refresh = (board.comment.isEmpty != text.isEmpty)
                     board.comment = text
                     textClear.isHidden = (text == "")
                 case .versus:
@@ -2475,7 +2496,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 default:
                     break
                 }
-                scorecardDelegate?.scorecardChanged(type: rowType, itemNumber: itemNumber, column: columnType)
+                scorecardDelegate?.scorecardChanged(type: rowType, itemNumber: itemNumber, column: columnType, refresh: refresh)
             }
         }
     }
@@ -2748,8 +2769,14 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                     getFocus()
                 }
             case .commentAvailable:
-                if rowType == .boardTitle || Scorecard.current.isImported && board?.score != nil {
-                    scorecardDelegate?.scorecardSetCommentBoardIndex(boardIndex: board?.boardIndex ?? -1)
+                if rowType == .boardTitle {
+                    scorecardDelegate?.scorecardSetCommentOptions(visible: true)
+                } else if Scorecard.current.isImported && board?.score != nil {
+                    scorecardDelegate?.scorecardSetComment(option: .toggle,  boardIndex: board?.boardIndex)
+                    if scorecardDelegate?.scorecardCommentVisible[board.boardIndex] ?? false && board.comment.isEmpty {
+                        // If making an empty comment visible - edit it
+                        scorecardDelegate?.scorecardSelectNext(rowType: rowType, itemNumber: board.boardIndex, columnType: .commentAvailable, action: .previous)
+                    }
                 }
             case .comment:
                 if !(Scorecard.current.isImported && board?.score == nil) {
@@ -2876,7 +2903,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         let width: CGFloat = 70
         let space = (frame.width - width) / 2
         let selected = Responsible.validCases.firstIndex(of: board.responsible)
-        scorecardDelegate?.scorecardScrollPickerPopup(values: Responsible.validCases.map{ScrollPickerEntry(title: $0.short, caption: $0.full)}, maxValues: 13, selected: selected, defaultValue: nil, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 16, bottomPadding: 0) { [self] (selected, keyAction) in
+        scorecardDelegate?.scorecardScrollPickerPopup(values: Responsible.validCases.map{ScrollPickerEntry(title: $0.show, caption: $0.full)}, maxValues: 13, selected: selected, defaultValue: nil, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 16, bottomPadding: 0) { [self] (selected, keyAction) in
             let responsible = Responsible.validCases[selected!]
             responsiblePicker.set(responsible)
             enumPickerDidChange(to: responsible)
