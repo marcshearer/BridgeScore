@@ -61,6 +61,9 @@ class Palette {
     @BackgroundColor(.handCards) static var handCards
     @BackgroundColor(.handBidding) static var handBidding
     @BackgroundColor(.handButtonPanel) static var handButtonPanel
+    @BackgroundColor(.double) static var double
+    @BackgroundColor(.redouble) static var redouble
+    @BackgroundColor(.pass) static var pass
     @BackgroundColor(.card) static var card
     @BackgroundColor(.widgetDetail) static var widgetDetail
     @BackgroundColor(.widgetBar) static var widgetBar
@@ -72,6 +75,9 @@ class Palette {
     @SpecificColor(.clickableBackground) static var clickableBackground
     @SpecificColor(.gridLine) static var gridLine
     @SpecificColor(.clearText) static var clearText
+    @SpecificColor(.redSuit) static var redSuit
+    @SpecificColor(.blackSuit) static var blackSuit
+    @SpecificColor(.ntSuit) static var ntSuit
         
     class func colorDetail(color: Color) -> (red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat) {
         var red: CGFloat = 0

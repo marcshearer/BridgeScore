@@ -49,7 +49,7 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
         return Vulnerability(board: boardNumber)
     }
     public var dealer: Seat {
-        return Seat(rawValue: ((boardNumber - 1) % 4) + 1) ?? .unknown
+        return Seat.dealer(board: boardNumber)
     }
     public var boardNumberText: String {
         return ("\(boardNumber)")

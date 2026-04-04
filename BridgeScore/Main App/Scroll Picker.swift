@@ -19,12 +19,12 @@ extension ScrollPickerDelegate {
 }
 
 struct ScrollPickerEntry: Equatable {
-    var show: String
+    var show: String!
     var title: String
     var caption: String?
     
-    init(show: String = "", title: String = "", caption: String? = nil) {
-        self.show = show
+    init(show: String? = nil, title: String = "", caption: String? = nil) {
+        self.show = show ?? title
         self.title = title
         self.caption = caption
     }

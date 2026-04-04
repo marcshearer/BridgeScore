@@ -123,18 +123,55 @@ struct TrailingAttributedText: View {
 }
 
 struct MiddleCentered<Content>: View where Content: View {
+    var width: CGFloat? = nil
+    var height: CGFloat? = nil
+    var padding: CGFloat = 0
     var content: ()->Content
     
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
-            HStack(spacing: 0) {
-                Spacer()
-                content()
-                Spacer()
+        VStack {
+            Spacer().frame(height: padding)
+            HStack {
+                Spacer().frame(width: padding)
+                VStack(spacing: 0) {
+                    Spacer()
+                    HStack(spacing: 0) {
+                        Spacer()
+                        content()
+                        Spacer()
+                    }
+                    Spacer()
+                }
+                .contentShape(Rectangle())
+                Spacer().frame(width: padding)
+
             }
-            Spacer()
+            Spacer().frame(height: padding)
         }
-        .contentShape(Rectangle())
+        .if(width != nil) { view in
+            view.frame(width: width!)
+        }
+        .if(height != nil) { view in
+            view.frame(width: height!)
+        }
+    }
+}
+
+struct MiddleCenteredAttributed: View {
+    var text: AttributedString
+    var width: CGFloat? = nil
+    var height: CGFloat? = nil
+    var padding: CGFloat = 0
+    
+    var body: some View {
+        MiddleCentered(width: width, height: height, padding: padding) { Text(text) }
+    }
+}
+
+struct MiddleCenteredText: View {
+    var text: String
+    var padding: CGFloat = 0
+    var body: some View {
+        MiddleCentered(padding: padding) { Text(text) }
     }
 }

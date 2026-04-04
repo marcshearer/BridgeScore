@@ -114,7 +114,7 @@ class Scorecard {
     public func load(scorecard: ScorecardViewModel) {
         let scorecardFilter = NSPredicate(format: "scorecardId = %@", scorecard.scorecardId as NSUUID)
         
-        // Load boards
+            // Load boards
         let boardMOs = CoreData.fetch(from: BoardMO.tableName, filter: scorecardFilter) as! [BoardMO]
         
         boards = [:]
@@ -122,17 +122,17 @@ class Scorecard {
             boards[boardMO.boardIndex] = BoardViewModel(scorecard: scorecard, boardMO: boardMO)
         }
         
-        // Load double dummies
+            // Load double dummies
         let doubleDummyMOs = CoreData.fetch(from: DoubleDummyMO.tableName, filter: scorecardFilter) as! [DoubleDummyMO]
         
         for doubleDummyMO in doubleDummyMOs {
             if let board = boards[doubleDummyMO.boardIndex] {
-                // Add to double dummy MO dicionary
+                    // Add to double dummy MO dicionary
                 if board.doubleDummy[doubleDummyMO.declarer] == nil {
                     board.doubleDummy[doubleDummyMO.declarer] = [:]
                 }
                 board.doubleDummy[doubleDummyMO.declarer]![doubleDummyMO.suit] = DoubleDummyViewModel(scorecard: scorecard, doubleDummyMO: doubleDummyMO)
-                // Add to double dummy dictionary
+                    // Add to double dummy dictionary
                 if board.doubleDummyMO[doubleDummyMO.declarer] == nil {
                     board.doubleDummyMO[doubleDummyMO.declarer] = [:]
                 }
@@ -140,17 +140,17 @@ class Scorecard {
             }
         }
         
-        // Load override tricks
+            // Load override tricks
         let overrideMOs = CoreData.fetch(from: OverrideMO.tableName, filter: scorecardFilter) as! [OverrideMO]
         
         for overrideMO in overrideMOs {
             if let board = boards[overrideMO.boardIndex] {
-                // Add to override tricks MO dicionary
+                    // Add to override tricks MO dicionary
                 if board.override[overrideMO.declarer] == nil {
                     board.override[overrideMO.declarer] = [:]
                 }
                 board.override[overrideMO.declarer]![overrideMO.suit] = OverrideViewModel(scorecard: scorecard, overrideMO: overrideMO)
-                // Add to override tricks dictionary
+                    // Add to override tricks dictionary
                 if board.overrideMO[overrideMO.declarer] == nil {
                     board.overrideMO[overrideMO.declarer] = [:]
                 }
@@ -158,7 +158,7 @@ class Scorecard {
             }
         }
         
-        // Load tables
+            // Load tables
         let tableMOs = CoreData.fetch(from: TableMO.tableName, filter: scorecardFilter) as! [TableMO]
         
         tables = [:]
@@ -166,7 +166,7 @@ class Scorecard {
             tables[tableMO.table] = TableViewModel(scorecard: scorecard, tableMO: tableMO)
         }
         
-        // Load rankings
+            // Load rankings
         let rankingMOs = CoreData.fetch(from: RankingMO.tableName, filter: scorecardFilter) as! [RankingMO]
         
         rankingList = []
@@ -174,7 +174,7 @@ class Scorecard {
             rankingList.append(RankingViewModel(scorecard: scorecard, rankingMO: rankingMO))
         }
         
-        // Load ranking table MOs
+            // Load ranking table MOs
         let rankingTableMOs = CoreData.fetch(from: RankingTableMO.tableName, filter: scorecardFilter) as! [RankingTableMO]
         
         rankingTableList = []
@@ -182,7 +182,7 @@ class Scorecard {
             rankingTableList.append(RankingTableViewModel(scorecard: scorecard, rankingTableMO: rankingTableMO))
         }
         
-        // Load travellers
+            // Load travellers
         let travellerMOs = CoreData.fetch(from: TravellerMO.tableName, filter: scorecardFilter) as! [TravellerMO]
         
         travellerList = []
@@ -190,7 +190,7 @@ class Scorecard {
             travellerList.append(TravellerViewModel(scorecard: scorecard, travellerMO: travellerMO))
         }
         
-        // Empty analysis
+            // Empty analysis
         analysisList = [:]
         overrideList = [:]
         
@@ -273,34 +273,34 @@ class Scorecard {
             if tableNumber < 1 || tableNumber > scorecard.tables {
                     // Remove any tables no longer in bounds
                 if table.isNew {
-                    // Not yet in core data - just remove from array
+                        // Not yet in core data - just remove from array
                     tables[table.table] = nil
                 } else {
                     remove(table: table)
                 }
             } else if table.changed {
-                // Save any existing tables
+                    // Save any existing tables
                 save(table: table)
             }
         }
         
         for (ranking) in rankingList {
-            // Save any existing rankings
+                // Save any existing rankings
             save(ranking: ranking)
         }
         
         var removeList = IndexSet()
         for (index, rankingTable) in rankingTableList.reversed().enumerated() {
             if rankingTable.table < 1 || rankingTable.table > scorecard.tables {
-                // Remove any tables no longer in bounds
+                    // Remove any tables no longer in bounds
                 if rankingTable.isNew {
-                    // Not yet in core data - just remove from array
+                        // Not yet in core data - just remove from array
                     removeList.insert(index)
                 } else {
                     remove(rankingTable: rankingTable)
                 }
             } else if rankingTable.changed {
-                // Save any existing ranking tables
+                    // Save any existing ranking tables
                 save(rankingTable: rankingTable)
             }
         }
@@ -309,15 +309,15 @@ class Scorecard {
         removeList = IndexSet()
         for (index, traveller) in travellerList.reversed().enumerated() {
             if traveller.boardIndex < 1 || traveller.boardIndex > scorecard.boards {
-                // Remove any travellers no longer in bounds
+                    // Remove any travellers no longer in bounds
                 if traveller.isNew {
-                    // Not yet in core data - just remove from array
+                        // Not yet in core data - just remove from array
                     removeList.insert(index)
                 } else {
                     remove(traveller: traveller)
                 }
             } else if traveller.changed {
-                // Save any existing travellers
+                    // Save any existing travellers
                 save(traveller: traveller)
             }
         }
@@ -378,7 +378,7 @@ class Scorecard {
     
     public func addNew() {
         if let scorecard = scorecard {
-            // Fill in any gaps in boards
+                // Fill in any gaps in boards
             for boardIndex in 1...scorecard.boards {
                 if boards[boardIndex] == nil {
                     boards[boardIndex] = BoardViewModel(scorecard: scorecard, boardIndex: boardIndex)
@@ -388,7 +388,7 @@ class Scorecard {
                 }
             }
             
-            // Fill in any gaps in tables
+                // Fill in any gaps in tables
             for tableNumber in 1...scorecard.tables {
                 if tables[tableNumber] == nil {
                     tables[tableNumber] = TableViewModel(scorecard: scorecard, table: tableNumber)
@@ -415,7 +415,7 @@ class Scorecard {
     }
     
     
-    // MARK: - Boards (including Double Dummies) ================================================ -
+        // MARK: - Boards (including Double Dummies) ================================================ -
     
     public func insert(board: BoardViewModel) {
         assert(board.scorecard == scorecard, "Board is not in current scorecard")
@@ -424,30 +424,30 @@ class Scorecard {
         assert(board.doubleDummy.isEmpty, "Board double dummies already exist")
         assert(board.override.isEmpty, "Board override tricks already exist")
         CoreData.update(updateLogic: {
-            // Add board MO
+                // Add board MO
             board.boardMO = BoardMO()
             board.updateMO()
-            // Add double dummy MOs
+                // Add double dummy MOs
             board.forEachDoubleDummy { (declarer, suit, doubleDummy) in
                 if board.doubleDummyMO[declarer] == nil {
                     board.doubleDummyMO[declarer] = [:]
                 }
                 let mo = DoubleDummyMO()
                 doubleDummy.updateMO(mo)
-                // Add to double dummy MO dictionary
+                    // Add to double dummy MO dictionary
                 board.doubleDummyMO[declarer]![suit] = mo
             }
-            // Add override tricks MOs
+                // Add override tricks MOs
             board.forEachOverride { (declarer, suit, override) in
                 if board.override[declarer] == nil {
                     board.override[declarer] = [:]
                 }
                 let mo = OverrideMO()
                 override.updateMO(mo)
-                // Add to double dummy MO dictionary
+                    // Add to double dummy MO dictionary
                 board.overrideMO[declarer]![suit] = mo
             }
-            // Add to board dictionary
+                // Add to board dictionary
             boards[board.boardIndex] = board
         })
     }
@@ -457,23 +457,23 @@ class Scorecard {
         assert(!board.isNew, "Cannot remove a board which doesn't already have a managed object")
         assert(boards[board.boardIndex] != nil, "Board does not exist and cannot be deleted")
         CoreData.update(updateLogic: {
-            // Delete board MO
+                // Delete board MO
             CoreData.context.delete(board.boardMO!)
-            // Delete double dummy MOs
+                // Delete double dummy MOs
             board.forEachDoubleDummyMO { (declarer, suit, mo) in
                 CoreData.context.delete(mo)
             }
-            // Delete override tricks MOs
+                // Delete override tricks MOs
             board.forEachOverrideMO { (declarer, suit, mo) in
                 CoreData.context.delete(mo)
             }
-            // Remove from double dummy dictionaries
+                // Remove from double dummy dictionaries
             board.doubleDummyMO = [:]
             board.doubleDummy = [:]
-            // Remove from override tricks dictionaries
+                // Remove from override tricks dictionaries
             board.overrideMO = [:]
             board.override = [:]
-            // Remove from boards dictionary
+                // Remove from boards dictionary
             boards[board.boardIndex] = nil
         })
     }
@@ -483,24 +483,24 @@ class Scorecard {
         assert(boards[board.boardIndex] != nil, "Board does not exist and cannot be updated")
         if board.isNew {
             CoreData.update(updateLogic: {
-                // Create board MO
+                    // Create board MO
                 board.boardMO = BoardMO()
                 board.updateMO()
-                // Create any double dummy MOs
+                    // Create any double dummy MOs
                 board.forEachDoubleDummy { (declarer, suit, doubleDummy) in
                     let mo = DoubleDummyMO()
                     doubleDummy.updateMO(mo)
-                    // Add to double dummy MO dictionary
+                        // Add to double dummy MO dictionary
                     if board.doubleDummyMO[declarer] == nil {
                         board.doubleDummyMO[declarer] = [:]
                     }
                     board.doubleDummyMO[declarer]![suit] = mo
                 }
-                // Create any override tricks MOs
+                    // Create any override tricks MOs
                 board.forEachOverride { (declarer, suit, override) in
                     let mo = OverrideMO()
                     override.updateMO(mo)
-                    // Add to double dummy MO dictionary
+                        // Add to double dummy MO dictionary
                     if board.overrideMO[declarer] == nil {
                         board.overrideMO[declarer] = [:]
                     }
@@ -509,9 +509,9 @@ class Scorecard {
             })
         } else if board.changed {
             CoreData.update(updateLogic: {
-                // Update board MO
+                    // Update board MO
                 board.updateMO()
-                // Update double dummy MOs
+                    // Update double dummy MOs
                 board.forEachDoubleDummy { (declarer, suit, doubleDummy) in
                     let mo = board.doubleDummyMO[declarer]?[suit] ?? DoubleDummyMO()
                     doubleDummy.updateMO(mo)
@@ -520,14 +520,14 @@ class Scorecard {
                     }
                     board.doubleDummyMO[declarer]![suit] = mo
                 }
-                // Remove any double dummy MOs which aren't in view model
+                    // Remove any double dummy MOs which aren't in view model
                 board.forEachDoubleDummyMO { (declarer, suit, mo) in
                     if board.doubleDummy[declarer]?[suit] == nil {
                         CoreData.context.delete(mo)
                         board.doubleDummyMO[declarer]![suit] = nil
                     }
                 }
-                // Update override tricks MOs
+                    // Update override tricks MOs
                 board.forEachOverride { (declarer, suit, override) in
                     let mo = board.overrideMO[declarer]?[suit] ?? OverrideMO()
                     override.updateMO(mo)
@@ -536,7 +536,7 @@ class Scorecard {
                     }
                     board.overrideMO[declarer]![suit] = mo
                 }
-                // Remove any override tricks MOs which aren't in view model
+                    // Remove any override tricks MOs which aren't in view model
                 board.forEachOverrideMO { (declarer, suit, mo) in
                     if board.override[declarer]?[suit] == nil {
                         CoreData.context.delete(mo)
@@ -547,7 +547,7 @@ class Scorecard {
         }
     }
     
-    // MARK: - Tables ======================================================================== -
+        // MARK: - Tables ======================================================================== -
     
     public func insert(table: TableViewModel) {
         assert(table.scorecard == scorecard, "Table is not in current scorecard")
@@ -585,7 +585,7 @@ class Scorecard {
         }
     }
     
-    // MARK: - Rankings ======================================================================== -
+        // MARK: - Rankings ======================================================================== -
     
     public func insert(ranking: RankingViewModel) {
         assert(ranking.scorecard == scorecard, "Ranking is not in current scorecard")
@@ -623,7 +623,7 @@ class Scorecard {
         }
     }
     
-    // MARK: - Ranking Tables =================================================================== -
+        // MARK: - Ranking Tables =================================================================== -
     
     public func insert(rankingTable: RankingTableViewModel) {
         assert(rankingTable.scorecard == scorecard, "Ranking table is not in current scorecard")
@@ -661,7 +661,7 @@ class Scorecard {
         }
     }
     
-    // MARK: - Travellers ======================================================================== -
+        // MARK: - Travellers ======================================================================== -
     
     public func insert(traveller: TravellerViewModel) {
         assert(traveller.scorecard == scorecard, "Traveller is not in current scorecard")
@@ -698,7 +698,7 @@ class Scorecard {
         }
     }
     
-    // MARK: - Utilities ======================================================================== -
+        // MARK: - Utilities ======================================================================== -
     
     public static func defaultSession(scorecard: ScorecardViewModel, table: Int) -> Int {
         return scorecard.isMultiSession ? ((table - 1) / scorecard.tablesSession) + 1 : 1
@@ -712,7 +712,7 @@ class Scorecard {
     public static func defaultBoardNumber(scorecard: ScorecardViewModel, boardIndex: Int) -> Int {
         return (scorecard.isMultiSession && scorecard.resetNumbers) ? ((boardIndex - 1) % scorecard.boardsSession) + 1 : boardIndex
     }
-        
+    
     @discardableResult static public func updateScores(scorecard: ScorecardViewModel) -> Bool {
         var changed = false
         
@@ -734,11 +734,11 @@ class Scorecard {
         var total: Float = 0
         var count: Int = 0
         if let table = Scorecard.current.tables[tableNumber] {
-            // First check if any imported table scores since likely to be more precies
+                // First check if any imported table scores since likely to be more precies
             var tableScore: Float?
             if let myRanking = myRanking(session: table.session),
-                    let rankingTable = Scorecard.current.rankingTableList.first(where: {matchRanking(ranking: myRanking, tableNumber: tableNumber, rankingTable: $0)}),
-                    let score = rankingTable.nsScore {
+               let rankingTable = Scorecard.current.rankingTableList.first(where: {matchRanking(ranking: myRanking, tableNumber: tableNumber, rankingTable: $0)}),
+               let score = rankingTable.nsScore {
                 tableScore = score
             }
             if let tableScore = tableScore {
@@ -788,7 +788,7 @@ class Scorecard {
         for tableNumber in 1...scorecard.tables {
             if let table = Scorecard.current.tables[tableNumber] {
                 if let score = table.score {
-                    // Weight it to number of boards completed if averaging
+                        // Weight it to number of boards completed if averaging
                     let scored = table.scoredBoards
                     let weight = (scorecard.type.matchAggregate ~= .average ? scored : 1)
                     total += score * Float(weight)
@@ -932,11 +932,11 @@ class Scorecard {
             var from: Int
             var to: Int
             if points > 0 {
-                // Made
+                    // Made
                 from = 0
                 to = 13 - contract.level.tricks
             } else {
-                // Went off
+                    // Went off
                 from = -(contract.level.tricks)
                 to = -1
             }
@@ -977,7 +977,7 @@ class Scorecard {
         }
         return result
     }
-        
+    
     public static func commentAvailableText(exists: Bool) -> NSAttributedString {
         let attachment = NSTextAttachment()
         attachment.image = UIImage(systemName: exists ? "text.bubble" : "bubble")
@@ -989,7 +989,7 @@ class Scorecard {
         var playData = ""
         var linData = traveller.playData.removingPercentEncoding ?? ""
         if linData != "" {
-            // Got lin data - just replace names
+                // Got lin data - just replace names
             var nameString = ""
             for seat in [Seat.south, Seat.west, Seat.north, Seat.east] {
                 var name = "Unknown"

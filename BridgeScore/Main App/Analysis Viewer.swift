@@ -93,6 +93,8 @@ struct AnalysisViewer: View {
     @State var initialYOffset: CGFloat
     @State var yOffset: CGFloat
     @Binding var dismissView: Bool
+    @State var editBidding: Bool = false
+    @StateObject var bids = Auction()
     
     init(board: BoardViewModel, traveller: TravellerViewModel, sitting: Seat, frame: CGRect, initialYOffset: CGFloat, dismissView: Binding<Bool>, from: UIView) {
         self._analysisData = StateObject(wrappedValue: AnalysisData(analysis: Scorecard.current.analysis(board: board, traveller: traveller, sitting: sitting), otherAnalysis: nil))
@@ -123,31 +125,40 @@ struct AnalysisViewer: View {
                                 HStack(spacing: 0) {
                                     Spacer().frame(width: 8)
                                     let handWidth = bodyGeometry.size.height * 0.8
-                                    HandViewer(board: $board, traveller: $handTraveller, sitting: $sitting, rotated: $rotated, from: from, bidAnnounce: $bidAnnounce, stopEdit: $stopEdit)
+                                    HandViewer(board: $board, traveller: $handTraveller, bids: bids, sitting: $sitting, rotated: $rotated, from: from, bidAnnounce: $bidAnnounce, stopEdit: $stopEdit, editBidding: $editBidding)
                                         .cornerRadius(analysisCornerSize)
                                         .ignoresSafeArea(.keyboard)
                                         .frame(width: handWidth)
                                     Spacer().frame(width: 8)
-                                    VStack {
-                                        AnalysisWrapper(label: "Summary", height: 88, teamsHeight: 149, stopEdit: $stopEdit) {
-                                            AnalysisSummary(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData)
+                                    GeometryReader { analysisGeometry in
+                                        VStack {
+                                            AnalysisWrapper(label: "Summary", height: 88, teamsHeight: 149, stopEdit: $stopEdit) {
+                                                AnalysisSummary(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData)
+                                            }
+                                                // Grow up to size for 5 entries with no scroll
+                                            let height = 130 + min(50, max(0, (frame.height - 794) / 3))
+                                            AnalysisWrapper(label: "Tricks Made", height: height, stopEdit: $stopEdit) {
+                                                AnalysisCombinationTricks(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData)
+                                            }
+                                            AnalysisWrapper(label: "Suggest", height: 70, teamsHeight: 90, stopEdit: $stopEdit) {
+                                                AnalysisSuggestionView(board: $board, traveller: $traveller, sitting: $sitting, formatInt: $formatInt, analysisData: analysisData)
+                                            }
+                                            AnalysisWrapper(label: "Bidding Options", height: 150, stopEdit: $stopEdit) {
+                                                AnalysisBiddingOptions(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData, formatInt: $formatInt)
+                                            }
+                                            AnalysisWrapper(label: "Travellers", stopEdit: $stopEdit) {
+                                                AnalysisTravellerView(board: $board, traveller: $handTraveller, sitting: $sitting, summaryMode: $summaryMode, stopEdit: $stopEdit)
+                                            }
                                         }
-                                            // Grow up to size for 5 entries with no scroll
-                                        let height = 130 + min(50, max(0, (frame.height - 794) / 3))
-                                        AnalysisWrapper(label: "Tricks Made", height: height, stopEdit: $stopEdit) {
-                                            AnalysisCombinationTricks(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData)
-                                        }
-                                        AnalysisWrapper(label: "Suggest", height: 70, teamsHeight: 90, stopEdit: $stopEdit) {
-                                            AnalysisSuggestionView(board: $board, traveller: $traveller, sitting: $sitting, formatInt: $formatInt, analysisData: analysisData)
-                                        }
-                                        AnalysisWrapper(label: "Bidding Options", height: 150, stopEdit: $stopEdit) {
-                                            AnalysisBiddingOptions(board: $board, traveller: $traveller, sitting: $sitting, analysisData: analysisData, formatInt: $formatInt)
-                                        }
-                                        AnalysisWrapper(label: "Travellers", stopEdit: $stopEdit) {
-                                            AnalysisTravellerView(board: $board, traveller: $handTraveller, sitting: $sitting, summaryMode: $summaryMode, stopEdit: $stopEdit)
+                                        .frame(width: bodyGeometry.size.width - 24 - handWidth)
+                                        .fullScreenCover(isPresented: $editBidding, onDismiss: { }) {
+                                            let bodyFrame = bodyGeometry.frame(in: .global)
+                                            let analysisFrame = analysisGeometry.frame(in: .global)
+                                            let frame = CGRect(x: analysisFrame.minX, y: bodyFrame.minY, width: analysisFrame.width - 8, height: analysisFrame.height)
+                                            ShowEditBidding(bids: bids, traveller: $traveller, sitting: $sitting, dealer: board.dealer, boardNumber: $board.boardNumber, bidAnnounce: $bidAnnounce, frame: frame)
+                                                .edgesIgnoringSafeArea(.all)
                                         }
                                     }
-                                    .frame(width: bodyGeometry.size.width - 24 - handWidth)
                                 }
                                 Spacer().frame(height: 8)
                             }
@@ -184,6 +195,9 @@ struct AnalysisViewer: View {
                     }
                 }
             }
+            .onChange(of: traveller, initial: true) {
+                bids.set(from: traveller.playData, sitting: sitting, dealer: board.dealer)
+            }
             .onSwipe() { direction in
                 nextTraveller(direction == .left ? 1 : -1)
             }
@@ -194,6 +208,37 @@ struct AnalysisViewer: View {
     fileprivate enum FocusField {
         case comment
         case responsible
+    }
+    
+    struct ShowEditBidding : View {
+        @ObservedObject var bids: Auction
+        @Binding var traveller: TravellerViewModel
+        @Binding var sitting: Seat
+        @State var dealer: Seat
+        @Binding var boardNumber: Int
+        @Binding var bidAnnounce: String
+        var frame: CGRect
+        
+        var body: some View {
+            ZStack {
+                Color.clear.opacity(0)
+                HStack {
+                    GeometryReader { geometry in
+                        HStack {
+                            VStack(spacing: 0) {
+                                BiddingEditorView(bids: bids, traveller: $traveller, sitting: $sitting, dealer: dealer, boardNumber: $boardNumber, bidAnnounce: $bidAnnounce)
+                            }
+                        }
+                        .cornerRadius(analysisCornerSize)
+                        .frame(width: frame.width, height: frame.height)
+                        .offset(x: frame.minX, y: frame.minY)
+                        
+                    }
+                }
+            }
+            .background(BackgroundBlurView(opacity: 0.0))
+            .edgesIgnoringSafeArea(.all)
+        }
     }
     
     struct AnalysisBanner : View {

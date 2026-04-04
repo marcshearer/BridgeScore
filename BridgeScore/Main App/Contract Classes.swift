@@ -20,7 +20,7 @@ protocol ContractEnumType : CaseIterable, Equatable {
     var rawValue: Int {get}
 }
 
-public enum ContractLevel: Int, ContractEnumType, Equatable, Comparable {
+public enum ContractLevel: Int, ContractEnumType, Equatable, Comparable, Identifiable, Hashable {
     case blank = 0
     case passout = -1
     case one = 1
@@ -30,6 +30,11 @@ public enum ContractLevel: Int, ContractEnumType, Equatable, Comparable {
     case five = 5
     case six = 6
     case seven = 7
+    
+    public var id: Int {
+        rawValue
+    }
+    
     
     init(character: String) {
         self = .blank
@@ -94,14 +99,18 @@ public enum ContractLevel: Int, ContractEnumType, Equatable, Comparable {
     }
 }
 
-public enum Suit: Int, ContractEnumType, Equatable, Comparable {
+public enum Suit: Int, ContractEnumType, Equatable, Comparable, Identifiable, Hashable {
     case blank = 0
     case clubs = 1
     case diamonds = 2
     case hearts = 3
     case spades = 4
     case noTrumps = 5
-    
+   
+    public var id: Int {
+        rawValue
+    }
+
     init(string: String) {
         switch string.uppercased() {
         case "C":
@@ -112,7 +121,24 @@ public enum Suit: Int, ContractEnumType, Equatable, Comparable {
             self = .hearts
         case "S":
             self = .spades
-        case "N":
+        case "N", "NT":
+            self = .noTrumps
+        default:
+            self = .blank
+        }
+    }
+    
+    init(symbol: String) {
+        switch symbol {
+        case "♣︎":
+            self = .clubs
+        case "♦︎":
+            self = .diamonds
+        case "♥︎":
+            self = .hearts
+        case "♠︎":
+            self = .spades
+        case "NT":
             self = .noTrumps
         default:
             self = .blank
@@ -205,11 +231,11 @@ public enum Suit: Int, ContractEnumType, Equatable, Comparable {
         get {
             switch self {
             case .diamonds, .hearts:
-                return .red
+                return Palette.redSuit
             case .clubs, .spades:
-                return .black
+                return Palette.blackSuit
             default:
-                return .black
+                return Palette.ntSuit
             }
         }
     }

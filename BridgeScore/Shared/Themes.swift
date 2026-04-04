@@ -122,6 +122,9 @@ enum ThemeBackgroundColorName: CaseIterable {
     case handBidding
     case handButtonPanel
     case card
+    case pass
+    case double
+    case redouble
     case widgetBar
     case widgetDetail
 }
@@ -140,6 +143,9 @@ enum ThemeSpecificColorName: CaseIterable {
     case clickableBackground
     case gridLine
     case clearText
+    case redSuit
+    case blackSuit
+    case ntSuit
 }
 
 class Theme {
@@ -424,7 +430,7 @@ class Themes {
                 .datePicker                  : ThemeColor(#colorLiteral(red: 0.9019607843, green: 0.9019607843, blue: 1, alpha: 1), nil, .lightBackground),
                 .vulnerable                  : ThemeColor(#colorLiteral(red: 1, green: 0, blue: 0, alpha: 1), nil, .darkBackground),
                 .nonVulnerable               : ThemeColor(#colorLiteral(red: 1, green: 1, blue: 1, alpha: 1), nil, .lightBackground),
-                .handTable                   : ThemeColor(#colorLiteral(red: 0, green: 0.7468389053, blue: 0.5775149598, alpha: 1), nil, .midBackground),
+                .handTable                   : ThemeColor(#colorLiteral(red: 0.1294117647, green: 0.8745098039, blue: 0.7058823529, alpha: 1), nil, .midBackground),
                 .handPlayer                  : ThemeColor(#colorLiteral(red: 0, green: 0.6941176471, blue: 0.8274509804, alpha: 1), nil, .midBackground),
                 .handCards                   : ThemeColor(#colorLiteral(red: 1, green: 1, blue: 1, alpha: 1), nil, .lightBackground),
                 .handBidding                 : ThemeColor(#colorLiteral(red: 0, green: 0.7468389053, blue: 0.5775149598, alpha: 1), nil, .lightBackground),
@@ -432,6 +438,9 @@ class Themes {
                 .card                        : ThemeColor(#colorLiteral(red: 1, green: 1, blue: 1, alpha: 1), nil, .lightBackground),
                 .widgetBar                   : ThemeColor(#colorLiteral(red: 0.8374180198, green: 0.8374378085, blue: 0.8374271393, alpha: 1), nil, .lightBackground),
                 .widgetDetail                : ThemeColor(#colorLiteral(red: 0, green: 0.3285208941, blue: 0.5748849511, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1), .darkBackground, .darkBackground),
+                .pass                        : ThemeColor(#colorLiteral(red: 0.1474743151, green: 0.707807149, blue: 0.173828125, alpha: 1), #colorLiteral(red: 0.1474743151, green: 0.6149400685, blue: 0.173828125, alpha: 1), .darkBackground, .darkBackground),
+                .double                      : ThemeColor(#colorLiteral(red: 0.9211793664, green: 0, blue: 0, alpha: 1), #colorLiteral(red: 0.9211793664, green: 0, blue: 0, alpha: 1), .darkBackground, .darkBackground),
+                .redouble                    : ThemeColor(#colorLiteral(red: 0.2196078449, green: 0.007843137719, blue: 0.8549019694, alpha: 1), #colorLiteral(red: 0.2196078449, green: 0.007843137719, blue: 0.8549019694, alpha: 1), .darkBackground, .darkBackground)
             ],
             text: [
                 .lightBackground             : ThemeTextColor(normal: #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1), contrast: #colorLiteral(red: 0.337254902, green: 0.4509803922, blue: 0.4549019608, alpha: 1), strong: #colorLiteral(red: 0.9981788993, green: 0.2295429707, blue: 0.1891850233, alpha: 1), faint: #colorLiteral(red: 0.3137254902, green: 0.3137254902, blue: 0.3137254902, alpha: 1), theme: #colorLiteral(red: 0.2196078449, green: 0.007843137719, blue: 0.8549019694, alpha: 1)) ,
@@ -445,6 +454,9 @@ class Themes {
                 .maskBackground              : ThemeTraitColor(#colorLiteral(red: 0, green: 0, blue: 0, alpha: 0.3003128759), #colorLiteral(red: 0.999904573, green: 1, blue: 0.9998808503, alpha: 0.2982953811)),
                 .clickableBackground         : ThemeTraitColor(#colorLiteral(red: 0, green: 0, blue: 0, alpha: 0.02357007967), #colorLiteral(red: 0.999904573, green: 1, blue: 0.9998808503, alpha: 0.02027367603)),
                 .gridLine                    : ThemeTraitColor(#colorLiteral(red: 0, green: 0.5152708056, blue: 0.7039544028, alpha: 1), #colorLiteral(red: 0, green: 0.5152708056, blue: 0.7039544028, alpha: 1)),
+                .redSuit                     : ThemeTraitColor(#colorLiteral(red: 0.8051958476, green: 0, blue: 0, alpha: 1), #colorLiteral(red: 0.6247056935, green: 0, blue: 0, alpha: 1)),
+                .blackSuit                   : ThemeTraitColor(#colorLiteral(red: 0, green: 0, blue: 0, alpha: 1), #colorLiteral(red: 0, green: 0.5152708056, blue: 0.7039544028, alpha: 1)),
+                .ntSuit                      : ThemeTraitColor(#colorLiteral(red: 0, green: 0, blue: 0, alpha: 1), #colorLiteral(red: 0, green: 0.5152708056, blue: 0.7039544028, alpha: 1)),
                 .clearText                   : ThemeTraitColor(#colorLiteral(red: 0.6666666865, green: 0.6666666865, blue: 0.6666666865, alpha: 1), #colorLiteral(red: 0.9411764706, green: 0.9411764706, blue: 0.9411764706, alpha: 1))
             ]
             )

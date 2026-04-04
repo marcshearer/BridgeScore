@@ -42,6 +42,8 @@
 		B213A33D2AB8616700EA098F /* import PBN.swift in Sources */ = {isa = PBXBuildFile; fileRef = B213A33C2AB8616700EA098F /* import PBN.swift */; };
 		B217314427D026050096DAE8 /* Undo Handler.swift in Sources */ = {isa = PBXBuildFile; fileRef = B217314327D026050096DAE8 /* Undo Handler.swift */; };
 		B217C8D32F7D156F006F02A3 /* Comment Options View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B217C8D22F7D1566006F02A3 /* Comment Options View.swift */; };
+		B217C8D52F7E5490006F02A3 /* Bidding Editor View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B217C8D42F7E548A006F02A3 /* Bidding Editor View.swift */; };
+		B217C8D72F7E6D96006F02A3 /* Bidding Viewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B217C8D62F7E6D8F006F02A3 /* Bidding Viewer.swift */; };
 		B21CC0BC279FDD3A001AECC1 /* Scorecard Detail View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */; };
 		B21CC0BE27A01293001AECC1 /* Date Picker Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21CC0BD27A01292001AECC1 /* Date Picker Input.swift */; };
 		B21CC0C027A02A2A001AECC1 /* Stepper Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21CC0BF27A02A2A001AECC1 /* Stepper Input.swift */; };
@@ -225,6 +227,8 @@
 		B213A33C2AB8616700EA098F /* import PBN.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "import PBN.swift"; sourceTree = "<group>"; };
 		B217314327D026050096DAE8 /* Undo Handler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Undo Handler.swift"; sourceTree = "<group>"; };
 		B217C8D22F7D1566006F02A3 /* Comment Options View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Comment Options View.swift"; sourceTree = "<group>"; };
+		B217C8D42F7E548A006F02A3 /* Bidding Editor View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Bidding Editor View.swift"; sourceTree = "<group>"; };
+		B217C8D62F7E6D8F006F02A3 /* Bidding Viewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Bidding Viewer.swift"; sourceTree = "<group>"; };
 		B21CC0BB279FDD3A001AECC1 /* Scorecard Detail View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Detail View.swift"; sourceTree = "<group>"; };
 		B21CC0BD27A01292001AECC1 /* Date Picker Input.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Date Picker Input.swift"; sourceTree = "<group>"; };
 		B21CC0BF27A02A2A001AECC1 /* Stepper Input.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Stepper Input.swift"; sourceTree = "<group>"; };
@@ -675,6 +679,8 @@
 				B2100D9927DA488200CC0130 /* Stats View.swift */,
 				B256D42827ECB15700F47322 /* BBO Name Replace View.swift */,
 				B22F55442A9CF33F0058443D /* Hand Viewer.swift */,
+				B217C8D62F7E6D8F006F02A3 /* Bidding Viewer.swift */,
+				B217C8D42F7E548A006F02A3 /* Bidding Editor View.swift */,
 				B2EEFC772AAB5BE4005A1ECA /* Analysis Viewer.swift */,
 			);
 			name = "Main Views";
@@ -900,6 +906,7 @@
 				B259CCE52F73EEB200AFBCD0 /* Auto Complete.swift in Sources */,
 				B26BCE672799AED700B73501 /* Swipe Gestures.swift in Sources */,
 				B2EB3D73279D734700D64225 /* Location View Model.swift in Sources */,
+				B217C8D52F7E5490006F02A3 /* Bidding Editor View.swift in Sources */,
 				B2BBC8BA27BBF6BC00D51A26 /* Table View Model.swift in Sources */,
 				B2E2FDC52D50B5ED0044B9AB /* Stats Widget.swift in Sources */,
 				B29BBA782D33D0B10032BC2F /* Scorecard Type Classes.swift in Sources */,
@@ -930,6 +937,7 @@
 				B2A5A42627E2582F00754061 /* BBO Name Managed Object.swift in Sources */,
 				B2B1D58B2B04C29F007A2977 /* Ranking Table Managed Object.swift in Sources */,
 				B2E2FDBF2D4FBA220044B9AB /* Intents and Entities.swift in Sources */,
+				B217C8D72F7E6D96006F02A3 /* Bidding Viewer.swift in Sources */,
 				B26BCE482799AD8900B73501 /* Day Number.swift in Sources */,
 				B24BA1E72F73ABEF00A92738 /* Auto Complete View.swift in Sources */,
 				B213A33D2AB8616700EA098F /* import PBN.swift in Sources */,
@@ -1160,7 +1168,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -1215,7 +1223,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
@@ -1256,7 +1264,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = MarcShearer.BridgeScore;
 				PRODUCT_NAME = "Bridge Score";
@@ -1301,7 +1309,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 15.0;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = MarcShearer.BridgeScore;
 				PRODUCT_NAME = "Bridge Score";

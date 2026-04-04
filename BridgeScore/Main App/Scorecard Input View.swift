@@ -231,7 +231,7 @@ struct ScorecardInputView: View {
                                    width: width,
                                    height: height)
                 
-                Color.black.opacity(0.4)
+                
                 ScorecardDetailView(scorecard: scorecard, deleted: $deleted, tableRefresh: $tableRefresh, title: title, frame: frame, initialYOffset: backgroundView.frame.height + 100, dismissView: $dismissView)
                     .cornerRadius(8)
                 Spacer()
