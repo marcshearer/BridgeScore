@@ -177,6 +177,23 @@ public enum Suit: Int, ContractEnumType, Equatable, Comparable, Identifiable, Ha
         }
     }
     
+    var playData: String {
+        switch self {
+        case .spades:
+            "S"
+        case .hearts:
+            "H"
+        case .diamonds:
+            "D"
+        case .clubs:
+            "C"
+        case .noTrumps:
+            "N"
+        default:
+            ""
+        }
+    }
+    
     var words: String {
         switch self {
         case .blank:
@@ -340,13 +357,17 @@ public enum Suit: Int, ContractEnumType, Equatable, Comparable, Identifiable, Ha
     
 }
 
-public enum ContractDouble: Int, ContractEnumType, Equatable, Comparable {
+public enum ContractDouble: Int, ContractEnumType, Equatable, Comparable, Identifiable, Hashable {
     case undoubled = 0
     case doubled = 1
     case redoubled = 2
 
     var string: String {
         return "\(self)".capitalized
+    }
+    
+    public var id: Int {
+        rawValue
     }
     
     var short: String {
@@ -561,6 +582,10 @@ public class Contract: Equatable, Comparable, Hashable {
                 }
             }
         }
+    }
+    
+    convenience init(attributed: AttributedString) {
+        self.init(string: String(attributed.characters))
     }
     
     init(copying contract: Contract) {

@@ -117,7 +117,6 @@ struct AnalysisViewer: View {
                 Spacer().layoutPriority(999)
                 ZStack {
                     AnalysisBanner(nextTraveller: nextTraveller, updateOptions: updateAnalysisData, board: $board, traveller: $traveller, handTraveller: $handTraveller, sitting: $sitting, rotated: $rotated, initialSitting: $initialSitting, bidAnnounce: $bidAnnounce, summaryMode: $summaryMode, stopEdit: $stopEdit, responsiblePicker: $responsiblePicker, dismissView: $dismissView)
-                        .zIndex(1)
                     VStack {
                         Spacer().frame(height: 88)
                         GeometryReader { bodyGeometry in
@@ -151,12 +150,18 @@ struct AnalysisViewer: View {
                                             }
                                         }
                                         .frame(width: bodyGeometry.size.width - 24 - handWidth)
-                                        .fullScreenCover(isPresented: $editBidding, onDismiss: { }) {
+                                        .fullScreenCover(isPresented: $editBidding, onDismiss: {
+                                            bids.set(from: traveller.playData, sitting: sitting, dealer: board.dealer)
+                                            bids.set(inEditMode: false)
+                                        }) {
+                                            let viewFrame = viewGeometry.frame(in: .global)
                                             let bodyFrame = bodyGeometry.frame(in: .global)
                                             let analysisFrame = analysisGeometry.frame(in: .global)
                                             let frame = CGRect(x: analysisFrame.minX, y: bodyFrame.minY, width: analysisFrame.width - 8, height: analysisFrame.height)
-                                            ShowEditBidding(bids: bids, traveller: $traveller, sitting: $sitting, dealer: board.dealer, boardNumber: $board.boardNumber, bidAnnounce: $bidAnnounce, frame: frame)
+                                            let bannerFrame = CGRect(x: viewFrame.minX, y: bodyFrame.minY - 88, width: bodyFrame.width, height: 80)
+                                            ShowEditBidding(bids: bids, traveller: $traveller, sitting: $sitting, dealer: board.dealer, boardNumber: $board.boardNumber, bidAnnounce: $bidAnnounce, frame: frame, bannerFrame: bannerFrame)
                                                 .edgesIgnoringSafeArea(.all)
+                                                .focusable(false)
                                         }
                                     }
                                 }
@@ -218,6 +223,7 @@ struct AnalysisViewer: View {
         @Binding var boardNumber: Int
         @Binding var bidAnnounce: String
         var frame: CGRect
+        var bannerFrame: CGRect
         
         var body: some View {
             ZStack {
@@ -235,9 +241,17 @@ struct AnalysisViewer: View {
                         
                     }
                 }
+                VStack {
+                    Color.black.opacity(0.4)
+                        .frame(width: bannerFrame.width, height: bannerFrame.height)
+                    Spacer()
+                }
+                .cornerRadius(8)
+                .offset(x: bannerFrame.minX, y: bannerFrame.minY)
             }
             .background(BackgroundBlurView(opacity: 0.0))
             .edgesIgnoringSafeArea(.all)
+            .focusable(false)
         }
     }
     
@@ -1182,7 +1196,9 @@ struct AnalysisViewer: View {
                                 HStack {
                                     PickerInputSimple(title: "Show", field: $formatInt, values: AnalysisOptionFormat.allCases.map{$0.string}, topSpace: 5, width: 90, height: 25, titleWidth: 40) { newValue in
                                         UserDefault.analysisOptionFormat.set(newValue)
-                                    }.frame(width: 180)
+                                    }
+                                    .frame(width: 180)
+                                    .focusable(false)
                                     Spacer()
                                 }
                                 ForEach(allMethods, id: \.self) { method in
@@ -1264,7 +1280,7 @@ struct AnalysisViewer: View {
                                     TextViewWrapper(autoComplete: autoComplete, frame: frame, field: $comment, focused: $commentFocused, disabledColor: disabledColor, enabledColor: enabledColor)
                                 }
                                 .onChange(of: comment, initial: false) {
-                                    if comment.contains("\n") || comment.contains("\n") {
+                                    if comment.contains("\n") || comment.contains("\t") {
                                         board.comment = comment.replacingOccurrences(of: "\n", with: "").replacingOccurrences(of: "\t", with: "")
                                         comment = board.comment
                                         focused = false

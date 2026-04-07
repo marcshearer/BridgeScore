@@ -40,7 +40,6 @@ struct AutoCompleteView<ID:Hashable> : View {
                                                 .padding(0)
                                             Spacer()
                                         }
-                                        .debugPrint(element.description)
                                         .frame(width: codeWidth - 12)
                                         Text(element.description)
                                             .font(inputTitleFont)

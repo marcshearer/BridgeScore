@@ -158,9 +158,9 @@ struct ScorecardFilterView: View {
                     .cornerRadius(20)
                 HStack {
                     Spacer().frame(width: 20)
-                    Input(field: $filterValues.searchText, placeHolder: "Search words", height: 40, color: Palette.clear, clearText: true) { (text) in
+                    Input(field: $filterValues.searchText, placeHolder: "Search words", height: 40, color: Palette.clear, clearText: true, onChange: { (text) in
                             filterValues.save()
-                    }
+                    })
                     .frame(height: 40)
                     .foregroundColor(Palette.input.text)
                 }

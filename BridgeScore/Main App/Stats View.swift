@@ -140,9 +140,9 @@ struct StatsFilterView: View {
                                     .cornerRadius(20)
                                 HStack {
                                     Spacer().frame(width: 20)
-                                    Input(field: $filterValues.searchText, placeHolder: "Search words", height: 40, color: Palette.clear, clearText: (filterValues.searchText != "")) { (searchText) in
+                                    Input(field: $filterValues.searchText, placeHolder: "Search words", height: 40, color: Palette.clear, clearText: (filterValues.searchText != ""), onChange: { (searchText) in
                                             filterValues.save()
-                                    }
+                                    })
                                     .foregroundColor(Palette.input.text)
                                 }
                             }
