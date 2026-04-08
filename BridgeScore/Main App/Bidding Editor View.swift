@@ -29,14 +29,16 @@ struct BiddingEditorView: View {
     @FocusState var focusedField: BiddingFocusField?
     
     var body: some View {
-        StandardView("Bidding Editor") {
+        StandardView("Bidding Editor", backgroundColor: Palette.clear) {
             ZStack {
                 Color.black.opacity(0.65)
                     .focusable(false)
                 HStack(spacing: 0) {
                     Spacer()
                     VStack(spacing: 0) {
-                        Spacer().frame(height: 30)
+                        
+                        Spacer().frame(height: 20).layoutPriority(2)
+                        Spacer()
                         
                         BiddingViewer(bids: bids, focusedField: $focusedField, sitting: $sitting, boardNumber: $boardNumber, bidAnnounce: $bidAnnounce, showClaim: $showClaim, editBidding: $editBidding, cancelEdit: cancelEdit)
                             .matchedGeometryEffect(id: BiddingId.biddingViewer, in: biddingViewerNameSpace, anchor: .topTrailing, isSource: true)
@@ -46,18 +48,18 @@ struct BiddingEditorView: View {
                         
                         BiddingAnnounceView(bids: bids, focusedField: $focusedField)
                         
-                        Spacer().frame(height: 40)
+                        Spacer().frame(height: 30)
                         
                         BiddingBoxView(bids: bids)
                         
-                        Spacer().frame(height: 30)
+                        Spacer().frame(height: 20)
                         
                         BiddingEditorButtons(bids: bids, requiredContract: traveller.contract, traveller: $traveller, sitting: $sitting, dealer: dealer, cancelEdit: cancelEdit)
                         
                         Spacer()
                         
                     }
-                    Spacer().frame(width: 100)
+                    Spacer().frame(width: 140)
                     Spacer()
                 }
                 .zIndex(2)

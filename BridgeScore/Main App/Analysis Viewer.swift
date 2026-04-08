@@ -152,11 +152,10 @@ struct AnalysisViewer: View {
                                         }
                                         .frame(width: bodyGeometry.size.width - 24 - handWidth)
                                         .fullScreenCover(isPresented: $editBidding) {
-                                            let viewFrame = viewGeometry.frame(in: .global)
                                             let bodyFrame = bodyGeometry.frame(in: .global)
                                             let analysisFrame = analysisGeometry.frame(in: .global)
                                             let frame = CGRect(x: analysisFrame.minX, y: bodyFrame.minY, width: analysisFrame.width - 8, height: analysisFrame.height)
-                                            let bannerFrame = CGRect(x: viewFrame.minX, y: bodyFrame.minY - 88, width: bodyFrame.width, height: 80)
+                                            let bannerFrame = CGRect(x: bodyFrame.minX, y: bodyFrame.minY - 88, width: bodyFrame.width, height: 80)
                                             ShowEditBidding(bids: bids, board: $board, traveller: $traveller, sitting: $sitting, dealer: board.dealer, boardNumber: $board.boardNumber, bidAnnounce: $bidAnnounce, frame: frame, bannerFrame: bannerFrame)
                                                 .edgesIgnoringSafeArea(.all)
                                                 .focusable(false)
@@ -252,15 +251,18 @@ struct AnalysisViewer: View {
                                     })
                                 }
                             }
-                            .cornerRadius(analysisCornerSize)
-                            .frame(width: frame.width, height: frame.height)
-                            .offset(x: frame.minX, y: frame.minY)
+                            //.cornerRadius(analysisCornerSize)
+                            .frame(width: frame.width + 16, height: frame.height + 96)
+                            .offset(x: frame.minX - 8, y: frame.minY - 88)
                             
                         }
                     }
                     VStack {
-                        Color.black.opacity(0.4)
-                            .frame(width: bannerFrame.width, height: bannerFrame.height)
+                        HStack {
+                            Color.black.opacity(0.65)
+                                .frame(width: bannerFrame.width - frame.width - 16, height: bannerFrame.height)
+                            Spacer()
+                        }
                         Spacer()
                     }
                     .cornerRadius(8)
