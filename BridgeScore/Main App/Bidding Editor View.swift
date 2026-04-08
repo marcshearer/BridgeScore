@@ -1,58 +1,50 @@
-    //
-    //  Bidding Editor View.swift
-    //  BridgeScore
-    //
-    //  Created by Marc Shearer on 02/04/2026.
-    //
+//
+//  Bidding Editor View.swift
+//  BridgeScore
+//
+//  Created by Marc Shearer on 02/04/2026.
+//
 
-    import SwiftUI
+import SwiftUI
 
-    enum BiddingFocusField : Hashable {
-        case biddingViewer(index: Int)
-        case explain
-        
-        var string: String {
-            switch self {
-            case .biddingViewer(index: let index):
-                "biddingViewer\(index)"
-            default:
-                "\(self)"
-            }
-        }
-    }
+enum BiddingFocusField : Hashable {
+    case explain
+}
 
-    enum BiddingId {
-        case biddingViewer
-    }
+enum BiddingId {
+    case biddingViewer
+}
 
-    struct BiddingEditorView: View {
-        @ObservedObject var bids: Auction
-        @Binding var traveller: TravellerViewModel
-        @Binding var sitting: Seat
-        @State var dealer: Seat
-        @Binding var boardNumber: Int
-        @Binding var bidAnnounce: String
-        @State var showClaim: Bool = false
-        @State var editBidding: Bool = false
-        @Namespace private var biddingViewerNameSpace
-        @FocusState var focusedField: BiddingFocusField?
-
-        var body: some View {
+struct BiddingEditorView: View {
+    @ObservedObject var bids: Auction
+    @Binding var traveller: TravellerViewModel
+    @Binding var sitting: Seat
+    @State var dealer: Seat
+    @Binding var boardNumber: Int
+    @Binding var bidAnnounce: String
+    @State var showClaim: Bool = false
+    @State var editBidding: Bool = false
+    var cancelEdit: ((Bool)->())
+    @Namespace private var biddingViewerNameSpace
+    @FocusState var focusedField: BiddingFocusField?
+    
+    var body: some View {
+        StandardView("Bidding Editor") {
             ZStack {
-                Color.black.opacity(0.6)
+                Color.black.opacity(0.65)
                     .focusable(false)
                 HStack(spacing: 0) {
                     Spacer()
                     VStack(spacing: 0) {
                         Spacer().frame(height: 30)
-
-                        BiddingAnnounceView(bids: bids, focusedField: $focusedField)
+                        
+                        BiddingViewer(bids: bids, focusedField: $focusedField, sitting: $sitting, boardNumber: $boardNumber, bidAnnounce: $bidAnnounce, showClaim: $showClaim, editBidding: $editBidding, cancelEdit: cancelEdit)
+                            .matchedGeometryEffect(id: BiddingId.biddingViewer, in: biddingViewerNameSpace, anchor: .topTrailing, isSource: true)
+                            .frame(width: 300, height: 260)
                         
                         Spacer().frame(height: 20)
                         
-                        BiddingViewer(bids: bids, focusedField: $focusedField, sitting: $sitting, boardNumber: $boardNumber, bidAnnounce: $bidAnnounce, showClaim: $showClaim, editBidding: $editBidding)
-                            .matchedGeometryEffect(id: BiddingId.biddingViewer, in: biddingViewerNameSpace, anchor: .topTrailing, isSource: true)
-                            .frame(width: 300, height: 260)
+                        BiddingAnnounceView(bids: bids, focusedField: $focusedField)
                         
                         Spacer().frame(height: 40)
                         
@@ -60,7 +52,7 @@
                         
                         Spacer().frame(height: 30)
                         
-                        BiddingEditorButtons(bids: bids, traveller: $traveller, sitting: $sitting, dealer: dealer)
+                        BiddingEditorButtons(bids: bids, requiredContract: traveller.contract, traveller: $traveller, sitting: $sitting, dealer: dealer, cancelEdit: cancelEdit)
                         
                         Spacer()
                         
@@ -95,27 +87,28 @@
             .focusable(false)
         }
     }
+}
 
-    struct BiddingAnnounceView : View {
-        @Environment(\.isFocused) var isFocused
-        @ObservedObject var bids: Auction
-        @FocusState.Binding var focusedField: BiddingFocusField?
-        
-        var nonOptional: Binding<String> {
-            Binding {
-                bids.element(bids.selected!).announce ?? ""
-            } set: { (newValue) in
-                bids.bidList[bids.selected! - bids.skip].announce = (newValue == "" ? nil : newValue)
-            }
+struct BiddingAnnounceView : View {
+    @Environment(\.isFocused) var isFocused
+    @ObservedObject var bids: Auction
+    @FocusState.Binding var focusedField: BiddingFocusField?
+    
+    var nonOptional: Binding<String> {
+        Binding {
+            bids.element(bids.selected!).announce ?? ""
+        } set: { (newValue) in
+            bids.bidList[bids.selected! - bids.skip].announce = (newValue == "" ? nil : newValue)
         }
-        
+    }
+    
     var body : some View {
         VStack(spacing: 0) {
             Spacer()
             if let selected = bids.selected, bids.element(selected).bid != nil {
                 InputFocused(title: "", field: nonOptional, focusedField: $focusedField, focusValue: BiddingFocusField.explain, placeHolder: "Enter explanation", width: 230, color: Palette.clear, font: inputTitleFont, multiLine: false, inlineTitleWidth: 0, accessibilityIdentifier: "Explanation", onLoseFocus: {
                     Utility.mainThread {
-                        focusedField = .biddingViewer(index: bids.selected ?? bids.count)
+                        focusedField = nil
                     }
                 })
             } else {
@@ -149,11 +142,12 @@ struct BiddingViewerToolbar : View {
             BiddingEditorButton(text: "Delete") {
                 bids.removeLast()
             }
-            .disabled(bids.selected != bids.count)
+            .disabled(bids.selected != bids.count || bids.bidList.isEmpty)
             
             BiddingEditorButton(text: "Clear") {
                 bids.clear()
             }
+            .disabled(bids.bidList.isEmpty)
             
             BiddingEditorButton(text: bids.element(selected).alerted ? "Un-Alert" : "Alert") {
                 bids.set(alerted: !bids.element(selected).alerted)
@@ -167,23 +161,30 @@ struct BiddingViewerToolbar : View {
 }
 
 struct BiddingEditorButtons : View {
-    @Environment(\.dismiss) var dismiss
     @ObservedObject var bids: Auction
+    var requiredContract: Contract
     @Binding var traveller: TravellerViewModel
     @Binding var sitting: Seat
     @State var dealer: Seat
+    var cancelEdit: ((Bool)->())
     
     var body: some View {
         HStack {
             BiddingEditorButton(text: "Cancel") {
-                // Handled by onDismiss in caller to make sure Esc is also dealt with
-                dismiss()
+                cancelEdit(false)
             }
             Spacer().frame(width: 50)
             BiddingEditorButton(text: "Update") {
-                bids.set(inEditMode: false)
-                traveller.playData = bids.playData
-                dismiss()
+                var message = ""
+                if bids.contract != requiredContract {
+                    message = "The contract was \(requiredContract.compact), but the result of this auction is \(bids.contract.compact)"
+                } else if !bids.ends3Passes {
+                    message = "This auction does not end with 3 passes"
+                }
+                
+                MessageBox.shared.show("\(message)\n\nAre you sure you want to save this auction?", if: message != "", cancelText: "Re-edit", okText: "Save", okAction: {
+                    cancelEdit(true)
+                })
             }
         }
         .focusable(false)
@@ -206,7 +207,7 @@ struct BiddingEditorButton : View {
             .frame(width: 130, height: 40)
             .font(inputTitleFont)
             .palette(isEnabled ? .enabledButton : .disabledButton)
-            .opacity(isEnabled ? 1 : 0.8)
+            .opacity(isEnabled ? 1 : 0.7)
             .cornerRadius(20)
         }
         .focusable(false)
@@ -279,6 +280,7 @@ struct BiddingBoxRowView : View {
 }
 
 struct BidView : View {
+    @Environment(\.isEnabled) private var isEnabled
     @State var bid: Bid
     var canBid: Bool
     @State var width: CGFloat
@@ -290,9 +292,9 @@ struct BidView : View {
             HStack {
                 Text(bid.colorCompact)
             }
-            .foregroundColor(bid.palette.text)
+            .foregroundColor(bid.double != .undoubled && !isEnabled ? bid.palette.faintText :  bid.palette.text)
         }
-        .opacity(canBid ? 1 : 0.5)
+        .opacity(canBid ? 1 : 0.4)
         .frame(width: width, height: 40)
         .focusable(false)
     }

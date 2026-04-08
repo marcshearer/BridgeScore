@@ -7,6 +7,10 @@
 
 import SwiftUI
 
+let passBid = Bid()
+let doubleBid = Bid(double: .doubled)
+let redoubleBid = Bid(double: .redoubled)
+
 class Auction: ObservableObject, Equatable {
     @Published var bidList: [(bid: Bid, alerted: Bool, announce: String?)]
     @Published var manualAuction: Bool = true
@@ -37,12 +41,12 @@ class Auction: ObservableObject, Equatable {
     
     var count: Int { bidList.count + skip }
     
-    func focusable(_ index: Int) -> Bool {
+    func selectable(_ index: Int) -> Bool {
         (index >= skip && index <= count)
     }
     
     func element(_ index: Int) -> (bid: Bid?, alerted: Bool, announce: String?) {
-        if index != count && focusable(index) {
+        if index != count && selectable(index) {
             bidList[index - skip]
         } else {
             (nil, false, nil)
@@ -63,18 +67,22 @@ class Auction: ObservableObject, Equatable {
         let element = position - skip
         
         // Check previous passes
-        var passes = 0
-        if element >= 3 {
-            for index in ((element - 3)...(element-1)).reversed() {
-                if bidList[index].bid == Bid() {
-                    passes += 1
-                } else {
-                    break
+        if bidList.count == 3 && bidList.filter({$0.bid != passBid}).isEmpty && bid == passBid {
+            // 4 passes at the beginning of the auction is OK
+        } else {
+            var passes = 0
+            if element >= 3 {
+                for index in ((element - 3)...(element-1)).reversed() {
+                    if bidList[index].bid == passBid {
+                        passes += 1
+                    } else {
+                        break
+                    }
                 }
             }
-        }
-        if passes >= 3 {
-            result = false
+            if passes >= 3 {
+                result = false
+            }
         }
 
         if result {
@@ -117,7 +125,7 @@ class Auction: ObservableObject, Equatable {
                     // A pass - check for too many passes in a row
                     var passes = 0
                     for (index, bid) in bidList.map({$0.bid}).enumerated() {
-                        if (index != element && bid != Bid()) || passes > 3 {
+                        if (index != element && bid != passBid) || passes > 3 {
                             // End of sequence of passes - check it
                             if passes > 3 {
                                 result = false
@@ -128,12 +136,13 @@ class Auction: ObservableObject, Equatable {
                         passes += 1
                     }
                 case .doubled:
-                    // Only valid if previous bid was a noarmal bid by an opponent
+                    // Only valid if previous bid was a normal bid by an opponent
                     if element == 0 {
                         result = false
                     } else {
+                        var foundBid  = false
                         for index in (0..<element).reversed() {
-                            if bidList[index].bid != Bid() {
+                            if bidList[index].bid != passBid {
                                     // Not a pass
                                 if bidList[index].bid.level.hasSuit {
                                         // Not a double or redouble
@@ -141,6 +150,8 @@ class Auction: ObservableObject, Equatable {
                                             // By partner (or self)
                                         result = false
                                         break
+                                    } else {
+                                        foundBid = true
                                     }
                                 } else {
                                         // Was a double or a redouble - can't double it
@@ -149,29 +160,38 @@ class Auction: ObservableObject, Equatable {
                                 break
                             }
                         }
+                        if !foundBid {
+                            result = false
+                        }
                     }
                 case .redoubled:
                     // Only valid if previous bid was a double by an opponent
                     if element == 0 {
                         result = false
                     } else {
+                        var foundBid  = false
                         for index in (0..<element).reversed() {
-                            if bidList[index].bid != Bid() {
+                            if bidList[index].bid != passBid {
                                     // Not a pass
                                 if bidList[index].bid.double != .doubled {
                                         // Not a double
                                     result = false
                                     break
                                 } else {
-                                        // Was a double
+                                    // Was a double
                                     if (element - index) % 2 == 0 {
                                             // By partner (or self)
                                         result = false
                                         break
+                                    } else {
+                                        foundBid = true
                                     }
                                 }
                                 break
                             }
+                        }
+                        if !foundBid {
+                            result = false
                         }
                     }
                 }
@@ -210,15 +230,38 @@ class Auction: ObservableObject, Equatable {
         }
     }
     
+    var contract: Contract {
+        var result = Contract(level: .passout)
+        for bid in bidList.map({$0.bid}) {
+            if bid.level.hasSuit {
+                result = bid
+            } else if bid.double != .undoubled {
+                result.double = bid.double
+            }
+        }
+        return result
+    }
+    
+    var ends3Passes: Bool {
+        let bids = bidList.count
+        return bids >= 3 && bidList.suffix(3).filter({$0.bid != passBid}).isEmpty
+    }
+    
     @discardableResult func removeLast() -> Bool {
         var result = false
         if !bidList.isEmpty {
             _ = bidList.popLast()
-            selected = bidList.count
+            selected = count
             result = true
             manualAuction = true
         }
         return result
+    }
+    
+    func remove(at index: Int) {
+        if selectable(index) {
+            bidList.remove(at: index - skip)
+        }
     }
     
     static func == (lhs: Auction, rhs: Auction) -> Bool {
@@ -292,11 +335,11 @@ class Auction: ObservableObject, Equatable {
         
         switch bid {
         case "P":
-            result = Bid()
+            result = passBid
         case "D":
-            result = Bid(double: .doubled)
+            result = doubleBid
         case "R":
-            result = Bid(double: .redoubled)
+            result = redoubleBid
         default:
             if let levelNumber = Int(bid.left(1)), let level = ContractLevel(rawValue: levelNumber) {
                 if bid.right(2) == "NT" {
@@ -305,7 +348,7 @@ class Auction: ObservableObject, Equatable {
                     result = Bid(level: level, suit: Suit(string: bid.right(1)))
                 }
             } else {
-                result = Bid()
+                result = passBid
             }
         }
         return result
@@ -322,6 +365,7 @@ struct BiddingViewer : View {
     @Binding var showClaim: Bool
     @Binding var editBidding: Bool
     var font: Font = .title2
+    var cancelEdit: ((Bool)->())? = nil
      
     var body: some View {
         ZStack {
@@ -330,13 +374,17 @@ struct BiddingViewer : View {
                 if !editBidding || !bids.inEditMode {
                     if !bids.bidList.isEmpty || bids.manualAuction || bids.inEditMode {
                         BiddingViewerTitles(sitting: $sitting, boardNumber: $boardNumber)
-                        BiddingViewerBids(bids: bids, focusedField: _focusedField, sitting: $sitting, boardNumber: $boardNumber, bidAnnounce: $bidAnnounce, showClaim: $showClaim)
+                        BiddingViewerBids(bids: bids, focusedField: _focusedField, sitting: $sitting, boardNumber: $boardNumber, bidAnnounce: $bidAnnounce, showClaim: $showClaim, cancelEdit: cancelEdit)
                     }
                     if (bids.bidList.isEmpty || bids.manualAuction) && !bids.inEditMode {
                         Spacer()
                         Button(bids.manualAuction ? "Edit auction" : "Enter auction") {
-                            editBidding = true
-                            bids.reset()
+                            var transaction = Transaction()
+                            transaction.disablesAnimations = true
+                            withTransaction(transaction) {
+                                editBidding = true
+                                bids.reset()
+                            }
                         }
                         .font(defaultFont.bold())
                         .foregroundColor(Palette.handTable.contrastText)
@@ -395,16 +443,24 @@ struct BiddingViewerTitles: View {
 }
 
 struct BiddingViewerBids: View {
-    @Environment(\.isFocused) var isFocused
+    @Environment(\.dismiss) var dismiss
     @ObservedObject var bids: Auction
     @FocusState.Binding var focusedField: BiddingFocusField?
     @Binding var sitting: Seat
     @Binding var boardNumber: Int
     @Binding var bidAnnounce: String
     @Binding var showClaim: Bool
+    var cancelEdit: ((Bool)->())? = nil
     var width: CGFloat = 60
     var height: CGFloat = 25
     @State var bidLevel: Int? = nil
+    var otherFocused: Binding<Bool> {
+        Binding {
+            focusedField == .explain
+        } set: { (newValue) in
+            
+        }
+    }
     
     var body: some View {
         ScrollView(showsIndicators: false) {
@@ -430,102 +486,95 @@ struct BiddingViewerBids: View {
                             .foregroundColor((bids.element(index).announce ?? "") != "" ? Palette.card.text : Palette.handBidding.text)
                             .frame(height: height)
                             .onChange(of: bids.count) {
-                                bids.selected = bids.count - 1
+                                bids.selected = bids.count
                             }
                         }
                     }
-                    .onKeyPress(keys: [.delete, .deleteForward, .upArrow, .downArrow, .leftArrow, .rightArrow, .tab, "1", "2", "3", "4", "5", "6", "7", "c", "d", "h", "s", "n", "p", "r", "x", " "]) { press in
-                        if (press.key == .delete || press.key == .deleteForward) && bids.selected == nil { bids.selected = bids.count }
-                        Utility.mainThread {
-                            bids.selected = processKey(press: press, index: bids.selected ?? bids.count)
-                        }
-                        return .handled
-                    }
+                }
+            }
+            .background {
+                KeyInterceptor(ignoreKeys: otherFocused) { key in
+                    bids.selected = processKey(key: key, index: bids.selected ?? bids.count)
                 }
             }
         }
         .background(Color.clear)
         .focusable(false)
         .onAppear {
-            Utility.executeAfter(delay: 1) {
-                bids.selected = bids.count - 1
-            }
-        }
-        .onChange(of: bids.selected, initial: true) {
-            let target = BiddingFocusField.biddingViewer(index: bids.selected ?? bids.count)
-            if focusedField != target {
-                focusedField = target
-            }
+            bids.selected = bids.count
         }
         .palette(.handTable)
-        // .focusEffectDisabled()
     }
     
-    func processKey(press: KeyPress, index: Int) -> Int {
-        switch press.key {
-        case .delete, .deleteForward:
+    func processKey(key: UIKey, index: Int) -> Int {
+        switch key.keyCode {
+        case .keyboardDeleteOrBackspace:
             if index == bids.count {
                 bids.removeLast()
                 return index - 1
             }
-        case .upArrow:
+        case .keyboardUpArrow:
             bidLevel = nil
             if index - 4 >= bids.skip {
                 return index - 4
             }
-        case .leftArrow:
+        case .keyboardLeftArrow:
             bidLevel = nil
             if index - 1 >= bids.skip {
                 return index - 1
             }
-        case .downArrow:
+        case .keyboardDownArrow:
             bidLevel = nil
             if index + 4 <= bids.count {
                 return index + 4
-            } else {
-                if index != bids.count {
-                    focusedField = .explain
-                }
             }
-        case .rightArrow, .tab:
+        case .keyboardRightArrow, .keyboardTab:
             bidLevel = nil
             if index + 1 <= bids.count {
                 return index + 1
+            }
+        case .keyboardEscape:
+            if let cancelEdit = cancelEdit {
+                cancelEdit(false)
             } else {
-                if index != bids.count {
-                    focusedField = .explain
-                }
+                dismiss()
             }
-        case "1", "2", "3", "4", "5", "6", "7":
-            bidLevel = Int(String(press.characters.first!))
-        case "c", "d", "h", "s", "n":
-            if let selected = bids.selected {
-                if let bidLevel = bidLevel, let level = ContractLevel(rawValue: bidLevel) {
-                    let suit = Suit(string: String(press.characters.first!))
-                    let bid = Bid(level: level, suit: suit)
-                    bids.replace(at: selected, with: bid)
-                } else if press.characters.first! == "d" {
-                    bids.replace(at: selected, with: Bid(double: .doubled))
-                }
-                bidLevel = nil
-            }
-        case "p", " ":
-            if let selected = bids.selected {
-                bids.replace(at: selected, with: Bid())
-            }
-            bidLevel = nil
-        case "x":
-            if let selected = bids.selected {
-                bids.replace(at: selected, with: Bid(double: .doubled))
-            }
-            bidLevel = nil
-        case "r":
-            if let selected = bids.selected {
-                bids.replace(at: selected, with: Bid(double: .redoubled))
-            }
-            bidLevel = nil
         default:
-            break
+            if let character = key.characters.first {
+                let string = String(character)
+                switch string {
+                case "1", "2", "3", "4", "5", "6", "7":
+                    bidLevel = Int(string)
+                case "c", "d", "h", "s", "n":
+                    if let selected = bids.selected {
+                        if let bidLevel = bidLevel, let level = ContractLevel(rawValue: bidLevel) {
+                            let suit = Suit(string: string)
+                            let bid = Bid(level: level, suit: suit)
+                            bids.replace(at: selected, with: bid)
+                        } else if string == "d" {
+                            bids.replace(at: selected, with: doubleBid)
+                        }
+                        bidLevel = nil
+                    }
+                case "p", " ":
+                    if let selected = bids.selected {
+                        bids.replace(at: selected, with: passBid)
+                    }
+                    bidLevel = nil
+                case "x":
+                    if let selected = bids.selected {
+                        bids.replace(at: selected, with: doubleBid)
+                    }
+                    bidLevel = nil
+                case "r":
+                    if let selected = bids.selected {
+                        bids.replace(at: selected, with: redoubleBid)
+                    }
+                    bidLevel = nil
+                default:
+                    break
+                }
+            }
         }
         return index
     }
@@ -543,13 +592,9 @@ struct BidButton : View {
     var body: some View {
         Button {
             if bids.inEditMode {
-                if bids.focusable(index) {
+                if bids.selectable(index) {
                     Utility.mainThread {
                         bids.selected = index
-                        focusedField = nil
-                        Utility.executeAfter(delay: 0.2) {
-                            focusedField = .biddingViewer(index: index)
-                        }
                     }
                 }
             } else {
@@ -563,7 +608,7 @@ struct BidButton : View {
                 }
             }
         } label: {
-            let text = bids.element(index).bid?.colorCompact ?? AttributedString(index == bids.count ? "-" : "")
+            let text = bids.element(index).bid?.colorCompact ?? AttributedString(index == bids.count && bids.inEditMode ? "-" : "")
             Text(text)
                 .layoutPriority(99)
                 .contentShape(Rectangle())
@@ -572,8 +617,7 @@ struct BidButton : View {
                 .fixedSize()
         }
         .buttonStyle(.plain)
-        .focusable(true)
-        .focused($focusedField, equals: .biddingViewer(index: index))
+        .focusable(false)
     }
 }
 

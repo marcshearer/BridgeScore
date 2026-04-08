@@ -154,6 +154,7 @@
 		B2AC53AA2B11032D00B07D20 /* Export.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AC53A92B11032D00B07D20 /* Export.swift */; };
 		B2AF750D27AD14FD00233693 /* Slide In Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AF750C27AD14FD00233693 /* Slide In Menu.swift */; };
 		B2AF750F27AD384900233693 /* Layout Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AF750E27AD384900233693 /* Layout Setup View.swift */; };
+		B2B190DA2F85523200FDDD26 /* Key Interceptor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2B190D92F85522B00FDDD26 /* Key Interceptor.swift */; };
 		B2B1D5892B026C87007A2977 /* Import Usebio.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2B1D5882B026C87007A2977 /* Import Usebio.swift */; };
 		B2B1D58B2B04C29F007A2977 /* Ranking Table Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2B1D58A2B04C29F007A2977 /* Ranking Table Managed Object.swift */; };
 		B2B1D58D2B04C3DB007A2977 /* Ranking Table View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2B1D58C2B04C3DB007A2977 /* Ranking Table View Model.swift */; };
@@ -343,6 +344,7 @@
 		B2AC53A92B11032D00B07D20 /* Export.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Export.swift; path = ../Shared/Export.swift; sourceTree = "<group>"; };
 		B2AF750C27AD14FD00233693 /* Slide In Menu.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Slide In Menu.swift"; sourceTree = "<group>"; };
 		B2AF750E27AD384900233693 /* Layout Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Layout Setup View.swift"; sourceTree = "<group>"; };
+		B2B190D92F85522B00FDDD26 /* Key Interceptor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Key Interceptor.swift"; sourceTree = "<group>"; };
 		B2B1D5882B026C87007A2977 /* Import Usebio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Import Usebio.swift"; sourceTree = "<group>"; };
 		B2B1D58A2B04C29F007A2977 /* Ranking Table Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Ranking Table Managed Object.swift"; sourceTree = "<group>"; };
 		B2B1D58C2B04C3DB007A2977 /* Ranking Table View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Ranking Table View Model.swift"; sourceTree = "<group>"; };
@@ -591,6 +593,7 @@
 				B24EAE8D27DDE95C001B3E64 /* Multi Select Picker Input.swift */,
 				B21CC0BD27A01292001AECC1 /* Date Picker Input.swift */,
 				B21CC0BF27A02A2A001AECC1 /* Stepper Input.swift */,
+				B2B190D92F85522B00FDDD26 /* Key Interceptor.swift */,
 				B2EBA8B52D52568F00360ED5 /* View Wrappers.swift */,
 				B26BCE612799AED700B73501 /* Separator.swift */,
 				B26BCE5F2799AED700B73501 /* Standard View.swift */,
@@ -909,6 +912,7 @@
 				B259CCE52F73EEB200AFBCD0 /* Auto Complete.swift in Sources */,
 				B26BCE672799AED700B73501 /* Swipe Gestures.swift in Sources */,
 				B2EB3D73279D734700D64225 /* Location View Model.swift in Sources */,
+				B2B190DA2F85523200FDDD26 /* Key Interceptor.swift in Sources */,
 				B217C8D52F7E5490006F02A3 /* Bidding Editor View.swift in Sources */,
 				B2BBC8BA27BBF6BC00D51A26 /* Table View Model.swift in Sources */,
 				B2E2FDC52D50B5ED0044B9AB /* Stats Widget.swift in Sources */,

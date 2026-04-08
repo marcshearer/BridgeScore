@@ -117,6 +117,7 @@ struct AnalysisViewer: View {
                 Spacer().layoutPriority(999)
                 ZStack {
                     AnalysisBanner(nextTraveller: nextTraveller, updateOptions: updateAnalysisData, board: $board, traveller: $traveller, handTraveller: $handTraveller, sitting: $sitting, rotated: $rotated, initialSitting: $initialSitting, bidAnnounce: $bidAnnounce, summaryMode: $summaryMode, stopEdit: $stopEdit, responsiblePicker: $responsiblePicker, dismissView: $dismissView)
+                        .zIndex(3)
                     VStack {
                         Spacer().frame(height: 88)
                         GeometryReader { bodyGeometry in
@@ -150,18 +151,16 @@ struct AnalysisViewer: View {
                                             }
                                         }
                                         .frame(width: bodyGeometry.size.width - 24 - handWidth)
-                                        .fullScreenCover(isPresented: $editBidding, onDismiss: {
-                                            bids.set(from: traveller.playData, sitting: sitting, dealer: board.dealer)
-                                            bids.set(inEditMode: false)
-                                        }) {
+                                        .fullScreenCover(isPresented: $editBidding) {
                                             let viewFrame = viewGeometry.frame(in: .global)
                                             let bodyFrame = bodyGeometry.frame(in: .global)
                                             let analysisFrame = analysisGeometry.frame(in: .global)
                                             let frame = CGRect(x: analysisFrame.minX, y: bodyFrame.minY, width: analysisFrame.width - 8, height: analysisFrame.height)
                                             let bannerFrame = CGRect(x: viewFrame.minX, y: bodyFrame.minY - 88, width: bodyFrame.width, height: 80)
-                                            ShowEditBidding(bids: bids, traveller: $traveller, sitting: $sitting, dealer: board.dealer, boardNumber: $board.boardNumber, bidAnnounce: $bidAnnounce, frame: frame, bannerFrame: bannerFrame)
+                                            ShowEditBidding(bids: bids, board: $board, traveller: $traveller, sitting: $sitting, dealer: board.dealer, boardNumber: $board.boardNumber, bidAnnounce: $bidAnnounce, frame: frame, bannerFrame: bannerFrame)
                                                 .edgesIgnoringSafeArea(.all)
                                                 .focusable(false)
+                                                .presentationBackground(.clear)
                                         }
                                     }
                                 }
@@ -216,42 +215,66 @@ struct AnalysisViewer: View {
     }
     
     struct ShowEditBidding : View {
+        @Environment(\.dismiss) var dismiss
         @ObservedObject var bids: Auction
+        @Binding var board: BoardViewModel
         @Binding var traveller: TravellerViewModel
         @Binding var sitting: Seat
         @State var dealer: Seat
         @Binding var boardNumber: Int
         @Binding var bidAnnounce: String
+        @State private var isVisible = false
         var frame: CGRect
         var bannerFrame: CGRect
         
         var body: some View {
             ZStack {
-                Color.clear.opacity(0)
-                HStack {
-                    GeometryReader { geometry in
-                        HStack {
-                            VStack(spacing: 0) {
-                                BiddingEditorView(bids: bids, traveller: $traveller, sitting: $sitting, dealer: dealer, boardNumber: $boardNumber, bidAnnounce: $bidAnnounce)
+                if isVisible {
+                    Color.clear.opacity(0)
+                    HStack {
+                        GeometryReader { geometry in
+                            HStack {
+                                VStack(spacing: 0) {
+                                    BiddingEditorView(bids: bids, traveller: $traveller, sitting: $sitting, dealer: dealer, boardNumber: $boardNumber, bidAnnounce: $bidAnnounce, cancelEdit: { update in
+                                        if update {
+                                            bids.set(inEditMode: false)
+                                            traveller.playData = bids.playData
+                                        } else {
+                                            bids.set(from: traveller.playData, sitting: sitting, dealer: board.dealer)
+                                            bids.set(inEditMode: false)
+                                        }
+                                        withAnimation(.easeInOut(duration: 0.5)) {
+                                                isVisible = false
+                                            }
+                                        Utility.executeAfter(delay: 0.5) {
+                                            dismiss()
+                                        }
+                                    })
+                                }
                             }
+                            .cornerRadius(analysisCornerSize)
+                            .frame(width: frame.width, height: frame.height)
+                            .offset(x: frame.minX, y: frame.minY)
+                            
                         }
-                        .cornerRadius(analysisCornerSize)
-                        .frame(width: frame.width, height: frame.height)
-                        .offset(x: frame.minX, y: frame.minY)
-                        
                     }
+                    VStack {
+                        Color.black.opacity(0.4)
+                            .frame(width: bannerFrame.width, height: bannerFrame.height)
+                        Spacer()
+                    }
+                    .cornerRadius(8)
+                    .offset(x: bannerFrame.minX, y: bannerFrame.minY)
+                    .transition(.opacity)
                 }
-                VStack {
-                    Color.black.opacity(0.4)
-                        .frame(width: bannerFrame.width, height: bannerFrame.height)
-                    Spacer()
-                }
-                .cornerRadius(8)
-                .offset(x: bannerFrame.minX, y: bannerFrame.minY)
             }
             .background(BackgroundBlurView(opacity: 0.0))
             .edgesIgnoringSafeArea(.all)
             .focusable(false)
+            .onAppear {
+                withAnimation(.easeInOut(duration: 0.5)) {
+                    isVisible = true}
+            }
         }
     }
     
