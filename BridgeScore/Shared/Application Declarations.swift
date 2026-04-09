@@ -202,7 +202,12 @@ public enum Seat: Int, EnumPickerType, ContractEnumType, Identifiable {
     }
     
     public var string: String {
-        return "\(self)".capitalized
+        switch self {
+        case .unknown:
+            ""
+        default:
+            "\(self)".capitalized
+        }
     }
     
     public var button: String {
@@ -277,7 +282,7 @@ public enum Seat: Int, EnumPickerType, ContractEnumType, Identifiable {
         switch self {
         case sitting:
             if sitting == .unknown {
-                return "Unknown"
+                return ""
             } else {
                 return "Self"
             }
@@ -288,7 +293,7 @@ public enum Seat: Int, EnumPickerType, ContractEnumType, Identifiable {
         case sitting.rightOpponent:
             return "Right"
         default:
-            return "Unknown"
+            return ""
         }
     }
 }

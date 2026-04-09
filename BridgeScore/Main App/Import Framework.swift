@@ -409,7 +409,7 @@ class ImportedScorecard: NSObject, ObservableObject {
                     }
                 } else if scorecard.type.boardScoreType == .percent {
                     if (traveller.nsMps == nil || traveller.totalMps == nil) && traveller.nsPoints != nil {
-                        traveller.totalMps = (boardTravellers.count - 1) * 2
+                        traveller.totalMps = Float((boardTravellers.count - 1) * 2)
                         traveller.nsMps = 0
                         for otherTraveller in boardTravellers {
                             if otherTraveller != traveller {
@@ -423,7 +423,9 @@ class ImportedScorecard: NSObject, ObservableObject {
                             }
                         }
                     }
-                    traveller.nsScore = Utility.round(Float(traveller.nsMps!) / Float(traveller.totalMps!) * 100, places: scorecard.type.boardPlaces)
+                    if let nsMps = traveller.nsMps, let totalMps = traveller.totalMps {
+                        traveller.nsScore = Utility.round(Float(nsMps) / Float(totalMps) * 100, places: scorecard.type.boardPlaces)
+                    }
                 } else if scorecard.type.boardScoreType == .aggregate {
                     traveller.nsScore = Float(traveller.nsPoints ?? 0)
                 }
@@ -965,8 +967,8 @@ class ImportedTraveller: Equatable {
     public var made: Int?
     public var lead: String?
     public var nsPoints: Int?
-    public var nsMps: Int?
-    public var totalMps: Int?
+    public var nsMps: Float?
+    public var totalMps: Float?
     public var nsScore: Float?
     public var nsXImps: Float?
     public var playData: String?

@@ -675,7 +675,7 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
             }))
         case "NS_MATCH_POINTS":
             current = current?.add(child: Node(name: name, completion: { (value) in
-                traveller.nsMps = Int(value)
+                traveller.nsMps = Float(value)
             }))
         case "LIN_DATA":
             current = current?.add(child: Node(name: name, completion: { (value) in

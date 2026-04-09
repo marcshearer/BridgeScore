@@ -13,6 +13,7 @@ enum BiddingFocusField : Hashable {
 
 enum BiddingId {
     case biddingViewer
+    case biddingBox
 }
 
 struct BiddingEditorView: View {
@@ -30,63 +31,89 @@ struct BiddingEditorView: View {
     
     var body: some View {
         StandardView("Bidding Editor", backgroundColor: Palette.clear) {
-            ZStack {
-                Color.black.opacity(0.65)
-                    .focusable(false)
-                HStack(spacing: 0) {
-                    Spacer()
-                    VStack(spacing: 0) {
-                        
-                        Spacer().frame(height: 20).layoutPriority(2)
+            GeometryReader { geometry in
+                ZStack {
+                    Color.black.opacity(0.65)
+                        .focusable(false)
+                    HStack(spacing: 0) {
                         Spacer()
-                        
-                        BiddingViewer(bids: bids, focusedField: $focusedField, sitting: $sitting, boardNumber: $boardNumber, bidAnnounce: $bidAnnounce, showClaim: $showClaim, editBidding: $editBidding, cancelEdit: cancelEdit)
-                            .matchedGeometryEffect(id: BiddingId.biddingViewer, in: biddingViewerNameSpace, anchor: .topTrailing, isSource: true)
-                            .frame(width: 300, height: 260)
-                        
-                        Spacer().frame(height: 20)
-                        
-                        BiddingAnnounceView(bids: bids, focusedField: $focusedField)
-                        
-                        Spacer().frame(height: 30)
-                        
-                        BiddingBoxView(bids: bids)
-                        
-                        Spacer().frame(height: 20)
-                        
-                        BiddingEditorButtons(bids: bids, requiredContract: traveller.contract, traveller: $traveller, sitting: $sitting, dealer: dealer, cancelEdit: cancelEdit)
-                        
-                        Spacer()
-                        
-                    }
-                    Spacer().frame(width: 140)
-                    Spacer()
-                }
-                .zIndex(2)
-                .overlay(alignment: .trailing) {
-                    VStack {
-                        HStack {
-                            Spacer().frame(width: 40)
-                            BiddingViewerToolbar(bids: bids)
+                        VStack(spacing: 0) {
+                            
+                            Spacer().frame(height: 20).layoutPriority(2)
                             Spacer()
+                            
+                            BiddingViewer(bids: bids, focusedField: $focusedField, sitting: $sitting, boardNumber: $boardNumber, bidAnnounce: $bidAnnounce, showClaim: $showClaim, editBidding: $editBidding, cancelEdit: cancelEdit)
+                                .matchedGeometryEffect(id: BiddingId.biddingViewer, in: biddingViewerNameSpace, anchor: .topTrailing, isSource: true)
+                                .frame(width: 300)
+                                .frame(maxHeight: 260)
+                                .frame(minHeight: 200)
+                            
+                            Spacer().frame(height: 20)
+                            
+                            BiddingAnnounceView(bids: bids, focusedField: $focusedField)
+                            
+                            Spacer().frame(height: 30)
+                            
+                            BiddingBoxView(bids: bids)
+                                .matchedGeometryEffect(id: BiddingId.biddingBox, in: biddingViewerNameSpace, anchor: .topTrailing, isSource: true)
+                            
+                            if geometry.size.height > 1000 {
+                                Spacer().frame(height: 30)
+                                
+                                BiddingEditorButtons(bids: bids, requiredContract: traveller.contract, traveller: $traveller, sitting: $sitting, dealer: dealer, horizontal: true, cancelEdit: cancelEdit)
+                            }
+                            
+                            Spacer()
+                            
                         }
-                        Spacer().layoutPriority(999)
+                        Spacer().frame(width: 140)
+                        Spacer()
                     }
-                    .focusable(false)
-                    .matchedGeometryEffect(
-                        id: BiddingId.biddingViewer,
-                        in: biddingViewerNameSpace,
-                        properties: .position,
-                        anchor: .topLeading,
-                        isSource: false)
+                    .zIndex(2)
+                    .overlay(alignment: .trailing) {
+                        VStack {
+                            HStack {
+                                Spacer().frame(width: 40)
+                                BiddingViewerToolbar(bids: bids)
+                                Spacer()
+                            }
+                            Spacer().layoutPriority(999)
+                        }
+                        .focusable(false)
+                        .matchedGeometryEffect(
+                            id: BiddingId.biddingViewer,
+                            in: biddingViewerNameSpace,
+                            properties: .position,
+                            anchor: .topLeading,
+                            isSource: false)
+                    }
+                    .overlay(alignment: .trailing) {
+                        if geometry.size.height <= 1000 {
+                            VStack {
+                                HStack {
+                                    Spacer().frame(width: 10)
+                                    BiddingEditorButtons(bids: bids, requiredContract: traveller.contract, traveller: $traveller, sitting: $sitting, dealer: dealer, horizontal: false, cancelEdit: cancelEdit)
+                                    Spacer()
+                                }
+                                Spacer().layoutPriority(999)
+                            }
+                            .focusable(false)
+                            .matchedGeometryEffect(
+                                id: BiddingId.biddingBox,
+                                in: biddingViewerNameSpace,
+                                properties: .position,
+                                anchor: .topLeading,
+                                isSource: false)
+                        }
+                    }
                 }
+                .font(inputTitleFont)
+                .background(BackgroundBlurView(opacity: 0.0))
+                .onAppear {
+                    bids.set(inEditMode: true)
+                }
+                .focusable(false)
             }
-            .font(inputTitleFont)
-            .background(BackgroundBlurView(opacity: 0.0))
-            .onAppear {
-                bids.set(inEditMode: true)
-            }
-            .focusable(false)
         }
     }
 }
@@ -168,14 +195,18 @@ struct BiddingEditorButtons : View {
     @Binding var traveller: TravellerViewModel
     @Binding var sitting: Seat
     @State var dealer: Seat
+    var horizontal: Bool
     var cancelEdit: ((Bool)->())
     
     var body: some View {
-        HStack {
+        let layout = horizontal ? AnyLayout(HStackLayout(spacing: 30)) : AnyLayout(VStackLayout(spacing: 20))
+        layout {
+            if horizontal {
+                Spacer()
+            }
             BiddingEditorButton(text: "Cancel") {
                 cancelEdit(false)
             }
-            Spacer().frame(width: 50)
             BiddingEditorButton(text: "Update") {
                 var message = ""
                 if bids.contract != requiredContract {
@@ -188,6 +219,7 @@ struct BiddingEditorButtons : View {
                     cancelEdit(true)
                 })
             }
+            Spacer()
         }
         .focusable(false)
     }

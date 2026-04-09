@@ -504,16 +504,26 @@ class ImportedBBOScorecard: ImportedScorecard {
             case "contract":
                 let contract = Contract()
                 if let string = columns.element(index) {
-                    if let level = Int(string.left(1)) {
-                        contract.level = ContractLevel(rawValue: level) ?? .passout
-                        contract.suit = Suit(string: string.left(2).right(1))
-                    } else {
-                        contract.level = .passout
+                    if string == "" {
+                        // Check not an adjustment
+                        if let resultColumn = travellerHeadings.firstIndex(where: {$0.lowercased() == "result"}) {
+                            if columns[resultColumn].left(1).lowercased() == "a" {
+                                contract.level = .adjustment
+                            }
+                        }
                     }
-                    if string.right(2).lowercased() == "xx" {
-                        contract.double = .redoubled
-                    } else if string.right(1).lowercased() == "x" {
-                        contract.double = .doubled
+                    if contract.level != .adjustment {
+                        if let level = Int(string.left(1)) {
+                            contract.level = ContractLevel(rawValue: level) ?? .passout
+                            contract.suit = Suit(string: string.left(2).right(1))
+                        } else {
+                            contract.level = .passout
+                        }
+                        if string.right(2).lowercased() == "xx" {
+                            contract.double = .redoubled
+                        } else if string.right(1).lowercased() == "x" {
+                            contract.double = .doubled
+                        }
                     }
                 }
                 importedTraveller.contract = contract

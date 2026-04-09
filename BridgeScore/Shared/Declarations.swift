@@ -247,12 +247,17 @@ public enum Pair: Int, CaseIterable, Identifiable, Equatable {
         case .ew:
             return "East / West"
         default:
-            return "Unknown"
+            return ""
         }
     }
     
     var short: String {
-        return "\(self)".uppercased()
+        switch self {
+        case .unknown:
+            ""
+        default:
+            "\(self)".uppercased()
+        }
     }
     
     static var validCases: [Pair] {

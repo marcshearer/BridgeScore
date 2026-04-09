@@ -657,16 +657,21 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
             case "bid":
                 let contract = Contract()
                 if let string = columns.element(index) {
-                    if let level = Int(string.left(1)) {
-                        contract.level = ContractLevel(rawValue: level) ?? .passout
-                        contract.suit = Suit(string: string.left(2).right(1))
+                    if string.lowercased() == "n/a" {
+                        // Adjustment
+                        contract.level = .adjustment
                     } else {
-                        contract.level = .passout
-                    }
-                    if string.right(2).lowercased() == "**" {
-                        contract.double = .redoubled
-                    } else if string.right(1).lowercased() == "*" {
-                        contract.double = .doubled
+                        if let level = Int(string.left(1)) {
+                            contract.level = ContractLevel(rawValue: level) ?? .passout
+                            contract.suit = Suit(string: string.left(2).right(1))
+                        } else {
+                            contract.level = .passout
+                        }
+                        if string.right(2).lowercased() == "**" {
+                            contract.double = .redoubled
+                        } else if string.right(1).lowercased() == "*" {
+                            contract.double = .doubled
+                        }
                     }
                 }
                 importedTraveller.contract = contract
@@ -689,17 +694,17 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                     }
                 }
             case "+sc":
-                if let string = columns.element(index), let value = Int(string) {
+                if let string = columns.element(index)?.replacingOccurrences(of: "%", with: ""), let value = Int(string) {
                     importedTraveller.nsPoints = value
                 }
             case "-sc":
-                if let string = columns.element(index), let value = Int(string) {
+                if let string = columns.element(index)?.replacingOccurrences(of: "%", with: ""), let value = Int(string) {
                     importedTraveller.nsPoints = -value
                 }
             case "+":
                 if let string = columns.element(index) {
                     if scorecard.type.boardScoreType == .percent {
-                        if let value = Int(string) {
+                        if let value = Float(string) {
                             importedTraveller.nsMps = value
                             importedTraveller.totalMps = (importedTraveller.totalMps ?? 0) + value
                         }
@@ -710,8 +715,8 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
             case "-":
                 if let string = columns.element(index) {
                     if scorecard.type.boardScoreType == .percent {
-                        if let value = Int(string) {
-                            importedTraveller.totalMps = (importedTraveller.totalMps ?? 0) + value
+                        if let value = Float(string) {
+                            importedTraveller.totalMps = Float((importedTraveller.totalMps ?? 0) + value)
                         }
                     } else {
                         importedTraveller.nsScore = -(Float(string) ?? 0)

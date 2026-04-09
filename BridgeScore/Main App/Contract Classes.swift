@@ -23,6 +23,7 @@ protocol ContractEnumType : CaseIterable, Equatable {
 public enum ContractLevel: Int, ContractEnumType, Equatable, Comparable, Identifiable, Hashable {
     case blank = 0
     case passout = -1
+    case adjustment = -2
     case one = 1
     case two = 2
     case three = 3
@@ -51,6 +52,8 @@ public enum ContractLevel: Int, ContractEnumType, Equatable, Comparable, Identif
         switch self {
         case .blank:
             return ""
+        case .adjustment:
+            return "Adj"
         case .passout:
             return "Pass Out"
         default:
@@ -71,7 +74,7 @@ public enum ContractLevel: Int, ContractEnumType, Equatable, Comparable, Identif
     }
     
     var isValid: Bool {
-        return self != .blank && self != .passout
+        return self != .blank && self != .passout && self != .adjustment
     }
     
     static var validCases: [ContractLevel] {
@@ -451,6 +454,8 @@ public class Contract: Equatable, Comparable, Hashable {
             return ""
         case .passout:
             return "Pass Out"
+        case .adjustment:
+            return "Adjusted"
         default:
             return "\(level.short) \(suit.string) \(double.bold)"
         }
@@ -467,7 +472,9 @@ public class Contract: Equatable, Comparable, Hashable {
         case .blank:
             return ""
         case .passout:
-            return "Pass Out"
+            return "Pass"
+        case .adjustment:
+            return "Adj"
         default:
             return "\(level.short)\(suit.string)\(double.short)"
         }
@@ -479,6 +486,8 @@ public class Contract: Equatable, Comparable, Hashable {
             return ""
         case .passout:
             return "Pass Out"
+        case .adjustment:
+            return "Adjusted"
         default:
             return AttributedString("\(level.short) ") + suit.colorString + AttributedString(" ") + AttributedString(double.bold)
         }
@@ -489,7 +498,9 @@ public class Contract: Equatable, Comparable, Hashable {
         case .blank:
             return NSAttributedString("")
         case .passout:
-            return NSAttributedString("Pass Out")
+            return NSAttributedString("Pass")
+        case .adjustment:
+            return NSAttributedString("Adj")
         default:
             return NSAttributedString(level.short) + suit.attributedString + NSAttributedString(double.short)
         }
@@ -501,6 +512,8 @@ public class Contract: Equatable, Comparable, Hashable {
             return NSAttributedString("")
         case .passout:
             return NSAttributedString("Pass Out")
+        case .adjustment:
+            return NSAttributedString("Adjusted")
         default:
             return NSAttributedString(level.short) + suit.attributedContrast + NSAttributedString(double.short)
         }
@@ -512,6 +525,8 @@ public class Contract: Equatable, Comparable, Hashable {
             return NSAttributedString("")
         case .passout:
             return NSAttributedString("Pass Out")
+        case .adjustment:
+            return NSAttributedString("Adjusted")
         default:
             return NSAttributedString("\(level.short) ") + suit.attributedString + double.bold
         }
@@ -522,7 +537,9 @@ public class Contract: Equatable, Comparable, Hashable {
         case .blank:
             return ""
         case .passout:
-            return "Pass Out"
+            return "Pass"
+        case .adjustment:
+            return "Adj"
         default:
             return AttributedString(level.short) + suit.colorString + AttributedString(double.short)
         }
@@ -534,6 +551,8 @@ public class Contract: Equatable, Comparable, Hashable {
             return ""
         case .passout:
             return "Pass Out"
+        case .adjustment:
+            return "Adj"
         default:
             return AttributedString(level.short) + suit.colorContrast + AttributedString(double.short)
         }

@@ -421,7 +421,7 @@ struct AnalysisViewer: View {
             var versus = ""
             for seat in sitting.versus {
                 if let ranking = traveller.ranking(seat: seat) {
-                    var name = (ranking.players[seat] ?? "Unknown")
+                    var name = (ranking.players[seat] ?? "")
                     if Scorecard.current.scorecard?.importSource == .bbo {
                         if let realName = MasterData.shared.realName(bboName: name) {
                             name = realName.components(separatedBy: " ").last!

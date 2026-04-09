@@ -370,7 +370,7 @@ struct BiddingViewer : View {
     var body: some View {
         ZStack {
             Rectangle().fill(.clear)
-            VStack {
+            VStack(spacing: 0) {
                 if !editBidding || !bids.inEditMode {
                     if !bids.bidList.isEmpty || bids.manualAuction || bids.inEditMode {
                         BiddingViewerTitles(sitting: $sitting, boardNumber: $boardNumber)
@@ -387,6 +387,7 @@ struct BiddingViewer : View {
                             }
                         }
                         .font(defaultFont.bold())
+                        .minimumScaleFactor(0.6)
                         .foregroundColor(Palette.handTable.contrastText)
                         HStack {
                             Spacer()
@@ -450,10 +451,10 @@ struct BiddingViewerBids: View {
     @Binding var boardNumber: Int
     @Binding var bidAnnounce: String
     @Binding var showClaim: Bool
-    var cancelEdit: ((Bool)->())? = nil
-    var width: CGFloat = 60
     var height: CGFloat = 25
+    var cancelEdit: ((Bool)->())? = nil
     @State var bidLevel: Int? = nil
+    
     var otherFocused: Binding<Bool> {
         Binding {
             focusedField == .explain
@@ -464,37 +465,23 @@ struct BiddingViewerBids: View {
     
     var body: some View {
         ScrollView(showsIndicators: false) {
-            VStack(spacing: 2) {
-                ForEach(0...(bids.count / 4), id: \.self) { row in
-                    HStack(spacing: 0) {
-                        ForEach(0...3, id: \.self) { column in
-                            let index = (row * 4) + column
-                            VStack(spacing: 0) {
-                                Spacer()
-                                HStack(spacing: 0) {
-                                    Spacer()
-                                    BidButton(bids: bids, focusedField: _focusedField, index: index, bidLevel: $bidLevel, bidAnnounce: $bidAnnounce, showClaim: $showClaim)
-                                    Spacer()
-                                }
-                                .background((bids.element(index).announce ?? "") != "" ? Palette.card.background : (bids.element(index).alerted ? Palette.alternate.background : .clear))
-                                .cornerRadius(8)
-                                .overlay(RoundedRectangle(cornerRadius: 8)
-                                    .strokeBorder(Palette.gridLine, lineWidth: (bids.inEditMode && index == bids.selected ? 3 : 0)))
-                                Spacer()
-                            }
-                            .cornerRadius(8)
-                            .foregroundColor((bids.element(index).announce ?? "") != "" ? Palette.card.text : Palette.handBidding.text)
-                            .frame(height: height)
-                            .onChange(of: bids.count) {
-                                bids.selected = bids.count
+            GeometryReader { geometry in
+                VStack(spacing: 4) {
+                    let width = (geometry.size.width - 6) / 4
+                    ForEach(0...(bids.count / 4), id: \.self) { row in
+                        HStack(spacing: 2) {
+                            ForEach(0...3, id: \.self) { column in
+                                let index = (row * 4) + column
+                                BidButton(bids: bids, focusedField: _focusedField, index: index, bidLevel: $bidLevel, bidAnnounce: $bidAnnounce, showClaim: $showClaim, width: width)
                             }
                         }
+                        .frame(height: height)
                     }
                 }
-            }
-            .background {
-                KeyInterceptor(ignoreKeys: otherFocused) { key in
-                    bids.selected = processKey(key: key, index: bids.selected ?? bids.count)
+                .background {
+                    KeyInterceptor(ignoreKeys: otherFocused) { key in
+                        bids.selected = processKey(key: key, index: bids.selected ?? bids.count)
+                    }
                 }
             }
         }
@@ -588,6 +575,7 @@ struct BidButton : View {
     @Binding var bidLevel: Int?
     @Binding var bidAnnounce: String
     @Binding var showClaim: Bool
+    var width: CGFloat
     
     var body: some View {
         Button {
@@ -609,12 +597,29 @@ struct BidButton : View {
             }
         } label: {
             let text = bids.element(index).bid?.colorCompact ?? AttributedString(index == bids.count && bids.inEditMode ? "-" : "")
-            Text(text)
-                .layoutPriority(99)
-                .contentShape(Rectangle())
-                .lineLimit(1)
-                .minimumScaleFactor(0.4)
+            VStack(spacing: 0) {
+                Spacer()
+                HStack(spacing: 0) {
+                    Spacer()
+                    Text(text)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.4)
+                    Spacer()
+                }
+                .frame(width: width)
                 .fixedSize()
+                .palette((bids.element(index).announce ?? "") != "" ? .card : (bids.element(index).alerted ? .alternate : .clear))
+                .cornerRadius(bids.inEditMode ? 8 : 4)
+                .if(bids.inEditMode) { view in
+                    view.overlay(RoundedRectangle(cornerRadius: 8)
+                        .strokeBorder(Palette.gridLine, lineWidth: (bids.inEditMode && index == bids.selected ? 3 : 0)))
+                }
+                Spacer()
+            }
+            .contentShape(Rectangle())
+            .onChange(of: bids.count) {
+                bids.selected = bids.count
+            }
         }
         .buttonStyle(.plain)
         .focusable(false)
