@@ -20,12 +20,14 @@ extension ScrollPickerDelegate {
 
 struct ScrollPickerEntry: Equatable {
     var show: String!
+    var imageName: String?
     var title: String
     var caption: String?
     
-    init(show: String? = nil, title: String = "", caption: String? = nil) {
+    init(show: String? = nil, title: String = "", imageName: String? = nil, caption: String? = nil) {
         self.show = show ?? title
         self.title = title
+        self.imageName = imageName
         self.caption = caption
     }
     
@@ -187,7 +189,7 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = ScrollPickerCell.dequeue(collectionView, for: indexPath)
         let item = (selected == nil && defaultEntry != nil ? defaultEntry! : list[indexPath.item])
-        cell.set(titleText: item.show, captionText: item.caption ?? "", color: color, titleFont: titleFont, captionFont: captionFont, clearBackground: clearBackground)
+        cell.set(titleText: item.show, imageName: item.imageName, captionText: item.caption ?? "", color: color, titleFont: titleFont, captionFont: captionFont, clearBackground: clearBackground)
         return cell
     }
     
@@ -338,13 +340,16 @@ class ScrollPicker : UIView, UICollectionViewDelegate, UICollectionViewDelegateF
 class ScrollPickerView: UIView {
     private var background: UIView!
     private var title: UILabel!
+    private var imageView: UIImageView!
     private var caption: UILabel!
     private var captionHeightConstraint: NSLayoutConstraint!
     private var tapAction: ((Int)->())?
     private var tapGesture: UITapGestureRecognizer!
-    private var topPaddingHeight: NSLayoutConstraint!
+    private var titleTopPaddingHeight: NSLayoutConstraint!
+    private var imageTopPaddingHeight: NSLayoutConstraint!
     private var bottomPaddingHeight: NSLayoutConstraint!
-    private var centerPaddingHeight: NSLayoutConstraint!
+    private var titleCenterPaddingHeight: NSLayoutConstraint!
+    private var imageCenterPaddingHeight: NSLayoutConstraint!
     private var trailingSpace: NSLayoutConstraint!
     private var leadingSpace: NSLayoutConstraint!
     private var cornerRadius: CGFloat?
@@ -354,6 +359,10 @@ class ScrollPickerView: UIView {
         
         background = UIView(frame: frame)
         self.addSubview(background, anchored: .top, .bottom)
+        
+        self.accessibilityIdentifier = "ScrollPickerView"
+        background.accessibilityIdentifier = "background"
+        
         leadingSpace = Constraint.anchor(view: self, control: background, attributes: .leading).first!
         trailingSpace = Constraint.anchor(view: self, control: background, attributes: .trailing).first!
         
@@ -361,15 +370,21 @@ class ScrollPickerView: UIView {
         title.font = pickerTitleFont
         title.minimumScaleFactor = 0.3
         title.textAlignment = .center
+        title.backgroundColor = .clear
         background.addSubview(title, leading: 0, trailing: 0)
-        topPaddingHeight = Constraint.anchor(view: self, control: title, constant: 0, attributes: .top).first!
+        titleTopPaddingHeight = Constraint.anchor(view: self, control: title, constant: 0, attributes: .top).first!
+        
+        imageView = UIImageView(frame: frame)
+        background.addSubview(imageView, leading: 0, trailing: 0)
+        imageTopPaddingHeight = Constraint.anchor(view: self, control: imageView, constant: 0, attributes: .top).first!
         
         caption = UILabel(frame: frame)
         caption.font = pickerCaptionFont
         caption.textAlignment = .center
         background.addSubview(caption, leading: 0, trailing: 0)
         bottomPaddingHeight = Constraint.anchor(view: self, control: caption, constant: 0, attributes: .bottom).first!
-        centerPaddingHeight = Constraint.anchor(view: self, control: caption, to: title, constant: 0, toAttribute: .bottom, attributes: .top).first!
+        titleCenterPaddingHeight = Constraint.anchor(view: self, control: caption, to: title, constant: 0, toAttribute: .bottom, attributes: .top).first!
+        imageCenterPaddingHeight = Constraint.anchor(view: self, control: caption, to: imageView, constant: 0, toAttribute: .bottom, attributes: .top).first!
         captionHeightConstraint = Constraint.setHeight(control: caption, height: 0)
     }
     
@@ -404,6 +419,7 @@ class ScrollPickerView: UIView {
         title.minimumScaleFactor = 0.3
         title.textAlignment = .center
         title.backgroundColor = UIColor.clear
+        imageView.image = nil
         caption.text = ""
         caption.font = pickerCaptionFont
         caption.textAlignment = .center
@@ -412,8 +428,7 @@ class ScrollPickerView: UIView {
         tapGesture?.isEnabled = false
     }
     
-    public func set(titleText: String, captionText: String? = nil, tag: Int = 0, color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil, clearBackground: Bool = true, topPadding: CGFloat = 0, bottomPadding: CGFloat = 0, leadingSpace: CGFloat = 0, trailingSpace: CGFloat = 0, borderWidth: CGFloat = 0, cornerRadius: CGFloat? = nil, tapAction: ((Int)->())? = nil) {
-        
+    public func set(titleText: String, imageName: String? = nil, captionText: String? = nil, tag: Int = 0, color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil, clearBackground: Bool = true, topPadding: CGFloat = 0, bottomPadding: CGFloat = 0, leadingSpace: CGFloat = 0, trailingSpace: CGFloat = 0, borderWidth: CGFloat = 0, cornerRadius: CGFloat? = nil, tapAction: ((Int)->())? = nil) {
         background.backgroundColor = (clearBackground ? UIColor.clear : UIColor(color?.background ?? Color.clear))
         self.tag = tag
         self.addTapGesture(tapAction: tapAction)
@@ -423,17 +438,29 @@ class ScrollPickerView: UIView {
         self.cornerRadius = cornerRadius
         
         let height = frame.height - topPadding - bottomPadding
-        self.topPaddingHeight.constant = (height * 0.10) + topPadding
-        self.centerPaddingHeight.constant = height * 0.075
+        self.titleTopPaddingHeight.constant = (height * 0.10) + topPadding
+        self.imageTopPaddingHeight.constant = self.titleTopPaddingHeight.constant
+        self.titleCenterPaddingHeight.constant = height * 0.075
+        self.imageCenterPaddingHeight.constant = self.titleCenterPaddingHeight.constant
         self.bottomPaddingHeight.constant = -((height * 0.10) + bottomPadding)
         self.leadingSpace.constant = leadingSpace
         self.trailingSpace.constant = -trailingSpace
         
-        title.text = titleText
-        if let titleFont = titleFont {
-            title.font = titleFont
+        if let imageName = imageName, let image = UIImage(systemName: imageName)?.withRenderingMode(.alwaysTemplate) {
+            self.imageView.image = image
+            self.imageView.contentMode = .scaleAspectFit
+            self.imageView.tintColor = .black
+            self.background.bringSubviewToFront(self.imageView)
+            self.title.backgroundColor = .clear
+            title.text = nil
+        } else {
+            title.text = titleText
+            if let titleFont = titleFont {
+                title.font = titleFont
+            }
+            self.background.bringSubviewToFront(self.title)
+            title.textColor = UIColor(color?.text ?? Palette.background.text)
         }
-        title.textColor = UIColor(color?.text ?? Palette.background.text)
         if let captionText = captionText {
             caption.text = captionText
             captionHeightConstraint.constant = height / 4
@@ -472,8 +499,8 @@ class ScrollPickerCell: UICollectionViewCell {
         return cell
     }
     
-    public func set(titleText: String, captionText: String? = nil, tag: Int = 0, color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil, clearBackground: Bool = true, topPadding: CGFloat = 0, bottomPadding: CGFloat = 0, leadingSpace: CGFloat = 0, trailingSpace: CGFloat = 0, borderWidth: CGFloat = 0, cornerRadius: CGFloat? = nil, tapAction: ((Int)->())? = nil) {
-        view.set(titleText: titleText, captionText: captionText, tag: tag, color: color, titleFont: titleFont, captionFont: captionFont, clearBackground: clearBackground, topPadding: topPadding, bottomPadding: bottomPadding, leadingSpace: leadingSpace, trailingSpace: trailingSpace, borderWidth: borderWidth, cornerRadius: cornerRadius, tapAction: tapAction)
+    public func set(titleText: String, imageName: String?, captionText: String? = nil, tag: Int = 0, color: PaletteColor? = nil, titleFont: UIFont? = nil, captionFont: UIFont? = nil, clearBackground: Bool = true, topPadding: CGFloat = 0, bottomPadding: CGFloat = 0, leadingSpace: CGFloat = 0, trailingSpace: CGFloat = 0, borderWidth: CGFloat = 0, cornerRadius: CGFloat? = nil, tapAction: ((Int)->())? = nil) {
+        view.set(titleText: titleText, imageName: imageName, captionText: captionText, tag: tag, color: color, titleFont: titleFont, captionFont: captionFont, clearBackground: clearBackground, topPadding: topPadding, bottomPadding: bottomPadding, leadingSpace: leadingSpace, trailingSpace: trailingSpace, borderWidth: borderWidth, cornerRadius: cornerRadius, tapAction: tapAction)
     }
     
     internal override func prepareForReuse() {

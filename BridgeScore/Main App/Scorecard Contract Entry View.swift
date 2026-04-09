@@ -204,7 +204,7 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
                 let selected = (seat == sitting)
                 let color = (selected ? Palette.contractSelected : Palette.contractUnselected)
                 let entry = seatList[indexPath.item].entry
-                cell.set(titleText: entry.title, captionText: entry.caption, tag: indexPath.item, color: color, clearBackground: false, trailingSpace: buttonSpaceX, cornerRadius: 10) { (value) in
+                cell.set(titleText: entry.title, imageName: entry.imageName, captionText: entry.caption, tag: indexPath.item, color: color, clearBackground: false, trailingSpace: buttonSpaceX, cornerRadius: 10) { (value) in
                     self.sittingTapped(seat: self.seatList[value].seat)
                 }
                 return cell
@@ -215,7 +215,7 @@ class ScorecardContractEntryView: UIView, UICollectionViewDataSource, UICollecti
                 let color = (selected ? Palette.contractSelected : Palette.contractUnselected)
                 let entry = declarerList[indexPath.item].entry
                 let leadingSpace = ((collection == .declarer && (indexPath.item == 0 || indexPath.item == Seat.allCases.count - 1)) ? collection.buttonWidth + buttonSpaceX : 0)
-                cell.set(titleText: entry.title, captionText: (sitting == .unknown ? "" : entry.caption), tag: indexPath.item, color: color, clearBackground: false, leadingSpace: leadingSpace, trailingSpace: leadingSpace + buttonSpaceX, cornerRadius: 10) { (value) in
+                cell.set(titleText: entry.title, imageName: entry.imageName, captionText: (sitting == .unknown ? "" : entry.caption), tag: indexPath.item, color: color, clearBackground: false, leadingSpace: leadingSpace, trailingSpace: leadingSpace + buttonSpaceX, cornerRadius: 10) { (value) in
                     self.declarerTapped(declarer: self.declarerList[value].seat)
                 }
                 return cell

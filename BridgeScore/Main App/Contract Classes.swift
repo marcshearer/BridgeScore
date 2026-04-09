@@ -389,9 +389,9 @@ public enum ContractDouble: Int, ContractEnumType, Equatable, Comparable, Identi
         case .undoubled:
             NSAttributedString(string: "")
         case .doubled:
-            ContractDouble.symbol
+            NSAttributedString(string: "*")
         case .redoubled:
-            ContractDouble.symbol + ContractDouble.symbol
+            NSAttributedString(string: "**")
         }
     }
     
@@ -406,9 +406,9 @@ public enum ContractDouble: Int, ContractEnumType, Equatable, Comparable, Identi
         case .undoubled:
             return "-"
         case .doubled:
-            return "􀑇"
+            return "Dbl"
         case .redoubled:
-            return "􀑇􀑇"
+            return "Rdbl"
         }
     }
     

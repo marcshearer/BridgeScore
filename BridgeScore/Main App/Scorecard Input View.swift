@@ -2200,7 +2200,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
             textControl?.isUserInteractionEnabled = scorecard.manualTotals
             set(tap: .textInput)
         case .versus:
-            setTextInputString(value: (Scorecard.current.isImported ? importedVersus : table.versus), offset: 16)
+            setTextInputString(value: (Scorecard.current.isImported ? (table.boards.first?.score == nil ? "Sitout" : importedVersus) : table.versus), offset: 16)
         }
         
         if rowType == .table && column.heading != "" {
@@ -2264,7 +2264,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         if let autoComplete = scorecardDelegate?.scorecardAutoComplete[column.type] {
             textControl?.autoComplete = autoComplete.autoComplete
         }
-        textClear.isHidden = (value == "")
+        textClear.isHidden = (value == "" || !isEnabled)
         textClearTapGesture.isEnabled = true
         textClearWidth.constant = 34
         textClearPadding.forEach { (constraint) in constraint.setIndent(in: self, constant: inputControlInset * 2) }
@@ -2485,10 +2485,10 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 case .comment:
                     refresh = (board.comment.isEmpty != text.isEmpty)
                     board.comment = text
-                    textClear.isHidden = (text == "")
+                    textClear.isHidden = (text == "" || !isEnabled)
                 case .versus:
                     table.versus = text
-                    textClear.isHidden = (text == "")
+                    textClear.isHidden = (text == "" || !isEnabled)
                 case .score:
                     board.score = ScorecardInputUIView.numericValue(text)
                 case .tableScore:
@@ -2623,6 +2623,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         if text != "" {
             textControl?.textValue = ""
             inputTextChanged(textControl!)
+            textControl?.becomeFirstResponder()
         }
     }
     
@@ -2772,6 +2773,11 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 if rowType == .boardTitle {
                     scorecardDelegate?.scorecardSetCommentOptions(visible: true)
                 } else if Scorecard.current.isImported && board?.score != nil {
+                    let isVisible = scorecardDelegate?.scorecardCommentVisible[board.boardIndex] ?? false
+                    if isVisible {
+                        // We are about to set the comment invisible - move on first
+                        scorecardDelegate?.scorecardSelectNext(rowType: rowType, itemNumber: board.boardIndex, columnType: .commentAvailable, action: .next)
+                    }
                     scorecardDelegate?.scorecardSetComment(option: .toggle,  boardIndex: board?.boardIndex)
                     if scorecardDelegate?.scorecardCommentVisible[board.boardIndex] ?? false && board.comment.isEmpty {
                         // If making an empty comment visible - edit it
@@ -2903,7 +2909,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         let width: CGFloat = 70
         let space = (frame.width - width) / 2
         let selected = Responsible.validCases.firstIndex(of: board.responsible)
-        scorecardDelegate?.scorecardScrollPickerPopup(values: Responsible.validCases.map{ScrollPickerEntry(title: $0.show, caption: $0.full)}, maxValues: 13, selected: selected, defaultValue: nil, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 16, bottomPadding: 0) { [self] (selected, keyAction) in
+        scorecardDelegate?.scorecardScrollPickerPopup(values: Responsible.validCases.map{ScrollPickerEntry(title: $0.show, imageName: $0.imageName, caption: $0.full)}, maxValues: 13, selected: selected, defaultValue: nil, frame: CGRect(x: self.frame.minX + space, y: self.frame.minY, width: width, height: self.frame.height), in: self.superview!, topPadding: 16, bottomPadding: 0) { [self] (selected, keyAction) in
             let responsible = Responsible.validCases[selected!]
             responsiblePicker.set(responsible)
             enumPickerDidChange(to: responsible)

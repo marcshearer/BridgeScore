@@ -58,7 +58,7 @@ class DeclarerPickerPopupView: UIView, UICollectionViewDataSource, UICollectionV
         let entry = values[item].entry
         let selectedItem = (values[item].seat == selected)
         let space = (item == 0 || item == values.count - 1 ? buttonSize.width : 0)
-        cell.set(titleText: entry.title, captionText: entry.caption, tag: item, color: (selectedItem ? Palette.banner : Palette.alternate), clearBackground: false, topPadding: topPadding, bottomPadding: bottomPadding, leadingSpace: space, trailingSpace: space, borderWidth: 2.0, tapAction: valueTapped)
+        cell.set(titleText: entry.title, imageName: entry.imageName, captionText: entry.caption, tag: item, color: (selectedItem ? Palette.banner : Palette.alternate), clearBackground: false, topPadding: topPadding, bottomPadding: bottomPadding, leadingSpace: space, trailingSpace: space, borderWidth: 2.0, tapAction: valueTapped)
         return cell
     }
             

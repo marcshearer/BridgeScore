@@ -68,6 +68,7 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         let cell = ScrollPickerCell.dequeue(collectionView, for: indexPath)
         let item = indexPath.item
         var text = ""
+        var imageName: String?
         var caption: String?
         var clearBackground = true
         var tag = -1
@@ -75,11 +76,12 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
         if item >= extra && item - extra <= values.count - 1 {
             clearBackground = false
             text = values[item - extra].title
+            imageName = values[item - extra].imageName
             caption = values[item - extra].caption
             tag = item - extra
             tapAction = valueTapped
         }
-        cell.set(titleText: text, captionText: caption, tag: tag, color: Palette.alternate, clearBackground: clearBackground, topPadding: topPadding, bottomPadding: bottomPadding, borderWidth: (tapAction == nil ? 0 : 0.5), tapAction: tapAction)
+        cell.set(titleText: text, imageName: imageName, captionText: caption, tag: tag, color: Palette.alternate, clearBackground: clearBackground, topPadding: topPadding, bottomPadding: bottomPadding, borderWidth: (tapAction == nil ? 0 : 0.5), tapAction: tapAction)
         return cell
     }
     

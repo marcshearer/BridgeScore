@@ -6,6 +6,7 @@
 //
 
 import Combine
+import SwiftUI
 
 let ScorecardListViewChange = PassthroughSubject<ScorecardDetails, Never>()
 
@@ -71,14 +72,16 @@ public enum Responsible: Int, EnumPickerType, Identifiable {
         }
     }
         
-    public var show: String {
+    public var imageName: String? {
         switch self {
         case .query:
-            "􀯩"
+            "person.fill.questionmark"
         default:
-            short
+            nil
         }
     }
+     
+    public var show: String { short }
     
     public static var validCases: [Responsible] {
         let players = Scorecard.current.scorecard?.type.players ?? 2
@@ -155,6 +158,7 @@ protocol EnumPickerType : CaseIterable, Equatable {
     var string: String {get}
     var show: String {get}
     var short: String {get}
+    var imageName: String? {get}
     var rawValue: Int {get}
     init?(rawValue: Int)
 }
@@ -169,6 +173,8 @@ public enum Seat: Int, EnumPickerType, ContractEnumType, Identifiable {
     public var id: Self { self }
     
     public var show: String { short }
+    
+    public var imageName: String? { nil }
     
     init(string: String) {
         switch string.uppercased() {

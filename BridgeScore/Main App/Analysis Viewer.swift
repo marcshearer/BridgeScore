@@ -476,11 +476,9 @@ struct AnalysisViewer: View {
                     responsiblePicker = true
                 }
                 .popover(isPresented: $responsiblePicker) {
-                    ZStack {
-                        Palette.windowBannerShadow.background.scaleEffect(1.5)
-                        AnalysisResponsiblePicker(board: $board, show: show, scrollId: $scrollId, changed: $changed)
-                            .palette(.windowBannerShadow)
-                    }
+                    AnalysisResponsiblePicker(board: $board, show: show, scrollId: $scrollId, changed: $changed)
+                        .padding(EdgeInsets(top: 10, leading: 2, bottom: 10, trailing: 2))
+                        .presentationBackground(Palette.windowBannerShadow.background)
                 }
                 .onChange(of: changed, initial: false) {
                     if changed {
@@ -512,8 +510,7 @@ struct AnalysisViewer: View {
         var body : some View {
             let scrollIndicators = (MyApp.target == .macOS)
             let scrollHeight: CGFloat = (scrollIndicators ? 10 : 0)
-            let cases = Responsible.validCases.count
-            let blanks = (cases / 2)
+            let blanks = (show / 2)
             let list = (Array(repeating: .blank, count: blanks) + Responsible.validCases + Array(repeating: .blank, count: blanks)).enumerated().map{AnalysisResponsibleEnumeration(index: $0.0, responsible: $0.1)}
             
             VStack {
@@ -570,6 +567,7 @@ struct AnalysisViewer: View {
                 .frame(width: (70 * CGFloat(show)), height: 60 + scrollHeight)
                 Spacer().frame(height: scrollIndicators ? 2 : 0) // Need some space to make them appear
             }
+            .ignoresSafeArea()
         }
     }
     
@@ -584,7 +582,13 @@ struct AnalysisViewer: View {
                 Spacer()
                 HStack {
                     Spacer()
-                    Text(responsible.short).font(responsibleTitleFont)
+                    if let image = responsible.imageName {
+                        Image(systemName: image)
+                            .font(responsibleTitleFont)
+                    } else {
+                        Text(responsible.show)
+                            .font(responsibleTitleFont)
+                    }
                     Spacer()
                 }
                 Spacer().frame(height: 2)
@@ -635,7 +639,9 @@ struct AnalysisViewer: View {
                     nextTraveller(-1)
                 } label: {
                     Image(systemName: "backward.frame")
-                }.disabled(board.boardIndex <= 1).foregroundColor(Palette.banner.text.opacity(board.boardIndex <= 1 ? 0.5 : 1))
+                }
+                .disabled(board.boardIndex <= 1)
+                .foregroundColor(Palette.banner.text.opacity(board.boardIndex <= 1 ? 0.5 : 1))
                 Spacer().frame(width: 20)
                 Button {
                     save()
