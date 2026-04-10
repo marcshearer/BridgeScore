@@ -151,7 +151,11 @@ struct AnalysisViewer: View {
                                             }
                                         }
                                         .frame(width: bodyGeometry.size.width - 24 - handWidth)
-                                        .fullScreenCover(isPresented: $editBidding) {
+                                        .fullScreenCover(isPresented: $editBidding, onDismiss: {
+                                            // Backstop in case handler not called - e.g. escape from TextView
+                                            bids.set(from: traveller.playData, sitting: sitting, dealer: board.dealer)
+                                            bids.set(inEditMode: false)
+                                        }) {
                                             let bodyFrame = bodyGeometry.frame(in: .global)
                                             let analysisFrame = analysisGeometry.frame(in: .global)
                                             let frame = CGRect(x: analysisFrame.minX, y: bodyFrame.minY, width: analysisFrame.width - 8, height: analysisFrame.height)

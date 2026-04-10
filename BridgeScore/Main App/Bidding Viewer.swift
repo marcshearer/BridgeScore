@@ -12,11 +12,14 @@ let doubleBid = Bid(double: .doubled)
 let redoubleBid = Bid(double: .redoubled)
 
 class Auction: ObservableObject, Equatable {
-    @Published var bidList: [(bid: Bid, alerted: Bool, announce: String?)]
     @Published var manualAuction: Bool = true
     @Published var inEditMode: Bool = false
-    @Published var selected: Int? = nil
-    @Published var skip = 0
+    @Published private(set) var selected: Int? = nil
+    @Published private var bidList: [(bid: Bid, alerted: Bool, announce: String?)]
+    @Published private var skip = 0
+    @Published private(set) var lastAdded: Bool = false { didSet {
+        
+    }}
     
     init() {
         self.bidList = []
@@ -31,15 +34,19 @@ class Auction: ObservableObject, Equatable {
     }
     
     func reset() {
-        selected = count
+        set(selected: count)
+        lastAdded = false
     }
     
     func clear() {
         bidList.removeAll()
-        selected = count
+        set(selected: count)
+        lastAdded = false
     }
     
     var count: Int { bidList.count + skip }
+    
+    var isEmpty: Bool { bidList.isEmpty }
     
     func selectable(_ index: Int) -> Bool {
         (index >= skip && index <= count)
@@ -56,8 +63,24 @@ class Auction: ObservableObject, Equatable {
     func add(bid: Bid, alerted: Bool, announce: String? = nil, updateManualAuction: Bool = true) {
         bidList.append((bid, alerted, announce))
         selected = count
+        lastAdded = true
         if updateManualAuction {
             manualAuction = true
+        }
+    }
+    
+    func set(selected index: Int?) {
+        if index != selected {
+            selected = index
+            lastAdded = false
+        }
+    }
+    
+    func canEditAnnounce(index: Int?) -> Bool {
+        if let index = index {
+            (index >= skip && index < count)
+        } else {
+            false
         }
     }
     
@@ -212,20 +235,20 @@ class Auction: ObservableObject, Equatable {
                 if let announce = announce {
                     bidList[index - skip].announce = announce
                 }
-                selected = index
+                set(selected: index)
                 manualAuction = true
             }
         }
     }
     
-    func set(alerted: Bool? = nil, announce: String? = nil) {
-        let selected = selected ?? count
-        if selected >= skip && selected < count {
+    func set(alerted: Bool? = nil, announce: String? = nil, index: Int? = nil) {
+        var index = index ?? selected ?? count
+        if index >= skip && index < count {
             if let alerted = alerted {
-                bidList[selected - skip].alerted = alerted
+                bidList[index - skip].alerted = alerted
             }
             if let announce = announce {
-                bidList[selected - skip].announce = announce
+                bidList[index - skip].announce = announce
             }
         }
     }
@@ -251,7 +274,7 @@ class Auction: ObservableObject, Equatable {
         var result = false
         if !bidList.isEmpty {
             _ = bidList.popLast()
-            selected = count
+            set(selected: count)
             result = true
             manualAuction = true
         }
@@ -301,7 +324,7 @@ class Auction: ObservableObject, Equatable {
     func set(from playData: String, sitting: Seat, dealer: Seat) {
         bidList = []
         skip = sitting.offset(to: dealer)
-        selected = nil
+        set(selected: nil)
         manualAuction = false
         if !playData.isEmpty {
             let tokens = playData.removingPercentEncoding!.components(separatedBy: "|")
@@ -325,7 +348,7 @@ class Auction: ObservableObject, Equatable {
                     add(bid: translatePlayData(bid: bid), alerted: alert, announce: announce, updateManualAuction: false)
                 }
             }
-            selected = count
+            set(selected: count)
         }
     }
         
@@ -372,11 +395,11 @@ struct BiddingViewer : View {
             Rectangle().fill(.clear)
             VStack(spacing: 0) {
                 if !editBidding || !bids.inEditMode {
-                    if !bids.bidList.isEmpty || bids.manualAuction || bids.inEditMode {
+                    if !bids.isEmpty || bids.manualAuction || bids.inEditMode {
                         BiddingViewerTitles(sitting: $sitting, boardNumber: $boardNumber)
                         BiddingViewerBids(bids: bids, focusedField: _focusedField, sitting: $sitting, boardNumber: $boardNumber, bidAnnounce: $bidAnnounce, showClaim: $showClaim, cancelEdit: cancelEdit)
                     }
-                    if (bids.bidList.isEmpty || bids.manualAuction) && !bids.inEditMode {
+                    if (bids.isEmpty || bids.manualAuction) && !bids.inEditMode {
                         Spacer()
                         Button(bids.manualAuction ? "Edit auction" : "Enter auction") {
                             var transaction = Transaction()
@@ -480,7 +503,7 @@ struct BiddingViewerBids: View {
                 }
                 .background {
                     KeyInterceptor(ignoreKeys: otherFocused) { key in
-                        bids.selected = processKey(key: key, index: bids.selected ?? bids.count)
+                        bids.set(selected: processKey(key: key, index: bids.selected ?? bids.count))
                     }
                 }
             }
@@ -488,12 +511,13 @@ struct BiddingViewerBids: View {
         .background(Color.clear)
         .focusable(false)
         .onAppear {
-            bids.selected = bids.count
+            bids.set(selected: bids.count)
         }
         .palette(.handTable)
     }
     
     func processKey(key: UIKey, index: Int) -> Int {
+        var index = index
         switch key.keyCode {
         case .keyboardDeleteOrBackspace:
             if index == bids.count {
@@ -502,22 +526,22 @@ struct BiddingViewerBids: View {
             }
         case .keyboardUpArrow:
             bidLevel = nil
-            if index - 4 >= bids.skip {
+            if bids.selectable(index - 4) {
                 return index - 4
             }
         case .keyboardLeftArrow:
             bidLevel = nil
-            if index - 1 >= bids.skip {
+            if bids.selectable(index - 1) {
                 return index - 1
             }
         case .keyboardDownArrow:
             bidLevel = nil
-            if index + 4 <= bids.count {
+            if bids.selectable(index + 4) {
                 return index + 4
             }
         case .keyboardRightArrow, .keyboardTab:
             bidLevel = nil
-            if index + 1 <= bids.count {
+            if bids.selectable(index + 1) {
                 return index + 1
             }
         case .keyboardEscape:
@@ -561,6 +585,7 @@ struct BiddingViewerBids: View {
                 default:
                     break
                 }
+                index = bids.selected ?? index
             }
         }
         return index
@@ -582,7 +607,7 @@ struct BidButton : View {
             if bids.inEditMode {
                 if bids.selectable(index) {
                     Utility.mainThread {
-                        bids.selected = index
+                        bids.set(selected: index)
                     }
                 }
             } else {
@@ -618,7 +643,7 @@ struct BidButton : View {
             }
             .contentShape(Rectangle())
             .onChange(of: bids.count) {
-                bids.selected = bids.count
+                bids.set(selected: bids.count)
             }
         }
         .buttonStyle(.plain)
@@ -640,16 +665,25 @@ class Bid : Contract {
     override var colorCompact: AttributedString {
         switch level {
         case .blank, .passout:
-            switch double {
-            case .undoubled:
-                AttributedString("Pass")
-            case .doubled:
-                AttributedString("Dbl")
-            case .redoubled:
-                AttributedString("Rdbl")
-            }
+            AttributedString(compact)
         default:
             super.colorCompact
+        }
+    }
+    
+    override var compact: String {
+        switch level {
+        case .blank, .passout:
+            switch double {
+            case .undoubled:
+                "Pass"
+            case .doubled:
+                "Dbl"
+            case .redoubled:
+                "Rdbl"
+            }
+        default:
+            super.compact
         }
     }
     

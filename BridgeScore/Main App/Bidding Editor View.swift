@@ -123,19 +123,29 @@ struct BiddingAnnounceView : View {
     @ObservedObject var bids: Auction
     @FocusState.Binding var focusedField: BiddingFocusField?
     
+    var bidIndex: Int? {
+        if let selected = bids.selected {
+            (bids.lastAdded && selected == bids.count ? selected - 1 : selected)
+        } else {
+            bids.selected
+        }
+    }
+    
     var nonOptional: Binding<String> {
         Binding {
-            bids.element(bids.selected!).announce ?? ""
+            bids.element(bidIndex!).announce ?? ""
         } set: { (newValue) in
-            bids.bidList[bids.selected! - bids.skip].announce = (newValue == "" ? nil : newValue)
+            if let bidIndex = bidIndex {
+                bids.set(announce: newValue == "" ? nil : newValue, index: bidIndex)
+            }
         }
     }
     
     var body : some View {
         VStack(spacing: 0) {
             Spacer()
-            if let selected = bids.selected, bids.element(selected).bid != nil {
-                InputFocused(title: "", field: nonOptional, focusedField: $focusedField, focusValue: BiddingFocusField.explain, placeHolder: "Enter explanation", width: 230, color: Palette.clear, font: inputTitleFont, multiLine: false, inlineTitleWidth: 0, accessibilityIdentifier: "Explanation", onLoseFocus: {
+            if bids.canEditAnnounce(index: bidIndex) {
+                InputFocused(title: "", field: nonOptional, focusedField: $focusedField, focusValue: BiddingFocusField.explain, placeHolder: "Explain " + (bids.element(bidIndex!).bid?.compact ?? ""), width: 230, color: Palette.clear, font: inputTitleFont, multiLine: false, inlineTitleWidth: 0, accessibilityIdentifier: "Explanation", onLoseFocus: {
                     Utility.mainThread {
                         focusedField = nil
                     }
@@ -149,6 +159,7 @@ struct BiddingAnnounceView : View {
                         .foregroundColor(Palette.input.faintText.opacity(0.5))
                     Spacer()
                 }
+                .debugPrint(bids.lastAdded)
             }
             Spacer()
         }
@@ -171,12 +182,12 @@ struct BiddingViewerToolbar : View {
             BiddingEditorButton(text: "Delete") {
                 bids.removeLast()
             }
-            .disabled(bids.selected != bids.count || bids.bidList.isEmpty)
+            .disabled(bids.selected != bids.count || bids.isEmpty)
             
             BiddingEditorButton(text: "Clear") {
                 bids.clear()
             }
-            .disabled(bids.bidList.isEmpty)
+            .disabled(bids.isEmpty)
             
             BiddingEditorButton(text: bids.element(selected).alerted ? "Un-Alert" : "Alert") {
                 bids.set(alerted: !bids.element(selected).alerted)

@@ -103,6 +103,9 @@ struct TextViewWrapper: UIViewRepresentable {
         }
         
         func inputTextDidEndEditing(_ textInput: any ScorecardInputTextInput) {
+            Utility.mainThread {
+                self.parent.focused = false
+            }
         }
         
         func inputTextShouldReturn(_ textInput: any ScorecardInputTextInput) -> Bool {
@@ -128,12 +131,16 @@ struct TextViewWrapper: UIViewRepresentable {
         }
         
         func resignedFirstResponder(from: any ScorecardResponder) {
+            Utility.mainThread {
+                self.parent.focused = false
+            }
         }
         
         func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
         }
         
         func pressesEnded(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
+            
         }
     }
     
