@@ -15,7 +15,7 @@ class Auction: ObservableObject, Equatable {
     @Published var manualAuction: Bool = true
     @Published var inEditMode: Bool = false
     @Published private(set) var selected: Int? = nil
-    @Published private var bidList: [(bid: Bid, alerted: Bool, announce: String?)]
+    @Published private var bidList: [(bid: Bid?, alerted: Bool, announce: String?)]
     @Published private var skip = 0
     @Published private(set) var lastAdded: Bool = false { didSet {
         
@@ -60,6 +60,10 @@ class Auction: ObservableObject, Equatable {
         }
     }
     
+    func set(element: (bid: Bid?, alerted: Bool, announce: String?), for index: Int) {
+        bidList[index - skip] = element
+    }
+    
     func add(bid: Bid, alerted: Bool, announce: String? = nil, updateManualAuction: Bool = true) {
         bidList.append((bid, alerted, announce))
         selected = count
@@ -76,9 +80,9 @@ class Auction: ObservableObject, Equatable {
         }
     }
     
-    func canEditAnnounce(index: Int?) -> Bool {
+    func hasBid(index: Int?) -> Bool {
         if let index = index {
-            (index >= skip && index < count)
+            index != count && selectable(index)
         } else {
             false
         }
@@ -87,16 +91,16 @@ class Auction: ObservableObject, Equatable {
     func can(bid: Bid, at position: Int? = nil) -> Bool {
         var result = true
         let position = position ?? selected ?? count
-        let element = position - skip
         
         // Check previous passes
         if bidList.count == 3 && bidList.filter({$0.bid != passBid}).isEmpty && bid == passBid {
             // 4 passes at the beginning of the auction is OK
-        } else {
+        } else if bidList.count > 3 {
+            // Don't allow 3 passes unless right at start of auction
             var passes = 0
-            if element >= 3 {
-                for index in ((element - 3)...(element-1)).reversed() {
-                    if bidList[index].bid == passBid {
+            if position >= 3 {
+                for index in ((position - 3)...(position-1)).reversed() {
+                    if element(index).bid == passBid {
                         passes += 1
                     } else {
                         break
@@ -111,32 +115,34 @@ class Auction: ObservableObject, Equatable {
         if result {
             if bid.level.hasSuit {
                 // Actual bid - check lower bid
-                var index = element
-                while index > 0 {
+                var index = position
+                while hasBid(index: index - 1) {
                     index -= 1
-                    let lowerBid = bidList[index].bid
-                    if lowerBid.level.hasSuit {
-                        if bid <= lowerBid {
-                            result = false
-                            break
-                        } else {
-                            break
+                    if let lowerBid = element(index).bid {
+                        if lowerBid.level.hasSuit {
+                            if bid <= lowerBid {
+                                result = false
+                                break
+                            } else {
+                                break
+                            }
                         }
                     }
                 }
                 
                 if result {
                     // Check higher bid
-                    var index = element
-                    while index < bidList.count - 1 {
+                    var index = position
+                    while hasBid(index: index + 1) {
                         index += 1
-                        let upperBid = bidList[index].bid
-                        if upperBid.level.hasSuit {
-                            if bid >= upperBid {
-                                result = false
-                                break
-                            } else {
-                                break
+                        if let upperBid = element(index).bid {
+                            if upperBid.level.hasSuit {
+                                if bid >= upperBid {
+                                    result = false
+                                    break
+                                } else {
+                                    break
+                                }
                             }
                         }
                     }
@@ -148,7 +154,7 @@ class Auction: ObservableObject, Equatable {
                     // A pass - check for too many passes in a row
                     var passes = 0
                     for (index, bid) in bidList.map({$0.bid}).enumerated() {
-                        if (index != element && bid != passBid) || passes > 3 {
+                        if (index != position && bid != passBid) || passes > 3 {
                             // End of sequence of passes - check it
                             if passes > 3 {
                                 result = false
@@ -160,16 +166,16 @@ class Auction: ObservableObject, Equatable {
                     }
                 case .doubled:
                     // Only valid if previous bid was a normal bid by an opponent
-                    if element == 0 {
+                    if position == 0 {
                         result = false
                     } else {
                         var foundBid  = false
-                        for index in (0..<element).reversed() {
-                            if bidList[index].bid != passBid {
+                        for index in (0..<position).reversed() {
+                            if hasBid(index: index) && element(index).bid != passBid {
                                     // Not a pass
-                                if bidList[index].bid.level.hasSuit {
+                                if let bid = element(index).bid, bid.level.hasSuit {
                                         // Not a double or redouble
-                                    if (element - index) % 2 == 0 {
+                                    if (position - index) % 2 == 0 {
                                             // By partner (or self)
                                         result = false
                                         break
@@ -189,20 +195,20 @@ class Auction: ObservableObject, Equatable {
                     }
                 case .redoubled:
                     // Only valid if previous bid was a double by an opponent
-                    if element == 0 {
+                    if position == 0 {
                         result = false
                     } else {
                         var foundBid  = false
-                        for index in (0..<element).reversed() {
-                            if bidList[index].bid != passBid {
+                        for index in (0..<position).reversed() {
+                            if hasBid(index: index) && element(index).bid != passBid {
                                     // Not a pass
-                                if bidList[index].bid.double != .doubled {
+                                if let bid = element(index).bid, bid.double != .doubled {
                                         // Not a double
                                     result = false
                                     break
                                 } else {
                                     // Was a double
-                                    if (element - index) % 2 == 0 {
+                                    if (position - index) % 2 == 0 {
                                             // By partner (or self)
                                         result = false
                                         break
@@ -228,13 +234,15 @@ class Auction: ObservableObject, Equatable {
             if index == count {
                 add(bid: newBid, alerted: alerted ?? false, announce: announce)
             } else if index >= skip {
-                bidList[index - skip].bid = newBid
+                var element = self.element(index)
+                element.bid = newBid
                 if let alerted = alerted {
-                    bidList[index - skip].alerted = alerted
+                    element.alerted = alerted
                 }
                 if let announce = announce {
-                    bidList[index - skip].announce = announce
+                    element.announce = announce
                 }
+                bidList[index - skip] = element
                 set(selected: index)
                 manualAuction = true
             }
@@ -242,24 +250,28 @@ class Auction: ObservableObject, Equatable {
     }
     
     func set(alerted: Bool? = nil, announce: String? = nil, index: Int? = nil) {
-        var index = index ?? selected ?? count
-        if index >= skip && index < count {
+        let index = index ?? selected ?? count
+        if hasBid(index: index) {
+            var element = self.element(index)
             if let alerted = alerted {
-                bidList[index - skip].alerted = alerted
+                element.alerted = alerted
             }
             if let announce = announce {
-                bidList[index - skip].announce = announce
+                element.announce = announce
             }
+            set(element: element, for: index)
         }
     }
     
     var contract: Contract {
         var result = Contract(level: .passout)
         for bid in bidList.map({$0.bid}) {
-            if bid.level.hasSuit {
-                result = bid
-            } else if bid.double != .undoubled {
-                result.double = bid.double
+            if let bid = bid {
+                if bid.level.hasSuit {
+                    result = bid
+                } else if bid.double != .undoubled {
+                    result.double = bid.double
+                }
             }
         }
         return result
@@ -305,14 +317,16 @@ class Auction: ObservableObject, Equatable {
     var playData: String {
         var playData = "manualAuction|"
         for (bid, alert, announce) in bidList {
-            playData.append("mb|\(bid.playData)")
-            if alert {
-                playData.append("!")
+            if let bid = bid {
+                playData.append("mb|\(bid.playData)")
+                if alert {
+                    playData.append("!")
+                }
+                if let announce = announce {
+                    playData += "|an|\(announce.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)"
+                }
+                playData += "|"
             }
-            if let announce = announce {
-                playData += "|an|\(announce.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)"
-            }
-            playData += "|"
         }
         return playData
     }

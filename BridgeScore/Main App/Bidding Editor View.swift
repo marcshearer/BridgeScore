@@ -123,29 +123,27 @@ struct BiddingAnnounceView : View {
     @ObservedObject var bids: Auction
     @FocusState.Binding var focusedField: BiddingFocusField?
     
-    var bidIndex: Int? {
+    var bidIndex: Int {
         if let selected = bids.selected {
             (bids.lastAdded && selected == bids.count ? selected - 1 : selected)
         } else {
-            bids.selected
+            bids.selected ?? bids.count
         }
     }
     
     var nonOptional: Binding<String> {
         Binding {
-            bids.element(bidIndex!).announce ?? ""
+            bids.element(bidIndex).announce ?? ""
         } set: { (newValue) in
-            if let bidIndex = bidIndex {
-                bids.set(announce: newValue == "" ? nil : newValue, index: bidIndex)
-            }
+            bids.set(announce: newValue == "" ? nil : newValue, index: bidIndex)
         }
     }
     
     var body : some View {
         VStack(spacing: 0) {
             Spacer()
-            if bids.canEditAnnounce(index: bidIndex) {
-                InputFocused(title: "", field: nonOptional, focusedField: $focusedField, focusValue: BiddingFocusField.explain, placeHolder: "Explain " + (bids.element(bidIndex!).bid?.compact ?? ""), width: 230, color: Palette.clear, font: inputTitleFont, multiLine: false, inlineTitleWidth: 0, accessibilityIdentifier: "Explanation", onLoseFocus: {
+            if bids.hasBid(index: bidIndex) {
+                InputFocused(title: "", field: nonOptional, focusedField: $focusedField, focusValue: BiddingFocusField.explain, placeHolder: "Explain " + (bids.element(bidIndex).bid?.compact ?? ""), width: 230, color: Palette.clear, font: inputTitleFont, multiLine: false, inlineTitleWidth: 0, accessibilityIdentifier: "Explanation", onLoseFocus: {
                     Utility.mainThread {
                         focusedField = nil
                     }
