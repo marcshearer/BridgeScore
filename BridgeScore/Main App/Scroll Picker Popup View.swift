@@ -279,7 +279,7 @@ class ScrollPickerPopupView: UIView, UICollectionViewDataSource, UICollectionVie
                         set(selectedOnEntry)
                     }
                     
-                    if keyAction != .characters && !(keyAction?.arrowKey ?? false) {
+                    if keyAction != .characters && !(keyAction?.leftRightKey ?? false) {
                         completion?(selected, keyAction)
                         hide()
                     }

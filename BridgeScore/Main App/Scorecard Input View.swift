@@ -3116,7 +3116,7 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
     override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
         if !processPressedKeys(presses, with: event, allowCharacters: true, action: { (keyAction, _) in
             switch keyAction {
-            case .next, .previous, .characters:
+            case .next, .previous, .up, .down, .characters:
                 true
             case .left, .right:
                 switch column.type {
