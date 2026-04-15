@@ -656,7 +656,8 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     internal var focusTable: Int?
     internal var focusBoard: Int?
     internal var focusColumnType: ColumnType?
-    internal var commentOptions: CommentOptionsView!
+    internal var commentOptionsView: CommentOptionsView!
+    internal var commentOption: CommentOption = .hideIfBlank
     
     var boardColumns: [ScorecardColumn] = []
     var boardAnalysisCommentColumns: [ScorecardColumn] = []
@@ -679,7 +680,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         super.init(frame: frame)
     
         // Create comment options view
-        self.commentOptions = CommentOptionsView(completion: commentOptionsCompletion)
+        self.commentOptionsView = CommentOptionsView(completion: commentOptionsCompletion)
         
         // Set up view
         change(viewType: scorecardViewType, force: true)
@@ -704,9 +705,9 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
         ScorecardInputBoardTableCell.register(mainTableView)
         
         // Setup comment available selection view and select non-blank
-        self.addSubview(commentOptions)
-        commentOptions.set(visible: false)
-        commentOptions.set(selected: .hideIfBlank)
+        self.addSubview(commentOptionsView)
+        commentOptionsView.set(visible: false)
+        commentOptionsView.set(selected: commentOption)
         scorecardSetComment(option: .hideIfBlank, boardIndex: nil)
         
         // Setup auto-complete views
@@ -762,6 +763,7 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     
     public func tableRefresh() {
         titleView.collectionView.reloadData()
+        self.scorecardSetComment(option: commentOption, boardIndex: nil)
         mainTableView.reloadData()
     }
     
@@ -1382,14 +1384,14 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
     }
     
     func scorecardPositionCommentOptions(frame: CGRect) {
-        commentOptions.set(position: CGPoint(x: frame.maxX, y: frame.maxY))
+        commentOptionsView.set(position: CGPoint(x: frame.maxX, y: frame.maxY))
     }
     
     func scorecardSetCommentOptions(visible: Bool) {
         if visible {
             disableBanner.wrappedValue = true
         }
-        commentOptions.set(visible: visible)
+        commentOptionsView.set(visible: visible)
     }
     
     func commentOptionsCompletion(selected commentOption: CommentOption?) {
