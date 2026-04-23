@@ -435,7 +435,7 @@ class ImportedScorecard: NSObject, ObservableObject {
     
     func checkBoardsPerTable(name: String) {
         // Check boards per table
-        var lastVersus: Int? = nil
+        var lastRanking: [Seat: Int]? = nil
         var lastBoards: Int = 0
         var boardsTableError = false
         if let myRanking = myRanking,
@@ -444,15 +444,15 @@ class ImportedScorecard: NSObject, ObservableObject {
             let mySection = myRanking.section
             for (_, lines) in travellers.sorted(by: {$0.key < $1.key}) {
                 if let line = myTravellerLine(lines: lines, myNumber: myNumber, myPair: myPair, mySection: mySection) {
-                    if let mySeat = seat(line: line, ranking: myRanking, name: name) {
-                        let thisVersus = line.ranking[mySeat.leftOpponent]
-                        if lastVersus != thisVersus && lastVersus != nil {
+                    if seat(line: line, ranking: myRanking, name: name) != nil {
+                        let thisRanking = line.ranking
+                        if lastRanking != thisRanking && lastRanking != nil {
                             if lastBoards != scorecard?.boardsTable {
                                 boardsTableError = true
                             }
                             lastBoards = 0
                         }
-                        lastVersus = thisVersus
+                        lastRanking = thisRanking
                         lastBoards += 1
                     }
                 }

@@ -94,6 +94,9 @@ struct ImportBridgeWebsScorecard: View {
         }
         .onAppear {
             phase = (scorecard.isMultiSession ? .checkOffset : .getList)
+            if Scorecard.current.scorecard?.type.eventType == .individual {
+                MessageBox.shared.show("Warning - ScoreBridge / BridgeWebs provides very suspect data for Individual tournaments.\n\nIf this event was scored on ScoreBridge, the Usebio import is much better if you can get it")
+            }
         }
     }
     
@@ -686,7 +689,8 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
             case "by":
                 importedTraveller.declarer = Seat(string: columns.element(index) ?? "")
             case "tks":
-                if let string = columns.element(index), let tricks = Int(string) {
+                if let string = columns.element(index) {
+                    let tricks = Int(string) ?? 0
                     if let level = importedTraveller.contract?.level {
                         if level.rawValue > 0 {
                             importedTraveller.made = tricks - (level.rawValue + 6)

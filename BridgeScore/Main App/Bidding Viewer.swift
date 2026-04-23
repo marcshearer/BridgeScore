@@ -401,6 +401,7 @@ struct BiddingViewer : View {
     @Binding var bidAnnounce: String
     @Binding var showClaim: Bool
     @Binding var editBidding: Bool
+    @Binding var canEditBidding: Bool
     var font: Font = .title2
     var cancelEdit: ((Bool)->())? = nil
      
@@ -413,7 +414,7 @@ struct BiddingViewer : View {
                         BiddingViewerTitles(sitting: $sitting, boardNumber: $boardNumber)
                         BiddingViewerBids(bids: bids, focusedField: _focusedField, sitting: $sitting, boardNumber: $boardNumber, bidAnnounce: $bidAnnounce, showClaim: $showClaim, cancelEdit: cancelEdit)
                     }
-                    if (bids.isEmpty || bids.manualAuction) && !bids.inEditMode {
+                    if (bids.isEmpty || bids.manualAuction) && !bids.inEditMode && canEditBidding {
                         Spacer()
                         Button(bids.manualAuction ? "Edit auction" : "Enter auction") {
                             var transaction = Transaction()
@@ -426,6 +427,10 @@ struct BiddingViewer : View {
                         .font(defaultFont.bold())
                         .minimumScaleFactor(0.6)
                         .foregroundColor(Palette.handTable.contrastText)
+                        HStack {
+                            Spacer()
+                        }
+                    } else {
                         HStack {
                             Spacer()
                         }

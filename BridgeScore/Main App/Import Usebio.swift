@@ -218,7 +218,7 @@ struct ImportUsebioScorecard: View {
             var text: String?
             var date: Date?
             
-            if let contents = try? String(contentsOf: path) {
+            if let contents = try? String(contentsOf: path, encoding: .utf8) {
                 if contents.uppercased().contains("<USEBIO VERSION") {
                     let lines = contents.replacingOccurrences(of: "\r\n", with: "\n").components(separatedBy: "\n")
                     if let line = lines.filter({$0.ltrim().uppercased().starts(with: "<EVENT_DESCRIPTION>")}).first {
@@ -461,7 +461,6 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
                 currentRanking.currentSeat = currentRanking.currentSeat.offset(by: 1)
                 currentRanking.currentPair = currentRanking.currentSeat.pair
             }))
-            fatalError("Individuals not completed yet")
         default:
             current = current?.add(child: Node(name: name))
         }
@@ -637,21 +636,20 @@ class ImportedUsebioScorecard: ImportedScorecard, XMLParserDelegate {
             current = current?.add(child: Node(name: name, completion: { (value) in
                 traveller.direction = value.uppercased() == "NS" ? .ns : .ew
             }))
-        case "NS_PAIR_NUMBER":
+        case "NS_PAIR_NUMBER", "EW_PAIR_NUMBER":
+            let pair = Pair(string: name.left(2))
             current = current?.add(child: Node(name: name, completion: { [self] (value) in
                 let invert = (traveller.direction == .ew)
-                for seat in Pair.ns.seats {
+                for seat in pair.seats {
                     traveller.ranking[seat] = currentMatch.ranking[invert ? seat.equivalent : seat] ?? Int(value)
                     traveller.section[seat] = currentMatch.section[invert ? seat.equivalent : seat] ?? 1
                 }
             }))
-        case "EW_PAIR_NUMBER":
+        case "N_PLAYER_NUMBER", "S_PLAYER_NUMBER", "E_PLAYER_NUMBER", "W_PLAYER_NUMBER":
+            let seat = Seat(string: name.left(1))
             current = current?.add(child: Node(name: name, completion: { [self] (value) in
-                let invert = (traveller.direction == .ew)
-                for seat in Pair.ew.seats {
-                    traveller.ranking[seat] = currentMatch.ranking[invert ? seat.equivalent : seat] ?? Int(value)
-                    traveller.section[seat] = currentMatch.section[invert ? seat.equivalent : seat] ?? 1
-                }
+                traveller.ranking[seat] = currentMatch.ranking[seat] ?? Int(value)
+                traveller.section[seat] = currentMatch.section[seat] ?? 1
             }))
         case "CONTRACT":
             current = current?.add(child: Node(name: name, completion: { (value) in

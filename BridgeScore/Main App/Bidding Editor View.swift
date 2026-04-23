@@ -42,7 +42,7 @@ struct BiddingEditorView: View {
                             Spacer().frame(height: 20).layoutPriority(2)
                             Spacer()
                             
-                            BiddingViewer(bids: bids, focusedField: $focusedField, sitting: $sitting, boardNumber: $boardNumber, bidAnnounce: $bidAnnounce, showClaim: $showClaim, editBidding: $editBidding, cancelEdit: cancelEdit)
+                            BiddingViewer(bids: bids, focusedField: $focusedField, sitting: $sitting, boardNumber: $boardNumber, bidAnnounce: $bidAnnounce, showClaim: $showClaim, editBidding: $editBidding, canEditBidding: Binding.constant(false), cancelEdit: cancelEdit)
                                 .matchedGeometryEffect(id: BiddingId.biddingViewer, in: biddingViewerNameSpace, anchor: .topTrailing, isSource: true)
                                 .frame(width: 300)
                                 .frame(maxHeight: 260)

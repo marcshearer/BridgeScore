@@ -94,6 +94,7 @@ struct AnalysisViewer: View {
     @State var yOffset: CGFloat
     @Binding var dismissView: Bool
     @State var editBidding: Bool = false
+    var canEditBidding: Binding<Bool> { Binding { traveller.rankingNumber == handTraveller.rankingNumber } set: { (_) in } }
     @StateObject var bids = Auction()
     
     init(board: BoardViewModel, traveller: TravellerViewModel, sitting: Seat, frame: CGRect, initialYOffset: CGFloat, dismissView: Binding<Bool>, from: UIView) {
@@ -125,7 +126,7 @@ struct AnalysisViewer: View {
                                 HStack(spacing: 0) {
                                     Spacer().frame(width: 8)
                                     let handWidth = bodyGeometry.size.height * 0.8
-                                    HandViewer(board: $board, traveller: $handTraveller, bids: bids, sitting: $sitting, rotated: $rotated, from: from, bidAnnounce: $bidAnnounce, stopEdit: $stopEdit, editBidding: $editBidding)
+                                    HandViewer(board: $board, traveller: $handTraveller, bids: bids, sitting: $sitting, rotated: $rotated, from: from, bidAnnounce: $bidAnnounce, stopEdit: $stopEdit, editBidding: $editBidding, canEditBidding: canEditBidding)
                                         .cornerRadius(analysisCornerSize)
                                         .ignoresSafeArea(.keyboard)
                                         .frame(width: handWidth)
@@ -403,6 +404,14 @@ struct AnalysisViewer: View {
             if let board = Scorecard.current.boards[board.boardIndex] {
                 if board.changed {
                     Scorecard.current.save(board: board)
+                }
+                // Also save scorer's traveller (and team-mates) in case playData changed for manual auction
+                for equivalentSeat in (Scorecard.current.scorecard?.type.players == 4) ? [true, false] : [true] {
+                    if let (_, traveller, _) = Scorecard.getBoardTraveller(boardIndex: board.boardIndex, equivalentSeat: equivalentSeat) {
+                        if traveller.isNew || traveller.changed {
+                            Scorecard.current.save(traveller: traveller)
+                        }
+                    }
                 }
             }
         }

@@ -23,13 +23,14 @@ struct HandViewerForm: View {
     @State var stopEdit = false
     @State var rotated = 0
     @State var editBidding = false
+    @State var canEditBidding = false
     @StateObject var bids = Auction()
     
     var body: some View {
         
         StandardView("HandViewerForm") {
             VStack {
-                HandViewer(board: $board, traveller: $traveller, bids: bids, sitting: $sitting, rotated: $rotated, from: from, bidAnnounce: $bidAnnounce, stopEdit: $stopEdit, editBidding: $editBidding)
+                HandViewer(board: $board, traveller: $traveller, bids: bids, sitting: $sitting, rotated: $rotated, from: from, bidAnnounce: $bidAnnounce, stopEdit: $stopEdit, editBidding: $editBidding, canEditBidding: $canEditBidding)
                 Spacer().frame(height: 2)
                 HandViewButtonBar()
                 Spacer().frame(height: 2)
@@ -87,6 +88,7 @@ struct HandViewer: View {
     @Binding var bidAnnounce: String
     @Binding var stopEdit: Bool
     @Binding var editBidding: Bool
+    @Binding var canEditBidding: Bool
     @State var trickNumber = 0
     @State var deal = Deal()
     @State var tricks: [Trick] = []
@@ -119,7 +121,7 @@ struct HandViewer: View {
                         HandViewHand(board: $board, traveller: $traveller, sitting: $sitting, player: .rhOpponent, rotated: $rotated, deal: $deal, trickNumber: $trickNumber, visible: $visible)
                     }
                     HStack(spacing: 10) {
-                        BiddingViewer(bids: bids, focusedField: $focusedField, sitting: $sitting, boardNumber: $board.boardNumber, bidAnnounce: $bidAnnounce, showClaim: $showClaim, editBidding: $editBidding, font: .title3)
+                        BiddingViewer(bids: bids, focusedField: $focusedField, sitting: $sitting, boardNumber: $board.boardNumber, bidAnnounce: $bidAnnounce, showClaim: $showClaim, editBidding: $editBidding, canEditBidding: $canEditBidding, font: .title3)
                             .frame(maxWidth: .infinity)
                         HandViewHand(board: $board, traveller: $traveller, sitting: $sitting, player: .player, rotated: $rotated, deal: $deal, trickNumber: $trickNumber, visible: $visible)
                             .frame(maxWidth: .infinity)
