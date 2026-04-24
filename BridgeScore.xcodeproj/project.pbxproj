@@ -171,6 +171,7 @@
 		B2CC509E27BE22210050F22C /* Enum Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CC509D27BE22210050F22C /* Enum Picker.swift */; };
 		B2CD8E722D3BE80F00E0B3DD /* UITextView Wrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CD8E712D3BE80700E0B3DD /* UITextView Wrapper.swift */; };
 		B2DADE5127E7A06E009F7572 /* Import BBO.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2DADE5027E7A06E009F7572 /* Import BBO.swift */; };
+		B2E0914C2F9B842600E5C5F1 /* Bridge Scorecard.icon in Resources */ = {isa = PBXBuildFile; fileRef = B2E0914B2F9B842600E5C5F1 /* Bridge Scorecard.icon */; };
 		B2E1B76827DC71E300204CAC /* User Defaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E1B76727DC71E300204CAC /* User Defaults.swift */; };
 		B2E2FDBF2D4FBA220044B9AB /* Intents and Entities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E2FDBE2D4FBA1B0044B9AB /* Intents and Entities.swift */; };
 		B2E2FDC02D4FBA220044B9AB /* Intents and Entities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E2FDBE2D4FBA1B0044B9AB /* Intents and Entities.swift */; };
@@ -361,6 +362,7 @@
 		B2CC509F27BE22900050F22C /* Obsolete Contract Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Obsolete Contract Picker.swift"; sourceTree = "<group>"; };
 		B2CD8E712D3BE80700E0B3DD /* UITextView Wrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UITextView Wrapper.swift"; sourceTree = "<group>"; };
 		B2DADE5027E7A06E009F7572 /* Import BBO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Import BBO.swift"; sourceTree = "<group>"; };
+		B2E0914B2F9B842600E5C5F1 /* Bridge Scorecard.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "Bridge Scorecard.icon"; sourceTree = "<group>"; };
 		B2E1B76727DC71E300204CAC /* User Defaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "User Defaults.swift"; sourceTree = "<group>"; };
 		B2E2FDBE2D4FBA1B0044B9AB /* Intents and Entities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Intents and Entities.swift"; sourceTree = "<group>"; };
 		B2E2FDC42D50B5D70044B9AB /* Stats Widget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Stats Widget.swift"; sourceTree = "<group>"; };
@@ -625,6 +627,7 @@
 			isa = PBXGroup;
 			children = (
 				B22D40A127A2CF3E002F2470 /* Assets.xcassets */,
+				B2E0914B2F9B842600E5C5F1 /* Bridge Scorecard.icon */,
 				B26BCDF92799A1AC00B73501 /* Bridge Score App.swift */,
 				B26BCE532799AE4D00B73501 /* Master Data.swift */,
 				B2EB3D78279DB80000D64225 /* Scorecard.swift */,
@@ -837,6 +840,7 @@
 				B22D40A227A2CF3E002F2470 /* Assets.xcassets in Resources */,
 				B23ADBEE27B1CC68001B6B38 /* Notes.txt in Resources */,
 				B26BCE012799A1AE00B73501 /* Preview Assets.xcassets in Resources */,
+				B2E0914C2F9B842600E5C5F1 /* Bridge Scorecard.icon in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1244,7 +1248,7 @@
 		B26BCE0A2799A1AE00B73501 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "Bridge Scorecard";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = BridgeScore/BridgeScore.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
@@ -1290,7 +1294,7 @@
 		B26BCE0B2799A1AE00B73501 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "Bridge Scorecard";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = BridgeScore/BridgeScore.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
