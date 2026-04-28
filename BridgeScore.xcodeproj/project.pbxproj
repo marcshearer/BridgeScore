@@ -35,6 +35,11 @@
 		B20096452D4A02900051B8E3 /* Debug Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B204175727CE58CD00A3EFA8 /* Debug Utilities.swift */; };
 		B203F96A27F30BD900DA748A /* Scorecard Web View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B203F96927F30BD900DA748A /* Scorecard Web View.swift */; };
 		B204175827CE58CD00A3EFA8 /* Debug Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B204175727CE58CD00A3EFA8 /* Debug Utilities.swift */; };
+		B20771142F9CF57200DB6C18 /* Board Summary Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20771132F9CF56D00DB6C18 /* Board Summary Managed Object.swift */; };
+		B20771162F9D1A5300DB6C18 /* Object Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20771152F9D1A4D00DB6C18 /* Object Model.swift */; };
+		B20771172F9D1A5300DB6C18 /* Object Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20771152F9D1A4D00DB6C18 /* Object Model.swift */; };
+		B20771192F9D1C8900DB6C18 /* Board SummaryView Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20771182F9D1C8000DB6C18 /* Board SummaryView Model.swift */; };
+		B207711B2F9D28AE00DB6C18 /* Insights.swift in Sources */ = {isa = PBXBuildFile; fileRef = B207711A2F9D28AB00DB6C18 /* Insights.swift */; };
 		B20B38F227C153280001B45E /* Scorecard Contract Entry View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20B38F127C153280001B45E /* Scorecard Contract Entry View.swift */; };
 		B2100D9827DA449D00CC0130 /* Graph View Class.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2100D9727DA449D00CC0130 /* Graph View Class.swift */; };
 		B2100D9A27DA488200CC0130 /* Stats View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2100D9927DA488200CC0130 /* Stats View.swift */; };
@@ -131,6 +136,7 @@
 		B26C555727C7EA9200015D0A /* Table with Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26C555627C7EA9200015D0A /* Table with Collection.swift */; };
 		B26C555927C8BCBC00015D0A /* Scroll Picker Popup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26C555827C8BCBC00015D0A /* Scroll Picker Popup View.swift */; };
 		B273C1442B0BC2120061CF04 /* Scorecard Drop Delegates.swift in Sources */ = {isa = PBXBuildFile; fileRef = B273C1432B0BC2120061CF04 /* Scorecard Drop Delegates.swift */; };
+		B2746FC12F9F2BC300716D08 /* Insights View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2746FC02F9F2BBA00716D08 /* Insights View.swift */; };
 		B27AD1332F693AE600890600 /* Rescore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B27AD1322F693ADF00890600 /* Rescore.swift */; };
 		B27CFA4E27CDFE8400B976E0 /* Popup Menu.swift in Sources */ = {isa = PBXBuildFile; fileRef = B27CFA4D27CDFE8400B976E0 /* Popup Menu.swift */; };
 		B28D3F5E2ACE6FD60060DAA1 /* Override Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B28D3F5D2ACE6FD60060DAA1 /* Override Managed Object.swift */; };
@@ -223,6 +229,10 @@
 		B20095DE2D4A00830051B8E3 /* Intent Actions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Intent Actions.swift"; sourceTree = "<group>"; };
 		B203F96927F30BD900DA748A /* Scorecard Web View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Web View.swift"; sourceTree = "<group>"; };
 		B204175727CE58CD00A3EFA8 /* Debug Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Debug Utilities.swift"; sourceTree = "<group>"; };
+		B20771132F9CF56D00DB6C18 /* Board Summary Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Board Summary Managed Object.swift"; sourceTree = "<group>"; };
+		B20771152F9D1A4D00DB6C18 /* Object Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Object Model.swift"; sourceTree = "<group>"; };
+		B20771182F9D1C8000DB6C18 /* Board SummaryView Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Board SummaryView Model.swift"; sourceTree = "<group>"; };
+		B207711A2F9D28AB00DB6C18 /* Insights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Insights.swift; sourceTree = "<group>"; };
 		B20B38F127C153280001B45E /* Scorecard Contract Entry View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Contract Entry View.swift"; sourceTree = "<group>"; };
 		B2100D9727DA449D00CC0130 /* Graph View Class.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Graph View Class.swift"; sourceTree = "<group>"; };
 		B2100D9927DA488200CC0130 /* Stats View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Stats View.swift"; sourceTree = "<group>"; };
@@ -320,6 +330,7 @@
 		B26C555627C7EA9200015D0A /* Table with Collection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Table with Collection.swift"; sourceTree = "<group>"; };
 		B26C555827C8BCBC00015D0A /* Scroll Picker Popup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Scroll Picker Popup View.swift"; path = "../Main App/Scroll Picker Popup View.swift"; sourceTree = "<group>"; };
 		B273C1432B0BC2120061CF04 /* Scorecard Drop Delegates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Drop Delegates.swift"; sourceTree = "<group>"; };
+		B2746FC02F9F2BBA00716D08 /* Insights View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Insights View.swift"; sourceTree = "<group>"; };
 		B27AD1322F693ADF00890600 /* Rescore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Rescore.swift; sourceTree = "<group>"; };
 		B27CFA4D27CDFE8400B976E0 /* Popup Menu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Popup Menu.swift"; sourceTree = "<group>"; };
 		B28D3F5D2ACE6FD60060DAA1 /* Override Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Override Managed Object.swift"; sourceTree = "<group>"; };
@@ -534,6 +545,7 @@
 			children = (
 				B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */,
 				B2EB3D65279D54D500D64225 /* Board Managed Object.swift */,
+				B20771132F9CF56D00DB6C18 /* Board Summary Managed Object.swift */,
 				B2BBC8B727BBF4B100D51A26 /* Table Managed Object.swift */,
 				B256D42227EC456B00F47322 /* Ranking Managed Object.swift */,
 				B2B1D58A2B04C29F007A2977 /* Ranking Table Managed Object.swift */,
@@ -632,6 +644,7 @@
 				B26BCE532799AE4D00B73501 /* Master Data.swift */,
 				B2EB3D78279DB80000D64225 /* Scorecard.swift */,
 				B2AB6ECA2AC2CCA900ED002A /* Analysis.swift */,
+				B207711A2F9D28AB00DB6C18 /* Insights.swift */,
 				B27AD1322F693ADF00890600 /* Rescore.swift */,
 				B29BBA772D33D0A10032BC2F /* Scorecard Type Classes.swift */,
 				B29BBA792D33D1540032BC2F /* Contract Classes.swift */,
@@ -650,6 +663,7 @@
 			children = (
 				B2EB3D76279D73FC00D64225 /* Scorecard View Model.swift */,
 				B2EB3D74279D73E100D64225 /* Board View Model.swift */,
+				B20771182F9D1C8000DB6C18 /* Board SummaryView Model.swift */,
 				B2BBC8B927BBF6BC00D51A26 /* Table View Model.swift */,
 				B256D42427EC578500F47322 /* Ranking View Model.swift */,
 				B2B1D58C2B04C3DB007A2977 /* Ranking Table View Model.swift */,
@@ -667,6 +681,7 @@
 		B26BCE262799AAEB00B73501 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
+				B20771152F9D1A4D00DB6C18 /* Object Model.swift */,
 				B26BCE372799AD5800B73501 /* Version.swift */,
 				B21E6F6C27C511DA00DBDCC2 /* Bridge Calculations.swift */,
 			);
@@ -690,6 +705,7 @@
 				B22F55442A9CF33F0058443D /* Hand Viewer.swift */,
 				B217C8D62F7E6D8F006F02A3 /* Bidding Viewer.swift */,
 				B217C8D42F7E548A006F02A3 /* Bidding Editor View.swift */,
+				B2746FC02F9F2BBA00716D08 /* Insights View.swift */,
 				B2EEFC772AAB5BE4005A1ECA /* Analysis Viewer.swift */,
 			);
 			name = "Main Views";
@@ -884,6 +900,7 @@
 				B20095F42D4A02280051B8E3 /* BridgeScore.xcdatamodeld in Sources */,
 				B20095E92D4A02180051B8E3 /* Location Managed Object.swift in Sources */,
 				B20095EB2D4A02180051B8E3 /* Layout Managed Object.swift in Sources */,
+				B20771172F9D1A5300DB6C18 /* Object Model.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -891,6 +908,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B207711B2F9D28AE00DB6C18 /* Insights.swift in Sources */,
 				B2EB3D66279D54D500D64225 /* Board Managed Object.swift in Sources */,
 				B26BCE692799AED700B73501 /* Input String.swift in Sources */,
 				B26BCE322799ABF000B73501 /* Declarations.swift in Sources */,
@@ -939,17 +957,20 @@
 				B2EB3D6E279D6BA700D64225 /* Layout View Model.swift in Sources */,
 				B25AE9E72AA704BE00F04229 /* Double Dummy View Model.swift in Sources */,
 				B26BCE512799AD8900B73501 /* My Color.swift in Sources */,
+				B20771162F9D1A5300DB6C18 /* Object Model.swift in Sources */,
 				B2FCC05127A05BA500A3D9F5 /* Input Toggle.swift in Sources */,
 				B2AC53A82B10CE6E00B07D20 /* Share Scorecard View.swift in Sources */,
 				B2EB3D79279DB80000D64225 /* Scorecard.swift in Sources */,
 				B28D3F602ACE70850060DAA1 /* Override View Model.swift in Sources */,
 				B26BCE4D2799AD8900B73501 /* String Extensions.swift in Sources */,
+				B20771192F9D1C8900DB6C18 /* Board SummaryView Model.swift in Sources */,
 				B2A2053D27B13F2F00C83C88 /* Keyboard Adaptive.swift in Sources */,
 				B2A5A42627E2582F00754061 /* BBO Name Managed Object.swift in Sources */,
 				B2B1D58B2B04C29F007A2977 /* Ranking Table Managed Object.swift in Sources */,
 				B2120DA22F84470E0060248A /* Input Focused.swift in Sources */,
 				B2E2FDBF2D4FBA220044B9AB /* Intents and Entities.swift in Sources */,
 				B217C8D72F7E6D96006F02A3 /* Bidding Viewer.swift in Sources */,
+				B2746FC12F9F2BC300716D08 /* Insights View.swift in Sources */,
 				B26BCE482799AD8900B73501 /* Day Number.swift in Sources */,
 				B24BA1E72F73ABEF00A92738 /* Auto Complete View.swift in Sources */,
 				B213A33D2AB8616700EA098F /* import PBN.swift in Sources */,
@@ -979,6 +1000,7 @@
 				B25F653C27F0507600FDD6B1 /* Scorecard Traveller View.swift in Sources */,
 				B26BCE3A2799AD6D00B73501 /* Core Data.swift in Sources */,
 				B26BCE562799AE6400B73501 /* Preview Data.swift in Sources */,
+				B20771142F9CF57200DB6C18 /* Board Summary Managed Object.swift in Sources */,
 				B2100D9827DA449D00CC0130 /* Graph View Class.swift in Sources */,
 				B2FC6CFE2AF6BD2900B53A68 /* Contract Picker.swift in Sources */,
 				B256D42327EC456B00F47322 /* Ranking Managed Object.swift in Sources */,

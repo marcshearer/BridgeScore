@@ -129,16 +129,117 @@ extension Pair {
     var first: Seat {
         return seats.first!
     }
+    
+    public func offset(by pairType: PairType) -> Pair {
+        pairType == .we ? self : self.other
+    }
 }
 
-public enum SeatPlayer: Int {
+public enum SeatPlayer: Int, CaseIterable {
+    case unknown = -1
     case player = 0
     case partner = 2
     case lhOpponent = 1
     case rhOpponent = 3
     
+    init(sitting: Seat, seat: Seat) {
+        self.init(rawValue: sitting.offset(to: seat))!
+    }
+    
     var isOpponent: Bool {
         self == .lhOpponent || self == .rhOpponent
+    }
+    
+    var offset: Int {
+        rawValue
+    }
+    
+    static var validCases: [SeatPlayer] {
+        allCases.filter{$0 != .unknown}
+    }
+    
+    var pairType: PairType {
+        switch self {
+        case .player, .partner:
+            .we
+        case .lhOpponent, .rhOpponent:
+            .they
+        default:
+            .unknown
+        }
+    }
+}
+
+public enum PairType: Int, CaseIterable {
+    case unknown = -1
+    case we = 0
+    case they = 2
+    
+    var seatPlayers: [SeatPlayer] {
+        switch self {
+        case .we:
+            [.player, .partner]
+        case .they:
+            [.lhOpponent, .rhOpponent]
+        default: []
+        }
+    }
+    
+    static var validCases: [PairType] {
+        allCases.filter{$0 != .unknown}
+    }
+}
+
+public enum SuitType: Int {
+    case major
+    case minor
+    case noTrumps
+    case unknown
+    
+    init(suit: Suit) {
+        switch suit {
+        case .hearts, .spades:
+            self = .major
+        case .clubs, .diamonds:
+            self = .minor
+        default:
+            self = .noTrumps
+        }
+    }
+    
+    var gameTricks: Int {
+        switch self {
+        case .noTrumps:
+            Values.noTrumpGameLevel.tricks
+        case .major:
+            Values.majorGameLevel.tricks
+        case .minor:
+            Values.minorGameLevel.tricks
+        default:
+            0
+        }
+    }
+}
+
+public enum LevelType: Int {
+    case passout
+    case partScore
+    case game
+    case slam
+    
+    init(level: ContractLevel, suit: Suit) {
+        if level == .passout {
+            self = .passout
+        } else if level == ContractLevel.smallSlam || level == ContractLevel.grandSlam {
+            self = .slam
+        } else {
+            let gameTricks = SuitType(suit: suit).gameTricks
+            if level.tricks >= gameTricks {
+                self = .game
+            } else {
+                self = .partScore
+            }
+        }
     }
 }
 
@@ -365,6 +466,42 @@ public enum Vulnerability: Int {
     }
 }
 
+public enum SeatVulnerability: Int {
+    case unknown = 0
+    case none = 1
+    case we = 2
+    case they = 3
+    case both = 4
+    
+    init(boardNumber: Int, sitting: Seat) {
+        let vulnerability = Vulnerability(board: boardNumber)
+        var seatVulnerability = SeatVulnerability(rawValue: vulnerability.rawValue)!
+        if sitting.pair != .ns {
+            if vulnerability == .ns {
+                seatVulnerability = .they
+            } else if vulnerability == .ew {
+                seatVulnerability = .we
+            }
+        }
+        self = seatVulnerability
+    }
+    
+    public var string: String {
+        switch self {
+        case .unknown:
+            return "?"
+        case .none:
+            return "-"
+        case .we:
+            return "We"
+        case .they:
+            return "They"
+        case .both:
+            return "All"
+        }
+    }
+}
+
 public enum Values {
     case nonVulnerable
     case vulnerable
@@ -386,4 +523,7 @@ public enum Values {
     public static var trickOffset: Int { 6 }
     public static var smallSlamLevel: ContractLevel { .six }
     public static var grandSlamLevel: ContractLevel { .seven }
+    public static var noTrumpGameLevel: ContractLevel { .three }
+    public static var majorGameLevel: ContractLevel { .four }
+    public static var minorGameLevel: ContractLevel { .five }
 }

@@ -449,7 +449,7 @@ class Utility {
         
         let sendingMessage = Utility.sendingMessage
 
-        if Utility.isDevelopment || force {
+        if Utility.isDevelopment || force || debug {
             if mainThread {
                 Utility.mainThread(suppressDebug: true, execute: {
                     closure()

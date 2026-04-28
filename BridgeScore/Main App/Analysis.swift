@@ -601,7 +601,7 @@ class Analysis {
                     // Double dummy
                 var made: [Int] = []
                 for index in 0...1 {
-                    made.append(board.doubleDummy[pair.seats[index]]?[suit]?.made ?? -1)
+                    made.append(board.doubleDummy[pair.seats[index]]?[suit]?.tricks ?? -1)
                 }
                 if made.max() ?? -1 >= 0 {
                     assessment[combination]!.made[.doubleDummy] = made.max()
@@ -667,7 +667,7 @@ class Analysis {
                                 // Head to head - compare to double dummy and then other table if in same suit played the same way
                             if let otherTraveller = otherTraveller {
                                 if otherTraveller.contract.suit == combination.suit && otherTraveller.declarer.pair == combination.declarer {
-                                    if let ddMade = board.doubleDummy[useTraveller.declarer]?[combination.suit]?.made {
+                                    if let ddMade = board.doubleDummy[useTraveller.declarer]?[combination.suit]?.tricks {
                                         // Use double dummy if have it
                                         withMethod = .doubleDummy
                                         withTricks = ddMade
@@ -708,7 +708,7 @@ class Analysis {
                             // No luck so far - compare with Double Dummy
                         var ddMade: [Int] = []
                         for seat in combination.declarer.seats {
-                            ddMade.append(board.doubleDummy[seat]?[combination.suit]?.made ?? -1)
+                            ddMade.append(board.doubleDummy[seat]?[combination.suit]?.tricks ?? -1)
                         }
                         if ddMade.max() ?? -1 >= 0 {
                             withMethod = .doubleDummy

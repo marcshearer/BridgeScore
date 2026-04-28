@@ -20,6 +20,13 @@ public let statsWidgetKind = "\(appId).stats"
 public let otherPlayer = "Other"
 public let otherLocation = "Other"
 public let schemaVersion = 1
+
+#if DEBUG
+public var debug = true
+#else
+public var debug = false
+#endif
+
 // Sizes
 
 var inputTopHeight: CGFloat { MyApp.format != .phone ? 20.0 : 10.0 }
@@ -275,8 +282,6 @@ public enum Pair: Int, CaseIterable, Identifiable, Equatable {
         }
     }
     
-
-    
     var sign: Int {
         switch self {
         case .ns:
@@ -291,8 +296,8 @@ public enum Pair: Int, CaseIterable, Identifiable, Equatable {
     public static func < (lhs: Pair, rhs: Pair) -> Bool {
         return lhs.rawValue < rhs.rawValue
     }
-    
 }
+
 
 #if canImport(UIKit)
 public let target: UIMode = .uiKit

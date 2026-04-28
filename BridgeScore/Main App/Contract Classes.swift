@@ -311,15 +311,28 @@ public enum Suit: Int, ContractEnumType, Equatable, Comparable, Identifiable, Ha
     }
     
     var gameTricks : Int {
-        switch self {
+        switch suitType {
         case .noTrumps:
-            return 3
-        case .hearts, .spades:
-            return 4
-        case .clubs, .diamonds:
-            return 5
+            return Values.noTrumpGameLevel.tricks
+        case .major:
+            return Values.majorGameLevel.tricks
+        case .minor:
+            return Values.minorGameLevel.tricks
         default:
             return 0
+        }
+    }
+    
+    var suitType : SuitType {
+        switch self {
+        case .noTrumps:
+            .noTrumps
+        case .hearts, .spades:
+            .major
+        case .clubs, .diamonds:
+            .minor
+        default:
+            .unknown
         }
     }
     
@@ -617,6 +630,18 @@ public class Contract: Equatable, Comparable, Hashable {
         if suit <= than.suit {
             if let nextLevel = ContractLevel(rawValue: self.level.rawValue + 1) {
                 self.level = nextLevel
+            } else {
+                return nil
+            }
+        }
+    }
+    
+    convenience init?(lower than: Contract, suit: Suit) {
+        self.init(copying: than)
+        self.suit = suit
+        if suit >= than.suit {
+            if let lowerLevel = ContractLevel(rawValue: self.level.rawValue - 1) {
+                self.level = lowerLevel
             } else {
                 return nil
             }

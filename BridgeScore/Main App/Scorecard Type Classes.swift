@@ -187,7 +187,8 @@ public enum AggregateType: CaseIterable, Equatable {
     }
 }
 
-public enum ScoreType: Equatable, CaseIterable {
+public enum ScoreType: Equatable, CaseIterable, RawRepresentable {
+    
     case percent
     case imp
     case xImp
@@ -195,6 +196,11 @@ public enum ScoreType: Equatable, CaseIterable {
     case vp(type: VpType)
     case aggregate
     case unknown
+    
+    // Only here to make it RawRepresentable
+    public init?(rawValue: Int) {
+        self.init(rawValue: rawValue, vpType: .unknown)
+    }
     
     public init?(rawValue: Int, vpType: VpType = .unknown) {
         switch rawValue {
@@ -424,7 +430,7 @@ public enum EventType: Int, CaseIterable {
     }
     
     public var string: String {
-        "\(self)".capitalized
+        String(describing: self).capitalized
     }
     
     public var players: Int {

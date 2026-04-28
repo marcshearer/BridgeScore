@@ -17,7 +17,7 @@ public class DoubleDummyMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var boardIndex16: Int16
     @NSManaged public var declarer16: Int16
     @NSManaged public var suit16: Int16
-    @NSManaged public var made16: Int16
+    @NSManaged public var tricks16: Int16
     
     convenience init() {
         self.init(context: CoreData.context)
@@ -34,8 +34,8 @@ public class DoubleDummyMO: NSManagedObject, ManagedObject, Identifiable {
     }
     
     public var made: Int {
-        get { Int(self.made16) }
-        set { self.made16 = Int16(newValue) }
+        get { Int(self.tricks16) }
+        set { self.tricks16 = Int16(newValue) }
     }
     
     public var suit: Suit {

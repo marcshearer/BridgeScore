@@ -10,8 +10,8 @@ import SwiftUI
 import CoreData
 
 public class BoardViewModel : NSObject, ObservableObject, Identifiable {
-
-    // Properties in core data model
+    
+        // Properties in core data model
     @Published private(set) var scorecard: ScorecardViewModel
     @Published public var boardIndex: Int
     @Published public var session: Int
@@ -27,7 +27,7 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
     @Published public var doubleDummy: [Seat:[Suit:DoubleDummyViewModel]] = [:]
     @Published public var override: [Pair:[Suit:OverrideViewModel]] = [:]
     
-    // Linked managed objects - should only be referenced in this and the Data classes
+        // Linked managed objects - should only be referenced in this and the Data classes
     @Published internal var boardMO: BoardMO?
     @Published internal var doubleDummyMO: [Seat:[Suit:DoubleDummyMO]] = [:]
     @Published internal var overrideMO: [Pair:[Suit:OverrideMO]] = [:]
@@ -35,7 +35,7 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
     @Published private(set) var saveMessage: String = ""
     @Published private(set) var canSave: Bool = true
     
-    // Auto-cleanup
+        // Auto-cleanup
     private var cancellableSet: Set<AnyCancellable> = []
     
     public var tableNumber: Int {
@@ -58,7 +58,7 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
         made == nil ? nil : contract.level.tricks + made!
     }
     
-    // Check if view model matches managed object
+        // Check if view model matches managed object
     public var changed: Bool {
         var result = false
         if let mo = self.boardMO {
@@ -76,10 +76,10 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
                 self.responsible != mo.responsible ||
                 self.hand != mo.hand ||
                 self.optimumScore != mo.optimumScore {
-                    result = true
+                result = true
             }
             if !result {
-                // Check double dummy entries match
+                    // Check double dummy entries match
                 if doubleDummy.count != doubleDummyMO.count {
                     result = true
                 } else {
@@ -107,7 +107,7 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
                 }
             }
             if !result {
-                // Check override tricks entries match
+                    // Check override tricks entries match
                 if override.count != overrideMO.count {
                     result = true
                 } else {
@@ -154,7 +154,7 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
         self.boardMO = boardMO
         self.revert()
     }
-        
+    
     private func setupMappings() {
     }
     

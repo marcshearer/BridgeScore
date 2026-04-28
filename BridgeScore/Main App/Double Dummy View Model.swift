@@ -16,7 +16,7 @@ public class DoubleDummyViewModel : ObservableObject, Identifiable, CustomDebugS
     @Published public var boardIndex: Int
     @Published public var declarer: Seat = .unknown
     @Published public var suit: Suit = .blank
-    @Published public var made: Int = -1
+    @Published public var tricks: Int = -1
     
     // Auto-cleanup
     private var cancellableSet: Set<AnyCancellable> = []
@@ -28,7 +28,7 @@ public class DoubleDummyViewModel : ObservableObject, Identifiable, CustomDebugS
             self.boardIndex != mo.boardIndex ||
             self.declarer != mo.declarer ||
             self.suit != mo.suit ||
-            self.made != mo.made {
+            self.tricks != mo.made {
             result = true
         }
         return result
@@ -39,7 +39,7 @@ public class DoubleDummyViewModel : ObservableObject, Identifiable, CustomDebugS
         self.boardIndex = board
         self.declarer = declarer
         self.suit = suit
-        self.made = made
+        self.tricks = made
         self.setupMappings()
     }
     
@@ -58,7 +58,7 @@ public class DoubleDummyViewModel : ObservableObject, Identifiable, CustomDebugS
         self.boardIndex = mo.boardIndex
         self.declarer = mo.declarer
         self.suit = mo.suit
-        self.made = mo.made
+        self.tricks = mo.made
     }
     
     public func updateMO(_ mo: DoubleDummyMO) {
@@ -66,7 +66,7 @@ public class DoubleDummyViewModel : ObservableObject, Identifiable, CustomDebugS
         mo.boardIndex = boardIndex
         mo.declarer = declarer
         mo.suit = suit
-        mo.made = made
+        mo.made = tricks
     }
         
     public var description: String {

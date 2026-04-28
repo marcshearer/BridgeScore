@@ -168,54 +168,9 @@ struct HandViewer: View {
     
     func reflectChange() {
         trickNumber = 0
-        deal = constructCards(cards: board.hand, playData: traveller.playData)
+        deal = Deal(cards: board.hand, playData: traveller.playData)
         tricks = constructTricks(playData: traveller.playData, declarer: traveller.declarer, trumps: traveller.contract.suit)
         setTrick(deal: deal, tricks: tricks)
-    }
-    
-    func constructCards(cards: String, playData: String) -> Deal {
-        var cardArray: [String] = []
-        
-        if cards == "" {
-            if playData != "" {
-                let data = playData.removingPercentEncoding!.components(separatedBy: "|")
-                for (index, element) in data.enumerated() {
-                    if element == "md" && index + 1 < data.count {
-                        let handData = data[index + 1]
-                        let cardData = handData.mid(2, handData.count - 1).components(separatedBy: ",")
-                        cardArray = constructHand(cards: cardData[2]) + ["", "", "", ""] + constructHand(cards: cardData[0]) + constructHand(cards: cardData[1])
-                        cardArray = addFourthHand(hands: cardArray, index: 1)
-                    }
-                }
-            }
-        } else {
-            cardArray = cards.replacingOccurrences(of: "-", with: "").components(separatedBy: ",")
-        }
-        return Deal(fromCards: cardArray)
-    }
-    
-    func constructHand(cards: String) -> [String] {
-        var suitData: [String] = cards.replacingOccurrences(of: "S", with: ",").replacingOccurrences(of: "H", with: ",").replacingOccurrences(of: "D", with: ",").replacingOccurrences(of: "C", with: ",").components(separatedBy: ",")
-        for (index, suit) in suitData.enumerated() {
-            suitData[index] = String(suit.reversed())
-        }
-        suitData.remove(at: 0)
-        return suitData
-    }
-    
-    func addFourthHand(hands: [String], index fourthIndex: Int) -> [String] {
-        var result: [String] = hands
-        for suit in 0...3 {
-            result[(fourthIndex * 4) + suit] = "AKQJT98765432"
-            for index in 0...3 {
-                if index != fourthIndex {
-                    for char in hands[(index * 4) + suit] {
-                        result[(fourthIndex * 4) + suit].removeAll(where: {$0 == char})
-                    }
-                }
-            }
-        }
-        return result
     }
     
     func constructTricks(playData: String, declarer: Seat, trumps: Suit) -> [Trick] {
@@ -888,7 +843,7 @@ struct HandViewer: View {
                                         Text(declarer.short).frame(width: 20).bold()
                                         ForEach(Suit.validCases, id: \.self) { suit in
                                             Spacer()
-                                            let made = board.doubleDummy[declarer]?[suit]?.made ?? 0
+                                            let made = board.doubleDummy[declarer]?[suit]?.tricks ?? 0
                                             Text(made >= 7 ? "\(made - Values.trickOffset)" : "-").frame(width:20).foregroundColor(Palette.handTable.text)
                                         }
                                     }.font(.body).bold()

@@ -50,7 +50,8 @@ class MyApp {
         TravellerMO.entity(),
         BBONameMO.entity(),
         OverrideMO.entity(),
-        DoubleDummyMO.entity()]
+        DoubleDummyMO.entity(),
+        BoardSummaryMO.entity()]
     #endif
     
     static let shared = MyApp()

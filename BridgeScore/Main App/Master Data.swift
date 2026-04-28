@@ -103,19 +103,6 @@ class MasterData: ObservableObject {
                 bboNames.append(BBONameViewModel(bboNameMO: bboNameMO))
             }
         }
-        
-        /*
-        let location = locations.first(where: { $0.name.uppercased() == "SBU non-National".uppercased() })!
-        for scorecard in scorecards {
-            if scorecard.desc.uppercased() == "Saturday Swiss Pairs".uppercased() && scorecard.location != location {
-                scorecard.location = location
-                CoreData.update {
-                    scorecard.updateMO()
-                }
-            }
-        }
-        */
-        
     }
 }
 

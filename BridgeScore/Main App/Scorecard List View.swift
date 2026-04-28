@@ -20,8 +20,9 @@ enum Destination: Int {
     case scorecardInput
     case scorecardParameters
     case layoutSelect
+    case insights
     
-    var navigate: Bool { [.layoutSetup, .playerSetup, .locationSetup, .stats, .scorecardInput].contains(self)}
+    var navigate: Bool { [.layoutSetup, .playerSetup, .locationSetup, .stats, .scorecardInput, .insights].contains(self)}
 }
 
 struct ScorecardListView: View, DropDelegate {
@@ -179,6 +180,8 @@ struct ScorecardListView: View, DropDelegate {
             result = StatsView()
         case .scorecardInput:
             result = ScorecardInputView(scorecard: selected, importScorecard: importScorecard)
+        case .insights:
+            result = InsightsView()
         default:
             result = EmptyView()
         }
@@ -298,12 +301,13 @@ struct ScorecardListView: View, DropDelegate {
     func bannerMenuOptions() -> [BannerOption] {
         var menuOptions: [BannerOption] = []
         menuOptions = [BannerOption(text: "Statistics", action: { destination = .stats }),
+                       BannerOption(text: "Insights", action: { destination = .insights }),
                            BannerOption(text: "Templates", action: { destination = .layoutSetup }),
                            BannerOption(text: "Players",  action: { destination = .playerSetup }),
                            BannerOption(text: "Locations", action: { destination = .locationSetup }),
                            BannerOption(text: "Import BBO Names", action: { ImportBBO.importNames() }),
                            BannerOption(text: "Backup", action: { MessageBox.shared.show("Backing up", cancelText: "Cancel", okText: "Continue", okAction: {Backup.shared.backup() ; MessageBox.shared.hide()})})]
-        if Utility.isSimulator || MyApp.target == .iOS {
+        if Utility.isSimulator || MyApp.target == .iOS || debug {
             menuOptions.append(
                 BannerOption(text: "Restore", action: {
                     Backup.shared.restore(dateString: "Latest") }))

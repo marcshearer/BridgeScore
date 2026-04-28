@@ -367,6 +367,28 @@ class Deal: NSObject, NSCopying {
         hands = [:]
     }
     
+    convenience init(cards: String, playData: String) {
+        self.init()
+
+        var cardArray: [String] = []
+        if cards == "" {
+            if playData != "" {
+                let data = playData.removingPercentEncoding!.components(separatedBy: "|")
+                for (index, element) in data.enumerated() {
+                    if element == "md" && index + 1 < data.count {
+                        let handData = data[index + 1]
+                        let cardData = handData.mid(2, handData.count - 1).components(separatedBy: ",")
+                        cardArray = constructHand(cards: cardData[2]) + ["", "", "", ""] + constructHand(cards: cardData[0]) + constructHand(cards: cardData[1])
+                        cardArray = addFourthHand(hands: cardArray, index: 1)
+                    }
+                }
+            }
+        } else {
+            cardArray = cards.replacingOccurrences(of: "-", with: "").components(separatedBy: ",")
+        }
+        self.init(fromCards: cardArray)
+    }
+    
     init(fromCards: [String]) {
         hands = [:]
         if fromCards.count >= 16 {
@@ -411,6 +433,34 @@ class Deal: NSObject, NSCopying {
             copy.hands[seat] = hand.copy() as? Hand
         }
         return copy
+    }
+    
+    var isEmpty: Bool {
+        hands.isEmpty || hands.values.allSatisfy({$0.cards.isEmpty})
+    }
+    
+    func constructHand(cards: String) -> [String] {
+        var suitData: [String] = cards.replacingOccurrences(of: "S", with: ",").replacingOccurrences(of: "H", with: ",").replacingOccurrences(of: "D", with: ",").replacingOccurrences(of: "C", with: ",").components(separatedBy: ",")
+        for (index, suit) in suitData.enumerated() {
+            suitData[index] = String(suit.reversed())
+        }
+        suitData.remove(at: 0)
+        return suitData
+    }
+    
+    func addFourthHand(hands: [String], index fourthIndex: Int) -> [String] {
+        var result: [String] = hands
+        for suit in 0...3 {
+            result[(fourthIndex * 4) + suit] = "AKQJT98765432"
+            for index in 0...3 {
+                if index != fourthIndex {
+                    for char in hands[(index * 4) + suit] {
+                        result[(fourthIndex * 4) + suit].removeAll(where: {$0 == char})
+                    }
+                }
+            }
+        }
+        return result
     }
 }
 
