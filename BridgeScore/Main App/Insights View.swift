@@ -9,8 +9,10 @@ import SwiftUI
 
 enum InsightColumn {
     
-    case desc
+    case eventDesc
     case boardIndex
+    case sessionNumber
+    case boardNumber
     case partner
     case location
     case date
@@ -43,13 +45,56 @@ enum InsightColumn {
     case totalTricks
     case totalTricksDd
     
-    static let defaultCases: [InsightColumn] = [.desc, .boardIndex, .partner, .location, .date, .vulnerability, .eventType, .boardScoreType, .contractMade, .declarer, .score, .fieldSize, .gameOdds, .slamOdds, .compContract, .compDeclarer, .compDdMade, .compDdScore, .compMakeScore, .compMakeOdds, .suit(pairType: .we), .declare(pairType: .we), .medianTricks(pairType: .we), .modeTricks(pairType: .we), .ddTricks(pairType: .we), .fit(pairType: .we), .suit(pairType: .they), .declare(pairType: .they), .medianTricks(pairType: .they), .modeTricks(pairType: .they), .ddTricks(pairType: .they), .fit(pairType: .they), .points(seatPlayer: .player), .points(seatPlayer: .partner), .points(seatPlayer: .lhOpponent), .points(seatPlayer: .rhOpponent), .suitType, .levelType, .totalTricks, .totalTricksDd]
+    static let defaultCases: [InsightColumn] =
+    [.eventDesc,
+     .sessionNumber,
+     .boardNumber,
+     .partner,
+     .location,
+     .date,
+     .vulnerability,
+     .eventType,
+     .boardScoreType,
+     .contractMade,
+     .declarer,
+     .score,
+     .fieldSize,
+     .gameOdds,
+     .slamOdds,
+     .suit(pairType: .we),
+     .declare(pairType: .we),
+     .medianTricks(pairType: .we),
+     .modeTricks(pairType: .we),
+     .ddTricks(pairType: .we),
+     .fit(pairType: .we),
+     .suit(pairType: .they),
+     .declare(pairType: .they),
+     .medianTricks(pairType: .they),
+     .modeTricks(pairType: .they),
+     .ddTricks(pairType: .they),
+     .fit(pairType: .they),
+     .points(seatPlayer: .player),
+     .points(seatPlayer: .partner),
+     .points(seatPlayer: .lhOpponent),
+     .points(seatPlayer: .rhOpponent),
+     .suitType,
+     .levelType,
+     .totalTricks,
+     .totalTricksDd,
+     .compContract,
+     .compDeclarer,
+     .compDdMade,
+     .compDdScore,
+     .compMakeScore,
+     .compMakeOdds]
     
     var title: String {
         switch self {
-        case .desc:
-            "Desc"
-        case .boardIndex:
+        case .eventDesc:
+            "Event Description"
+        case .sessionNumber:
+            "Session"
+        case .boardIndex, .boardNumber:
             "Board"
         case .location:
             "Location"
@@ -118,10 +163,14 @@ enum InsightColumn {
     
     func value(boardSummary: BoardSummaryViewModel) -> AttributedString {
         switch self {
-        case .desc:
+        case .eventDesc:
             AttributedString(boardSummary.scorecard.desc)
         case .boardIndex:
             AttributedString("\(boardSummary.boardIndex)")
+        case .sessionNumber:
+            AttributedString(boardSummary.session == 0 ? "" : "\(boardSummary.session)")
+        case .boardNumber:
+            AttributedString("\(boardSummary.boardNumber)")
         case .location:
             AttributedString(boardSummary.location!.name.components(separatedBy: " ").first!)
         case .partner:
@@ -155,9 +204,9 @@ enum InsightColumn {
         case .compDeclarer:
             !boardSummary.isCompetitive ? "" : AttributedString("\(boardSummary.compDeclarer.string)")
         case .compDdMade:
-            !boardSummary.isCompetitive ? "" : AttributedString(Scorecard.madeString(made: boardSummary.compDdMade ?? 0))
+            !boardSummary.isCompetitive || (boardSummary.compDdMade ?? -1) < 0 ? "" : AttributedString(Scorecard.madeString(made: boardSummary.compDdMade ?? 0))
         case .compDdScore:
-            !boardSummary.isCompetitive ? "" : AttributedString("\(boardSummary.compDdScore)%")
+            !boardSummary.isCompetitive || (boardSummary.compDdMade ?? -1) < 0 ? "" : AttributedString("\(boardSummary.compDdScore)%")
         case .compMakeScore:
             !boardSummary.isCompetitive ? "" : AttributedString("\(boardSummary.compMakeScore)%")
         case .compMakeOdds:
@@ -171,7 +220,7 @@ enum InsightColumn {
         case .modeTricks(let pairType):
             AttributedString(boardSummary.suit[pairType]! == .blank ? "" : "\(boardSummary.modeTricks[pairType]!)")
         case .ddTricks(let pairType):
-            AttributedString(boardSummary.suit[pairType]! == .blank ? "" : "\(boardSummary.ddTricks[pairType]!)")
+            AttributedString(boardSummary.ddTricks[pairType]! < 0 ? "" : boardSummary.suit[pairType]! == .blank ? "" : "\(boardSummary.ddTricks[pairType]!)")
         case .fit(let pairType):
             AttributedString(boardSummary.suit[pairType]! == .blank ? "" : "\(boardSummary.fit[pairType]!)")
         case .points(let seatPlayer):
@@ -183,15 +232,15 @@ enum InsightColumn {
         case .totalTricks:
             AttributedString("\(boardSummary.totalTricks)")
         case .totalTricksDd:
-            AttributedString("\(boardSummary.totalTricksDd)")
+            boardSummary.ddTricks[.we]! < 0 || boardSummary.ddTricks[.they]! < 0 ? "" :  AttributedString("\(boardSummary.totalTricksDd)")
         }
     }
     
     var align: TextAlignment {
         switch self {
-        case .desc, .partner, .location:
+        case .eventDesc, .partner, .location:
                 .leading
-        case .vulnerability, .eventType, .boardScoreType, .contract, .contractMade, .declarer, .made, .compContract, .compDeclarer, .suit, .suitType, .levelType:
+        case .boardIndex, .sessionNumber, .boardNumber, .vulnerability, .eventType, .boardScoreType, .contract, .contractMade, .declarer, .made, .compContract, .compDeclarer, .suit, .suitType, .levelType:
                 .center
         default:
                 .trailing
@@ -200,16 +249,16 @@ enum InsightColumn {
         
     var width: CGFloat {
         switch self {
-        case .desc:
-            250
+        case .eventDesc:
+            280
         case .date, .suitType, .levelType:
             120
-        case .partner, .location:
+        case .partner, .location, .contractMade:
             100
         case .contract:
             90
         default:
-            50
+            80
         }
     }
 }
@@ -231,18 +280,35 @@ struct InsightsView: View {
                 VStack(spacing: 0) {
                     ScrollView(.horizontal) {
                         ScrollView {
-                            LazyVGrid(columns: gridColumns, pinnedViews: [.sectionHeaders]) {
-                                Section(header: headerView) {
-                                    if !boardSummaries.isEmpty {
-                                        ForEach(0..<((columns.count * boardSummaries.count) - 1), id: \.self) { index in
-                                            let columnIndex = index % columns.count
-                                            let boardIndex = index / columns.count
-                                            let column = columns[columnIndex]
-                                            Text(column.value(boardSummary: boardSummaries[boardIndex]))
-                                                .frame(width: column.width, height: 20)
+                            HStack {
+                                Spacer().frame(width: 10)
+                                LazyVStack(pinnedViews: [.sectionHeaders]) {
+                                    Section(header: headerView) {
+                                        if !boardSummaries.isEmpty {
+                                            Grid(horizontalSpacing: 5) {
+                                                ForEach(0..<boardSummaries.count, id: \.self) { boardIndex in
+                                                    GridRow {
+                                                        ForEach(0..<columns.count, id: \.self) { columnIndex in
+                                                            let column = columns[columnIndex]
+                                                            HStack {
+                                                                if column.align != .leading {
+                                                                    Spacer()
+                                                                }
+                                                                Text(column.value(boardSummary: boardSummaries[boardIndex]))
+                                                                if column.align != .trailing {
+                                                                    Spacer()
+                                                                }
+                                                            }
+                                                            .frame(width: column.width, height: 20)
+                                                        }
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
+                                .fixedSize(horizontal: true, vertical: false)
+                                Spacer().frame(width: 10)
                             }
                         }
                         .clipped()
@@ -259,14 +325,28 @@ struct InsightsView: View {
     }
     
     var headerView : some View {
-        LazyVGrid(columns: gridColumns) {
-            ForEach(0..<columns.count, id: \.self) { columnIndex in
-                let column = columns[columnIndex]
-                Text(column.title)
-                    .frame(width: column.width, height: 80)
-                    .lineLimit(nil)
-                    .multilineTextAlignment(.center)
+        HStack {
+            Spacer().frame(width: 10)
+            Grid(horizontalSpacing: 5) {
+                GridRow {
+                    ForEach(0..<columns.count, id: \.self) { columnIndex in
+                        let column = columns[columnIndex]
+                        HStack {
+                            if column.align != .leading {
+                                Spacer()
+                            }
+                            Text(column.title)
+                                .lineLimit(nil)
+                                .multilineTextAlignment(.center)
+                            if column.align != .trailing {
+                                Spacer()
+                            }
+                        }
+                        .frame(width: column.width, height: 80)
+                    }
+                }
             }
+            Spacer().frame(width: 10)
         }
         .palette(.contrastTile)
     }

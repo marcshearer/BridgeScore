@@ -32,6 +32,7 @@
     </entity>
     <entity name="BoardSummary" representedClassName="BoardSummaryMO" syncable="YES">
         <attribute name="boardIndex16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="boardNumber16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="boardScoreType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="compContractDouble16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="compContractLevel16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
@@ -73,6 +74,7 @@
         <attribute name="pointsRhOpponent16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="score16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="scorecardId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="session16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="slamOdds16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="suitThey16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="suitType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>

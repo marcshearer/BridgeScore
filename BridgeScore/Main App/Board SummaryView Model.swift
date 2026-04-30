@@ -10,10 +10,11 @@ import SwiftUI
 import CoreData
 
 public class BoardSummaryViewModel : NSObject, ObservableObject, Identifiable {
-    
-        // Properties in core data model
+    // Properties in core data model
     @Published private(set) var scorecard: ScorecardViewModel
     @Published public var boardIndex: Int
+    @Published public var session: Int = 0
+    @Published public var boardNumber: Int = 0
     @Published public var location: LocationViewModel?
     @Published public var partner: PlayerViewModel?
     @Published public var date: Date = Date()
@@ -68,6 +69,8 @@ public class BoardSummaryViewModel : NSObject, ObservableObject, Identifiable {
         if let mo = boardSummaryMO {
             if self.scorecard.scorecardId != mo.scorecardId ||
                 self.boardIndex != mo.boardIndex ||
+                self.session != mo.session ||
+                self.boardNumber != mo.boardNumber ||
                 self.location?.locationId != mo.locationId ||
                 self.partner?.playerId != mo.partnerId ||
                 self.date != mo.date ||
@@ -122,6 +125,8 @@ public class BoardSummaryViewModel : NSObject, ObservableObject, Identifiable {
                 self.partner = partner
             }
             self.boardIndex = mo.boardIndex
+            self.session = mo.session
+            self.boardNumber = mo.boardNumber
             self.date = mo.date
             self.vulnerability = mo.vulnerability
             self.eventType = mo.eventType
@@ -165,6 +170,8 @@ public class BoardSummaryViewModel : NSObject, ObservableObject, Identifiable {
             mo.locationId = self.location!.locationId
             mo.partnerId = self.partner!.playerId
             mo.boardIndex = boardIndex
+            mo.session = session
+            mo.boardNumber = boardNumber
             mo.date = date
             mo.vulnerability = vulnerability
             mo.eventType = eventType

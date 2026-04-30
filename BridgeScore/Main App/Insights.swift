@@ -84,6 +84,8 @@ class Insights {
         boardSummary.partner = scorecard.partner
         boardSummary.location = scorecard.location
         boardSummary.date = scorecard.date
+        boardSummary.session = scorecard.sessions == 1 ? 0 : board.session
+        boardSummary.boardNumber = board.boardNumber
         
         boardSummary.vulnerability = SeatVulnerability(boardNumber: board.boardNumber, sitting: table.sitting)
         boardSummary.eventType = scorecard.type.eventType
@@ -124,13 +126,6 @@ class Insights {
             boardSummary.compDdMade = nil
             boardSummary.compMakeOdds = 0
             boardSummary.compDdScore = 0
-            
-            // TODO Remove
-            if boardSummary.boardIndex == 9 {
-                
-            }
-            
-            
             if boardSummary.declare[.we]! >= 20 && boardSummary.declare[.they]! >= 20 && boardSummary.suit[.we] != .noTrumps && boardSummary.levelType == .partScore {
                 // Competitive auction where we have a suit
                 if boardSummary.declarer.pairType == .we && (board.made ?? 1) < 0 {

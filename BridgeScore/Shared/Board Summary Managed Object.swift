@@ -15,6 +15,8 @@ public class BoardSummaryMO: NSManagedObject, ManagedObject, Identifiable {
     public var id: (UUID, Int) { (self.scorecardId, self.boardIndex) }
     @NSManaged public var scorecardId: UUID
     @NSManaged public var boardIndex16: Int16 ; @IntProperty(\BoardSummaryMO.boardIndex16) public var boardIndex: Int
+    @NSManaged public var session16: Int16 ; @IntProperty(\BoardSummaryMO.session16) public var session: Int
+    @NSManaged public var boardNumber16: Int16 ; @IntProperty(\BoardSummaryMO.boardNumber16) public var boardNumber: Int
     @NSManaged public var locationId: UUID!
     @NSManaged public var partnerId: UUID!
     @NSManaged public var date: Date
