@@ -168,6 +168,21 @@ public enum SeatPlayer: Int, CaseIterable {
             .unknown
         }
     }
+    
+    var string: String {
+        switch self {
+        case .player:
+            "Self"
+        case .partner:
+            "Partner"
+        case .lhOpponent:
+            "LH Opp"
+        case .rhOpponent:
+            "RH Opp"
+        default:
+            ""
+        }
+    }
 }
 
 public enum PairType: Int, CaseIterable {
@@ -183,6 +198,10 @@ public enum PairType: Int, CaseIterable {
             [.lhOpponent, .rhOpponent]
         default: []
         }
+    }
+    
+    var string: String {
+        self == .unknown ? "" : "\(self)".capitalized
     }
     
     static var validCases: [PairType] {
@@ -219,6 +238,14 @@ public enum SuitType: Int {
             0
         }
     }
+    
+    var string: String {
+        if self == .noTrumps {
+            "No Trumps"
+        } else {
+            "\(self)".capitalized
+        }
+    }
 }
 
 public enum LevelType: Int {
@@ -241,6 +268,18 @@ public enum LevelType: Int {
             }
         }
     }
+    
+    var string: String {
+        switch self {
+        case .passout:
+            "Pass out"
+        case .partScore:
+            "Part score"
+        default:
+            "\(self)".capitalized
+        }
+    }
+    
 }
 
 protocol EnumPickerDelegate {

@@ -11,11 +11,11 @@ class Insights {
     
     static func build() {
         initialise() // TODO Remove
-        let cutoff = cutoff(date: "25/04/2026") // TODO Remove
+        let cutoff = cutoff(date: "18/04/2026") // TODO Remove
         
         let boardMOs = CoreData.fetch(from: BoardMO.tableName) as! [BoardMO]
         for boardMO in boardMOs {
-            if let scorecard = MasterData.shared.scorecard(id: boardMO.scorecardId) {
+            if let scorecard = MasterData.shared.scorecard(id: boardMO.scorecardId), boardMO.contract.level != .blank, boardMO.madeEntered {
                 if scorecard.importSource != .none  && scorecard.date >= cutoff {
 
                     // Setup board

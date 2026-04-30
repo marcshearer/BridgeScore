@@ -627,6 +627,7 @@ public class Contract: Equatable, Comparable, Hashable {
     convenience init?(higher than: Contract, suit: Suit) {
         self.init(copying: than)
         self.suit = suit
+        self.double = .undoubled
         if suit <= than.suit {
             if let nextLevel = ContractLevel(rawValue: self.level.rawValue + 1) {
                 self.level = nextLevel
@@ -639,8 +640,9 @@ public class Contract: Equatable, Comparable, Hashable {
     convenience init?(lower than: Contract, suit: Suit) {
         self.init(copying: than)
         self.suit = suit
-        if suit >= than.suit {
-            if let lowerLevel = ContractLevel(rawValue: self.level.rawValue - 1) {
+        self.double = .undoubled
+        if suit <= than.suit {
+            if let lowerLevel = ContractLevel(rawValue: self.level.rawValue + 1) {
                 self.level = lowerLevel
             } else {
                 return nil

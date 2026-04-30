@@ -45,6 +45,9 @@ public class BoardSummaryViewModel : NSObject, ObservableObject, Identifiable {
     @Published public var totalTricks: Int = 0
     @Published public var totalTricksDd: Int = 0
     
+    public var id: (UUID, Int) { (self.scorecard.id, self.boardIndex) }
+    public var isCompetitive: Bool { self.compContract.isValid }
+    
     // Linked managed objects - should only be referenced in this and the Data classes
     @Published internal var boardSummaryMO: BoardSummaryMO?
     
