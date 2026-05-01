@@ -82,7 +82,6 @@ struct AnalysisViewer: View {
     @State var initialSitting: Seat
     @State var sitting: Seat
     @State var rotated: Int = 0
-    @State var from: UIView
     @StateObject var analysisData: AnalysisData
     @State var bidAnnounce = ""
     @State var summaryMode = true
@@ -97,7 +96,7 @@ struct AnalysisViewer: View {
     var canEditBidding: Binding<Bool> { Binding { traveller.rankingNumber == handTraveller.rankingNumber } set: { (_) in } }
     @StateObject var bids = Auction()
     
-    init(board: BoardViewModel, traveller: TravellerViewModel, sitting: Seat, frame: CGRect, initialYOffset: CGFloat, dismissView: Binding<Bool>, from: UIView) {
+    init(board: BoardViewModel, traveller: TravellerViewModel, sitting: Seat, frame: CGRect, initialYOffset: CGFloat, dismissView: Binding<Bool>) {
         self._analysisData = StateObject(wrappedValue: AnalysisData(analysis: Scorecard.current.analysis(board: board, traveller: traveller, sitting: sitting), otherAnalysis: nil))
         _board = State(initialValue: board)
         _traveller = State(initialValue: traveller)
@@ -105,7 +104,6 @@ struct AnalysisViewer: View {
         _initialSitting = State(initialValue: sitting)
         _sitting = State(initialValue: sitting)
         _frame = State(initialValue: frame)
-        _from = State(initialValue: from)
         _yOffset = State(initialValue: initialYOffset)
         _initialYOffset = State(initialValue: initialYOffset)
         _formatInt = State(initialValue: UserDefault.analysisOptionFormat.int)
@@ -126,7 +124,7 @@ struct AnalysisViewer: View {
                                 HStack(spacing: 0) {
                                     Spacer().frame(width: 8)
                                     let handWidth = bodyGeometry.size.height * 0.8
-                                    HandViewer(board: $board, traveller: $handTraveller, bids: bids, sitting: $sitting, rotated: $rotated, from: from, bidAnnounce: $bidAnnounce, stopEdit: $stopEdit, editBidding: $editBidding, canEditBidding: canEditBidding)
+                                    HandViewer(board: $board, traveller: $handTraveller, bids: bids, sitting: $sitting, rotated: $rotated, bidAnnounce: $bidAnnounce, stopEdit: $stopEdit, editBidding: $editBidding, canEditBidding: canEditBidding)
                                         .cornerRadius(analysisCornerSize)
                                         .ignoresSafeArea(.keyboard)
                                         .frame(width: handWidth)

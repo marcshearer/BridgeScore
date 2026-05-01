@@ -45,14 +45,15 @@ enum InsightColumn {
     case totalTricks
     case totalTricksDd
     
-    static let defaultCases: [InsightColumn] =
+    static let defaultPinnedColumns: [InsightColumn] =
     [.eventDesc,
-     .sessionNumber,
      .boardNumber,
      .partner,
      .location,
-     .date,
-     .vulnerability,
+     .date]
+    
+    static let defaultColumns: [InsightColumn] =
+    [.vulnerability,
      .eventType,
      .boardScoreType,
      .contractMade,
@@ -172,7 +173,7 @@ enum InsightColumn {
         case .boardNumber:
             AttributedString("\(boardSummary.boardNumber)")
         case .location:
-            AttributedString(boardSummary.location!.name.components(separatedBy: " ").first!)
+            AttributedString(boardSummary.location!.short == "" ? boardSummary.location!.name : boardSummary.location!.short)
         case .partner:
             AttributedString(boardSummary.partner!.name.components(separatedBy: " ").first!)
         case .date:
@@ -264,67 +265,107 @@ enum InsightColumn {
 }
 
 struct InsightsView: View {
-    @State var boardSummaries: [BoardSummaryViewModel] = []
-    @State var columns = InsightColumn.defaultCases
+    @Environment(\.dismiss) var dismiss
+    @State var boardSummaries: [BoardSummaryExtension] = []
+    @State var pinnedColumns = InsightColumn.defaultPinnedColumns
+    @State var columns = InsightColumn.defaultColumns
+    @State var showBoardSummary: BoardSummaryExtension? = nil
+    @State var dismissView: Bool = false
     var gridColumns : [GridItem] { Array(repeating: GridItem(.adaptive(minimum: 50), spacing: 0), count: columns.count) }
     
     var body: some View {
         StandardView("Insights") {
-            ZStack {
-                VStack(spacing: 0) {
-                    Rectangle()
-                        .frame(height: 80)
-                        .foregroundColor(Palette.contrastTile.background)
-                    Spacer()
-                }
-                VStack(spacing: 0) {
-                    ScrollView(.horizontal) {
-                        ScrollView {
-                            HStack {
-                                Spacer().frame(width: 10)
-                                LazyVStack(pinnedViews: [.sectionHeaders]) {
-                                    Section(header: headerView) {
-                                        if !boardSummaries.isEmpty {
-                                            Grid(horizontalSpacing: 5) {
-                                                ForEach(0..<boardSummaries.count, id: \.self) { boardIndex in
-                                                    GridRow {
-                                                        ForEach(0..<columns.count, id: \.self) { columnIndex in
-                                                            let column = columns[columnIndex]
-                                                            HStack {
-                                                                if column.align != .leading {
-                                                                    Spacer()
-                                                                }
-                                                                Text(column.value(boardSummary: boardSummaries[boardIndex]))
-                                                                if column.align != .trailing {
-                                                                    Spacer()
+            GeometryReader { geometry in
+                ZStack {
+                    VStack(spacing: 0) {
+                        Rectangle()
+                            .frame(height: 120)
+                            .foregroundColor(Palette.contrastTile.background)
+                            .ignoresSafeArea()
+                        Spacer()
+                    }
+                    VStack(spacing: 0) {
+                        HStack {
+                            Spacer()
+                            Button("􀆄") {
+                                dismiss()
+                            }
+                            .keyboardShortcut(.cancelAction)
+                            .font(bannerFont)
+                            .palette(.contrastTile)
+                            Spacer()
+                                .frame(width: 20)
+                        }
+                        .ignoresSafeArea()
+                        Spacer()
+                    }
+                    .zIndex(99)
+                    VStack(spacing: 0) {
+                        HStack {
+                            Spacer().frame(width: 10)
+                            ScrollView(.horizontal) {
+                                ScrollView {
+                                    HStack {
+                                        LazyVStack(pinnedViews: [.sectionHeaders]) {
+                                            Section(header: headerView(columns: columns)) {
+                                                if !boardSummaries.isEmpty {
+                                                    Grid(horizontalSpacing: 5) {
+                                                        ForEach(0..<boardSummaries.count, id: \.self) { boardIndex in
+                                                            let boardSummary = boardSummaries[boardIndex]
+                                                            GridRow {
+                                                                ForEach(0..<columns.count, id: \.self) { columnIndex in
+                                                                    let column = columns[columnIndex]
+                                                                    HStack {
+                                                                        if column.align != .leading {
+                                                                            Spacer()
+                                                                        }
+                                                                        Text(column.value(boardSummary: boardSummary))
+                                                                        if column.align != .trailing {
+                                                                            Spacer()
+                                                                        }
+                                                                    }
+                                                                    .frame(width: column.width, height: 20)
                                                                 }
                                                             }
-                                                            .frame(width: column.width, height: 20)
+                                                            .onTapGesture {
+                                                                if loadDetails(boardSummary: boardSummary) {
+                                                                    showBoardSummary = boardSummary
+                                                                }
+                                                            }
                                                         }
                                                     }
                                                 }
                                             }
                                         }
+                                        .fixedSize(horizontal: true, vertical: false)
                                     }
                                 }
-                                .fixedSize(horizontal: true, vertical: false)
-                                Spacer().frame(width: 10)
+                                .clipped()
                             }
+                            .clipped()
+                            Spacer().frame(width: 10)
                         }
-                        .clipped()
+                        Spacer()
                     }
-                    .clipped()
                 }
+                .fullScreenCover(item: $showBoardSummary, onDismiss: {
+                    if let scorecard = Scorecard.current.scorecard {
+                        Scorecard.current.saveAll(scorecard: scorecard)
+                        Scorecard.current.clear()
+                    }
+                }, content: { boardSummary in
+                    showDetails(boardSummary: boardSummary, frame: geometry.frame(in: .global))
+                })
             }
-            Spacer()
+                
         }
         .onAppear {
-            Insights.build()
+            // Insights.build()
             boardSummaries = Insights.Load()
         }
     }
     
-    var headerView : some View {
+    func headerView(columns: [InsightColumn]) -> some View {
         HStack {
             Spacer().frame(width: 10)
             Grid(horizontalSpacing: 5) {
@@ -349,5 +390,45 @@ struct InsightsView: View {
             Spacer().frame(width: 10)
         }
         .palette(.contrastTile)
+    }
+    
+    func showDetails(boardSummary: BoardSummaryExtension, frame: CGRect) -> some View {
+        let width = min(1400, frame.width) // Allow for safe area
+        let height = min(1024, (frame.height))
+        let frame = CGRect(x: (frame.width - width) / 2,
+                           y: ((frame.height - height) / 2),
+                           width: width,
+                           height: height)
+        return ZStack{
+            Color.black.opacity(0.4)
+            AnalysisViewer(board: boardSummary.board!, traveller: boardSummary.traveller!, sitting: boardSummary.seat!, frame: frame, initialYOffset: frame.height + 100, dismissView: $dismissView)
+        }
+        .background(BackgroundBlurView(opacity: 0.0))
+        .edgesIgnoringSafeArea(.all)
+        .onTapGesture {
+            dismissView = true
+        }
+    }
+    
+    func loadDetails(boardSummary: BoardSummaryExtension) -> Bool {
+        let scorecard = boardSummary.scorecard
+        Scorecard.current.clear()
+        Scorecard.current.load(scorecard: scorecard)
+        if boardSummary.board == nil || boardSummary.traveller == nil || boardSummary.seat == nil {
+            if let (board, traveller, seat) = Scorecard.getBoardTraveller(boardIndex: boardSummary.boardIndex, equivalentSeat: false) {
+                boardSummary.board = board
+                boardSummary.traveller = traveller
+                boardSummary.seat = seat
+                return true
+            } else {
+                boardSummary.board = nil
+                boardSummary.traveller = nil
+                boardSummary.seat = nil
+                Scorecard.current.clear()
+                return false
+            }
+        } else {
+            return true
+        }
     }
 }

@@ -109,12 +109,9 @@ class Insights {
                 boardSummary.declare[pairType] = Int((declareTravellers.count * 100) / travellers.count)
                 suitTravellers[pairType] = (suit == .blank ? [] : declareTravellers.filter({$0.contract.suit == suit}))
                 suitTricks[pairType] = suitTravellers[pairType]!.map({$0.contract.tricks + $0.made})
-                if pairType == .we {
-                    boardSummary.gameOdds = suitTricks[pairType]!.count(where: {$0 >= suit.gameTricks})
-                    boardSummary.slamOdds = suitTricks[pairType]!.count(where: {$0 >= Values.smallSlamLevel.tricks})
-                } else {
-                    boardSummary.gameOdds = 0
-                    boardSummary.slamOdds = 0
+                if pairType == .we && suitTricks[pairType]!.count > 0 {
+                    boardSummary.gameOdds = (suitTricks[pairType]!.count(where: {$0 >= suit.gameTricks}) * 100) / suitTricks[pairType]!.count
+                    boardSummary.slamOdds = (suitTricks[pairType]!.count(where: {$0 >= Values.smallSlamLevel.tricks}) * 100) / suitTricks[pairType]!.count
                 }
                 boardSummary.medianTricks[pairType] = median(in: suitTricks[pairType]!) ?? -1
                 boardSummary.modeTricks[pairType] = mode(in: suitTricks[pairType]!) ?? -1
@@ -222,12 +219,20 @@ class Insights {
         }
     }
     
-    static func Load() -> [BoardSummaryViewModel] {
-        var boardSummaries: [BoardSummaryViewModel] = []
+    static func Load() -> [BoardSummaryExtension] {
+        var boardSummaries: [BoardSummaryExtension] = []
+        // TODO Remove
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: BoardSummaryMO.tableName)
+        do {
+            let count = try CoreData.context.count(for: fetchRequest)
+            print("Total records: \(count)")
+        } catch {
+            print("Error counting records: \(error)")
+        }
         let boardSummaryMOs = CoreData.fetch(from: BoardSummaryMO.tableName, sort: [("date", .descending), ("boardIndex16", .ascending)]) as! [BoardSummaryMO]
         for boardSummaryMO in boardSummaryMOs {
             if let scorecard = MasterData.shared.scorecard(id: boardSummaryMO.scorecardId) {
-                let boardSummary = BoardSummaryViewModel(scorecard: scorecard, boardSummaryMO: boardSummaryMO)
+                let boardSummary = BoardSummaryExtension(scorecard: scorecard, boardSummaryMO: boardSummaryMO)
                 boardSummaries.append(boardSummary)
             }
         }
@@ -246,5 +251,17 @@ class Insights {
         let formatter = DateFormatter()
         formatter.dateFormat = "dd/MM/yyyy"
         return formatter.date(from: date)!
+    }
+}
+
+class BoardSummaryExtension : BoardSummaryViewModel {
+    var board: BoardViewModel?
+    var traveller: TravellerViewModel?
+    var seat: Seat?
+    
+    init(scorecard: ScorecardViewModel, boardSummaryMO: BoardSummaryMO) {
+        super.init(scorecard: scorecard, boardIndex: boardSummaryMO.boardIndex)
+        self.boardSummaryMO = boardSummaryMO
+        self.revert()
     }
 }

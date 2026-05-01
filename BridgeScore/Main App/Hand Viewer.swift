@@ -12,7 +12,6 @@ struct HandViewerForm: View {
     @State var board: BoardViewModel
     @State var traveller: TravellerViewModel
     @State var sitting: Seat
-    @State var from: UIView
     @State var bidAnnounce = ""
     @State var trickNumber = 0
     @State var deal = Deal()
@@ -30,7 +29,7 @@ struct HandViewerForm: View {
         
         StandardView("HandViewerForm") {
             VStack {
-                HandViewer(board: $board, traveller: $traveller, bids: bids, sitting: $sitting, rotated: $rotated, from: from, bidAnnounce: $bidAnnounce, stopEdit: $stopEdit, editBidding: $editBidding, canEditBidding: $canEditBidding)
+                HandViewer(board: $board, traveller: $traveller, bids: bids, sitting: $sitting, rotated: $rotated, bidAnnounce: $bidAnnounce, stopEdit: $stopEdit, editBidding: $editBidding, canEditBidding: $canEditBidding)
                 Spacer().frame(height: 2)
                 HandViewButtonBar()
                 Spacer().frame(height: 2)
@@ -84,7 +83,6 @@ struct HandViewer: View {
     @ObservedObject var bids: Auction
     @Binding var sitting: Seat
     @Binding var rotated: Int
-    @State var from: UIView
     @Binding var bidAnnounce: String
     @Binding var stopEdit: Bool
     @Binding var editBidding: Bool
@@ -137,7 +135,7 @@ struct HandViewer: View {
                                     }
                                     Spacer()
                                     if traveller.contract.level != .passout && tricks.count > 0 {
-                                        HandViewPlayerBar(board: $board, traveller: $traveller, from: $from, tricks: $tricks, trickNumber: $trickNumber, visible: $visible, animationChanged: $animationChanged, showClaim: $showClaim, bidAnnounce: $bidAnnounce)
+                                        HandViewPlayerBar(board: $board, traveller: $traveller, tricks: $tricks, trickNumber: $trickNumber, visible: $visible, animationChanged: $animationChanged, showClaim: $showClaim, bidAnnounce: $bidAnnounce)
                                             .frame(height: 50)
                                     }
                                 }.overlay(RoundedRectangle(cornerRadius: 4).stroke(Palette.separator.background,  lineWidth: 2))
@@ -536,7 +534,6 @@ struct HandViewer: View {
         @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
         @Binding var board: BoardViewModel
         @Binding var traveller: TravellerViewModel
-        @State var from: Binding<UIView>
         @Binding var tricks: [Trick]
         @Binding var trickNumber: Int
         @Binding var visible: [Bool]

@@ -113,7 +113,7 @@ public class BoardSummaryViewModel : NSObject, ObservableObject, Identifiable {
         return result
     }
     
-    private func revert() {
+    public func revert() {
         if let mo = self.boardSummaryMO {
             if let scorecard = MasterData.shared.scorecard(id: mo.scorecardId) {
                 self.scorecard = scorecard

@@ -318,7 +318,7 @@ struct ScorecardInputView: View {
         }) {
             if let handBoard = handBoard {
                 if let handTraveller = handTraveller {
-                    HandViewerForm(board: handBoard, traveller: handTraveller, sitting: handSitting, from: uiView)
+                    HandViewerForm(board: handBoard, traveller: handTraveller, sitting: handSitting)
                 }
             }
         }
@@ -338,7 +338,7 @@ struct ScorecardInputView: View {
                                            y: ((backgroundView.frame.height - height) / 2),
                                            width: width,
                                            height: height)
-                        AnalysisViewer(board: handBoard, traveller: handTraveller, sitting: handSitting, frame: frame, initialYOffset: backgroundView.frame.height + 100, dismissView: $dismissView, from: uiView)
+                        AnalysisViewer(board: handBoard, traveller: handTraveller, sitting: handSitting, frame: frame, initialYOffset: backgroundView.frame.height + 100, dismissView: $dismissView)
                             .cornerRadius(8)
                         Spacer()
                     }

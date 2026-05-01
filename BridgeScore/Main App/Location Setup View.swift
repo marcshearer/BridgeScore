@@ -149,6 +149,8 @@ struct LocationDetailView : View {
                             
                             Input(title: "Name", field: $selected.name, message: $selected.nameMessage)
                             
+                            Input(title: "Short name", field: $selected.short, placeHolder: "Optional shorter name")
+                            
                             Input(title: "BridgeWebs Id", field: $selected.bridgeWebsId, autoCapitalize: .none, autoCorrect: false)
                             
                             if selected.retired {
