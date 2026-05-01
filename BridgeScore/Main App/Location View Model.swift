@@ -43,6 +43,7 @@ public class LocationViewModel : ObservableObject, Identifiable, Equatable, Cust
             if self.locationId != mo.locationId ||
                 self.sequence != mo.sequence ||
                 self.name != mo.name ||
+                self.short != mo.short ||
                 self.bridgeWebsId != mo.bridgewebsId ||
                 self.retired != mo.retired {
                     result = true

@@ -298,13 +298,13 @@ public enum ScoreType: Equatable, CaseIterable, RawRepresentable {
          case .xImp:
              return "XImps"
          case .butlerImp:
-             return "Butler IMPs"
+             return "Butler"
          case .imp:
              return "Imps"
          case .vp:
              return "VPs"
          case .aggregate:
-             return "Aggregate"
+             return "Agg"
          case .unknown:
              return ""
          }

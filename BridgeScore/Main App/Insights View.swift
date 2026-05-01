@@ -183,7 +183,7 @@ enum InsightColumn {
         case .eventType:
             AttributedString(boardSummary.eventType.string)
         case .boardScoreType:
-            AttributedString(boardSummary.boardScoreType.string)
+            AttributedString(boardSummary.boardScoreType.brief)
         case .contract:
             boardSummary.contract.colorCompact
         case .contractMade:
@@ -252,9 +252,9 @@ enum InsightColumn {
         switch self {
         case .eventDesc:
             280
-        case .date, .suitType, .levelType:
+        case .date, .suitType, .levelType, .eventType:
             120
-        case .partner, .location, .contractMade:
+        case .partner, .location, .contractMade, .boardScoreType:
             100
         case .contract:
             90
@@ -271,7 +271,7 @@ struct InsightsView: View {
     @State var columns = InsightColumn.defaultColumns
     @State var showBoardSummary: BoardSummaryExtension? = nil
     @State var dismissView: Bool = false
-    var gridColumns : [GridItem] { Array(repeating: GridItem(.adaptive(minimum: 50), spacing: 0), count: columns.count) }
+    @State private var scrollOffset: CGFloat = 0
     
     var body: some View {
         StandardView("Insights") {
@@ -300,51 +300,53 @@ struct InsightsView: View {
                         Spacer()
                     }
                     .zIndex(99)
-                    VStack(spacing: 0) {
-                        HStack {
+                    VStack(alignment: .leading, spacing: 0) {
+                        HStack(alignment: .top, spacing: 0) {
                             Spacer().frame(width: 10)
-                            ScrollView(.horizontal) {
-                                ScrollView {
-                                    LazyVStack(pinnedViews: [.sectionHeaders]) {
-                                        Section(header: headerView(columns: columns)) {
-                                            if !boardSummaries.isEmpty {
-                                                Grid(horizontalSpacing: 5) {
-                                                    ForEach(0..<boardSummaries.count, id: \.self) { boardIndex in
-                                                        let boardSummary = boardSummaries[boardIndex]
-                                                        GridRow {
-                                                            ForEach(0..<columns.count, id: \.self) { columnIndex in
-                                                                let column = columns[columnIndex]
-                                                                HStack {
-                                                                    if column.align != .leading {
-                                                                        Spacer()
-                                                                    }
-                                                                    Text(column.value(boardSummary: boardSummary))
-                                                                    if column.align != .trailing {
-                                                                        Spacer()
-                                                                    }
-                                                                }
-                                                                .frame(width: column.width, height: 20)
-                                                            }
-                                                        }
-                                                        .onTapGesture {
-                                                            if loadDetails(boardSummary: boardSummary) {
-                                                                showBoardSummary = boardSummary
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                    .fixedSize(horizontal: true, vertical: false)
-                                }
-                                .clipped()
+                            headerView(columns: pinnedColumns)
+                                .zIndex(1)
+                            GeometryReader { _ in
+                                headerView(columns: columns)
+                                    .offset(x: scrollOffset)
                             }
-                            .clipped()
                             Spacer().frame(width: 10)
                         }
-                        Spacer()
+                        .frame(height: 80)
+                        
+                        ScrollView(.vertical) {
+                            HStack(alignment: .top, spacing: 0) {
+                                Spacer().frame(width: 10)
+                                LazyVStack(alignment: .leading, spacing: 0) {
+                                    ForEach(0..<boardSummaries.count, id: \.self) { boardIndex in
+                                        rowView(boardSummary: boardSummaries[boardIndex], columns: pinnedColumns)
+                                    }
+                                }
+                                .frame(width: pinnedColumns.map{$0.width}.reduce(0, +))
+                                GeometryReader { outerGeometry in
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        ZStack(alignment: .topLeading) {
+                                            GeometryReader { innerGeometry in
+                                                Color.clear
+                                                    .frame(width: 0, height: 0)
+                                                    .preference(key: ScrollOffsetKey.self, value: innerGeometry.frame(in: .named("Outer VStack")).minX - outerGeometry.frame(in: .named("Outer VStack")).minX)
+                                            }
+                                            LazyVStack(alignment: .leading, spacing: 0) {
+                                                ForEach(0..<boardSummaries.count, id: \.self) { boardIndex in
+                                                    rowView(boardSummary: boardSummaries[boardIndex], columns: columns)
+                                                }
+                                            }
+                                            .fixedSize(horizontal: true, vertical: false)
+                                        }
+                                    }
+                                    .onPreferenceChange(ScrollOffsetKey.self) { value in
+                                        scrollOffset = value
+                                    }
+                                }
+                                Spacer().frame(width: 10)
+                            }
+                        }
                     }
+                    .coordinateSpace(name: "Outer VStack")
                 }
                 .fullScreenCover(item: $showBoardSummary, onDismiss: {
                     if let scorecard = Scorecard.current.scorecard {
@@ -358,36 +360,53 @@ struct InsightsView: View {
                 
         }
         .onAppear {
-            // Insights.build()
+            Insights.build()
             boardSummaries = Insights.Load()
         }
     }
     
     func headerView(columns: [InsightColumn]) -> some View {
-        HStack {
-            Spacer().frame(width: 10)
-            Grid(horizontalSpacing: 5) {
-                GridRow {
-                    ForEach(0..<columns.count, id: \.self) { columnIndex in
-                        let column = columns[columnIndex]
-                        HStack {
-                            if column.align != .leading {
-                                Spacer()
-                            }
-                            Text(column.title)
-                                .lineLimit(nil)
-                                .multilineTextAlignment(.center)
-                            if column.align != .trailing {
-                                Spacer()
-                            }
-                        }
-                        .frame(width: column.width, height: 80)
+        HStack(spacing: 0) {
+            ForEach(0..<columns.count, id: \.self) { columnIndex in
+                let column = columns[columnIndex]
+                HStack {
+                    if column.align != .leading {
+                        Spacer()
+                    }
+                    Text(column.title)
+                        .lineLimit(nil)
+                        .multilineTextAlignment(.center)
+                    if column.align != .trailing {
+                        Spacer()
                     }
                 }
+                .frame(width: column.width, height: 80)
             }
-            Spacer().frame(width: 10)
         }
         .palette(.contrastTile)
+    }
+    
+    func rowView(boardSummary: BoardSummaryExtension, columns: [InsightColumn]) -> some View {
+        HStack(spacing: 0){
+            ForEach(0..<columns.count, id: \.self) { columnIndex in
+                let column = columns[columnIndex]
+                HStack {
+                    if column.align != .leading {
+                        Spacer()
+                    }
+                    Text(column.value(boardSummary: boardSummary))
+                    if column.align != .trailing {
+                        Spacer()
+                    }
+                }
+                .frame(width: column.width, height: 20)
+            }
+        }
+        .onTapGesture {
+            if loadDetails(boardSummary: boardSummary) {
+                showBoardSummary = boardSummary
+            }
+        }
     }
     
     func showDetails(boardSummary: BoardSummaryExtension, frame: CGRect) -> some View {
@@ -427,6 +446,17 @@ struct InsightsView: View {
             }
         } else {
             return true
+        }
+    }
+}
+
+struct ScrollOffsetKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        let newValue = nextValue()
+        if newValue != 0 {
+            value = newValue
+            print(value)
         }
     }
 }
