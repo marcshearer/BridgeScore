@@ -305,40 +305,38 @@ struct InsightsView: View {
                             Spacer().frame(width: 10)
                             ScrollView(.horizontal) {
                                 ScrollView {
-                                    HStack {
-                                        LazyVStack(pinnedViews: [.sectionHeaders]) {
-                                            Section(header: headerView(columns: columns)) {
-                                                if !boardSummaries.isEmpty {
-                                                    Grid(horizontalSpacing: 5) {
-                                                        ForEach(0..<boardSummaries.count, id: \.self) { boardIndex in
-                                                            let boardSummary = boardSummaries[boardIndex]
-                                                            GridRow {
-                                                                ForEach(0..<columns.count, id: \.self) { columnIndex in
-                                                                    let column = columns[columnIndex]
-                                                                    HStack {
-                                                                        if column.align != .leading {
-                                                                            Spacer()
-                                                                        }
-                                                                        Text(column.value(boardSummary: boardSummary))
-                                                                        if column.align != .trailing {
-                                                                            Spacer()
-                                                                        }
+                                    LazyVStack(pinnedViews: [.sectionHeaders]) {
+                                        Section(header: headerView(columns: columns)) {
+                                            if !boardSummaries.isEmpty {
+                                                Grid(horizontalSpacing: 5) {
+                                                    ForEach(0..<boardSummaries.count, id: \.self) { boardIndex in
+                                                        let boardSummary = boardSummaries[boardIndex]
+                                                        GridRow {
+                                                            ForEach(0..<columns.count, id: \.self) { columnIndex in
+                                                                let column = columns[columnIndex]
+                                                                HStack {
+                                                                    if column.align != .leading {
+                                                                        Spacer()
                                                                     }
-                                                                    .frame(width: column.width, height: 20)
+                                                                    Text(column.value(boardSummary: boardSummary))
+                                                                    if column.align != .trailing {
+                                                                        Spacer()
+                                                                    }
                                                                 }
+                                                                .frame(width: column.width, height: 20)
                                                             }
-                                                            .onTapGesture {
-                                                                if loadDetails(boardSummary: boardSummary) {
-                                                                    showBoardSummary = boardSummary
-                                                                }
+                                                        }
+                                                        .onTapGesture {
+                                                            if loadDetails(boardSummary: boardSummary) {
+                                                                showBoardSummary = boardSummary
                                                             }
                                                         }
                                                     }
                                                 }
                                             }
                                         }
-                                        .fixedSize(horizontal: true, vertical: false)
                                     }
+                                    .fixedSize(horizontal: true, vertical: false)
                                 }
                                 .clipped()
                             }
