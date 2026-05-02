@@ -47,10 +47,10 @@ enum InsightColumn {
     
     static let defaultPinnedColumns: [InsightColumn] =
     [.eventDesc,
-     .boardNumber,
-     .partner,
      .location,
-     .date]
+     .partner,
+     .date,
+     .boardNumber]
     
     static let defaultColumns: [InsightColumn] =
     [.vulnerability,
@@ -251,7 +251,7 @@ enum InsightColumn {
     var width: CGFloat {
         switch self {
         case .eventDesc:
-            280
+            180
         case .date, .suitType, .levelType, .eventType:
             120
         case .partner, .location, .contractMade, .boardScoreType:
@@ -264,6 +264,12 @@ enum InsightColumn {
     }
 }
 
+enum ScrollViews : CaseIterable, Hashable {
+    case heading
+    case data
+    case scrollIndicator
+}
+
 struct InsightsView: View {
     @Environment(\.dismiss) var dismiss
     @State var boardSummaries: [BoardSummaryExtension] = []
@@ -271,10 +277,7 @@ struct InsightsView: View {
     @State var columns = InsightColumn.defaultColumns
     @State var showBoardSummary: BoardSummaryExtension? = nil
     @State var dismissView: Bool = false
-    @State private var scrollOffset: CGFloat = 0
-    @State private var scrollPosition = Array(repeating: ScrollPosition(point: .zero), count: 2)
-    @State private var activeScrollerIndex: Int? = nil
-    // @State private var offset: CGFloat = 0
+    @StateObject private var scrollSync = ScrollSync<ScrollViews>()
     
     var body: some View {
         StandardView("Insights") {
@@ -307,16 +310,13 @@ struct InsightsView: View {
                         HStack(alignment: .top, spacing: 0) {
                             Spacer().frame(width: 10)
                             headerView(columns: pinnedColumns)
-                                .zIndex(1)
                             Spacer().frame(width: 20)
-                            GeometryReader { _ in
+                            scrollSync.scrollView(id: .heading) {
                                 headerView(columns: columns)
-                                    .offset(x: scrollOffset)
                             }
                             Spacer().frame(width: 10)
                         }
                         .frame(height: 80)
-                        
                         ScrollView(.vertical) {
                             HStack(alignment: .top, spacing: 0) {
                                 Spacer().frame(width: 10)
@@ -327,71 +327,30 @@ struct InsightsView: View {
                                 }
                                 .frame(width: pinnedColumns.map{$0.width}.reduce(0, +))
                                 Spacer().frame(width: 20)
-                                GeometryReader { outerGeometry in
-                                    ScrollView(.horizontal, showsIndicators: false) {
-                                        ZStack(alignment: .topLeading) {
-                                            GeometryReader { innerGeometry in
-                                                Color.clear
-                                                    .frame(width: 0, height: 0)
-                                                    .preference(key: ScrollOffsetKey.self, value: innerGeometry.frame(in: .named("Outer VStack")).minX - outerGeometry.frame(in: .named("Outer VStack")).minX)
-                                            }
-                                            LazyVStack(alignment: .leading, spacing: 0) {
-                                                ForEach(0..<boardSummaries.count, id: \.self) { boardIndex in
-                                                    rowView(boardSummary: boardSummaries[boardIndex], columns: columns)
-                                                }
-                                            }
-                                            .fixedSize(horizontal: true, vertical: false)
+                                    .background(.blue)
+                                scrollSync.scrollView(showsIndicators: false, id: .data) {
+                                    LazyVStack(alignment: .leading, spacing: 0) {
+                                        ForEach(0..<boardSummaries.count, id: \.self) { boardIndex in
+                                            rowView(boardSummary: boardSummaries[boardIndex], columns: columns)
                                         }
                                     }
-                                    .onScrollPhaseChange { _, newPhase in
-                                        if newPhase != .idle {
-                                            activeScrollerIndex = 0
-                                        } else if newPhase == .idle {
-                                            activeScrollerIndex = nil
-                                        }
-                                    }
-                                    .onScrollGeometryChange(for: CGFloat.self) { geometry in
-                                        geometry.contentOffset.x
-                                    } action: { _, newOffset in
-                                        if activeScrollerIndex == 0 {
-                                            let newPosition = ScrollPosition(point: CGPoint(x: newOffset, y: 0))
-                                            scrollPosition[1] = newPosition
-                                        }
-                                    }
-                                    .scrollPosition($scrollPosition[0])
-                                    .onPreferenceChange(ScrollOffsetKey.self) { value in
-                                        scrollOffset = value
-                                    }
+                                    .fixedSize(horizontal: true, vertical: false)
                                 }
                                 Spacer().frame(width: 10)
                             }
                         }
+                        Spacer().frame(height: 5)
                         HStack{
-                            Spacer().frame(width: pinnedColumns.map{$0.width}.reduce(0,+), height: 20)
+                            Spacer().frame(width: 10)
+                            spacerView(columns: pinnedColumns)
                             Spacer().frame(width: 20)
-                            ScrollView(.horizontal, showsIndicators: true) {
-                                headerView(columns: columns)
-                                    .scrollTargetLayout()
+                            scrollSync.scrollView(showsIndicators: true, id: .scrollIndicator) {
+                                spacerView(columns: columns)
                             }
-                            .onScrollPhaseChange { _, newPhase in
-                                if newPhase != .idle {
-                                    activeScrollerIndex = 1
-                                } else if newPhase == .idle {
-                                    activeScrollerIndex = nil
-                                }
-                            }
-                            .onScrollGeometryChange(for: CGFloat.self) { geometry in
-                                geometry.contentOffset.x
-                            } action: { _, newOffset in
-                                if activeScrollerIndex == 1 {
-                                    let newPosition = ScrollPosition(point: CGPoint(x: newOffset, y: 0))
-                                    scrollPosition[0] = newPosition
-                                }
-                            }
-                            .scrollPosition($scrollPosition[1])
+                            Spacer().frame(width: 10)
                         }
+                        // Spacer().frame(height: 5)
                     }
-                    .coordinateSpace(name: "Outer VStack")
                 }
                 .fullScreenCover(item: $showBoardSummary, onDismiss: {
                     if let scorecard = Scorecard.current.scorecard {
@@ -405,7 +364,7 @@ struct InsightsView: View {
                 
         }
         .onAppear {
-            Insights.build()
+            //Insights.build()
             boardSummaries = Insights.Load()
         }
     }
@@ -452,6 +411,10 @@ struct InsightsView: View {
                 showBoardSummary = boardSummary
             }
         }
+    }
+    
+    func spacerView(columns: [InsightColumn]) -> some View {
+        Spacer().frame(width: columns.map{$0.width}.reduce(0,+), height: 10)
     }
     
     func showDetails(boardSummary: BoardSummaryExtension, frame: CGRect) -> some View {
@@ -503,5 +466,49 @@ struct ScrollOffsetKey: PreferenceKey {
             value = newValue
             print(value)
         }
+    }
+}
+
+class ScrollSync<ID: Hashable & CaseIterable> : ObservableObject {
+    @Published var position: [ID:ScrollPosition] = [:]
+    private var activeId: ID? = nil
+    
+    init() {
+        for id in ID.allCases {
+            position[id] = ScrollPosition(point: .zero)
+        }
+    }
+    
+    @ViewBuilder func scrollView<Content: View>(showsIndicators: Bool = false, id: ID, @ViewBuilder content: @escaping () -> Content) -> some View {
+        
+        ScrollView(.horizontal, showsIndicators: showsIndicators) {
+                content()
+                .scrollTargetLayout()
+        }
+        .onScrollPhaseChange { [self] (_, newPhase) in
+            if newPhase != .idle {
+                activeId = id
+            } else if newPhase == .idle {
+                activeId = nil
+            }
+        }
+        .onScrollGeometryChange(for: CGFloat.self) { geometry in
+            geometry.contentOffset.x
+        } action: { [self] (_, newOffset) in
+            if activeId == id {
+                let newPosition = ScrollPosition(point: CGPoint(x: newOffset, y: 0))
+                for index in position.keys {
+                    if index != id {
+                        position[index]! = newPosition
+                        self.objectWillChange.send()
+                    }
+                }
+            }
+        }
+        .scrollPosition(binding(for: id))
+    }
+    
+    func binding(for id: ID) -> Binding<ScrollPosition> {
+        Binding (get: { self.position[id]! }, set: { self.position[id] = $0 })
     }
 }
