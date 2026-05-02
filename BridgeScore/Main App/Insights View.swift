@@ -239,9 +239,9 @@ enum InsightColumn {
     
     var align: TextAlignment {
         switch self {
-        case .eventDesc, .partner, .location:
+        case .eventDesc:
                 .leading
-        case .boardIndex, .sessionNumber, .boardNumber, .vulnerability, .eventType, .boardScoreType, .contract, .contractMade, .declarer, .made, .compContract, .compDeclarer, .suit, .suitType, .levelType:
+        case .boardIndex, .sessionNumber, .boardNumber, .vulnerability, .eventType, .boardScoreType, .contract, .contractMade, .declarer, .made, .compContract, .compDeclarer, .suit, .suitType, .levelType, .partner, .location, .date:
                 .center
         default:
                 .trailing
@@ -272,6 +272,9 @@ struct InsightsView: View {
     @State var showBoardSummary: BoardSummaryExtension? = nil
     @State var dismissView: Bool = false
     @State private var scrollOffset: CGFloat = 0
+    @State private var scrollPosition = Array(repeating: ScrollPosition(point: .zero), count: 2)
+    @State private var activeScrollerIndex: Int? = nil
+    // @State private var offset: CGFloat = 0
     
     var body: some View {
         StandardView("Insights") {
@@ -279,7 +282,7 @@ struct InsightsView: View {
                 ZStack {
                     VStack(spacing: 0) {
                         Rectangle()
-                            .frame(height: 120)
+                            .frame(height: 80 + geometry.safeAreaInsets.top)
                             .foregroundColor(Palette.contrastTile.background)
                             .ignoresSafeArea()
                         Spacer()
@@ -305,6 +308,7 @@ struct InsightsView: View {
                             Spacer().frame(width: 10)
                             headerView(columns: pinnedColumns)
                                 .zIndex(1)
+                            Spacer().frame(width: 20)
                             GeometryReader { _ in
                                 headerView(columns: columns)
                                     .offset(x: scrollOffset)
@@ -322,6 +326,7 @@ struct InsightsView: View {
                                     }
                                 }
                                 .frame(width: pinnedColumns.map{$0.width}.reduce(0, +))
+                                Spacer().frame(width: 20)
                                 GeometryReader { outerGeometry in
                                     ScrollView(.horizontal, showsIndicators: false) {
                                         ZStack(alignment: .topLeading) {
@@ -338,12 +343,52 @@ struct InsightsView: View {
                                             .fixedSize(horizontal: true, vertical: false)
                                         }
                                     }
+                                    .onScrollPhaseChange { _, newPhase in
+                                        if newPhase != .idle {
+                                            activeScrollerIndex = 0
+                                        } else if newPhase == .idle {
+                                            activeScrollerIndex = nil
+                                        }
+                                    }
+                                    .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                                        geometry.contentOffset.x
+                                    } action: { _, newOffset in
+                                        if activeScrollerIndex == 0 {
+                                            let newPosition = ScrollPosition(point: CGPoint(x: newOffset, y: 0))
+                                            scrollPosition[1] = newPosition
+                                        }
+                                    }
+                                    .scrollPosition($scrollPosition[0])
                                     .onPreferenceChange(ScrollOffsetKey.self) { value in
                                         scrollOffset = value
                                     }
                                 }
                                 Spacer().frame(width: 10)
                             }
+                        }
+                        HStack{
+                            Spacer().frame(width: pinnedColumns.map{$0.width}.reduce(0,+), height: 20)
+                            Spacer().frame(width: 20)
+                            ScrollView(.horizontal, showsIndicators: true) {
+                                headerView(columns: columns)
+                                    .scrollTargetLayout()
+                            }
+                            .onScrollPhaseChange { _, newPhase in
+                                if newPhase != .idle {
+                                    activeScrollerIndex = 1
+                                } else if newPhase == .idle {
+                                    activeScrollerIndex = nil
+                                }
+                            }
+                            .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                                geometry.contentOffset.x
+                            } action: { _, newOffset in
+                                if activeScrollerIndex == 1 {
+                                    let newPosition = ScrollPosition(point: CGPoint(x: newOffset, y: 0))
+                                    scrollPosition[0] = newPosition
+                                }
+                            }
+                            .scrollPosition($scrollPosition[1])
                         }
                     }
                     .coordinateSpace(name: "Outer VStack")

@@ -63,7 +63,10 @@ struct PersistenceController {
 
             container.persistentStoreDescriptions = [ storeDescription ]
             */
-            container.persistentStoreDescriptions.first!.url = sharedStoreURL
+            let description = NSPersistentStoreDescription(url: sharedStoreURL)
+            description.shouldMigrateStoreAutomatically = true
+            description.shouldInferMappingModelAutomatically = true
+            container.persistentStoreDescriptions = [description]
         }
         container.loadPersistentStores(completionHandler: { (storeDescription, error) in
             if let error = error as NSError? {
