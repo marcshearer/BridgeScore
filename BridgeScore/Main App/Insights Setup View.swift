@@ -10,6 +10,21 @@ import SwiftUI
 struct InsightsSetupView : View {
     @Binding var pinnedColumns: [InsightColumn]
     @Binding var columns: [InsightColumn]
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 0) {
+                InsightsChooseColumnsView(pinnedColumns: $pinnedColumns, columns: $columns)
+                Spacer()
+            }
+        }
+    }
+}
+
+struct InsightsChooseColumnsView : View {
+    @Binding var pinnedColumns: [InsightColumn]
+    @Binding var columns: [InsightColumn]
+    
     var availableColumns: Binding<[InsightColumn]> { Binding(
         get: { InsightColumn.allColumns.filter { !pinnedColumns.contains($0) && !columns.contains($0) } },
         set: { _ in  } // No need to do this as it will be handled by a change to coluns or pinnedColumns
@@ -33,25 +48,73 @@ struct InsightsSetupView : View {
             HStack(spacing: 0) {
                 Spacer().frame(width: 100)
                 VStack(spacing: 0) {
-                    columnList(title: "Unused", columns: availableColumns, height: 680, source: .available, specific: false)
+                    InsightsColumnListView(title: "Unused", columns: availableColumns, listType: .available, specificDrop: false, allowDrag: true, handleDrop: handleDrop)
                     Spacer()
                 }
                 Spacer().frame(width: 100)
                 VStack(spacing: 0) {
-                    columnList(title: "Pinned", columns: $pinnedColumns, height: 200, source: .pinned, specific: true)
+                    InsightsColumnListView(title: "Pinned", columns: $pinnedColumns, height: 240, listType: .pinned, specificDrop: true, allowDrag: true, handleDrop: handleDrop)
                     Spacer().frame(height: 40)
-                    columnList(title: "Un-pinned", columns: $columns, height: 400, source: .unpinned, specific: true)
+                    InsightsColumnListView(title: "Not Pinned", columns: $columns, listType: .unpinned, specificDrop: true, allowDrag: true, handleDrop: handleDrop)
                     Spacer()
                 }
                 Spacer()
             }
+            Spacer().frame(height: 50)
             Spacer()
         }
     }
     
-    func columnList(title: String, columns: Binding<[InsightColumn]>, height: CGFloat, source: ColumnSource, specific: Bool) -> some View {
+    func handleDrop(target: ListType, targetColumns: Binding<[InsightColumn]>, dropped: [ColumnTransfer], after: InsightColumn?) -> Bool {
+        var result = false
+        var beforeIndex: Int?
+        if after == nil {
+            beforeIndex = 0
+        } else {
+            if let index = targetColumns.wrappedValue.firstIndex(where: {$0 == after!}) {
+                beforeIndex = index + 1
+            }
+        }
         
-        return VStack(spacing: 0) {
+        if let beforeIndex = beforeIndex {
+            for droppedTransfer in dropped.reversed() {
+                if target == droppedTransfer.source {
+                    // Dropping in same list - move it
+                    if beforeIndex != 0 && droppedTransfer.column != after {
+                        // No need to do anything if moving in a non-specific list
+                        if let currentIndex = targetColumns.wrappedValue.firstIndex(of: droppedTransfer.column) {
+                            targetColumns.wrappedValue.move(fromOffsets: IndexSet([currentIndex]), toOffset: beforeIndex)
+                        }
+                    }
+                } else {
+                    switch droppedTransfer.source {
+                    case .available:
+                        break // No need to do anything - will recalculated when added to the other group
+                    case .pinned:
+                        pinnedColumns.removeAll(where: {$0 == droppedTransfer.column})
+                    case .unpinned:
+                        columns.removeAll(where: {$0 == droppedTransfer.column})
+                    }
+                    targetColumns.wrappedValue.insert(droppedTransfer.column, at: beforeIndex)
+                    result = true
+                }
+            }
+        }
+        return result
+    }
+}
+
+struct InsightsColumnListView : View {
+    var title: String
+    @Binding var columns: [InsightColumn]
+    var height: CGFloat? = nil
+    var listType: ListType
+    var specificDrop: Bool = true
+    var allowDrag: Bool
+    var handleDrop: ((_ target: ListType, _ destination: Binding<[InsightColumn]>, _ columns: [ColumnTransfer], _ dropped: InsightColumn?) -> Bool)?
+    
+    var body: some View {
+        VStack(spacing: 0) {
             Grid(horizontalSpacing: 0, verticalSpacing: 0) {
                 GridRow {
                     HStack {
@@ -63,22 +126,20 @@ struct InsightsSetupView : View {
                     .contentShape(Rectangle())
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .palette(.contrastTile)
-
+                    
                 }
                 .frame(width: 200, height: 40)
-                
-                
                 
                 ScrollView {
                     VStack {
                         Spacer().frame(width: 200, height: 4)
                             .palette(.mutedTile)
-                            .if(specific) { view in
+                            .if(specificDrop && handleDrop != nil) { view in
                                 view.dropDestination(for: ColumnTransfer.self) { droppedColumns, _ in
-                                    return handleDrop(destination: columns, dropped: droppedColumns, after: nil)
+                                    return handleDrop!(listType, $columns, droppedColumns, nil)
                                 }
                             }
-                        ForEach(columns, id: \.self) { column in
+                        ForEach($columns, id: \.self) { column in
                             GridRow {
                                 VStack(spacing: 0) {
                                     HStack {
@@ -88,7 +149,7 @@ struct InsightsSetupView : View {
                                     }
                                     .frame(width: 200, height: 24)
                                     .palette(.tile)
-                                    .draggable(ColumnTransfer(source: source, column: column.wrappedValue))
+                                    .draggable(ColumnTransfer(source: listType, column: column.wrappedValue))
                                     .overlay(alignment: .top) {
                                         VStack(spacing: 0) {
                                             Spacer().frame(width: 200, height: 16)
@@ -97,9 +158,9 @@ struct InsightsSetupView : View {
                                                 .palette(.mutedTile)
                                         }
                                         .offset(y: 8)
-                                        .if(specific) { view in
+                                        .if(specificDrop && handleDrop != nil) { view in
                                             view.dropDestination(for: ColumnTransfer.self) { droppedColumns, _ in
-                                                return handleDrop(destination: columns, dropped: droppedColumns, after: column.wrappedValue)
+                                                return handleDrop!(listType, $columns, droppedColumns, column.wrappedValue)
                                             }
                                         }
                                     }
@@ -108,56 +169,30 @@ struct InsightsSetupView : View {
                         }
                     }
                 }
-                .frame(maxHeight: height)
+                .if(height != nil) { view in
+                    view.frame(height: height! - 40)
+                }
             }
         }
-        .if(!specific) { view in
+        .if(!specificDrop && handleDrop != nil) { view in
             view.dropDestination(for: ColumnTransfer.self) { droppedColumns, _ in
-                return handleDrop(destination: columns, dropped: droppedColumns, after: nil)
+                return handleDrop!(listType, $columns, droppedColumns, nil)
             }
         }
         .palette(.mutedTile)
         .cornerRadius(8)
         .frame(width: 200)
     }
-    
-    func handleDrop(destination: Binding<[InsightColumn]>, dropped: [ColumnTransfer], after: InsightColumn?) -> Bool {
-        var result = false
-        var beforeIndex: Int?
-        if after == nil {
-            beforeIndex = 0
-        } else {
-            if let index = destination.wrappedValue.firstIndex(where: {$0 == after!}) {
-                beforeIndex = index + 1
-            }
-        }
-        if let beforeIndex = beforeIndex {
-            for droppedTransfer in dropped.reversed() {
-                switch droppedTransfer.source {
-                case .available:
-                    break // No need to do anything - will recalculated when added to the other group
-                case .pinned:
-                    pinnedColumns.removeAll(where: {$0 == droppedTransfer.column})
-                case .unpinned:
-                    columns.removeAll(where: {$0 == droppedTransfer.column})
-                }
-                destination.wrappedValue.insert(droppedTransfer.column, at: beforeIndex)
-                result = true
-                
-            }
-        }
-        return result
-    }
 }
 
-enum ColumnSource : Codable {
+enum ListType : Codable {
     case available
     case pinned
     case unpinned
 }
 
 struct ColumnTransfer : Codable, Transferable {
-    var source: ColumnSource
+    var source: ListType
     var column: InsightColumn
     
     static var transferRepresentation: some TransferRepresentation {
