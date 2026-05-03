@@ -17,7 +17,7 @@ struct BannerOption {
     let menu: Bool
     let action: ()->()
     
-    init(image: AnyView? = nil, text: String? = nil, color: PaletteColor? = nil, likeBack: Bool = false, isEnabled: Binding<Bool>? = nil, isHidden: Binding<Bool>? = nil, menu: Bool = false, action: @escaping ()->()) {
+    init(image: AnyView? = nil, text: String? = nil, color: PaletteColor? = nil, likeBack: Bool = false, isEnabled: Binding<Bool>? = nil, isHidden: Binding<Bool>? = nil, menu: Bool = true, action: @escaping ()->()) {
         self.image = image
         self.text = text
         self.likeBack = likeBack
@@ -166,6 +166,7 @@ struct Banner: View {
                     Banner_Buttons(options: options.filter{!$0.menu || optionMode == .buttons}, alternateStyle: alternateStyle, bannerColor: bannerColor, buttonColor: buttonColor, backButtonColor: backButtonColor)
                 }
                 if optionMode == .menu || optionMode == .both {
+                    Spacer().frame(width: 20)
                     Banner_Menu(id: menuId!, image: menuImage, title: menuTitle, options: options.filter{$0.menu || optionMode == .menu}, bannerColor: bannerColor)
                 }
             }

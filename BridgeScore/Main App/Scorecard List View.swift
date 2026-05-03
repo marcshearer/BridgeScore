@@ -62,7 +62,7 @@ struct ScorecardListView: View, DropDelegate {
         return StandardView("Scorecard List", slideInId: id, navigation: true, path: $path) {
             GeometryReader { geometry in
                 VStack {
-                    Banner(title: $title, back: false, optionMode: .menu, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: "Setup", menuId: id, options: bannerMenuOptions())
+                    Banner(title: $title, back: false, optionMode: .both, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: "Setup", menuId: id, options: bannerMenuOptions())
                     Spacer().frame(height: 8)
                     newScorecardTileView()
                     ScrollView {
@@ -300,13 +300,13 @@ struct ScorecardListView: View, DropDelegate {
     
     func bannerMenuOptions() -> [BannerOption] {
         var menuOptions: [BannerOption] = []
-        menuOptions = [BannerOption(text: "Statistics", action: { destination = .stats }),
-                       BannerOption(text: "Insights", action: { destination = .insights }),
-                           BannerOption(text: "Templates", action: { destination = .layoutSetup }),
-                           BannerOption(text: "Players",  action: { destination = .playerSetup }),
-                           BannerOption(text: "Locations", action: { destination = .locationSetup }),
-                           BannerOption(text: "Import BBO Names", action: { ImportBBO.importNames() }),
-                           BannerOption(text: "Backup", action: { MessageBox.shared.show("Backing up", cancelText: "Cancel", okText: "Continue", okAction: {Backup.shared.backup() ; MessageBox.shared.hide()})})]
+        menuOptions = [BannerOption(image: AnyView(Image(systemName: "chart.xyaxis.line")), likeBack: true, menu: false, action: { destination = .stats }),
+                       BannerOption(image: AnyView(Image(systemName: "sparkles")), likeBack: true, menu: false, action: { destination = .insights }),
+                       BannerOption(text: "Templates", action: { destination = .layoutSetup }),
+                       BannerOption(text: "Players",  action: { destination = .playerSetup }),
+                       BannerOption(text: "Locations", action: { destination = .locationSetup }),
+                       BannerOption(text: "Import BBO Names", action: { ImportBBO.importNames() }),
+                       BannerOption(text: "Backup", action: { MessageBox.shared.show("Backing up", cancelText: "Cancel", okText: "Continue", okAction: {Backup.shared.backup() ; MessageBox.shared.hide()})})]
         if Utility.isSimulator || MyApp.target == .iOS || debug {
             menuOptions.append(
                 BannerOption(text: "Restore", action: {

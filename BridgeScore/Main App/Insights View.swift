@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-enum InsightColumn {
+enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     
     case eventDesc
     case boardIndex
@@ -21,8 +21,8 @@ enum InsightColumn {
     case boardScoreType
     case contract
     case contractMade
-    case declarer
     case made
+    case declarer
     case score
     case fieldSize
     case gameOdds
@@ -45,6 +45,10 @@ enum InsightColumn {
     case totalTricks
     case totalTricksDd
     
+    static var transferRepresentation: some TransferRepresentation {
+        CodableRepresentation(contentType: .data)
+    }
+    
     static let defaultPinnedColumns: [InsightColumn] =
     [.eventDesc,
      .location,
@@ -52,10 +56,25 @@ enum InsightColumn {
      .date,
      .boardNumber]
     
-    static let defaultColumns: [InsightColumn] =
-    [.vulnerability,
+    static let defaultExcludeColumns: [InsightColumn] = [
+        .boardIndex,
+        .sessionNumber,
+        .contract,
+        .made,
+    ]
+    
+    static let allColumns: [InsightColumn] =
+    [.eventDesc,
+     .location,
+     .partner,
+     .date,
+     .sessionNumber,
+     .boardNumber,
+     .vulnerability,
      .eventType,
      .boardScoreType,
+     .contract,
+     .made,
      .contractMade,
      .declarer,
      .score,
@@ -89,6 +108,8 @@ enum InsightColumn {
      .compMakeScore,
      .compMakeOdds]
     
+    static let defaultColumns = InsightColumn.allColumns.filter{!defaultPinnedColumns.contains($0) && !defaultExcludeColumns.contains($0)}
+    
     var title: String {
         switch self {
         case .eventDesc:
@@ -111,12 +132,12 @@ enum InsightColumn {
             "Score Type"
         case .contract:
             "Contract"
-        case .contractMade:
-            "Contract"
-        case .declarer:
-            "By"
         case .made:
             "Made"
+        case .contractMade:
+            "Contract / Made"
+        case .declarer:
+            "By"
         case .score:
             "Score"
         case .fieldSize:
@@ -252,9 +273,9 @@ enum InsightColumn {
         switch self {
         case .eventDesc:
             180
-        case .date, .suitType, .levelType, .eventType:
+        case .date, .location, .suitType, .levelType, .eventType:
             120
-        case .partner, .location, .contractMade, .boardScoreType:
+        case .partner, .contractMade, .boardScoreType:
             100
         case .contract:
             90
@@ -277,6 +298,7 @@ struct InsightsView: View {
     @State var columns = InsightColumn.defaultColumns
     @State var showBoardSummary: BoardSummaryExtension? = nil
     @State var dismissView: Bool = false
+    @State var editMode: Bool = false
     @StateObject private var scrollSync = ScrollSync<ScrollViews>()
     
     var body: some View {
@@ -285,71 +307,67 @@ struct InsightsView: View {
                 ZStack {
                     VStack(spacing: 0) {
                         Rectangle()
-                            .frame(height: 80 + geometry.safeAreaInsets.top)
+                            .frame(height: editMode ? 40 : 90 + geometry.safeAreaInsets.top)
                             .foregroundColor(Palette.contrastTile.background)
                             .ignoresSafeArea()
                         Spacer()
                     }
-                    VStack(spacing: 0) {
-                        HStack {
-                            Spacer()
-                            Button("􀆄") {
-                                dismiss()
-                            }
-                            .keyboardShortcut(.cancelAction)
-                            .font(bannerFont)
-                            .palette(.contrastTile)
-                            Spacer()
-                                .frame(width: 20)
-                        }
-                        .ignoresSafeArea()
-                        Spacer()
-                    }
-                    .zIndex(99)
-                    VStack(alignment: .leading, spacing: 0) {
-                        HStack(alignment: .top, spacing: 0) {
-                            Spacer().frame(width: 10)
-                            headerView(columns: pinnedColumns)
-                            Spacer().frame(width: 20)
-                            scrollSync.scrollView(id: .heading) {
-                                headerView(columns: columns)
-                            }
-                            Spacer().frame(width: 10)
-                        }
-                        .frame(height: 80)
-                        ScrollView(.vertical) {
+                    
+                    toolBarView()
+                        .zIndex(99)
+                    if !editMode {
+                        VStack(alignment: .leading, spacing: 0) {
+                            Spacer().frame(height: 10)
                             HStack(alignment: .top, spacing: 0) {
                                 Spacer().frame(width: 10)
-                                LazyVStack(alignment: .leading, spacing: 0) {
-                                    ForEach(0..<boardSummaries.count, id: \.self) { boardIndex in
-                                        rowView(boardSummary: boardSummaries[boardIndex], columns: pinnedColumns)
-                                    }
-                                }
-                                .frame(width: pinnedColumns.map{$0.width}.reduce(0, +))
+                                headerView(columns: pinnedColumns)
                                 Spacer().frame(width: 20)
-                                    .background(.blue)
-                                scrollSync.scrollView(showsIndicators: false, id: .data) {
-                                    LazyVStack(alignment: .leading, spacing: 0) {
-                                        ForEach(0..<boardSummaries.count, id: \.self) { boardIndex in
-                                            rowView(boardSummary: boardSummaries[boardIndex], columns: columns)
+                                scrollSync.scrollView(id: .heading) {
+                                    headerView(columns: columns)
+                                }
+                                Spacer().frame(width: 10)
+                            }
+                            .frame(height: 80)
+                            ScrollView(.vertical) {
+                                HStack(spacing: 0) {
+                                    HStack {
+                                        Spacer().frame(width: 10)
+                                        LazyVStack(alignment: .leading, spacing: 0) {
+                                            ForEach(0..<boardSummaries.count, id: \.self) { boardIndex in
+                                                rowView(boardSummary: boardSummaries[boardIndex], columns: pinnedColumns)
+                                            }
                                         }
+                                        .frame(width: pinnedColumns.map{$0.width}.reduce(0, +))
+                                        Spacer().frame(width: 20)
                                     }
-                                    .fixedSize(horizontal: true, vertical: false)
+                                    .palette(.alternate)
+                                    scrollSync.scrollView(showsIndicators: false, id: .data) {
+                                        LazyVStack(alignment: .leading, spacing: 0) {
+                                            ForEach(0..<boardSummaries.count, id: \.self) { boardIndex in
+                                                rowView(boardSummary: boardSummaries[boardIndex], columns: columns)
+                                            }
+                                        }
+                                        .fixedSize(horizontal: true, vertical: false)
+                                    }
+                                    Spacer().frame(width: 10)
+                                }
+                            }
+                            HStack{
+                                HStack {
+                                    Spacer().frame(width: 10)
+                                    spacerView(columns: pinnedColumns)
+                                    Spacer().frame(width: 20)
+                                }
+                                .palette(.alternate)
+                                scrollSync.scrollView(showsIndicators: true, id: .scrollIndicator) {
+                                    spacerView(columns: columns)
                                 }
                                 Spacer().frame(width: 10)
                             }
                         }
-                        Spacer().frame(height: 5)
-                        HStack{
-                            Spacer().frame(width: 10)
-                            spacerView(columns: pinnedColumns)
-                            Spacer().frame(width: 20)
-                            scrollSync.scrollView(showsIndicators: true, id: .scrollIndicator) {
-                                spacerView(columns: columns)
-                            }
-                            Spacer().frame(width: 10)
-                        }
-                        // Spacer().frame(height: 5)
+                    } else {
+                        InsightsSetupView(pinnedColumns: $pinnedColumns, columns: $columns)
+                        Spacer()
                     }
                 }
                 .fullScreenCover(item: $showBoardSummary, onDismiss: {
@@ -364,8 +382,49 @@ struct InsightsView: View {
                 
         }
         .onAppear {
-            //Insights.build()
             boardSummaries = Insights.Load()
+            if boardSummaries.isEmpty {
+                // TODO Shouldn't need this
+                Insights.build()
+                boardSummaries = Insights.Load()
+            }
+        }
+    }
+    
+    func toolBarView() -> some View {
+        VStack(spacing: 0) {
+            VStack(spacing: 0) {
+                Spacer()
+                HStack {
+                    Spacer()
+                    
+                    Text("Insights")
+                    
+                    Spacer()
+                    
+                    Button("\(editMode ? "􀈄" : "􀈎")") {
+                       editMode.toggle()
+                    }
+                    
+                    Spacer().frame(width: 40)
+                    
+                    Button("􀆄") {
+                        dismiss()
+                    }
+                    .keyboardShortcut(.cancelAction)
+                    
+                    Spacer()
+                        .frame(width: 20)
+                }
+                .frame(height: 30)
+                Spacer()
+                Separator(direction: .horizontal, thickness: 2)
+            }
+            .frame(height: 40)
+            .font(bannerFont)
+            .palette(.contrastTile)
+            .ignoresSafeArea()
+            Spacer()
         }
     }
     
@@ -406,6 +465,8 @@ struct InsightsView: View {
                 .frame(width: column.width, height: 20)
             }
         }
+        .contentShape(Rectangle())
+        .help("\(boardSummary.scorecard.desc)\nDate: \(Utility.dateString(boardSummary.scorecard.date, format: "dd/MM/yyyy"))\nLocation: \(boardSummary.location!.name)\nPartner: \(boardSummary.partner!.name)\nBoard: \(boardSummary.boardNumber) of \(boardSummary.scorecard.boards)")
         .onTapGesture {
             if loadDetails(boardSummary: boardSummary) {
                 showBoardSummary = boardSummary
@@ -455,60 +516,5 @@ struct InsightsView: View {
         } else {
             return true
         }
-    }
-}
-
-struct ScrollOffsetKey: PreferenceKey {
-    static var defaultValue: CGFloat = 0
-    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
-        let newValue = nextValue()
-        if newValue != 0 {
-            value = newValue
-            print(value)
-        }
-    }
-}
-
-class ScrollSync<ID: Hashable & CaseIterable> : ObservableObject {
-    @Published var position: [ID:ScrollPosition] = [:]
-    private var activeId: ID? = nil
-    
-    init() {
-        for id in ID.allCases {
-            position[id] = ScrollPosition(point: .zero)
-        }
-    }
-    
-    @ViewBuilder func scrollView<Content: View>(showsIndicators: Bool = false, id: ID, @ViewBuilder content: @escaping () -> Content) -> some View {
-        
-        ScrollView(.horizontal, showsIndicators: showsIndicators) {
-                content()
-                .scrollTargetLayout()
-        }
-        .onScrollPhaseChange { [self] (_, newPhase) in
-            if newPhase != .idle {
-                activeId = id
-            } else if newPhase == .idle {
-                activeId = nil
-            }
-        }
-        .onScrollGeometryChange(for: CGFloat.self) { geometry in
-            geometry.contentOffset.x
-        } action: { [self] (_, newOffset) in
-            if activeId == id {
-                let newPosition = ScrollPosition(point: CGPoint(x: newOffset, y: 0))
-                for index in position.keys {
-                    if index != id {
-                        position[index]! = newPosition
-                        self.objectWillChange.send()
-                    }
-                }
-            }
-        }
-        .scrollPosition(binding(for: id))
-    }
-    
-    func binding(for id: ID) -> Binding<ScrollPosition> {
-        Binding (get: { self.position[id]! }, set: { self.position[id] = $0 })
     }
 }

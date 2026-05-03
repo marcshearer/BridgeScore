@@ -155,6 +155,8 @@
 		B2A5A42627E2582F00754061 /* BBO Name Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A5A42527E2582F00754061 /* BBO Name Managed Object.swift */; };
 		B2A5A42827E3090300754061 /* BBO Name View Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A5A42727E3090300754061 /* BBO Name View Model.swift */; };
 		B2A724CB2FA469B700C574DC /* Clear BridgeWebs Download.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A724CA2FA469AD00C574DC /* Clear BridgeWebs Download.swift */; };
+		B2A724CF2FA5EEFB00C574DC /* Scroll Sync.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A724CE2FA5EEF600C574DC /* Scroll Sync.swift */; };
+		B2A724D12FA61BFC00C574DC /* Insights Setup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A724D02FA61BF400C574DC /* Insights Setup View.swift */; };
 		B2A918932ADABF0B00761B66 /* Analysis Summary View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2A918922ADABF0B00761B66 /* Analysis Summary View.swift */; };
 		B2AB6ECB2AC2CCA900ED002A /* Analysis.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AB6ECA2AC2CCA900ED002A /* Analysis.swift */; };
 		B2AC53A82B10CE6E00B07D20 /* Share Scorecard View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2AC53A72B10CE6E00B07D20 /* Share Scorecard View.swift */; };
@@ -352,6 +354,8 @@
 		B2A5A42527E2582F00754061 /* BBO Name Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BBO Name Managed Object.swift"; sourceTree = "<group>"; };
 		B2A5A42727E3090300754061 /* BBO Name View Model.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "BBO Name View Model.swift"; sourceTree = "<group>"; };
 		B2A724CA2FA469AD00C574DC /* Clear BridgeWebs Download.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Clear BridgeWebs Download.swift"; sourceTree = "<group>"; };
+		B2A724CE2FA5EEF600C574DC /* Scroll Sync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scroll Sync.swift"; sourceTree = "<group>"; };
+		B2A724D02FA61BF400C574DC /* Insights Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Insights Setup View.swift"; sourceTree = "<group>"; };
 		B2A918922ADABF0B00761B66 /* Analysis Summary View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Analysis Summary View.swift"; sourceTree = "<group>"; };
 		B2AB6ECA2AC2CCA900ED002A /* Analysis.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Analysis.swift; sourceTree = "<group>"; };
 		B2AC53A72B10CE6E00B07D20 /* Share Scorecard View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Share Scorecard View.swift"; sourceTree = "<group>"; };
@@ -621,6 +625,7 @@
 				B26BCE592799AED700B73501 /* Message Box.swift */,
 				B2AF750C27AD14FD00233693 /* Slide In Menu.swift */,
 				B26BCE5C2799AED700B73501 /* Swipe Gestures.swift */,
+				B2A724CE2FA5EEF600C574DC /* Scroll Sync.swift */,
 				B26BCE572799AED700B73501 /* Target View Modifiers.swift */,
 				B2A2053C27B13F2F00C83C88 /* Keyboard Adaptive.swift */,
 				B27CFA4D27CDFE8400B976E0 /* Popup Menu.swift */,
@@ -709,6 +714,7 @@
 				B217C8D62F7E6D8F006F02A3 /* Bidding Viewer.swift */,
 				B217C8D42F7E548A006F02A3 /* Bidding Editor View.swift */,
 				B2746FC02F9F2BBA00716D08 /* Insights View.swift */,
+				B2A724D02FA61BF400C574DC /* Insights Setup View.swift */,
 				B2EEFC772AAB5BE4005A1ECA /* Analysis Viewer.swift */,
 			);
 			name = "Main Views";
@@ -919,6 +925,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B2A724CF2FA5EEFB00C574DC /* Scroll Sync.swift in Sources */,
 				B207711B2F9D28AE00DB6C18 /* Insights.swift in Sources */,
 				B2EB3D66279D54D500D64225 /* Board Managed Object.swift in Sources */,
 				B26BCE692799AED700B73501 /* Input String.swift in Sources */,
@@ -1028,6 +1035,7 @@
 				B23ADBF427B28D68001B6B38 /* Local Authentication.swift in Sources */,
 				B29BBA7A2D33D15A0032BC2F /* Contract Classes.swift in Sources */,
 				B2A5A42827E3090300754061 /* BBO Name View Model.swift in Sources */,
+				B2A724D12FA61BFC00C574DC /* Insights Setup View.swift in Sources */,
 				B26BCE6A2799AED700B73501 /* Standard View.swift in Sources */,
 				B26C555727C7EA9200015D0A /* Table with Collection.swift in Sources */,
 				B273C1442B0BC2120061CF04 /* Scorecard Drop Delegates.swift in Sources */,

@@ -135,7 +135,7 @@ extension Pair {
     }
 }
 
-public enum SeatPlayer: Int, CaseIterable {
+public enum SeatPlayer: Int, Codable, CaseIterable {
     case unknown = -1
     case player = 0
     case partner = 2
@@ -185,7 +185,7 @@ public enum SeatPlayer: Int, CaseIterable {
     }
 }
 
-public enum PairType: Int, CaseIterable {
+public enum PairType: Int, Codable, CaseIterable {
     case unknown = -1
     case we = 0
     case they = 2
