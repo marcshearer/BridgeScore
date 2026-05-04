@@ -65,6 +65,9 @@ class MasterData: ObservableObject {
         // Setup locations
         self.locations = []
         for locationMO in locationMOs {
+            if locationMO.name == "New Melville" && locationMO.short.isEmpty {
+                
+            }
             locations.append(LocationViewModel(locationMO: locationMO))
         }
         if locations.count == 0 && createDefaultData {

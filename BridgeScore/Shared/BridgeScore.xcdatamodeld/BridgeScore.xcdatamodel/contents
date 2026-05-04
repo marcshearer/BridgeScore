@@ -119,7 +119,7 @@
         <attribute name="name" optional="YES" attributeType="String"/>
         <attribute name="retired" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
         <attribute name="sequence16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="short" optional="YES" attributeType="String"/>
+        <attribute name="short" optional="YES" attributeType="String" defaultValueString=""/>
     </entity>
     <entity name="Override" representedClassName="OverrideMO" syncable="YES">
         <attribute name="boardIndex16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>

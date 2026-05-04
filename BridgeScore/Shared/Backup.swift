@@ -40,7 +40,7 @@ class Backup {
     public func restore(dateString: String) {
         let thisBackupUrl = databaseBackupsUrl.appendingPathComponent(dateString)
 
-        for entity in /*MyApp.databaseTables*/ [LocationMO.entity(), DoubleDummyMO.entity(), BoardSummaryMO.entity()] {
+        for entity in /*MyApp.databaseTables { // */ [LocationMO.entity(), DoubleDummyMO.entity(), BoardSummaryMO.entity()] {
             Backup.shared.restore(entity, directory: thisBackupUrl)
         }
         MasterData.shared.load()

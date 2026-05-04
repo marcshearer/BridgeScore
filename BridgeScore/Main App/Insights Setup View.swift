@@ -10,11 +10,16 @@ import SwiftUI
 struct InsightsSetupView : View {
     @Binding var pinnedColumns: [InsightColumn]
     @Binding var columns: [InsightColumn]
+    @Binding var logic: [DerivedElement]
     
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
+                Spacer().frame(width: 100)
                 InsightsChooseColumnsView(pinnedColumns: $pinnedColumns, columns: $columns)
+                Spacer().frame(width: 100)
+                InsightsDerivedValueView(logic: $logic)
+                Spacer().frame(width: 100)
                 Spacer()
             }
         }
@@ -34,7 +39,6 @@ struct InsightsChooseColumnsView : View {
         VStack(spacing: 0) {
             Spacer().frame(height: 40)
             HStack(spacing: 0) {
-                Spacer().frame(width: 100)
                 HStack(spacing: 0) {
                     Spacer()
                     Text("Drag columns to different sections")
@@ -46,7 +50,6 @@ struct InsightsChooseColumnsView : View {
             }
             Spacer().frame(height: 40)
             HStack(spacing: 0) {
-                Spacer().frame(width: 100)
                 VStack(spacing: 0) {
                     InsightsColumnListView(title: "Unused", columns: availableColumns, listType: .available, specificDrop: false, allowDrag: true, handleDrop: handleDrop)
                     Spacer()
@@ -200,3 +203,24 @@ struct ColumnTransfer : Codable, Transferable {
     }
 }
 
+struct InsightsDerivedValueView : View {
+    @State var logic: [DerivedElement]
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer().frame(height: 40)
+            HStack(spacing: 0) {
+                HStack(spacing: 0) {
+                    Spacer()
+                    Text("Derived Value")
+                        .font(defaultFont)
+                    Spacer()
+                }
+                .frame(width: 500)
+                Spacer()
+            }
+            Spacer().frame(height: 40)
+            DerivedValuesView(logic: $logic, color: .tile)
+        }
+    }
+}
