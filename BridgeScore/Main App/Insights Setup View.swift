@@ -10,7 +10,8 @@ import SwiftUI
 struct InsightsSetupView : View {
     @Binding var pinnedColumns: [InsightColumn]
     @Binding var columns: [InsightColumn]
-    @Binding var logic: [DerivedElement]
+    @Binding var data: [BoardSummaryExtension]
+    @State var logic: [DerivedElement] = []
     
     var body: some View {
         VStack(spacing: 0) {
@@ -18,7 +19,7 @@ struct InsightsSetupView : View {
                 Spacer().frame(width: 100)
                 InsightsChooseColumnsView(pinnedColumns: $pinnedColumns, columns: $columns)
                 Spacer().frame(width: 100)
-                InsightsDerivedValueView(logic: $logic)
+                InsightsDerivedValueView(logic: $logic, data: $data)
                 Spacer().frame(width: 100)
                 Spacer()
             }
@@ -204,7 +205,12 @@ struct ColumnTransfer : Codable, Transferable {
 }
 
 struct InsightsDerivedValueView : View {
-    @State var logic: [DerivedElement]
+    @Binding var logic: [DerivedElement]
+    @Binding var data: [BoardSummaryExtension]
+    @State var errorMessage: String?
+    @State var typeMessage: String?
+    @State var treeValue: String?
+    @State var value: String?
     
     var body: some View {
         VStack(spacing: 0) {
@@ -220,7 +226,60 @@ struct InsightsDerivedValueView : View {
                 Spacer()
             }
             Spacer().frame(height: 40)
-            DerivedValuesView(logic: $logic, color: .tile)
+            DerivedValuesView(logic: $logic, color: .alternate)
+            Spacer().frame(height: 40)
+            Button ("Parse") {
+                let parser = DerivedParser(tokens: logic)
+                parser.parse() { (tree, message) in
+                    if let message = message {
+                        errorMessage = message
+                        treeValue = nil
+                        value = nil
+                        typeMessage = nil
+                    } else if let tree = tree {
+                        typeMessage = nil
+                        errorMessage = nil
+                        treeValue = tree.string
+                        do {
+                            let resultType = try tree.type(variableType: variableType)
+                            typeMessage = "Type is \(resultType.string)"
+                        } catch {
+                            typeMessage = "Error type checking \(error)"
+                        }
+                            
+                        do {
+                            try value = tree.value(variableValue: evaluate).text
+                        } catch {
+                            value = "Error evaluating \(error)"
+                        }
+                    }
+                }
+            }
+            ScrollView(.horizontal) {
+                Text(errorMessage ?? "")
+            }
+            ScrollView(.horizontal) {
+                Text(typeMessage ?? "")
+            }
+            .frame(height: 50)
+            ScrollView(.horizontal) {
+                Text(treeValue ?? "")
+            }
+            .frame(height: 50)
+            .contentMargins(.bottom, 10, for: .scrollContent)
+            Text(value ?? "")
+        }
+    }
+    
+    func variableType(variable: any DerivedVariable) -> DerivedType? {
+        variable.type
+    }
+    
+    func evaluate(variable: any DerivedVariable) -> DerivedValue? {
+        if let data = data.first {
+            return variable.value(viewModel: data)
+        } else {
+            return nil
         }
     }
 }

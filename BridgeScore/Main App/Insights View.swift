@@ -7,8 +7,14 @@
 
 import SwiftUI
 
-enum InsightColumn : Codable, Hashable, Equatable, Transferable {
-    
+enum InsightColumnType {
+    case string
+    case numeric
+    case percent
+    case boolean
+}
+
+enum InsightColumn : DerivedVariable, Codable, Hashable, Equatable, Transferable {
     case eventDesc
     case boardIndex
     case sessionNumber
@@ -110,6 +116,22 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     
     static let defaultColumns = InsightColumn.allColumns.filter{!defaultPinnedColumns.contains($0) && !defaultExcludeColumns.contains($0)}
     
+    var name: String {
+        var result = "\(self)"
+        if let start = result.components(separatedBy: "(").first {
+            result = start
+        }
+        switch self {
+        case .suit(let pairType), .declare(let pairType), .medianTricks(let pairType), .modeTricks(let pairType), .ddTricks(let pairType), .fit(let pairType):
+            result += pairType.string
+        case .points(let seatPlayer):
+            result += seatPlayer.suffix
+        default:
+            break
+        }
+        return result
+    }
+    
     var title: String {
         switch self {
         case .eventDesc:
@@ -183,78 +205,219 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         }
     }
     
-    func value(boardSummary: BoardSummaryViewModel) -> AttributedString {
+    var type: DerivedType {
+        switch self.insightType {
+        case .numeric, .percent:
+                .numeric
+        case .boolean:
+                .boolean
+        case .string:
+                .string
+        }
+    }
+    
+    var decimalPlaces: Int {
+        0
+    }
+    
+    var insightType: InsightColumnType {
         switch self {
         case .eventDesc:
-            AttributedString(boardSummary.scorecard.desc)
+                .string
+        case .sessionNumber:
+                .numeric
+        case .boardIndex, .boardNumber:
+                .numeric
+        case .location:
+                .string
+        case .partner:
+                .string
+        case .date:
+                .string
+        case .vulnerability:
+                .string
+        case .eventType:
+                .string
+        case .boardScoreType:
+                .string
+        case .contract:
+                .string
+        case .made:
+                .numeric
+        case .contractMade:
+                .string
+        case .declarer:
+                .string
+        case .score:
+                .numeric
+        case .fieldSize:
+                .numeric
+        case .gameOdds:
+                .percent
+        case .slamOdds:
+                .percent
+        case .compContract:
+                .string
+        case .compDeclarer:
+                .string
+        case .compDdMade:
+                .numeric
+        case .compDdScore:
+                .numeric
+        case .compMakeScore:
+                .numeric
+        case .compMakeOdds:
+                .percent
+        case .suit:
+                .string
+        case .declare:
+                .percent
+        case .medianTricks:
+                .numeric
+        case .modeTricks:
+                .numeric
+        case .ddTricks:
+                .numeric
+        case .fit:
+                .numeric
+        case .points:
+                .numeric
+        case .suitType:
+                .string
+        case .levelType:
+                .string
+        case .totalTricks:
+                .numeric
+        case .totalTricksDd:
+                .numeric
+        }
+    }
+    
+    func value<ViewModel: NSObject>(viewModel: ViewModel) -> DerivedValue {
+        var value = insightValue(boardSummary: viewModel as! BoardSummaryViewModel)
+        if self.insightType == .percent {
+            value.numeric! /= 100
+        }
+        return value
+    }
+    
+    func insightValue(boardSummary: BoardSummaryViewModel) -> DerivedValue {
+        return switch self {
+        case .eventDesc:
+            DerivedValue(boardSummary.scorecard.desc)
         case .boardIndex:
-            AttributedString("\(boardSummary.boardIndex)")
+            DerivedValue(boardSummary.boardIndex)
+        case .sessionNumber:
+            DerivedValue(boardSummary.session)
+        case .boardNumber:
+            DerivedValue(boardSummary.boardNumber)
+        case .location:
+            DerivedValue(boardSummary.location!.short == "" ? boardSummary.location!.name : boardSummary.location!.short)
+        case .partner:
+            DerivedValue(boardSummary.partner!.name.components(separatedBy: " ").first!)
+        case .date:
+            DerivedValue(Utility.dateString(boardSummary.date, format: "dd/MM/yyyy"))
+        case .vulnerability:
+            DerivedValue(boardSummary.vulnerability.string)
+        case .eventType:
+            DerivedValue(boardSummary.eventType.string)
+        case .boardScoreType:
+            DerivedValue(boardSummary.boardScoreType.brief)
+        case .contract:
+            DerivedValue(boardSummary.contract.compact)
+        case .contractMade:
+            DerivedValue(boardSummary.contract.compact + " " + Scorecard.madeString(made: boardSummary.made ?? 0))
+        case .declarer:
+            DerivedValue(boardSummary.declarer.pairType.string)
+        case .made:
+            DerivedValue(Scorecard.madeString(made: boardSummary.made ?? 0))
+        case .score:
+            DerivedValue(boardSummary.score)
+        case .fieldSize:
+            DerivedValue(boardSummary.fieldSize)
+        case .gameOdds:
+            DerivedValue(boardSummary.gameOdds)
+        case .slamOdds:
+            DerivedValue(boardSummary.slamOdds)
+        case .compContract:
+            DerivedValue(boardSummary.compContract.compact)
+        case .compDeclarer:
+            DerivedValue(boardSummary.compDeclarer.string)
+        case .compDdMade:
+            DerivedValue(boardSummary.compDdMade ?? 0)
+        case .compDdScore:
+            DerivedValue(boardSummary.compDdScore)
+        case .compMakeScore:
+            DerivedValue(boardSummary.compMakeScore)
+        case .compMakeOdds:
+            DerivedValue(boardSummary.compMakeOdds)
+        case .suit(let pairType):
+            DerivedValue(boardSummary.suit[pairType]!.string)
+        case .declare(let pairType):
+            DerivedValue(boardSummary.declare[pairType]!)
+        case .medianTricks(let pairType):
+            DerivedValue(boardSummary.medianTricks[pairType]!)
+        case .modeTricks(let pairType):
+            DerivedValue(boardSummary.modeTricks[pairType]!)
+        case .ddTricks(let pairType):
+            DerivedValue(boardSummary.ddTricks[pairType]!)
+        case .fit(let pairType):
+            DerivedValue(boardSummary.fit[pairType]!)
+        case .points(let seatPlayer):
+            DerivedValue(boardSummary.points[seatPlayer]!)
+        case .suitType:
+            DerivedValue(boardSummary.suitType.string)
+        case .levelType:
+            DerivedValue(boardSummary.levelType.string)
+        case .totalTricks:
+            DerivedValue(boardSummary.totalTricks)
+        case .totalTricksDd:
+            DerivedValue(boardSummary.ddTricks[.we]! < 0 || boardSummary.ddTricks[.they]! < 0 ? 0 : boardSummary.totalTricksDd)
+        }
+    }
+    
+    func textValue(boardSummary: BoardSummaryViewModel) -> AttributedString {
+        var text = self.insightValue(boardSummary: boardSummary).integerText
+        if self.insightType == .percent {
+            text += "%"
+        }
+        
+        // Only have a case for fields where above is not correct
+        return switch self {
         case .sessionNumber:
             AttributedString(boardSummary.session == 0 ? "" : "\(boardSummary.session)")
-        case .boardNumber:
-            AttributedString("\(boardSummary.boardNumber)")
-        case .location:
-            AttributedString(boardSummary.location!.short == "" ? boardSummary.location!.name : boardSummary.location!.short)
-        case .partner:
-            AttributedString(boardSummary.partner!.name.components(separatedBy: " ").first!)
-        case .date:
-            AttributedString(Utility.dateString(boardSummary.date, format: "dd/MM/yyyy"))
-        case .vulnerability:
-            AttributedString(boardSummary.vulnerability.string)
-        case .eventType:
-            AttributedString(boardSummary.eventType.string)
-        case .boardScoreType:
-            AttributedString(boardSummary.boardScoreType.brief)
         case .contract:
             boardSummary.contract.colorCompact
         case .contractMade:
             boardSummary.contract.colorCompact + " " + AttributedString(Scorecard.madeString(made: boardSummary.made ?? 0))
-        case .declarer:
-            AttributedString("\(boardSummary.declarer.pairType.string)")
         case .made:
             AttributedString(Scorecard.madeString(made: boardSummary.made ?? 0))
-        case .score:
-            AttributedString("\(boardSummary.score)%")
-        case .fieldSize:
-            AttributedString("\(boardSummary.fieldSize)")
-        case .gameOdds:
-            AttributedString("\(boardSummary.gameOdds)%")
-        case .slamOdds:
-            AttributedString("\(boardSummary.slamOdds)%")
         case .compContract:
             !boardSummary.isCompetitive ? "" : boardSummary.compContract.colorCompact
         case .compDeclarer:
-            !boardSummary.isCompetitive ? "" : AttributedString("\(boardSummary.compDeclarer.string)")
+            AttributedString(!boardSummary.isCompetitive ? "" : text)
         case .compDdMade:
-            !boardSummary.isCompetitive || (boardSummary.compDdMade ?? -1) < 0 ? "" : AttributedString(Scorecard.madeString(made: boardSummary.compDdMade ?? 0))
+            AttributedString(!boardSummary.isCompetitive || (boardSummary.compDdMade ?? -1) < 0 ? "" : text)
         case .compDdScore:
-            !boardSummary.isCompetitive || (boardSummary.compDdMade ?? -1) < 0 ? "" : AttributedString("\(boardSummary.compDdScore)%")
+            AttributedString(!boardSummary.isCompetitive || (boardSummary.compDdMade ?? -1) < 0 ? "" : text)
         case .compMakeScore:
-            !boardSummary.isCompetitive ? "" : AttributedString("\(boardSummary.compMakeScore)%")
+            AttributedString(!boardSummary.isCompetitive ? "" : text)
         case .compMakeOdds:
-            !boardSummary.isCompetitive ? "" : AttributedString("\(boardSummary.compMakeOdds)%")
+            AttributedString(!boardSummary.isCompetitive ? "" : text)
         case .suit(let pairType):
             boardSummary.suit[pairType]!.colorString
-        case .declare(let pairType):
-            AttributedString("\(boardSummary.declare[pairType]!)%")
         case .medianTricks(let pairType):
-            AttributedString(boardSummary.suit[pairType]! == .blank ? "" : "\(boardSummary.medianTricks[pairType]!)")
+            AttributedString(boardSummary.suit[pairType]! == .blank ? "" : text)
         case .modeTricks(let pairType):
-            AttributedString(boardSummary.suit[pairType]! == .blank ? "" : "\(boardSummary.modeTricks[pairType]!)")
+            AttributedString(boardSummary.suit[pairType]! == .blank ? "" : text)
         case .ddTricks(let pairType):
-            AttributedString(boardSummary.ddTricks[pairType]! < 0 ? "" : boardSummary.suit[pairType]! == .blank ? "" : "\(boardSummary.ddTricks[pairType]!)")
+            AttributedString(boardSummary.ddTricks[pairType]! < 0 ? "" : boardSummary.suit[pairType]! == .blank ? "" : text)
         case .fit(let pairType):
-            AttributedString(boardSummary.suit[pairType]! == .blank ? "" : "\(boardSummary.fit[pairType]!)")
-        case .points(let seatPlayer):
-            AttributedString("\(boardSummary.points[seatPlayer]!)")
-        case .suitType:
-            AttributedString(boardSummary.suitType.string)
-        case .levelType:
-            AttributedString(boardSummary.levelType.string)
-        case .totalTricks:
-            AttributedString("\(boardSummary.totalTricks)")
+            AttributedString(boardSummary.suit[pairType]! == .blank ? "" : text)
         case .totalTricksDd:
-            boardSummary.ddTricks[.we]! < 0 || boardSummary.ddTricks[.they]! < 0 ? "" :  AttributedString("\(boardSummary.totalTricksDd)")
+            AttributedString(boardSummary.ddTricks[.we]! < 0 || boardSummary.ddTricks[.they]! < 0 ? "" : text)
+        default:
+            AttributedString(text)
         }
     }
     
@@ -366,7 +529,7 @@ struct InsightsView: View {
                             }
                         }
                     } else {
-                        InsightsSetupView(pinnedColumns: $pinnedColumns, columns: $columns)
+                        InsightsSetupView(pinnedColumns: $pinnedColumns, columns: $columns, data: $boardSummaries)
                         Spacer()
                     }
                 }
@@ -457,7 +620,7 @@ struct InsightsView: View {
                     if column.align != .leading {
                         Spacer()
                     }
-                    Text(column.value(boardSummary: boardSummary))
+                    Text(column.textValue(boardSummary: boardSummary))
                     if column.align != .trailing {
                         Spacer()
                     }

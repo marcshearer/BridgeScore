@@ -169,6 +169,21 @@ public enum SeatPlayer: Int, Codable, CaseIterable {
         }
     }
     
+    var suffix: String {
+        switch self {
+        case .player:
+            "Self"
+        case .partner:
+            "Part"
+        case .lhOpponent:
+            "LhOp"
+        case .rhOpponent:
+            "RhOp"
+        default:
+            ""
+        }
+    }
+    
     var string: String {
         switch self {
         case .player:

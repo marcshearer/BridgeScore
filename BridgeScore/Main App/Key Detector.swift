@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct KeyDetectorView: View {
-    var processKey: (KeyEquivalent)->()
+    var processKey: (KeyEquivalent?,String?)->()
     @State private var hiddenInput = "X"
     @FocusState private var isFocused: Bool
     @State private var process = true
@@ -21,11 +21,11 @@ struct KeyDetectorView: View {
             .onChange(of: hiddenInput) {
                 if hiddenInput == "" {
                     // Backspace key
-                    processKey(.delete)
+                    processKey(KeyEquivalent.delete, nil)
                     process = true
                 } else if let character = hiddenInput.last {
                     if process {
-                        processKey(KeyEquivalent(character))
+                        processKey(nil, String(character))
                     } else {
                         process = true
                     }
@@ -37,9 +37,9 @@ struct KeyDetectorView: View {
             }
             .onKeyPress { keyPress in
                 if keyPress.characters == "\u{7f}" {
-                    processKey(.deleteForward)
+                    processKey(KeyEquivalent.deleteForward, nil)
                 } else {
-                    processKey(keyPress.key)
+                    processKey(keyPress.key, nil)
                 }
                 if hiddenInput != "X" {
                     process = false
