@@ -16,8 +16,7 @@ enum ScrollViews : CaseIterable, Hashable {
 struct InsightsView: View {
     @Environment(\.dismiss) var dismiss
     @State var boardSummaries: [BoardSummaryExtension] = []
-    @State var pinnedColumns = InsightColumn.defaultPinnedColumns
-    @State var columns = InsightColumn.defaultColumns
+    @State var report: Report<InsightColumn, InsightColumn> = Report<InsightColumn, InsightColumn>(pinnedColumns: InsightColumn.defaultPinnedColumns, unpinnedColumns: InsightColumn.defaultColumns, derivedColumns: [])
     @State var showBoardSummary: BoardSummaryExtension? = nil
     @State var dismissView: Bool = false
     @State var editMode: Bool = false
@@ -42,10 +41,10 @@ struct InsightsView: View {
                             Spacer().frame(height: 10)
                             HStack(alignment: .top, spacing: 0) {
                                 Spacer().frame(width: 10)
-                                headerView(columns: pinnedColumns)
+                                headerView(columns: report.pinnedColumns)
                                 Spacer().frame(width: 20)
                                 scrollSync.scrollView(id: .heading) {
-                                    headerView(columns: columns)
+                                    headerView(columns: report.unpinnedColumns)
                                 }
                                 Spacer().frame(width: 10)
                             }
@@ -56,17 +55,17 @@ struct InsightsView: View {
                                         Spacer().frame(width: 10)
                                         LazyVStack(alignment: .leading, spacing: 0) {
                                             ForEach(0..<boardSummaries.count, id: \.self) { boardIndex in
-                                                rowView(boardSummary: boardSummaries[boardIndex], columns: pinnedColumns)
+                                                rowView(boardSummary: boardSummaries[boardIndex], columns: report.pinnedColumns)
                                             }
                                         }
-                                        .frame(width: pinnedColumns.map{$0.width}.reduce(0, +))
+                                        .frame(width: report.pinnedColumns.map{$0.width}.reduce(0, +))
                                         Spacer().frame(width: 20)
                                     }
                                     .palette(.alternate)
                                     scrollSync.scrollView(showsIndicators: false, id: .data) {
                                         LazyVStack(alignment: .leading, spacing: 0) {
                                             ForEach(0..<boardSummaries.count, id: \.self) { boardIndex in
-                                                rowView(boardSummary: boardSummaries[boardIndex], columns: columns)
+                                                rowView(boardSummary: boardSummaries[boardIndex], columns: report.unpinnedColumns)
                                             }
                                         }
                                         .fixedSize(horizontal: true, vertical: false)
@@ -77,18 +76,18 @@ struct InsightsView: View {
                             HStack{
                                 HStack {
                                     Spacer().frame(width: 10)
-                                    spacerView(columns: pinnedColumns)
+                                    spacerView(columns: report.pinnedColumns)
                                     Spacer().frame(width: 20)
                                 }
                                 .palette(.alternate)
                                 scrollSync.scrollView(showsIndicators: true, id: .scrollIndicator) {
-                                    spacerView(columns: columns)
+                                    spacerView(columns: report.unpinnedColumns)
                                 }
                                 Spacer().frame(width: 10)
                             }
                         }
                     } else {
-                        InsightsSetupView(pinnedColumns: $pinnedColumns, columns: $columns, data: $boardSummaries)
+                        InsightsSetupView(report: $report, data: $boardSummaries)
                         Spacer()
                     }
                 }
@@ -240,3 +239,4 @@ struct InsightsView: View {
         }
     }
 }
+

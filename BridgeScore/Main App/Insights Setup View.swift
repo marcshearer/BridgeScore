@@ -8,8 +8,7 @@
 import SwiftUI
 
 struct InsightsSetupView : View {
-    @Binding var pinnedColumns: [InsightColumn]
-    @Binding var columns: [InsightColumn]
+    @Binding var report: Report<InsightColumn, InsightColumn>
     @Binding var data: [BoardSummaryExtension]
     @State var logic: [DerivedElement] = []
     
@@ -17,7 +16,7 @@ struct InsightsSetupView : View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
                 Spacer().frame(width: 100)
-                InsightsChooseColumnsView(pinnedColumns: $pinnedColumns, columns: $columns)
+                InsightsChooseColumnsView(report: $report)
                 Spacer().frame(width: 100)
                 InsightsDerivedValueView(logic: $logic, data: $data)
                 Spacer().frame(width: 100)
@@ -28,11 +27,10 @@ struct InsightsSetupView : View {
 }
 
 struct InsightsChooseColumnsView : View {
-    @Binding var pinnedColumns: [InsightColumn]
-    @Binding var columns: [InsightColumn]
+    @Binding var report: Report<InsightColumn, InsightColumn>
     
     var availableColumns: Binding<[InsightColumn]> { Binding(
-        get: { InsightColumn.allColumns.filter { !pinnedColumns.contains($0) && !columns.contains($0) } },
+        get: { InsightColumn.allColumns.filter { !report.pinnedColumns.contains($0) && !report.unpinnedColumns.contains($0) } },
         set: { _ in  } // No need to do this as it will be handled by a change to coluns or pinnedColumns
     )}
     
@@ -57,9 +55,9 @@ struct InsightsChooseColumnsView : View {
                 }
                 Spacer().frame(width: 100)
                 VStack(spacing: 0) {
-                    InsightsColumnListView(title: "Pinned", columns: $pinnedColumns, height: 240, listType: .pinned, specificDrop: true, allowDrag: true, handleDrop: handleDrop)
+                    InsightsColumnListView(title: "Pinned", columns: $report.pinnedColumns, height: 240, listType: .pinned, specificDrop: true, allowDrag: true, handleDrop: handleDrop)
                     Spacer().frame(height: 40)
-                    InsightsColumnListView(title: "Not Pinned", columns: $columns, listType: .unpinned, specificDrop: true, allowDrag: true, handleDrop: handleDrop)
+                    InsightsColumnListView(title: "Not Pinned", columns: $report.unpinnedColumns, listType: .unpinned, specificDrop: true, allowDrag: true, handleDrop: handleDrop)
                     Spacer()
                 }
                 Spacer()
@@ -95,9 +93,9 @@ struct InsightsChooseColumnsView : View {
                     case .available:
                         break // No need to do anything - will recalculated when added to the other group
                     case .pinned:
-                        pinnedColumns.removeAll(where: {$0 == droppedTransfer.column})
+                        report.pinnedColumns.removeAll(where: {$0 == droppedTransfer.column})
                     case .unpinned:
-                        columns.removeAll(where: {$0 == droppedTransfer.column})
+                        report.unpinnedColumns.removeAll(where: {$0 == droppedTransfer.column})
                     }
                     targetColumns.wrappedValue.insert(droppedTransfer.column, at: beforeIndex)
                     result = true

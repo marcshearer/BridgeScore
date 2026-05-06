@@ -181,19 +181,19 @@ enum InsightColumn : DerivedVariable, Codable, Hashable, Equatable, Transferable
         case .compMakeOdds:
             "Comp Make Odds"
         case .suit(let pairType):
-            "Suit \(pairType.string)"
+            "\(pairType.string) Suit"
         case .declare(let pairType):
-            "Declare \(pairType.string)%"
+            "\(pairType.string) Declare%"
         case .medianTricks(let pairType):
-            "Median Made \(pairType.string)"
+            "\(pairType.string) Median Made"
         case .modeTricks(let pairType):
-            "Mode Made \(pairType.string)"
+            "\(pairType.string) Mode Made"
         case .ddTricks(let pairType):
-            "DD Made \(pairType.string)"
+            "\(pairType.string) DD Made"
         case .fit(let pairType):
-            "Fit \(pairType.string)"
+            "\(pairType.string) Fit"
         case .points(let seatPlayer):
-            "Points \(seatPlayer.string)"
+            "\(seatPlayer.string) Points"
         case .suitType:
             "Suit Type"
         case .levelType:
