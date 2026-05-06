@@ -33,6 +33,8 @@
 		B200960A2D4A02430051B8E3 /* Date Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE3F2799AD8800B73501 /* Date Extensions.swift */; };
 		B20096142D4A025A0051B8E3 /* Scorecard Type Classes.swift in Sources */ = {isa = PBXBuildFile; fileRef = B29BBA772D33D0A10032BC2F /* Scorecard Type Classes.swift */; };
 		B20096452D4A02900051B8E3 /* Debug Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B204175727CE58CD00A3EFA8 /* Debug Utilities.swift */; };
+		B2029F742FAB4D2700634061 /* Insight Column.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2029F732FAB4D1F00634061 /* Insight Column.swift */; };
+		B2029F762FAB4D7100634061 /* Report.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2029F752FAB4D6C00634061 /* Report.swift */; };
 		B203F96A27F30BD900DA748A /* Scorecard Web View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B203F96927F30BD900DA748A /* Scorecard Web View.swift */; };
 		B204175827CE58CD00A3EFA8 /* Debug Utilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = B204175727CE58CD00A3EFA8 /* Debug Utilities.swift */; };
 		B20771142F9CF57200DB6C18 /* Board Summary Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20771132F9CF56D00DB6C18 /* Board Summary Managed Object.swift */; };
@@ -233,6 +235,8 @@
 
 /* Begin PBXFileReference section */
 		B20095DE2D4A00830051B8E3 /* Intent Actions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Intent Actions.swift"; sourceTree = "<group>"; };
+		B2029F732FAB4D1F00634061 /* Insight Column.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Insight Column.swift"; sourceTree = "<group>"; };
+		B2029F752FAB4D6C00634061 /* Report.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Report.swift; sourceTree = "<group>"; };
 		B203F96927F30BD900DA748A /* Scorecard Web View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Web View.swift"; sourceTree = "<group>"; };
 		B204175727CE58CD00A3EFA8 /* Debug Utilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Debug Utilities.swift"; sourceTree = "<group>"; };
 		B20771132F9CF56D00DB6C18 /* Board Summary Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Board Summary Managed Object.swift"; sourceTree = "<group>"; };
@@ -662,6 +666,8 @@
 				B2EB3D78279DB80000D64225 /* Scorecard.swift */,
 				B2AB6ECA2AC2CCA900ED002A /* Analysis.swift */,
 				B207711A2F9D28AB00DB6C18 /* Insights.swift */,
+				B2029F732FAB4D1F00634061 /* Insight Column.swift */,
+				B2029F752FAB4D6C00634061 /* Report.swift */,
 				B27AD1322F693ADF00890600 /* Rescore.swift */,
 				B29BBA772D33D0A10032BC2F /* Scorecard Type Classes.swift */,
 				B29BBA792D33D1540032BC2F /* Contract Classes.swift */,
@@ -1031,6 +1037,7 @@
 				B20771142F9CF57200DB6C18 /* Board Summary Managed Object.swift in Sources */,
 				B2100D9827DA449D00CC0130 /* Graph View Class.swift in Sources */,
 				B2FC6CFE2AF6BD2900B53A68 /* Contract Picker.swift in Sources */,
+				B2029F762FAB4D7100634061 /* Report.swift in Sources */,
 				B256D42327EC456B00F47322 /* Ranking Managed Object.swift in Sources */,
 				B26BE1432FA87AFA0002DA80 /* Derived Values.swift in Sources */,
 				B2633A0E27AC3A460081B258 /* Layout List View.swift in Sources */,
@@ -1045,6 +1052,7 @@
 				B23ADBF427B28D68001B6B38 /* Local Authentication.swift in Sources */,
 				B29BBA7A2D33D15A0032BC2F /* Contract Classes.swift in Sources */,
 				B2A5A42827E3090300754061 /* BBO Name View Model.swift in Sources */,
+				B2029F742FAB4D2700634061 /* Insight Column.swift in Sources */,
 				B2A724D12FA61BFC00C574DC /* Insights Setup View.swift in Sources */,
 				B26BCE6A2799AED700B73501 /* Standard View.swift in Sources */,
 				B26C555727C7EA9200015D0A /* Table with Collection.swift in Sources */,

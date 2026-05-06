@@ -7,12 +7,12 @@
 
 import Foundation
 
-protocol DerivedVariable : Hashable, Equatable {
+protocol DerivedVariable : Hashable, Equatable, Codable, Encodable, Decodable {
+    var title: String {get}
     var name: String {get}
     func value<ViewModel: NSObject>(viewModel: ViewModel) -> DerivedValue
     var type: DerivedType {get}
     var decimalPlaces: Int {get}
-    // static func == (lhs: Self, rhs: Self) -> Bool
 }
 
 extension DerivedVariable where Self: Equatable {
