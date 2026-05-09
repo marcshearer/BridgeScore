@@ -16,7 +16,7 @@ enum ScrollViews : CaseIterable, Hashable {
 struct InsightsView: View {
     @Environment(\.dismiss) var dismiss
     @State var boardSummaries: [BoardSummaryExtension] = []
-    @StateObject var report = Report(pinnedColumns: InsightColumn.defaultPinnedColumns, unpinnedColumns: InsightColumn.defaultColumns, derivedColumns: [])
+    @StateObject var report = Report(pinnedColumns: InsightColumn.defaultPinnedColumns, unpinnedColumns: InsightColumn.defaultColumns, calculatedColumns: [])
     @State var showBoardSummary: BoardSummaryExtension? = nil
     @State var dismissView: Bool = false
     @State var editMode: Bool = false
@@ -87,7 +87,7 @@ struct InsightsView: View {
                             }
                         }
                     } else {
-                        InsightsSetupView(report: report, data: $boardSummaries)
+                        InsightsSetupView(report: report, data: boardSummaries.first)
                         Spacer()
                     }
                 }
@@ -103,7 +103,8 @@ struct InsightsView: View {
                 
         }
         .onAppear {
-            boardSummaries = Insights.Load()
+            InsightsSaveReportView.load(report: report, from: "default")
+                boardSummaries = Insights.Load()
             if boardSummaries.isEmpty {
                 // TODO Shouldn't need this
                 Insights.build()
@@ -154,13 +155,13 @@ struct InsightsView: View {
             ForEach(0..<columns.count, id: \.self) { columnIndex in
                 let column = columns[columnIndex]
                 HStack {
-                    if column.align != .leading {
+                    if column.align != .left {
                         Spacer()
                     }
                     Text(column.title)
                         .lineLimit(nil)
                         .multilineTextAlignment(.center)
-                    if column.align != .trailing {
+                    if column.align != .right {
                         Spacer()
                     }
                 }
@@ -175,11 +176,11 @@ struct InsightsView: View {
             ForEach(0..<columns.count, id: \.self) { columnIndex in
                 let column = columns[columnIndex]
                 HStack {
-                    if column.align != .leading {
+                    if column.align != .left {
                         Spacer()
                     }
                     Text(column.textValue(boardSummary: boardSummary))
-                    if column.align != .trailing {
+                    if column.align != .right {
                         Spacer()
                     }
                 }

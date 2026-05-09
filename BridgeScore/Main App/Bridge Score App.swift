@@ -17,6 +17,21 @@ struct BridgeScoreApp: App {
     public let context = PersistenceController.shared.container.viewContext
 
     init() {
+#if targetEnvironment(macCatalyst)
+        NotificationCenter.default.addObserver(
+            forName: UITextField.textDidBeginEditingNotification,
+            object: nil,
+            queue: .main
+        ) { notification in
+            if let textField = notification.object as? UITextField {
+                textField.borderStyle = .none
+                textField.layer.borderWidth = 0
+                textField.focusEffect = nil
+            }
+        }
+#endif
+        
+        
         CoreData.context = context
         
         MyApp.shared.start()
@@ -46,6 +61,8 @@ struct MyScene: Scene {
                     .onAppear {
                         isLandscape = (geometry.size.width > geometry.size.height)
                     }
+                    .focusEffectDisabled(true)
+                    .textFieldStyle(.plain)
             }
         }
         .onChange(of: scenePhase, initial: false) { (_, phase) in

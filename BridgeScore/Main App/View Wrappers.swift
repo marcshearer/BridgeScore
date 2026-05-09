@@ -126,13 +126,15 @@ struct MiddleCentered<Content>: View where Content: View {
     var width: CGFloat? = nil
     var height: CGFloat? = nil
     var padding: CGFloat = 0
+    var horizontalPadding: CGFloat? = nil
+    var verticalPadding: CGFloat? = nil
     var content: ()->Content
     
     var body: some View {
         VStack {
-            Spacer().frame(height: padding)
+            Spacer().frame(height: verticalPadding ?? padding)
             HStack {
-                Spacer().frame(width: padding)
+                Spacer().frame(width: horizontalPadding ?? padding)
                 VStack(spacing: 0) {
                     Spacer()
                     HStack(spacing: 0) {
@@ -143,16 +145,16 @@ struct MiddleCentered<Content>: View where Content: View {
                     Spacer()
                 }
                 .contentShape(Rectangle())
-                Spacer().frame(width: padding)
+                Spacer().frame(width: horizontalPadding ?? padding)
 
             }
-            Spacer().frame(height: padding)
+            Spacer().frame(height: verticalPadding ?? padding)
         }
         .if(width != nil) { view in
             view.frame(width: width!)
         }
         .if(height != nil) { view in
-            view.frame(width: height!)
+            view.frame(height: height!)
         }
     }
 }
@@ -173,5 +175,36 @@ struct MiddleCenteredText: View {
     var padding: CGFloat = 0
     var body: some View {
         MiddleCentered(padding: padding) { Text(text) }
+    }
+}
+
+struct Centered<Content>: View where Content: View {
+    var width: CGFloat? = nil
+    var height: CGFloat? = nil
+    var padding: CGFloat = 0
+    var content: ()->Content
+    
+    var body: some View {
+        HStack {
+            Spacer().frame(width: padding)
+            VStack(spacing: 0) {
+                Spacer()
+                HStack(spacing: 0) {
+                    Spacer()
+                    content()
+                    Spacer()
+                }
+                Spacer()
+            }
+            .contentShape(Rectangle())
+            Spacer().frame(width: padding)
+            
+        }
+        .if(width != nil) { view in
+            view.frame(width: width!)
+        }
+        .if(height != nil) { view in
+            view.frame(height: height!)
+        }
     }
 }

@@ -49,7 +49,7 @@ struct StepperInputAdditional<Additional>: View where Additional: Equatable {
     var message: Binding<String>?
     var topSpace: CGFloat = 5
     var leadingSpace: CGFloat = 0
-    var height: CGFloat = 40
+    var height: CGFloat? = 40
     var width: CGFloat?
     var labelWidth: CGFloat?
     var buttonWidth: ()->(CGFloat) = {MyApp.format == .phone && !isLandscape ? 25 : 35}
@@ -85,6 +85,7 @@ struct StepperInputAdditional<Additional>: View where Additional: Equatable {
                             Spacer()
                         }
                         .frame(width: inlineTitleWidth)
+                        .background(.blue)
                         Spacer().frame(width: 12)
                     }
                     Spacer().frame(width: 8)
@@ -93,14 +94,25 @@ struct StepperInputAdditional<Additional>: View where Additional: Equatable {
                             if let label = label {
                                 Text(label(field.wrappedValue))
                                     .foregroundColor(labelColor)
+                                    .if(labelWidth != nil) { (view) in
+                                        view.frame(width: labelWidth!)
+                                    }
+                                    .if(height != nil) { (view) in
+                                        view.frame(height: height!)
+                                    }
                             } else {
                                 Text(String(field.wrappedValue))
                                     .foregroundColor(labelColor)
+                                    .if(labelWidth != nil || width != nil) { (view) in
+                                        view.frame(width: width ?? labelWidth!)
+                                    }
+                                    .if(height != nil) { (view) in
+                                        view.frame(height: height!)
+                                    }
                             }
                             Spacer()
-                            if isEnabled {
-                                let plusDisabled = field.wrappedValue + (increment?() ?? 1) > (maxValue?() ?? Int.max)
-                                let minusDisabled = field.wrappedValue - (increment?() ?? 1) < (minValue?() ?? -Int.max)
+                                let plusDisabled = !isEnabled || field.wrappedValue + (increment?() ?? 1) > (maxValue?() ?? Int.max)
+                                let minusDisabled = !isEnabled || field.wrappedValue - (increment?() ?? 1) < (minValue?() ?? -Int.max)
                                 Button {
                                     change(field, direction: +1)
                                 } label: {
@@ -123,10 +135,9 @@ struct StepperInputAdditional<Additional>: View where Additional: Equatable {
                                         .cornerRadius(4)
                                 }
                                 .disabled(minusDisabled)
-                            }
                         }
                         .if(labelWidth != nil) { (view) in
-                            view.frame(width: labelWidth! + 100)
+                            view.frame(width: labelWidth!)
                         }
                     }
                     Spacer().frame(width: 8)
@@ -137,7 +148,7 @@ struct StepperInputAdditional<Additional>: View where Additional: Equatable {
                 }
             }
         }
-        .frame(height: self.height + self.topSpace + (title == nil || inlineTitle ? 0 : 30))
+        .frame(height: (self.height ?? 40) + self.topSpace + (title == nil || inlineTitle ? 0 : 30))
         .onAppear {
             self.change(field)
         }

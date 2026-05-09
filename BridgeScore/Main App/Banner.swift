@@ -41,6 +41,7 @@ struct Banner: View {
 
     @Binding var title: String
     var alternateStyle: Bool = false
+    var alternateColor: Bool = false
     var bottomSpace: Bool = true
     var back: Bool = true
     var backEnabled: (()->(Bool))?
@@ -110,9 +111,9 @@ struct Banner: View {
         }
         .disabled(disabled.wrappedValue)
         .onAppear {
-            bannerColor = (alternateStyle ? Palette.alternateBanner : Palette.banner)
-            buttonColor = (alternateStyle ? Palette.alternateBannerButton : Palette.bannerButton)
-            backButtonColor = (alternateStyle ? Palette.alternateBannerBackButton : Palette.bannerBackButton)
+            bannerColor = (alternateStyle || alternateColor ? Palette.alternateBanner : Palette.banner)
+            buttonColor = (alternateStyle || alternateColor ? Palette.alternateBannerButton : Palette.bannerButton)
+            backButtonColor = (alternateStyle || alternateColor ? Palette.alternateBannerBackButton : Palette.bannerBackButton)
         }
         .frame(height: (alternateStyle ? alternateBannerHeight : bannerHeight + bannerBottom))
         .background(bannerColor.background)

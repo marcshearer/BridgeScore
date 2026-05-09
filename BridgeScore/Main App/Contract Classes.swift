@@ -89,6 +89,10 @@ public enum ContractLevel: Int, ContractEnumType, Equatable, Comparable, Identif
         return hasSuit
     }
     
+    var number: Int {
+        rawValue
+    }
+    
     var tricks: Int {
         rawValue + Values.trickOffset
     }
