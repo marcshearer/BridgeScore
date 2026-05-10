@@ -137,7 +137,7 @@
 		B26BCE74279B236F00B73501 /* Layout Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE73279B236F00B73501 /* Layout Managed Object.swift */; };
 		B26BCE76279BEBA500B73501 /* Scorecard Managed Object.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */; };
 		B26BE13D2FA7A98C0002DA80 /* Key Detector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BE13C2FA7A97E0002DA80 /* Key Detector.swift */; };
-		B26BE1402FA878A50002DA80 /* Derived Values View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BE13E2FA8788C0002DA80 /* Derived Values View.swift */; };
+		B26BE1402FA878A50002DA80 /* Calculated Values View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BE13E2FA8788C0002DA80 /* Calculated Values View.swift */; };
 		B26BE1432FA87AFA0002DA80 /* Calculated Values.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BE1412FA87AF60002DA80 /* Calculated Values.swift */; };
 		B26C555727C7EA9200015D0A /* Table with Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26C555627C7EA9200015D0A /* Table with Collection.swift */; };
 		B26C555927C8BCBC00015D0A /* Scroll Picker Popup View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26C555827C8BCBC00015D0A /* Scroll Picker Popup View.swift */; };
@@ -340,7 +340,7 @@
 		B26BCE73279B236F00B73501 /* Layout Managed Object.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Layout Managed Object.swift"; sourceTree = "<group>"; };
 		B26BCE75279BEBA500B73501 /* Scorecard Managed Object.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Managed Object.swift"; sourceTree = "<group>"; };
 		B26BE13C2FA7A97E0002DA80 /* Key Detector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Key Detector.swift"; sourceTree = "<group>"; };
-		B26BE13E2FA8788C0002DA80 /* Derived Values View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Derived Values View.swift"; sourceTree = "<group>"; };
+		B26BE13E2FA8788C0002DA80 /* Calculated Values View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Calculated Values View.swift"; sourceTree = "<group>"; };
 		B26BE1412FA87AF60002DA80 /* Calculated Values.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Calculated Values.swift"; sourceTree = "<group>"; };
 		B26C555627C7EA9200015D0A /* Table with Collection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Table with Collection.swift"; sourceTree = "<group>"; };
 		B26C555827C8BCBC00015D0A /* Scroll Picker Popup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Scroll Picker Popup View.swift"; path = "../Main App/Scroll Picker Popup View.swift"; sourceTree = "<group>"; };
@@ -627,7 +627,7 @@
 				B24EAE8D27DDE95C001B3E64 /* Multi Select Picker Input.swift */,
 				B21CC0BD27A01292001AECC1 /* Date Picker Input.swift */,
 				B21CC0BF27A02A2A001AECC1 /* Stepper Input.swift */,
-				B26BE13E2FA8788C0002DA80 /* Derived Values View.swift */,
+				B26BE13E2FA8788C0002DA80 /* Calculated Values View.swift */,
 				B2B190D92F85522B00FDDD26 /* Key Interceptor.swift */,
 				B26BE13C2FA7A97E0002DA80 /* Key Detector.swift */,
 				B2EBA8B52D52568F00360ED5 /* View Wrappers.swift */,
@@ -1100,7 +1100,7 @@
 				B2C4338E27B7B56200796F24 /* Custom Collection View Flow.swift in Sources */,
 				B23ADBF227B25356001B6B38 /* List Tile View.swift in Sources */,
 				B20B38F227C153280001B45E /* Scorecard Contract Entry View.swift in Sources */,
-				B26BE1402FA878A50002DA80 /* Derived Values View.swift in Sources */,
+				B26BE1402FA878A50002DA80 /* Calculated Values View.swift in Sources */,
 				B256D42527EC578500F47322 /* Ranking View Model.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

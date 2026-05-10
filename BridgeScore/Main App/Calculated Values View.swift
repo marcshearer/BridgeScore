@@ -1,5 +1,5 @@
 //
-//  Calculate Values View.swift
+//  Calculated Values View.swift
 //  BridgeScore
 //
 //  Created by Marc Shearer on 04/05/2026.
@@ -41,13 +41,7 @@ struct CalculatedValuesView<Focus> : View where Focus : Hashable {
                                             if index == cursor && literalCursor == nil && focused == focusValue {
                                                 HStack(spacing: 0) {
                                                     Spacer()
-                                                    Rectangle().frame(width: 2, height: 30)
-                                                        .foregroundColor(.blue)
-                                                        .phaseAnimator([true, false]) { content, phase in
-                                                            content.opacity(phase || focused != focusValue ? 1 : 0)
-                                                        } animation: { _ in
-                                                                .easeInOut(duration: 0.5)
-                                                        }
+                                                    cursorBar
                                                     Spacer()
                                                 }
                                                 .frame(width: 8)
@@ -60,29 +54,21 @@ struct CalculatedValuesView<Focus> : View where Focus : Hashable {
                                         if index <= logic.count - 1 {
                                             let string = logic[index].string
                                             if case let .literal(literal) = logic[index] {
-                                                // Text with literal cursor
-                                                if index <= logic.count - 1 {
-                                                    if let literalCursor = literalCursor, cursor == index, case let .literal(literal) = logic[index], focused == focusValue {
-                                                        HStack(spacing: 0) {
-                                                            let literalCursor = literalCursor + literal.literalCursorOffset
-                                                            if literalCursor > 0 {
-                                                                Text(string.prefix(literalCursor))
-                                                            }
-                                                            Rectangle().frame(width: 2, height: 30)
-                                                                .foregroundColor(.blue)
-                                                                .phaseAnimator([true, false]) { content, phase in
-                                                                    content.opacity(phase || focused != focusValue ? 1 : 0)
-                                                                } animation: { _ in
-                                                                        .easeInOut(duration: 0.5)
-                                                                }
-                                                            if string.count > literalCursor {
-                                                                Text(string.suffix(string.count - literalCursor))
-                                                            }
+                                                // Text with literal cursor - separate output of each character
+                                                ForEach(0..<string.count, id: \.self) { characterIndex in
+                                                    let cIndex = string.index(string.startIndex, offsetBy: characterIndex)
+                                                    let character = string[cIndex]
+                                                    if let literalCursor = literalCursor {
+                                                        if (characterIndex == (literalCursor + literal.literalCursorOffset)) && (cursor == index) {
+                                                            cursorBar
                                                         }
-                                                        .layoutPriority(1)
-                                                    } else {
-                                                        Text(string)
                                                     }
+                                                    Text(String(character))
+                                                        .onTapGesture {
+                                                            focused = focusValue
+                                                            cursor = index
+                                                            literalCursor = characterIndex
+                                                        }
                                                 }
                                             } else {
                                                 // Non-literal
@@ -93,6 +79,7 @@ struct CalculatedValuesView<Focus> : View where Focus : Hashable {
                                     .id(index)
                                     .contentShape(Rectangle())
                                     .onTapGesture {
+                                        focused = focusValue
                                         cursor = index
                                         literalCursor = nil
                                     }
@@ -115,6 +102,8 @@ struct CalculatedValuesView<Focus> : View where Focus : Hashable {
             }
             .onTapGesture {
                 focused = focusValue
+                cursor = logic.count
+                literalCursor = nil
             }
             .frame(height: 60)
             .dropDestination(for: InsightsSetupTransfer.self) { (droppedValues, _) in
@@ -124,6 +113,16 @@ struct CalculatedValuesView<Focus> : View where Focus : Hashable {
                 cursor = logic.count
             }
         }
+    }
+    
+    var cursorBar : some View {
+        Rectangle().frame(width: 2, height: 30)
+            .foregroundColor(.blue)
+            .phaseAnimator([true, false]) { content, phase in
+                content.opacity(phase || focused != focusValue ? 1 : 0)
+            } animation: { _ in
+                    .easeInOut(duration: 0.5)
+            }
     }
     
     func handleDrop(_ droppedValues: [InsightsSetupTransfer], _ before: Int) {
