@@ -10,6 +10,7 @@ import SwiftUI
 struct InsightsSetupView : View {
     @ObservedObject var report: Report
     @State var data: BoardSummaryExtension?
+    @Binding var editMode: Bool
     
     var body: some View {
         VStack(spacing: 0) {
@@ -17,7 +18,7 @@ struct InsightsSetupView : View {
                 Spacer().frame(width: 100)
                 InsightsChooseColumnsView(report: report, data: data)
                 Spacer().frame(width: 100)
-                InsightsSaveReportView(report: report)
+                InsightsReportViewStorage(report: report)
                 Spacer()
             }
         }
@@ -27,6 +28,7 @@ struct InsightsSetupView : View {
 struct InsightsChooseColumnsView : View {
     @ObservedObject var report: Report
     @State var data: BoardSummaryExtension?
+    @State var selectedListType: ListType? = nil
     
     var body: some View {
         VStack(spacing: 0) {
@@ -44,16 +46,16 @@ struct InsightsChooseColumnsView : View {
             Spacer().frame(height: 40)
             HStack(spacing: 0) {
                 VStack(spacing: 0) {
-                    InsightsColumnListView(report: report, data: data, title: "Not Used", columns: report.availableColumns, listType: .availableColumns, allowDrag: true, specificDrop: false, onDropReceived: onDropReceived)
+                    InsightsColumnListView(report: report, data: data, title: "Not Used", columns: report.availableColumns, listType: .availableColumns, allowDrag: true, specificDrop: false, selectedListType: $selectedListType, onDropReceived: onDropReceived)
                     Spacer().frame(height: 40)
-                    InsightsColumnListView(report: report, data: data, title: "Calculated", columns: $report.values.calculatedColumns, listType: .calculatedColumns, allowDrag: true, showEdit: true, showInsert: true, showRemove: true)
+                    InsightsColumnListView(report: report, data: data, title: "Calculated", columns: $report.values.calculatedColumns, listType: .calculatedColumns, allowDrag: true, showEdit: true, showInsert: true, showRemove: true, selectedListType: $selectedListType)
                     Spacer()
                 }
                 Spacer().frame(width: 100)
                 VStack(spacing: 0) {
-                    InsightsColumnListView(report: report, data: data, title: "Pinned", columns: $report.values.pinnedColumns, listType: .pinnedColumns, allowDrag: true, showRemove: true, specificDrop: true, height: 240, onDropReceived: onDropReceived)
+                    InsightsColumnListView(report: report, data: data, title: "Pinned", columns: $report.values.pinnedColumns, listType: .pinnedColumns, allowDrag: true, showRemove: true, specificDrop: true, height: 240, selectedListType: $selectedListType, onDropReceived: onDropReceived)
                     Spacer().frame(height: 40)
-                    InsightsColumnListView(report: report, data: data, title: "Not Pinned", columns: $report.values.unpinnedColumns, listType: .unpinnedColumns, allowDrag: true, showRemove: true, specificDrop: true, onDropReceived: onDropReceived)
+                    InsightsColumnListView(report: report, data: data, title: "Not Pinned", columns: $report.values.unpinnedColumns, listType: .unpinnedColumns, allowDrag: true, showRemove: true, specificDrop: true, selectedListType: $selectedListType, onDropReceived: onDropReceived)
                     Spacer()
                 }
                 Spacer()
@@ -133,8 +135,10 @@ struct InsightsListView : View {
     var listType: ListType
     var allowDrag: Bool
     var allowSelect: Bool = true
+    var selectedListType: Binding<ListType?>
+    var onSelect: ((CalculatedFunction) -> Void)? = nil
+    
     @State var selected: String? = nil
-    var onClickArrow: ((CalculatedFunction) -> Void)? = nil
     
     var body : some View {
         VStack(spacing: 0) {
@@ -172,10 +176,11 @@ struct InsightsListView : View {
                                     }
                                 }
                                 .onTapGesture {
-                                    if let onclickArrow = onClickArrow {
-                                        onclickArrow(CalculatedFunction(rawValue: element)!)
+                                    if let onSelect = onSelect {
+                                        onSelect(CalculatedFunction(rawValue: element)!)
                                     } else if allowSelect {
                                         selected = element
+                                        selectedListType.wrappedValue = listType
                                     }
                                 }
                             }
@@ -189,6 +194,11 @@ struct InsightsListView : View {
             .palette(.mutedTile)
             .cornerRadius(8)
             .frame(width: 200)
+        }
+        .onChange(of: selectedListType.wrappedValue) {
+            if selectedListType.wrappedValue != listType {
+                selected = nil
+            }
         }
     }
 }
@@ -222,8 +232,9 @@ struct InsightsColumnListView : View {
     var showRemove: Bool = false
     var specificDrop: Bool = true
     var height: CGFloat? = nil
+    var selectedListType: Binding<ListType?>
     var onSelect: ((InsightColumn) -> Void)? = nil
-    var onDropReceived: ((_ target: ListType, _ droppedColumns: [InsightsSetupTransfer], _ before: (InsightColumn)?) -> Bool)?
+    var onDropReceived: ((_ target: ListType, _ droppedColumns: [InsightsSetupTransfer], _ before: InsightColumn?) -> Bool)?
     
     @State private var selected: InsightColumn? = nil
     @State private var showCalculatedColumn: Bool = false
@@ -233,6 +244,7 @@ struct InsightsColumnListView : View {
     var body: some View {
         VStack(spacing: 0) {
             VStack(spacing: 0) {
+                let showBottomBar = (showInsert || ((showRemove || showEdit) && selected != nil))
                 Grid(horizontalSpacing: 0, verticalSpacing: 0) {
                     GridRow {
                         HStack {
@@ -240,6 +252,9 @@ struct InsightsColumnListView : View {
                             Text(title)
                                 .frame(width: 200, height: 40)
                             Spacer()
+                        }
+                        .dropDestination(for: InsightsSetupTransfer.self) { droppedColumns, _ in
+                            return onDropReceived!(listType, droppedColumns, nil)
                         }
                         .contentShape(Rectangle())
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -268,6 +283,7 @@ struct InsightsColumnListView : View {
                                         }
                                         .frame(width: 200, height: 24)
                                         .palette(selected == column.wrappedValue ? .filterTile : .tile)
+                                        .dropDestination(for: String.self) { _, _ in return false } // Exclude drop
                                         .draggable(InsightsSetupTransfer(source: listType, column: column.wrappedValue))
                                         .overlay(alignment: .top) {
                                             VStack(spacing: 0) {
@@ -291,17 +307,25 @@ struct InsightsColumnListView : View {
                                         selected = nil
                                     } else if allowSelect {
                                         selected = column.wrappedValue
+                                        selectedListType.wrappedValue = listType
                                     }
                                 }
                             }
                         }
                     }
+                    .if(specificDrop && onDropReceived != nil) { view in
+                        view.dropDestination(for: InsightsSetupTransfer.self) { droppedColumns, _ in
+                            return onDropReceived!(listType, droppedColumns, columns.last)
+                        }
+                    }
                     .if(height != nil) { view in
-                        view.frame(height: height! - 40)
+                        view.frame(height: height! - 40 - (showBottomBar ? 40 : 0))
                     }
                 }
-                if showInsert || ((showRemove || showEdit) && selected != nil) {
-                    Spacer()
+                if showBottomBar {
+                    if height == nil {
+                        Spacer()
+                    }
                     HStack {
                         Spacer().frame(width: 20)
                         if showEdit {
@@ -319,6 +343,7 @@ struct InsightsColumnListView : View {
                             } label: {
                                 Text("Edit")
                             }
+                            .contentShape(Rectangle())
                             .opacity(selected == nil ? 0.3 : 1)
                             .disabled(selected == nil)
                         }
@@ -329,13 +354,16 @@ struct InsightsColumnListView : View {
                                 showCalculatedColumn = true
                             } label: {
                                 Image(systemName: "plus")
+                                    .contentShape(Rectangle())
                             }
                         }
                         if showRemove {
                             Button {
                                 columns.removeAll(where: {$0 == selected})
+                                selected = nil
                             } label: {
                                 Image(systemName: "minus")
+                                    .contentShape(Rectangle())
                             }
                             .opacity(selected == nil ? 0.3 : 1)
                             .disabled(selected == nil)
@@ -346,6 +374,17 @@ struct InsightsColumnListView : View {
                     .palette(.alternate)
                 }
 
+            }
+            .onChange(of: $columns.count) {
+                // Check selected hasn't been removed
+                if selected != nil && !columns.contains(selected!) {
+                   selected = nil
+                }
+            }
+            .onChange(of: selectedListType.wrappedValue) {
+                if selectedListType.wrappedValue != listType {
+                    selected = nil
+                }
             }
             .if(!specificDrop && onDropReceived != nil) { view in
                 view.dropDestination(for: InsightsSetupTransfer.self) { droppedColumns, _ in
@@ -417,6 +456,7 @@ struct InsightsCalculatedColumnView : View {
     @State var notNumeric: Bool = true
     @State var showErrorMessage: Bool = false
     @State var referencedVariables: [CalculatedColumn] = []
+    @State var selectedListType: ListType? = nil
     
     var body: some View {
         VStack(spacing: 0) {
@@ -452,19 +492,19 @@ struct InsightsCalculatedColumnView : View {
                 Spacer().frame(maxWidth: 100)
                 VStack(spacing: 0) {
                     MiddleCentered(height: 60) { Image(systemName: "arrowshape.up").font(bannerFont) }
-                    InsightsColumnListView(report: report, data: data, title: "Data columns", columns: report.allColumns, listType: .allColumns, allowDrag: true, onSelect: variableSelected)
+                    InsightsColumnListView(report: report, data: data, title: "Data columns", columns: report.allColumns, listType: .allColumns, allowDrag: true, selectedListType: $selectedListType, onSelect: variableSelected)
                 }
                 .frame(width: 200)
                 Spacer().frame(maxWidth: 60)
                 VStack(spacing: 0) {
                     MiddleCentered(height: 60) { Image(systemName: "arrowshape.up").font(bannerFont) }
-                    InsightsColumnListView(report: report, data: data, title: "Calculated columns", columns: $report.values.calculatedColumns, listType: .calculatedColumns, allowDrag: true, onSelect: variableSelected)
+                    InsightsColumnListView(report: report, data: data, title: "Calculated columns", columns: $report.values.calculatedColumns, listType: .calculatedColumns, allowDrag: true, selectedListType: $selectedListType, onSelect: variableSelected)
                 }
                 .frame(width: 200)
                 Spacer().frame(maxWidth: 60)
                 VStack(spacing: 0) {
                     MiddleCentered(height: 60) { Image(systemName: "arrowshape.up").font(bannerFont) }
-                    InsightsListView(title:"Functions", list: CalculatedFunction.allCases.map{$0.string},listType: .functions, allowDrag: true, onClickArrow: functionSelected)
+                    InsightsListView(title:"Functions", list: CalculatedFunction.allCases.map{$0.string}, listType: .functions, allowDrag: true, selectedListType: $selectedListType, onSelect: functionSelected)
                 }
                 .frame(width: 200)
                 Spacer().frame(width: 60)
@@ -812,79 +852,5 @@ struct MyTextField<Focus> : View where Focus: Hashable {
         }
         .palette(color)
         .cornerRadius(cornerRadius)
-    }
-}
-
-struct InsightsSaveReportView : View {
-    @ObservedObject var report: Report
-    
-    var body: some View {
-        HStack {
-            Spacer().frame(width: 100)
-            VStack {
-                Spacer().frame(height: 100)
-                Button("Save") {
-                    InsightsSaveReportView.save(report: report)
-                }
-                Spacer().frame(height: 40)
-                Button("Load") {
-                    InsightsSaveReportView.load(report: report, from: "default")
-                }
-                Spacer()
-            }
-            Spacer()
-        }
-    }
-    
-    private static var storageURL: URL {
-        let paths = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)
-        let directory = paths[0].appendingPathComponent("InsightReport", isDirectory: true)
-        
-        // Create the folder if it doesn't exist
-        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
-        return directory
-    }
-    
-    static func save(report: Report) {
-        let fileURL = storageURL.appendingPathComponent("default.json")
-        do {
-            let data = try JSONEncoder().encode(report.values)
-            try data.write(to: fileURL, options: .atomic)
-        } catch {
-            print("Save failed: \(error)")
-        }
-    }
-    
-    static func load(report: Report, from: String) {
-        let fileURL = storageURL.appendingPathComponent("\(from).json")
-        do {
-            let values = try JSONDecoder().decode(ReportValues.self, from: Data(contentsOf: fileURL))
-            report.update(from: values)
-        } catch {
-            print("Load failed: \(error)")
-        }
-    }
-}
-
-struct InsightsSetupButton : View {
-    @Environment(\.isEnabled) private var isEnabled
-    var text: String
-    var action: ()->()
-    
-    var body : some View {
-        Button {
-            action()
-        } label: {
-            MiddleCentered {
-                Text(text)
-            }
-            .bold()
-            .frame(width: 130, height: 40)
-            .font(inputTitleFont)
-            .palette(isEnabled ? .enabledButton : .disabledButton)
-            .opacity(isEnabled ? 1 : 0.7)
-            .cornerRadius(6)
-        }
-        .focusable(false)
     }
 }

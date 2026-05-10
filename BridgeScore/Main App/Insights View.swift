@@ -16,7 +16,7 @@ enum ScrollViews : CaseIterable, Hashable {
 struct InsightsView: View {
     @Environment(\.dismiss) var dismiss
     @State var boardSummaries: [BoardSummaryExtension] = []
-    @StateObject var report = Report(pinnedColumns: InsightColumn.defaultPinnedColumns, unpinnedColumns: InsightColumn.defaultColumns, calculatedColumns: [])
+    @StateObject var report = Report(viewName: "", pinnedColumns: InsightColumn.defaultPinnedColumns, unpinnedColumns: InsightColumn.defaultColumns, calculatedColumns: [])
     @State var showBoardSummary: BoardSummaryExtension? = nil
     @State var dismissView: Bool = false
     @State var editMode: Bool = false
@@ -87,7 +87,7 @@ struct InsightsView: View {
                             }
                         }
                     } else {
-                        InsightsSetupView(report: report, data: boardSummaries.first)
+                        InsightsSetupView(report: report, data: boardSummaries.first, editMode: $editMode)
                         Spacer()
                     }
                 }
@@ -103,7 +103,8 @@ struct InsightsView: View {
                 
         }
         .onAppear {
-            InsightsSaveReportView.load(report: report, from: "default")
+            let defaultUrl = InsightsReportViewStorage.url(for: UserDefault.defaultViewName.string)
+            InsightsReportViewStorage.load(report: report, from: defaultUrl)
                 boardSummaries = Insights.Load()
             if boardSummaries.isEmpty {
                 // TODO Shouldn't need this

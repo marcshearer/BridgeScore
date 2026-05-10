@@ -495,7 +495,17 @@ extension View {
     }
 }
 
-    
+#if !widget
+extension View {
+    @discardableResult func forceDismiss() -> Bool {
+        let scenes = UIApplication.shared.connectedScenes
+        let windowScene = scenes.first { $0.activationState == .foregroundActive } as? UIWindowScene
+        windowScene?.windows.first?.rootViewController?.dismiss(animated: true)
+        return false
+    }
+}
+#endif
+
 struct PaletteModifier : ViewModifier {
     var color: PaletteColor
     var textType: ThemeTextType = .normal

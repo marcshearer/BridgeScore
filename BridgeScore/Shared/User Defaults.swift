@@ -37,6 +37,7 @@ enum UserDefault: String, CaseIterable {
     case currentImportNext
     case currentSharedBy
     case currentSharedWith
+    case defaultViewName
     
     public var defaultValue: Any? {
         switch self {
@@ -98,6 +99,8 @@ enum UserDefault: String, CaseIterable {
             return ""
         case .currentSharedWith:
             return ""
+        case .defaultViewName:
+            return "Default View"
         }
     }
     

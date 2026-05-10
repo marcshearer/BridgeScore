@@ -476,7 +476,6 @@ class Utility {
         }
         return result
     }
-    
 }
 
 extension Array where Element == String {

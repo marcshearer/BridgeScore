@@ -8,11 +8,13 @@
 import SwiftUI
 
 struct ReportValues: Codable {
+    var viewName: String
     var pinnedColumns: [InsightColumn]
     var unpinnedColumns: [InsightColumn]
     var calculatedColumns: [InsightColumn]
     
-    init(pinnedColumns: [InsightColumn], unpinnedColumns: [InsightColumn], calculatedColumns: [InsightColumn]) {
+    init(viewName: String, pinnedColumns: [InsightColumn], unpinnedColumns: [InsightColumn], calculatedColumns: [InsightColumn]) {
+        self.viewName = viewName
         self.pinnedColumns = pinnedColumns
         self.unpinnedColumns = unpinnedColumns
         self.calculatedColumns = calculatedColumns
@@ -53,11 +55,12 @@ class Report: ObservableObject {
         }
     }
     
-    init(pinnedColumns: [InsightColumn], unpinnedColumns: [InsightColumn], calculatedColumns: [InsightColumn]) {
-        self.values = ReportValues(pinnedColumns: pinnedColumns, unpinnedColumns: unpinnedColumns, calculatedColumns: calculatedColumns)
+    init(viewName: String, pinnedColumns: [InsightColumn], unpinnedColumns: [InsightColumn], calculatedColumns: [InsightColumn]) {
+        self.values = ReportValues(viewName: viewName, pinnedColumns: pinnedColumns, unpinnedColumns: unpinnedColumns, calculatedColumns: calculatedColumns)
     }
     
     func update(from newValues: ReportValues) {
+        values.viewName = newValues.viewName
         values.pinnedColumns = []
         values.unpinnedColumns = []
         values.calculatedColumns = []

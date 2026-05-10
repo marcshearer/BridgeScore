@@ -83,6 +83,10 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         .sessionNumber,
         .contract,
         .made,
+        .contractLevel,
+        .contractSuit,
+        .contractDouble,
+        .contractRedouble
     ]
     
     static let allColumns: [InsightColumn] =

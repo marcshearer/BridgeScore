@@ -36,6 +36,7 @@ struct Input : View {
     var height: CGFloat = 40
     var width: CGFloat?
     var color: PaletteColor = Palette.input
+    var cornerRadius: CGFloat = 0
     var keyboardType: KeyboardType = .default
     var autoCapitalize: CapitalizationType = .sentences
     var autoCorrect: Bool = true
@@ -145,6 +146,7 @@ struct Input : View {
                     }
                 }
                 .background(color.background)
+                .cornerRadius(cornerRadius)
                 .if(width != nil) { (view) in
                     view.frame(width: width)
                 }

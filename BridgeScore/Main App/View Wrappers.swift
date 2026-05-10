@@ -122,43 +122,6 @@ struct TrailingAttributedText: View {
     }
 }
 
-struct MiddleCentered<Content>: View where Content: View {
-    var width: CGFloat? = nil
-    var height: CGFloat? = nil
-    var padding: CGFloat = 0
-    var horizontalPadding: CGFloat? = nil
-    var verticalPadding: CGFloat? = nil
-    var content: ()->Content
-    
-    var body: some View {
-        VStack {
-            Spacer().frame(height: verticalPadding ?? padding)
-            HStack {
-                Spacer().frame(width: horizontalPadding ?? padding)
-                VStack(spacing: 0) {
-                    Spacer()
-                    HStack(spacing: 0) {
-                        Spacer()
-                        content()
-                        Spacer()
-                    }
-                    Spacer()
-                }
-                .contentShape(Rectangle())
-                Spacer().frame(width: horizontalPadding ?? padding)
-
-            }
-            Spacer().frame(height: verticalPadding ?? padding)
-        }
-        .if(width != nil) { view in
-            view.frame(width: width!)
-        }
-        .if(height != nil) { view in
-            view.frame(height: height!)
-        }
-    }
-}
-
 struct MiddleCenteredAttributed: View {
     var text: AttributedString
     var width: CGFloat? = nil
@@ -184,21 +147,219 @@ struct Centered<Content>: View where Content: View {
     var padding: CGFloat = 0
     var content: ()->Content
     
+    init(width: CGFloat? = nil, height: CGFloat? = nil, padding: CGFloat = 0, @ViewBuilder content: @escaping ()->Content) {
+        self.width = width
+        self.height = height
+        self.padding = padding
+        self.content = content
+    }
+    
     var body: some View {
-        HStack {
+        HStack(spacing: 0) {
             Spacer().frame(width: padding)
-            VStack(spacing: 0) {
-                Spacer()
-                HStack(spacing: 0) {
+            Spacer()
+            content()
+            Spacer()
+            Spacer().frame(width: padding)
+        }
+        .contentShape(Rectangle())
+        
+        .if(width != nil) { view in
+            view.frame(width: width!)
+        }
+        .if(height != nil) { view in
+            view.frame(height: height!)
+        }
+    }
+}
+
+struct Leading<Content>: View where Content: View {
+    var width: CGFloat? = nil
+    var height: CGFloat? = nil
+    var padding: CGFloat = 0
+    var content: ()->Content
+    
+    init(width: CGFloat? = nil, height: CGFloat? = nil, padding: CGFloat = 0, @ViewBuilder content: @escaping ()->Content) {
+        self.width = width
+        self.height = height
+        self.padding = padding
+        self.content = content
+    }
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            Spacer().frame(width: padding)
+            content()
+            Spacer()
+            Spacer().frame(width: padding)
+        }
+        .contentShape(Rectangle())
+        .if(width != nil) { view in
+            view.frame(width: width!)
+        }
+        .if(height != nil) { view in
+            view.frame(height: height!)
+        }
+    }
+}
+
+struct Trailing<Content>: View where Content: View {
+    var width: CGFloat? = nil
+    var height: CGFloat? = nil
+    var padding: CGFloat = 0
+    var content: ()->Content
+    
+    init(width: CGFloat? = nil, height: CGFloat? = nil, padding: CGFloat = 0, @ViewBuilder content: @escaping ()->Content) {
+        self.width = width
+        self.height = height
+        self.padding = padding
+        self.content = content
+    }
+    
+    var body: some View {
+        HStack(spacing: 0) {
+            Spacer().frame(width: padding)
+            Spacer()
+            content()
+            Spacer().frame(width: padding)
+        }
+        .contentShape(Rectangle())
+        .if(width != nil) { view in
+            view.frame(width: width!)
+        }
+        .if(height != nil) { view in
+            view.frame(height: height!)
+        }
+    }
+}
+
+struct Top<Content>: View where Content: View {
+    var width: CGFloat? = nil
+    var height: CGFloat? = nil
+    var padding: CGFloat = 0
+    var content: ()->Content
+    
+    init(width: CGFloat? = nil, height: CGFloat? = nil, padding: CGFloat = 0, @ViewBuilder content: @escaping ()->Content) {
+        self.width = width
+        self.height = height
+        self.padding = padding
+        self.content = content
+    }
+    
+    var body: some View {
+        VStack {
+            Spacer().frame(height: padding)
+            content()
+            Spacer()
+            Spacer().frame(height: padding)
+        }
+        .contentShape(Rectangle())
+        .if(width != nil) { view in
+            view.frame(width: width!)
+        }
+        .if(height != nil) { view in
+            view.frame(height: height!)
+        }
+    }
+}
+
+struct Middle<Content>: View where Content: View {
+    var width: CGFloat? = nil
+    var height: CGFloat? = nil
+    var padding: CGFloat = 0
+    var content: ()->Content
+    
+    init(width: CGFloat? = nil, height: CGFloat? = nil, padding: CGFloat = 0, @ViewBuilder content: @escaping ()->Content) {
+        self.width = width
+        self.height = height
+        self.padding = padding
+        self.content = content
+    }
+    
+    var body: some View {
+        VStack {
+            Spacer().frame(height: padding)
+            Spacer()
+            content()
+            Spacer()
+            Spacer().frame(height: padding)
+        }
+        .contentShape(Rectangle())
+        .if(width != nil) { view in
+            view.frame(width: width!)
+        }
+        .if(height != nil) { view in
+            view.frame(height: height!)
+        }
+    }
+}
+
+struct Bottom<Content>: View where Content: View {
+    var width: CGFloat? = nil
+    var height: CGFloat? = nil
+    var padding: CGFloat = 0
+    var content: ()->Content
+    
+    init(width: CGFloat? = nil, height: CGFloat? = nil, padding: CGFloat = 0, @ViewBuilder content: @escaping ()->Content) {
+        self.width = width
+        self.height = height
+        self.padding = padding
+        self.content = content
+    }
+    
+    var body: some View {
+        VStack {
+            Spacer().frame(height: padding)
+            Spacer()
+            content()
+            Spacer().frame(height: padding)
+        }
+        .contentShape(Rectangle())
+        .if(width != nil) { view in
+            view.frame(width: width!)
+        }
+        .if(height != nil) { view in
+            view.frame(height: height!)
+        }
+    }
+}
+
+struct MiddleCentered<Content>: View where Content: View {
+    var width: CGFloat? = nil
+    var height: CGFloat? = nil
+    var padding: CGFloat = 0
+    var horizontalPadding: CGFloat? = nil
+    var verticalPadding: CGFloat? = nil
+    var content: ()->Content
+    
+    init(width: CGFloat? = nil, height: CGFloat? = nil, padding: CGFloat = 0, horizontalPadding: CGFloat? = nil, verticalPadding: CGFloat? = nil, @ViewBuilder content: @escaping ()->Content) {
+        self.width = width
+        self.height = height
+        self.padding = padding
+        self.horizontalPadding = horizontalPadding
+        self.verticalPadding = verticalPadding
+        self.content = content
+    }
+    
+    var body: some View {
+        VStack {
+            Spacer().frame(height: verticalPadding ?? padding)
+            HStack {
+                Spacer().frame(width: horizontalPadding ?? padding)
+                VStack(spacing: 0) {
                     Spacer()
-                    content()
+                    HStack(spacing: 0) {
+                        Spacer()
+                        content()
+                        Spacer()
+                    }
                     Spacer()
                 }
-                Spacer()
+                .contentShape(Rectangle())
+                Spacer().frame(width: horizontalPadding ?? padding)
+
             }
-            .contentShape(Rectangle())
-            Spacer().frame(width: padding)
-            
+            Spacer().frame(height: verticalPadding ?? padding)
         }
         .if(width != nil) { view in
             view.frame(width: width!)
