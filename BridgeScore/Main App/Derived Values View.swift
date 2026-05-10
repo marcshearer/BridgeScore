@@ -34,8 +34,9 @@ struct CalculatedValuesView<Focus> : View where Focus : Hashable {
                     ScrollViewReader { proxy in
                         ScrollView(.horizontal) {
                             HStack(spacing: 0) {
-                                ForEach(0..<logic.count+1, id: \.self) { index in
+                                ForEach(0..<logic.count + 1, id: \.self) { index in
                                     HStack(spacing: 0) {
+                                        // Preceding cursor
                                         HStack(spacing: 0) {
                                             if index == cursor && literalCursor == nil && focused == focusValue {
                                                 HStack(spacing: 0) {
@@ -58,30 +59,43 @@ struct CalculatedValuesView<Focus> : View where Focus : Hashable {
                                         }
                                         if index <= logic.count - 1 {
                                             let string = logic[index].string
-                                            if let literalCursor = literalCursor, cursor == index, case let .literal(literal) = logic[index], focused == focusValue {
-                                                HStack(spacing: 0) {
-                                                    let literalCursor = literalCursor + literal.literalCursorOffset
-                                                    if literalCursor > 0 {
-                                                        Text(string.prefix(literalCursor))
-                                                    }
-                                                    Rectangle().frame(width: 2, height: 30)
-                                                        .foregroundColor(.blue)
-                                                        .phaseAnimator([true, false]) { content, phase in
-                                                            content.opacity(phase || focused != focusValue ? 1 : 0)
-                                                        } animation: { _ in
-                                                                .easeInOut(duration: 0.5)
+                                            if case let .literal(literal) = logic[index] {
+                                                // Text with literal cursor
+                                                if index <= logic.count - 1 {
+                                                    if let literalCursor = literalCursor, cursor == index, case let .literal(literal) = logic[index], focused == focusValue {
+                                                        HStack(spacing: 0) {
+                                                            let literalCursor = literalCursor + literal.literalCursorOffset
+                                                            if literalCursor > 0 {
+                                                                Text(string.prefix(literalCursor))
+                                                            }
+                                                            Rectangle().frame(width: 2, height: 30)
+                                                                .foregroundColor(.blue)
+                                                                .phaseAnimator([true, false]) { content, phase in
+                                                                    content.opacity(phase || focused != focusValue ? 1 : 0)
+                                                                } animation: { _ in
+                                                                        .easeInOut(duration: 0.5)
+                                                                }
+                                                            if string.count > literalCursor {
+                                                                Text(string.suffix(string.count - literalCursor))
+                                                            }
                                                         }
-                                                    if string.count > literalCursor {
-                                                        Text(string.suffix(string.count - literalCursor))
+                                                        .layoutPriority(1)
+                                                    } else {
+                                                        Text(string)
                                                     }
                                                 }
-                                                .layoutPriority(1)
                                             } else {
+                                                // Non-literal
                                                 Text(string)
                                             }
                                         }
                                     }
                                     .id(index)
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        cursor = index
+                                        literalCursor = nil
+                                    }
                                 }
                                 Spacer()
                             }
@@ -331,6 +345,7 @@ struct CalculatedValuesView<Focus> : View where Focus : Hashable {
                                 string = String(literal.characters.prefix(literalCursor!))
                             }
                             logic[cursor] = .literal(CalculatedLiteral(characters: string, type: .string))
+                            cursor += 1
                             handled = true
                         } else {
                             // Adding to an existing string

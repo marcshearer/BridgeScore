@@ -484,7 +484,7 @@ struct CalculatedValue : Codable {
     }
 }
 
-indirect enum CalculatedParseNode {
+indirect enum CalculatedParseNode : Equatable {
     case numeric(value: Float)
     case string(value: String)
     case boolean(value: Bool)
@@ -521,7 +521,7 @@ indirect enum CalculatedParseNode {
         }
     }
     
-    func type(variableType: (InsightColumn)->CalculatedType?) throws -> CalculatedType {
+    func type(variableType: (InsightColumn) throws ->CalculatedType?) throws -> CalculatedType {
         switch self {
         case .numeric:
             return .numeric
@@ -530,7 +530,7 @@ indirect enum CalculatedParseNode {
         case .boolean:
             return .boolean
         case .variable(let variable):
-            if let type = variableType(variable) {
+            if let type = try variableType(variable) {
                 return type
             } else {
                 throw CalculatedError.invalidVariableName(variable.name)
@@ -615,6 +615,36 @@ indirect enum CalculatedParseNode {
                 }
             }
             return function.type
+        }
+    }
+    
+    public func traverse(_ calculatedAction: (CalculatedColumn) throws -> ()) throws {
+        switch self {
+        case .variable(let variable):
+            if case let .calculated(calculated) = variable {
+                try calculatedAction(calculated)
+            }
+        case .binaryOp(let lhs, _, let rhs):
+            try lhs.traverse(calculatedAction)
+            try rhs.traverse(calculatedAction)
+        case .unaryOp( _, let value):
+            try value.traverse(calculatedAction)
+        case .logicalOp(let lhs, _, let rhs):
+            try lhs.traverse(calculatedAction)
+            try rhs.traverse(calculatedAction)
+        case .comparisonOp(let lhs, _, let rhs):
+            try lhs.traverse(calculatedAction)
+            try rhs.traverse(calculatedAction)
+        case .ternaryOp(let condition, let ifTrue, let ifFalse):
+            try condition.traverse(calculatedAction)
+            try ifTrue.traverse(calculatedAction)
+            try ifFalse.traverse(calculatedAction)
+        case .function(_, let arguments):
+            for argument in arguments {
+                try argument.traverse(calculatedAction)
+            }
+        default:
+            break
         }
     }
     
@@ -749,6 +779,7 @@ enum CalculatedError: Error {
     case invalidNumberOfArgumentsToFunction(CalculatedFunction, Int)
     case errorEvaluatingCalculatedColumn(String)
     case invalidToken(String)
+    case circularReference(String)
     case typeMismatchOperator(CalculatedOperator, CalculatedType, CalculatedType)
     case typeMismatchLogical(CalculatedLogicalOperator, CalculatedType, CalculatedType)
     case typeMismatchComparison(CalculatedComparisonOperator,CalculatedType, CalculatedType)
@@ -772,6 +803,8 @@ enum CalculatedError: Error {
             return "Error evaluating calculated column: \(string)"
         case .invalidToken(let token):
             return "Invalid token: \(token)"
+        case .circularReference(let name):
+            return "Circular reference to calculated column: '\(name)'"
         case .invalidVariableName(let name):
             return "Invalid variable name \(name)"
         case .divideByZero:
@@ -829,7 +862,7 @@ class CalculatedParser {
         return current == expected
     }
     
-    func parse(completion: (CalculatedParseNode?, String?)->()) {
+    func parse(completion: (CalculatedParseNode?, String?) -> ()) {
         if have(.endOfCalculation) {
             completion(nil, "Unexpected '\(CalculatedElement.endOfCalculation.string)'")
         } else {

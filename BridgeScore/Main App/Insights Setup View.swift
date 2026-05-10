@@ -227,7 +227,7 @@ struct InsightsColumnListView : View {
     
     @State private var selected: InsightColumn? = nil
     @State private var showCalculatedColumn: Bool = false
-    @State private var column: CalculatedColumn? = nil
+    @State private var column = CalculatedColumn()
     @State private var editMode: InsightEditMode? = nil
     
     var body: some View {
@@ -354,7 +354,7 @@ struct InsightsColumnListView : View {
             }
             .fullScreenCover(isPresented: $showCalculatedColumn) {
                 FullScreenView(minWidth: 1600, minHeight: 1200) {
-                    InsightsCalculatedColumnView(report: report, column: column!, data: data, editMode: editMode!)
+                    InsightsCalculatedColumnView(report: report, column: $column, data: data, editMode: editMode!)
                 }
             }
             .palette(.mutedTile)
@@ -403,7 +403,7 @@ fileprivate enum EditField {
 struct InsightsCalculatedColumnView : View {
     @Environment(\.dismiss) var dismiss
     @ObservedObject var report: Report
-    @State var column: CalculatedColumn
+    @Binding var column: CalculatedColumn
     @State var data: BoardSummaryExtension?
     @State var editMode: InsightEditMode
     
@@ -416,6 +416,7 @@ struct InsightsCalculatedColumnView : View {
     @State var resultType: CalculatedType?
     @State var notNumeric: Bool = true
     @State var showErrorMessage: Bool = false
+    @State var referencedVariables: [CalculatedColumn] = []
     
     var body: some View {
         VStack(spacing: 0) {
@@ -525,7 +526,7 @@ struct InsightsCalculatedColumnView : View {
                     Spacer().frame(height: 50)
                     HStack {
                         HStack {
-                            Text("Places:")
+                            Text("Decimal places:")
                             Spacer()
                         }
                         .frame(width: 120)
@@ -557,7 +558,7 @@ struct InsightsCalculatedColumnView : View {
                             Spacer()
                         }
                         .frame(width: 120)
-                        InputToggle(field: $column.percent, disabled: $notNumeric, width: 80, inlineTitle: false)
+                        InputToggle(field: $editColumn.percent, disabled: $notNumeric, width: 80, inlineTitle: false)
                         .frame(width: 80)
                         Spacer()
                     }
@@ -587,6 +588,7 @@ struct InsightsCalculatedColumnView : View {
         .task {
             Utility.mainThread {
                 editColumn.copy(from: column)
+                updateLogic()
                 focused = .logic
             }
         }
@@ -614,7 +616,9 @@ struct InsightsCalculatedColumnView : View {
             return nil
         }
         let duplicates = names.enumerated().count(where: { $1 == editColumn.name && $0 != index })
-        canSave = !editColumn.name.isEmpty && !editColumn.logic.isEmpty && duplicates == 0
+        Utility.mainThread {
+            canSave = !editColumn.name.isEmpty && !editColumn.logic.isEmpty && duplicates == 0 && resultType != nil
+        }
     }
     
     func updateLogic() {
@@ -635,7 +639,23 @@ struct InsightsCalculatedColumnView : View {
                 } catch {
                     errorMessage = "Unknown error: \(error)"
                 }
+                if resultType != nil {
+                    // Traverse the tree looking for duplicates
+                    referencedVariables = [editColumn]
+                    do {
+                        try tree.traverse(traverseCalculatedColumn)
+                    } catch let error as CalculatedError {
+                        errorMessage = error.errorDescription
+                        resultType = nil
+                    } catch {
+                        errorMessage = "Unknown error: \(error)"
+                        resultType = nil
+                    }
+                }
             }
+        }
+        Utility.mainThread {
+            canSave = canSave && errorMessage.isEmpty
         }
     }
     
@@ -699,11 +719,11 @@ struct InsightsCalculatedColumnView : View {
         canSave = !editColumn.name.isEmpty && !editColumn.logic.isEmpty
     }
     
-    func variableType(variable: InsightColumn) -> CalculatedType? {
-        variable.type
+    func variableType(variable: InsightColumn) throws -> CalculatedType? {
+        return variable.type
     }
     
-    func evaluate<ViewModel>(column: InsightColumn, viewModel: ViewModel) -> CalculatedValue? {
+    func variableValue<ViewModel>(column: InsightColumn, viewModel: ViewModel) throws -> CalculatedValue? {
         do {
             if let data = data {
                 return try column.value(viewModel: data)
@@ -712,6 +732,16 @@ struct InsightsCalculatedColumnView : View {
             }
         } catch {
             return CalculatedValue("ERROR")
+        }
+    }
+    
+    func traverseCalculatedColumn(calculated: CalculatedColumn) throws {
+        if referencedVariables.contains(where: { $0.name == calculated.name }) {
+            throw CalculatedError.circularReference(calculated.title)
+        } else {
+            // Need to carry on going down in this variable's logic
+            referencedVariables.append(calculated)
+            try calculated.traverse(traverseCalculatedColumn)
         }
     }
 }

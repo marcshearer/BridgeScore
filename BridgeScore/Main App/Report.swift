@@ -127,12 +127,7 @@ class CalculatedColumn : Codable, Equatable, Hashable, Identifiable, ObservableO
     }
     
     func value<ViewModel>(viewModel: ViewModel, evaluate: @escaping (ViewModel, InsightColumn) throws -> CalculatedValue?) throws -> CalculatedValue {
-        if tree == nil {
-            let parser = CalculatedParser(tokens: logic)
-            parser.parse() { (tree, message) in
-                self.tree = tree
-            }
-        }
+        prepareTree()
         if let tree = tree {
             return try tree.value(viewModel: viewModel, variableValue: { column, vm in try evaluate(vm, column) })
         } else {
@@ -140,8 +135,26 @@ class CalculatedColumn : Codable, Equatable, Hashable, Identifiable, ObservableO
         }
     }
     
+    func traverse(_ calculatedAction: (CalculatedColumn) throws -> ()) throws {
+        prepareTree()
+        if let tree = tree {
+            try tree.traverse(calculatedAction)
+        } else {
+            throw CalculatedError.errorEvaluatingCalculatedColumn(name)
+        }
+    }
+    
+    func prepareTree() {
+        if tree == nil {
+            let parser = CalculatedParser(tokens: logic)
+            parser.parse() { (tree, message) in
+                self.tree = tree
+            }
+        }
+    }
+    
     static func == (lhs: CalculatedColumn, rhs: CalculatedColumn) -> Bool {
-        return lhs.id == rhs.id && lhs.title == rhs.title && lhs.name == rhs.name && lhs.type == rhs.type && lhs.decimalPlaces == rhs.decimalPlaces || lhs.align == rhs.align || lhs.width == rhs.width || lhs.blankIf == rhs.blankIf || lhs.percent == rhs.percent || lhs.logic == rhs.logic
+        return lhs.id == rhs.id && lhs.title == rhs.title && lhs.name == rhs.name && lhs.type == rhs.type && lhs.decimalPlaces == rhs.decimalPlaces && lhs.align == rhs.align && lhs.width == rhs.width && lhs.blankIf == rhs.blankIf && lhs.percent == rhs.percent && lhs.logic == rhs.logic
     }
 }
 

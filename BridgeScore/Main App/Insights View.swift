@@ -124,8 +124,15 @@ struct InsightsView: View {
                     
                     Spacer()
                     
-                    Button("\(editMode ? "􀈄" : "􀈎")") {
-                       editMode.toggle()
+                    if editMode {
+                        Button("\("􀈄")") {
+                            editMode = false
+                        }
+                        .keyboardShortcut(.cancelAction)
+                    } else {
+                        Button("\("􀈎")") {
+                            editMode = true
+                        }
                     }
                     
                     Spacer().frame(width: 40)
@@ -133,6 +140,8 @@ struct InsightsView: View {
                     Button("􀆄") {
                         dismiss()
                     }
+                    .disabled(editMode)
+                    .opacity(editMode ? 0.3 : 1)
                     .keyboardShortcut(.cancelAction)
                     
                     Spacer()

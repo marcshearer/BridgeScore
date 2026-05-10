@@ -16,7 +16,7 @@ enum InsightColumnType {
     init(columnType: CalculatedType, percent: Bool) {
         switch columnType {
         case .numeric:
-            self = (percent ? .percent :.numeric)
+            self = (percent ? .percent : .numeric)
         case .string:
             self = .string
         case .boolean:
@@ -146,6 +146,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             result += pairType.string
         case .points(let seatPlayer):
             result += seatPlayer.suffix
+        case .calculated(let calculated):
+            result = calculated.name
         default:
             break
         }
@@ -340,83 +342,83 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     func insightValue(boardSummary: BoardSummaryViewModel) throws -> CalculatedValue {
         switch self {
         case .eventDesc:
-            return CalculatedValue(boardSummary.scorecard.desc)
+            return summaryValue(boardSummary.scorecard.desc)
         case .boardIndex:
-            return CalculatedValue(boardSummary.boardIndex)
+            return summaryValue(boardSummary.boardIndex)
         case .sessionNumber:
-            return CalculatedValue(boardSummary.session)
+            return summaryValue(boardSummary.session)
         case .boardNumber:
-            return CalculatedValue(boardSummary.boardNumber)
+            return summaryValue(boardSummary.boardNumber)
         case .location:
-            return CalculatedValue(boardSummary.location!.short == "" ? boardSummary.location!.name : boardSummary.location!.short)
+            return summaryValue(boardSummary.location!.short == "" ? boardSummary.location!.name : boardSummary.location!.short)
         case .partner:
-            return CalculatedValue(boardSummary.partner!.name.components(separatedBy: " ").first!)
+            return summaryValue(boardSummary.partner!.name.components(separatedBy: " ").first!)
         case .date:
-            return CalculatedValue(Utility.dateString(boardSummary.date, format: "dd/MM/yyyy"))
+            return summaryValue(Utility.dateString(boardSummary.date, format: "dd/MM/yyyy"))
         case .vulnerability:
-            return CalculatedValue(boardSummary.vulnerability.string)
+            return summaryValue(boardSummary.vulnerability.string)
         case .eventType:
-            return CalculatedValue(boardSummary.eventType.string)
+            return summaryValue(boardSummary.eventType.string)
         case .boardScoreType:
-            return CalculatedValue(boardSummary.boardScoreType.brief)
+            return summaryValue(boardSummary.boardScoreType.brief)
         case .contract:
-            return CalculatedValue(boardSummary.contract.compact)
+            return summaryValue(boardSummary.contract.compact)
         case .contractLevel:
-            return CalculatedValue(boardSummary.contract.level.number)
+            return summaryValue(boardSummary.contract.level.number)
         case .contractSuit:
-            return CalculatedValue(boardSummary.contract.suit.string)
+            return summaryValue(boardSummary.contract.suit.string)
         case .contractDouble:
-            return CalculatedValue(boardSummary.contract.double == .doubled)
+            return summaryValue(boardSummary.contract.double == .doubled)
         case .contractRedouble:
-            return CalculatedValue(boardSummary.contract.double == .redoubled)
+            return summaryValue(boardSummary.contract.double == .redoubled)
         case .contractMade:
-            return CalculatedValue(boardSummary.contract.compact + " " + Scorecard.madeString(made: boardSummary.made ?? 0))
+            return summaryValue(boardSummary.contract.compact + " " + Scorecard.madeString(made: boardSummary.made ?? 0))
         case .declarer:
-            return CalculatedValue(boardSummary.declarer.pairType.string)
+            return summaryValue(boardSummary.declarer.pairType.string)
         case .made:
-            return CalculatedValue(boardSummary.made ?? 0)
+            return summaryValue(boardSummary.made ?? 0)
         case .score:
-            return CalculatedValue(boardSummary.score)
+            return summaryValue(boardSummary.score)
         case .fieldSize:
-            return CalculatedValue(boardSummary.fieldSize)
+            return summaryValue(boardSummary.fieldSize)
         case .gameOdds:
-            return CalculatedValue(boardSummary.gameOdds)
+            return summaryValue(boardSummary.gameOdds)
         case .slamOdds:
-            return CalculatedValue(boardSummary.slamOdds)
+            return summaryValue(boardSummary.slamOdds)
         case .compContract:
-            return CalculatedValue(boardSummary.compContract.compact)
+            return summaryValue(boardSummary.compContract.compact)
         case .compDeclarer:
-            return CalculatedValue(boardSummary.compDeclarer.string)
+            return summaryValue(boardSummary.compDeclarer.string)
         case .compDdMade:
-            return CalculatedValue(boardSummary.compDdMade ?? 0)
+            return summaryValue(boardSummary.compDdMade ?? 0)
         case .compDdScore:
-            return CalculatedValue(boardSummary.compDdScore)
+            return summaryValue(boardSummary.compDdScore)
         case .compMakeScore:
-            return CalculatedValue(boardSummary.compMakeScore)
+            return summaryValue(boardSummary.compMakeScore)
         case .compMakeOdds:
-            return CalculatedValue(boardSummary.compMakeOdds)
+            return summaryValue(boardSummary.compMakeOdds)
         case .suit(let pairType):
-            return CalculatedValue(boardSummary.suit[pairType]!.string)
+            return summaryValue(boardSummary.suit[pairType]!.string)
         case .declare(let pairType):
-            return CalculatedValue(boardSummary.declare[pairType]!)
+            return summaryValue(boardSummary.declare[pairType]!)
         case .medianTricks(let pairType):
-            return CalculatedValue(boardSummary.medianTricks[pairType]!)
+            return summaryValue(boardSummary.medianTricks[pairType]!)
         case .modeTricks(let pairType):
-            return CalculatedValue(boardSummary.modeTricks[pairType]!)
+            return summaryValue(boardSummary.modeTricks[pairType]!)
         case .ddTricks(let pairType):
-            return CalculatedValue(boardSummary.ddTricks[pairType]!)
+            return summaryValue(boardSummary.ddTricks[pairType]!)
         case .fit(let pairType):
-            return CalculatedValue(boardSummary.fit[pairType]!)
+            return summaryValue(boardSummary.fit[pairType]!)
         case .points(let seatPlayer):
-            return CalculatedValue(boardSummary.points[seatPlayer]!)
+            return summaryValue(boardSummary.points[seatPlayer]!)
         case .suitType:
-            return CalculatedValue(boardSummary.suitType.string)
+            return summaryValue(boardSummary.suitType.string)
         case .levelType:
-            return CalculatedValue(boardSummary.levelType.string)
+            return summaryValue(boardSummary.levelType.string)
         case .totalTricks:
-            return CalculatedValue(boardSummary.totalTricks)
+            return summaryValue(boardSummary.totalTricks)
         case .totalTricksDd:
-            return CalculatedValue(boardSummary.ddTricks[.we]! < 0 || boardSummary.ddTricks[.they]! < 0 ? 0 : boardSummary.totalTricksDd)
+            return summaryValue(boardSummary.ddTricks[.we]! < 0 || boardSummary.ddTricks[.they]! < 0 ? 0 : boardSummary.totalTricksDd)
         case .calculated(let column):
             do {
                 return try column.value(viewModel: boardSummary, evaluate: recurseValue)
@@ -426,12 +428,25 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         }
     }
     
+    func summaryValue(_ value: Any) -> CalculatedValue {
+        switch insightType {
+        case .percent:
+            CalculatedValue(Float(value as! Int) / Float(100))
+        case .numeric:
+            CalculatedValue(value as! Int)
+        case .string:
+            CalculatedValue(value as! String)
+        case .boolean:
+            CalculatedValue(value as! Bool)
+        }
+    }
+    
     func recurseValue(boardSummary: BoardSummaryViewModel, column: InsightColumn) throws -> CalculatedValue {
         return try column.insightValue(boardSummary: boardSummary)
     }
     
     func formattedText(_ value: CalculatedValue) -> String {
-        switch value.type {
+        switch self.insightType {
         case .string:
             return value.string!
         case .boolean:
@@ -442,15 +457,18 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             } else {
                 return value.numeric!.toString(places: decimalPlaces)
             }
+        case .percent:
+            if blankIf.evaluate(value: value.numeric!) {
+                return ""
+            } else {
+                return Utility.round(value.numeric! * 100, places: 2).toString(places: decimalPlaces) + "%"
+            }
         }
     }
     
     func textValue(boardSummary: BoardSummaryViewModel) -> AttributedString {
         do {
-            var text = try formattedText(insightValue(boardSummary: boardSummary))
-            if self.insightType == .percent && text != "" {
-                text += "%"
-            }
+            let text = try formattedText(insightValue(boardSummary: boardSummary))
             
             // Only have a case for fields where above is not correct
             return switch self {
@@ -523,20 +541,13 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     var align: CalculatedAlignment {
         switch self {
         case .eventDesc:
-            return .left
+            .left
         case .boardIndex, .sessionNumber, .boardNumber, .vulnerability, .eventType, .boardScoreType, .contract, .contractMade, .declarer, .made, .compContract, .compDeclarer, .suit, .suitType, .levelType, .partner, .location, .date:
-            return .center
-        case .calculated:
-            switch type {
-            case .boolean:
-                return .center
-            case .numeric:
-                return .right
-            case .string:
-                return .left
-            }
+            .center
+        case .calculated(let calculated):
+            calculated.align
         default:
-            return .right
+            .right
         }
     }
     
