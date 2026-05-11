@@ -11,28 +11,35 @@ struct InsightsReportViewStorage : View {
     @ObservedObject var report: Report
     @State var showLoadDialog: Bool = false
     @State var showSaveDialog: Bool = false
+    @State var showRemoveDialog: Bool = false
     
     var body: some View {
         HStack {
             Spacer().frame(width: 100)
             VStack {
                 Spacer().frame(height: 100)
+                InsightsSetupButton(text: "Load View") {
+                    showLoadDialog = true
+                }
+                Spacer().frame(height: 40)
                 InsightsSetupButton(text: "Save View") {
                     showSaveDialog = true
                 }
                 Spacer().frame(height: 40)
-                InsightsSetupButton(text: "Load View") {
-                    showLoadDialog = true
+                InsightsSetupButton(text: "Delete View") {
+                    showRemoveDialog = true
                 }
                 Spacer()
             }
-            Spacer()
         }
         .sheet(isPresented: $showLoadDialog) {
             InsightsReportViewStorageLoadDialog(report: report)
         }
         .sheet(isPresented: $showSaveDialog) {
             InsightsReportViewStorageSaveDialog(report: report)
+        }
+        .sheet(isPresented: $showRemoveDialog) {
+            InsightsReportViewStorageRemoveDialog(report: report)
         }
     }
     
@@ -54,7 +61,7 @@ struct InsightsReportViewStorage : View {
             let data = try JSONEncoder().encode(report.values)
             try data.write(to: fileUrl, options: .atomic)
         } catch {
-            print("Save failed: \(error)")
+            fatalError()
         }
     }
     
@@ -63,7 +70,15 @@ struct InsightsReportViewStorage : View {
             let values = try JSONDecoder().decode(ReportValues.self, from: Data(contentsOf: fileUrl))
             report.update(from: values)
         } catch {
-            print("Load failed: \(error)")
+            fatalError()
+        }
+    }
+    
+    static func remove(at fileUrl: URL) {
+        do {
+            try FileManager.default.removeItem(at: fileUrl)
+        } catch {
+            fatalError()
         }
     }
     
@@ -159,85 +174,171 @@ struct InsightsReportViewStorageSaveDialog: View {
     var body: some View {
         let defaultUrl = InsightsReportViewStorage.url(for: UserDefault.defaultViewName.string)
         
-        Banner(title: Binding.constant("Save View"), alternateStyle: true, back: false, leftTitle: false)
-        VStack {
-            Spacer().frame(height: 20)
-            Top {
-                Leading(padding: 30) {
-                    Spacer().frame(width: 10)
-                    Input(title: "Save As:", field: $filename, color: Palette.alternate, cornerRadius: 8, inlineTitle: true, inlineTitleWidth: 100) { _ in
-                        if filename.isEmpty {
-                            saveUrl = nil
-                        } else {
-                            saveUrl = InsightsReportViewStorage.url(for: filename)
+        StandardView("Save View") {
+            Banner(title: Binding.constant("Save View"), alternateStyle: true, back: false, leftTitle: false)
+            VStack {
+                Spacer().frame(height: 20)
+                Top {
+                    Leading(padding: 30) {
+                        Spacer().frame(width: 10)
+                        Input(title: "Save As:", field: $filename, color: Palette.alternate, cornerRadius: 8, inlineTitle: true, inlineTitleWidth: 100) { _ in
+                            if filename.isEmpty {
+                                saveUrl = nil
+                            } else {
+                                saveUrl = InsightsReportViewStorage.url(for: filename)
+                            }
                         }
+                        Spacer().frame(width: 50)
                     }
-                    Spacer().frame(width: 50)
-                }
-                Spacer().frame(height: 10)
-                Centered(padding: 20) {
-                    Middle(padding: 10) {
-                        ScrollView(.vertical) {
-                            LazyVStack(spacing: 0) {
-                                ForEach(files, id: \.self) { url in
-                                    Centered(padding: 20) {
-                                        HStack {
-                                            Spacer().frame(width: 10)
-                                            Text(url.deletingPathExtension().lastPathComponent)
-                                            Spacer()
-                                            LeadingText(url == defaultUrl ? " (default)" : "")
-                                                .frame(width: 80)
-                                                .foregroundColor(Palette.background.faintText)
+                    Spacer().frame(height: 10)
+                    Centered(padding: 20) {
+                        Middle(padding: 10) {
+                            ScrollView(.vertical) {
+                                LazyVStack(spacing: 0) {
+                                    ForEach(files, id: \.self) { url in
+                                        Centered(padding: 20) {
+                                            HStack {
+                                                Spacer().frame(width: 10)
+                                                Text(url.deletingPathExtension().lastPathComponent)
+                                                Spacer()
+                                                LeadingText(url == defaultUrl ? " (default)" : "")
+                                                    .frame(width: 80)
+                                                    .foregroundColor(Palette.background.faintText)
+                                            }
+                                            .contentShape(Rectangle())
+                                            .frame(height: 30)
+                                            .palette(saveUrl == url ? .alternate : .clear)
+                                            .cornerRadius(8)
                                         }
-                                        .contentShape(Rectangle())
-                                        .frame(height: 30)
-                                        .palette(saveUrl == url ? .alternate : .clear)
-                                        .cornerRadius(8)
-                                    }
-                                    .onTapGesture {
-                                        saveUrl = url
-                                        filename = url.deletingPathExtension().lastPathComponent
+                                        .onTapGesture {
+                                            saveUrl = url
+                                            filename = url.deletingPathExtension().lastPathComponent
+                                        }
                                     }
                                 }
                             }
                         }
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(Palette.gridLine, lineWidth: 2))
                     }
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(Palette.gridLine, lineWidth: 2))
                 }
-            }
-            Leading(padding: 30) {
-                Text("Save as default:")
-                Spacer().frame(width: 20)
-                Toggle("", isOn: $saveAsDefault)
-                    .toggleStyle(.automatic)
-                    .frame(width: 40)
-                Spacer()
-            }
-            
-            MiddleCentered {
-                HStack {
-                    InsightsSetupButton(text: "Cancel") {
-                        forceDismiss()
-                    }
-                    .keyboardShortcut(.cancelAction)
-                    Spacer().frame(width: 50)
-                    InsightsSetupButton(text: "Save") {
-                        InsightsReportViewStorage.save(report: report, to: saveUrl!)
-                        if saveAsDefault {
-                            UserDefault.defaultViewName.set(filename)
+                Leading(padding: 30) {
+                    Text("Save as default:")
+                    Spacer().frame(width: 20)
+                    Toggle("", isOn: $saveAsDefault)
+                        .toggleStyle(.automatic)
+                        .frame(width: 40)
+                    Spacer()
+                }
+                
+                MiddleCentered {
+                    HStack {
+                        InsightsSetupButton(text: "Cancel") {
+                            forceDismiss()
                         }
-                        forceDismiss()
+                        .keyboardShortcut(.cancelAction)
+                        Spacer().frame(width: 50)
+                        InsightsSetupButton(text: "Save") {
+                            MessageBox.shared.show("View already exists!", if: filename != report.values.viewName && files.contains(saveUrl!), cancelText: "Cancel", okText: "Overwrite", okDestructive: true, okAction: {
+                                report.values.viewName = filename
+                                InsightsReportViewStorage.save(report: report, to: saveUrl!)
+                                if saveAsDefault {
+                                    UserDefault.defaultViewName.set(filename)
+                                }
+                                forceDismiss()
+                            })
+                        }
+                        .disabled(saveUrl == nil)
                     }
-                    .disabled(saveUrl == nil)
                 }
+                .frame(height: 80)
             }
-            .frame(height: 80)
         }
         .onAppear {
             files = InsightsReportViewStorage.loadFileList()
             filename = report.values.viewName
+        }
+    }
+}
+
+struct InsightsReportViewStorageRemoveDialog: View {
+    @ObservedObject var report: Report
+    
+    @Environment(\.dismiss) var dismiss
+    @State private var files: [URL] = []
+    @State var removeUrl: URL?
+    
+    var body: some View {
+        let defaultUrl = InsightsReportViewStorage.url(for: UserDefault.defaultViewName.string)
+        let currentUrl = InsightsReportViewStorage.url(for: report.values.viewName)
+        let removableFiles = files.filter({$0 != defaultUrl && $0 != currentUrl})
+       
+        StandardView("Remove View") {
+            Banner(title: Binding.constant("Delete View"), alternateStyle: true, back: false, leftTitle: false)
+            VStack {
+                Spacer().frame(height: 20)
+                Top {
+                    Leading(padding: 30) {
+                        VStack(spacing: 0) {
+                            LeadingText("Select view to delete:")
+                            LeadingText("Current view and default view cannot be deleted")
+                                .foregroundColor(Palette.background.faintText)
+                        }
+                    }
+                    Spacer().frame(height: 10)
+                    Centered(padding: 20) {
+                        Middle(padding: 10) {
+                            ScrollView(.vertical) {
+                                LazyVStack(spacing: 0) {
+                                    ForEach(removableFiles, id: \.self) { url in
+                                        Centered(padding: 20) {
+                                            HStack {
+                                                Spacer().frame(width: 10)
+                                                Text(url.deletingPathExtension().lastPathComponent)
+                                                Spacer()
+                                                LeadingText(url == defaultUrl ? " (default)" : "")
+                                                    .frame(width: 80)
+                                                    .foregroundColor(Palette.background.faintText)
+                                            }
+                                            .contentShape(Rectangle())
+                                            .frame(height: 30)
+                                            .palette(removeUrl == url ? .alternate : .clear)
+                                            .cornerRadius(8)
+                                        }
+                                        .onTapGesture {
+                                            removeUrl = url
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(Palette.gridLine, lineWidth: 2))
+                    }
+                }
+                MiddleCentered {
+                    HStack {
+                        InsightsSetupButton(text: "Cancel") {
+                            forceDismiss()
+                        }
+                        .keyboardShortcut(.cancelAction)
+                        Spacer().frame(width: 50)
+                        InsightsSetupButton(text: "Delete") {
+                            MessageBox.shared.show("Are you sure you want to delete this view?", cancelText: "Cancel", okText: "Delete", okDestructive: true, okAction: {
+                                InsightsReportViewStorage.remove(at: removeUrl!)
+                                forceDismiss()
+                            })
+                        }
+                        .disabled(removeUrl == nil)
+                    }
+                }
+                .frame(height: 80)
+            }
+        }
+        .onAppear {
+            files = InsightsReportViewStorage.loadFileList()
         }
     }
 }

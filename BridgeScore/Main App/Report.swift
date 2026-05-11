@@ -12,12 +12,14 @@ struct ReportValues: Codable {
     var pinnedColumns: [InsightColumn]
     var unpinnedColumns: [InsightColumn]
     var calculatedColumns: [InsightColumn]
+    var sort: [CalculatedSort]
     
-    init(viewName: String, pinnedColumns: [InsightColumn], unpinnedColumns: [InsightColumn], calculatedColumns: [InsightColumn]) {
+    init(viewName: String, pinnedColumns: [InsightColumn], unpinnedColumns: [InsightColumn], calculatedColumns: [InsightColumn], sort: [CalculatedSort] = []) {
         self.viewName = viewName
         self.pinnedColumns = pinnedColumns
         self.unpinnedColumns = unpinnedColumns
         self.calculatedColumns = calculatedColumns
+        self.sort = sort
     }
 }
 
@@ -55,8 +57,8 @@ class Report: ObservableObject {
         }
     }
     
-    init(viewName: String, pinnedColumns: [InsightColumn], unpinnedColumns: [InsightColumn], calculatedColumns: [InsightColumn]) {
-        self.values = ReportValues(viewName: viewName, pinnedColumns: pinnedColumns, unpinnedColumns: unpinnedColumns, calculatedColumns: calculatedColumns)
+    init(viewName: String = "", pinnedColumns: [InsightColumn] = [], unpinnedColumns: [InsightColumn] = [], calculatedColumns: [InsightColumn] = [], sort: [CalculatedSort] = []) {
+        self.values = ReportValues(viewName: viewName, pinnedColumns: pinnedColumns, unpinnedColumns: unpinnedColumns, calculatedColumns: calculatedColumns, sort: sort)
     }
     
     func update(from newValues: ReportValues) {
@@ -64,6 +66,7 @@ class Report: ObservableObject {
         values.pinnedColumns = []
         values.unpinnedColumns = []
         values.calculatedColumns = []
+        values.sort = []
         for column in newValues.pinnedColumns {
             values.pinnedColumns.append(column)
         }
@@ -72,6 +75,9 @@ class Report: ObservableObject {
         }
         for column in newValues.calculatedColumns {
             values.calculatedColumns.append(column)
+        }
+        for sort in newValues.sort {
+            values.sort.append(sort)
         }
     }
 }
@@ -211,5 +217,30 @@ enum CalculatedBlankIf : Int, CaseIterable, Codable {
         default:
             false
         }
+    }
+}
+
+class CalculatedSort : Codable, Equatable, Hashable {
+    var sortKey: InsightColumn?
+    var direction: SortDirection?
+    var subtotal: Bool?
+    var selectionLogic: [CalculatedElement]
+    
+    init(sortKey: InsightColumn, selectionLogic: [CalculatedElement] = [], direction: SortDirection = .ascending, subtotal: Bool = false) {
+        self.sortKey = sortKey
+        self.direction = direction
+        self.subtotal = subtotal
+        self.selectionLogic = selectionLogic
+    }
+    
+    static func == (lhs: CalculatedSort, rhs: CalculatedSort) -> Bool {
+        lhs.sortKey == rhs.sortKey && lhs.direction == rhs.direction && lhs.subtotal == rhs.subtotal && lhs.selectionLogic == rhs.selectionLogic
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(sortKey)
+        hasher.combine(direction)
+        hasher.combine(subtotal)
+        hasher.combine(selectionLogic)
     }
 }

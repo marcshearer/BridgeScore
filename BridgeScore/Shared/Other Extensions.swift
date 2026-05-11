@@ -509,16 +509,17 @@ extension View {
 struct PaletteModifier : ViewModifier {
     var color: PaletteColor
     var textType: ThemeTextType = .normal
+    var inverse: Bool = false
     
     func body(content: Content) -> some View { content
-        .background(color.background)
-        .foregroundColor(color.textColor(textType))
+        .background(inverse ? color.textColor(textType) : color.background)
+        .foregroundColor(inverse ? color.background  : color.textColor(textType))
     }
 }
 
 extension View {
-    func palette(_ color: ThemeBackgroundColorName, _ textType: ThemeTextType? = .normal) -> some View {
-        self.modifier(PaletteModifier(color: PaletteColor(color), textType: textType ?? .normal))
+    func palette(_ color: ThemeBackgroundColorName, _ textType: ThemeTextType? = .normal, inverse: Bool = false) -> some View {
+        self.modifier(PaletteModifier(color: PaletteColor(color), textType: textType ?? .normal, inverse: inverse))
     }
 }
 

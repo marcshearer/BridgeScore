@@ -7,7 +7,7 @@
 
 import CoreData
  
-public enum SortDirection {
+public enum SortDirection : Codable {
     case ascending
     case descending
 }

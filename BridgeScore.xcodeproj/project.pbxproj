@@ -71,6 +71,8 @@
 		B23ADBF227B25356001B6B38 /* List Tile View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23ADBF127B25356001B6B38 /* List Tile View.swift */; };
 		B23ADBF427B28D68001B6B38 /* Local Authentication.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23ADBF327B28D68001B6B38 /* Local Authentication.swift */; };
 		B23F362C2FB04AB2009C2AA9 /* Insights Storage View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23F362B2FB04AA6009C2AA9 /* Insights Storage View.swift */; };
+		B23F362E2FB0DB01009C2AA9 /* Insights Calculated View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23F362D2FB0DAF7009C2AA9 /* Insights Calculated View.swift */; };
+		B23F36302FB0DB44009C2AA9 /* Insights Selection View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23F362F2FB0DB3D009C2AA9 /* Insights Selection View.swift */; };
 		B240141A27CCBF2400C3117F /* Scorecard Filter View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B240141927CCBF2400C3117F /* Scorecard Filter View.swift */; };
 		B24BA1E72F73ABEF00A92738 /* Auto Complete View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24BA1E62F73ABEF00A92738 /* Auto Complete View.swift */; };
 		B24BC3A127F42DD200576D50 /* Scorecard Filter Values.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24BC3A027F42DD200576D50 /* Scorecard Filter Values.swift */; };
@@ -274,6 +276,8 @@
 		B23ADBF127B25356001B6B38 /* List Tile View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "List Tile View.swift"; sourceTree = "<group>"; };
 		B23ADBF327B28D68001B6B38 /* Local Authentication.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Local Authentication.swift"; sourceTree = "<group>"; };
 		B23F362B2FB04AA6009C2AA9 /* Insights Storage View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Insights Storage View.swift"; sourceTree = "<group>"; };
+		B23F362D2FB0DAF7009C2AA9 /* Insights Calculated View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Insights Calculated View.swift"; sourceTree = "<group>"; };
+		B23F362F2FB0DB3D009C2AA9 /* Insights Selection View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Insights Selection View.swift"; sourceTree = "<group>"; };
 		B240141927CCBF2400C3117F /* Scorecard Filter View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Filter View.swift"; sourceTree = "<group>"; };
 		B24BA1E62F73ABEF00A92738 /* Auto Complete View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Auto Complete View.swift"; sourceTree = "<group>"; };
 		B24BC3A027F42DD200576D50 /* Scorecard Filter Values.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Filter Values.swift"; sourceTree = "<group>"; };
@@ -735,6 +739,8 @@
 				B217C8D42F7E548A006F02A3 /* Bidding Editor View.swift */,
 				B2746FC02F9F2BBA00716D08 /* Insights View.swift */,
 				B2A724D02FA61BF400C574DC /* Insights Setup View.swift */,
+				B23F362D2FB0DAF7009C2AA9 /* Insights Calculated View.swift */,
+				B23F362F2FB0DB3D009C2AA9 /* Insights Selection View.swift */,
 				B23F362B2FB04AA6009C2AA9 /* Insights Storage View.swift */,
 				B2EEFC772AAB5BE4005A1ECA /* Analysis Viewer.swift */,
 			);
@@ -950,6 +956,7 @@
 				B207711B2F9D28AE00DB6C18 /* Insights.swift in Sources */,
 				B2EB3D66279D54D500D64225 /* Board Managed Object.swift in Sources */,
 				B26BCE692799AED700B73501 /* Input String.swift in Sources */,
+				B23F36302FB0DB44009C2AA9 /* Insights Selection View.swift in Sources */,
 				B26BCE322799ABF000B73501 /* Declarations.swift in Sources */,
 				B2DADE5127E7A06E009F7572 /* Import BBO.swift in Sources */,
 				B24BC3A127F42DD200576D50 /* Scorecard Filter Values.swift in Sources */,
@@ -1055,6 +1062,7 @@
 				B26BCE662799AED700B73501 /* Banner.swift in Sources */,
 				B203F96A27F30BD900DA748A /* Scorecard Web View.swift in Sources */,
 				B2A2053927B01D0000C83C88 /* Location Setup View.swift in Sources */,
+				B23F362E2FB0DB01009C2AA9 /* Insights Calculated View.swift in Sources */,
 				B2B1D5892B026C87007A2977 /* Import Usebio.swift in Sources */,
 				B23ADBF427B28D68001B6B38 /* Local Authentication.swift in Sources */,
 				B29BBA7A2D33D15A0032BC2F /* Contract Classes.swift in Sources */,

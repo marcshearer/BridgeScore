@@ -16,7 +16,7 @@ enum ScrollViews : CaseIterable, Hashable {
 struct InsightsView: View {
     @Environment(\.dismiss) var dismiss
     @State var boardSummaries: [BoardSummaryExtension] = []
-    @StateObject var report = Report(viewName: "", pinnedColumns: InsightColumn.defaultPinnedColumns, unpinnedColumns: InsightColumn.defaultColumns, calculatedColumns: [])
+    @StateObject var report = Report()
     @State var showBoardSummary: BoardSummaryExtension? = nil
     @State var dismissView: Bool = false
     @State var editMode: Bool = false
