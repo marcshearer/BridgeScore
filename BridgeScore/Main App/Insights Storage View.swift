@@ -56,22 +56,26 @@ struct InsightsReportViewStorage : View {
         storageUrl.appendingPathComponent(filename).appendingPathExtension("json")
     }
     
-    static func save(report: Report, to fileUrl: URL) {
+    static func save(report: Report, to fileUrl: URL) -> Bool {
+        var result = true
         do {
             let data = try JSONEncoder().encode(report.values)
             try data.write(to: fileUrl, options: .atomic)
         } catch {
-            fatalError()
+            result = false
         }
+        return result
     }
     
-    static func load(report: Report, from fileUrl: URL) {
+    static func load(report: Report, from fileUrl: URL) -> Bool {
+        var result = true
         do {
             let values = try JSONDecoder().decode(ReportValues.self, from: Data(contentsOf: fileUrl))
             report.update(from: values)
         } catch {
-            fatalError()
+            result = false
         }
+        return result
     }
     
     static func remove(at fileUrl: URL) {

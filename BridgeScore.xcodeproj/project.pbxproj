@@ -72,7 +72,8 @@
 		B23ADBF427B28D68001B6B38 /* Local Authentication.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23ADBF327B28D68001B6B38 /* Local Authentication.swift */; };
 		B23F362C2FB04AB2009C2AA9 /* Insights Storage View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23F362B2FB04AA6009C2AA9 /* Insights Storage View.swift */; };
 		B23F362E2FB0DB01009C2AA9 /* Insights Calculated View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23F362D2FB0DAF7009C2AA9 /* Insights Calculated View.swift */; };
-		B23F36302FB0DB44009C2AA9 /* Insights Selection View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23F362F2FB0DB3D009C2AA9 /* Insights Selection View.swift */; };
+		B23F36302FB0DB44009C2AA9 /* Insights Sort Level View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23F362F2FB0DB3D009C2AA9 /* Insights Sort Level View.swift */; };
+		B23F36332FB37EB1009C2AA9 /* Sort Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = B23F36322FB37EAD009C2AA9 /* Sort Helpers.swift */; };
 		B240141A27CCBF2400C3117F /* Scorecard Filter View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B240141927CCBF2400C3117F /* Scorecard Filter View.swift */; };
 		B24BA1E72F73ABEF00A92738 /* Auto Complete View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24BA1E62F73ABEF00A92738 /* Auto Complete View.swift */; };
 		B24BC3A127F42DD200576D50 /* Scorecard Filter Values.swift in Sources */ = {isa = PBXBuildFile; fileRef = B24BC3A027F42DD200576D50 /* Scorecard Filter Values.swift */; };
@@ -277,7 +278,8 @@
 		B23ADBF327B28D68001B6B38 /* Local Authentication.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Local Authentication.swift"; sourceTree = "<group>"; };
 		B23F362B2FB04AA6009C2AA9 /* Insights Storage View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Insights Storage View.swift"; sourceTree = "<group>"; };
 		B23F362D2FB0DAF7009C2AA9 /* Insights Calculated View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Insights Calculated View.swift"; sourceTree = "<group>"; };
-		B23F362F2FB0DB3D009C2AA9 /* Insights Selection View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Insights Selection View.swift"; sourceTree = "<group>"; };
+		B23F362F2FB0DB3D009C2AA9 /* Insights Sort Level View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Insights Sort Level View.swift"; sourceTree = "<group>"; };
+		B23F36322FB37EAD009C2AA9 /* Sort Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Sort Helpers.swift"; sourceTree = "<group>"; };
 		B240141927CCBF2400C3117F /* Scorecard Filter View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Filter View.swift"; sourceTree = "<group>"; };
 		B24BA1E62F73ABEF00A92738 /* Auto Complete View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Auto Complete View.swift"; sourceTree = "<group>"; };
 		B24BC3A027F42DD200576D50 /* Scorecard Filter Values.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Filter Values.swift"; sourceTree = "<group>"; };
@@ -610,6 +612,7 @@
 				B2A4282D2AE790BB000A97AA /* iCloud.swift */,
 				B259CCE32F73EEB200AFBCD0 /* Auto Complete.swift */,
 				B26BE1412FA87AF60002DA80 /* Calculated Values.swift */,
+				B23F36322FB37EAD009C2AA9 /* Sort Helpers.swift */,
 			);
 			name = Libraries;
 			sourceTree = "<group>";
@@ -740,7 +743,7 @@
 				B2746FC02F9F2BBA00716D08 /* Insights View.swift */,
 				B2A724D02FA61BF400C574DC /* Insights Setup View.swift */,
 				B23F362D2FB0DAF7009C2AA9 /* Insights Calculated View.swift */,
-				B23F362F2FB0DB3D009C2AA9 /* Insights Selection View.swift */,
+				B23F362F2FB0DB3D009C2AA9 /* Insights Sort Level View.swift */,
 				B23F362B2FB04AA6009C2AA9 /* Insights Storage View.swift */,
 				B2EEFC772AAB5BE4005A1ECA /* Analysis Viewer.swift */,
 			);
@@ -956,7 +959,7 @@
 				B207711B2F9D28AE00DB6C18 /* Insights.swift in Sources */,
 				B2EB3D66279D54D500D64225 /* Board Managed Object.swift in Sources */,
 				B26BCE692799AED700B73501 /* Input String.swift in Sources */,
-				B23F36302FB0DB44009C2AA9 /* Insights Selection View.swift in Sources */,
+				B23F36302FB0DB44009C2AA9 /* Insights Sort Level View.swift in Sources */,
 				B26BCE322799ABF000B73501 /* Declarations.swift in Sources */,
 				B2DADE5127E7A06E009F7572 /* Import BBO.swift in Sources */,
 				B24BC3A127F42DD200576D50 /* Scorecard Filter Values.swift in Sources */,
@@ -1023,6 +1026,7 @@
 				B24BA1E72F73ABEF00A92738 /* Auto Complete View.swift in Sources */,
 				B213A33D2AB8616700EA098F /* import PBN.swift in Sources */,
 				B26BCE6F279AEB6C00B73501 /* Scorecard List View.swift in Sources */,
+				B23F36332FB37EB1009C2AA9 /* Sort Helpers.swift in Sources */,
 				B256101F2D4E75BB005DB22F /* Create Scorecard Widget.swift in Sources */,
 				B26BCE4C2799AD8900B73501 /* My Image.swift in Sources */,
 				B25F653A27EDEEF400FDD6B1 /* Scorecard Ranking View.swift in Sources */,

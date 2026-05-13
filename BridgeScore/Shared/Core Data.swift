@@ -7,9 +7,20 @@
 
 import CoreData
  
-public enum SortDirection : Codable {
+public enum SortDirection : CaseIterable, Codable {
     case ascending
     case descending
+    
+    var string: String {
+        "\(self)".capitalized
+    }
+    
+    var symbol: String {
+        switch self {
+        case .ascending: return "􁾨"
+        case .descending: return "􁾬"
+        }
+    }
 }
 
 class CoreData {

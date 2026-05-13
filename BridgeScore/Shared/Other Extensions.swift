@@ -510,16 +510,23 @@ struct PaletteModifier : ViewModifier {
     var color: PaletteColor
     var textType: ThemeTextType = .normal
     var inverse: Bool = false
+    var clear: Bool = false
     
     func body(content: Content) -> some View { content
-        .background(inverse ? color.textColor(textType) : color.background)
+        .background(clear ? .clear : (inverse ? color.textColor(textType) : color.background))
         .foregroundColor(inverse ? color.background  : color.textColor(textType))
     }
 }
 
+extension Bool {
+    var asTick: String {
+        return self ? "✔️" : ""
+    }
+}
+
 extension View {
-    func palette(_ color: ThemeBackgroundColorName, _ textType: ThemeTextType? = .normal, inverse: Bool = false) -> some View {
-        self.modifier(PaletteModifier(color: PaletteColor(color), textType: textType ?? .normal, inverse: inverse))
+    func palette(_ color: ThemeBackgroundColorName, _ textType: ThemeTextType? = .normal, inverse: Bool = false, clear: Bool = false) -> some View {
+        self.modifier(PaletteModifier(color: PaletteColor(color), textType: textType ?? .normal, inverse: inverse, clear: clear))
     }
 }
 

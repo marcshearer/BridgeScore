@@ -117,6 +117,9 @@ public var isLandscape: Bool = (MyApp.format == .phone ? false : true)
 
 // Application specific types
 
+let today = Date()
+let todayNumber: DayNumber = DayNumber.today
+
 public enum TotalCalculation: Int, CaseIterable {
     case automatic = 0
     case manual = 1

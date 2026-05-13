@@ -23,6 +23,7 @@ enum InsightColumnType {
             self = .boolean
         }
     }
+    
 }
 
 enum InsightColumn : Codable, Hashable, Equatable, Transferable {
@@ -33,6 +34,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     case partner
     case location
     case date
+    case age
     case vulnerability
     case eventType
     case boardScoreType
@@ -86,7 +88,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         .contractLevel,
         .contractSuit,
         .contractDouble,
-        .contractRedouble
+        .contractRedouble,
+        .age
     ]
     
     static let allColumns: [InsightColumn] =
@@ -94,6 +97,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
      .location,
      .partner,
      .date,
+     .age,
      .sessionNumber,
      .boardNumber,
      .vulnerability,
@@ -172,6 +176,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             "Partner"
         case .date:
             "Date"
+        case .age:
+            "Age"
         case .vulnerability:
             "Vul"
         case .eventType:
@@ -185,9 +191,9 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         case .contractSuit:
             "Contract Suit"
         case .contractDouble:
-            "ContractDouble"
+            "Contract Double"
         case .contractRedouble:
-            "ContractRedouble"
+            "Contract Redouble"
         case .made:
             "Made"
         case .contractMade:
@@ -266,6 +272,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
                 .string
         case .date:
                 .string
+        case .age:
+                .numeric
         case .vulnerability:
                 .string
         case .eventType:
@@ -335,12 +343,54 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         }
     }
     
+    var visibility: CalculatedVisibility {
+        switch self {
+        case .calculated(let calculated):
+            calculated.visibility
+        default:
+            switch type {
+            case .numeric:
+                    .both
+            case .boolean:
+                    .both
+            case .string:
+                    .boardOnly
+            }
+        }
+    }
+    
+    var totalType: CalculatedTotalType? {
+        switch self {
+        case .contractDouble:
+            .total
+        case .contractRedouble:
+            .total
+        case .made:
+            .total
+        case .calculated(let calculated):
+            calculated.totalType
+        default:
+            .average
+        }
+    }
+    
     func value<ViewModel: NSObject>(viewModel: ViewModel) throws -> CalculatedValue {
         var value = try insightValue(boardSummary: viewModel as! BoardSummaryViewModel)
         if self.insightType == .percent {
             value.numeric! /= 100
         }
         return value
+    }
+    
+    func totalValue<ViewModel: NSObject>(viewModel: ViewModel) throws -> CalculatedValue {
+        let boardSummary = viewModel as! BoardSummaryViewModel
+        let value = try self.insightValue(boardSummary: boardSummary)
+        switch self {
+        case .compDdMade, .compDdScore, .ddTricks,.totalTricksDd:
+            return CalculatedValue(value.numeric! < 0 ? 0 : value.numeric!)
+        default:
+            return value
+        }
     }
     
     func insightValue(boardSummary: BoardSummaryViewModel) throws -> CalculatedValue {
@@ -359,6 +409,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             return summaryValue(boardSummary.partner!.name.components(separatedBy: " ").first!)
         case .date:
             return summaryValue(Utility.dateString(boardSummary.date, format: "dd/MM/yyyy"))
+        case .age:
+            return summaryValue(todayNumber - DayNumber(from: boardSummary.date))
         case .vulnerability:
             return summaryValue(boardSummary.vulnerability.string)
         case .eventType:
@@ -432,6 +484,15 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         }
     }
     
+    func totalValue(value: Float, count: Int) -> Float {
+        switch totalType {
+        case .average:
+            return value / Float(count)
+        default:
+            return value
+        }
+    } 
+    
     func summaryValue(_ value: Any) -> CalculatedValue {
         switch insightType {
         case .percent:
@@ -454,9 +515,10 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         case .string:
             return value.string!
         case .boolean:
-            return value.boolean! ? "✔️" : ""
+            return value.boolean!.asTick
         case .numeric:
-            if blankIf.evaluate(value: value.numeric!) {
+            let blankIf = blankIf
+            if blankIf != .none && blankIf.evaluate(value: value.numeric!) {
                 return ""
             } else {
                 return value.numeric!.toString(places: decimalPlaces)

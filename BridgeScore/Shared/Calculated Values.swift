@@ -277,7 +277,7 @@ enum CalculatedFunction : String, CaseIterable, Codable {
     }
 }
 
-struct CalculatedValue : Codable {
+struct CalculatedValue : Codable, Equatable {
     var numeric: Float?
     var string: String?
     var boolean: Bool?
@@ -407,9 +407,9 @@ struct CalculatedValue : Codable {
         case .numeric:
             return CalculatedValue(lhs.numeric! < rhs.numeric!)
         case .string:
-            return CalculatedValue(lhs.string! > rhs.string!)
+            return CalculatedValue(lhs.string! < rhs.string!)
         case .boolean:
-            throw CalculatedError.invalidComparisonOperationForType(.lessThan, lhs.type)
+            return CalculatedValue(lhs.boolean! == false && rhs.boolean! == true)
         }
     }
     
@@ -423,7 +423,7 @@ struct CalculatedValue : Codable {
         case .string:
             return CalculatedValue(lhs.string! > rhs.string!)
         case .boolean:
-            throw CalculatedError.invalidComparisonOperationForType(.greaterThan, lhs.type)
+            return CalculatedValue(lhs.boolean! == true && rhs.boolean! == false)
         }
     }
     
@@ -437,7 +437,7 @@ struct CalculatedValue : Codable {
         case .string:
             return CalculatedValue(lhs.string! <= rhs.string!)
         case .boolean:
-            throw CalculatedError.invalidComparisonOperationForType(.lessThanOrEqual, lhs.type)
+            return CalculatedValue(lhs.boolean! == false && rhs.boolean! == true || lhs.boolean! == rhs.boolean!)
         }
     }
     
@@ -451,7 +451,7 @@ struct CalculatedValue : Codable {
         case .string:
             return CalculatedValue(lhs.string! >= rhs.string!)
         case .boolean:
-            throw CalculatedError.invalidComparisonOperationForType(.greaterThanOrEqual, lhs.type)
+            return CalculatedValue(lhs.boolean! == true && rhs.boolean! == false || lhs.boolean! == rhs.boolean!)
         }
     }
     
@@ -618,30 +618,28 @@ indirect enum CalculatedParseNode : Equatable {
         }
     }
     
-    public func traverse(_ calculatedAction: (CalculatedColumn) throws -> ()) throws {
+    public func traverse(_ action: (InsightColumn) throws -> ()) throws {
         switch self {
         case .variable(let variable):
-            if case let .calculated(calculated) = variable {
-                try calculatedAction(calculated)
-            }
+            try action(variable)
         case .binaryOp(let lhs, _, let rhs):
-            try lhs.traverse(calculatedAction)
-            try rhs.traverse(calculatedAction)
+            try lhs.traverse(action)
+            try rhs.traverse(action)
         case .unaryOp( _, let value):
-            try value.traverse(calculatedAction)
+            try value.traverse(action)
         case .logicalOp(let lhs, _, let rhs):
-            try lhs.traverse(calculatedAction)
-            try rhs.traverse(calculatedAction)
+            try lhs.traverse(action)
+            try rhs.traverse(action)
         case .comparisonOp(let lhs, _, let rhs):
-            try lhs.traverse(calculatedAction)
-            try rhs.traverse(calculatedAction)
+            try lhs.traverse(action)
+            try rhs.traverse(action)
         case .ternaryOp(let condition, let ifTrue, let ifFalse):
-            try condition.traverse(calculatedAction)
-            try ifTrue.traverse(calculatedAction)
-            try ifFalse.traverse(calculatedAction)
+            try condition.traverse(action)
+            try ifTrue.traverse(action)
+            try ifFalse.traverse(action)
         case .function(_, let arguments):
             for argument in arguments {
-                try argument.traverse(calculatedAction)
+                try argument.traverse(action)
             }
         default:
             break
@@ -791,6 +789,7 @@ enum CalculatedError: Error {
     case invalidArgumentTypes(CalculatedFunction, CalculatedType?)
     case invalidVariableName(String)
     case divideByZero
+    case errorEvaluatingSelection(String)
     
     var errorDescription: String {
         switch self {
@@ -827,6 +826,8 @@ enum CalculatedError: Error {
             return "Type mismatch for operator \(op.string): \(type.string) found where other expected"
         case .invalidArgumentTypes(let function, let type):
             return "Type mismatch for argument of \(function.string)(): \(type?.string ?? "Other type")) found where \(function.argumentType.string) expected"
+        case .errorEvaluatingSelection(let level):
+            return "Error evaluating selection at \(level)"
         }
     }
 }

@@ -149,7 +149,7 @@ struct InsightsCalculatedColumnView : View {
                             Spacer()
                         }
                         .frame(width: 120)
-                        Picker("Blank If", selection: $editColumn.blankIf) {
+                        Picker("Blank If:", selection: $editColumn.blankIf) {
                             ForEach(CalculatedBlankIf.allCases, id: \.self) { align in
                                 Text(align.string)
                                     .tag(align)
@@ -168,6 +168,52 @@ struct InsightsCalculatedColumnView : View {
                         .frame(width: 120)
                         InputToggle(field: $editColumn.percent, disabled: $notNumeric, width: 80, inlineTitle: false)
                         .frame(width: 80)
+                        Spacer()
+                    }
+                    HStack {
+                        HStack {
+                            Text("Show in:")
+                            Spacer()
+                        }
+                        .frame(width: 120)
+                        Picker("Show in:", selection: $editColumn.visibility) {
+                            ForEach(CalculatedVisibility.allCases, id: \.self) { visibility in
+                                Text(visibility.string)
+                                    .tag(visibility)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(width: 300)
+                        Spacer()
+                    }
+                    Spacer()
+                    HStack {
+                        HStack {
+                            Text("Show as:")
+                            Spacer()
+                        }
+                        .frame(width: 120)
+                        Picker("Show in:", selection: $editColumn.totalType) {
+                            ForEach(CalculatedTotalType.allCases, id: \.self) { totalType in
+                                Text(totalType.string)
+                                    .tag(totalType)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .disabled(!editColumn.visibility.isInTotal)
+                        .frame(width: 300)
+                        Spacer()
+                    }
+                    Spacer()
+                    HStack {
+                        HStack {
+                            Text("Recalculate:")
+                            Spacer()
+                        }
+                        .frame(width: 120)
+                        InputToggle(field: $editColumn.recalculate, disabled: .constant(false), width: 80, inlineTitle: false)
+                        .frame(width: 80)
+                        .disabled(!editColumn.visibility.isInTotal)
                         Spacer()
                     }
                     Spacer()
@@ -259,6 +305,7 @@ struct InsightsCalculatedColumnView : View {
                         errorMessage = "Unknown error: \(error)"
                         resultType = nil
                     }
+                    editColumn.type = resultType ?? .numeric
                 }
             }
         }
@@ -307,7 +354,6 @@ struct InsightsCalculatedColumnView : View {
         cursor += 1
         updateLogic()
         focused = .logic
-        editColumn.objectWillChange.send()
         canSave = !editColumn.name.isEmpty && !editColumn.logic.isEmpty
     }
     
@@ -343,13 +389,15 @@ struct InsightsCalculatedColumnView : View {
         }
     }
     
-    func traverseCalculatedColumn(calculated: CalculatedColumn) throws {
-        if referencedVariables.contains(where: { $0.name == calculated.name }) {
-            throw CalculatedError.circularReference(calculated.title)
-        } else {
-            // Need to carry on going down in this variable's logic
-            referencedVariables.append(calculated)
-            try calculated.traverse(traverseCalculatedColumn)
+    func traverseCalculatedColumn(variable: InsightColumn) throws {
+        if case let .calculated(calculated) = variable {
+            if referencedVariables.contains(where: { $0.name == calculated.name }) {
+                throw CalculatedError.circularReference(calculated.title)
+            } else {
+                // Need to carry on going down in this variable's logic
+                referencedVariables.append(calculated)
+                try calculated.traverse(traverseCalculatedColumn)
+            }
         }
     }
 }

@@ -9,9 +9,9 @@ import CoreData
 
 class Insights {
     
-    static func build() {
+    static func build() async {
         initialise() // TODO Remove
-        let cutoff = cutoff(date: "18/04/2026") // TODO Remove
+        let cutoff = cutoff(date: "01/01/2010") // TODO Remove
         
         let boardMOs = CoreData.fetch(from: BoardMO.tableName) as! [BoardMO]
         for boardMO in boardMOs {
@@ -219,7 +219,7 @@ class Insights {
         }
     }
     
-    static func Load() -> [BoardSummaryExtension] {
+    static func Load() async -> [BoardSummaryExtension] {
         var boardSummaries: [BoardSummaryExtension] = []
         // TODO Remove
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: BoardSummaryMO.tableName)

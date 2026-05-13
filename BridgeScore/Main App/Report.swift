@@ -12,14 +12,14 @@ struct ReportValues: Codable {
     var pinnedColumns: [InsightColumn]
     var unpinnedColumns: [InsightColumn]
     var calculatedColumns: [InsightColumn]
-    var sort: [CalculatedSort]
+    var levels: [CalculatedSortLevel]
     
-    init(viewName: String, pinnedColumns: [InsightColumn], unpinnedColumns: [InsightColumn], calculatedColumns: [InsightColumn], sort: [CalculatedSort] = []) {
+    init(viewName: String = "", pinnedColumns: [InsightColumn], unpinnedColumns: [InsightColumn], calculatedColumns: [InsightColumn] = [], levels: [CalculatedSortLevel] = [CalculatedSortLevel(isBoard: true)]) {
         self.viewName = viewName
         self.pinnedColumns = pinnedColumns
         self.unpinnedColumns = unpinnedColumns
         self.calculatedColumns = calculatedColumns
-        self.sort = sort
+        self.levels = levels
     }
 }
 
@@ -57,8 +57,11 @@ class Report: ObservableObject {
         }
     }
     
-    init(viewName: String = "", pinnedColumns: [InsightColumn] = [], unpinnedColumns: [InsightColumn] = [], calculatedColumns: [InsightColumn] = [], sort: [CalculatedSort] = []) {
-        self.values = ReportValues(viewName: viewName, pinnedColumns: pinnedColumns, unpinnedColumns: unpinnedColumns, calculatedColumns: calculatedColumns, sort: sort)
+    static var parses = 0
+    static var selectionParses = 0
+    
+    init(viewName: String = "", pinnedColumns: [InsightColumn] = [], unpinnedColumns: [InsightColumn] = [], calculatedColumns: [InsightColumn] = [], levels: [CalculatedSortLevel] = [CalculatedSortLevel(isBoard: true)]) {
+        self.values = ReportValues(viewName: viewName, pinnedColumns: pinnedColumns, unpinnedColumns: unpinnedColumns, calculatedColumns: calculatedColumns, levels: levels)
     }
     
     func update(from newValues: ReportValues) {
@@ -66,7 +69,7 @@ class Report: ObservableObject {
         values.pinnedColumns = []
         values.unpinnedColumns = []
         values.calculatedColumns = []
-        values.sort = []
+        values.levels = []
         for column in newValues.pinnedColumns {
             values.pinnedColumns.append(column)
         }
@@ -76,8 +79,56 @@ class Report: ObservableObject {
         for column in newValues.calculatedColumns {
             values.calculatedColumns.append(column)
         }
-        for sort in newValues.sort {
-            values.sort.append(sort)
+        for sort in newValues.levels {
+            values.levels.append(sort)
+        }
+        reset()
+    }
+    
+    var referencedColumns: Set<InsightColumn> {
+        get throws {
+            var result = Set<InsightColumn>()
+            for column in values.pinnedColumns {
+                add(column)
+            }
+            for column in values.unpinnedColumns {
+                add(column)
+            }
+            for column in values.calculatedColumns {
+                add(column)
+                try action(column)
+            }
+            for level in values.levels {
+                if let column = level.key {
+                    add(column)
+                }
+                if !level.selectionLogic.isEmpty {
+                    try level.traverse(action)
+                }
+            }
+            return result
+            
+            func add(_ column: InsightColumn) {
+                result.insert(column)
+            }
+            
+            func action(_ column: InsightColumn) throws -> () {
+                add(column)
+                if case .calculated(let calculated) = column {
+                    try calculated.traverse(action)
+                }
+            }
+        }
+    }
+    
+    func reset() {
+        for column in values.calculatedColumns {
+            if case .calculated(let calculation) = column {
+                calculation.reset()
+            }
+        }
+        for sort in values.levels {
+            sort.reset()
         }
     }
 }
@@ -92,6 +143,9 @@ class CalculatedColumn : Codable, Equatable, Hashable, Identifiable, ObservableO
     var align: CalculatedAlignment = .right
     var blankIf: CalculatedBlankIf = .none
     var percent: Bool = false
+    var visibility: CalculatedVisibility = .both
+    var totalType: CalculatedTotalType = .average
+    var recalculate: Bool = false
     var logic: [CalculatedElement] = []
     
     var tree: CalculatedParseNode?
@@ -106,6 +160,9 @@ class CalculatedColumn : Codable, Equatable, Hashable, Identifiable, ObservableO
         hasher.combine(align)
         hasher.combine(blankIf)
         hasher.combine(percent)
+        hasher.combine(visibility)
+        hasher.combine(totalType)
+        hasher.combine(recalculate)
         hasher.combine(logic)
     }
     
@@ -119,7 +176,15 @@ class CalculatedColumn : Codable, Equatable, Hashable, Identifiable, ObservableO
         case width
         case blankIf
         case percent
+        case visibility
+        case totalType
+        case recalculate
         case logic
+    }
+    
+    func reset() {
+        // Clear parse trees
+        tree = nil
     }
     
     func copy(from: CalculatedColumn) {
@@ -132,19 +197,22 @@ class CalculatedColumn : Codable, Equatable, Hashable, Identifiable, ObservableO
         self.width = from.width
         self.blankIf = from.blankIf
         self.percent = from.percent
+        self.visibility = from.visibility
+        self.totalType = from.totalType
+        self.recalculate = from.recalculate
         self.logic = from.logic
     }
     
     func value<ViewModel>(viewModel: ViewModel, evaluate: @escaping (ViewModel, InsightColumn) throws -> CalculatedValue?) throws -> CalculatedValue {
         prepareTree()
         if let tree = tree {
-            return try tree.value(viewModel: viewModel, variableValue: { column, vm in try evaluate(vm, column) })
+            return try tree.value(viewModel: viewModel, variableValue: { column, viewModel in try evaluate(viewModel, column) })
         } else {
             throw CalculatedError.errorEvaluatingCalculatedColumn(name)
         }
     }
     
-    func traverse(_ calculatedAction: (CalculatedColumn) throws -> ()) throws {
+    func traverse(_ calculatedAction: (InsightColumn) throws -> ()) throws {
         prepareTree()
         if let tree = tree {
             try tree.traverse(calculatedAction)
@@ -158,12 +226,14 @@ class CalculatedColumn : Codable, Equatable, Hashable, Identifiable, ObservableO
             let parser = CalculatedParser(tokens: logic)
             parser.parse() { (tree, message) in
                 self.tree = tree
+                Report.parses += 1
+                print("Calculation parses: \(Report.parses)")
             }
         }
     }
     
     static func == (lhs: CalculatedColumn, rhs: CalculatedColumn) -> Bool {
-        return lhs.id == rhs.id && lhs.title == rhs.title && lhs.name == rhs.name && lhs.type == rhs.type && lhs.decimalPlaces == rhs.decimalPlaces && lhs.align == rhs.align && lhs.width == rhs.width && lhs.blankIf == rhs.blankIf && lhs.percent == rhs.percent && lhs.logic == rhs.logic
+        return lhs.id == rhs.id && lhs.title == rhs.title && lhs.name == rhs.name && lhs.type == rhs.type && lhs.decimalPlaces == rhs.decimalPlaces && lhs.align == rhs.align && lhs.width == rhs.width && lhs.blankIf == rhs.blankIf && lhs.percent == rhs.percent && lhs.visibility == rhs.visibility && lhs.totalType == rhs.totalType && lhs.recalculate == rhs.recalculate && lhs.logic == rhs.logic
     }
 }
 
@@ -220,27 +290,121 @@ enum CalculatedBlankIf : Int, CaseIterable, Codable {
     }
 }
 
-class CalculatedSort : Codable, Equatable, Hashable {
-    var sortKey: InsightColumn?
-    var direction: SortDirection?
-    var subtotal: Bool?
-    var selectionLogic: [CalculatedElement]
+enum CalculatedTotalType: Int, Equatable, Hashable, Codable, CaseIterable {
+    case total = 1
+    case average = 2
     
-    init(sortKey: InsightColumn, selectionLogic: [CalculatedElement] = [], direction: SortDirection = .ascending, subtotal: Bool = false) {
-        self.sortKey = sortKey
-        self.direction = direction
-        self.subtotal = subtotal
-        self.selectionLogic = selectionLogic
+    var string: String {
+        "\(self)".capitalized
+    }
+}
+
+enum CalculatedVisibility : Int, Equatable, Hashable, Codable, CaseIterable {
+    case boardOnly = 1
+    case totalOnly = 2
+    case both = 3
+    case none = 0
+    
+    var string: String {
+        "\(self)".capitalized
+    }
+    var isInTotal: Bool {
+        self == .totalOnly || self == .both
     }
     
-    static func == (lhs: CalculatedSort, rhs: CalculatedSort) -> Bool {
-        lhs.sortKey == rhs.sortKey && lhs.direction == rhs.direction && lhs.subtotal == rhs.subtotal && lhs.selectionLogic == rhs.selectionLogic
+    var isInBoard: Bool {
+        self == .boardOnly || self == .both
+    }
+}
+
+class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had to be a struct to refresh parent view!
+    var id: UUID = UUID()
+    var isBoard: Bool
+    var key: InsightColumn?
+    var direction: SortDirection
+    var subtotal: Bool
+    var selectionLogic: [CalculatedElement]
+    
+    var selectionTree: CalculatedParseNode? { didSet {
+        print("UUID: \(self.id.uuidString), Tree: \(String(describing: selectionTree))")
+    }}
+    
+    func value<ViewModel>(viewModel: ViewModel, level: Int, evaluate: @escaping (ViewModel, InsightColumn) throws -> CalculatedValue?) throws -> Bool {
+        prepareTree()
+        if let tree = selectionTree {
+            let value = try tree.value(viewModel: viewModel, variableValue: { column, viewModel in
+                try evaluate(viewModel, column) })
+            if value.isBoolean, let boolean = value.boolean {
+                return boolean
+            } else {
+                throw CalculatedError.errorEvaluatingSelection(isBoard ? "board level" : "level \(level)")
+            }
+        } else {
+            throw CalculatedError.errorEvaluatingSelection(isBoard ? "board level" : "level \(level)")
+        }
+    }
+    
+    func reset() {
+        // Clear parse trees
+        selectionTree = nil
+    }
+    
+    func prepareTree() {
+        if selectionTree == nil {
+            let parser = CalculatedParser(tokens: selectionLogic)
+            parser.parse() { (tree, message) in
+                self.selectionTree = tree
+                Report.selectionParses += 1
+                print("Selection parses: \(Report.selectionParses)")
+            }
+        }
+    }
+    
+    func traverse(_ action: (InsightColumn) throws -> ()) throws {
+        prepareTree()
+        if let tree = selectionTree {
+            try tree.traverse(action)
+        }
+    }
+    
+    init(isBoard: Bool = false) {
+        self.isBoard = isBoard
+        self.key = nil
+        self.direction = .ascending
+        self.subtotal = false
+        self.selectionLogic = []
+    }
+    
+    func copy(from: CalculatedSortLevel) {
+        self.isBoard = from.isBoard
+        self.key = from.key
+        self.direction = from.direction
+        self.subtotal = from.subtotal
+        self.selectionLogic = from.selectionLogic
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case isBoard
+        case key
+        case direction
+        case subtotal
+        case selectionLogic
     }
     
     func hash(into hasher: inout Hasher) {
-        hasher.combine(sortKey)
+        hasher.combine(isBoard)
+        hasher.combine(key)
         hasher.combine(direction)
         hasher.combine(subtotal)
         hasher.combine(selectionLogic)
     }
+    
+    static func == (lhs: CalculatedSortLevel, rhs: CalculatedSortLevel) -> Bool {
+        return lhs.isBoard == rhs.isBoard && lhs.key == rhs.key && lhs.direction == rhs.direction && lhs.subtotal == rhs.subtotal && lhs.selectionLogic == rhs.selectionLogic
+    }
+    
+    var selectionLogicString: String {
+        selectionLogic.map{$0.string}.joined(separator: "")
+    }
 }
+

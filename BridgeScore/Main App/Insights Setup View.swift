@@ -18,7 +18,7 @@ struct InsightsSetupView : View {
                 Spacer().frame(width: 100)
                 InsightsChooseColumnsView(report: report, data: data)
                 Spacer().frame(width: 100)
-                InsightsSelectionView(report: report)
+                InsightsSortLevelsView(report: report)
                 Spacer()
                 InsightsReportViewStorage(report: report)
                 Spacer().frame(width: 50)
@@ -375,7 +375,7 @@ struct InsightsColumnListView : View {
                         Spacer()
                     }
                     .frame(height: 40)
-                    .palette(.alternate)
+                    .palette(.contrastTile)
                 }
 
             }
