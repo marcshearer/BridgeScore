@@ -13,18 +13,30 @@ struct InsightsCalculatedColumnView : View {
     @Binding var column: CalculatedColumn
     @State var data: BoardSummaryExtension?
     @State var editMode: InsightEditMode
-    
+    @State var duplicateMessage: String = ""
     @State var errorMessage: String = ""
     @State var cursor: Int = 0
     @FocusState fileprivate var focused: EditField?
     @StateObject var editColumn = CalculatedColumn()
-    @State var canSave: Bool = false
+    @State var canSave: Bool = true
     @State var align: CalculatedAlignment = .right
     @State var resultType: CalculatedType?
     @State var notNumeric: Bool = true
     @State var showErrorMessage: Bool = false
+    @State var showDuplicateMessage: Bool = false
     @State var referencedVariables: [CalculatedColumn] = []
     @State var selectedListType: ListType? = nil
+    var calculatedColumns: Binding<[InsightColumn]> { Binding( // Need to exclude this column
+        get: {
+            report.values.calculatedColumns.filter({ matchColumn in
+            if case .calculated(let calculated) = matchColumn {
+                return calculated != column
+            } else {
+                return false
+            }
+        })},
+        set: { _ in  }
+    )}
     
     var body: some View {
         VStack(spacing: 0) {
@@ -38,7 +50,26 @@ struct InsightsCalculatedColumnView : View {
                 }
                 .frame(width: 114)
                 MyTextField(field: $editColumn.title, focused: $focused, focusValue: EditField.description, nextFocusValue: .logic, previousFocusValue: .logic, width: 800, height: 40, cornerRadius: 8, color: .alternate) { _ in
-                    updateName()
+                    checkTitle()
+                }
+                Spacer().frame(width: 20)
+                Text(duplicateMessage)
+                    .foregroundColor(Palette.background.strongText)
+                if duplicateMessage != "" {
+                    Spacer().frame(width: 20)
+                    Button("􀁝")
+                    {
+                        showDuplicateMessage = true
+                    }
+                    .font(inputFont)
+                    .foregroundColor(Palette.background.themeText)
+                    .popover(isPresented: $showDuplicateMessage) {
+                        HStack {
+                            Spacer().frame(width: 50)
+                            Text("Name is created by stripping spaces from the description")
+                            Spacer().frame(width: 50)
+                        }
+                    }
                 }
                 Spacer()
             }
@@ -66,7 +97,7 @@ struct InsightsCalculatedColumnView : View {
                 Spacer().frame(maxWidth: 60)
                 VStack(spacing: 0) {
                     MiddleCentered(height: 60) { Image(systemName: "arrowshape.up").font(bannerFont) }
-                    InsightsColumnListView(report: report, data: data, title: "Calculated columns", columns: $report.values.calculatedColumns, listType: .calculatedColumns, allowDrag: true, selectedListType: $selectedListType, onSelect: variableSelected)
+                    InsightsColumnListView(report: report, data: data, title: "Calculated columns", columns: calculatedColumns, listType: .calculatedColumns, allowDrag: true, selectedListType: $selectedListType, onSelect: variableSelected)
                 }
                 .frame(width: 200)
                 Spacer().frame(maxWidth: 60)
@@ -189,11 +220,11 @@ struct InsightsCalculatedColumnView : View {
                     Spacer()
                     HStack {
                         HStack {
-                            Text("Show as:")
+                            Text("Calculate as:")
                             Spacer()
                         }
                         .frame(width: 120)
-                        Picker("Show in:", selection: $editColumn.totalType) {
+                        Picker("Calculate as:", selection: $editColumn.totalType) {
                             ForEach(CalculatedTotalType.allCases, id: \.self) { totalType in
                                 Text(totalType.string)
                                     .tag(totalType)
@@ -211,7 +242,11 @@ struct InsightsCalculatedColumnView : View {
                             Spacer()
                         }
                         .frame(width: 120)
-                        InputToggle(field: $editColumn.recalculate, disabled: .constant(false), width: 80, inlineTitle: false)
+                        InputToggle(field: $editColumn.recalculate, disabled: .constant(false), width: 80, inlineTitle: false) { _ in
+                            Utility.mainThread {
+                                updateLogic()
+                            }
+                        }
                         .frame(width: 80)
                         .disabled(!editColumn.visibility.isInTotal)
                         Spacer()
@@ -240,23 +275,14 @@ struct InsightsCalculatedColumnView : View {
         }
         .focusable(false)
         .task {
-            Utility.mainThread {
-                editColumn.copy(from: column)
-                updateLogic()
-                focused = .logic
-            }
+            editColumn.copy(from: column)
+            checkTitle()
+            updateLogic()
+            focused = .logic
         }
     }
     
-    func updateName() {
-        let alpha = editColumn.title.filter({ $0.isLetter || $0.isNumber || $0 == " " })
-        var words = alpha.split(separator: " ").map{ String($0.capitalized) }.filter({$0.trim() != ""})
-        editColumn.name = (words.first ?? "").lowercased()
-        if !words.isEmpty {
-            words.removeFirst()
-        }
-        editColumn.name += words.joined(separator: "")
-        
+    func checkTitle() {
         let index = switch editMode {
         case .amend(let amendIndex):
             amendIndex
@@ -269,10 +295,13 @@ struct InsightsCalculatedColumnView : View {
             }
             return nil
         }
-        let duplicates = names.enumerated().count(where: { $1 == editColumn.name && $0 != index })
-        Utility.mainThread {
-            canSave = !editColumn.name.isEmpty && !editColumn.logic.isEmpty && duplicates == 0 && resultType != nil
+        let duplicates = names.enumerated().filter({ $1 == editColumn.name && $0 != index })
+        if duplicates.count > 0 {
+            duplicateMessage = "Duplicate description with '\(report.values.calculatedColumns[duplicates.first!.offset].title)'"
+        } else {
+            duplicateMessage = ""
         }
+        canSave = !editColumn.name.isEmpty && !editColumn.logic.isEmpty && duplicates.count == 0 && resultType != nil
     }
     
     func updateLogic() {
@@ -312,10 +341,27 @@ struct InsightsCalculatedColumnView : View {
         Utility.mainThread {
             canSave = canSave && errorMessage.isEmpty
         }
+        
+        return
+        
+        func traverseCalculatedColumn(variable: InsightColumn) throws {
+            let otherReferencedVariables = referencedVariables.filter({$0 != editColumn})
+            if case let .calculated(calculated) = variable {
+                if otherReferencedVariables.contains(where: { $0.name == calculated.name }) {
+                    throw CalculatedError.circularReference(calculated.title)
+                } else if editColumn.recalculate && otherReferencedVariables.contains(where: { $0.recalculate}) {
+                    throw CalculatedError.recalculatedReferencesRecalculated(otherReferencedVariables.filter({$0.recalculate}).first!.title)
+                } else {
+                    // Need to carry on going down in this variable's logic
+                    referencedVariables.append(calculated)
+                    try calculated.traverse(traverseCalculatedColumn)
+                }
+            }
+        }
     }
     
     func save() {
-        updateName()
+        checkTitle()
         switch editMode {
         case .create:
             report.values.calculatedColumns.append(.calculated(column: editColumn))
@@ -386,18 +432,6 @@ struct InsightsCalculatedColumnView : View {
             }
         } catch {
             return CalculatedValue("ERROR")
-        }
-    }
-    
-    func traverseCalculatedColumn(variable: InsightColumn) throws {
-        if case let .calculated(calculated) = variable {
-            if referencedVariables.contains(where: { $0.name == calculated.name }) {
-                throw CalculatedError.circularReference(calculated.title)
-            } else {
-                // Need to carry on going down in this variable's logic
-                referencedVariables.append(calculated)
-                try calculated.traverse(traverseCalculatedColumn)
-            }
         }
     }
 }

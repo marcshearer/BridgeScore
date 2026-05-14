@@ -257,7 +257,8 @@ struct InsightsView: View {
                             .palette(.background, .theme, clear: true)
                             .frame(width: column.width, height: 18)
                         }
-                        .frame(width: column.width, height: 20)
+                        .frame(width: column.width, height: 40)
+                        .fixedSize()
                     }
                 }
             }
@@ -359,38 +360,45 @@ struct InsightsView: View {
                 let referenced = try report.referencedColumns.filter{$0.visibility != .none && $0.visibility != .boardOnly}
                 
                 // 0 inded is grand total followed by others
-                var totals: [[InsightColumn:(Int,Float)]] = Array(repeating: [:], count: sortDirections.count + 1)
+                var totals: [[InsightColumn:(count: Int, value: Float)]] = Array(repeating: [:], count: sortDirections.count + 1)
                 
                 var inserted = 0
-                for index in 0..<sortIndex.count {
+                for boardIndex in 0..<sortIndex.count {
                     // Check if changed
                     var changed = Array(repeating: false, count: levels.count + 1)
-                    if index > 0 {
+                    if boardIndex > 0 {
                         for levelIndex in 1...sortDirections.count {
                             if levels[levelIndex - 1].subtotal {
                                 if levelIndex >= 2 && changed[levelIndex - 1] {
                                     // Higher level key has changed
                                     changed[levelIndex] = true
-                                } else if sortIndex[index + inserted].keys[levelIndex - 1] != sortIndex[index + inserted - 1].keys[levelIndex - 1] {
+                                } else if sortIndex[boardIndex + inserted].keys[levelIndex - 1] != sortIndex[boardIndex + inserted - 1].keys[levelIndex - 1] {
                                     // This key has changed
                                     changed[levelIndex] = true
                                 }
                             }
                         }
-                    }
-                    // Insert a sub-total and zero the running total if changed
-                    for levelIndex in (1...sortDirections.count).reversed() {
-                        if levels[levelIndex - 1].subtotal {
-                            if changed[levelIndex] {
-                                sortIndex.insert(SortData(totalLevel: levelIndex, keys: sortIndex[index + inserted - 1].keys, totals: totals[levelIndex]), at: index + inserted)
-                                inserted += 1
-                                totals[levelIndex] = [:]
+                        
+                        // Insert a sub-total and zero the running total if changed
+                        let lastIndex = boardIndex + inserted - 1
+                        for levelIndex in (1...sortDirections.count).reversed() {
+                            if levels[levelIndex - 1].subtotal {
+                                if changed[levelIndex] {
+                                    // First check for recalculation
+                                    try recalculate(totals: totals[levelIndex], boardSummary: sortIndex[lastIndex].source! as BoardSummaryExtension) { column, count, value in
+                                        totals[levelIndex][column] = (count, value)
+                                    }
+                                    // Now insert it
+                                    sortIndex.insert(SortData(totalLevel: levelIndex, keys: sortIndex[boardIndex + inserted].keys, source: sortIndex[lastIndex].source! as BoardSummaryExtension, totals: totals[levelIndex]), at: boardIndex + inserted)
+                                    inserted += 1
+                                    totals[levelIndex] = [:]
+                                }
                             }
                         }
                     }
                     // Add current row to totals
                     for column in referenced {
-                        let value = try! column.totalValue(viewModel: sortIndex[index + inserted].source!)
+                        let value = try! column.totalValue(viewModel: sortIndex[boardIndex + inserted].source!)
                         let numeric =
                             if value.isBoolean {
                                 Float(value.boolean! ? 1 : 0)
@@ -406,8 +414,14 @@ struct InsightsView: View {
                     }
                 }
                 // Insert final totals
+                let lastIndex = sortIndex.count - 1
                 for levelIndex in (0...sortDirections.count).reversed() {
                     if levelIndex == 0 || levels[levelIndex - 1].subtotal {
+                        // First check for recalculation
+                        try recalculate(totals: totals[levelIndex], boardSummary: sortIndex[lastIndex].source! as BoardSummaryExtension) { column, count, value in
+                            totals[levelIndex][column] = (count, value)
+                        }
+                        // Now insert it
                         sortIndex.append(SortData(totalLevel: levelIndex, keys: levelIndex == 0 ? [] : sortIndex.last!.keys, totals: totals[levelIndex]))
                     }
                 }
@@ -423,5 +437,40 @@ struct InsightsView: View {
         }
         return errorMessage
     }
+    
+    func recalculate(totals: [InsightColumn:(count: Int, value: Float)], boardSummary: BoardSummaryExtension, update: (InsightColumn, Int, Float)->()) throws {
+        for column in totals.keys {
+            if case .calculated(let calculated) = column {
+                if calculated.recalculate {
+                    let (currentCount, _) = totals[column] ?? (0, 0)
+                    // Need to recalculate - TODO need to change this so that can cascade up recalulated colums that reference each other - or block recalculated referencing other recalculated
+                    if let newValue = try recalculateValue(column: column, boardSummary: boardSummary, totals: totals) {
+                        update(column, currentCount + 1, newValue.numeric!)
+                    } else {
+                        throw CalculatedError.errorEvaluatingCalculatedColumn(column.title)
+                    }
+                }
+            }
+        }
+    }
+    
+    func recalculateValue(column: InsightColumn, boardSummary: BoardSummaryExtension, totals: [InsightColumn:(count: Int, value: Float)]) throws -> CalculatedValue? {
+        var result: CalculatedValue?
+        if case .calculated(let calculated) = column {
+            result = try calculated.value(viewModel: boardSummary, evaluate: recalculateEvaluate)
+        }
+        return result
+        
+        func recalculateEvaluate(boardSummary: BoardSummaryExtension, column: InsightColumn) throws -> CalculatedValue? {
+            // Get value for totals rather than from the view model
+            if let value = totals[column]?.value {
+                return CalculatedValue(value)
+            } else {
+                return try column.insightValue(boardSummary: boardSummary)
+            }
+        }
+    }
+    
+    
 }
 

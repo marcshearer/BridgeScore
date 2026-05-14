@@ -778,6 +778,7 @@ enum CalculatedError: Error {
     case errorEvaluatingCalculatedColumn(String)
     case invalidToken(String)
     case circularReference(String)
+    case recalculatedReferencesRecalculated(String)
     case typeMismatchOperator(CalculatedOperator, CalculatedType, CalculatedType)
     case typeMismatchLogical(CalculatedLogicalOperator, CalculatedType, CalculatedType)
     case typeMismatchComparison(CalculatedComparisonOperator,CalculatedType, CalculatedType)
@@ -804,6 +805,8 @@ enum CalculatedError: Error {
             return "Invalid token: \(token)"
         case .circularReference(let name):
             return "Circular reference to calculated column: '\(name)'"
+        case .recalculatedReferencesRecalculated(let name):
+            return "Recalculated column references another recalculated column: (\(name))"
         case .invalidVariableName(let name):
             return "Invalid variable name \(name)"
         case .divideByZero:

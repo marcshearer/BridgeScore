@@ -345,6 +345,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     
     var visibility: CalculatedVisibility {
         switch self {
+        case .boardIndex, .boardNumber, .sessionNumber:
+            .boardOnly
         case .calculated(let calculated):
             calculated.visibility
         default:

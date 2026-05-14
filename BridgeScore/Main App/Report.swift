@@ -136,7 +136,6 @@ class Report: ObservableObject {
 class CalculatedColumn : Codable, Equatable, Hashable, Identifiable, ObservableObject {
     var id = UUID()
     var title: String = ""
-    var name: String = ""
     var type: CalculatedType = .numeric
     var decimalPlaces: Int = 0
     var width: Int = 80
@@ -148,12 +147,22 @@ class CalculatedColumn : Codable, Equatable, Hashable, Identifiable, ObservableO
     var recalculate: Bool = false
     var logic: [CalculatedElement] = []
     
+    var name: String {
+        var result: String = ""
+        var words = title.split(separator: " ").map{ String($0.capitalized) }.filter({$0.trim() != ""})
+        result = (words.first ?? "").lowercased()
+        if !words.isEmpty {
+            words.removeFirst()
+        }
+        result += words.joined(separator: "")
+        return result
+    }
+    
     var tree: CalculatedParseNode?
     
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
         hasher.combine(title)
-        hasher.combine(name)
         hasher.combine(type)
         hasher.combine(decimalPlaces)
         hasher.combine(width)
@@ -169,7 +178,6 @@ class CalculatedColumn : Codable, Equatable, Hashable, Identifiable, ObservableO
     enum CodingKeys: String, CodingKey {
         case id
         case title
-        case name
         case type
         case decimalPlaces
         case align
@@ -190,7 +198,6 @@ class CalculatedColumn : Codable, Equatable, Hashable, Identifiable, ObservableO
     func copy(from: CalculatedColumn) {
         self.id = from.id
         self.title = from.title
-        self.name = from.name
         self.type = from.type
         self.decimalPlaces = from.decimalPlaces
         self.align = from.align
@@ -233,7 +240,7 @@ class CalculatedColumn : Codable, Equatable, Hashable, Identifiable, ObservableO
     }
     
     static func == (lhs: CalculatedColumn, rhs: CalculatedColumn) -> Bool {
-        return lhs.id == rhs.id && lhs.title == rhs.title && lhs.name == rhs.name && lhs.type == rhs.type && lhs.decimalPlaces == rhs.decimalPlaces && lhs.align == rhs.align && lhs.width == rhs.width && lhs.blankIf == rhs.blankIf && lhs.percent == rhs.percent && lhs.visibility == rhs.visibility && lhs.totalType == rhs.totalType && lhs.recalculate == rhs.recalculate && lhs.logic == rhs.logic
+        return lhs.id == rhs.id && lhs.title == rhs.title && lhs.type == rhs.type && lhs.decimalPlaces == rhs.decimalPlaces && lhs.align == rhs.align && lhs.width == rhs.width && lhs.blankIf == rhs.blankIf && lhs.percent == rhs.percent && lhs.visibility == rhs.visibility && lhs.totalType == rhs.totalType && lhs.recalculate == rhs.recalculate && lhs.logic == rhs.logic
     }
 }
 

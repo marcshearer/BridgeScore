@@ -48,10 +48,13 @@ struct InputToggle : View {
                 }
                 Spacer()
                 UndoWrapper(field) { field in
-                    Toggle(isOn: field) {
-                        Text(text ?? "")
-                            .font(inputFont)
-                    }
+                    Toggle("", isOn: Binding(
+                        get: { self.field.wrappedValue },
+                        set: { newValue in
+                            self.field.wrappedValue = newValue
+                            onChange?(newValue)
+                        }
+                    ))
                     .focusable(false)
                     .fixedSize()
                     .scaleEffect(0.8)
@@ -59,9 +62,6 @@ struct InputToggle : View {
                 }
                 .if(labelWidth != nil) { (view) in
                     view.frame(width: labelWidth! + 55)
-                }
-                .onChange(of: field.wrappedValue, initial: false) {
-                    onChange?(field.wrappedValue)
                 }
                 Spacer().frame(width: 16)
             }
