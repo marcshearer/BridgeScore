@@ -25,8 +25,7 @@ struct CalculatedValuesView<Focus> : View where Focus : Hashable {
                 .foregroundColor(PaletteColor(color).background)
                 .cornerRadius(8)
             VStack {
-                Spacer().frame(height: 8)
-                Spacer()
+                Spacer().frame(height: 15)
                 HStack {
                     Spacer().frame(width: 4)
                     KeyDetectorView(processKey: processKey, focused: $focused, focusValue: focusValue, nextFocusValue: nextFocusValue, previousFocusValue: previousFocusValue)
@@ -105,7 +104,6 @@ struct CalculatedValuesView<Focus> : View where Focus : Hashable {
                 cursor = logic.count
                 literalCursor = nil
             }
-            .frame(height: 60)
             .dropDestination(for: InsightsSetupTransfer.self) { (droppedValues, _) in
                 return handleDrop(droppedValues, cursor)
             }

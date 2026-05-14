@@ -68,7 +68,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     case levelType
     case totalTricks
     case totalTricksDd
-    case passout(pairType: PairType)
+    case passout
     case partScore(pairType: PairType)
     case game(pairType: PairType)
     case smallSlam(pairType: PairType)
@@ -96,12 +96,12 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         .contractDouble,
         .contractRedouble,
         .age,
-        .passout(pairType: .we),
+        .passout,
         .partScore(pairType: .we),
         .game(pairType: .we),
         .smallSlam(pairType: .we),
         .grandSlam(pairType: .we),
-        .passout(pairType: .they),
+        .passout,
         .partScore(pairType: .they),
         .game(pairType: .they),
         .smallSlam(pairType: .they),
@@ -144,12 +144,11 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
      .modeTricks(pairType: .they),
      .ddTricks(pairType: .they),
      .fit(pairType: .they),
-     .passout(pairType: .we),
+     .passout,
      .partScore(pairType: .we),
      .game(pairType: .we),
      .smallSlam(pairType: .we),
      .grandSlam(pairType: .we),
-     .passout(pairType: .they),
      .partScore(pairType: .they),
      .game(pairType: .they),
      .smallSlam(pairType: .they),
@@ -380,7 +379,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         case .totalTricksDd:
                 .numeric
         case .passout, .partScore, .game, .smallSlam, .grandSlam:
-                .numeric
+                .percent
         case .calculated(let column):
             InsightColumnType(columnType: column.type, percent: column.percent)
         }
@@ -676,7 +675,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     
     var blankIf: CalculatedBlankIf {
         switch self {
-        case .sessionNumber, .contractLevel, .score, .fieldSize , .gameOdds, .slamOdds, .compDdScore, .compMakeScore, .compMakeOdds, .medianTricks, .modeTricks, .ddTricks, .fit, .points, .totalTricks, .totalTricksDd:
+        case .sessionNumber, .contractLevel, .score, .fieldSize , .gameOdds, .slamOdds, .compDdScore, .compMakeScore, .compMakeOdds, .medianTricks, .modeTricks, .ddTricks, .fit, .points, .totalTricks, .totalTricksDd, .passout, .partScore, .game, .smallSlam, .grandSlam:
             .zero
         case .calculated(let calculated):
             calculated.blankIf

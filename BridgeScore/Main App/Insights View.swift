@@ -366,7 +366,7 @@ struct InsightsView: View {
                 for boardIndex in 0..<sortIndex.count {
                     // Check if changed
                     var changed = Array(repeating: false, count: levels.count + 1)
-                    if boardIndex > 0 {
+                    if boardIndex > 0 && !sortDirections.isEmpty {
                         for levelIndex in 1...sortDirections.count {
                             if levels[levelIndex - 1].subtotal {
                                 if levelIndex >= 2 && changed[levelIndex - 1] {

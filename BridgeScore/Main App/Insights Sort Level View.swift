@@ -55,10 +55,7 @@ struct InsightsSortLevelsView : View {
                     HStack {
                         Spacer().frame(width: 20)
                         Button {
-                            if let index = report.values.levels.firstIndex(where: {$0 == selected!}) {
-                                sortLevel = report.values.levels[index]
-                                showSortLevel = ShowSortLevel(index: index, editMode: .amend(index: index))
-                            }
+                            editSortLevel(selected!)
                         } label: {
                             Text("Edit")
                         }
@@ -106,6 +103,13 @@ struct InsightsSortLevelsView : View {
         }
     }
     
+    func editSortLevel(_ column: CalculatedSortLevel) {
+        if let index = report.values.levels.firstIndex(where: {$0 == column}) {
+            sortLevel = report.values.levels[index]
+            showSortLevel = ShowSortLevel(index: index, editMode: .amend(index: index))
+        }
+    }
+    
     func gridRow(level: String, key: String = "", direction: String = "", subtotal: String = "", logic: String) -> some View {
         HStack(spacing: 0) {
             CenteredText(level).frame(width: 120)
@@ -134,6 +138,10 @@ struct InsightsSortLevelsView : View {
         .onTapGesture {
             selected = level
         }
+        .onTapGesture(count: 2) {
+            selected = level
+            editSortLevel(level)
+        }
     }
 }
 
@@ -161,7 +169,7 @@ struct InsightsSortLevelView : View {
     
     var body: some View {
         VStack(spacing: 0) {
-            Banner(title: Binding.constant("\(editMode.string.capitalized) Calculated Value"), alternateColor: true)
+            Banner(title: Binding.constant("\(editMode.string.capitalized) \(sortLevel.isBoard ? "Board Selection" : "Sort Level \(index)")"), alternateColor: true)
             Spacer().frame(height: 40)
             if !editSortLevel.isBoard {
                 HStack {
@@ -170,7 +178,7 @@ struct InsightsSortLevelView : View {
                         Text("Sort column:")
                         Spacer()
                     }
-                    .frame(width: 120)
+                    .frame(width: 200)
                     HStack {
                         Spacer().frame(width: 8)
                         Text(editSortLevel.key?.title ?? "")
@@ -193,7 +201,7 @@ struct InsightsSortLevelView : View {
                         Text("Sort Direction:")
                         Spacer()
                     }
-                    .frame(width: 120)
+                    .frame(width: 200)
                     Picker("Sort Direction", selection: $editSortLevel.direction) {
                         ForEach(SortDirection.allCases, id: \.self) { align in
                             Text(align.string)
@@ -211,23 +219,30 @@ struct InsightsSortLevelView : View {
                         Text("Sub-total:")
                         Spacer()
                     }
-                    .frame(width: 120)
-                    InputToggle(field: $editSortLevel.subtotal, disabled: Binding.constant(false), width: 80, inlineTitle: false)
-                        .frame(width: 80)
+                    .frame(width: 200)
+                    InputToggle(field: $editSortLevel.subtotal, disabled: Binding.constant(false), width: 80, inlineTitle: false) { _ in
+                        if !editSortLevel.subtotal {
+                            editSortLevel.selectionLogic = []
+                            updateLogic()
+                        }
+                    }
+                        .frame(width: 40)
                     Spacer()
                 }
-                Spacer().frame(height: 30)
+                Spacer().frame(height: 15)
             }
             HStack {
                 Spacer().frame(width: 40)
                 HStack(spacing: 0) {
-                    Text("Logic:")
+                    Text("\(sortLevel.isBoard ? "Board" : "Subtotal") selection logic:")
                     Spacer()
                 }
-                .frame(width: 120)
+                .frame(width: 200)
                 CalculatedValuesView(logic: $editSortLevel.selectionLogic, cursor: $cursor, focused: $focused, focusValue: .selectionLogic,  nextFocusValue: .sortKey, previousFocusValue: .sortKey, color: .alternate) {
                     updateLogic()
                 }
+                .disabled(!editSortLevel.subtotal)
+                .opacity(editSortLevel.subtotal ? 1 : 0.3)
                 HStack {
                     Spacer().frame(width: 20)
                     if editSortLevel.isBoard {
@@ -363,27 +378,31 @@ struct InsightsSortLevelView : View {
         }
     }
     
-    
-    
     func variableSelected(selected: InsightColumn) {
-        editSortLevel.selectionLogic.insert(.variable(selected), at: cursor)
-        cursor += 1
-        updateLogic()
-        focused = .selectionLogic
+        if editSortLevel.subtotal {
+            editSortLevel.selectionLogic.insert(.variable(selected), at: cursor)
+            cursor += 1
+            updateLogic()
+            focused = .selectionLogic
+        }
     }
     
     func calculatedVariableSelected(selected: CalculatedColumn) {
-        editSortLevel.selectionLogic.insert(.calculatedVariable(selected), at: cursor)
-        cursor += 1
-        updateLogic()
-        focused = .selectionLogic
+        if editSortLevel.subtotal {
+            editSortLevel.selectionLogic.insert(.calculatedVariable(selected), at: cursor)
+            cursor += 1
+            updateLogic()
+            focused = .selectionLogic
+        }
     }
     
     func functionSelected(selected: CalculatedFunction) {
-        editSortLevel.selectionLogic.insert(contentsOf: [.function(selected), .bracket(.open), .bracket(.close)], at: cursor)
-        cursor += 2
-        updateLogic()
-        focused = .selectionLogic
+        if editSortLevel.subtotal {
+            editSortLevel.selectionLogic.insert(contentsOf: [.function(selected), .bracket(.open), .bracket(.close)], at: cursor)
+            cursor += 2
+            updateLogic()
+            focused = .selectionLogic
+        }
     }
     
     func variableType(variable: InsightColumn) throws -> CalculatedType? {

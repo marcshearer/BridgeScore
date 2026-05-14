@@ -127,6 +127,7 @@ struct InsightsReportViewStorageLoadDialog: View {
                                                 .frame(width: 80)
                                                 .foregroundColor(Palette.background.faintText)
                                         }
+                                        .frame(minWidth: 200)
                                         .contentShape(Rectangle())
                                         .frame(height: 30)
                                         .palette(loadUrl == url ? .alternate : .clear)
@@ -134,6 +135,10 @@ struct InsightsReportViewStorageLoadDialog: View {
                                     }
                                     .onTapGesture {
                                         loadUrl = url
+                                    }
+                                    .onTapGesture(count: 2) {
+                                        loadUrl = url
+                                        loadUrl(url: loadUrl!)
                                     }
                                 }
                             }
@@ -152,8 +157,7 @@ struct InsightsReportViewStorageLoadDialog: View {
                     .keyboardShortcut(.cancelAction)
                     Spacer().frame(width: 50)
                     InsightsSetupButton(text: "Load") {
-                        InsightsReportViewStorage.load(report: report, from: loadUrl!)
-                        forceDismiss()
+                        loadUrl(url: loadUrl!)
                     }
                     .disabled(loadUrl == nil)
                 }
@@ -163,6 +167,11 @@ struct InsightsReportViewStorageLoadDialog: View {
         .onAppear {
             files = InsightsReportViewStorage.loadFileList()
         }
+    }
+    
+    func loadUrl(url: URL) {
+        InsightsReportViewStorage.load(report: report, from: url)
+        forceDismiss()
     }
 }
 
@@ -209,6 +218,7 @@ struct InsightsReportViewStorageSaveDialog: View {
                                                     .frame(width: 80)
                                                     .foregroundColor(Palette.background.faintText)
                                             }
+                                            .frame(minWidth: 200)
                                             .contentShape(Rectangle())
                                             .frame(height: 30)
                                             .palette(saveUrl == url ? .alternate : .clear)
@@ -217,6 +227,12 @@ struct InsightsReportViewStorageSaveDialog: View {
                                         .onTapGesture {
                                             saveUrl = url
                                             filename = url.deletingPathExtension().lastPathComponent
+                                        }
+                                        .onTapGesture(count: 2) {
+                                            saveUrl = url
+                                            filename = url.deletingPathExtension().lastPathComponent
+                                            saveUrl(url: saveUrl!)
+                                            
                                         }
                                     }
                                 }
@@ -245,12 +261,7 @@ struct InsightsReportViewStorageSaveDialog: View {
                         Spacer().frame(width: 50)
                         InsightsSetupButton(text: "Save") {
                             MessageBox.shared.show("View already exists!", if: filename != report.values.viewName && files.contains(saveUrl!), cancelText: "Cancel", okText: "Overwrite", okDestructive: true, okAction: {
-                                report.values.viewName = filename
-                                InsightsReportViewStorage.save(report: report, to: saveUrl!)
-                                if saveAsDefault {
-                                    UserDefault.defaultViewName.set(filename)
-                                }
-                                forceDismiss()
+                                saveUrl(url: saveUrl!)
                             })
                         }
                         .disabled(saveUrl == nil)
@@ -263,6 +274,15 @@ struct InsightsReportViewStorageSaveDialog: View {
             files = InsightsReportViewStorage.loadFileList()
             filename = report.values.viewName
         }
+    }
+    
+    func saveUrl(url: URL) {
+        report.values.viewName = filename
+        InsightsReportViewStorage.save(report: report, to: saveUrl!)
+        if saveAsDefault {
+            UserDefault.defaultViewName.set(filename)
+        }
+        forceDismiss()
     }
 }
 

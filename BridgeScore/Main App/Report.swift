@@ -411,7 +411,7 @@ class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had 
     }
     
     var selectionLogicString: String {
-        selectionLogic.map{$0.string}.joined(separator: "")
+        selectionLogic.map{$0.string}.joined(separator: " ")
     }
 }
 

@@ -275,20 +275,21 @@ struct InsightsColumnListView : View {
                                     }
                                 }
                             ForEach(0..<columns.count, id: \.self) { index in
-                                let column = $columns[index]
+                                let wrappedColumn = $columns[index]
+                                let showColumn = wrappedColumn.wrappedValue
                                 GridRow {
                                     VStack(spacing: 0) {
                                         HStack {
                                             Spacer()
-                                            Text(column.wrappedValue.title)
+                                            Text(showColumn.title)
                                             Spacer()
                                         }
                                         .frame(width: 200, height: 24)
-                                        .palette(selected == column.wrappedValue ? .filterTile : .tile)
+                                        .palette(selected == showColumn ? .filterTile : .tile)
                                         .if(specificDrop) { view in
                                             view.dropDestination(for: String.self) { _, _ in return false } // Exclude drop
                                         }
-                                        .draggable(InsightsSetupTransfer(source: listType, column: column.wrappedValue))
+                                        .draggable(InsightsSetupTransfer(source: listType, column: showColumn))
                                         .overlay(alignment: .top) {
                                             VStack(spacing: 0) {
                                                 Spacer().frame(width: 200, height: 16)
@@ -299,20 +300,17 @@ struct InsightsColumnListView : View {
                                             .offset(y: 8)
                                             .if(specificDrop && onDropReceived != nil) { view in
                                                 view.dropDestination(for: InsightsSetupTransfer.self) { droppedColumns, _ in
-                                                    return onDropReceived!(listType, droppedColumns, column.wrappedValue)
+                                                    return onDropReceived!(listType, droppedColumns, showColumn)
                                                 }
                                             }
                                         }
                                     }
                                 }
                                 .onTapGesture {
-                                    if let onSelect = onSelect {
-                                        onSelect(column.wrappedValue)
-                                        selected = nil
-                                    } else if allowSelect {
-                                        selected = column.wrappedValue
-                                        selectedListType.wrappedValue = listType
-                                    }
+                                    tapHandler(column: showColumn)
+                                }
+                                .onTapGesture(count: 2) {
+                                    tapHandler(column: showColumn, count: 2)
                                 }
                             }
                         }
@@ -334,16 +332,7 @@ struct InsightsColumnListView : View {
                         Spacer().frame(width: 20)
                         if showEdit {
                             Button {
-                                switch selected {
-                                case .calculated(column: let calculated):
-                                    if let index = columns.firstIndex(where: { $0 == selected! }) {
-                                        editMode = .amend(index: index)
-                                        column = calculated
-                                        showCalculatedColumn = true
-                                    }
-                                default:
-                                    break
-                                }
+                                editCalculated(selected!)
                             } label: {
                                 Text("Edit")
                             }
@@ -377,12 +366,12 @@ struct InsightsColumnListView : View {
                     .frame(height: 40)
                     .palette(.contrastTile)
                 }
-
+                
             }
             .onChange(of: $columns.count) {
                 // Check selected hasn't been removed
                 if selected != nil && !columns.contains(selected!) {
-                   selected = nil
+                    selected = nil
                 }
             }
             .onChange(of: selectedListType.wrappedValue) {
@@ -404,6 +393,30 @@ struct InsightsColumnListView : View {
             .cornerRadius(8)
         }
         .frame(width: 200)
+    }
+    
+    func tapHandler(column: InsightColumn, count: Int = 1) {
+        if showEdit && count == 2 {
+            editCalculated(column)
+        } else if let onSelect = onSelect {
+            onSelect(column)
+            selected = nil
+        } else if allowSelect {
+            selected = column
+            selectedListType.wrappedValue = listType
+        }
+    }
+    
+    func editCalculated(_ column: InsightColumn) {
+        switch column {
+        case .calculated(column: let calculated):
+            if let index = columns.firstIndex(where: { $0 == column }) {
+                editMode = .amend(index: index)
+                self.column = calculated
+                showCalculatedColumn = true
+            }
+        default: break
+        }
     }
 }
 
