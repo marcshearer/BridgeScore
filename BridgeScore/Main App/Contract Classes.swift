@@ -484,6 +484,14 @@ public class Contract: Equatable, Comparable, Hashable {
         return contract
     }
     
+    public var suitType: SuitType {
+        suit.suitType
+    }
+    
+    public var levelType: LevelType {
+        LevelType(level: level, suit: suit)
+    }
+    
     public var compact: String {
         switch level {
         case .blank:

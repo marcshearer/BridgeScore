@@ -41,10 +41,13 @@ public class BoardSummaryViewModel : NSObject, ObservableObject, Identifiable {
     @Published public var ddTricks: [PairType:Int] = [:]
     @Published public var fit: [PairType:Int] = [:]
     @Published public var points: [SeatPlayer:Int] = [:]
-    @Published public var suitType: SuitType = .noTrumps
-    @Published public var levelType: LevelType = .passout
     @Published public var totalTricks: Int = 0
     @Published public var totalTricksDd: Int = 0
+    @Published public var passout: Int = 0
+    @Published public var partScore: [PairType:Int] = [:]
+    @Published public var game: [PairType:Int] = [:]
+    @Published public var smallSlam: [PairType:Int] = [:]
+    @Published public var grandSlam: [PairType:Int] = [:]
     
     public var id: (UUID, Int) { (self.scorecard.id, self.boardIndex) }
     public var isCompetitive: Bool { self.compContract.isValid }
@@ -103,10 +106,17 @@ public class BoardSummaryViewModel : NSObject, ObservableObject, Identifiable {
                 self.fit[.we] != mo.fitWe ||
                 self.fit[.they] != mo.fitThey ||
                 self.points != mo.points ||
-                self.suitType != mo.suitType ||
-                self.levelType != mo.levelType ||
                 self.totalTricks != mo.totalTricks ||
-                self.totalTricksDd != mo.totalTricksDd {
+                self.totalTricksDd != mo.totalTricksDd ||
+                self.passout != mo.passout ||
+                self.partScore[.we] != mo.partScoreWe ||
+                self.game[.we] != mo.gameWe ||
+                self.smallSlam[.we] != mo.smallSlamWe ||
+                self.grandSlam[.we] != mo.grandSlamWe ||
+                self.partScore[.they] != mo.partScoreThey ||
+                self.game[.they] != mo.gameThey ||
+                self.smallSlam[.they] != mo.smallSlamThey ||
+                self.grandSlam[.they] != mo.grandSlamThey {
                 result = true
             }
         }
@@ -157,10 +167,17 @@ public class BoardSummaryViewModel : NSObject, ObservableObject, Identifiable {
             self.fit[.we] = mo.fitWe
             self.fit[.they] = mo.fitThey
             self.points = mo.points
-            self.suitType = mo.suitType
-            self.levelType = mo.levelType
             self.totalTricks = mo.totalTricks
             self.totalTricksDd = mo.totalTricksDd
+            self.passout = mo.passout
+            self.partScore[.we] = mo.partScoreWe
+            self.game[.we] = mo.gameWe
+            self.smallSlam[.we] = mo.smallSlamWe
+            self.grandSlam[.we] = mo.grandSlamWe
+            self.partScore[.they] = mo.partScoreThey
+            self.game[.they] = mo.gameThey
+            self.smallSlam[.they] = mo.smallSlamThey
+            self.grandSlam[.they] = mo.grandSlamThey
         }
     }
     
@@ -206,10 +223,19 @@ public class BoardSummaryViewModel : NSObject, ObservableObject, Identifiable {
             mo.fitWe = fit[.we] ?? 0
             mo.fitThey = fit[.they] ?? 0
             mo.points = points
-            mo.suitType = suitType
-            mo.levelType = levelType
             mo.totalTricks = totalTricks
             mo.totalTricksDd = totalTricksDd
+            mo.passout = passout
+            mo.partScoreWe = partScore[.we] ?? 0
+            mo.gameWe = game[.we] ?? 0
+            mo.smallSlamWe = smallSlam[.we] ?? 0
+            mo.grandSlamWe = grandSlam[.we] ?? 0
+            mo.partScoreThey = partScore[.they] ?? 0
+            mo.gameThey = game[.they] ?? 0
+            mo.smallSlamThey = smallSlam[.they] ?? 0
+            mo.grandSlamThey = grandSlam[.they] ?? 0
+            
+            
         } else {
             fatalError("No managed object")
         }

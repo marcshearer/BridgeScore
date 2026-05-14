@@ -46,6 +46,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     case contractMade
     case made
     case declarer
+    case declarerPair
     case score
     case fieldSize
     case gameOdds
@@ -67,6 +68,11 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     case levelType
     case totalTricks
     case totalTricksDd
+    case passout(pairType: PairType)
+    case partScore(pairType: PairType)
+    case game(pairType: PairType)
+    case smallSlam(pairType: PairType)
+    case grandSlam(pairType: PairType)
     case calculated(column: CalculatedColumn)
     
     static var transferRepresentation: some TransferRepresentation {
@@ -89,7 +95,17 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         .contractSuit,
         .contractDouble,
         .contractRedouble,
-        .age
+        .age,
+        .passout(pairType: .we),
+        .partScore(pairType: .we),
+        .game(pairType: .we),
+        .smallSlam(pairType: .we),
+        .grandSlam(pairType: .we),
+        .passout(pairType: .they),
+        .partScore(pairType: .they),
+        .game(pairType: .they),
+        .smallSlam(pairType: .they),
+        .grandSlam(pairType: .they)
     ]
     
     static let allColumns: [InsightColumn] =
@@ -111,6 +127,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
      .made,
      .contractMade,
      .declarer,
+     .declarerPair,
      .score,
      .fieldSize,
      .gameOdds,
@@ -127,6 +144,16 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
      .modeTricks(pairType: .they),
      .ddTricks(pairType: .they),
      .fit(pairType: .they),
+     .passout(pairType: .we),
+     .partScore(pairType: .we),
+     .game(pairType: .we),
+     .smallSlam(pairType: .we),
+     .grandSlam(pairType: .we),
+     .passout(pairType: .they),
+     .partScore(pairType: .they),
+     .game(pairType: .they),
+     .smallSlam(pairType: .they),
+     .grandSlam(pairType: .they),
      .points(seatPlayer: .player),
      .points(seatPlayer: .partner),
      .points(seatPlayer: .lhOpponent),
@@ -150,7 +177,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             result = start
         }
         switch self {
-        case .suit(let pairType), .declare(let pairType), .medianTricks(let pairType), .modeTricks(let pairType), .ddTricks(let pairType), .fit(let pairType):
+        case .suit(let pairType), .declare(let pairType), .medianTricks(let pairType), .modeTricks(let pairType), .ddTricks(let pairType), .fit(let pairType), .partScore(let pairType), .game(let pairType), .smallSlam(let pairType), .grandSlam(let pairType):
             result += pairType.string
         case .points(let seatPlayer):
             result += seatPlayer.suffix
@@ -200,6 +227,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             "Contract / Made"
         case .declarer:
             "By"
+        case .declarerPair:
+            "By Pair"
         case .score:
             "Score"
         case .fieldSize:
@@ -244,6 +273,16 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             "Total Tricks DD"
         case .calculated(let column):
             column.title
+        case .passout:
+            "Passout"
+        case .partScore(let seatPlayer):
+            "\(seatPlayer.string) Part Score"
+        case .game(let seatPlayer):
+            "\(seatPlayer.string) Game"
+        case .smallSlam(let seatPlayer):
+            "\(seatPlayer.string) Small Slam"
+        case .grandSlam(let seatPlayer):
+            "\(seatPlayer.string) Grand Slam"
         }
     }
     
@@ -296,6 +335,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
                 .string
         case .declarer:
                 .string
+        case .declarerPair:
+                .string
         case .score:
                 .numeric
         case .fieldSize:
@@ -337,6 +378,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         case .totalTricks:
                 .numeric
         case .totalTricksDd:
+                .numeric
+        case .passout, .partScore, .game, .smallSlam, .grandSlam:
                 .numeric
         case .calculated(let column):
             InsightColumnType(columnType: column.type, percent: column.percent)
@@ -432,6 +475,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         case .contractMade:
             return summaryValue(boardSummary.contract.compact + " " + Scorecard.madeString(made: boardSummary.made ?? 0))
         case .declarer:
+            return summaryValue(boardSummary.declarer.simple)
+        case .declarerPair:
             return summaryValue(boardSummary.declarer.pairType.string)
         case .made:
             return summaryValue(boardSummary.made ?? 0)
@@ -470,13 +515,23 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         case .points(let seatPlayer):
             return summaryValue(boardSummary.points[seatPlayer]!)
         case .suitType:
-            return summaryValue(boardSummary.suitType.string)
+            return summaryValue(boardSummary.contract.suitType.string)
         case .levelType:
-            return summaryValue(boardSummary.levelType.string)
+            return summaryValue(boardSummary.contract.levelType.string)
         case .totalTricks:
             return summaryValue(boardSummary.totalTricks)
         case .totalTricksDd:
             return summaryValue(boardSummary.ddTricks[.we]! < 0 || boardSummary.ddTricks[.they]! < 0 ? 0 : boardSummary.totalTricksDd)
+        case .passout:
+            return summaryValue(boardSummary.passout)
+        case .partScore(let pairType):
+            return summaryValue(boardSummary.partScore[pairType]!)
+        case .game(let pairType):
+            return summaryValue(boardSummary.game[pairType]!)
+        case .smallSlam(let pairType):
+            return summaryValue(boardSummary.smallSlam[pairType]!)
+        case .grandSlam(let pairType):
+            return summaryValue(boardSummary.grandSlam[pairType]!)
         case .calculated(let column):
             do {
                 return try column.value(viewModel: boardSummary, evaluate: recurseValue)

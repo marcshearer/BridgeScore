@@ -198,6 +198,19 @@ public enum SeatPlayer: Int, Codable, CaseIterable {
             ""
         }
     }
+    
+    var simple: String {
+        switch self {
+        case .player:
+            "Self"
+        case .partner:
+            "Partner"
+        case .lhOpponent, .rhOpponent:
+            "They"
+        default:
+            ""
+        }
+    }
 }
 
 public enum PairType: Int, Codable, CaseIterable {
@@ -267,13 +280,20 @@ public enum LevelType: Int {
     case passout
     case partScore
     case game
-    case slam
+    case smallSlam
+    case grandSlam
+    
+    var slam: Bool {
+        self == .smallSlam || self == .grandSlam
+    }
     
     init(level: ContractLevel, suit: Suit) {
         if level == .passout {
             self = .passout
-        } else if level == ContractLevel.smallSlam || level == ContractLevel.grandSlam {
-            self = .slam
+        } else if level == ContractLevel.smallSlam {
+            self = .smallSlam
+        } else if level == ContractLevel.grandSlam {
+            self = .grandSlam
         } else {
             let gameTricks = SuitType(suit: suit).gameTricks
             if level.tricks >= gameTricks {

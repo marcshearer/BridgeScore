@@ -56,12 +56,19 @@ public class BoardSummaryMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var pointsPartner16: Int16 ; @IntProperty(\BoardSummaryMO.pointsPartner16) public var pointsPartner: Int
     @NSManaged public var pointsLhOpponent16: Int16 ; @IntProperty(\BoardSummaryMO.pointsLhOpponent16) public var pointsLhOpponent: Int
     @NSManaged public var pointsRhOpponent16: Int16 ; @IntProperty(\BoardSummaryMO.pointsRhOpponent16) public var pointsRhOpponent: Int
-    @NSManaged public var suitType16: Int16 ; @EnumProperty(\BoardSummaryMO.suitType16) public var suitType: SuitType
-    @NSManaged public var level16: Int16 ; @EnumProperty(\BoardSummaryMO.level16) public var levelType: LevelType
     @NSManaged public var fitWe16: Int16 ; @IntProperty(\BoardSummaryMO.fitWe16) public var fitWe: Int
     @NSManaged public var fitThey16: Int16 ; @IntProperty(\BoardSummaryMO.fitThey16) public var fitThey: Int
     @NSManaged public var totalTricks16: Int16 ; @IntProperty(\BoardSummaryMO.totalTricks16) public var totalTricks: Int
     @NSManaged public var totalTricksDd16: Int16 ; @IntProperty(\BoardSummaryMO.totalTricksDd16) public var totalTricksDd: Int
+    @NSManaged public var passout16: Int16 ; @IntProperty(\BoardSummaryMO.passout16) public var passout: Int
+    @NSManaged public var partScoreWe16: Int16 ; @IntProperty(\BoardSummaryMO.partScoreWe16) public var partScoreWe: Int
+    @NSManaged public var gameWe16: Int16 ; @IntProperty(\BoardSummaryMO.gameWe16) public var gameWe: Int
+    @NSManaged public var smallSlamWe16: Int16 ; @IntProperty(\BoardSummaryMO.smallSlamWe16) public var smallSlamWe: Int
+    @NSManaged public var grandSlamWe16: Int16 ; @IntProperty(\BoardSummaryMO.grandSlamWe16) public var grandSlamWe: Int
+    @NSManaged public var partScoreThey16: Int16 ; @IntProperty(\BoardSummaryMO.partScoreThey16) public var partScoreThey: Int
+    @NSManaged public var gameThey16: Int16 ; @IntProperty(\BoardSummaryMO.gameThey16) public var gameThey: Int
+    @NSManaged public var smallSlamThey16: Int16 ; @IntProperty(\BoardSummaryMO.smallSlamThey16) public var smallSlamThey: Int
+    @NSManaged public var grandSlamThey16: Int16 ; @IntProperty(\BoardSummaryMO.grandSlamThey16) public var grandSlamThey: Int
     
     convenience init() {
         self.init(context: CoreData.context)

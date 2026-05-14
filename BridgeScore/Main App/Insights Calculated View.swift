@@ -198,7 +198,7 @@ struct InsightsCalculatedColumnView : View {
                         }
                         .frame(width: 120)
                         InputToggle(field: $editColumn.percent, disabled: $notNumeric, width: 80, inlineTitle: false)
-                        .frame(width: 80)
+                        .frame(width: 60)
                         Spacer()
                     }
                     HStack {
@@ -247,7 +247,7 @@ struct InsightsCalculatedColumnView : View {
                                 updateLogic()
                             }
                         }
-                        .frame(width: 80)
+                        .frame(width: 60)
                         .disabled(!editColumn.visibility.isInTotal)
                         Spacer()
                     }

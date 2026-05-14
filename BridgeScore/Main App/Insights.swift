@@ -41,10 +41,12 @@ class Insights {
                         
                         // Load travellers
                         let travellerMOs = CoreData.fetch(from: TravellerMO.tableName, filter: boardFilter) as! [TravellerMO]
+                        var allTravellers: [TravellerViewModel] = []
                         var travellers: [TravellerViewModel] = []
                         var excluded = false
                         for travellerMO in travellerMOs {
                             let traveller = TravellerViewModel(scorecard: scorecard, travellerMO: travellerMO)
+                            allTravellers.append(traveller)
                             if !excluded && traveller.contract == board.contract && traveller.made == board.made && traveller.declarer == board.declarer {
                                 // Exclude one with same results as board assuming it is us
                                 excluded = true
@@ -68,7 +70,7 @@ class Insights {
                         }
                         
                         // Got everything - Build the board summary and save it
-                        buildBoardSummary(boardSummary: boardSummary, scorecard: scorecard, board: board, table: table, travellers: travellers, doubleDummys: doubleDummys)
+                        buildBoardSummary(boardSummary: boardSummary, scorecard: scorecard, board: board, table: table, travellers: travellers, allTravellers: allTravellers, doubleDummys: doubleDummys)
                         
                         if boardSummary.isNew || boardSummary.changed {
                             boardSummary.save()
@@ -79,7 +81,7 @@ class Insights {
         }
     }
     
-    static func buildBoardSummary(boardSummary: BoardSummaryViewModel, scorecard: ScorecardViewModel, board: BoardViewModel, table: TableViewModel, travellers:  [TravellerViewModel], doubleDummys: [SeatPlayer:[Suit:DoubleDummyViewModel]]) {
+    static func buildBoardSummary(boardSummary: BoardSummaryViewModel, scorecard: ScorecardViewModel, board: BoardViewModel, table: TableViewModel, travellers:  [TravellerViewModel], allTravellers:  [TravellerViewModel], doubleDummys: [SeatPlayer:[Suit:DoubleDummyViewModel]]) {
         
         boardSummary.partner = scorecard.partner
         boardSummary.location = scorecard.location
@@ -95,8 +97,6 @@ class Insights {
         boardSummary.made = board.made
         boardSummary.score = Int(board.score ?? 0)
         boardSummary.fieldSize = travellers.count + 1
-        boardSummary.suitType = SuitType(suit: board.contract.suit)
-        boardSummary.levelType = LevelType(level: board.contract.level, suit: board.contract.suit)
         
         var suitTravellers: [PairType:[TravellerViewModel]] = [:]
         var suitTricks: [PairType: [Int]] = [:]
@@ -116,14 +116,23 @@ class Insights {
                 boardSummary.medianTricks[pairType] = median(in: suitTricks[pairType]!) ?? -1
                 boardSummary.modeTricks[pairType] = mode(in: suitTricks[pairType]!) ?? -1
                 boardSummary.ddTricks[pairType] = doubleDummys[pairType.seatPlayers.first!]?[suit]?.tricks ?? -1
+                
+                let allDeclareTravellers = allTravellers.filter({$0.declarer.pair == match})
+                boardSummary.partScore[pairType] = Int(allDeclareTravellers.filter({$0.contract.levelType == .partScore}).count * 100 / allTravellers.count)
+                boardSummary.game[pairType] = Int(allDeclareTravellers.filter({$0.contract.levelType == .game}).count * 100 / allTravellers.count)
+                boardSummary.smallSlam[pairType] = Int(allDeclareTravellers.filter({$0.contract.levelType == .smallSlam}).count * 100 / allTravellers.count)
+                boardSummary.grandSlam[pairType] = Int(allDeclareTravellers.filter({$0.contract.levelType == .grandSlam}).count * 100 / allTravellers.count)
             }
+            let passoutTravellers = allTravellers.filter({$0.contract.levelType == .passout})
+            boardSummary.passout = Int(passoutTravellers.count * 100 / allTravellers.count)
+            
             // Consider competition
             boardSummary.compContract = Contract()
             boardSummary.compDeclarer = .unknown
             boardSummary.compDdMade = nil
             boardSummary.compMakeOdds = 0
             boardSummary.compDdScore = 0
-            if boardSummary.declare[.we]! >= 20 && boardSummary.declare[.they]! >= 20 && boardSummary.suit[.we] != .noTrumps && boardSummary.levelType == .partScore {
+            if boardSummary.declare[.we]! >= 20 && boardSummary.declare[.they]! >= 20 && boardSummary.suit[.we] != .noTrumps && boardSummary.contract.levelType == .partScore {
                 // Competitive auction where we have a suit
                 if boardSummary.declarer.pairType == .we && (board.made ?? 1) < 0 {
                     // We went off - consider not competing - assume they are in 1 less of their suit

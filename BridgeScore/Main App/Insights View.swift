@@ -257,7 +257,7 @@ struct InsightsView: View {
                             .palette(.background, .theme, clear: true)
                             .frame(width: column.width, height: 18)
                         }
-                        .frame(width: column.width, height: 40)
+                        .frame(width: column.width, height: 20)
                         .fixedSize()
                     }
                 }
@@ -398,7 +398,7 @@ struct InsightsView: View {
                     }
                     // Add current row to totals
                     for column in referenced {
-                        let value = try! column.totalValue(viewModel: sortIndex[boardIndex + inserted].source!)
+                        let value = try column.totalValue(viewModel: sortIndex[boardIndex + inserted].source!)
                         let numeric =
                             if value.isBoolean {
                                 Float(value.boolean! ? 1 : 0)
@@ -443,7 +443,6 @@ struct InsightsView: View {
             if case .calculated(let calculated) = column {
                 if calculated.recalculate {
                     let (currentCount, _) = totals[column] ?? (0, 0)
-                    // Need to recalculate - TODO need to change this so that can cascade up recalulated colums that reference each other - or block recalculated referencing other recalculated
                     if let newValue = try recalculateValue(column: column, boardSummary: boardSummary, totals: totals) {
                         update(column, currentCount + 1, newValue.numeric!)
                     } else {
