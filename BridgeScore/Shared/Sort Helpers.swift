@@ -5,13 +5,13 @@
 //  Created by Marc Shearer on 12/05/2026.
 //
 
-class SortData<ViewModel> {
+class SortData<ViewModel,Value:Comparable> {
     var totalLevel: Int?
     var keys: [CalculatedValue]
     var source: ViewModel?
-    var totals: [InsightColumn:(Int,Float)] = [:] // (Count, Total)
+    var totals: [InsightColumn:Value] = [:] // (Count, Total)
     
-    init(totalLevel: Int? = nil, keys: [CalculatedValue], source: ViewModel? = nil, totals: [InsightColumn:(Int, Float)] = [:]) {
+    init(totalLevel: Int? = nil, keys: [CalculatedValue], source: ViewModel? = nil, totals: [InsightColumn:Value] = [:]) {
         self.totalLevel = totalLevel
         self.keys = keys
         self.source = source
@@ -21,7 +21,7 @@ class SortData<ViewModel> {
 
 class SortIndex {
     
-    public static func sort<ViewModel>(_ first: SortData<ViewModel>, _ second: SortData<ViewModel>, directions: [SortDirection]) throws -> Bool {
+    public static func sort<ViewModel,Value:Comparable>(_ first: SortData<ViewModel,Value>, _ second: SortData<ViewModel,Value>, directions: [SortDirection]) throws -> Bool {
         assert(first.keys.count == directions.count && second.keys.count == directions.count, "Inconsistent sort data")
         var result = false
         for key in 0..<directions.count {

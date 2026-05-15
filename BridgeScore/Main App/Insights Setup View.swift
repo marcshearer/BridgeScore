@@ -10,7 +10,6 @@ import SwiftUI
 struct InsightsSetupView : View {
     @ObservedObject var report: Report
     @State var data: BoardSummaryExtension?
-    @Binding var editMode: Bool
     
     var body: some View {
         VStack(spacing: 0) {

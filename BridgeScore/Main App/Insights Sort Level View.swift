@@ -64,7 +64,7 @@ struct InsightsSortLevelsView : View {
                         .disabled(selected == nil)
                         Button {
                             if let index = (selected == nil ? report.values.levels.count - 1 : report.values.levels.firstIndex(where: {$0 == selected!})) {
-                                sortLevel = CalculatedSortLevel(isBoard: false)
+                                sortLevel = CalculatedSortLevel()
                                 showSortLevel = ShowSortLevel(index: index + 1, editMode: .create)
                             }
                         } label: {
@@ -220,12 +220,7 @@ struct InsightsSortLevelView : View {
                         Spacer()
                     }
                     .frame(width: 200)
-                    InputToggle(field: $editSortLevel.subtotal, disabled: Binding.constant(false), width: 80, inlineTitle: false) { _ in
-                        if !editSortLevel.subtotal {
-                            editSortLevel.selectionLogic = []
-                            updateLogic()
-                        }
-                    }
+                    InputToggle(field: $editSortLevel.subtotal, disabled: Binding.constant(false), width: 80, inlineTitle: false)
                         .frame(width: 40)
                     Spacer()
                 }
@@ -241,7 +236,6 @@ struct InsightsSortLevelView : View {
                 CalculatedValuesView(logic: $editSortLevel.selectionLogic, cursor: $cursor, focused: $focused, focusValue: .selectionLogic,  nextFocusValue: .sortKey, previousFocusValue: .sortKey, color: .alternate) {
                     updateLogic()
                 }
-                .disabled(!editSortLevel.subtotal)
                 .opacity(editSortLevel.subtotal ? 1 : 0.3)
                 HStack {
                     Spacer().frame(width: 20)

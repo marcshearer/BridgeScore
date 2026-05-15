@@ -411,22 +411,28 @@ class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had 
     var subtotal: Bool
     var selectionLogic: [CalculatedElement]
     
-    var selectionTree: CalculatedParseNode? { didSet {
-        print("UUID: \(self.id.uuidString), Tree: \(String(describing: selectionTree))")
-    }}
+    var selectionTree: CalculatedParseNode?
+    
+    var isTotalling: Bool {
+        !isBoard && (subtotal || !selectionLogic.isEmpty)
+    }
     
     func value<ViewModel>(report: Report, viewModel: ViewModel, level: Int, evaluate: @escaping (ViewModel, InsightColumn) throws -> CalculatedValue?) throws -> Bool {
-        prepareTree(report: report)
-        if let tree = selectionTree {
-            let value = try tree.value(viewModel: viewModel, variableValue: { column, viewModel in
-                try evaluate(viewModel, column) })
-            if value.isBoolean, let boolean = value.boolean {
-                return boolean
+        if selectionLogic.isEmpty {
+            return true
+        } else {
+            prepareTree(report: report)
+            if let tree = selectionTree {
+                let value = try tree.value(viewModel: viewModel, variableValue: { column, viewModel in
+                    try evaluate(viewModel, column) })
+                if value.isBoolean, let boolean = value.boolean {
+                    return boolean
+                } else {
+                    throw CalculatedError.errorEvaluatingSelection(isBoard ? "board level" : "level \(level)")
+                }
             } else {
                 throw CalculatedError.errorEvaluatingSelection(isBoard ? "board level" : "level \(level)")
             }
-        } else {
-            throw CalculatedError.errorEvaluatingSelection(isBoard ? "board level" : "level \(level)")
         }
     }
     
