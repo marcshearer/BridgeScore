@@ -961,7 +961,7 @@ class CalculatedParser {
         } else if case .variable(let variable) = current {
             // Variable
             nextSymbol()
-            // Important - This variable is a stale copy from the logic of the parent - need to get the latest
+            // Important - This variable may be a stale copy from the logic of the parent - need to get the latest
             var variable = variable
             if variable.isCalculated {
                 if let calculated = report.values.calculatedColumns.first(where: {$0.name == variable.name}) {

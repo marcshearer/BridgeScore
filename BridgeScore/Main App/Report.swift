@@ -64,7 +64,7 @@ class Report: ObservableObject {
         self.values = ReportValues(viewName: viewName, pinnedColumns: pinnedColumns, unpinnedColumns: unpinnedColumns, calculatedColumns: calculatedColumns, levels: levels)
     }
     
-    func update(from newValues: ReportValues) {
+    func update(from newValues: ReportValues) throws {
         values.viewName = newValues.viewName
         values.pinnedColumns = []
         values.unpinnedColumns = []
@@ -82,7 +82,7 @@ class Report: ObservableObject {
         for sort in newValues.levels {
             values.levels.append(sort)
         }
-        reset()
+        try refresh()
     }
     
     var referencedColumns: Set<InsightColumn> {
@@ -163,14 +163,14 @@ class Report: ObservableObject {
         return recalculationIndexes
     }
     
-    func reset() {
+    func refresh() throws {
         for column in values.calculatedColumns {
             if case .calculated(let calculation) = column {
-                calculation.reset()
+                try calculation.refresh(report: self)
             }
         }
         for sort in values.levels {
-            sort.reset()
+            try sort.refresh(report: self)
         }
     }
 }
@@ -233,9 +233,21 @@ class CalculatedColumn : Codable, Equatable, Hashable, Identifiable, ObservableO
         case logic
     }
     
-    func reset() {
+    func refresh(report: Report) throws {
         // Clear parse trees
         tree = nil
+        // Update potentially stale references in logic
+        for (index, logic) in self.logic.enumerated() {
+            if case .variable(let column) = logic {
+                if case .calculated = column {
+                    if let freshColumn = report.values.calculatedColumns.first(where: {$0.name == column.name}) {
+                        self.logic[index] = .variable(freshColumn)
+                    } else {
+                        throw CalculatedError.invalidVariableName(column.name)
+                    }
+                }
+            }
+        }
     }
     
     func copy(from: CalculatedColumn) {
@@ -418,9 +430,31 @@ class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had 
         }
     }
     
-    func reset() {
+    func refresh(report: Report) throws {
         // Clear parse trees
         selectionTree = nil
+        for (index, logic) in self.selectionLogic.enumerated() {
+            // Update potentially stale references in logic
+            if case .variable(let column) = logic {
+                if case .calculated = column {
+                    if let freshColumn = report.values.calculatedColumns.first(where: {$0.name == column.name}) {
+                        self.selectionLogic[index] = .variable(freshColumn)
+                    } else {
+                        throw CalculatedError.invalidVariableName(column.name)
+                    }
+                }
+            }
+        }
+        // Update potentially stale reference in sort key
+        if let key = key {
+            if case .calculated = key {
+                if let freshColumn = report.values.calculatedColumns.first(where: {$0.name == key.name}) {
+                    self.key = freshColumn
+                } else {
+                    throw CalculatedError.invalidVariableName(key.name)
+                }
+            }
+        }
     }
     
     func prepareTree(report: Report) {

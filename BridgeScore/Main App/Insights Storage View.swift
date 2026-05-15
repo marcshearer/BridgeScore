@@ -59,6 +59,7 @@ struct InsightsReportViewStorage : View {
     static func save(report: Report, to fileUrl: URL) -> Bool {
         var result = true
         do {
+            try report.refresh()
             let data = try JSONEncoder().encode(report.values)
             try data.write(to: fileUrl, options: .atomic)
         } catch {
@@ -71,11 +72,11 @@ struct InsightsReportViewStorage : View {
         var result = true
         do {
             let values = try JSONDecoder().decode(ReportValues.self, from: Data(contentsOf: fileUrl))
-            report.update(from: values)
+            try report.update(from: values)
         } catch {
             result = false
         }
-        return result
+        return result // TODO Need to handle returned FALSE
     }
     
     static func remove(at fileUrl: URL) {

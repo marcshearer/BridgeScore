@@ -114,7 +114,11 @@ struct InsightsView: View {
     func loadDefaultView() {
         let defaultUrl = InsightsReportViewStorage.url(for: UserDefault.defaultViewName.string)
         if !InsightsReportViewStorage.load(report: report, from: defaultUrl) {
-            report.update(from: ReportValues(pinnedColumns: InsightColumn.defaultPinnedColumns, unpinnedColumns: InsightColumn.defaultColumns))
+            do {
+                try report.update(from: ReportValues(pinnedColumns: InsightColumn.defaultPinnedColumns, unpinnedColumns: InsightColumn.defaultColumns))
+            } catch {
+                // Just ignore for now
+            }
         }
     }
     func loadData() async {
@@ -331,16 +335,15 @@ struct InsightsView: View {
     func reload() -> String? {
         var recalculationIndexes: [String:Int] = [:]
         var totals: [[InsightColumn:(count: Int, value: Float)]] = []
-        
-        // Clear cached parses
-        report.reset()
-        
-        // Filter at bottom level
-        boardSummaries = allBoardSummaries.filter({selectRow(boardSummary: $0)})
-        
         var errorMessage: String? = nil
         let levels = report.values.levels.filter({!$0.isBoard})
+        
         do {
+            try report.refresh()
+            
+            // Filter at bottom level
+            boardSummaries = allBoardSummaries.filter({selectRow(boardSummary: $0)})
+            
             // Generate recalculation indexes to work out sequence to recalculate totals in
             recalculationIndexes = try report.generateRecalculationIndexes()
             
