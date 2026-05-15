@@ -19,7 +19,7 @@ class ScrollSync<ID: Hashable & CaseIterable> : ObservableObject {
         }
     }
     
-    @ViewBuilder func scrollView<Content: View>(showsIndicators: Bool = false, id: ID, @ViewBuilder content: @escaping () -> Content) -> some View {
+    @ViewBuilder func horizontalScrollView<Content: View>(showsIndicators: Bool = false, id: ID, @ViewBuilder content: @escaping () -> Content) -> some View {
         
         ScrollView(.horizontal, showsIndicators: showsIndicators) {
             content()
@@ -64,6 +64,58 @@ class ScrollSync<ID: Hashable & CaseIterable> : ObservableObject {
                         }
                     }
                     lastOffset[id] = value.location.x
+                    self.objectWillChange.send()
+                }
+                .onEnded { [self] _ in
+                    lastOffset[id] = nil
+                })
+    }
+    
+    @ViewBuilder func verticalScrollView<Content: View>(showsIndicators: Bool = false, id: ID, @ViewBuilder content: @escaping () -> Content) -> some View {
+        
+        ScrollView(.vertical, showsIndicators: showsIndicators) {
+            content()
+                .scrollTargetLayout()
+        }
+        .onScrollPhaseChange { [self] (_, newPhase) in
+            if newPhase != .idle {
+                activeId = id
+            } else if newPhase == .idle {
+                activeId = nil
+            }
+        }
+        .onScrollGeometryChange(for: CGFloat.self) { geometry in
+            geometry.contentSize.height - geometry.containerSize.height
+        } action: { [self] (_, newMaxScroll) in
+            maxScroll = newMaxScroll
+        }
+        .onScrollGeometryChange(for: CGFloat.self) { geometry in
+            geometry.contentOffset.y
+        } action: { [self] (_, newOffset) in
+            if activeId == id {
+                let newPosition = ScrollPosition(point: CGPoint(x: 0, y: newOffset))
+                for index in position.keys {
+                    if index != id {
+                        position[index]! = newPosition
+                        self.objectWillChange.send()
+                    }
+                }
+            }
+        }
+        .scrollPosition(binding(for: id))
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { [self] value in
+                    lastOffset[id] = lastOffset[id] ?? value.startLocation.y
+                    let newY = min(maxScroll, max(0, position[id]!.point!.y + lastOffset[id]! - value.location.y))
+                    let newPosition = ScrollPosition(point: CGPoint(x: 0, y: newY ))
+                    position[id] = newPosition
+                    for index in position.keys {
+                        if index != id {
+                            position[index] = newPosition
+                        }
+                    }
+                    lastOffset[id] = value.location.y
                     self.objectWillChange.send()
                 }
                 .onEnded { [self] _ in

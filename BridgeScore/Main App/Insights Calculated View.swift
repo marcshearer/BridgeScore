@@ -306,7 +306,7 @@ struct InsightsCalculatedColumnView : View {
     
     func updateLogic() {
         canSave = !editColumn.name.isEmpty && !editColumn.logic.isEmpty
-        let parser = CalculatedParser(tokens: editColumn.logic)
+        let parser = CalculatedParser(report: report, tokens: editColumn.logic)
         resultType = nil
         notNumeric = true
         errorMessage = ""
@@ -349,12 +349,10 @@ struct InsightsCalculatedColumnView : View {
             if case let .calculated(calculated) = variable {
                 if otherReferencedVariables.contains(where: { $0.name == calculated.name }) {
                     throw CalculatedError.circularReference(calculated.title)
-                } else if editColumn.recalculate && otherReferencedVariables.contains(where: { $0.recalculate}) {
-                    throw CalculatedError.recalculatedReferencesRecalculated(otherReferencedVariables.filter({$0.recalculate}).first!.title)
                 } else {
                     // Need to carry on going down in this variable's logic
                     referencedVariables.append(calculated)
-                    try calculated.traverse(traverseCalculatedColumn)
+                    try calculated.traverse(report, traverseCalculatedColumn)
                 }
             }
         }
@@ -426,7 +424,7 @@ struct InsightsCalculatedColumnView : View {
     func variableValue<ViewModel>(column: InsightColumn, viewModel: ViewModel) throws -> CalculatedValue? {
         do {
             if let data = data {
-                return try column.value(viewModel: data)
+                return try column.value(report: report, viewModel: data)
             } else {
                 return nil
             }

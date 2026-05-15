@@ -45,7 +45,7 @@ struct InsightsView: View {
                                 Spacer().frame(width: 10)
                                 headerView(columns: report.values.pinnedColumns)
                                 Spacer().frame(width: 20)
-                                scrollSync.scrollView(id: .heading) {
+                                scrollSync.horizontalScrollView(id: .heading) {
                                     headerView(columns: report.values.unpinnedColumns)
                                 }
                                 Spacer().frame(width: 10)
@@ -64,7 +64,7 @@ struct InsightsView: View {
                                         Spacer().frame(width: 20)
                                     }
                                     .palette(.alternate)
-                                    scrollSync.scrollView(showsIndicators: false, id: .data) {
+                                    scrollSync.horizontalScrollView(showsIndicators: false, id: .data) {
                                         LazyVStack(alignment: .leading, spacing: 0) {
                                             ForEach(0..<rowIndex.count, id: \.self) { index in
                                                 rowView(data: rowIndex[index], columns: report.values.unpinnedColumns)
@@ -81,7 +81,7 @@ struct InsightsView: View {
                                     Spacer().frame(width: 20)
                                 }
                                 .palette(.alternate)
-                                scrollSync.scrollView(showsIndicators: true, id: .scrollIndicator) {
+                                scrollSync.horizontalScrollView(showsIndicators: true, id: .scrollIndicator) {
                                     spacerView(columns: report.values.unpinnedColumns)
                                 }
                                 Spacer().frame(width: 10)
@@ -212,7 +212,7 @@ struct InsightsView: View {
                                 Spacer()
                             }
                             if column.visibility.isInBoard {
-                                Text(column.textValue(boardSummary: boardSummary))
+                                Text(column.textValue(report: report, boardSummary: boardSummary))
                             } else {
                                 Text("")
                             }
@@ -270,7 +270,7 @@ struct InsightsView: View {
         let selections = report.values.levels.filter({$0.isBoard})
         for index in 0..<selections.count {
             do {
-                if try !selections[index].value(viewModel: boardSummary, level: 0, evaluate: evaluateColumn) {
+                if try !selections[index].value(report: report, viewModel: boardSummary, level: 0, evaluate: evaluateColumn) {
                     show = false
                 }
             } catch {
@@ -281,7 +281,7 @@ struct InsightsView: View {
     }
     
     func evaluateColumn(boardSummary: BoardSummaryViewModel, column: InsightColumn) throws -> CalculatedValue? {
-        return try column.insightValue(boardSummary: boardSummary)
+        return try column.insightValue(report: report, boardSummary: boardSummary)
     }
     
     func spacerView(columns: [InsightColumn]) -> some View {
@@ -329,6 +329,9 @@ struct InsightsView: View {
     }
     
     func reload() -> String? {
+        var recalculationIndexes: [String:Int] = [:]
+        var totals: [[InsightColumn:(count: Int, value: Float)]] = []
+        
         // Clear cached parses
         report.reset()
         
@@ -338,29 +341,33 @@ struct InsightsView: View {
         var errorMessage: String? = nil
         let levels = report.values.levels.filter({!$0.isBoard})
         do {
+            // Generate recalculation indexes to work out sequence to recalculate totals in
+            recalculationIndexes = try report.generateRecalculationIndexes()
+            
             // Build sort index
             var sortIndex: [SortData<BoardSummaryExtension>] = []
             for boardSummary in boardSummaries {
                 var sortKeys: [CalculatedValue] = []
                 for level in levels {
-                    let value = try level.key!.value(viewModel: boardSummary)
+                    let value = try level.key!.value(report: report, viewModel: boardSummary)
                     sortKeys.append(value)
                 }
                 sortIndex.append(SortData(keys: sortKeys, source: boardSummary))
             }
+            
             if !sortIndex.isEmpty {
-                var sortDirections: [SortDirection] = []
-                for level in levels {
-                    sortDirections.append(level.direction)
-                }
+                // Execute the sort
+                let sortDirections: [SortDirection] = levels.map{$0.direction}
                 if !sortDirections.isEmpty {
                     try sortIndex.sort(by: { try SortIndex.sort($0, $1, directions: sortDirections)})
                 }
                 // Build totals and sub-totals
                 let referenced = try report.referencedColumns.filter{$0.visibility != .none && $0.visibility != .boardOnly}
                 
-                // 0 inded is grand total followed by others
-                var totals: [[InsightColumn:(count: Int, value: Float)]] = Array(repeating: [:], count: sortDirections.count + 1)
+                // 0 index is grand total followed by others
+                for _ in 0...sortDirections.count {
+                    totals.append([:])
+                }
                 
                 var inserted = 0
                 for boardIndex in 0..<sortIndex.count {
@@ -385,7 +392,7 @@ struct InsightsView: View {
                             if levels[levelIndex - 1].subtotal {
                                 if changed[levelIndex] {
                                     // First check for recalculation
-                                    try recalculate(totals: totals[levelIndex], boardSummary: sortIndex[lastIndex].source! as BoardSummaryExtension) { column, count, value in
+                                    try recalculate(levelIndex: levelIndex, boardSummary: sortIndex[lastIndex].source! as BoardSummaryExtension) { column, count, value in
                                         totals[levelIndex][column] = (count, value)
                                     }
                                     // Now insert it
@@ -398,13 +405,13 @@ struct InsightsView: View {
                     }
                     // Add current row to totals
                     for column in referenced {
-                        let value = try column.totalValue(viewModel: sortIndex[boardIndex + inserted].source!)
+                        let value = try column.totalValue(report: report, viewModel: sortIndex[boardIndex + inserted].source!)
                         let numeric =
-                            if value.isBoolean {
-                                Float(value.boolean! ? 1 : 0)
-                            } else {
-                                value.numeric!
-                            }
+                        if value.isBoolean {
+                            Float(value.boolean! ? 1 : 0)
+                        } else {
+                            value.numeric!
+                        }
                         for levelIndex in 0...sortDirections.count {
                             if levelIndex == 0 || levels[levelIndex - 1].subtotal {
                                 let (currentCount, currentTotal) = totals[levelIndex][column] ?? (0, 0)
@@ -418,7 +425,7 @@ struct InsightsView: View {
                 for levelIndex in (0...sortDirections.count).reversed() {
                     if levelIndex == 0 || levels[levelIndex - 1].subtotal {
                         // First check for recalculation
-                        try recalculate(totals: totals[levelIndex], boardSummary: sortIndex[lastIndex].source! as BoardSummaryExtension) { column, count, value in
+                        try recalculate(levelIndex: levelIndex, boardSummary: sortIndex[lastIndex].source! as BoardSummaryExtension) { column, count, value in
                             totals[levelIndex][column] = (count, value)
                         }
                         // Now insert it
@@ -436,40 +443,37 @@ struct InsightsView: View {
             MessageBox.shared.show(errorMessage)
         }
         return errorMessage
-    }
-    
-    func recalculate(totals: [InsightColumn:(count: Int, value: Float)], boardSummary: BoardSummaryExtension, update: (InsightColumn, Int, Float)->()) throws {
-        for column in totals.keys {
-            if case .calculated(let calculated) = column {
-                if calculated.recalculate {
-                    let (currentCount, _) = totals[column] ?? (0, 0)
-                    if let newValue = try recalculateValue(column: column, boardSummary: boardSummary, totals: totals) {
-                        update(column, currentCount + 1, newValue.numeric!)
-                    } else {
-                        throw CalculatedError.errorEvaluatingCalculatedColumn(column.title)
+        
+        func recalculate(levelIndex: Int, boardSummary: BoardSummaryExtension, update: (InsightColumn, Int, Float)->()) throws {
+            for column in totals[levelIndex].keys.sorted(by: { (recalculationIndexes[$0.name] ?? 0) < (recalculationIndexes[$1.name] ?? 0)}) {
+                if case .calculated(let calculated) = column {
+                    if calculated.recalculate {
+                        let (currentCount, _) = totals[levelIndex][column] ?? (0, 0)
+                        if let newValue = try recalculateValue(levelIndex: levelIndex, column: column, boardSummary: boardSummary) {
+                            update(column, currentCount, newValue.numeric!)
+                        } else {
+                            throw CalculatedError.errorEvaluatingCalculatedColumn(column.title)
+                        }
                     }
                 }
             }
         }
-    }
-    
-    func recalculateValue(column: InsightColumn, boardSummary: BoardSummaryExtension, totals: [InsightColumn:(count: Int, value: Float)]) throws -> CalculatedValue? {
-        var result: CalculatedValue?
-        if case .calculated(let calculated) = column {
-            result = try calculated.value(viewModel: boardSummary, evaluate: recalculateEvaluate)
-        }
-        return result
-        
-        func recalculateEvaluate(boardSummary: BoardSummaryExtension, column: InsightColumn) throws -> CalculatedValue? {
-            // Get value for totals rather than from the view model
-            if let value = totals[column]?.value {
-                return CalculatedValue(value)
-            } else {
-                return try column.insightValue(boardSummary: boardSummary)
+        func recalculateValue(levelIndex: Int, column: InsightColumn, boardSummary: BoardSummaryExtension) throws -> CalculatedValue? {
+            var result: CalculatedValue?
+            if case .calculated(let calculated) = column {
+                result = try calculated.value(report: report, viewModel: boardSummary, evaluate: recalculateEvaluate)
+            }
+            return result
+            
+            func recalculateEvaluate(report: Report, boardSummary: BoardSummaryExtension, column: InsightColumn) throws -> CalculatedValue? {
+                // Get value for totals rather than from the view model
+                if let value = totals[levelIndex][column]?.value {
+                    return CalculatedValue(value)
+                } else {
+                    return try column.insightValue(report: report, boardSummary: boardSummary)
+                }
             }
         }
     }
-    
-    
 }
 

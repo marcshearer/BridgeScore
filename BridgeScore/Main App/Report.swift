@@ -103,7 +103,7 @@ class Report: ObservableObject {
                     add(column)
                 }
                 if !level.selectionLogic.isEmpty {
-                    try level.traverse(action)
+                    try level.traverse(self, action)
                 }
             }
             return result
@@ -115,10 +115,52 @@ class Report: ObservableObject {
             func action(_ column: InsightColumn) throws -> () {
                 add(column)
                 if case .calculated(let calculated) = column {
-                    try calculated.traverse(action)
+                    try calculated.traverse(self, action)
                 }
             }
         }
+    }
+    
+    func generateRecalculationIndexes() throws -> [String: Int] {
+        // Note that although these are put back into the reports values, the old values will
+        // be cached in parse trees etc and those valuese will be stale. Much better to use the return dictionary
+        
+        // Set all to 1 and generate referenced columns for each
+        var referencedColumns: [InsightColumn:Set<InsightColumn>] = [:]
+        var recalculationIndexes: [String: Int] = [:]
+        var index = 1
+        for calculatedColumn in values.calculatedColumns {
+            if case .calculated(let calculation) = calculatedColumn {
+                recalculationIndexes[calculatedColumn.name] = index
+            }
+            referencedColumns[calculatedColumn] = try CalculatedColumn.referencedColumns(report: self, column: calculatedColumn)
+        }
+        // Now iterate round increasing the index if they reference columns at the same level
+        var finished = false
+        repeat {
+            finished = true
+            index += 1
+            for calculatedColumn in values.calculatedColumns {
+                if case .calculated(let calculation) = calculatedColumn {
+                    for reference in referencedColumns[calculatedColumn]! {
+                        if case .calculated(let referenceCalculation) = reference {
+                            if recalculationIndexes[referenceCalculation.name] == index - 1 {
+                                recalculationIndexes[calculation.name] = index
+                                finished = false
+                            }
+                        }
+                    }
+                }
+            }
+        } while !finished
+        // Insert the results back into the report
+        for calculatedColumn in values.calculatedColumns {
+            if case .calculated(let calculation) = calculatedColumn {
+                calculation.recalculationIndex = recalculationIndexes[calculatedColumn.name]!
+            }
+        }
+        
+        return recalculationIndexes
     }
     
     func reset() {
@@ -146,6 +188,7 @@ class CalculatedColumn : Codable, Equatable, Hashable, Identifiable, ObservableO
     var totalType: CalculatedTotalType = .average
     var recalculate: Bool = false
     var logic: [CalculatedElement] = []
+    var recalculationIndex: Int = 0
     
     var name: String {
         var result: String = ""
@@ -210,17 +253,17 @@ class CalculatedColumn : Codable, Equatable, Hashable, Identifiable, ObservableO
         self.logic = from.logic
     }
     
-    func value<ViewModel>(viewModel: ViewModel, evaluate: @escaping (ViewModel, InsightColumn) throws -> CalculatedValue?) throws -> CalculatedValue {
-        prepareTree()
+    func value<ViewModel>(report: Report, viewModel: ViewModel, evaluate: @escaping (Report, ViewModel, InsightColumn) throws -> CalculatedValue?) throws -> CalculatedValue {
+        prepareTree(report: report)
         if let tree = tree {
-            return try tree.value(viewModel: viewModel, variableValue: { column, viewModel in try evaluate(viewModel, column) })
+            return try tree.value(viewModel: viewModel, variableValue: { column, viewModel in try evaluate(report, viewModel, column) })
         } else {
             throw CalculatedError.errorEvaluatingCalculatedColumn(name)
         }
     }
     
-    func traverse(_ calculatedAction: (InsightColumn) throws -> ()) throws {
-        prepareTree()
+    func traverse(_ report: Report, _ calculatedAction: (InsightColumn) throws -> ()) throws {
+        prepareTree(report: report)
         if let tree = tree {
             try tree.traverse(calculatedAction)
         } else {
@@ -228,9 +271,33 @@ class CalculatedColumn : Codable, Equatable, Hashable, Identifiable, ObservableO
         }
     }
     
-    func prepareTree() {
+    static func referencedColumns(report: Report, column: InsightColumn) throws -> Set<InsightColumn> {
+        var result = Set<InsightColumn>()
+        if case .calculated(let calculated) = column {
+            try calculated.traverse(report, action)
+        }
+        return result
+            
+        func add(_ column: InsightColumn) {
+            // Important - This column is a stale copy from the logic of the parent - need to get the latest
+            var column = column
+            if column.isCalculated {
+                column = report.values.calculatedColumns.first(where: {$0.name == column.name})!
+            }
+            result.insert(column)
+        }
+        
+        func action(_ column: InsightColumn) throws -> () {
+            add(column)
+            if case .calculated(let calculated) = column {
+                try calculated.traverse(report, action)
+            }
+        }
+    }
+    
+    func prepareTree(report: Report) {
         if tree == nil {
-            let parser = CalculatedParser(tokens: logic)
+            let parser = CalculatedParser(report: report, tokens: logic)
             parser.parse() { (tree, message) in
                 self.tree = tree
                 Report.parses += 1
@@ -336,8 +403,8 @@ class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had 
         print("UUID: \(self.id.uuidString), Tree: \(String(describing: selectionTree))")
     }}
     
-    func value<ViewModel>(viewModel: ViewModel, level: Int, evaluate: @escaping (ViewModel, InsightColumn) throws -> CalculatedValue?) throws -> Bool {
-        prepareTree()
+    func value<ViewModel>(report: Report, viewModel: ViewModel, level: Int, evaluate: @escaping (ViewModel, InsightColumn) throws -> CalculatedValue?) throws -> Bool {
+        prepareTree(report: report)
         if let tree = selectionTree {
             let value = try tree.value(viewModel: viewModel, variableValue: { column, viewModel in
                 try evaluate(viewModel, column) })
@@ -356,9 +423,9 @@ class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had 
         selectionTree = nil
     }
     
-    func prepareTree() {
+    func prepareTree(report: Report) {
         if selectionTree == nil {
-            let parser = CalculatedParser(tokens: selectionLogic)
+            let parser = CalculatedParser(report: report, tokens: selectionLogic)
             parser.parse() { (tree, message) in
                 self.selectionTree = tree
                 Report.selectionParses += 1
@@ -367,8 +434,8 @@ class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had 
         }
     }
     
-    func traverse(_ action: (InsightColumn) throws -> ()) throws {
-        prepareTree()
+    func traverse(_ report: Report, _ action: (InsightColumn) throws -> ()) throws {
+        prepareTree(report: report)
         if let tree = selectionTree {
             try tree.traverse(action)
         }

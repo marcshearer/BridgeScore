@@ -418,17 +418,17 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         }
     }
     
-    func value<ViewModel: NSObject>(viewModel: ViewModel) throws -> CalculatedValue {
-        var value = try insightValue(boardSummary: viewModel as! BoardSummaryViewModel)
+    func value<ViewModel: NSObject>(report: Report, viewModel: ViewModel) throws -> CalculatedValue {
+        var value = try insightValue(report: report, boardSummary: viewModel as! BoardSummaryViewModel)
         if self.insightType == .percent {
             value.numeric! /= 100
         }
         return value
     }
     
-    func totalValue<ViewModel: NSObject>(viewModel: ViewModel) throws -> CalculatedValue {
+    func totalValue<ViewModel: NSObject>(report: Report, viewModel: ViewModel) throws -> CalculatedValue {
         let boardSummary = viewModel as! BoardSummaryViewModel
-        let value = try self.insightValue(boardSummary: boardSummary)
+        let value = try self.insightValue(report: report, boardSummary: boardSummary)
         switch self {
         case .compDdMade, .compDdScore, .ddTricks,.totalTricksDd:
             return CalculatedValue(value.numeric! < 0 ? 0 : value.numeric!)
@@ -437,7 +437,23 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         }
     }
     
-    func insightValue(boardSummary: BoardSummaryViewModel) throws -> CalculatedValue {
+    var isCalculated: Bool {
+        if case .calculated = self {
+            true
+        } else {
+            false
+        }
+    }
+    
+    var calculatedColumn: CalculatedColumn? {
+        if case .calculated(let calculated) = self {
+            calculated
+        } else {
+            nil
+        }
+    }
+    
+    func insightValue(report: Report, boardSummary: BoardSummaryViewModel) throws -> CalculatedValue {
         switch self {
         case .eventDesc:
             return summaryValue(boardSummary.scorecard.desc)
@@ -533,7 +549,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             return summaryValue(boardSummary.grandSlam[pairType]!)
         case .calculated(let column):
             do {
-                return try column.value(viewModel: boardSummary, evaluate: recurseValue)
+                return try column.value(report: report, viewModel: boardSummary, evaluate: recurseValue)
             } catch {
                 throw CalculatedError.errorEvaluatingCalculatedColumn(column.name)
             }
@@ -562,11 +578,11 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         }
     }
     
-    func recurseValue(boardSummary: BoardSummaryViewModel, column: InsightColumn) throws -> CalculatedValue {
-        return try column.insightValue(boardSummary: boardSummary)
+    func recurseValue(report: Report, boardSummary: BoardSummaryViewModel, column: InsightColumn) throws -> CalculatedValue {
+        return try column.insightValue(report: report, boardSummary: boardSummary)
     }
     
-    func formattedText(_ value: CalculatedValue) -> String {
+    func formattedText(report: Report, _ value: CalculatedValue) -> String {
         switch self.insightType {
         case .string:
             return value.string!
@@ -588,9 +604,9 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         }
     }
     
-    func textValue(boardSummary: BoardSummaryViewModel) -> AttributedString {
+    func textValue(report: Report, boardSummary: BoardSummaryViewModel) -> AttributedString {
         do {
-            let text = try formattedText(insightValue(boardSummary: boardSummary))
+            let text = try formattedText(report: report, insightValue(report: report, boardSummary: boardSummary))
             
             // Only have a case for fields where above is not correct
             return switch self {
@@ -681,6 +697,14 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             calculated.blankIf
         default:
             .none
+        }
+    }
+    
+    var recalculationIndex: Int {
+        if case .calculated(let calculated) = self {
+            calculated.recalculationIndex
+        } else {
+            0
         }
     }
 }

@@ -778,7 +778,6 @@ enum CalculatedError: Error {
     case errorEvaluatingCalculatedColumn(String)
     case invalidToken(String)
     case circularReference(String)
-    case recalculatedReferencesRecalculated(String)
     case typeMismatchOperator(CalculatedOperator, CalculatedType, CalculatedType)
     case typeMismatchLogical(CalculatedLogicalOperator, CalculatedType, CalculatedType)
     case typeMismatchComparison(CalculatedComparisonOperator,CalculatedType, CalculatedType)
@@ -805,8 +804,6 @@ enum CalculatedError: Error {
             return "Invalid token: \(token)"
         case .circularReference(let name):
             return "Circular reference to calculated column: '\(name)'"
-        case .recalculatedReferencesRecalculated(let name):
-            return "Recalculated column references another recalculated column: (\(name))"
         case .invalidVariableName(let name):
             return "Invalid variable name \(name)"
         case .divideByZero:
@@ -839,8 +836,10 @@ class CalculatedParser {
     
     let tokens: [CalculatedElement] // Simplified for example
     var index = 0
+    let report: Report
     
-    init(tokens: [CalculatedElement]) {
+    init(report: Report, tokens: [CalculatedElement]) {
+        self.report = report
         self.tokens = tokens
     }
     
@@ -962,6 +961,16 @@ class CalculatedParser {
         } else if case .variable(let variable) = current {
             // Variable
             nextSymbol()
+            // Important - This variable is a stale copy from the logic of the parent - need to get the latest
+            var variable = variable
+            if variable.isCalculated {
+                if let calculated = report.values.calculatedColumns.first(where: {$0.name == variable.name}) {
+                    variable = calculated
+                } else {
+                    throw CalculatedError.invalidVariableName(variable.name)
+                }
+            }
+            
             return .variable(variable: variable)
         } else if case .literal(let literal) = current {
             // Literal

@@ -85,7 +85,6 @@ struct StepperInputAdditional<Additional>: View where Additional: Equatable {
                             Spacer()
                         }
                         .frame(width: inlineTitleWidth)
-                        .background(.blue)
                         Spacer().frame(width: 12)
                     }
                     Spacer().frame(width: 8)

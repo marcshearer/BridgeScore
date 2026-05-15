@@ -335,7 +335,7 @@ struct InsightsSortLevelView : View {
     }
     
     func updateLogic() {
-        let parser = CalculatedParser(tokens: editSortLevel.selectionLogic)
+        let parser = CalculatedParser(report: report, tokens: editSortLevel.selectionLogic)
         resultType = nil
         errorMessage = ""
         parser.parse() { (tree, message) in
