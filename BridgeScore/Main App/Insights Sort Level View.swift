@@ -170,7 +170,7 @@ struct InsightsSortLevelView : View {
     var body: some View {
         VStack(spacing: 0) {
             Banner(title: Binding.constant("\(editMode.string.capitalized) \(sortLevel.isBoard ? "Board Selection" : "Sort Level \(index)")"), alternateColor: true)
-            Spacer().frame(height: 40)
+            Spacer().frame(height: 30)
             if !editSortLevel.isBoard {
                 HStack {
                     Spacer().frame(width: 40)
@@ -194,7 +194,7 @@ struct InsightsSortLevelView : View {
                     }
                     Spacer()
                 }
-                Spacer().frame(height: 30)
+                Spacer().frame(height: 20)
                 HStack {
                     Spacer().frame(width: 40)
                     HStack {
@@ -212,7 +212,7 @@ struct InsightsSortLevelView : View {
                     .frame(width: 240)
                     Spacer()
                 }
-                Spacer().frame(height: 30)
+                Spacer().frame(height: 20)
                 HStack {
                     Spacer().frame(width: 40)
                     HStack {
@@ -220,11 +220,29 @@ struct InsightsSortLevelView : View {
                         Spacer()
                     }
                     .frame(width: 200)
-                    InputToggle(field: $editSortLevel.subtotal, disabled: Binding.constant(false), width: 80, inlineTitle: false)
-                        .frame(width: 40)
+                    Middle {
+                        InputToggle(field: $editSortLevel.subtotal, disabled: Binding.constant(false), topSpace: 10, width: 80, inlineTitle: false)
+                            .frame(width: 40)
+                    }
+                    .frame(height: 30)
                     Spacer()
                 }
-                Spacer().frame(height: 15)
+                Spacer().frame(height: 20)
+                HStack {
+                    Spacer().frame(width: 40)
+                    HStack {
+                        Text("Default total only:")
+                        Spacer()
+                    }
+                    .frame(width: 200)
+                    Middle {
+                    InputToggle(field: $editSortLevel.defaultTotalOnly, disabled: Binding.constant(false), topSpace: 10, width: 80, inlineTitle: false)
+                        .frame(width: 40)
+                    }
+                    .frame(height: 30)
+                    Spacer()
+                }
+                Spacer().frame(height: 5)
             }
             HStack {
                 Spacer().frame(width: 40)
@@ -236,11 +254,10 @@ struct InsightsSortLevelView : View {
                 CalculatedValuesView(logic: $editSortLevel.selectionLogic, cursor: $cursor, focused: $focused, focusValue: .selectionLogic,  nextFocusValue: .sortKey, previousFocusValue: .sortKey, color: .alternate) {
                     updateLogic()
                 }
-                .opacity(editSortLevel.subtotal ? 1 : 0.3)
                 HStack {
                     Spacer().frame(width: 20)
                     if editSortLevel.isBoard {
-                        Text(resultType == nil ? (editSortLevel.selectionLogic.isEmpty ? "No logic" : "Invalid logic") : (resultType == .boolean ? "Correct" : "Invalid - Must be a boolean result"))
+                        Text(resultType == nil ? (editSortLevel.selectionLogic.isEmpty ? "No logic - Show all" : "Invalid logic") : (resultType == .boolean ? "Correct" : "Invalid - Must be a boolean result"))
                     } else {
                         Text(resultType == nil ? (editSortLevel.selectionLogic.isEmpty ? "Correct" : "Invalid logic") : (resultType == .boolean ? "Correct" : "Invalid - Must be a boolean result"))
                     }
@@ -267,7 +284,7 @@ struct InsightsSortLevelView : View {
                 Spacer().frame(width: 40)
             }
             HStack {
-                Spacer().frame(maxWidth: 100)
+                Spacer().frame(width: 240)
                 VStack(spacing: 0) {
                     MiddleCentered(height: 60) { Image(systemName: "arrowshape.up").font(bannerFont) }
                     InsightsColumnListView(report: report, title: "Data columns", columns: report.allColumns, listType: .allColumns, allowDrag: true, selectedListType: $selectedListType, onSelect: variableSelected)

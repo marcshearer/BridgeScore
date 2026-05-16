@@ -27,6 +27,7 @@ struct InsightsView: View {
     @StateObject var report = Report()
     @State var showBoardSummary: BoardSummaryExtension? = nil
     @State var dismissView: Bool = false
+    @State var buttonId: [UUID:UUID] = [:]
     @State fileprivate var displayMode: InsightDisplayMode = .loading { didSet {
         
     }}
@@ -69,8 +70,10 @@ struct InsightsView: View {
                                         HStack {
                                             Spacer().frame(width: 10)
                                             LazyVStack(alignment: .leading, spacing: 0) {
-                                                ForEach(0..<rowIndex.count, id: \.self) { index in
-                                                    rowView(data: rowIndex[index], columns: report.values.pinnedColumns)
+                                                ForEach($rowIndex, id: \.id) { rowData in
+                                                    if showRow(totalIndex: rowData.wrappedValue.totalIndex) {
+                                                        rowView(data: rowData, columns: report.values.pinnedColumns, replaceTotal: true)
+                                                    }
                                                 }
                                             }
                                             .frame(width: report.values.pinnedColumns.map{$0.width}.reduce(0, +))
@@ -79,8 +82,10 @@ struct InsightsView: View {
                                         .palette(.alternate)
                                         scrollSync.horizontalScrollView(showsIndicators: false, id: .data) {
                                             LazyVStack(alignment: .leading, spacing: 0) {
-                                                ForEach(0..<rowIndex.count, id: \.self) { index in
-                                                    rowView(data: rowIndex[index], columns: report.values.unpinnedColumns)
+                                                ForEach($rowIndex, id: \.id) { rowData in
+                                                    if showRow(totalIndex: rowData.wrappedValue.totalIndex) {
+                                                        rowView(data: rowData, columns: report.values.unpinnedColumns)
+                                                    }
                                                 }
                                             }
                                         }
@@ -125,6 +130,19 @@ struct InsightsView: View {
         }
     }
     
+    func showRow(totalIndex: [Int?]) -> Bool {
+        var result = true
+        for index in totalIndex {
+            if let index = index {
+                if !rowIndex[index].expanded {
+                    result = false
+                    break
+                }
+            }
+        }
+        return result
+    }
+    
     func loadDefaultView() {
         let defaultUrl = InsightsReportViewStorage.url(for: UserDefault.defaultViewName.string)
         if !InsightsReportViewStorage.load(report: report, from: defaultUrl) {
@@ -137,11 +155,11 @@ struct InsightsView: View {
     }
     func loadData() async {
         // Load master data
-        await allBoardSummaries = Insights.Load()
+        await allBoardSummaries = Insights.load()
         if allBoardSummaries.isEmpty {
             // TODO Shouldn't need this
             await Insights.build()
-            await allBoardSummaries = Insights.Load()
+            await allBoardSummaries = Insights.load()
         }
         Task(priority: .userInitiated) {
             if let errorMessage = await reload() {
@@ -229,10 +247,10 @@ struct InsightsView: View {
         .palette(.contrastTile)
     }
     
-    func rowView(data: SortData<BoardSummaryExtension,InsightTotal>, columns: [InsightColumn]) -> some View {
+    func rowView(data: Binding<SortData<BoardSummaryExtension,InsightTotal>>, columns: [InsightColumn], replaceTotal: Bool = false) -> some View {
         LazyHStack {
-            if data.totalLevel == nil {
-                let boardSummary = (data.source as BoardSummaryExtension?)!
+            if data.wrappedValue.totalLevel == nil {
+                let boardSummary = (data.source.wrappedValue as BoardSummaryExtension?)!
                 LazyHStack(alignment: .top, spacing: 0) {
                     ForEach(0..<columns.count, id: \.self) { columnIndex in
                         let column = columns[columnIndex]
@@ -258,8 +276,8 @@ struct InsightsView: View {
                             showBoardSummary = boardSummary
                         }
                     }
-            } else {
-                LazyHStack(spacing: 0){
+            } else if !replaceTotal {
+                LazyHStack(spacing: 0) {
                     ForEach(0..<columns.count, id: \.self) { columnIndex in
                         let column = columns[columnIndex]
                         VStack(spacing: 0) {
@@ -268,7 +286,7 @@ struct InsightsView: View {
                                 if column.align != .left {
                                     Spacer()
                                 }
-                                if let total = data.totals[column], let value = total.value, let count = total.count {
+                                if let total = data.wrappedValue.totals[column], let value = total.value, let count = total.count {
                                     let showValue = column.totalValue(value: value, count: count)
                                     if column.insightType == .percent {
                                         Text((showValue * Float(100)).toString(places: column.decimalPlaces) + "%")
@@ -290,7 +308,36 @@ struct InsightsView: View {
                         .fixedSize()
                     }
                 }
+            } else {
+                let width = columns.map({$0.width}).reduce(0, +)
+                LazyHStack(spacing: 0) {
+                    VStack(spacing: 0) {
+                        Separator(direction: .horizontal, padding: false, thickness: 2, color: .black)
+                        HStack {
+                            Spacer()
+                                .frame(width: CGFloat(data.wrappedValue.totalLevel! * 20))
+                            Button {
+                                data.wrappedValue.expanded.toggle()
+                                buttonId[data.wrappedValue.id] = UUID()
+                            } label: {
+                                Image(systemName: data.wrappedValue.expanded ? "minus" : "plus")
+                                    .id(buttonId[data.wrappedValue.id])
+                            }
+                            Text(data.wrappedValue.totalLevel == 0 ? "Grand Total" : "Total for \(data.wrappedValue.levelKey!)")
+                            Spacer()
+                        }
+                        .bold()
+                        .palette(.background, .theme, clear: true)
+                        .frame(width: width, height: 18)
+                    }
+                    .frame(width: width, height: 20)
+                    .fixedSize()
+                }
+                
             }
+        }
+        .onAppear {
+            buttonId[data.wrappedValue.id] = UUID()
         }
     }
     
@@ -348,6 +395,7 @@ struct InsightsView: View {
         var sortIndex: [SortData<BoardSummaryExtension,InsightTotal>] = []
         var boardIndex: Int = 0
         var inserted = 0
+        var sortDirections: [SortDirection]
         
         do {
             try report.refresh()
@@ -365,12 +413,12 @@ struct InsightsView: View {
                     let value = try level.key!.value(report: report, viewModel: boardSummary)
                     sortKeys.append(value)
                 }
-                sortIndex.append(SortData(keys: sortKeys, source: boardSummary))
+                sortIndex.append(SortData(rowType: .data, keys: sortKeys, source: boardSummary))
             }
             
             if !sortIndex.isEmpty {
                 // Execute the sort
-                let sortDirections: [SortDirection] = levels.map{$0.direction}
+                sortDirections = levels.map{$0.direction}
                 if !sortDirections.isEmpty {
                     try sortIndex.sort(by: { try SortIndex.sort($0, $1, directions: sortDirections)})
                 }
@@ -404,27 +452,11 @@ struct InsightsView: View {
                         
                         // Insert a sub-total and zero the running total if changed
                         let lastIndex = boardIndex + inserted - 1
-                        for levelIndex in (1...sortDirections.count).reversed() {
-                            if levels[levelIndex - 1].isTotalling {
-                                if changed[levelIndex] {
-                                    var discarded = false
-                                    // First check for recalculation
-                                    try recalculate(levelIndex: levelIndex, boardSummary: sortIndex[lastIndex].source! as BoardSummaryExtension) { column, value in
-                                        totals[levelIndex][column]!.set(value: value)
-                                    }
-                                    // Remove it if selected out
-                                    discarded = try applySubtotalSelection(levelIndex: levelIndex, boardSummary: sortIndex[lastIndex].source! as BoardSummaryExtension)
-                                    if !discarded && levels[levelIndex - 1].subtotal {
-                                        // Now insert it
-                                        sortIndex.insert(SortData(totalLevel: levelIndex, keys: sortIndex[boardIndex + inserted].keys, source: sortIndex[lastIndex].source! as BoardSummaryExtension, totals: totals[levelIndex]), at: boardIndex + inserted)
-                                        inserted += 1
-                                    }
-                                    // Setup zeroed totals
-                                    totals[levelIndex] = [:]
-                                    for column in referenced {
-                                        totals[levelIndex][column] = InsightTotal()
-                                    }
-                                }
+                        try insertTotals(startLevelIndex: 1, lastIndex: { lastIndex }, changed: { levelIndex in changed[levelIndex] }) { (levelIndex) in
+                            // Setup zeroed totals
+                            totals[levelIndex] = [:]
+                            for column in referenced {
+                                totals[levelIndex][column] = InsightTotal()
                             }
                         }
                     }
@@ -446,23 +478,22 @@ struct InsightsView: View {
                     boardIndex += 1
                 }
                 // Insert final totals
-                for levelIndex in (0...sortDirections.count).reversed() {
-                    if levelIndex == 0 || levels[levelIndex - 1].isTotalling {
-                        var discarded = false
-                        // First check for recalculation
-                        try recalculate(levelIndex: levelIndex, boardSummary: sortIndex[sortIndex.count - 1].source! as BoardSummaryExtension) { column, value in
-                            totals[levelIndex][column]!.set(value: value)
-                        }
-                        if levelIndex != 0 {
-                            discarded = try applySubtotalSelection(levelIndex: levelIndex, boardSummary: sortIndex[sortIndex.count - 1].source! as BoardSummaryExtension)
-                        }
-                        if !discarded && (levelIndex == 0 || levels[levelIndex - 1].subtotal) {
-                            // Now insert it
-                            sortIndex.append(SortData<BoardSummaryExtension,InsightTotal>(totalLevel: levelIndex, keys: ((levelIndex == 0) ? [] : sortIndex.last!.keys), source: sortIndex[sortIndex.count - 1].source! as BoardSummaryExtension, totals: totals[levelIndex]))
-                            inserted += 1
-                        }
+                try insertTotals(startLevelIndex: 0, lastIndex: { sortIndex.count - 1 }, changed: { _ in true}, zeroTotals: { _ in })
+
+                // Build pointer from row to subtotals (excluding grand total)
+                var totalIndex: [Int?] = Array(repeating: nil, count : sortIndex.count - 1)
+                for index in (0..<sortIndex.count).reversed() {
+                    if sortIndex[index].rowType == .total {
+                        // total
+                        totalIndex[sortIndex[index].totalLevel!] = index
+                    }
+                    sortIndex[index].totalIndex = totalIndex
+                    if sortIndex[index].rowType == .total {
+                        // Don't point back to yourself
+                        sortIndex[index].totalIndex[sortIndex[index].totalLevel!] = nil
                     }
                 }
+                
                 rowIndex = sortIndex
             }
         } catch let error as CalculatedError {
@@ -476,13 +507,39 @@ struct InsightsView: View {
         
         return errorMessage
         
+        func insertTotals(startLevelIndex: Int, lastIndex: ()->Int, changed: (Int)->Bool, zeroTotals: (Int)->()) throws {
+            for levelIndex in (startLevelIndex...sortDirections.count).reversed() {
+                if levelIndex == 0 || levels[levelIndex - 1].isTotalling {
+                    if changed(levelIndex) {
+                        var discarded = false
+                        // First check for recalculation
+                        print("\(lastIndex()) \(levelIndex)")
+                        try recalculate(levelIndex: levelIndex, boardSummary: sortIndex[lastIndex()].source! as BoardSummaryExtension) { column, value in
+                            totals[levelIndex][column]!.set(value: value)
+                        }
+                        if levelIndex != 0 {
+                            // Remove it if selected out
+                            discarded = try applySubtotalSelection(levelIndex: levelIndex, boardSummary: sortIndex[lastIndex()].source! as BoardSummaryExtension)
+                        }
+                        if !discarded && (levelIndex == 0 || levels[levelIndex - 1].subtotal) {
+                            // Now insert it
+                            let boardSummary = sortIndex[lastIndex()].source! as BoardSummaryExtension
+                            let levelKey = levelIndex == 0 ? "" : (levels[levelIndex - 1].key!.textValue(report: report, boardSummary: boardSummary))
+                            sortIndex.insert(SortData(rowType: .total, totalLevel: levelIndex, levelKey: levelKey, keys: sortIndex[boardIndex + inserted - 1].keys, source: boardSummary, totals: totals[levelIndex]), at: boardIndex + inserted)
+                            inserted += 1
+                        }
+                        zeroTotals(levelIndex)
+                    }
+                }
+            }
+        }
+        
         func applySubtotalSelection(levelIndex: Int, boardSummary: BoardSummaryExtension) throws -> Bool {
             if try !levels[levelIndex - 1].value(report: report, viewModel: boardSummary, level: levelIndex, evaluate: evaluateColumn) {
                 // Failed selection - need to remove the rows from the sort index and reduce all higher level totals
                 for rightIndex in 0..<levelIndex {
                     // Reduce higher level subtotals and grand totals by this amount
                     for column in referenced {
-                        // TODO Sort out the lastIndex
                         totals[rightIndex][column]!.subtract(totals[levelIndex][column]!)
                     }
                 }
@@ -570,7 +627,6 @@ actor DataFilterService {
 
 class InsightTotal:Comparable {
     var startIndex: Int?
-    var endIndex: Int?
     var count: Int?
     var value: Float?
     
@@ -579,7 +635,6 @@ class InsightTotal:Comparable {
     
     func add(index: Int, value: Float) {
         self.startIndex = self.startIndex ?? index
-        self.endIndex = index
         self.count = (self.count ?? 0) + 1
         self.value = (self.value ?? 0) + value
     }
@@ -600,5 +655,11 @@ class InsightTotal:Comparable {
     static func == (lhs: InsightTotal, rhs: InsightTotal) -> Bool {
         (lhs.value ?? 0) == (rhs.value ?? 0)
     }
+}
+
+enum InsightRowType {
+    case header
+    case data
+    case total
 }
 

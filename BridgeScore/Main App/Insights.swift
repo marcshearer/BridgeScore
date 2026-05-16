@@ -228,7 +228,7 @@ class Insights {
         }
     }
     
-    static func Load() async -> [BoardSummaryExtension] {
+    static func load() async -> [BoardSummaryExtension] {
         var boardSummaries: [BoardSummaryExtension] = []
         // TODO Remove
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: BoardSummaryMO.tableName)

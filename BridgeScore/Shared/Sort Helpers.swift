@@ -5,17 +5,35 @@
 //  Created by Marc Shearer on 12/05/2026.
 //
 
-class SortData<ViewModel,Value:Comparable> {
+import Foundation
+
+class SortData<ViewModel,Value:Comparable> : Identifiable, Hashable {
+    var id = UUID()
+    var rowType: InsightRowType?
     var totalLevel: Int?
+    var levelKey: AttributedString?
     var keys: [CalculatedValue]
     var source: ViewModel?
     var totals: [InsightColumn:Value] = [:] // (Count, Total)
+    var totalIndex: [Int?] = []
+    var expanded: Bool = true
     
-    init(totalLevel: Int? = nil, keys: [CalculatedValue], source: ViewModel? = nil, totals: [InsightColumn:Value] = [:]) {
+    init(rowType: InsightRowType, totalLevel: Int? = nil, levelKey: AttributedString? = nil, keys: [CalculatedValue], source: ViewModel? = nil, totals: [InsightColumn:Value] = [:], expanded: Bool = true) {
+        self.rowType = rowType
         self.totalLevel = totalLevel
+        self.levelKey = levelKey
         self.keys = keys
         self.source = source
         self.totals = totals
+        self.expanded = expanded
+    }
+    
+    static func == (lhs: SortData<ViewModel, Value>, rhs: SortData<ViewModel, Value>) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(self.id)
     }
 }
 
