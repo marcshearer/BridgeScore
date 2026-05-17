@@ -71,15 +71,10 @@ struct InsightsView: View {
                                                 Spacer().frame(width: 10)
                                                 LazyVStack(alignment: .leading, spacing: 0) {
                                                     ForEach($filteredIndex, id: \.id) { rowData in
-                                                        rowView(data: rowData, columns: report.values.pinnedColumns, replaceTotal: true) { id in
-                                                            withAnimation {
-                                                                proxy.scrollTo(id, anchor: nil)
-                                                            }
-                                                        }
+                                                        rowView(data: rowData, columns: report.values.pinnedColumns, replaceTotal: true)
                                                     }
                                                 }
                                                 .frame(width: report.values.pinnedColumns.map{$0.width}.reduce(0, +))
-                                                Spacer().frame(width: 20)
                                             }
                                             scrollSync.horizontalScrollView(showsIndicators: false, id: .data) {
                                                 LazyVStack(alignment: .leading, spacing: 0) {
@@ -152,9 +147,12 @@ struct InsightsView: View {
         let defaultUrl = InsightsReportViewStorage.url(for: UserDefault.defaultViewName.string)
         if !InsightsReportViewStorage.load(report: report, from: defaultUrl) {
             do {
-                try report.update(from: ReportValues(pinnedColumns: InsightColumn.defaultPinnedColumns, unpinnedColumns: InsightColumn.defaultColumns))
+                let level = CalculatedSortLevel(isBoard: true)
+                level.selectionLogic = [.variable(.age),.comparisonOperator(.lessThan),.literal(CalculatedLiteral(characters: "30", type: .numeric))]
+                try report.update(from: ReportValues(pinnedColumns: InsightColumn.defaultPinnedColumns, unpinnedColumns: InsightColumn.defaultColumns, levels: [level]))
             } catch {
                 // Just ignore for now
+                print(error)
             }
         }
     }
@@ -544,8 +542,9 @@ struct InsightsView: View {
                         if !discarded && (levelIndex == 0 || levels[levelIndex - 1].subtotal) {
                             // Now insert it
                             let boardSummary = sortIndex[lastIndex()].source! as BoardSummaryExtension
-                            let levelKey = levelIndex == 0 ? "" : (levels[levelIndex - 1].key!.textValue(report: report, boardSummary: boardSummary))
-                            sortIndex.insert(SortData(rowType: .total, totalLevel: levelIndex, levelKey: levelKey, keys: sortIndex[boardIndex + inserted - 1].keys, source: boardSummary, totals: totals[levelIndex]), at: boardIndex + inserted)
+                            let levelKey = (levelIndex == 0 ? "" : (levels[levelIndex - 1].key!.textValue(report: report, boardSummary: boardSummary)))
+                            let levelState: SortDataState = (levelIndex == 0 ? .expanded : (levels[levelIndex - 1].defaultState))
+                            sortIndex.insert(SortData(rowType: .total, totalLevel: levelIndex, levelKey: levelKey, keys: sortIndex[boardIndex + inserted - 1].keys, source: boardSummary, totals: totals[levelIndex], state: levelState), at: boardIndex + inserted)
                             inserted += 1
                         }
                         zeroTotals(levelIndex)

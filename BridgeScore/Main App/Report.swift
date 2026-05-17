@@ -409,7 +409,7 @@ class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had 
     var key: InsightColumn?
     var direction: SortDirection
     var subtotal: Bool
-    var defaultTotalOnly: Bool = false
+    var defaultState: SortDataState = .expanded
     var selectionLogic: [CalculatedElement]
     
     var selectionTree: CalculatedParseNode?
@@ -487,7 +487,7 @@ class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had 
         self.key = nil
         self.direction = .ascending
         self.subtotal = false
-        self.defaultTotalOnly = false
+        self.defaultState = .expanded
         self.selectionLogic = []
     }
     
@@ -496,7 +496,7 @@ class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had 
         self.key = from.key
         self.direction = from.direction
         self.subtotal = from.subtotal
-        self.defaultTotalOnly = from.defaultTotalOnly
+        self.defaultState = from.defaultState
         self.selectionLogic = from.selectionLogic
     }
     
@@ -505,8 +505,18 @@ class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had 
         case key
         case direction
         case subtotal
-        case defaultTotalOnly
+        case defaultState
         case selectionLogic
+    }
+    
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        isBoard = try container.decode(Bool.self, forKey: .isBoard)
+        key = try container.decodeIfPresent(InsightColumn.self, forKey: .key) ?? nil
+        direction = try container.decodeIfPresent(SortDirection.self, forKey: .direction) ?? .ascending
+        subtotal = try container.decode(Bool.self, forKey: .subtotal)
+        defaultState = try container.decodeIfPresent(SortDataState.self, forKey: .defaultState) ?? .expanded
+        selectionLogic = try container.decode([CalculatedElement].self, forKey: .selectionLogic)
     }
     
     func hash(into hasher: inout Hasher) {
@@ -514,12 +524,12 @@ class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had 
         hasher.combine(key)
         hasher.combine(direction)
         hasher.combine(subtotal)
-        hasher.combine(defaultTotalOnly)
+        hasher.combine(defaultState)
         hasher.combine(selectionLogic)
     }
     
     static func == (lhs: CalculatedSortLevel, rhs: CalculatedSortLevel) -> Bool {
-        return lhs.isBoard == rhs.isBoard && lhs.key == rhs.key && lhs.direction == rhs.direction && lhs.subtotal == rhs.subtotal && lhs.defaultTotalOnly == rhs.defaultTotalOnly && lhs.selectionLogic == rhs.selectionLogic
+        return lhs.isBoard == rhs.isBoard && lhs.key == rhs.key && lhs.direction == rhs.direction && lhs.subtotal == rhs.subtotal && lhs.defaultState == rhs.defaultState && lhs.selectionLogic == rhs.selectionLogic
     }
     
     var selectionLogicString: String {

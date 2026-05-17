@@ -231,18 +231,21 @@ struct InsightsSortLevelView : View {
                 HStack {
                     Spacer().frame(width: 40)
                     HStack {
-                        Text("Default total only:")
+                        Text("Default state:")
                         Spacer()
                     }
                     .frame(width: 200)
-                    Middle {
-                    InputToggle(field: $editSortLevel.defaultTotalOnly, disabled: Binding.constant(false), topSpace: 10, width: 80, inlineTitle: false)
-                        .frame(width: 40)
+                    Picker("Default state", selection: $editSortLevel.defaultState) {
+                        ForEach(SortDataState.allCases, id: \.self) { state in
+                            Text(state.string)
+                                .tag(state)
+                        }
                     }
-                    .frame(height: 30)
+                    .pickerStyle(.segmented)
+                    .frame(width: 240)
                     Spacer()
                 }
-                Spacer().frame(height: 5)
+                Spacer().frame(height: 20)
             }
             HStack {
                 Spacer().frame(width: 40)

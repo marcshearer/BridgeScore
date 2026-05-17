@@ -37,11 +37,13 @@ class SortData<ViewModel,Value:Comparable> : Identifiable, Hashable {
     }
 }
 
-enum SortDataState {
+enum SortDataState : Codable, Hashable, CaseIterable {
     case expanded
     case collapsed
     
     var inverse: SortDataState { (self == .expanded ? .collapsed : .expanded) }
+    
+    var string: String { "\(self)".capitalized }
 }
 
 class SortIndex {
