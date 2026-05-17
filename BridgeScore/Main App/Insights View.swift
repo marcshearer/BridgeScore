@@ -23,7 +23,8 @@ struct InsightsView: View {
     @Environment(\.dismiss) var dismiss
     @State var allBoardSummaries: [BoardSummaryExtension] = []
     @State var boardSummaries: [BoardSummaryExtension] = []
-    @State var rowIndex: [SortData<BoardSummaryExtension,InsightTotal>] = []
+    @State var sortIndex: [SortData<BoardSummaryExtension,InsightTotal>] = []
+    @State var filteredIndex: [SortData<BoardSummaryExtension,InsightTotal>] = []
     @StateObject var report = Report()
     @State var showBoardSummary: BoardSummaryExtension? = nil
     @State var dismissView: Bool = false
@@ -69,14 +70,11 @@ struct InsightsView: View {
                                             HStack {
                                                 Spacer().frame(width: 10)
                                                 LazyVStack(alignment: .leading, spacing: 0) {
-                                                    ForEach($rowIndex, id: \.id) { rowData in
-                                                        if showRow(rowType: rowData.wrappedValue.rowType!, totalIndex: rowData.wrappedValue.totalIndex) {
-                                                            rowView(data: rowData, columns: report.values.pinnedColumns, replaceTotal: true) {
-                                                                withAnimation {
-                                                                    proxy.scrollTo(rowData.id, anchor: nil)
-                                                                }
+                                                    ForEach($filteredIndex, id: \.id) { rowData in
+                                                        rowView(data: rowData, columns: report.values.pinnedColumns, replaceTotal: true) { id in
+                                                            withAnimation {
+                                                                proxy.scrollTo(id, anchor: nil)
                                                             }
-                                                            .id(rowData.id)
                                                         }
                                                     }
                                                 }
@@ -85,11 +83,9 @@ struct InsightsView: View {
                                             }
                                             scrollSync.horizontalScrollView(showsIndicators: false, id: .data) {
                                                 LazyVStack(alignment: .leading, spacing: 0) {
-                                                    ForEach($rowIndex, id: \.id) { rowData in
-                                                        if showRow(rowType: rowData.wrappedValue.rowType!, totalIndex: rowData.wrappedValue.totalIndex) {
-                                                            rowView(data: rowData, columns: report.values.unpinnedColumns)
-                                                                .id(rowData.id)
-                                                        }
+                                                    ForEach($filteredIndex, id: \.id) { rowData in
+                                                        rowView(data: rowData, columns: report.values.unpinnedColumns)
+                                                            .id(rowData.id)
                                                     }
                                                 }
                                             }
@@ -135,11 +131,16 @@ struct InsightsView: View {
         }
     }
     
+    func filterData() {
+        let filtered = sortIndex.filter{ showRow(rowType: $0.rowType!, totalIndex: $0.totalIndex) }
+        filteredIndex = filtered
+    }
+    
     func showRow(rowType: InsightRowType, totalIndex: [Int?]) -> Bool {
         var show = true
         for index in totalIndex.reversed() {
             if let index = index {
-                if rowIndex[index].state == .collapsed {
+                if sortIndex[index].state == .collapsed {
                     show = false
                 }
             }
@@ -188,7 +189,8 @@ struct InsightsView: View {
                     
                     if displayMode == .editing {
                         Button("\("􀈄")") {
-                            rowIndex = []
+                            sortIndex = []
+                            filteredIndex = []
                             displayMode = .loading
                             Task(priority: .userInitiated) {
                                 if let errorMessage = await reload() {
@@ -251,7 +253,7 @@ struct InsightsView: View {
         .palette(.contrastTile)
     }
     
-    func rowView(data: Binding<SortData<BoardSummaryExtension,InsightTotal>>, columns: [InsightColumn], replaceTotal: Bool = false, reposition: (()->())? = nil) -> some View {
+    func rowView(data: Binding<SortData<BoardSummaryExtension,InsightTotal>>, columns: [InsightColumn], replaceTotal: Bool = false, reposition: ((UUID)->())? = nil) -> some View {
         LazyHStack {
             if data.wrappedValue.totalLevel == nil {
                 let boardSummary = (data.source.wrappedValue as BoardSummaryExtension?)!
@@ -321,10 +323,14 @@ struct InsightsView: View {
                             Spacer().frame(width: CGFloat(data.wrappedValue.totalLevel! * 20))
                             HStack {
                                 Button {
+                                    let id = data.id
+                                    buttonId[data.wrappedValue.id, default: UUID()] = UUID()
                                     data.wrappedValue.state = data.wrappedValue.state.inverse
-                                    buttonId[data.wrappedValue.id] = UUID()
-                                    withAnimation {
-                                        reposition?()
+                                    filterData()
+                                    Utility.executeAfter(delay: 0.1) {
+                                        withAnimation {
+                                            reposition?(id)
+                                        }
                                     }
                                 } label: {
                                     Image(systemName: data.wrappedValue.state == .expanded ? "minus" : "plus")
@@ -404,7 +410,6 @@ struct InsightsView: View {
         let levels = report.values.levels.filter({!$0.isBoard})
         let filterService = DataFilterService()
         var referenced: Set<InsightColumn> = []
-        var sortIndex: [SortData<BoardSummaryExtension,InsightTotal>] = []
         var boardIndex: Int = 0
         var inserted = 0
         var sortDirections: [SortDirection]
@@ -509,8 +514,7 @@ struct InsightsView: View {
                         sortIndex[index].totalIndex[sortIndex[index].totalLevel!] = nil
                     }
                 }
-                
-                rowIndex = sortIndex
+                filterData()
             }
         } catch let error as CalculatedError {
             errorMessage = error.errorDescription
