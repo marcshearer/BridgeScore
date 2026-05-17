@@ -63,30 +63,38 @@ struct InsightsView: View {
                                     .font(bigFont)
                                     .palette(.background, .theme)
                             } else {
-                                ScrollView(.vertical) {
-                                    HStack(spacing: 0) {
-                                        HStack {
+                                ScrollViewReader { proxy in
+                                    ScrollView(.vertical) {
+                                        HStack(spacing: 0) {
+                                            HStack {
+                                                Spacer().frame(width: 10)
+                                                LazyVStack(alignment: .leading, spacing: 0) {
+                                                    ForEach($rowIndex, id: \.id) { rowData in
+                                                        if showRow(rowType: rowData.wrappedValue.rowType!, totalIndex: rowData.wrappedValue.totalIndex) {
+                                                            rowView(data: rowData, columns: report.values.pinnedColumns, replaceTotal: true) {
+                                                                withAnimation {
+                                                                    proxy.scrollTo(rowData.id, anchor: nil)
+                                                                }
+                                                            }
+                                                            .id(rowData.id)
+                                                        }
+                                                    }
+                                                }
+                                                .frame(width: report.values.pinnedColumns.map{$0.width}.reduce(0, +))
+                                                Spacer().frame(width: 20)
+                                            }
+                                            scrollSync.horizontalScrollView(showsIndicators: false, id: .data) {
+                                                LazyVStack(alignment: .leading, spacing: 0) {
+                                                    ForEach($rowIndex, id: \.id) { rowData in
+                                                        if showRow(rowType: rowData.wrappedValue.rowType!, totalIndex: rowData.wrappedValue.totalIndex) {
+                                                            rowView(data: rowData, columns: report.values.unpinnedColumns)
+                                                                .id(rowData.id)
+                                                        }
+                                                    }
+                                                }
+                                            }
                                             Spacer().frame(width: 10)
-                                            LazyVStack(alignment: .leading, spacing: 0) {
-                                                ForEach($rowIndex, id: \.id) { rowData in
-                                                    if showRow(rowType: rowData.wrappedValue.rowType!, totalIndex: rowData.wrappedValue.totalIndex) {
-                                                        rowView(data: rowData, columns: report.values.pinnedColumns, replaceTotal: true)
-                                                    }
-                                                }
-                                            }
-                                            .frame(width: report.values.pinnedColumns.map{$0.width}.reduce(0, +))
-                                            Spacer().frame(width: 20)
                                         }
-                                        scrollSync.horizontalScrollView(showsIndicators: false, id: .data) {
-                                            LazyVStack(alignment: .leading, spacing: 0) {
-                                                ForEach($rowIndex, id: \.id) { rowData in
-                                                    if showRow(rowType: rowData.wrappedValue.rowType!, totalIndex: rowData.wrappedValue.totalIndex) {
-                                                        rowView(data: rowData, columns: report.values.unpinnedColumns)
-                                                    }
-                                                }
-                                            }
-                                        }
-                                        Spacer().frame(width: 10)
                                     }
                                 }
                                 HStack{
@@ -243,7 +251,7 @@ struct InsightsView: View {
         .palette(.contrastTile)
     }
     
-    func rowView(data: Binding<SortData<BoardSummaryExtension,InsightTotal>>, columns: [InsightColumn], replaceTotal: Bool = false) -> some View {
+    func rowView(data: Binding<SortData<BoardSummaryExtension,InsightTotal>>, columns: [InsightColumn], replaceTotal: Bool = false, reposition: (()->())? = nil) -> some View {
         LazyHStack {
             if data.wrappedValue.totalLevel == nil {
                 let boardSummary = (data.source.wrappedValue as BoardSummaryExtension?)!
@@ -310,11 +318,14 @@ struct InsightsView: View {
                     VStack(spacing: 0) {
                         Separator(direction: .horizontal, padding: false, thickness: 2, color: .black)
                         HStack {
-                            Spacer().frame(width: 10)
+                            Spacer().frame(width: CGFloat(data.wrappedValue.totalLevel! * 20))
                             HStack {
                                 Button {
                                     data.wrappedValue.state = data.wrappedValue.state.inverse
                                     buttonId[data.wrappedValue.id] = UUID()
+                                    withAnimation {
+                                        reposition?()
+                                    }
                                 } label: {
                                     Image(systemName: data.wrappedValue.state == .expanded ? "minus" : "plus")
                                         .id(buttonId[data.wrappedValue.id, default: UUID()])
@@ -324,8 +335,7 @@ struct InsightsView: View {
                                 }
                                 Spacer()
                             }
-                            .frame(width: 50)
-                            Spacer().frame(width: CGFloat(data.wrappedValue.totalLevel! * 20))
+                            .frame(width: 30)
                             Text(data.wrappedValue.totalLevel == 0 ? "Grand Total" : "Total for \(data.wrappedValue.levelKey!)")
                             Spacer()
                         }
