@@ -28,9 +28,7 @@ struct InsightsView: View {
     @State var showBoardSummary: BoardSummaryExtension? = nil
     @State var dismissView: Bool = false
     @State var buttonId: [UUID:UUID] = [:]
-    @State fileprivate var displayMode: InsightDisplayMode = .loading { didSet {
-        
-    }}
+    @State fileprivate var displayMode: InsightDisplayMode = .loading
     @StateObject private var scrollSync = ScrollSync<ScrollViews>()
     
     var body: some View {
@@ -71,7 +69,7 @@ struct InsightsView: View {
                                             Spacer().frame(width: 10)
                                             LazyVStack(alignment: .leading, spacing: 0) {
                                                 ForEach($rowIndex, id: \.id) { rowData in
-                                                    if showRow(totalIndex: rowData.wrappedValue.totalIndex) {
+                                                    if showRow(rowType: rowData.wrappedValue.rowType!, totalIndex: rowData.wrappedValue.totalIndex) {
                                                         rowView(data: rowData, columns: report.values.pinnedColumns, replaceTotal: true)
                                                     }
                                                 }
@@ -79,11 +77,10 @@ struct InsightsView: View {
                                             .frame(width: report.values.pinnedColumns.map{$0.width}.reduce(0, +))
                                             Spacer().frame(width: 20)
                                         }
-                                        .palette(.alternate)
                                         scrollSync.horizontalScrollView(showsIndicators: false, id: .data) {
                                             LazyVStack(alignment: .leading, spacing: 0) {
                                                 ForEach($rowIndex, id: \.id) { rowData in
-                                                    if showRow(totalIndex: rowData.wrappedValue.totalIndex) {
+                                                    if showRow(rowType: rowData.wrappedValue.rowType!, totalIndex: rowData.wrappedValue.totalIndex) {
                                                         rowView(data: rowData, columns: report.values.unpinnedColumns)
                                                     }
                                                 }
@@ -130,17 +127,16 @@ struct InsightsView: View {
         }
     }
     
-    func showRow(totalIndex: [Int?]) -> Bool {
-        var result = true
-        for index in totalIndex {
+    func showRow(rowType: InsightRowType, totalIndex: [Int?]) -> Bool {
+        var show = true
+        for index in totalIndex.reversed() {
             if let index = index {
-                if !rowIndex[index].expanded {
-                    result = false
-                    break
+                if rowIndex[index].state == .collapsed {
+                    show = false
                 }
             }
         }
-        return result
+        return show
     }
     
     func loadDefaultView() {
@@ -310,19 +306,26 @@ struct InsightsView: View {
                 }
             } else {
                 let width = columns.map({$0.width}).reduce(0, +)
-                LazyHStack(spacing: 0) {
+                HStack(spacing: 0) {
                     VStack(spacing: 0) {
                         Separator(direction: .horizontal, padding: false, thickness: 2, color: .black)
                         HStack {
-                            Spacer()
-                                .frame(width: CGFloat(data.wrappedValue.totalLevel! * 20))
-                            Button {
-                                data.wrappedValue.expanded.toggle()
-                                buttonId[data.wrappedValue.id] = UUID()
-                            } label: {
-                                Image(systemName: data.wrappedValue.expanded ? "minus" : "plus")
-                                    .id(buttonId[data.wrappedValue.id])
+                            Spacer().frame(width: 10)
+                            HStack {
+                                Button {
+                                    data.wrappedValue.state = data.wrappedValue.state.inverse
+                                    buttonId[data.wrappedValue.id] = UUID()
+                                } label: {
+                                    Image(systemName: data.wrappedValue.state == .expanded ? "minus" : "plus")
+                                        .id(buttonId[data.wrappedValue.id, default: UUID()])
+                                        .frame(width: 44, height: 20)
+                                        .background(Color.clear)
+                                        .contentShape(Rectangle())
+                                }
+                                Spacer()
                             }
+                            .frame(width: 50)
+                            Spacer().frame(width: CGFloat(data.wrappedValue.totalLevel! * 20))
                             Text(data.wrappedValue.totalLevel == 0 ? "Grand Total" : "Total for \(data.wrappedValue.levelKey!)")
                             Spacer()
                         }
@@ -333,7 +336,6 @@ struct InsightsView: View {
                     .frame(width: width, height: 20)
                     .fixedSize()
                 }
-                
             }
         }
         .onAppear {
@@ -481,11 +483,15 @@ struct InsightsView: View {
                 try insertTotals(startLevelIndex: 0, lastIndex: { sortIndex.count - 1 }, changed: { _ in true}, zeroTotals: { _ in })
 
                 // Build pointer from row to subtotals (excluding grand total)
-                var totalIndex: [Int?] = Array(repeating: nil, count : sortIndex.count - 1)
+                var totalIndex: [Int?] = Array(repeating: nil, count : sortIndex.count)
                 for index in (0..<sortIndex.count).reversed() {
                     if sortIndex[index].rowType == .total {
-                        // total
-                        totalIndex[sortIndex[index].totalLevel!] = index
+                        // Total - fill it in and clear anything at a lower level
+                        let level = sortIndex[index].totalLevel!
+                        totalIndex[level] = index
+                        for subIndex in (level + 1)..<(sortIndex.count) {
+                            totalIndex[subIndex] = 0
+                        }
                     }
                     sortIndex[index].totalIndex = totalIndex
                     if sortIndex[index].rowType == .total {

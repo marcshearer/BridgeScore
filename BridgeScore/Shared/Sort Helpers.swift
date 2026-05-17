@@ -16,16 +16,16 @@ class SortData<ViewModel,Value:Comparable> : Identifiable, Hashable {
     var source: ViewModel?
     var totals: [InsightColumn:Value] = [:] // (Count, Total)
     var totalIndex: [Int?] = []
-    var expanded: Bool = true
+    var state: SortDataState = .expanded
     
-    init(rowType: InsightRowType, totalLevel: Int? = nil, levelKey: AttributedString? = nil, keys: [CalculatedValue], source: ViewModel? = nil, totals: [InsightColumn:Value] = [:], expanded: Bool = true) {
+    init(rowType: InsightRowType, totalLevel: Int? = nil, levelKey: AttributedString? = nil, keys: [CalculatedValue], source: ViewModel? = nil, totals: [InsightColumn:Value] = [:], state: SortDataState = .expanded) {
         self.rowType = rowType
         self.totalLevel = totalLevel
         self.levelKey = levelKey
         self.keys = keys
         self.source = source
         self.totals = totals
-        self.expanded = expanded
+        self.state = state
     }
     
     static func == (lhs: SortData<ViewModel, Value>, rhs: SortData<ViewModel, Value>) -> Bool {
@@ -35,6 +35,13 @@ class SortData<ViewModel,Value:Comparable> : Identifiable, Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(self.id)
     }
+}
+
+enum SortDataState {
+    case expanded
+    case collapsed
+    
+    var inverse: SortDataState { (self == .expanded ? .collapsed : .expanded) }
 }
 
 class SortIndex {
