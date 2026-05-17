@@ -7,123 +7,106 @@
 
 import SwiftUI
 
-class ScrollSync<ID: Hashable & CaseIterable> : ObservableObject {
-    @Published private var position: [ID:ScrollPosition] = [:]
-    private var lastOffset: [ID:CGFloat] = [:]
-    private var activeId: ID? = nil
-    private var maxScroll: CGFloat = 0
+class ScrollSync<ID: Hashable> : ObservableObject {
+    fileprivate var activeId: ID? = nil
+}
+
+
+struct HorizontalScrollView<ID,Content> : View where Content : View, ID : Hashable {
+    var showsIndicators: Bool = false
+    var id: ID
+    var widths: [CGFloat]
+    @State var scrollSync: ScrollSync<ID>
+    @Binding var activeColumn: Int?
+    var content: () -> Content
     
-    init() {
-        for id in ID.allCases {
-            position[id] = ScrollPosition(point: .zero)
-        }
-    }
+    @State private var position: CGFloat = 0
+    @State private var lastOffset: CGFloat? = nil
+    @State private var startColumn: Int? = nil
     
-    @ViewBuilder func horizontalScrollView<Content: View>(showsIndicators: Bool = false, id: ID, @ViewBuilder content: @escaping () -> Content) -> some View {
-        
-        ScrollView(.horizontal, showsIndicators: showsIndicators) {
-            content()
-                .scrollTargetLayout()
-        }
-        .onScrollPhaseChange { [self] (_, newPhase) in
-            if newPhase != .idle {
-                activeId = id
-            } else if newPhase == .idle {
-                activeId = nil
-            }
-        }
-        .onScrollGeometryChange(for: CGFloat.self) { geometry in
-            geometry.contentSize.width - geometry.containerSize.width
-        } action: { [self] (_, newMaxScroll) in
-            maxScroll = newMaxScroll
-        }
-        .onScrollGeometryChange(for: CGFloat.self) { geometry in
-            geometry.contentOffset.x
-        } action: { [self] (_, newOffset) in
-            if activeId == id {
-                let newPosition = ScrollPosition(point: CGPoint(x: newOffset, y: 0))
-                for index in position.keys {
-                    if index != id {
-                        position[index]! = newPosition
-                        self.objectWillChange.send()
-                    }
-                }
-            }
-        }
-        .scrollPosition(binding(for: id))
-        .gesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { [self] value in
-                    lastOffset[id] = lastOffset[id] ?? value.startLocation.x
-                    let newX = min(maxScroll, max(0, position[id]!.point!.x + lastOffset[id]! - value.location.x))
-                    let newPosition = ScrollPosition(point: CGPoint(x: newX, y: 0))
-                    position[id] = newPosition
-                    for index in position.keys {
-                        if index != id {
-                            position[index] = newPosition
+    var body : some View {
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: showsIndicators) {
+                ZStack(alignment: .topLeading) {
+                    HStack(spacing: 0) {
+                        ForEach(widths.enumerated(), id: \.offset) { index, width in
+                            Color.clear.frame(width: width, height: 1)
+                                .id(index)
                         }
                     }
-                    lastOffset[id] = value.location.x
-                    self.objectWillChange.send()
+                    .scrollTargetLayout()
+                    content()
                 }
-                .onEnded { [self] _ in
-                    lastOffset[id] = nil
-                })
-    }
-    
-    @ViewBuilder func verticalScrollView<Content: View>(showsIndicators: Bool = false, id: ID, @ViewBuilder content: @escaping () -> Content) -> some View {
-        
-        ScrollView(.vertical, showsIndicators: showsIndicators) {
-            content()
-                .scrollTargetLayout()
-        }
-        .onScrollPhaseChange { [self] (_, newPhase) in
-            if newPhase != .idle {
-                activeId = id
-            } else if newPhase == .idle {
-                activeId = nil
             }
-        }
-        .onScrollGeometryChange(for: CGFloat.self) { geometry in
-            geometry.contentSize.height - geometry.containerSize.height
-        } action: { [self] (_, newMaxScroll) in
-            maxScroll = newMaxScroll
-        }
-        .onScrollGeometryChange(for: CGFloat.self) { geometry in
-            geometry.contentOffset.y
-        } action: { [self] (_, newOffset) in
-            if activeId == id {
-                let newPosition = ScrollPosition(point: CGPoint(x: 0, y: newOffset))
-                for index in position.keys {
-                    if index != id {
-                        position[index]! = newPosition
-                        self.objectWillChange.send()
+            .contentMargins(0, for: .scrollContent)
+            .scrollClipDisabled()
+            .scrollTargetBehavior(.viewAligned)
+            .scrollPosition(id: self.binding(for: id), anchor: .leading)
+            .onScrollPhaseChange { [self] (_, newPhase) in
+                if newPhase != .idle {
+                    scrollSync.activeId = id
+                } else if newPhase == .idle {
+                    scrollSync.activeId = nil
+                }
+            }
+            .onChange(of: activeColumn) {
+                if scrollSync.activeId != id {
+                    withAnimation(.spring(duration: 0.3, bounce: 0)) {
+                        proxy.scrollTo(activeColumn, anchor: .leading)
                     }
                 }
             }
-        }
-        .scrollPosition(binding(for: id))
-        .gesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { [self] value in
-                    lastOffset[id] = lastOffset[id] ?? value.startLocation.y
-                    let newY = min(maxScroll, max(0, position[id]!.point!.y + lastOffset[id]! - value.location.y))
-                    let newPosition = ScrollPosition(point: CGPoint(x: 0, y: newY ))
-                    position[id] = newPosition
-                    for index in position.keys {
-                        if index != id {
-                            position[index] = newPosition
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        scrollSync.activeId = id
+                        startColumn = startColumn ?? activeColumn ?? 0
+                        lastOffset = lastOffset ?? value.startLocation.x
+                        let lastColumnOffset = offset(for:startColumn ?? 0)
+                        let offset = lastOffset! - value.startLocation.x
+                        let newOffset = (lastColumnOffset - offset) * CGFloat(2)
+                        let newColumn = index(for: newOffset)
+                        if newColumn != activeColumn {
+                            activeColumn = newColumn
                         }
+                        lastOffset = value.location.x
                     }
-                    lastOffset[id] = value.location.y
-                    self.objectWillChange.send()
-                }
-                .onEnded { [self] _ in
-                    lastOffset[id] = nil
-                })
+                    .onEnded { [self] _ in
+                        startColumn = nil
+                        lastOffset = nil
+                    })
+        }
     }
     
-    func binding(for id: ID) -> Binding<ScrollPosition> {
-        Binding (get: { self.position[id]! }, set: { self.position[id] = $0 })
+    func offset(for column: Int) -> CGFloat {
+        widths.prefix(column).reduce(0,+)
+    }
+    
+    func index(for offset: CGFloat) -> Int {
+        var current: CGFloat = 0
+        if offset < 0 {
+            return 0
+        }
+        for (index, width) in widths.enumerated() {
+            let next = current + width
+            if offset >= current && offset < next {
+                return index
+            }
+            current = next
+        }
+        return widths.count - 1
+    }
+        
+    func binding(for id: ID) -> Binding<Int?> {
+        Binding (get: {
+            activeColumn
+        }, set: { newValue in
+            if let newValue = newValue {
+                if self.activeColumn != newValue {
+                    self.activeColumn = newValue
+                    scrollSync.activeId = id
+                }
+            }
+        })
     }
 }

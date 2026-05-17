@@ -31,6 +31,7 @@ struct InsightsView: View {
     @State var buttonId: [UUID:UUID] = [:]
     @State fileprivate var displayMode: InsightDisplayMode = .loading
     @StateObject private var scrollSync = ScrollSync<ScrollViews>()
+    @State var activeColumn: Int? = nil
     
     var body: some View {
         StandardView("Insights") {
@@ -52,8 +53,8 @@ struct InsightsView: View {
                             HStack(alignment: .top, spacing: 0) {
                                 Spacer().frame(width: 10)
                                 headerView(columns: report.values.pinnedColumns)
-                                Spacer().frame(width: 20)
-                                scrollSync.horizontalScrollView(id: .heading) {
+                                    .zIndex(1)
+                                HorizontalScrollView(id: .heading, widths: report.values.unpinnedColumns.map{$0.width}, scrollSync: scrollSync, activeColumn: $activeColumn) {
                                     headerView(columns: report.values.unpinnedColumns)
                                 }
                                 Spacer().frame(width: 10)
@@ -72,11 +73,12 @@ struct InsightsView: View {
                                                 LazyVStack(alignment: .leading, spacing: 0) {
                                                     ForEach($filteredIndex, id: \.id) { rowData in
                                                         rowView(data: rowData, columns: report.values.pinnedColumns, replaceTotal: true)
+                                                            .zIndex(1)
                                                     }
                                                 }
                                                 .frame(width: report.values.pinnedColumns.map{$0.width}.reduce(0, +))
                                             }
-                                            scrollSync.horizontalScrollView(showsIndicators: false, id: .data) {
+                                            HorizontalScrollView(id: .data, widths: report.values.unpinnedColumns.map{$0.width}, scrollSync: scrollSync, activeColumn: $activeColumn) {
                                                 LazyVStack(alignment: .leading, spacing: 0) {
                                                     ForEach($filteredIndex, id: \.id) { rowData in
                                                         rowView(data: rowData, columns: report.values.unpinnedColumns)
@@ -94,9 +96,9 @@ struct InsightsView: View {
                                         spacerView(columns: report.values.pinnedColumns)
                                         Spacer().frame(width: 20)
                                     }
-                                    .palette(.alternate)
-                                    scrollSync.horizontalScrollView(showsIndicators: true, id: .scrollIndicator) {
+                                    HorizontalScrollView(showsIndicators: true, id: .scrollIndicator, widths: report.values.unpinnedColumns.map{$0.width}, scrollSync: scrollSync, activeColumn: $activeColumn) {
                                         spacerView(columns: report.values.unpinnedColumns)
+                                            .zIndex(1)
                                     }
                                     Spacer().frame(width: 10)
                                 }
