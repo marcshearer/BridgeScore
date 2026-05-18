@@ -14,13 +14,14 @@ struct InsightsSetupView : View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 0) {
-                Spacer().frame(width: 100)
+                Color.clear.frame(width: 20)
+                Color.clear.frame(minWidth: 20, idealWidth: 100, maxWidth: 100).layoutPriority(-1)
                 InsightsChooseColumnsView(report: report, data: data)
-                Spacer().frame(width: 100)
+                Color.clear.frame(minWidth: 20, maxWidth: 100).layoutPriority(-1)
                 InsightsSortLevelsView(report: report)
                 Spacer()
                 InsightsReportViewStorage(report: report)
-                Spacer().frame(width: 50)
+                Color.clear.frame(minWidth: 20, maxWidth: 50).layoutPriority(-1)
             }
         }
     }
@@ -39,9 +40,10 @@ struct InsightsChooseColumnsView : View {
                     Spacer()
                     Text("Drag columns to different sections")
                         .font(defaultFont)
+                        .minimumScaleFactor(0.5)
                     Spacer()
                 }
-                .frame(width: 500)
+                .frame(minWidth: 300, maxWidth: 500)
                 Spacer()
             }
             Spacer().frame(height: 40)
@@ -52,7 +54,7 @@ struct InsightsChooseColumnsView : View {
                     InsightsColumnListView(report: report, data: data, title: "Calculated", columns: $report.values.calculatedColumns, listType: .calculatedColumns, allowDrag: true, showEdit: true, showInsert: true, showRemove: true, selectedListType: $selectedListType)
                     Spacer()
                 }
-                Spacer().frame(width: 100)
+                Color.clear.frame(minWidth: 20, maxWidth: 100).layoutPriority(-1)
                 VStack(spacing: 0) {
                     InsightsColumnListView(report: report, data: data, title: "Pinned", columns: $report.values.pinnedColumns, listType: .pinnedColumns, allowDrag: true, showRemove: true, specificDrop: true, height: 240, selectedListType: $selectedListType, onDropReceived: onDropReceived)
                     Spacer().frame(height: 40)
