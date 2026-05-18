@@ -277,7 +277,7 @@ enum CalculatedFunction : String, CaseIterable, Codable {
     }
 }
 
-struct CalculatedValue : Codable, Equatable {
+struct CalculatedValue : Codable, Equatable, Hashable {
     var numeric: Float?
     var string: String?
     var boolean: Bool?

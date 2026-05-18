@@ -13,13 +13,15 @@ struct ReportValues: Codable {
     var unpinnedColumns: [InsightColumn]
     var calculatedColumns: [InsightColumn]
     var levels: [CalculatedSortLevel]
+    var prompts: [CalculatedPrompt]
     
-    init(viewName: String = "", pinnedColumns: [InsightColumn], unpinnedColumns: [InsightColumn], calculatedColumns: [InsightColumn] = [], levels: [CalculatedSortLevel] = [CalculatedSortLevel(isBoard: true)]) {
+    init(viewName: String = "", pinnedColumns: [InsightColumn], unpinnedColumns: [InsightColumn], calculatedColumns: [InsightColumn] = [], levels: [CalculatedSortLevel] = [CalculatedSortLevel(isBoard: true)], prompts: [CalculatedPrompt] = []) {
         self.viewName = viewName
         self.pinnedColumns = pinnedColumns
         self.unpinnedColumns = unpinnedColumns
         self.calculatedColumns = calculatedColumns
         self.levels = levels
+        self.prompts = prompts
     }
     
     var unpinnedSpacerColumns: [InsightColumn] {
@@ -64,8 +66,8 @@ class Report: ObservableObject {
     static var parses = 0
     static var selectionParses = 0
     
-    init(viewName: String = "", pinnedColumns: [InsightColumn] = [], unpinnedColumns: [InsightColumn] = [], calculatedColumns: [InsightColumn] = [], levels: [CalculatedSortLevel] = [CalculatedSortLevel(isBoard: true)]) {
-        self.values = ReportValues(viewName: viewName, pinnedColumns: pinnedColumns, unpinnedColumns: unpinnedColumns, calculatedColumns: calculatedColumns, levels: levels)
+    init(viewName: String = "", pinnedColumns: [InsightColumn] = [], unpinnedColumns: [InsightColumn] = [], calculatedColumns: [InsightColumn] = [], levels: [CalculatedSortLevel] = [CalculatedSortLevel(isBoard: true)], prompts: [CalculatedPrompt] = []) {
+        self.values = ReportValues(viewName: viewName, pinnedColumns: pinnedColumns, unpinnedColumns: unpinnedColumns, calculatedColumns: calculatedColumns, levels: levels, prompts: prompts)
     }
     
     func update(from newValues: ReportValues) throws {
@@ -83,8 +85,11 @@ class Report: ObservableObject {
         for column in newValues.calculatedColumns {
             values.calculatedColumns.append(column)
         }
-        for sort in newValues.levels {
-            values.levels.append(sort)
+        for level in newValues.levels {
+            values.levels.append(level)
+        }
+        for prompt in newValues.prompts {
+            values.prompts.append(prompt)
         }
         try refresh()
     }
@@ -317,7 +322,6 @@ class CalculatedColumn : Codable, Equatable, Hashable, Identifiable, ObservableO
             parser.parse() { (tree, message) in
                 self.tree = tree
                 Report.parses += 1
-                print("Calculation parses: \(Report.parses)")
             }
         }
     }
@@ -474,7 +478,6 @@ class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had 
             parser.parse() { (tree, message) in
                 self.selectionTree = tree
                 Report.selectionParses += 1
-                print("Selection parses: \(Report.selectionParses)")
             }
         }
     }
@@ -539,5 +542,81 @@ class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had 
     var selectionLogicString: String {
         selectionLogic.map{$0.string}.joined(separator: " ")
     }
+}
+
+enum CalculatedPromptType : Int, Equatable, Hashable, Codable, CaseIterable {
+    case partner
+    case location
+    case levelType
+    case suitType
+    case pairType
+    case seatPlayer
+    case eventType
+    case boardScoreType
+    case other
+}
+
+class CalculatedPrompt : Codable, Equatable, Hashable, Identifiable, ObservableObject {
+    var id: UUID = UUID()
+    var name: String
+    var promptText: String
+    var type: CalculatedType
+    var defaultValue: CalculatedValue
+    var promptType: CalculatedPromptType
+    var value: CalculatedValue?
+    
+    init() {
+        self.name = ""
+        self.promptText = ""
+        self.type = .numeric
+        self.defaultValue = CalculatedValue(0)
+        self.promptType = .other
+        self.value = nil
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case name
+        case promptText
+        case type
+        case defaultValue
+        case promptType
+    }
+    
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        name = try container.decodeIfPresent(String.self, forKey: .name) ?? ""
+        promptText = try container.decodeIfPresent(String.self, forKey: .promptText) ?? ""
+        type = try container.decodeIfPresent(CalculatedType.self, forKey: .type) ?? .numeric
+        defaultValue = try container.decodeIfPresent(CalculatedValue.self, forKey: .defaultValue) ?? CalculatedValue(0)
+        promptType = try container.decodeIfPresent(CalculatedPromptType.self, forKey: .promptType) ?? .other
+        value = nil
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(name)
+        hasher.combine(promptText)
+        hasher.combine(type)
+        hasher.combine(defaultValue)
+        hasher.combine(value)
+    }
+    
+    func copy(from: CalculatedPrompt) {
+        self.name = from.name
+        self.promptText = from.promptText
+        self.type = from.type
+        self.defaultValue = from.defaultValue
+        self.promptType = from.promptType
+    }
+    
+    static func == (lhs: CalculatedPrompt, rhs: CalculatedPrompt) -> Bool {
+        lhs.id == rhs.id
+        && lhs.name == rhs.name
+        && lhs.promptText == rhs.promptText
+        && lhs.type == rhs.type
+        && lhs.defaultValue == rhs.defaultValue
+        && lhs.value == rhs.value
+    }
+    
 }
 

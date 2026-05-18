@@ -58,6 +58,7 @@
 		B21CC0C027A02A2A001AECC1 /* Stepper Input.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21CC0BF27A02A2A001AECC1 /* Stepper Input.swift */; };
 		B21E6F6D27C511DA00DBDCC2 /* Bridge Calculations.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21E6F6C27C511DA00DBDCC2 /* Bridge Calculations.swift */; };
 		B2203EB52AE8CCFC00FA27C8 /* input Number Mac.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2203EB42AE8CCFC00FA27C8 /* input Number Mac.swift */; };
+		B22305952FBB60AD005A555E /* Insights Prompt View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22305942FBB60A5005A555E /* Insights Prompt View.swift */; };
 		B2276D5A27A692A40025DA80 /* Constraint.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2276D5927A692A40025DA80 /* Constraint.swift */; };
 		B22D1C2F2AFA2B8300C8897F /* Text Input Wrappers.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22D1C2E2AFA2B8300C8897F /* Text Input Wrappers.swift */; };
 		B22D1C312AFA2C0400C8897F /* First Responder Label.swift in Sources */ = {isa = PBXBuildFile; fileRef = B22D1C302AFA2C0400C8897F /* First Responder Label.swift */; };
@@ -264,6 +265,7 @@
 		B21CC0BF27A02A2A001AECC1 /* Stepper Input.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Stepper Input.swift"; sourceTree = "<group>"; };
 		B21E6F6C27C511DA00DBDCC2 /* Bridge Calculations.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Bridge Calculations.swift"; sourceTree = "<group>"; };
 		B2203EB42AE8CCFC00FA27C8 /* input Number Mac.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "input Number Mac.swift"; sourceTree = "<group>"; };
+		B22305942FBB60A5005A555E /* Insights Prompt View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Insights Prompt View.swift"; sourceTree = "<group>"; };
 		B2276D5727A5A2C90025DA80 /* Scorecard Canvas View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Canvas View.swift"; sourceTree = "<group>"; };
 		B2276D5927A692A40025DA80 /* Constraint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constraint.swift; sourceTree = "<group>"; };
 		B22D1C2E2AFA2B8300C8897F /* Text Input Wrappers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = "Text Input Wrappers.swift"; path = "../Main App/Text Input Wrappers.swift"; sourceTree = "<group>"; };
@@ -744,6 +746,7 @@
 				B2A724D02FA61BF400C574DC /* Insights Setup View.swift */,
 				B23F362D2FB0DAF7009C2AA9 /* Insights Calculated View.swift */,
 				B23F362F2FB0DB3D009C2AA9 /* Insights Sort Level View.swift */,
+				B22305942FBB60A5005A555E /* Insights Prompt View.swift */,
 				B23F362B2FB04AA6009C2AA9 /* Insights Storage View.swift */,
 				B2EEFC772AAB5BE4005A1ECA /* Analysis Viewer.swift */,
 			);
@@ -1094,6 +1097,7 @@
 				B250412E2ABD9A0E00C58CAD /* Picker Input Simple.swift in Sources */,
 				B2AB6ECB2AC2CCA900ED002A /* Analysis.swift in Sources */,
 				B27AD1332F693AE600890600 /* Rescore.swift in Sources */,
+				B22305952FBB60AD005A555E /* Insights Prompt View.swift in Sources */,
 				B2C4338C27B6646700796F24 /* Scorecard Input View.swift in Sources */,
 				B22D1C332AFA2C6200C8897F /* Key Action Enumeration.swift in Sources */,
 				B26BCE4E2799AD8900B73501 /* Link Presentation.swift in Sources */,

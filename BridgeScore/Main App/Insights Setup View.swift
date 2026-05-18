@@ -28,7 +28,11 @@ struct InsightsSetupView : View {
                 Spacer().frame(width: 30)
                 InsightsChooseColumnsView(report: report, data: data)
                 Spacer().frame(width: 30)
-                InsightsSortLevelsView(report: report).layoutPriority(1)
+                VStack(spacing: 0) {
+                    InsightsSortLevelsView(report: report).layoutPriority(1)
+                    InsightsPromptsView(report: report).layoutPriority(1)
+                    Spacer().layoutPriority(1)
+                }
                 Spacer().frame(width: 30)
                 InsightsReportViewStorage(report: report)
                 Spacer().frame(width: 30)

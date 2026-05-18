@@ -40,7 +40,7 @@ struct InsightsCalculatedColumnView : View {
     
     var body: some View {
         VStack(spacing: 0) {
-            Banner(title: Binding.constant("\(editMode.string.capitalized) Calculated Value"), alternateColor: true)
+            Banner(title: Binding.constant("\(editMode.string.capitalized) Calculated Value"), alternateColor: true, height: 80)
             Spacer().frame(height: 60)
             HStack {
                 Spacer().frame(width: 40)
@@ -445,8 +445,8 @@ struct MyTextField<Focus> : View where Focus: Hashable {
     var cornerRadius: CGFloat = 8
     var color: ThemeBackgroundColorName = .input
     var keyboardType: UIKeyboardType = .default
-    var autoCapitalize: TextInputAutocapitalization = .sentences
-    var autoCorrect: Bool = true
+    var autoCapitalize: TextInputAutocapitalization = .never
+    var autoCorrect: Bool = false
     var onChange: ((String)->())?
     
     var body: some View {
@@ -459,7 +459,7 @@ struct MyTextField<Focus> : View where Focus: Hashable {
             )
         
         MiddleCentered(horizontalPadding: 8, verticalPadding: 4) {
-            TextField("", text: binding)
+            TextField("", text: $field)
                 .onChange(of: field) { oldValue, newValue in
                     onChange?(newValue)
                 }
@@ -473,7 +473,7 @@ struct MyTextField<Focus> : View where Focus: Hashable {
                 .background(.clear)
                 .labelsHidden()
                 .lineLimit(1)
-                .focusEffectDisabled(true)
+                //.focusEffectDisabled(true)
                 .focusable(true)
                 .focused($focused, equals: focusValue)
                 .keyboardType(keyboardType)
