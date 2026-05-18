@@ -32,6 +32,9 @@ struct InsightsView: View {
     @State fileprivate var displayMode: InsightDisplayMode = .loading
     @StateObject private var scrollSync = ScrollSync<ScrollViews>()
     @State var activeColumn: Int? = nil
+    @State var horizontalScroll: Bool = false
+    @State var scrollWidth: CGFloat = 0
+    let rowHeight: CGFloat = 30
     
     var body: some View {
         StandardView("Insights") {
@@ -51,13 +54,11 @@ struct InsightsView: View {
                         VStack(alignment: .leading, spacing: 0) {
                             Spacer().frame(height: 10)
                             HStack(alignment: .top, spacing: 0) {
-                                Spacer().frame(width: 10)
-                                headerView(columns: report.values.pinnedColumns)
+                                headerView(columns: report.values.pinnedColumns, pinned: true)
                                     .zIndex(1)
-                                HorizontalScrollView(id: .heading, widths: report.values.unpinnedColumns.map{$0.width}, scrollSync: scrollSync, activeColumn: $activeColumn) {
-                                    headerView(columns: report.values.unpinnedColumns)
+                                HorizontalScrollView(id: .heading, widths: report.values.unpinnedSpacerColumns.map{$0.width}, scrollSync: scrollSync, activeColumn: $activeColumn) {
+                                    headerView(columns: report.values.unpinnedSpacerColumns, pinned: false)
                                 }
-                                Spacer().frame(width: 10)
                             }
                             .frame(height: 80)
                             if displayMode == .loading {
@@ -69,39 +70,50 @@ struct InsightsView: View {
                                     ScrollView(.vertical) {
                                         HStack(spacing: 0) {
                                             HStack {
-                                                Spacer().frame(width: 10)
                                                 LazyVStack(alignment: .leading, spacing: 0) {
                                                     ForEach($filteredIndex, id: \.id) { rowData in
-                                                        rowView(data: rowData, columns: report.values.pinnedColumns, replaceTotal: true)
+                                                        rowView(data: rowData, columns: report.values.pinnedColumns, pinned: true)
                                                             .zIndex(1)
                                                     }
                                                 }
                                                 .frame(width: report.values.pinnedColumns.map{$0.width}.reduce(0, +))
                                             }
-                                            HorizontalScrollView(id: .data, widths: report.values.unpinnedColumns.map{$0.width}, scrollSync: scrollSync, activeColumn: $activeColumn) {
+                                            HorizontalScrollView(id: .data, widths: report.values.unpinnedSpacerColumns.map{$0.width}, scrollSync: scrollSync, activeColumn: $activeColumn) {
                                                 LazyVStack(alignment: .leading, spacing: 0) {
                                                     ForEach($filteredIndex, id: \.id) { rowData in
-                                                        rowView(data: rowData, columns: report.values.unpinnedColumns)
+                                                        rowView(data: rowData, columns: report.values.unpinnedSpacerColumns, pinned: false)
                                                             .id(rowData.id)
                                                     }
                                                 }
                                             }
-                                            Spacer().frame(width: 10)
                                         }
                                     }
+                                    .ignoresSafeArea(edges: .bottom)
                                 }
-                                HStack{
-                                    HStack {
-                                        Spacer().frame(width: 10)
-                                        spacerView(columns: report.values.pinnedColumns)
-                                        Spacer().frame(width: 20)
+                                VStack {
+                                    HStack{
+                                        HStack {
+                                            spacerView(columns: report.values.pinnedColumns, pinned: true)
+                                        }
+                                        HorizontalScrollView(showsIndicators: true, id: .scrollIndicator, widths: report.values.unpinnedSpacerColumns.map{$0.width}, scrollSync: scrollSync, activeColumn: $activeColumn) {
+                                            spacerView(columns: report.values.unpinnedSpacerColumns, pinned: false)
+                                                .zIndex(1)
+                                        }
+                                        .onScrollGeometryChange(for: Bool.self) { geometry in
+                                            geometry.contentSize.width > geometry.containerSize.width
+                                        } action: { _, scroll in
+                                            horizontalScroll = scroll
+                                        }
+                                        .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                                            geometry.containerSize.width
+                                        } action: { [self] (_, newScrollWidth) in
+                                            scrollWidth = newScrollWidth
+                                        }
                                     }
-                                    HorizontalScrollView(showsIndicators: true, id: .scrollIndicator, widths: report.values.unpinnedColumns.map{$0.width}, scrollSync: scrollSync, activeColumn: $activeColumn) {
-                                        spacerView(columns: report.values.unpinnedColumns)
-                                            .zIndex(1)
-                                    }
-                                    Spacer().frame(width: 10)
+                                    Spacer()
                                 }
+                                .frame(height: horizontalScroll ? 20 : 0)
+                                .ignoresSafeArea(edges: .bottom)
                             }
                         }
                     } else {
@@ -109,6 +121,7 @@ struct InsightsView: View {
                         Spacer()
                     }
                 }
+                .ignoresSafeArea(edges: .bottom)
                 .fullScreenCover(item: $showBoardSummary, onDismiss: {
                     if let scorecard = Scorecard.current.scorecard {
                         Scorecard.current.saveAll(scorecard: scorecard)
@@ -124,54 +137,6 @@ struct InsightsView: View {
             Task {
                 loadDefaultView()
                 await loadData()
-            }
-        }
-    }
-    
-    func filterData() {
-        let filtered = sortIndex.filter{ showRow(rowType: $0.rowType!, totalIndex: $0.totalIndex) }
-        filteredIndex = filtered
-    }
-    
-    func showRow(rowType: InsightRowType, totalIndex: [Int?]) -> Bool {
-        var show = true
-        for index in totalIndex.reversed() {
-            if let index = index {
-                if sortIndex[index].state == .collapsed {
-                    show = false
-                }
-            }
-        }
-        return show
-    }
-    
-    func loadDefaultView() {
-        let defaultUrl = InsightsReportViewStorage.url(for: UserDefault.defaultViewName.string)
-        if !InsightsReportViewStorage.load(report: report, from: defaultUrl) {
-            do {
-                let level = CalculatedSortLevel(isBoard: true)
-                level.selectionLogic = [.variable(.age),.comparisonOperator(.lessThan),.literal(CalculatedLiteral(characters: "30", type: .numeric))]
-                try report.update(from: ReportValues(pinnedColumns: InsightColumn.defaultPinnedColumns, unpinnedColumns: InsightColumn.defaultColumns, levels: [level]))
-            } catch {
-                // Just ignore for now
-                print(error)
-            }
-        }
-    }
-    func loadData() async {
-        // Load master data
-        await allBoardSummaries = Insights.load()
-        if allBoardSummaries.isEmpty {
-            // TODO Shouldn't need this
-            await Insights.build()
-            await allBoardSummaries = Insights.load()
-        }
-        Task(priority: .userInitiated) {
-            if let errorMessage = await reload() {
-                MessageBox.shared.show(errorMessage)
-            }
-            await MainActor.run {
-                displayMode = .displaying
             }
         }
     }
@@ -232,8 +197,11 @@ struct InsightsView: View {
         }
     }
     
-    func headerView(columns: [InsightColumn]) -> some View {
-        HStack(spacing: 0) {
+    func headerView(columns: [InsightColumn], pinned: Bool) -> some View {
+        LazyHStack(spacing: 0) {
+            if pinned {
+                Color.clear.frame(width: 10, height: rowHeight)
+            }
             ForEach(0..<columns.count, id: \.self) { columnIndex in
                 let column = columns[columnIndex]
                 HStack {
@@ -249,118 +217,159 @@ struct InsightsView: View {
                 }
                 .frame(width: column.width, height: 80)
             }
+            if !pinned {
+                Color.clear.frame(width: 10, height: rowHeight)
+            }
         }
         .palette(.contrastTile)
     }
     
-    func rowView(data: Binding<SortData<BoardSummaryExtension,InsightTotal>>, columns: [InsightColumn], replaceTotal: Bool = false, reposition: ((UUID)->())? = nil) -> some View {
-        LazyHStack {
+    func rowView(data: Binding<SortData<BoardSummaryExtension,InsightTotal>>, columns: [InsightColumn], pinned: Bool) -> some View {
+        LazyHStack(spacing: 0) {
+            Color.clear.frame(width: 10, height: rowHeight)
             if data.wrappedValue.totalLevel == nil {
-                let boardSummary = (data.source.wrappedValue as BoardSummaryExtension?)!
-                LazyHStack(alignment: .top, spacing: 0) {
-                    ForEach(0..<columns.count, id: \.self) { columnIndex in
-                        let column = columns[columnIndex]
-                        HStack {
-                            if column.align != .left {
-                                Spacer()
-                            }
-                            if column.visibility.isInBoard {
-                                Text(column.textValue(report: report, boardSummary: boardSummary))
-                            } else {
-                                Text("")
-                            }
-                            if column.align != .right {
-                                Spacer()
-                            }
-                        }
-                        .frame(width: column.width, height: 20)
-                    }
-                }.contentShape(Rectangle())
-                    .help("\(boardSummary.scorecard.desc)\nDate: \(Utility.dateString(boardSummary.scorecard.date, format: "dd/MM/yyyy"))\nLocation: \(boardSummary.location!.name)\nPartner: \(boardSummary.partner!.name)\nBoard: \(boardSummary.boardNumber) of \(boardSummary.scorecard.boards)")
-                    .onTapGesture {
-                        if loadDetails(boardSummary: boardSummary) {
-                            showBoardSummary = boardSummary
-                        }
-                    }
-            } else if !replaceTotal {
-                LazyHStack(spacing: 0) {
-                    ForEach(0..<columns.count, id: \.self) { columnIndex in
-                        let column = columns[columnIndex]
-                        VStack(spacing: 0) {
-                            Separator(direction: .horizontal, padding: false, thickness: 2, color: .black)
-                            HStack {
-                                if column.align != .left {
-                                    Spacer()
-                                }
-                                if let total = data.wrappedValue.totals[column], let value = total.value, let count = total.count {
-                                    let showValue = column.totalValue(value: value, count: count)
-                                    if column.insightType == .percent {
-                                        Text((showValue * Float(100)).toString(places: column.decimalPlaces) + "%")
-                                    } else {
-                                        Text(showValue.toString(places: column.decimalPlaces))
-                                    }
-                                } else {
-                                    Text("")
-                                }
-                                if column.align != .right {
-                                    Spacer()
-                                }
-                            }
-                            .bold()
-                            .palette(.background, .theme, clear: true)
-                            .frame(width: column.width, height: 18)
-                        }
-                        .frame(width: column.width, height: 20)
-                        .fixedSize()
-                    }
-                }
+                rowViewData(data: data, boardSummary: (data.source.wrappedValue as BoardSummaryExtension?)!, columns: columns)
+            } else if pinned {
+                rowViewTotalHeading(data: data, columns: columns)
             } else {
-                let width = columns.map({$0.width}).reduce(0, +)
-                HStack(spacing: 0) {
-                    VStack(spacing: 0) {
-                        Separator(direction: .horizontal, padding: false, thickness: 2, color: .black)
-                        HStack {
-                            Spacer().frame(width: CGFloat(data.wrappedValue.totalLevel! * 20))
-                            HStack {
-                                Button {
-                                    let id = data.id
-                                    buttonId[data.wrappedValue.id, default: UUID()] = UUID()
-                                    data.wrappedValue.state = data.wrappedValue.state.inverse
-                                    filterData()
-                                    Utility.executeAfter(delay: 0.1) {
-                                        withAnimation {
-                                            reposition?(id)
-                                        }
-                                    }
-                                } label: {
-                                    Image(systemName: data.wrappedValue.state == .expanded ? "minus" : "plus")
-                                        .id(buttonId[data.wrappedValue.id, default: UUID()])
-                                        .frame(width: 44, height: 20)
-                                        .background(Color.clear)
-                                        .contentShape(Rectangle())
-                                }
-                                Spacer()
-                            }
-                            .frame(width: 30)
-                            Text(data.wrappedValue.totalLevel == 0 ? "Grand Total" : "Total for \(data.wrappedValue.levelKey!)")
-                            Spacer()
-                        }
-                        .bold()
-                        .palette(.background, .theme, clear: true)
-                        .frame(width: width, height: 18)
-                    }
-                    .frame(width: width, height: 20)
-                    .fixedSize()
-                }
+                rowViewTotalValues(data: data, columns: columns)
             }
+            if !pinned {
+                Color.clear.frame(width: 10, height: rowHeight)
+            }
+        }
+        .palette(rowColor(level: data.wrappedValue.totalLevel))
+    }
+    
+    func rowViewData(data: Binding<SortData<BoardSummaryExtension,InsightTotal>>, boardSummary: BoardSummaryExtension, columns: [InsightColumn], replaceTotal: Bool = false) -> some View {
+        
+        LazyHStack(alignment: .top, spacing: 0) {
+            ForEach(0..<columns.count, id: \.self) { columnIndex in
+                let column = columns[columnIndex]
+                HStack {
+                    if column.align != .left {
+                        Spacer()
+                    }
+                    if column.visibility.isInBoard {
+                        Text(column.textValue(report: report, boardSummary: boardSummary))
+                    } else {
+                        Text("")
+                    }
+                    if column.align != .right {
+                        Spacer()
+                    }
+                }
+                .frame(width: column.width, height: rowHeight)
+            }
+        }
+        .contentShape(Rectangle())
+        .help("\(boardSummary.scorecard.desc)\nDate: \(Utility.dateString(boardSummary.scorecard.date, format: "dd/MM/yyyy"))\nLocation: \(boardSummary.location!.name)\nPartner: \(boardSummary.partner!.name)\nBoard: \(boardSummary.boardNumber) of \(boardSummary.scorecard.boards)")
+        .onTapGesture {
+            if loadDetails(boardSummary: boardSummary) {
+                showBoardSummary = boardSummary
+            }
+        }
+    }
+    
+    func rowViewTotalHeading(data: Binding<SortData<BoardSummaryExtension,InsightTotal>>, columns: [InsightColumn], replaceTotal: Bool = false,) -> some View {
+        
+        LazyHStack(spacing: 0) {
+            let width = columns.map({$0.width}).reduce(0, +)
+            VStack(spacing: 0) {
+                HStack {
+                    Spacer().frame(width: CGFloat(data.wrappedValue.totalLevel! * 20))
+                    HStack {
+                        Button {
+                            buttonId[data.wrappedValue.id, default: UUID()] = UUID()
+                            data.wrappedValue.state = data.wrappedValue.state.inverse
+                            filterData()
+                        } label: {
+                            Image(systemName: data.wrappedValue.state == .expanded ? "minus" : "plus")
+                                .id(buttonId[data.wrappedValue.id, default: UUID()])
+                                .frame(width: 44, height: rowHeight)
+                                .background(Color.clear)
+                                .contentShape(Rectangle())
+                        }
+                    }
+                    .frame(width: 30)
+                    Text(data.wrappedValue.totalLevel == 0 ? "Grand Total" : "Total for \(data.wrappedValue.levelKey!)")
+                    Spacer()
+                }
+                .bold()
+            }
+            .frame(width: width, height: rowHeight)
+            .fixedSize()
         }
         .onAppear {
             buttonId[data.wrappedValue.id] = UUID()
         }
     }
     
-    func spacerView(columns: [InsightColumn]) -> some View {
-        Spacer().frame(width: columns.map{$0.width}.reduce(0,+), height: 10)
+    func rowViewTotalValues(data: Binding<SortData<BoardSummaryExtension,InsightTotal>>, columns: [InsightColumn], replaceTotal: Bool = false) -> some View {
+        
+        LazyHStack(spacing: 0) {
+            ForEach(0..<columns.count, id: \.self) { columnIndex in
+                let column = columns[columnIndex]
+                VStack(spacing: 0) {
+                    HStack {
+                        if column.align != .left {
+                            Spacer()
+                        }
+                        if let total = data.wrappedValue.totals[column], let value = total.value, let count = total.count {
+                            let showValue = column.totalValue(value: value, count: count)
+                            if column.insightType == .percent {
+                                Text((showValue * Float(100)).toString(places: column.decimalPlaces) + "%")
+                            } else {
+                                Text(showValue.toString(places: column.decimalPlaces))
+                            }
+                        } else {
+                            Text("")
+                        }
+                        if column.align != .right {
+                            Spacer()
+                        }
+                    }
+                    .bold()
+                }
+                .frame(width: (column == .spacer ? spacerWidth : column.width), height: rowHeight)
+                .fixedSize()
+            }
+            Spacer().background(Color.blue)
+                .frame(maxWidth: .infinity)
+                .frame(height: rowHeight)
+        }
+    }
+    
+    func spacerView(columns: [InsightColumn], pinned: Bool) -> some View {
+        HStack(spacing: 0) {
+            if pinned {
+                Spacer().frame(width: 10)
+            }
+            Spacer().frame(width: columns.map{$0.width}.reduce(0,+), height: horizontalScroll ? 15 : 0)
+            if !pinned {
+                Spacer().frame(width: 10)
+            }
+        }
+    }
+    
+    var spacerWidth: CGFloat {
+        // Width of padding when unpinned scroll view isn't full
+        max(0, scrollWidth - report.values.unpinnedSpacerColumns.map{$0.width}.reduce(0,+))
+    }
+    
+    func rowColor(level: Int?) -> ThemeBackgroundColorName {
+        switch level {
+        case nil:
+                .background
+        case 0:
+                .grandTotal
+        case 1:
+                .subtotal1
+        case 2:
+                .subtotal2
+        default:
+                .subtotal3
+        }
     }
     
     func showDetails(boardSummary: BoardSummaryExtension, frame: CGRect) -> some View {
@@ -400,6 +409,54 @@ struct InsightsView: View {
             }
         } else {
             return true
+        }
+    }
+    
+    func filterData() {
+        let filtered = sortIndex.filter{ showRow(rowType: $0.rowType!, totalIndex: $0.totalIndex) }
+        filteredIndex = filtered
+    }
+    
+    func showRow(rowType: InsightRowType, totalIndex: [Int?]) -> Bool {
+        var show = true
+        for index in totalIndex.reversed() {
+            if let index = index {
+                if sortIndex[index].state == .collapsed {
+                    show = false
+                }
+            }
+        }
+        return show
+    }
+    
+    func loadDefaultView() {
+        let defaultUrl = InsightsReportViewStorage.url(for: UserDefault.defaultViewName.string)
+        if !InsightsReportViewStorage.load(report: report, from: defaultUrl) {
+            do {
+                let level = CalculatedSortLevel(isBoard: true)
+                level.selectionLogic = [.variable(.age),.comparisonOperator(.lessThan),.literal(CalculatedLiteral(characters: "30", type: .numeric))]
+                try report.update(from: ReportValues(pinnedColumns: InsightColumn.defaultPinnedColumns, unpinnedColumns: InsightColumn.defaultColumns, levels: [level]))
+            } catch {
+                // Just ignore for now
+                print(error)
+            }
+        }
+    }
+    func loadData() async {
+        // Load master data
+        await allBoardSummaries = Insights.load()
+        if allBoardSummaries.isEmpty {
+            // TODO Shouldn't need this
+            await Insights.build()
+            await allBoardSummaries = Insights.load()
+        }
+        Task(priority: .userInitiated) {
+            if let errorMessage = await reload() {
+                MessageBox.shared.show(errorMessage)
+            }
+            await MainActor.run {
+                displayMode = .displaying
+            }
         }
     }
     

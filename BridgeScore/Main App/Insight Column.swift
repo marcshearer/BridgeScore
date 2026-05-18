@@ -74,6 +74,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     case smallSlam(pairType: PairType)
     case grandSlam(pairType: PairType)
     case calculated(column: CalculatedColumn)
+    case spacer
     
     static var transferRepresentation: some TransferRepresentation {
         CodableRepresentation(contentType: .data)
@@ -282,6 +283,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             "\(seatPlayer.string) Small Slam"
         case .grandSlam(let seatPlayer):
             "\(seatPlayer.string) Grand Slam"
+        case .spacer:
+            ""
         }
     }
     
@@ -380,6 +383,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
                 .numeric
         case .passout, .partScore, .game, .smallSlam, .grandSlam:
                 .percent
+        case .spacer:
+                .string
         case .calculated(let column):
             InsightColumnType(columnType: column.type, percent: column.percent)
         }
@@ -547,6 +552,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             return summaryValue(boardSummary.smallSlam[pairType]!)
         case .grandSlam(let pairType):
             return summaryValue(boardSummary.grandSlam[pairType]!)
+        case .spacer:
+            return CalculatedValue("")
         case .calculated(let column):
             do {
                 return try column.value(report: report, viewModel: boardSummary, evaluate: recurseValue)
@@ -653,17 +660,19 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     var width: CGFloat {
         switch self {
         case .eventDesc:
-            return 180
+            180
         case .date, .location, .suitType, .levelType, .eventType:
-            return 120
+            120
         case .partner, .contractMade, .boardScoreType:
-            return 100
+            100
         case .contract:
-            return 90
+            90
         case .calculated(let calculated):
-            return CGFloat(calculated.width)
+            CGFloat(calculated.width)
+        case .spacer:
+            0
         default:
-            return 80
+            80
         }
     }
     

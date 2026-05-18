@@ -41,6 +41,7 @@ struct HorizontalScrollView<ID,Content> : View where Content : View, ID : Hashab
                     content()
                 }
             }
+            .clipped()
             .contentMargins(0, for: .scrollContent)
             .scrollClipDisabled()
             .scrollTargetBehavior(.viewAligned)

@@ -21,6 +21,10 @@ struct ReportValues: Codable {
         self.calculatedColumns = calculatedColumns
         self.levels = levels
     }
+    
+    var unpinnedSpacerColumns: [InsightColumn] {
+        unpinnedColumns + [InsightColumn.spacer]
+    }
 }
 
 class Report: ObservableObject {
