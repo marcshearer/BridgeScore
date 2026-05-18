@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+// Designed to allow scrolling of various ScrollViews locked together. Also supports snap to column. Also supports dragging with the mouse
+
 class ScrollSync<ID: Hashable> : ObservableObject {
     fileprivate var activeId: ID? = nil
 }
@@ -20,9 +22,10 @@ struct HorizontalScrollView<ID,Content> : View where Content : View, ID : Hashab
     @Binding var activeColumn: Int?
     var content: () -> Content
     
-    @State private var position: CGFloat = 0
-    @State private var lastOffset: CGFloat? = nil
     @State private var startColumn: Int? = nil
+    @GestureState private var isDragging: Bool = false
+    @State var lastValidColumn: Int = 0
+    @State var maxOffset: CGFloat = 0
     
     var body : some View {
         ScrollViewReader { proxy in
@@ -42,6 +45,7 @@ struct HorizontalScrollView<ID,Content> : View where Content : View, ID : Hashab
             .scrollClipDisabled()
             .scrollTargetBehavior(.viewAligned)
             .scrollPosition(id: self.binding(for: id), anchor: .leading)
+            .simultaneousGesture(dragGesture)
             .onScrollPhaseChange { [self] (_, newPhase) in
                 if newPhase != .idle {
                     scrollSync.activeId = id
@@ -56,30 +60,48 @@ struct HorizontalScrollView<ID,Content> : View where Content : View, ID : Hashab
                     }
                 }
             }
-            .gesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { value in
-                        scrollSync.activeId = id
-                        startColumn = startColumn ?? activeColumn ?? 0
-                        lastOffset = lastOffset ?? value.startLocation.x
-                        let lastColumnOffset = offset(for:startColumn ?? 0)
-                        let offset = lastOffset! - value.startLocation.x
-                        let newOffset = (lastColumnOffset - offset) * CGFloat(2)
-                        let newColumn = index(for: newOffset)
-                        if newColumn != activeColumn {
-                            activeColumn = newColumn
-                        }
-                        lastOffset = value.location.x
-                    }
-                    .onEnded { [self] _ in
-                        startColumn = nil
-                        lastOffset = nil
-                    })
+            .onChange(of: activeColumn) { _, newValue in
+                if let index = newValue {
+                    lastValidColumn = index
+                }
+            }
+            .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                geometry.contentSize.width - geometry.containerSize.width
+            } action: { [self] (_, newMaxOffset) in
+                maxOffset = newMaxOffset
+            }
+            .onChange(of: isDragging) { _, nowDragging in
+                if !nowDragging {
+                    startColumn = nil
+                }
+            }
         }
     }
     
+    var dragGesture: some Gesture {
+        DragGesture(minimumDistance: 5)
+            .updating($isDragging) { _, state, _ in
+                state = true
+            }
+            .onChanged { value in
+                // let maxOffset = widths.reduce(0,+)
+                scrollSync.activeId = id
+                startColumn = startColumn ?? activeColumn ?? lastValidColumn
+                let startOffset = offset(for: startColumn ?? 0)
+                let offset = -value.translation.width
+                let newOffset = max(0,min(maxOffset + (widths.last ?? 00),(startOffset + offset)))
+                let newColumn = index(for: newOffset)
+                if newColumn != activeColumn {
+                    activeColumn = newColumn
+                }
+            }
+            .onEnded { [self] _ in
+                startColumn = nil
+            }
+    }
+    
     func offset(for column: Int) -> CGFloat {
-        widths.prefix(column).reduce(0,+)
+        widths.prefix(column).reduce(0,+) + (widths[column] / CGFloat(2))
     }
     
     func index(for offset: CGFloat) -> Int {
