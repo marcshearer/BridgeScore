@@ -16,13 +16,84 @@ struct InsightsSortLevelsView : View {
     @State private var refreshId = UUID()
     
     var body: some View {
-        let levels = report.values.levels
-        let bodyHeight: CGFloat = min(240, CGFloat(40 * report.values.levels.count))
         
         Top(padding: 40) {
-            CenteredText("View Sort and Selection")
+            CenteredText("View Selection and Sort")
                 .font(defaultFont)
+                .frame(height: 40)
             Spacer().frame(height: 40)
+            selectionView()
+            Spacer().frame(height: 50)
+            sortView()
+        }
+        .fullScreenCover(item: $showSortLevel) { showSortLevel in
+            FullScreenView(minWidth: 1600, minHeight: 1200) {
+                InsightsSortLevelView(report: report, sortLevel: $sortLevel, index: showSortLevel.index, editMode: showSortLevel.editMode, selected: $selected)
+                    .onDisappear {
+                        refreshId = UUID()
+                    }
+            }
+        }
+    }
+    
+    func selectionView() -> some View {
+        HStack(spacing: 0) {
+            let level = report.values.levels.first!
+            let bodyHeight: CGFloat = 40
+            ZStack {
+                VStack(spacing: 0) {
+                    VStack(spacing: 0) {
+                        Rectangle()
+                            .palette(.contrastTile, inverse: true)
+                            .frame(height: 40)
+                        Rectangle()
+                            .palette(.alternate, inverse: true)
+                            .frame(height: bodyHeight)
+                        Rectangle()
+                            .palette(.contrastTile, inverse: true)
+                            .frame(height: 40)
+                    }
+                    .cornerRadius(8)
+                }
+                VStack(spacing: 0) {
+                    Leading(padding: 30) {
+                        Text("Selection logic")
+                    }
+                    .palette(.contrastTile, clear: true)
+                    .frame(height: 40)
+                    VStack(spacing: 0) {
+                        Leading(padding: 30) {
+                            Text(level.selectionLogicString)
+                        }
+                        .onTapGesture(count: 2) {
+                            selected = level
+                            editSortLevel(level)
+                        }
+                        .id(refreshId)
+                    }
+                    .frame(height: bodyHeight)
+                    HStack {
+                        Spacer().frame(width: 20)
+                        Button {
+                            editSortLevel(level)
+                        } label: {
+                            Text("Edit")
+                        }
+                        .contentShape(Rectangle())
+                        Spacer()
+                    }
+                    .palette(.contrastTile, clear: true)
+                    .frame(height: 40)
+                }
+            }
+            .frame(height: bodyHeight + 80)
+        }
+    }
+    
+    func sortView() -> some View {
+        HStack(spacing: 0) {
+            let levels = report.values.levels
+            let bodyHeight: CGFloat = min(240, max(40, CGFloat(40 * (report.values.levels.count - 1))))
             ZStack {
                 VStack(spacing: 0) {
                     VStack(spacing: 0) {
@@ -37,14 +108,13 @@ struct InsightsSortLevelsView : View {
                             .frame(height: 40)
                     }
                     .cornerRadius(8)
-                    Spacer()
                 }
                 VStack(spacing: 0) {
                     gridRow(level: "Level", key: "Sort by", direction: "\(SortDirection.ascending.symbol)/\(SortDirection.descending.symbol)", subtotal: "Total", logic: "Selection Logic")
                         .palette(.contrastTile, clear: true)
                     ScrollView(.vertical) {
                         VStack(spacing: 0) {
-                            ForEach(0..<levels.count, id: \.self) { index in
+                            ForEach(1..<levels.count, id: \.self) { index in
                                 let level = levels[index]
                                 gridRowValues(index: index, level: level)
                                     .id(refreshId)
@@ -88,18 +158,9 @@ struct InsightsSortLevelsView : View {
                     }
                     .palette(.contrastTile, clear: true)
                     .frame(height: 40)
-                    Spacer()
                 }
             }
             .frame(height: bodyHeight + 80)
-        }
-        .fullScreenCover(item: $showSortLevel) { showSortLevel in
-            FullScreenView(minWidth: 1600, minHeight: 1200) {
-                InsightsSortLevelView(report: report, sortLevel: $sortLevel, index: showSortLevel.index, editMode: showSortLevel.editMode, selected: $selected)
-                    .onDisappear {
-                        refreshId = UUID()
-                    }
-            }
         }
     }
     
@@ -120,16 +181,12 @@ struct InsightsSortLevelsView : View {
         }
         .contentShape(Rectangle())
         .frame(height: 40)
-        .palette(.tile, clear: true)
     }
     
     func gridRowValues(index: Int, level: CalculatedSortLevel) -> some View {
         HStack(spacing: 0) {
-            if level.isBoard {
-                gridRow(level: "Board", key: "", direction: "", subtotal: "", logic: level.selectionLogicString)
-            } else {
                 gridRow(level: "Level \(index)", key: level.key?.title ?? "", direction: (level.key == nil ? "" : level.direction.symbol), subtotal: (level.key == nil ? "" : level.subtotal.asTick), logic: level.selectionLogicString)
-            }
+                    .palette(.tile, clear: true)
         }
         .palette(.tile, clear: true)
         .if(selected == level) { view in

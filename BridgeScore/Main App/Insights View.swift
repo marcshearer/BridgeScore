@@ -14,9 +14,9 @@ enum ScrollViews : CaseIterable, Hashable {
 }
 
  enum InsightDisplayMode {
-    case loading
-    case displaying
-    case editing
+     case building
+     case loading
+     case displaying
 }
 
 struct InsightsView: View {
@@ -30,6 +30,7 @@ struct InsightsView: View {
     @State var dismissView: Bool = false
     @State var buttonId: [UUID:UUID] = [:]
     @State fileprivate var displayMode: InsightDisplayMode = .loading
+    @State fileprivate var isEditing: Bool = false
     @StateObject private var scrollSync = ScrollSync<ScrollViews>()
     @State var activeColumn: Int? = nil
     @State var horizontalScroll: Bool = false
@@ -42,7 +43,7 @@ struct InsightsView: View {
                 ZStack {
                     VStack(spacing: 0) {
                         Rectangle()
-                            .frame(height: displayMode == .editing ? 40 : 90 + geometry.safeAreaInsets.top)
+                            .frame(height: 90 + geometry.safeAreaInsets.top)
                             .foregroundColor(Palette.contrastTile.background)
                             .ignoresSafeArea()
                         Spacer()
@@ -50,78 +51,76 @@ struct InsightsView: View {
                     
                     toolBarView()
                         .zIndex(99)
-                    if displayMode != .editing {
-                        VStack(alignment: .leading, spacing: 0) {
-                            Spacer().frame(height: 10)
-                            HStack(alignment: .top, spacing: 0) {
-                                headerView(columns: report.values.pinnedColumns, pinned: true)
-                                    .zIndex(1)
-                                HorizontalScrollView(id: .heading, widths: report.values.unpinnedSpacerColumns.map{$0.width}, scrollSync: scrollSync, activeColumn: $activeColumn) {
-                                    headerView(columns: report.values.unpinnedSpacerColumns, pinned: false)
-                                }
-                            }
-                            .frame(height: 80)
-                            if displayMode == .loading {
-                                MiddleCenteredText(text: "Loading...")
-                                    .font(bigFont)
-                                    .palette(.background, .theme)
-                            } else {
-                                ScrollViewReader { proxy in
-                                    ScrollView(.vertical) {
-                                        HStack(spacing: 0) {
-                                            HStack {
-                                                LazyVStack(alignment: .leading, spacing: 0) {
-                                                    ForEach($filteredIndex, id: \.id) { rowData in
-                                                        rowView(data: rowData, columns: report.values.pinnedColumns, pinned: true)
-                                                            .zIndex(1)
-                                                    }
-                                                }
-                                                .frame(width: report.values.pinnedColumns.map{$0.width}.reduce(0, +))
-                                            }
-                                            HorizontalScrollView(id: .data, widths: report.values.unpinnedSpacerColumns.map{$0.width}, scrollSync: scrollSync, activeColumn: $activeColumn) {
-                                                LazyVStack(alignment: .leading, spacing: 0) {
-                                                    ForEach($filteredIndex, id: \.id) { rowData in
-                                                        rowView(data: rowData, columns: report.values.unpinnedSpacerColumns, pinned: false)
-                                                            .id(rowData.id)
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                    .ignoresSafeArea(edges: .bottom)
-                                }
-                                VStack {
-                                    HStack{
-                                        HStack {
-                                            spacerView(columns: report.values.pinnedColumns, pinned: true)
-                                        }
-                                        HorizontalScrollView(showsIndicators: true, id: .scrollIndicator, widths: report.values.unpinnedSpacerColumns.map{$0.width}, scrollSync: scrollSync, activeColumn: $activeColumn) {
-                                            spacerView(columns: report.values.unpinnedSpacerColumns, pinned: false)
-                                                .zIndex(1)
-                                        }
-                                        .onScrollGeometryChange(for: Bool.self) { geometry in
-                                            geometry.contentSize.width > geometry.containerSize.width
-                                        } action: { _, scroll in
-                                            horizontalScroll = scroll
-                                        }
-                                        .onScrollGeometryChange(for: CGFloat.self) { geometry in
-                                            geometry.containerSize.width
-                                        } action: { [self] (_, newScrollWidth) in
-                                            scrollWidth = newScrollWidth
-                                        }
-                                    }
-                                    Spacer()
-                                }
-                                .frame(height: horizontalScroll ? 20 : 0)
-                                .ignoresSafeArea(edges: .bottom)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Spacer().frame(height: 10)
+                        HStack(alignment: .top, spacing: 0) {
+                            headerView(columns: report.values.pinnedColumns, pinned: true)
+                                .zIndex(1)
+                            HorizontalScrollView(id: .heading, widths: report.values.unpinnedSpacerColumns.map{$0.width}, scrollSync: scrollSync, activeColumn: $activeColumn) {
+                                headerView(columns: report.values.unpinnedSpacerColumns, pinned: false)
                             }
                         }
-                    } else {
-                        InsightsSetupView(report: report, data: boardSummaries.first)
-                        Spacer()
+                        .frame(height: 80)
+                        if displayMode == .loading {
+                            MiddleCenteredText(text: "Loading...")
+                                .font(bigFont)
+                                .palette(.background, .theme)
+                        } else {
+                            ScrollViewReader { proxy in
+                                ScrollView(.vertical) {
+                                    HStack(spacing: 0) {
+                                        HStack {
+                                            LazyVStack(alignment: .leading, spacing: 0) {
+                                                ForEach($filteredIndex, id: \.id) { rowData in
+                                                    rowView(data: rowData, columns: report.values.pinnedColumns, pinned: true)
+                                                        .zIndex(1)
+                                                }
+                                            }
+                                            .frame(width: report.values.pinnedColumns.map{$0.width}.reduce(0, +))
+                                        }
+                                        HorizontalScrollView(id: .data, widths: report.values.unpinnedSpacerColumns.map{$0.width}, scrollSync: scrollSync, activeColumn: $activeColumn) {
+                                            LazyVStack(alignment: .leading, spacing: 0) {
+                                                ForEach($filteredIndex, id: \.id) { rowData in
+                                                    rowView(data: rowData, columns: report.values.unpinnedSpacerColumns, pinned: false)
+                                                        .id(rowData.id)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                .ignoresSafeArea(edges: .bottom)
+                            }
+                            VStack {
+                                HStack{
+                                    HStack {
+                                        spacerView(columns: report.values.pinnedColumns, pinned: true)
+                                    }
+                                    HorizontalScrollView(showsIndicators: true, id: .scrollIndicator, widths: report.values.unpinnedSpacerColumns.map{$0.width}, scrollSync: scrollSync, activeColumn: $activeColumn) {
+                                        spacerView(columns: report.values.unpinnedSpacerColumns, pinned: false)
+                                            .zIndex(1)
+                                    }
+                                    .onScrollGeometryChange(for: Bool.self) { geometry in
+                                        geometry.contentSize.width > geometry.containerSize.width
+                                    } action: { _, scroll in
+                                        horizontalScroll = scroll
+                                    }
+                                    .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                                        geometry.containerSize.width
+                                    } action: { [self] (_, newScrollWidth) in
+                                        scrollWidth = newScrollWidth
+                                    }
+                                }
+                                Spacer()
+                            }
+                            .frame(height: horizontalScroll ? 20 : 0)
+                            .ignoresSafeArea(edges: .bottom)
+                        }
                     }
                 }
                 .ignoresSafeArea(edges: .bottom)
+                .fullScreenCover(isPresented: $isEditing) {
+                    showSetup(frame: geometry.frame(in: .global))
+                }
                 .fullScreenCover(item: $showBoardSummary, onDismiss: {
                     if let scorecard = Scorecard.current.scorecard {
                         Scorecard.current.saveAll(scorecard: scorecard)
@@ -141,6 +140,20 @@ struct InsightsView: View {
         }
     }
     
+    func setupCompletion() {
+        displayMode = .loading
+        sortIndex = []
+        filteredIndex = []
+        Task(priority: .userInitiated) {
+            if let errorMessage = await reload() {
+                MessageBox.shared.show(errorMessage)
+            }
+            await MainActor.run {
+                displayMode = .displaying
+            }
+        }
+    }
+    
     func toolBarView() -> some View {
         VStack(spacing: 0) {
             VStack(spacing: 0) {
@@ -152,34 +165,16 @@ struct InsightsView: View {
                     
                     Spacer()
                     
-                    if displayMode == .editing {
-                        Button("\("􀈄")") {
-                            sortIndex = []
-                            filteredIndex = []
-                            displayMode = .loading
-                            Task(priority: .userInitiated) {
-                                if let errorMessage = await reload() {
-                                    MessageBox.shared.show(errorMessage)
-                                }
-                                await MainActor.run {
-                                    displayMode = .displaying
-                                }
-                            }
-                        }
-                        .keyboardShortcut(.cancelAction)
-                    } else if displayMode == .displaying {
-                        Button("\("􀈎")") {
-                            displayMode = .editing
-                        }
+                    Button("\("􀈎")") {
+                        isEditing = true
                     }
-                    
+            
                     Spacer().frame(width: 40)
                     
                     Button("􀆄") {
                         dismiss()
                     }
-                    .disabled(displayMode == .editing)
-                    .opacity(displayMode == .editing ? 0.3 : 1)
+                    .disabled(isEditing)
                     .keyboardShortcut(.cancelAction)
                     
                     Spacer()
@@ -200,7 +195,7 @@ struct InsightsView: View {
     func headerView(columns: [InsightColumn], pinned: Bool) -> some View {
         LazyHStack(spacing: 0) {
             if pinned {
-                Color.clear.frame(width: 10, height: rowHeight)
+                Color.clear.frame(width: 20, height: rowHeight)
             }
             ForEach(0..<columns.count, id: \.self) { columnIndex in
                 let column = columns[columnIndex]
@@ -218,7 +213,7 @@ struct InsightsView: View {
                 .frame(width: column.width, height: 80)
             }
             if !pinned {
-                Color.clear.frame(width: 10, height: rowHeight)
+                Color.clear.frame(width: 20, height: rowHeight)
             }
         }
         .palette(.contrastTile)
@@ -226,7 +221,7 @@ struct InsightsView: View {
     
     func rowView(data: Binding<SortData<BoardSummaryExtension,InsightTotal>>, columns: [InsightColumn], pinned: Bool) -> some View {
         LazyHStack(spacing: 0) {
-            Color.clear.frame(width: 10, height: rowHeight)
+            Color.clear.frame(width: 20, height: rowHeight)
             if data.wrappedValue.totalLevel == nil {
                 rowViewData(data: data, boardSummary: (data.source.wrappedValue as BoardSummaryExtension?)!, columns: columns)
             } else if pinned {
@@ -235,7 +230,7 @@ struct InsightsView: View {
                 rowViewTotalValues(data: data, columns: columns)
             }
             if !pinned {
-                Color.clear.frame(width: 10, height: rowHeight)
+                Color.clear.frame(width: 20, height: rowHeight)
             }
         }
         .palette(rowColor(level: data.wrappedValue.totalLevel))
@@ -343,11 +338,11 @@ struct InsightsView: View {
     func spacerView(columns: [InsightColumn], pinned: Bool) -> some View {
         HStack(spacing: 0) {
             if pinned {
-                Spacer().frame(width: 10)
+                Spacer().frame(width: 20)
             }
             Spacer().frame(width: columns.map{$0.width}.reduce(0,+), height: horizontalScroll ? 15 : 0)
             if !pinned {
-                Spacer().frame(width: 10)
+                Spacer().frame(width: 20)
             }
         }
     }
@@ -382,6 +377,22 @@ struct InsightsView: View {
         return ZStack{
             Color.black.opacity(0.4)
             AnalysisViewer(board: boardSummary.board!, traveller: boardSummary.traveller!, sitting: boardSummary.seat!, frame: frame, initialYOffset: frame.height + 100, dismissView: $dismissView)
+        }
+        .background(BackgroundBlurView(opacity: 0.0))
+        .edgesIgnoringSafeArea(.all)
+        .onTapGesture {
+            dismissView = true
+        }
+    }
+    
+    func showSetup(frame: CGRect) -> some View {
+        let width = min(1400, frame.width) // Allow for safe area
+        let height = min(max(1024, frame.height - 10), (frame.height))
+        return ZStack{
+            Color.black.opacity(0.4)
+            InsightsSetupView(report: report, data: boardSummaries.first, dismissView: $dismissView, completion: setupCompletion)
+                .frame(width: width, height: height)
+                .interactiveDismissDisabled()
         }
         .background(BackgroundBlurView(opacity: 0.0))
         .edgesIgnoringSafeArea(.all)

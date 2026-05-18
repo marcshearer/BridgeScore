@@ -38,9 +38,11 @@ struct FullScreenView <Content>: View where Content: View {
                         .cornerRadius(20)
                 }
                 if escapeToDismiss {
-                    Button("") { dismiss() }
-                        .keyboardShortcut(.cancelAction)
-                        .opacity(0)
+                    Button("") {
+                        dismiss()
+                    }
+                    .keyboardShortcut(.cancelAction)
+                    .opacity(0)
                 }
             }
             .background(BackgroundBlurView(opacity: 0.0))

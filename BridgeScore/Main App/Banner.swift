@@ -42,12 +42,14 @@ struct Banner: View {
     @Binding var title: String
     var alternateStyle: Bool = false
     var alternateColor: Bool = false
+    var height: CGFloat? = nil
     var bottomSpace: Bool = true
     var back: Bool = true
     var backEnabled: (()->(Bool))?
     var backText: String? = nil
     var backImage: AnyView? = AnyView(Image(systemName: "chevron.left"))
     var backAction: (()->(Bool))?
+    var escapeToDismiss: Bool = false
     var leftTitle: Bool?
     var optionMode: BannerOptionMode = .none
     var menuImage: AnyView? = nil
@@ -106,7 +108,7 @@ struct Banner: View {
                 
                     Spacer().frame(width: 20)
                 }
-                Spacer().frame(height: (alternateStyle ? 0 : bannerBottom))
+                Spacer().frame(height: height != nil ? (height! - CGFloat(40)) / CGFloat(2) : (alternateStyle ? 0 : bannerBottom))
             }
         }
         .disabled(disabled.wrappedValue)
@@ -115,7 +117,7 @@ struct Banner: View {
             buttonColor = (alternateStyle || alternateColor ? Palette.alternateBannerButton : Palette.bannerButton)
             backButtonColor = (alternateStyle || alternateColor ? Palette.alternateBannerBackButton : Palette.bannerBackButton)
         }
-        .frame(height: (alternateStyle ? alternateBannerHeight : bannerHeight + bannerBottom))
+        .frame(height: height ?? (alternateStyle ? alternateBannerHeight : bannerHeight + bannerBottom))
         .background(bannerColor.background)
     }
         
@@ -138,6 +140,9 @@ struct Banner: View {
                     }
                     .foregroundColor(backButtonColor.opacity(enabled ? 1.0 : 0.5))
                 })
+                .if(escapeToDismiss) { view in
+                    view.keyboardShortcut(.cancelAction)
+                }
                 .disabled(!(enabled))
             } else {
                 EmptyView()

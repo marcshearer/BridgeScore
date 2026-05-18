@@ -15,9 +15,8 @@ struct InsightsReportViewStorage : View {
     
     var body: some View {
         HStack {
-            Spacer().frame(width: 100)
             VStack {
-                Spacer().frame(height: 100)
+                Spacer().frame(height: 120)
                 InsightsSetupButton(text: "Load View") {
                     showLoadDialog = true
                 }
@@ -153,7 +152,7 @@ struct InsightsReportViewStorageLoadDialog: View {
             MiddleCentered {
                 HStack {
                     InsightsSetupButton(text: "Cancel") {
-                        forceDismiss()
+                        dismiss()
                     }
                     .keyboardShortcut(.cancelAction)
                     Spacer().frame(width: 50)
@@ -172,7 +171,7 @@ struct InsightsReportViewStorageLoadDialog: View {
     
     func loadUrl(url: URL) {
         InsightsReportViewStorage.load(report: report, from: url)
-        forceDismiss()
+        dismiss()
     }
 }
 
@@ -256,7 +255,7 @@ struct InsightsReportViewStorageSaveDialog: View {
                 MiddleCentered {
                     HStack {
                         InsightsSetupButton(text: "Cancel") {
-                            forceDismiss()
+                            dismiss()
                         }
                         .keyboardShortcut(.cancelAction)
                         Spacer().frame(width: 50)
@@ -283,7 +282,7 @@ struct InsightsReportViewStorageSaveDialog: View {
         if saveAsDefault {
             UserDefault.defaultViewName.set(filename)
         }
-        forceDismiss()
+        dismiss()
     }
 }
 
@@ -346,14 +345,14 @@ struct InsightsReportViewStorageRemoveDialog: View {
                 MiddleCentered {
                     HStack {
                         InsightsSetupButton(text: "Cancel") {
-                            forceDismiss()
+                            dismiss()
                         }
                         .keyboardShortcut(.cancelAction)
                         Spacer().frame(width: 50)
                         InsightsSetupButton(text: "Delete") {
                             MessageBox.shared.show("Are you sure you want to delete this view?", cancelText: "Cancel", okText: "Delete", okDestructive: true, okAction: {
                                 InsightsReportViewStorage.remove(at: removeUrl!)
-                                forceDismiss()
+                                dismiss()
                             })
                         }
                         .disabled(removeUrl == nil)

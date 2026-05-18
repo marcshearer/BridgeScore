@@ -8,22 +8,38 @@
 import SwiftUI
 
 struct InsightsSetupView : View {
+    @Environment(\.dismiss) var dismiss
     @ObservedObject var report: Report
     @State var data: BoardSummaryExtension?
+    @Binding var dismissView: Bool
+    @State var completion: ()->()
+
+    var title: Binding<String> {  Binding(
+        get: { "Insights View Setup" + (report.values.viewName.isEmpty ? "" : " - " + report.values.viewName) },
+        set: { _ in}
+    )}
     
     var body: some View {
         VStack(spacing: 0) {
+            Banner(title: title, height: 80, backAction: {
+                completion() ; return true
+            }, escapeToDismiss: true)
             HStack(spacing: 0) {
-                Color.clear.frame(width: 20)
-                Color.clear.frame(minWidth: 20, idealWidth: 100, maxWidth: 100).layoutPriority(-1)
+                Spacer().frame(width: 30)
                 InsightsChooseColumnsView(report: report, data: data)
-                Color.clear.frame(minWidth: 20, maxWidth: 100).layoutPriority(-1)
-                InsightsSortLevelsView(report: report)
-                Spacer()
+                Spacer().frame(width: 30)
+                InsightsSortLevelsView(report: report).layoutPriority(1)
+                Spacer().frame(width: 30)
                 InsightsReportViewStorage(report: report)
-                Color.clear.frame(minWidth: 20, maxWidth: 50).layoutPriority(-1)
+                Spacer().frame(width: 30)
             }
         }
+        .onChange(of: dismissView) {
+            completion()
+            dismiss()
+        }
+        .palette(.background)
+        .cornerRadius(20)
     }
 }
 
@@ -38,7 +54,7 @@ struct InsightsChooseColumnsView : View {
             HStack(spacing: 0) {
                 HStack(spacing: 0) {
                     Spacer()
-                    Text("Drag columns to different sections")
+                    Text("Drag columns to report sections")
                         .font(defaultFont)
                         .minimumScaleFactor(0.5)
                     Spacer()
@@ -46,6 +62,7 @@ struct InsightsChooseColumnsView : View {
                 .frame(minWidth: 300, maxWidth: 500)
                 Spacer()
             }
+            .frame(height: 40)
             Spacer().frame(height: 40)
             HStack(spacing: 0) {
                 VStack(spacing: 0) {
@@ -54,7 +71,7 @@ struct InsightsChooseColumnsView : View {
                     InsightsColumnListView(report: report, data: data, title: "Calculated", columns: $report.values.calculatedColumns, listType: .calculatedColumns, allowDrag: true, showEdit: true, showInsert: true, showRemove: true, selectedListType: $selectedListType)
                     Spacer()
                 }
-                Color.clear.frame(minWidth: 20, maxWidth: 100).layoutPriority(-1)
+                Spacer().frame(width: 30)
                 VStack(spacing: 0) {
                     InsightsColumnListView(report: report, data: data, title: "Pinned", columns: $report.values.pinnedColumns, listType: .pinnedColumns, allowDrag: true, showRemove: true, specificDrop: true, height: 240, selectedListType: $selectedListType, onDropReceived: onDropReceived)
                     Spacer().frame(height: 40)
@@ -386,7 +403,7 @@ struct InsightsColumnListView : View {
                 }
             }
             .fullScreenCover(isPresented: $showCalculatedColumn) {
-                FullScreenView(minWidth: 1600, minHeight: 1200) {
+                FullScreenView(minWidth: 1600, minHeight: 1200, escapeToDismiss: false) {
                     InsightsCalculatedColumnView(report: report, column: $column, data: data, editMode: editMode!)
                 }
             }
