@@ -448,6 +448,7 @@ enum ListType : Codable {
     case pinnedColumns
     case unpinnedColumns
     case calculatedColumns
+    case promptColumns
     case functions
     
     var isColumns: Bool { self != .functions }

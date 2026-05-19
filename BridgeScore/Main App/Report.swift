@@ -7,21 +7,31 @@
 
 import SwiftUI
 
-struct ReportValues: Codable {
+class ReportValues: Codable {
     var viewName: String
     var pinnedColumns: [InsightColumn]
     var unpinnedColumns: [InsightColumn]
     var calculatedColumns: [InsightColumn]
+    var prompts: [InsightColumn]
     var levels: [CalculatedSortLevel]
-    var prompts: [CalculatedPrompt]
     
-    init(viewName: String = "", pinnedColumns: [InsightColumn], unpinnedColumns: [InsightColumn], calculatedColumns: [InsightColumn] = [], levels: [CalculatedSortLevel] = [CalculatedSortLevel(isBoard: true)], prompts: [CalculatedPrompt] = []) {
+    init(viewName: String = "", pinnedColumns: [InsightColumn], unpinnedColumns: [InsightColumn], calculatedColumns: [InsightColumn] = [], prompts: [InsightColumn] = [], levels: [CalculatedSortLevel] = [CalculatedSortLevel(isBoard: true)]) {
         self.viewName = viewName
         self.pinnedColumns = pinnedColumns
         self.unpinnedColumns = unpinnedColumns
         self.calculatedColumns = calculatedColumns
         self.levels = levels
         self.prompts = prompts
+    }
+    
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.viewName = try container.decodeIfPresent(String.self, forKey: .viewName) ?? ""
+        self.pinnedColumns = try container.decodeIfPresent([InsightColumn].self, forKey: .pinnedColumns) ?? []
+        self.unpinnedColumns = try container.decodeIfPresent([InsightColumn].self, forKey: .unpinnedColumns) ?? []
+        self.calculatedColumns = try container.decodeIfPresent([InsightColumn].self, forKey: .calculatedColumns) ?? []
+        self.levels = try container.decodeIfPresent([CalculatedSortLevel].self, forKey: .levels) ?? []
+        self.prompts = try container.decodeIfPresent([InsightColumn].self, forKey: .prompts) ?? []
     }
     
     var unpinnedSpacerColumns: [InsightColumn] {
@@ -66,8 +76,8 @@ class Report: ObservableObject {
     static var parses = 0
     static var selectionParses = 0
     
-    init(viewName: String = "", pinnedColumns: [InsightColumn] = [], unpinnedColumns: [InsightColumn] = [], calculatedColumns: [InsightColumn] = [], levels: [CalculatedSortLevel] = [CalculatedSortLevel(isBoard: true)], prompts: [CalculatedPrompt] = []) {
-        self.values = ReportValues(viewName: viewName, pinnedColumns: pinnedColumns, unpinnedColumns: unpinnedColumns, calculatedColumns: calculatedColumns, levels: levels, prompts: prompts)
+    init(viewName: String = "", pinnedColumns: [InsightColumn] = [], unpinnedColumns: [InsightColumn] = [], calculatedColumns: [InsightColumn] = [], prompts: [InsightColumn] = [], levels: [CalculatedSortLevel] = [CalculatedSortLevel(isBoard: true)]) {
+        self.values = ReportValues(viewName: viewName, pinnedColumns: pinnedColumns, unpinnedColumns: unpinnedColumns, calculatedColumns: calculatedColumns, prompts: prompts, levels: levels)
     }
     
     func update(from newValues: ReportValues) throws {
@@ -76,6 +86,7 @@ class Report: ObservableObject {
         values.unpinnedColumns = []
         values.calculatedColumns = []
         values.levels = []
+        values.prompts = []
         for column in newValues.pinnedColumns {
             values.pinnedColumns.append(column)
         }
@@ -139,7 +150,7 @@ class Report: ObservableObject {
         var recalculationIndexes: [String: Int] = [:]
         var index = 1
         for calculatedColumn in values.calculatedColumns {
-            if case .calculated(let calculation) = calculatedColumn {
+            if case .calculated = calculatedColumn {
                 recalculationIndexes[calculatedColumn.name] = index
             }
             referencedColumns[calculatedColumn] = try CalculatedColumn.referencedColumns(report: self, column: calculatedColumn)
@@ -248,12 +259,21 @@ class CalculatedColumn : Codable, Equatable, Hashable, Identifiable, ObservableO
         // Update potentially stale references in logic
         for (index, logic) in self.logic.enumerated() {
             if case .variable(let column) = logic {
-                if case .calculated = column {
+                switch column {
+                case .calculated:
                     if let freshColumn = report.values.calculatedColumns.first(where: {$0.name == column.name}) {
                         self.logic[index] = .variable(freshColumn)
                     } else {
                         throw CalculatedError.invalidVariableName(column.name)
                     }
+                case .prompt:
+                    if let freshColumn = report.values.prompts.first(where: {$0.name == column.name}) {
+                        self.logic[index] = .variable(freshColumn)
+                    } else {
+                        throw CalculatedError.invalidVariableName(column.name)
+                    }
+                default:
+                    break
                 }
             }
         }
@@ -335,6 +355,17 @@ enum CalculatedAlignment : Int, CaseIterable, Codable {
     case left = 1
     case center = 2
     case right = 3
+    
+    var textAlignment: TextAlignment {
+        switch self {
+        case .left:
+                .leading
+        case .center:
+                .center
+        case .right:
+                .trailing
+        }
+    }
     
     var string: String {
         "\(self)".capitalized
@@ -451,23 +482,41 @@ class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had 
         for (index, logic) in self.selectionLogic.enumerated() {
             // Update potentially stale references in logic
             if case .variable(let column) = logic {
-                if case .calculated = column {
+                switch column {
+                case .calculated:
                     if let freshColumn = report.values.calculatedColumns.first(where: {$0.name == column.name}) {
                         self.selectionLogic[index] = .variable(freshColumn)
                     } else {
                         throw CalculatedError.invalidVariableName(column.name)
                     }
+                case .prompt:
+                    if let freshColumn = report.values.prompts.first(where: {$0.name == column.name}) {
+                        self.selectionLogic[index] = .variable(freshColumn)
+                    } else {
+                        throw CalculatedError.invalidVariableName(column.name)
+                    }
+                default:
+                    break
                 }
             }
         }
         // Update potentially stale reference in sort key
         if let key = key {
-            if case .calculated = key {
+            switch key {
+            case .calculated:
                 if let freshColumn = report.values.calculatedColumns.first(where: {$0.name == key.name}) {
                     self.key = freshColumn
                 } else {
                     throw CalculatedError.invalidVariableName(key.name)
                 }
+            case .prompt:
+                if let freshColumn = report.values.prompts.first(where: {$0.name == key.name}) {
+                    self.key = freshColumn
+                } else {
+                    throw CalculatedError.invalidVariableName(key.name)
+                }
+            default:
+                break
             }
         }
     }
@@ -545,15 +594,43 @@ class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had 
 }
 
 enum CalculatedPromptType : Int, Equatable, Hashable, Codable, CaseIterable {
-    case partner
-    case location
-    case levelType
-    case suitType
-    case pairType
-    case seatPlayer
-    case eventType
-    case boardScoreType
-    case other
+    case partner = 1
+    case location = 2
+    case levelType = 3
+    case suitType = 4
+    case pairType = 5
+    case seatPlayer = 6
+    case eventType = 7
+    case boardScoreType = 8
+    case other = 0
+    
+    var string: String {
+        switch self {
+        case .levelType:
+            "Level Type"
+        case .suitType:
+            "Suit Type"
+        case .pairType:
+            "Pair Type"
+        case .seatPlayer:
+            "Declarer"
+        case .eventType:
+            "Event Type"
+        case .boardScoreType:
+            "Scoring Method"
+        default:
+            "\(self)".capitalized
+        }
+    }
+    
+    var type: CalculatedType? {
+        switch self {
+        case .partner, .location, .levelType, .suitType, .pairType, .seatPlayer, .eventType, .boardScoreType:
+            .string
+        default:
+            nil
+        }
+    }
 }
 
 class CalculatedPrompt : Codable, Equatable, Hashable, Identifiable, ObservableObject {
@@ -561,15 +638,26 @@ class CalculatedPrompt : Codable, Equatable, Hashable, Identifiable, ObservableO
     var name: String
     var promptText: String
     var type: CalculatedType
-    var defaultValue: CalculatedValue
+    var defaultValue: String
     var promptType: CalculatedPromptType
     var value: CalculatedValue?
+    
+    var calculatedDefaultValue: CalculatedValue {
+        switch type {
+        case .numeric:
+            CalculatedValue(Float(defaultValue) ?? 0)
+        case .string:
+            CalculatedValue(defaultValue)
+        case .boolean:
+            CalculatedValue(defaultValue.lowercased() == "true")
+        }
+    }
     
     init() {
         self.name = ""
         self.promptText = ""
         self.type = .numeric
-        self.defaultValue = CalculatedValue(0)
+        self.defaultValue = ""
         self.promptType = .other
         self.value = nil
     }
@@ -587,7 +675,7 @@ class CalculatedPrompt : Codable, Equatable, Hashable, Identifiable, ObservableO
         name = try container.decodeIfPresent(String.self, forKey: .name) ?? ""
         promptText = try container.decodeIfPresent(String.self, forKey: .promptText) ?? ""
         type = try container.decodeIfPresent(CalculatedType.self, forKey: .type) ?? .numeric
-        defaultValue = try container.decodeIfPresent(CalculatedValue.self, forKey: .defaultValue) ?? CalculatedValue(0)
+        defaultValue = try container.decodeIfPresent(String.self, forKey: .defaultValue) ?? ""
         promptType = try container.decodeIfPresent(CalculatedPromptType.self, forKey: .promptType) ?? .other
         value = nil
     }
@@ -607,6 +695,7 @@ class CalculatedPrompt : Codable, Equatable, Hashable, Identifiable, ObservableO
         self.type = from.type
         self.defaultValue = from.defaultValue
         self.promptType = from.promptType
+        self.value = from.value
     }
     
     static func == (lhs: CalculatedPrompt, rhs: CalculatedPrompt) -> Bool {
@@ -617,6 +706,5 @@ class CalculatedPrompt : Codable, Equatable, Hashable, Identifiable, ObservableO
         && lhs.defaultValue == rhs.defaultValue
         && lhs.value == rhs.value
     }
-    
 }
 

@@ -72,6 +72,7 @@ struct InsightsReportViewStorage : View {
         do {
             let values = try JSONDecoder().decode(ReportValues.self, from: Data(contentsOf: fileUrl))
             try report.update(from: values)
+            report.objectWillChange.send()
         } catch {
             result = false
         }

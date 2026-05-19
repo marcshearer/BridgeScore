@@ -344,7 +344,7 @@ struct InsightsSortLevelView : View {
                 Spacer().frame(width: 40)
             }
             HStack {
-                Spacer().frame(width: 240)
+                Spacer()
                 VStack(spacing: 0) {
                     MiddleCentered(height: 60) { Image(systemName: "arrowshape.up").font(bannerFont) }
                     InsightsColumnListView(report: report, title: "Data columns", columns: report.allColumns, listType: .allColumns, allowDrag: true, selectedListType: $selectedListType, onSelect: variableSelected)
@@ -354,6 +354,12 @@ struct InsightsSortLevelView : View {
                 VStack(spacing: 0) {
                     MiddleCentered(height: 60) { Image(systemName: "arrowshape.up").font(bannerFont) }
                     InsightsColumnListView(report: report, title: "Calculated columns", columns: $report.values.calculatedColumns, listType: .calculatedColumns, allowDrag: true, selectedListType: $selectedListType, onSelect: variableSelected)
+                }
+                .frame(width: 200)
+                Spacer().frame(maxWidth: 60)
+                VStack(spacing: 0) {
+                    MiddleCentered(height: 60) { Image(systemName: "arrowshape.up").font(bannerFont) }
+                    InsightsColumnListView(report: report, title: "Calculated columns", columns: $report.values.prompts, listType: .promptColumns, allowDrag: true, selectedListType: $selectedListType, onSelect: variableSelected)
                 }
                 .frame(width: 200)
                 Spacer().frame(maxWidth: 60)

@@ -38,7 +38,7 @@ struct InsightsPromptsView : View {
     func promptView() -> some View {
         VStack(spacing: 0) {
             let prompts = report.values.prompts
-            let bodyHeight: CGFloat = min(320, max(40, CGFloat(40 * (report.values.levels.count - 1))))
+            let bodyHeight: CGFloat = min(280, max(40, CGFloat(40 * (report.values.prompts.count))))
             ZStack {
                 VStack(spacing: 0) {
                     VStack(spacing: 0) {
@@ -61,8 +61,10 @@ struct InsightsPromptsView : View {
                         VStack(spacing: 0) {
                             ForEach(0..<prompts.count, id: \.self) { index in
                                 let prompt = prompts[index]
-                                gridRowValues(index: index, prompt: prompt)
-                                    .id(refreshId)
+                                if let promptColumn = prompt.promptColumn {
+                                    gridRowValues(index: index, prompt: promptColumn)
+                                        .id(refreshId)
+                                }
                             }
                         }
                     }
@@ -78,7 +80,7 @@ struct InsightsPromptsView : View {
                         .opacity(selected == nil ? 0.3 : 1)
                         .disabled(selected == nil)
                         Button {
-                            if let index = (selected == nil ? report.values.prompts.count - 1 : report.values.prompts.firstIndex(where: {$0 == selected!})) {
+                            if let index = (selected == nil ? report.values.prompts.count - 1 : report.values.prompts.firstIndex(where: {$0.promptColumn! == selected!})) {
                                 prompt = CalculatedPrompt()
                                 showPrompt = ShowPrompt(index: index + 1, editMode: .create)
                             }
@@ -88,7 +90,7 @@ struct InsightsPromptsView : View {
                         }
                         if selected != nil {
                             Button {
-                                if let index = report.values.prompts.firstIndex(where: {$0 == selected!}) {
+                                if let index = report.values.prompts.firstIndex(where: {$0.promptColumn! == selected!}) {
                                     report.values.prompts.remove(at: index)
                                     selected = nil
                                 }
@@ -111,16 +113,18 @@ struct InsightsPromptsView : View {
     }
     
     func editPrompt(_ prompt: CalculatedPrompt) {
-        if let index = report.values.prompts.firstIndex(where: {$0 == prompt}) {
-            self.prompt = report.values.prompts[index]
+        if let index = report.values.prompts.firstIndex(where: {$0.promptColumn! == prompt}) {
+            self.prompt = report.values.prompts[index].promptColumn!
             showPrompt = ShowPrompt(index: index, editMode: .amend(index: index))
         }
     }
     
     func gridRow(name: String, promptText: String = "") -> some View {
         HStack(spacing: 0) {
-            LeadingText(name).frame(width: 120)
-            LeadingText(promptText).frame(width: 240)
+            Spacer().frame(width: 10)
+            LeadingText(name).frame(width: 150)
+            LeadingText(promptText)
+            Spacer().frame(width: 10)
         }
         .contentShape(Rectangle())
         .frame(height: 40)
@@ -160,9 +164,15 @@ struct InsightsPromptView : View {
     
     @State var errorMessage: String = ""
     @State var cursor: Int = 0
-    @FocusState fileprivate var focused: EditField?
+    @State var focused: InsightsPromptEditField? = .name
     @StateObject var editPrompt = CalculatedPrompt()
-    
+    @State var canSave: Bool = false
+    @State var canEditType: Bool = true
+    @State var promptTypePickerSelection: Int = 0
+    @State var typePickerSelection: Int = 0
+    @State var defaultValue: String = ""
+    @State var typeId = UUID()
+
     var body: some View {
         VStack(spacing: 0) {
             Banner(title: Binding.constant("\(editMode.string.capitalized) Prompt"), alternateColor: true, height: 80)
@@ -174,16 +184,9 @@ struct InsightsPromptView : View {
                     Spacer()
                 }
                 .frame(width: 120)
-                HStack {
-                    Spacer().frame(width: 8)
-                    MyTextField(field: $editPrompt.name, focused: $focused, focusValue: .name, nextFocusValue: .promptType, previousFocusValue: .promptType, color: .alternate)
-                        .onChange(of: focused) {
-                            if focused != .name {
-                                focused = .promptText
-                            }
-                        }
-                            
-                }
+                InsightsTextView(text: $editPrompt.name, fieldType: InsightsPromptEditField.name, focus: $focused, onChange: { newValue in
+                    checkAvailable()
+                })
                 .frame(width: 240, height: 40)
                 .palette(.alternate)
                 .cornerRadius(8)
@@ -197,18 +200,83 @@ struct InsightsPromptView : View {
                     Spacer()
                 }
                 .frame(width: 120)
+                InsightsTextView(text: $editPrompt.promptText, fieldType: InsightsPromptEditField.promptText, focus: $focused, onChange: { newValue in
+                    checkAvailable()
+                })
+                .frame(width: 240, height: 40)
+                .palette(.alternate)
+                .cornerRadius(8)
+                Spacer()
+            }
+            Spacer().frame(height: 30)
+            HStack {
+                Spacer().frame(width: 40)
+                HStack(spacing: 0) {
+                    Text("Prompt type:")
+                    Spacer()
+                }
+                .frame(width: 120)
                 HStack {
-                    Spacer().frame(width: 8)
-                    MyTextField(field: $editPrompt.promptText, focused: $focused, focusValue: .promptText, nextFocusValue: .name, previousFocusValue: .name, color: .alternate)
-                        .onChange(of: focused) {
-                        if focused != .promptText {
-                            focused = .name
+                    PickerInputSimple(title: "", field: $promptTypePickerSelection, values: CalculatedPromptType.allCases.sorted(by: {$0.rawValue < $1.rawValue}).map{$0.string}, width: 200, titleWidth: 0) { rawValue in
+                        Utility.mainThread {
+                            editPrompt.promptType = CalculatedPromptType(rawValue: rawValue)!
+                            if let type = editPrompt.promptType.type {
+                                let typeChanged = (type != editPrompt.type)
+                                editPrompt.type = type
+                                if typeChanged {
+                                    editPrompt.defaultValue = emptyDefaultValue
+                                }
+                                typePickerSelection = type.rawValue
+                            }
+                            checkAvailable()
                         }
                     }
+                    .offset(x: -8)
                 }
                 .frame(width: 240, height: 40)
                 .palette(.alternate)
                 .cornerRadius(8)
+                Spacer()
+            }
+            Spacer().frame(height: 30)
+            HStack {
+                Spacer().frame(width: 40)
+                HStack(spacing: 0) {
+                    Text("Data type:")
+                    Spacer()
+                }
+                .frame(width: 120)
+                HStack {
+                    PickerInputSimple(title: "", field: $typePickerSelection, values: CalculatedType.allCases.map{$0.string}, width: 200, titleWidth: 0) { rawValue in
+                        let type = CalculatedType(rawValue: rawValue)!
+                        let typeChanged = (type != editPrompt.type)
+                        editPrompt.type = type
+                        if typeChanged {
+                            editPrompt.defaultValue = emptyDefaultValue
+                        }
+                        checkAvailable()
+                    }
+                    .disabled(!canEditType)
+                    .opacity(canEditType ? 1 : 0.3)
+                    .offset(x: -8)
+                }
+                .id(typeId)
+                .frame(width: 240, height: 40)
+                .palette(.alternate)
+                .cornerRadius(8)
+                Spacer()
+            }
+            Spacer().frame(height: 30)
+            HStack {
+                Spacer().frame(width: 40)
+                HStack(spacing: 0) {
+                    Text("Default value:")
+                    Spacer()
+                }
+                .frame(width: 120)
+                InsightsPromptValueView(prompt: editPrompt, value: $editPrompt.defaultValue, fieldType: InsightsPromptEditField.defaultValue, focus: $focused) { newValue in
+                    checkAvailable()
+                }
                 Spacer()
             }
             Spacer().frame(height: 40)
@@ -232,11 +300,42 @@ struct InsightsPromptView : View {
             Spacer().frame(height: 40)
         }
         .focusable(false)
-        .task {
-            Utility.mainThread {
-                editPrompt.copy(from: prompt)
-                focused = .name
+        .onAppear {
+            editPrompt.copy(from: prompt)
+            promptTypePickerSelection = editPrompt.promptType.rawValue
+            typePickerSelection = editPrompt.type.rawValue
+            focused = .name
+            checkAvailable()
+        }
+    }
+    
+    func checkAvailable() {
+        var checkType = true
+        switch editPrompt.type {
+        case .numeric:
+            if Float(editPrompt.defaultValue) == nil {
+                checkType = false
             }
+        case .boolean:
+            if !["true", "false"].contains(editPrompt.defaultValue.lowercased()) {
+                checkType = false
+            }
+        case .string:
+            break
+        }
+        canSave = (editPrompt.name != "" && editPrompt.promptText != "" && checkType)
+        canEditType = (editPrompt.promptType.type == nil)
+        typeId = UUID()
+    }
+    
+    var emptyDefaultValue: String {
+        switch editPrompt.type {
+        case .string:
+            ""
+        case .numeric:
+            "0"
+        case .boolean:
+            "false"
         }
     }
     
@@ -245,27 +344,21 @@ struct InsightsPromptView : View {
         switch editMode {
         case .create:
             prompt.copy(from: editPrompt)
-            report.values.prompts.insert(prompt, at: index)
+            report.values.prompts.insert(.prompt(prompt: prompt), at: index)
             selected = prompt
         case .amend(let index):
             prompt.copy(from: editPrompt)
-            report.values.prompts[index].copy(from: prompt)
+            report.values.prompts[index].promptColumn!.copy(from: prompt)
             selected = prompt
         default:
             break
         }
         dismiss()
     }
-    
-    var canSave: Bool {
-        !editPrompt.name.isEmpty && !editPrompt.promptText.isEmpty
-    }
 }
 
-fileprivate enum EditField {
-    case name
-    case promptText
-    case promptType
-    case type
-    case defaultValue
+enum InsightsPromptEditField : Int, Equatable, Hashable, CaseIterable {
+    case name = 0
+    case promptText = 1
+    case defaultValue = 2
 }

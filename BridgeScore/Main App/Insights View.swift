@@ -205,7 +205,7 @@ struct InsightsView: View {
                     }
                     Text(column.title)
                         .lineLimit(nil)
-                        .multilineTextAlignment(.center)
+                        .multilineTextAlignment(column.align.textAlignment)
                     if column.align != .right {
                         Spacer()
                     }

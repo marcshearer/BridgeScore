@@ -73,8 +73,9 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     case game(pairType: PairType)
     case smallSlam(pairType: PairType)
     case grandSlam(pairType: PairType)
-    case calculated(column: CalculatedColumn)
     case spacer
+    case calculated(column: CalculatedColumn)
+    case prompt(prompt: CalculatedPrompt)
     
     static var transferRepresentation: some TransferRepresentation {
         CodableRepresentation(contentType: .data)
@@ -182,7 +183,9 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         case .points(let seatPlayer):
             result += seatPlayer.suffix
         case .calculated(let calculated):
-            result = calculated.name
+            result = "calc.\(calculated.name)"
+        case .prompt(let prompt):
+            result = "prompt.\(prompt.name)"
         default:
             break
         }
@@ -238,17 +241,17 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         case .slamOdds:
             "Slam Odds%"
         case .compContract:
-            "Comp Cont"
+            "Compete Contract"
         case .compDeclarer:
-            "Comp By"
+            "Compete By"
         case .compDdMade:
-            "Comp Made"
+            "Compete Made"
         case .compDdScore:
-            "Comp DD Score"
+            "Compete DD Score"
         case .compMakeScore:
-            "Comp Make Score"
+            "Compete Make Score"
         case .compMakeOdds:
-            "Comp Make Odds"
+            "Compete Make Odds"
         case .suit(let pairType):
             "\(pairType.string) Suit"
         case .declare(let pairType):
@@ -271,8 +274,6 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             "Total Tricks"
         case .totalTricksDd:
             "Total Tricks DD"
-        case .calculated(let column):
-            column.title
         case .passout:
             "Passout"
         case .partScore(let seatPlayer):
@@ -285,6 +286,10 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             "\(seatPlayer.string) Grand Slam"
         case .spacer:
             ""
+        case .calculated(let column):
+            column.title
+        case .prompt(let prompt):
+            prompt.promptText
         }
     }
     
@@ -387,6 +392,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
                 .string
         case .calculated(let column):
             InsightColumnType(columnType: column.type, percent: column.percent)
+        case .prompt(let prompt):
+            InsightColumnType(columnType: prompt.type, percent: false)
         }
     }
     
@@ -453,6 +460,22 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     var calculatedColumn: CalculatedColumn? {
         if case .calculated(let calculated) = self {
             calculated
+        } else {
+            nil
+        }
+    }
+    
+    var isPrompt: Bool {
+        if case .prompt = self {
+            true
+        } else {
+            false
+        }
+    }
+    
+    var promptColumn: CalculatedPrompt? {
+        if case .prompt(let prompt) = self {
+            prompt
         } else {
             nil
         }
@@ -560,6 +583,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             } catch {
                 throw CalculatedError.errorEvaluatingCalculatedColumn(column.name)
             }
+        case .prompt(let prompt):
+            return prompt.value ?? prompt.calculatedDefaultValue
         }
     }
     
@@ -663,9 +688,9 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             180
         case .date, .location, .suitType, .levelType, .eventType:
             120
-        case .partner, .contractMade, .boardScoreType:
+        case .partner, .contractMade, .boardScoreType, .declarer:
             100
-        case .contract:
+        case .contract, .compContract, .compDeclarer:
             90
         case .calculated(let calculated):
             CGFloat(calculated.width)

@@ -134,7 +134,7 @@ extension UIView {
         }
         return results
     }
-    
+
     func processPressedKeys(_ presses: Set<UIPress>, with event: UIPressesEvent?, allowCharacters: Bool = false, action: (KeyAction, String)->(Bool)) -> Bool {
         for press in presses {
             if let key = press.key {
@@ -160,6 +160,7 @@ extension UIView {
         return false
     }
 }
+
 #endif
 #endif
 extension CGPoint {

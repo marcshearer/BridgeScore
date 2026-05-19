@@ -169,6 +169,10 @@ public enum SeatPlayer: Int, Codable, CaseIterable {
         }
     }
     
+    static var simpleCases: [SeatPlayer] {
+        [.player, .partner, .lhOpponent]
+    }
+    
     var suffix: String {
         switch self {
         case .player:
@@ -206,7 +210,7 @@ public enum SeatPlayer: Int, Codable, CaseIterable {
         case .partner:
             "Partner"
         case .lhOpponent, .rhOpponent:
-            "They"
+            "Opponents"
         default:
             ""
         }
@@ -237,7 +241,7 @@ public enum PairType: Int, Codable, CaseIterable {
     }
 }
 
-public enum SuitType: Int {
+public enum SuitType: Int, CaseIterable {
     case major
     case minor
     case noTrumps
@@ -252,6 +256,10 @@ public enum SuitType: Int {
         default:
             self = .noTrumps
         }
+    }
+    
+    static var validCases: [SuitType] {
+        allCases.filter({$0 != .unknown})
     }
     
     var gameTricks: Int {
@@ -276,7 +284,7 @@ public enum SuitType: Int {
     }
 }
 
-public enum LevelType: Int {
+public enum LevelType: Int, CaseIterable {
     case passout
     case partScore
     case game
@@ -310,6 +318,10 @@ public enum LevelType: Int {
             "Pass out"
         case .partScore:
             "Part score"
+        case .smallSlam:
+            "Grand slam"
+        case .grandSlam:
+            "Small slam"
         default:
             "\(self)".capitalized
         }

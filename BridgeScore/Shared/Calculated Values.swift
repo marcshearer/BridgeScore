@@ -7,10 +7,10 @@
 
 import Foundation
 
-enum CalculatedType: Codable {
-    case numeric
-    case boolean
-    case string
+enum CalculatedType: Int, Codable, CaseIterable {
+    case numeric = 0
+    case boolean = 1
+    case string = 2
     
     var string: String {
         "\(self)".capitalized

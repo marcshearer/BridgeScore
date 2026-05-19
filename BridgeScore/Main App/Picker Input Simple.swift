@@ -20,14 +20,15 @@ struct PickerInputSimple : View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Spacer().frame(height: topSpace)
-            HStack {
-                HStack {
-                    Text(title)
-                    Spacer()
+            HStack(spacing: 0) {
+                if titleWidth > 0 {
+                    HStack {
+                        Text(title)
+                        Spacer()
+                    }
+                    .frame(width: titleWidth + 5)
                 }
-                .frame(width: titleWidth)
-                Spacer().frame(width: 5)
-                HStack {
+                HStack(spacing: 0) {
                     Menu {
                         ForEach(values, id: \.self) { value in
                             Button(value) {
@@ -37,13 +38,13 @@ struct PickerInputSimple : View {
                             }
                         }
                     } label: {
-                        HStack {
-                            Text(values[field])
+                        HStack(spacing: 0) {
+                            Text((0..<values.count).contains(field) ? values[field] : "Unknown")
                                 .foregroundColor(Palette.background.themeText)
                             Spacer().frame(width: 5)
                             Image(systemName: "chevron.right")
                                 .foregroundColor(Palette.background.themeText)
-                            Spacer().frame(width: 2)
+                            Spacer()
                         }
                     }
                     .background(Color.clear)
@@ -53,6 +54,6 @@ struct PickerInputSimple : View {
             }
             Spacer()
         }
-        .frame(width: width + titleWidth + 5, height: topSpace + height)
+        .frame(width: width + titleWidth + (titleWidth > 0 ? 5 : 0), height: topSpace + height)
     }
 }
