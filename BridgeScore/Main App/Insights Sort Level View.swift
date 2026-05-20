@@ -373,7 +373,7 @@ struct InsightsSortLevelView : View {
                 Spacer().frame(maxWidth: 60)
                 VStack(spacing: 0) {
                     MiddleCentered(height: 60) { Image(systemName: "arrowshape.up").font(bannerFont) }
-                    InsightsColumnListView(report: report, title: "Calculated columns", columns: $report.values.prompts, listType: .promptColumns, allowDrag: true, selectedListType: $selectedListType, onSelect: variableSelected)
+                    InsightsColumnListView(report: report, title: "Prompted Values", columns: $report.values.prompts, listType: .promptColumns, allowDrag: true, selectedListType: $selectedListType, onSelect: variableSelected)
                 }
                 .frame(width: 200)
                 Spacer().frame(maxWidth: 60)

@@ -17,7 +17,7 @@ struct BannerOption {
     let menu: Bool
     let action: ()->()
     
-    init(image: AnyView? = nil, text: String? = nil, color: PaletteColor? = nil, likeBack: Bool = false, isEnabled: Binding<Bool>? = nil, isHidden: Binding<Bool>? = nil, menu: Bool = true, action: @escaping ()->()) {
+    init(image: AnyView? = nil, text: String? = nil, color: PaletteColor? = nil, likeBack: Bool = false, isEnabled: Binding<Bool>? = nil, isHidden: Binding<Bool>? = nil, menu: Bool = false, action: @escaping ()->()) {
         self.image = image
         self.text = text
         self.likeBack = likeBack
@@ -190,7 +190,7 @@ struct Banner_Menu : View {
 
     var body: some View {
         Button {
-            let filteredOptions = options.filter{$0.isEnabled && !$0.isHidden && ($0.text ?? "") != ""}
+            let filteredOptions = options.filter{$0.isEnabled && !$0.isHidden && $0.menu}
             SlideInMenu.shared.show(id: id, title: title, strings: filteredOptions.map{$0.text ?? ""}, top: bannerHeight - 20) { (option) in
                     if let selected = options.first(where: {$0.text == option}) {
                         selected.action()

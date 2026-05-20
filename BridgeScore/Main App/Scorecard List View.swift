@@ -302,18 +302,18 @@ struct ScorecardListView: View, DropDelegate {
         var menuOptions: [BannerOption] = []
         menuOptions = [BannerOption(image: AnyView(Image(systemName: "sparkles")), likeBack: true, menu: false, action: { destination = .insights }),
                        BannerOption(image: AnyView(Image(systemName: "chart.xyaxis.line")), likeBack: true, menu: false, action: { destination = .stats }),
-                       BannerOption(text: "Templates", action: { destination = .layoutSetup }),
-                       BannerOption(text: "Players",  action: { destination = .playerSetup }),
-                       BannerOption(text: "Locations", action: { destination = .locationSetup }),
-                       BannerOption(text: "Import BBO Names", action: { ImportBBO.importNames() }),
-                       BannerOption(text: "Backup", action: { MessageBox.shared.show("Backing up", cancelText: "Cancel", okText: "Continue", okAction: {Backup.shared.backup() ; MessageBox.shared.hide()})})]
+                       BannerOption(text: "Templates", menu: true, action: { destination = .layoutSetup }),
+                       BannerOption(text: "Players", menu: true,  action: { destination = .playerSetup }),
+                       BannerOption(text: "Locations", menu: true, action: { destination = .locationSetup }),
+                       BannerOption(text: "Import BBO Names", menu: true, action: { ImportBBO.importNames() }),
+                       BannerOption(text: "Backup", menu: true, action: { MessageBox.shared.show("Backing up", cancelText: "Cancel", okText: "Continue", okAction: {Backup.shared.backup() ; MessageBox.shared.hide()})})]
         if Utility.isSimulator || MyApp.target == .iOS || debug {
             menuOptions.append(
-                BannerOption(text: "Restore", action: {
+                BannerOption(text: "Restore", menu: true, action: {
                     Backup.shared.restore(dateString: "Latest") }))
         }
         menuOptions.append(contentsOf:
-                            [BannerOption(text: "About \(appName)", action: { MessageBox.shared.show("A Bridge scoring app from\nShearer Online Ltd", showIcon: true, showVersion: true) })])
+                            [BannerOption(text: "About \(appName)", menu: true, action: { MessageBox.shared.show("A Bridge scoring app from\nShearer Online Ltd", showIcon: true, showVersion: true) })])
         return menuOptions
     }
     
