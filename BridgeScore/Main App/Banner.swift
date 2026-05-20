@@ -172,7 +172,7 @@ struct Banner: View {
                     Banner_Buttons(options: options.filter{!$0.menu || optionMode == .buttons}, alternateStyle: alternateStyle, bannerColor: bannerColor, buttonColor: buttonColor, backButtonColor: backButtonColor)
                 }
                 if optionMode == .menu || optionMode == .both {
-                    Spacer().frame(width: 20)
+                    //Spacer().frame(width: 20)
                     Banner_Menu(id: menuId!, image: menuImage, title: menuTitle, options: options.filter{$0.menu || optionMode == .menu}, bannerColor: bannerColor)
                 }
             }
@@ -190,7 +190,7 @@ struct Banner_Menu : View {
 
     var body: some View {
         Button {
-            let filteredOptions = options.filter{$0.isEnabled && !$0.isHidden}
+            let filteredOptions = options.filter{$0.isEnabled && !$0.isHidden && ($0.text ?? "") != ""}
             SlideInMenu.shared.show(id: id, title: title, strings: filteredOptions.map{$0.text ?? ""}, top: bannerHeight - 20) { (option) in
                     if let selected = options.first(where: {$0.text == option}) {
                         selected.action()
