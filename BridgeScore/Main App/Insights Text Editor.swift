@@ -8,12 +8,13 @@
 import SwiftUI
 import UIKit
 
-struct InsightsTextView<EditField> : View where EditField : Hashable & Equatable & CaseIterable {
+struct InsightsTextView<EditField:InsightsFocusIndexBridge> : View  {
     @Binding var text: String
     var fieldType: EditField
     @Binding var focus: EditField?
     var placeholder: String = ""
     var spellCheckingType: UITextSpellCheckingType = .no
+    var readOnly: Bool = false
     var setFocus: ((FocusDirection) -> Void)? = nil
     var onConfirm: (() -> Void)? = nil
     var onChange: ((String)->())? = nil
@@ -21,38 +22,40 @@ struct InsightsTextView<EditField> : View where EditField : Hashable & Equatable
     var body: some View {
         HStack {
             Spacer().frame(width: 8)
-            InsightsTextViewRepresentable(text: $text, fieldType: fieldType, focus: $focus, placeholder: placeholder, setFocus: setFocus ?? defaultSetFocus, onConfirm: onConfirm, onChange: onChange)
+            ZStack {
+                InsightsTextViewRepresentable(text: $text, fieldType: fieldType, focus: $focus, spellCheckingType: spellCheckingType, readOnly: readOnly, setFocus: setFocus ?? defaultSetFocus, onConfirm: onConfirm, onChange: onChange)
+                    .fixedSize(horizontal: false, vertical: true)
+                if text == "" && placeholder != "" {
+                    LeadingText(placeholder).opacity(0.5)
+                }
+            }
         }
     }
     
     func defaultSetFocus(direction: FocusDirection) {
-        print("Setting focus")
         let allFields = Array(EditField.allCases)
-        if let currentIndex = allFields.firstIndex(where: {$0 == fieldType}) {
+        
+        if let currentFocus = focus {
             var nextIndex: Int
-            if direction == .forwards {
-                nextIndex = currentIndex + 1
+            nextIndex = currentFocus.intIndex + direction.rawValue
+            if nextIndex < 0 {
+                focus = EditField.from(intIndex: allFields.count - 1)
+            } else if nextIndex >= allFields.count {
+                focus = EditField.from(intIndex: 0)
             } else {
-                nextIndex = currentIndex - 1
-            }
-            if nextIndex < allFields.startIndex {
-                focus = allFields[allFields.endIndex - 1]
-            } else if nextIndex >= allFields.endIndex {
-                focus = allFields[allFields.startIndex]
-            } else {
-                focus = allFields[nextIndex]
+                focus = EditField.from(intIndex: nextIndex)
             }
         }
     }
     
 }
 
-struct InsightsTextViewRepresentable<EditField>: UIViewRepresentable where EditField : Hashable & Equatable & CaseIterable {
+struct InsightsTextViewRepresentable<EditField:InsightsFocusIndexBridge>: UIViewRepresentable {
     @Binding var text: String
     var fieldType: EditField
     @Binding var focus: EditField?
-    var placeholder: String = ""
     var spellCheckingType: UITextSpellCheckingType = .no
+    var readOnly: Bool = false
     var setFocus: ((FocusDirection)->())? = nil
     var onConfirm: (()->())? = nil
     var onChange: ((String)->())? = nil
@@ -61,8 +64,14 @@ struct InsightsTextViewRepresentable<EditField>: UIViewRepresentable where EditF
         let textView = InsightsUITextView<EditField>(fieldType: fieldType, setFocus: setFocus, onConfirm: onConfirm)
         textView.delegate = context.coordinator
         textView.font = .systemFont(ofSize: 16)
-        textView.spellCheckingType = .no
-        textView.isScrollEnabled = true
+        textView.spellCheckingType = spellCheckingType
+        textView.isScrollEnabled = false
+        textView.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        textView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        textView.isSelectable = true
+        textView.smartQuotesType = .no
+        textView.smartDashesType = .no
+        textView.isEditable = !readOnly
         return textView
     }
 
@@ -75,17 +84,13 @@ struct InsightsTextViewRepresentable<EditField>: UIViewRepresentable where EditF
         if focus == fieldType {
             if !uiView.isFirstResponder && uiView.window != nil {
                 Utility.mainThread {
-                    if focus == fieldType {
-                        print("\(fieldType) is first responder")
+                    if focus == fieldType && !uiView.isFirstResponder {
                         uiView.becomeFirstResponder()
                     }
                 }
             }
         } else {
-            print("\(fieldType) is not first responder")
-            if uiView.isFirstResponder {
-                uiView.resignFirstResponder()
-            }
+            
         }
     }
 
@@ -106,7 +111,7 @@ struct InsightsTextViewRepresentable<EditField>: UIViewRepresentable where EditF
     }
 }
 
-class InsightsUITextView<EditField>: UITextView where EditField : Hashable & Equatable & CaseIterable {
+class InsightsUITextView<EditField:InsightsFocusIndexBridge>: UITextView {
     var fieldType: EditField?
     var setFocus: ((FocusDirection)->())? = nil
     var onConfirm: (()->())? = nil
@@ -117,6 +122,16 @@ class InsightsUITextView<EditField>: UITextView where EditField : Hashable & Equ
         self.fieldType = fieldType
         self.setFocus = setFocus
         self.onConfirm = onConfirm
+    }
+    
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        if let event = event {
+            // Target the physical mouse wheel scroll engine (.scroll)
+            if event.type == .scroll {
+                return nil // 👈 Forwards discrete mouse wheel clicks directly to SwiftUI's ScrollView
+            }
+        }
+        return super.hitTest(point, with: event)
     }
     
     override func pressesBegan(_ presses: Set<UIPress>, with event: UIPressesEvent?) {
@@ -164,7 +179,25 @@ class InsightsUITextView<EditField>: UITextView where EditField : Hashable & Equ
     }
 }
 
-enum FocusDirection {
-    case forwards
-    case backwards
+enum FocusDirection: Int {
+    case forwards = 1
+    case backwards = -1
+}
+
+protocol InsightsFocusIndexBridge: CaseIterable, Equatable {
+    var intIndex: Int { get }
+    static func from(intIndex: Int) -> Self?
+}
+
+extension InsightsFocusIndexBridge {
+    var intIndex: Int {
+        let allCasesArray = Array(Self.allCases)
+        return allCasesArray.firstIndex(of: self) ?? 0
+    }
+    
+    static func from(intIndex: Int) -> Self? {
+        let allCasesArray = Array(Self.allCases)
+        guard intIndex >= 0 && intIndex < allCasesArray.count else { return nil }
+        return allCasesArray[intIndex]
+    }
 }

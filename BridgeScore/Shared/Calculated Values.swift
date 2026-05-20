@@ -5,7 +5,7 @@
 //  Created by Marc Shearer on 04/05/2026.
 //
 
-import Foundation
+import SwiftUI
 
 enum CalculatedType: Int, Codable, CaseIterable {
     case numeric = 0
@@ -242,6 +242,7 @@ enum CalculatedFunction : String, CaseIterable, Codable {
     case lowercased = "lowercased"
     case uppercased = "uppercased"
     case capitalized = "capitalized"
+    case match = "match"
     
     var string: String { self.rawValue }
     
@@ -251,7 +252,7 @@ enum CalculatedFunction : String, CaseIterable, Codable {
             return (min: 2, max: nil)
         case .abs:
             return (min: 1, max: 1)
-        case .mod:
+        case .mod, .match:
             return (min: 2, max: 2)
         case .lowercased, .uppercased, .capitalized:
             return (min: 1, max: 1)
@@ -260,7 +261,7 @@ enum CalculatedFunction : String, CaseIterable, Codable {
     
     var argumentType: CalculatedType {
         switch self {
-        case .lowercased, .uppercased, .capitalized:
+        case .lowercased, .uppercased, .capitalized, .match:
                 .string
         default:
                 .numeric
@@ -271,13 +272,15 @@ enum CalculatedFunction : String, CaseIterable, Codable {
         switch self {
         case .lowercased, .uppercased, .capitalized:
                 .string
+        case .match:
+                .boolean
         default:
                 .numeric
         }
     }
 }
 
-struct CalculatedValue : Codable, Equatable, Hashable {
+class CalculatedValue : Codable, Equatable, Hashable {
     var numeric: Float?
     var string: String?
     var boolean: Bool?
@@ -310,13 +313,49 @@ struct CalculatedValue : Codable, Equatable, Hashable {
         self.type = .boolean
     }
     
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(type)
+        switch type {
+        case .string:
+            hasher.combine(string)
+        case .numeric:
+            hasher.combine(numeric)
+        case .boolean:
+            hasher.combine(boolean)
+        }
+    }
+    
     var text: String { (isNumeric ? "\(numeric!)" : (isString ? string! : "\(boolean!)"))}
+    
+    var textBinding: Binding<String> {
+        Binding(
+            get: { self.text },
+            set: { newValue in
+                switch self.type {
+                case .numeric:
+                    self.numeric = Float(newValue) ?? 0
+                case .boolean:
+                    self.boolean = (newValue.lowercased() == "true")
+                case .string:
+                    self.string = newValue
+                }
+            })}
     
     var isNumeric: Bool { type == .numeric}
     
     var isString: Bool { type == .string}
     
     var isBoolean: Bool { type == .boolean}
+    
+    static func == (lhs: CalculatedValue, rhs:CalculatedValue)  -> Bool {
+        var result = true
+        do {
+            result = try isEqual(lhs: lhs,rhs: rhs).boolean!
+        } catch {
+            result = false
+        }
+        return result
+    }
     
     static func + (lhs: CalculatedValue, rhs:CalculatedValue) throws -> CalculatedValue {
         if rhs.type != lhs.type {
@@ -371,7 +410,7 @@ struct CalculatedValue : Codable, Equatable, Hashable {
         }
     }
     
-    static func == (lhs: CalculatedValue, rhs:CalculatedValue) throws -> CalculatedValue {
+    static func isEqual(lhs: CalculatedValue, rhs:CalculatedValue) throws -> CalculatedValue {
         if rhs.type != lhs.type {
             throw CalculatedError.typeMismatchComparison(.equal, rhs.type, lhs.type)
         }
@@ -383,6 +422,10 @@ struct CalculatedValue : Codable, Equatable, Hashable {
         case .boolean:
             return CalculatedValue(lhs.boolean! == rhs.boolean!)
         }
+    }
+    
+    static func == (lhs: CalculatedValue, rhs:CalculatedValue) throws -> CalculatedValue {
+        try isEqual(lhs: lhs, rhs: rhs)
     }
     
     static func != (lhs: CalculatedValue, rhs:CalculatedValue) throws -> CalculatedValue {
@@ -767,6 +810,8 @@ indirect enum CalculatedParseNode : Equatable {
                 return CalculatedValue(values[0].string!.uppercased())
             case .capitalized:
                 return CalculatedValue(values[0].string!.capitalized)
+            case .match:
+                return CalculatedValue((values[0].string! == "") || (values[0].string!.lowercased() == values[1].string!.lowercased()))
             }
         }
     }

@@ -285,11 +285,11 @@ public enum SuitType: Int, CaseIterable {
 }
 
 public enum LevelType: Int, CaseIterable {
-    case passout
-    case partScore
-    case game
-    case smallSlam
-    case grandSlam
+    case passout = 0
+    case partScore = 1
+    case game = 2
+    case smallSlam = 3
+    case grandSlam = 4
     
     var slam: Bool {
         self == .smallSlam || self == .grandSlam
@@ -319,9 +319,9 @@ public enum LevelType: Int, CaseIterable {
         case .partScore:
             "Part score"
         case .smallSlam:
-            "Grand slam"
-        case .grandSlam:
             "Small slam"
+        case .grandSlam:
+            "Grand slam"
         default:
             "\(self)".capitalized
         }

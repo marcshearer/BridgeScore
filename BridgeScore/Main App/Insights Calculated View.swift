@@ -16,7 +16,7 @@ struct InsightsCalculatedColumnView : View {
     @State var duplicateMessage: String = ""
     @State var errorMessage: String = ""
     @State var cursor: Int = 0
-    @FocusState fileprivate var focused: EditField?
+    @State var focus: InsightsCalculatedEditField?
     @StateObject var editColumn = CalculatedColumn()
     @State var canSave: Bool = true
     @State var align: CalculatedAlignment = .right
@@ -49,9 +49,12 @@ struct InsightsCalculatedColumnView : View {
                     Spacer()
                 }
                 .frame(width: 114)
-                MyTextField(field: $editColumn.title, focused: $focused, focusValue: EditField.description, nextFocusValue: .logic, previousFocusValue: .logic, width: 800, height: 40, cornerRadius: 8, color: .alternate) { _ in
+                InsightsTextView(text: $editColumn.title, fieldType: InsightsCalculatedEditField.description, focus: $focus, onChange: { _ in
                     checkTitle()
-                }
+                })
+                .frame(width: 500, height: 40)
+                .palette(.alternate)
+                .cornerRadius(8)
                 Spacer().frame(width: 20)
                 Text(duplicateMessage)
                     .foregroundColor(Palette.background.strongText)
@@ -81,7 +84,7 @@ struct InsightsCalculatedColumnView : View {
                     Spacer()
                 }
                 .frame(width: 120)
-                CalculatedValuesView(logic: $editColumn.logic, cursor: $cursor, focused: $focused, focusValue: .logic,  nextFocusValue: .description, previousFocusValue: .description, color: .alternate) {
+                CalculatedValuesView(logic: $editColumn.logic, cursor: $cursor, fieldType: InsightsCalculatedEditField.logic, nextFocusValue: .description, previousFocusValue:  .description, focus: $focus, color: .alternate) {
                     updateLogic()
                 }
                 .cornerRadius(8)
@@ -107,151 +110,167 @@ struct InsightsCalculatedColumnView : View {
                 }
                 .frame(width: 200)
                 Spacer().frame(width: 60)
-                VStack {
+                VStack(spacing: 0) {
                     Spacer().frame(height: 60)
-                    HStack {
+                    VStack(spacing: 0) {
+                        Spacer().frame(height: 30)
                         HStack {
-                            Text("Result type:")
-                            Spacer()
-                        }
-                        .frame(width: 120)
-                        Text(resultType == nil ? editColumn.logic.isEmpty ?"No logic" : "Invalid" : resultType!.string)
-                        if errorMessage != "" && !editColumn.logic.isEmpty {
-                            Spacer().frame(width: 20)
-                            Button("􀁝")
-                            {
-                                showErrorMessage = true
-                            }
-                            .font(inputFont)
-                            .foregroundColor(Palette.background.themeText)
-                            .popover(isPresented: $showErrorMessage) {
+                            Spacer().frame(width: 50)
+                            VStack(spacing: 0) {
                                 HStack {
-                                    Spacer().frame(width: 50)
-                                    Text(errorMessage)
-                                    Spacer().frame(width: 50)
+                                    HStack {
+                                        Text("Result type:")
+                                        Spacer()
+                                    }
+                                    .frame(width: 120)
+                                    Text(resultType == nil ? editColumn.logic.isEmpty ?"No logic" : "Invalid" : resultType!.string)
+                                    if errorMessage != "" && !editColumn.logic.isEmpty {
+                                        Spacer().frame(width: 20)
+                                        Button("􀁝")
+                                        {
+                                            showErrorMessage = true
+                                        }
+                                        .font(inputFont)
+                                        .foregroundColor(Palette.background.themeText)
+                                        .popover(isPresented: $showErrorMessage) {
+                                            HStack {
+                                                Spacer().frame(width: 50)
+                                                Text(errorMessage)
+                                                Spacer().frame(width: 50)
+                                            }
+                                        }
+                                    }
+                                    Spacer()
                                 }
+                                Spacer().frame(height: 10)
+                                Spacer()
+                                HStack {
+                                    HStack {
+                                        Text("Alignment:")
+                                        Spacer()
+                                    }
+                                    .frame(width: 120)
+                                    Picker("Alignment", selection: $editColumn.align) {
+                                        ForEach(CalculatedAlignment.allCases, id: \.self) { align in
+                                            Text(align.string)
+                                                .tag(align)
+                                        }
+                                    }
+                                    .pickerStyle(.segmented)
+                                    .frame(width: 240)
+                                    Spacer()
+                                }
+                                Spacer()
+                                HStack {
+                                    HStack {
+                                        Text("Width:")
+                                        Spacer()
+                                    }
+                                    .frame(width: 120)
+                                    StepperInput(field: $editColumn.width, minValue: {50}, maxValue: {200}, increment: {10}, height: 30, width: 100, inlineTitle: false)
+                                        .frame(width: 140)
+                                    Spacer()
+                                }
+                                Spacer()
+                                HStack {
+                                    HStack {
+                                        Text("Decimals:")
+                                        Spacer()
+                                    }
+                                    .frame(width: 120)
+                                    StepperInput(field: $editColumn.decimalPlaces, isEnabled: !notNumeric, minValue: {0}, maxValue: {4}, increment: {1}, height: 30, width: 100, inlineTitle: false)
+                                        .frame(width: 140)
+                                    Spacer()
+                                }
+                                Spacer()
+                                Spacer().frame(height: 10)
+                                HStack {
+                                    HStack {
+                                        Text("Blank If:")
+                                        Spacer()
+                                    }
+                                    .frame(width: 120)
+                                    Picker("Blank If:", selection: $editColumn.blankIf) {
+                                        ForEach(CalculatedBlankIf.allCases, id: \.self) { align in
+                                            Text(align.string)
+                                                .tag(align)
+                                        }
+                                    }
+                                    .pickerStyle(.segmented)
+                                    .disabled(notNumeric)
+                                    .frame(width: 300)
+                                    Spacer()
+                                }
+                                Spacer()
+                                HStack {
+                                    HStack {
+                                        Text("Percentage:")
+                                        Spacer()
+                                    }
+                                    .frame(width: 120)
+                                    InputToggle(field: $editColumn.percent, disabled: $notNumeric, width: 80, inlineTitle: false)
+                                        .frame(width: 40)
+                                    Spacer()
+                                }
+                                Spacer()
+                                HStack {
+                                    HStack {
+                                        Text("Show in:")
+                                        Spacer()
+                                    }
+                                    .frame(width: 120)
+                                    Picker("Show in:", selection: $editColumn.visibility) {
+                                        ForEach(CalculatedVisibility.allCases, id: \.self) { visibility in
+                                            Text(visibility.string)
+                                                .tag(visibility)
+                                        }
+                                    }
+                                    .pickerStyle(.segmented)
+                                    .frame(width: 300)
+                                    Spacer()
+                                }
+                                Spacer()
+                                Spacer().frame(height: 20)
+                                HStack {
+                                    HStack {
+                                        Text("Calculate as:")
+                                        Spacer()
+                                    }
+                                    .frame(width: 120)
+                                    Picker("Calculate as:", selection: $editColumn.totalType) {
+                                        ForEach(CalculatedTotalType.allCases, id: \.self) { totalType in
+                                            Text(totalType.string)
+                                                .tag(totalType)
+                                        }
+                                    }
+                                    .pickerStyle(.segmented)
+                                    .disabled(!editColumn.visibility.isInTotal)
+                                    .frame(width: 300)
+                                    Spacer()
+                                }
+                                Spacer()
+                                HStack {
+                                    HStack {
+                                        Text("Recalculate:")
+                                        Spacer()
+                                    }
+                                    .frame(width: 120)
+                                    InputToggle(field: $editColumn.recalculate, disabled: .constant(false), width: 80, inlineTitle: false) { _ in
+                                        Utility.mainThread {
+                                            updateLogic()
+                                        }
+                                    }
+                                    .frame(width: 40)
+                                    .disabled(!editColumn.visibility.isInTotal)
+                                    Spacer()
+                                }
+                                Spacer()
                             }
                         }
-                        Spacer()
                     }
-                    Spacer().frame(height: 50)
-                    HStack {
-                        HStack {
-                            Text("Alignment:")
-                            Spacer()
-                        }
-                        .frame(width: 120)
-                        Picker("Alignment", selection: $editColumn.align) {
-                            ForEach(CalculatedAlignment.allCases, id: \.self) { align in
-                                Text(align.string)
-                                    .tag(align)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .frame(width: 240)
-                        Spacer()
-                    }
-                    Spacer().frame(height: 50)
-                    HStack {
-                        HStack {
-                            Text("Width:")
-                            Spacer()
-                        }
-                        .frame(width: 120)
-                        StepperInput(field: $editColumn.width, minValue: {50}, maxValue: {200}, increment: {10}, height: 30, width: 100, inlineTitle: false)
-                            .frame(width: 140)
-                        Spacer()
-                    }
-                    Spacer().frame(height: 50)
-                    HStack {
-                        HStack {
-                            Text("Decimal places:")
-                            Spacer()
-                        }
-                        .frame(width: 120)
-                        StepperInput(field: $editColumn.decimalPlaces, isEnabled: !notNumeric, minValue: {0}, maxValue: {4}, increment: {1}, height: 30, width: 100, inlineTitle: false)
-                            .frame(width: 140)
-                        Spacer()
-                    }
-                    Spacer().frame(height: 50)
-                    HStack {
-                        HStack {
-                            Text("Blank If:")
-                            Spacer()
-                        }
-                        .frame(width: 120)
-                        Picker("Blank If:", selection: $editColumn.blankIf) {
-                            ForEach(CalculatedBlankIf.allCases, id: \.self) { align in
-                                Text(align.string)
-                                    .tag(align)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .disabled(notNumeric)
-                        .frame(width: 300)
-                        Spacer()
-                    }
-                    HStack {
-                        HStack {
-                            Text("Percentage:")
-                            Spacer()
-                        }
-                        .frame(width: 120)
-                        InputToggle(field: $editColumn.percent, disabled: $notNumeric, width: 80, inlineTitle: false)
-                        .frame(width: 40)
-                        Spacer()
-                    }
-                    HStack {
-                        HStack {
-                            Text("Show in:")
-                            Spacer()
-                        }
-                        .frame(width: 120)
-                        Picker("Show in:", selection: $editColumn.visibility) {
-                            ForEach(CalculatedVisibility.allCases, id: \.self) { visibility in
-                                Text(visibility.string)
-                                    .tag(visibility)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .frame(width: 300)
-                        Spacer()
-                    }
-                    Spacer()
-                    HStack {
-                        HStack {
-                            Text("Calculate as:")
-                            Spacer()
-                        }
-                        .frame(width: 120)
-                        Picker("Calculate as:", selection: $editColumn.totalType) {
-                            ForEach(CalculatedTotalType.allCases, id: \.self) { totalType in
-                                Text(totalType.string)
-                                    .tag(totalType)
-                            }
-                        }
-                        .pickerStyle(.segmented)
-                        .disabled(!editColumn.visibility.isInTotal)
-                        .frame(width: 300)
-                        Spacer()
-                    }
-                    Spacer()
-                    HStack {
-                        HStack {
-                            Text("Recalculate:")
-                            Spacer()
-                        }
-                        .frame(width: 120)
-                        InputToggle(field: $editColumn.recalculate, disabled: .constant(false), width: 80, inlineTitle: false) { _ in
-                            Utility.mainThread {
-                                updateLogic()
-                            }
-                        }
-                        .frame(width: 40)
-                        .disabled(!editColumn.visibility.isInTotal)
-                        Spacer()
-                    }
-                    Spacer()
+                    .frame(width: 500)
+                    .palette(.subtle)
+                    .cornerRadius(8)
                 }
             }
             Spacer().frame(height: 40)
@@ -278,7 +297,7 @@ struct InsightsCalculatedColumnView : View {
             editColumn.copy(from: column)
             checkTitle()
             updateLogic()
-            focused = .logic
+            focus = .description
         }
     }
     
@@ -397,7 +416,7 @@ struct InsightsCalculatedColumnView : View {
         editColumn.logic.insert(.variable(selected), at: cursor)
         cursor += 1
         updateLogic()
-        focused = .logic
+        focus = .logic
         canSave = !editColumn.name.isEmpty && !editColumn.logic.isEmpty
     }
     
@@ -405,7 +424,7 @@ struct InsightsCalculatedColumnView : View {
         editColumn.logic.insert(.calculatedVariable(selected), at: cursor)
         cursor += 1
         updateLogic()
-        focused = .logic
+        focus = .logic
         canSave = !editColumn.name.isEmpty && !editColumn.logic.isEmpty
     }
     
@@ -413,9 +432,9 @@ struct InsightsCalculatedColumnView : View {
         editColumn.logic.insert(contentsOf: [.function(selected), .bracket(.open), .bracket(.close)], at: cursor)
         cursor += 2
         updateLogic()
-        focused = .logic
+        focus = .logic
         canSave = !editColumn.name.isEmpty && !editColumn.logic.isEmpty
-    }
+}
     
     func variableType(variable: InsightColumn) throws -> CalculatedType? {
         return variable.type
@@ -434,76 +453,7 @@ struct InsightsCalculatedColumnView : View {
     }
 }
 
-struct MyTextField<Focus> : View where Focus: Hashable {
-    @Binding var field: String
-    @FocusState.Binding var focused: Focus?
-    let focusValue: Focus
-    var nextFocusValue: Focus? = nil
-    var previousFocusValue: Focus? = nil
-    var width: CGFloat? = nil
-    var height: CGFloat? = nil
-    var cornerRadius: CGFloat = 8
-    var color: ThemeBackgroundColorName = .input
-    var keyboardType: UIKeyboardType = .default
-    var autoCapitalize: TextInputAutocapitalization = .never
-    var autoCorrect: Bool = false
-    var onChange: ((String)->())?
-    
-    var body: some View {
-        let binding = Binding<String>(
-                get: { self.field },
-                set: { newValue in
-                    self.field = newValue
-                    self.onChange?(newValue) // Triggers immediately on every key press
-                }
-            )
-        
-        MiddleCentered(horizontalPadding: 8, verticalPadding: 4) {
-            TextField("", text: $field)
-                .onChange(of: field) { oldValue, newValue in
-                    onChange?(newValue)
-                }
-                .if(height != nil) { view in
-                    view.frame(height: height! - 8)
-                }
-                .if(width != nil) { view in
-                    view.frame(width: width! - 16)
-                }
-                .textFieldStyle(.plain)
-                .background(.clear)
-                .labelsHidden()
-                .lineLimit(1)
-                //.focusEffectDisabled(true)
-                .focusable(true)
-                .focused($focused, equals: focusValue)
-                .keyboardType(keyboardType)
-                .textInputAutocapitalization(autoCapitalize)
-                .disableAutocorrection(!autoCorrect)
-                .onKeyPress{ keyPress in
-                    let shift = keyPress.modifiers.contains(.shift)
-                    if let nextFocusValue = nextFocusValue, (keyPress.key == .return || (keyPress.key == .tab && !shift)) {
-                        // Move focus forward
-                        focused = nextFocusValue
-                        return .handled
-                    } else if let previousFocusValue = previousFocusValue, (keyPress.key == .tab && shift) {
-                        focused = previousFocusValue
-                        return .handled
-                    }
-                    return .ignored
-                }
-        }
-        .if(height != nil) { view in
-            view.frame(height: height!)
-        }
-        .if(width != nil) { view in
-            view.frame(width: width!)
-        }
-        .palette(color)
-        .cornerRadius(cornerRadius)
-    }
-}
-
-fileprivate enum EditField {
+enum InsightsCalculatedEditField : InsightsFocusIndexBridge {
     case description
     case logic
 }

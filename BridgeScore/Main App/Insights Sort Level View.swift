@@ -17,13 +17,16 @@ struct InsightsSortLevelsView : View {
     
     var body: some View {
         
-        Top(padding: 40) {
-            CenteredText("View Selection and Sort")
+        Top(padding: 20) {
+            CenteredText("View Selection")
                 .font(defaultFont)
                 .frame(height: 40)
-            Spacer().frame(height: 40)
+            Spacer().frame(height: 20)
             selectionView()
-            Spacer().frame(height: 50)
+            CenteredText("View Sorting")
+                .font(defaultFont)
+                .frame(height: 40)
+            Spacer().frame(height: 20)
             sortView()
         }
         .fullScreenCover(item: $showSortLevel) { showSortLevel in
@@ -93,7 +96,7 @@ struct InsightsSortLevelsView : View {
     func sortView() -> some View {
         HStack(spacing: 0) {
             let levels = report.values.levels
-            let bodyHeight: CGFloat = min(240, max(40, CGFloat(40 * (report.values.levels.count - 1))))
+            let bodyHeight: CGFloat = min(160, max(40, CGFloat(40 * (report.values.levels.count - 1))))
             ZStack {
                 VStack(spacing: 0) {
                     VStack(spacing: 0) {
@@ -218,15 +221,19 @@ struct InsightsSortLevelView : View {
     
     @State var errorMessage: String = ""
     @State var cursor: Int = 0
-    @FocusState fileprivate var focused: EditField?
+    @State fileprivate var focus: EditField?
     @State var editSortLevel = CalculatedSortLevel()
     @State var resultType: CalculatedType?
     @State var showErrorMessage: Bool = false
     @State var selectedListType: ListType? = nil
     
+    var binding: Binding<String> { Binding(
+        get: { self.editSortLevel.key?.title ?? "" },
+        set: { _ in })}
+    
     var body: some View {
         VStack(spacing: 0) {
-            Banner(title: Binding.constant("\(editMode.string.capitalized) \(sortLevel.isBoard ? "Board Selection" : "Sort Level \(index)")"), alternateColor: true)
+            Banner(title: Binding.constant("\(editMode.string.capitalized) \(sortLevel.isBoard ? "Board Selection" : "Sort Level \(index)")"), alternateColor: true, height: 80)
             Spacer().frame(height: 30)
             if !editSortLevel.isBoard {
                 HStack {
@@ -238,12 +245,10 @@ struct InsightsSortLevelView : View {
                     .frame(width: 200)
                     HStack {
                         Spacer().frame(width: 8)
-                        Text(editSortLevel.key?.title ?? "")
-                            .focusable()
-                            .focused($focused, equals: .sortKey)
+                        InsightsTextView(text: binding, fieldType: .sortKey, focus: $focus, placeholder: "Drop a field here", readOnly: true)
                         Spacer()
                     }
-                    .frame(width: 200, height: 40)
+                    .frame(width: 250, height: 40)
                     .palette(.alternate)
                     .cornerRadius(8)
                     .dropDestination(for: InsightsSetupTransfer.self) { droppedColumns, _ in
@@ -278,8 +283,13 @@ struct InsightsSortLevelView : View {
                     }
                     .frame(width: 200)
                     Middle {
-                        InputToggle(field: $editSortLevel.subtotal, disabled: Binding.constant(false), topSpace: 10, width: 80, inlineTitle: false)
-                            .frame(width: 40)
+                        InputToggle(field: $editSortLevel.subtotal, disabled: Binding.constant(false), topSpace: 10, width: 80, inlineTitle: false) { newValue in
+                            if !editSortLevel.subtotal {
+                                editSortLevel.selectionLogic = []
+                            }
+                            report.objectWillChange.send()
+                        }
+                        .frame(width: 40)
                     }
                     .frame(height: 30)
                     Spacer()
@@ -306,14 +316,18 @@ struct InsightsSortLevelView : View {
             }
             HStack {
                 Spacer().frame(width: 40)
-                HStack(spacing: 0) {
-                    Text("\(sortLevel.isBoard ? "Board" : "Subtotal") selection logic:")
-                    Spacer()
+                HStack {
+                    HStack(spacing: 0) {
+                        Text("\(sortLevel.isBoard ? "Board" : "Subtotal") selection logic:")
+                        Spacer()
+                    }
+                    .frame(width: 200)
+                    CalculatedValuesView(logic: $editSortLevel.selectionLogic, cursor: $cursor, fieldType: .selectionLogic, nextFocusValue: .sortKey, previousFocusValue: .sortKey, focus: $focus, color: .alternate) {
+                        updateLogic()
+                    }
                 }
-                .frame(width: 200)
-                CalculatedValuesView(logic: $editSortLevel.selectionLogic, cursor: $cursor, focused: $focused, focusValue: .selectionLogic,  nextFocusValue: .sortKey, previousFocusValue: .sortKey, color: .alternate) {
-                    updateLogic()
-                }
+                .disabled(!editSortLevel.subtotal && !editSortLevel.isBoard)
+                .opacity(editSortLevel.subtotal || editSortLevel.isBoard ? 1 : 0.3)
                 HStack {
                     Spacer().frame(width: 20)
                     if editSortLevel.isBoard {
@@ -344,7 +358,7 @@ struct InsightsSortLevelView : View {
                 Spacer().frame(width: 40)
             }
             HStack {
-                Spacer()
+                Spacer().frame(width: 260)
                 VStack(spacing: 0) {
                     MiddleCentered(height: 60) { Image(systemName: "arrowshape.up").font(bannerFont) }
                     InsightsColumnListView(report: report, title: "Data columns", columns: report.allColumns, listType: .allColumns, allowDrag: true, selectedListType: $selectedListType, onSelect: variableSelected)
@@ -394,7 +408,7 @@ struct InsightsSortLevelView : View {
             Utility.mainThread {
                 editSortLevel.copy(from: sortLevel)
                 updateLogic()
-                focused = .selectionLogic
+                focus = (editSortLevel.subtotal ? .selectionLogic : nil)
             }
         }
     }
@@ -402,7 +416,7 @@ struct InsightsSortLevelView : View {
     func onDropReceived(dropped: [InsightsSetupTransfer]) -> Bool {
         var result = false
         if let dropped = dropped.first {
-            if dropped.source.isColumns {
+            if dropped.source.isSortColumn  {
                 editSortLevel.key = dropped.column
                 updateLogic()
                 result = true
@@ -460,7 +474,7 @@ struct InsightsSortLevelView : View {
             editSortLevel.selectionLogic.insert(.variable(selected), at: cursor)
             cursor += 1
             updateLogic()
-            focused = .selectionLogic
+            focus = .selectionLogic
         }
     }
     
@@ -469,7 +483,7 @@ struct InsightsSortLevelView : View {
             editSortLevel.selectionLogic.insert(.calculatedVariable(selected), at: cursor)
             cursor += 1
             updateLogic()
-            focused = .selectionLogic
+            focus = .selectionLogic
         }
     }
     
@@ -478,7 +492,7 @@ struct InsightsSortLevelView : View {
             editSortLevel.selectionLogic.insert(contentsOf: [.function(selected), .bracket(.open), .bracket(.close)], at: cursor)
             cursor += 2
             updateLogic()
-            focused = .selectionLogic
+            focus = .selectionLogic
         }
     }
     
@@ -487,7 +501,7 @@ struct InsightsSortLevelView : View {
     }
 }
 
-fileprivate enum EditField {
+fileprivate enum EditField : InsightsFocusIndexBridge {
     case sortKey
     case selectionLogic
 }

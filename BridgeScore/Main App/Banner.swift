@@ -108,7 +108,7 @@ struct Banner: View {
                 
                     Spacer().frame(width: 20)
                 }
-                Spacer().frame(height: height != nil ? (height! - CGFloat(60)) / CGFloat(2) : (alternateStyle ? 0 : bannerBottom))
+                Spacer().frame(height: height != nil ? (height! - CGFloat(40)) / CGFloat(2) : (alternateStyle ? 0 : bannerBottom))
             }
         }
         .disabled(disabled.wrappedValue)

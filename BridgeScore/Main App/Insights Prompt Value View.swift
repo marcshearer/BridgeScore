@@ -7,11 +7,11 @@
 
 import SwiftUI
 
-struct InsightsPromptValueView : View {
+struct InsightsPromptValueView<EditValue:InsightsFocusIndexBridge> : View {
     @ObservedObject var prompt: CalculatedPrompt
     @Binding var value: String
-    var fieldType: InsightsPromptEditField
-    @Binding var focus: InsightsPromptEditField?
+    var fieldType: EditValue
+    @Binding var focus: EditValue?
     var onChange: ((String) -> ())? = nil
     
     @State var pickerValue: Int = 0
@@ -52,12 +52,12 @@ struct InsightsPromptValueView : View {
                         .tag("false")
                 }
                 .pickerStyle(.segmented)
-                .frame(width: 200, height: 40)
+                .frame(width: 280, height: 40)
             default:
-                InsightsTextView(text: $value, fieldType: fieldType, focus: $focus) { newValue in
+                InsightsTextView(text: $value, fieldType: fieldType, focus: $focus, onChange: { newValue in
                     onChange?(value)
-                }
-                .frame(width: 240, height: 40)
+                })
+                .frame(width: 280, height: 40)
                 .palette(.alternate)
                 .cornerRadius(8)
             }
@@ -69,6 +69,7 @@ struct InsightsPromptValuePickerView : View {
     @Binding var value: String
     @Binding var pickerValue: Int
     @State var values: [String] = []
+    var offset: CGFloat = 0
     var onChange: ((String) -> ())? = nil
     
     var body: some View {
@@ -80,8 +81,8 @@ struct InsightsPromptValuePickerView : View {
         .onAppear {
             pickerValue = values.firstIndex(where: {$0 == value}) ?? 0
         }
-        .offset(x: 10)
-        .frame(width: 200, height: 40)
+        .offset(x: offset)
+        .frame(width: 280, height: 40)
         .palette(.alternate)
         .cornerRadius(8)
     }

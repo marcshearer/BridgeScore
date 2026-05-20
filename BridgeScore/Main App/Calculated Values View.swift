@@ -7,13 +7,13 @@
 
 import SwiftUI
 
-struct CalculatedValuesView<Focus> : View where Focus : Hashable {
+struct CalculatedValuesView<Focus:InsightsFocusIndexBridge> : View {
     @Binding var logic: [CalculatedElement]
     @Binding var cursor: Int
-    @FocusState<Focus?>.Binding var focused: Focus?
-    var focusValue: Focus
+    var fieldType: Focus
     var nextFocusValue: Focus? = nil
     var previousFocusValue: Focus? = nil
+    @Binding var focus: Focus?
     var color: ThemeBackgroundColorName
     var onChange: (()->())?
     
@@ -28,7 +28,7 @@ struct CalculatedValuesView<Focus> : View where Focus : Hashable {
                 Spacer().frame(height: 15)
                 HStack {
                     Spacer().frame(width: 4)
-                    KeyDetectorView(processKey: processKey, focused: $focused, focusValue: focusValue, nextFocusValue: nextFocusValue, previousFocusValue: previousFocusValue)
+                    KeyDetectorView(processKey: processKey, fieldType: fieldType, nextFocusValue: nextFocusValue, previousFocusValue: previousFocusValue, focus: $focus)
                     Spacer()
                     ScrollViewReader { proxy in
                         ScrollView(.horizontal) {
@@ -37,7 +37,7 @@ struct CalculatedValuesView<Focus> : View where Focus : Hashable {
                                     HStack(spacing: 0) {
                                         // Preceding cursor
                                         HStack(spacing: 0) {
-                                            if index == cursor && literalCursor == nil && focused == focusValue {
+                                            if index == cursor && literalCursor == nil && focus == fieldType {
                                                 HStack(spacing: 0) {
                                                     Spacer()
                                                     cursorBar
@@ -64,7 +64,7 @@ struct CalculatedValuesView<Focus> : View where Focus : Hashable {
                                                     }
                                                     Text(String(character))
                                                         .onTapGesture {
-                                                            focused = focusValue
+                                                            focus = fieldType
                                                             cursor = index
                                                             literalCursor = characterIndex
                                                         }
@@ -78,7 +78,7 @@ struct CalculatedValuesView<Focus> : View where Focus : Hashable {
                                     .id(index)
                                     .contentShape(Rectangle())
                                     .onTapGesture {
-                                        focused = focusValue
+                                        focus = fieldType
                                         cursor = index
                                         literalCursor = nil
                                     }
@@ -100,7 +100,7 @@ struct CalculatedValuesView<Focus> : View where Focus : Hashable {
                 }
             }
             .onTapGesture {
-                focused = focusValue
+                focus = fieldType
                 cursor = logic.count
                 literalCursor = nil
             }
@@ -117,7 +117,7 @@ struct CalculatedValuesView<Focus> : View where Focus : Hashable {
         Rectangle().frame(width: 2, height: 30)
             .foregroundColor(.blue)
             .phaseAnimator([true, false]) { content, phase in
-                content.opacity(phase || focused != focusValue ? 1 : 0)
+                content.opacity(phase || focus != fieldType ? 1 : 0)
             } animation: { _ in
                     .easeInOut(duration: 0.5)
             }

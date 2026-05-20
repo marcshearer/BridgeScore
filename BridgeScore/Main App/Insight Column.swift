@@ -431,7 +431,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     }
     
     func value<ViewModel: NSObject>(report: Report, viewModel: ViewModel) throws -> CalculatedValue {
-        var value = try insightValue(report: report, boardSummary: viewModel as! BoardSummaryViewModel)
+        let value = try insightValue(report: report, boardSummary: viewModel as! BoardSummaryViewModel)
         if self.insightType == .percent {
             value.numeric! /= 100
         }
@@ -492,9 +492,9 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         case .boardNumber:
             return summaryValue(boardSummary.boardNumber)
         case .location:
-            return summaryValue(boardSummary.location!.short == "" ? boardSummary.location!.name : boardSummary.location!.short)
+            return summaryValue(boardSummary.location!.name)
         case .partner:
-            return summaryValue(boardSummary.partner!.name.components(separatedBy: " ").first!)
+            return summaryValue(boardSummary.partner!.name)
         case .date:
             return summaryValue(Utility.dateString(boardSummary.date, format: "dd/MM/yyyy"))
         case .age:
@@ -560,7 +560,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         case .suitType:
             return summaryValue(boardSummary.contract.suitType.string)
         case .levelType:
-            return summaryValue(boardSummary.contract.levelType.string)
+            return summaryValue("\(boardSummary.contract.levelType.rawValue)")
         case .totalTricks:
             return summaryValue(boardSummary.totalTricks)
         case .totalTricksDd:
@@ -642,6 +642,10 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             
             // Only have a case for fields where above is not correct
             return switch self {
+            case .location:
+                AttributedString(boardSummary.location!.short == "" ? boardSummary.location!.name : boardSummary.location!.short)
+            case .partner:
+                AttributedString(boardSummary.partner!.name.components(separatedBy: " ").first!)
             case .sessionNumber:
                 AttributedString(boardSummary.session == 0 ? "" : "\(boardSummary.session)")
             case .contract:
@@ -650,6 +654,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
                 boardSummary.contract.colorCompact + " " + AttributedString(Scorecard.madeString(made: boardSummary.made ?? 0))
             case .made:
                 AttributedString(Scorecard.madeString(made: boardSummary.made ?? 0))
+            case .levelType:
+                AttributedString(boardSummary.contract.levelType.string)
             case .compContract:
                 !boardSummary.isCompetitive ? "" : boardSummary.compContract.colorCompact
             case .compDeclarer:
@@ -725,7 +731,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     
     var blankIf: CalculatedBlankIf {
         switch self {
-        case .sessionNumber, .contractLevel, .score, .fieldSize , .gameOdds, .slamOdds, .compDdScore, .compMakeScore, .compMakeOdds, .medianTricks, .modeTricks, .ddTricks, .fit, .points, .totalTricks, .totalTricksDd, .passout, .partScore, .game, .smallSlam, .grandSlam:
+        case .sessionNumber, .contractLevel, .fieldSize , .gameOdds, .slamOdds, .compDdScore, .compMakeScore, .compMakeOdds, .medianTricks, .modeTricks, .ddTricks, .fit, .points, .totalTricks, .totalTricksDd, .passout, .partScore, .game, .smallSlam, .grandSlam:
             .zero
         case .calculated(let calculated):
             calculated.blankIf

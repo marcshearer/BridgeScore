@@ -192,6 +192,11 @@ class Report: ObservableObject {
         for sort in values.levels {
             try sort.refresh(report: self)
         }
+        for prompt in values.prompts {
+            if case .prompt(let prompt) = prompt {
+                prompt.refresh(report: self)
+            }
+        }
     }
 }
 
@@ -696,6 +701,18 @@ class CalculatedPrompt : Codable, Equatable, Hashable, Identifiable, ObservableO
         self.defaultValue = from.defaultValue
         self.promptType = from.promptType
         self.value = from.value
+    }
+    
+    func refresh(report: Report) {
+        // Copy default value to value
+        switch self.type {
+        case .numeric:
+            self.value = CalculatedValue(Float(self.defaultValue) ?? 0)
+        case .boolean:
+            self.value = CalculatedValue(self.defaultValue.lowercased() == "true")
+        case .string:
+            self.value = CalculatedValue(self.defaultValue)
+        }
     }
     
     static func == (lhs: CalculatedPrompt, rhs: CalculatedPrompt) -> Bool {

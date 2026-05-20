@@ -22,6 +22,7 @@ class Palette {
     @BackgroundColor(.destructiveButton) static var destructiveButton
     @BackgroundColor(.background) static var background
     @BackgroundColor(.alternate) static var alternate
+    @BackgroundColor(.subtle) static var subtle
     @BackgroundColor(.windowBackground) static var windowBackground
     @BackgroundColor(.tile) static var tile
     @BackgroundColor(.contrastTile) static var contrastTile

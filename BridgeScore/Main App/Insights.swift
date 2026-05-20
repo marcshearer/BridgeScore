@@ -234,9 +234,8 @@ class Insights {
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: BoardSummaryMO.tableName)
         do {
             let count = try CoreData.context.count(for: fetchRequest)
-            print("Total records: \(count)")
         } catch {
-            print("Error counting records: \(error)")
+
         }
         let boardSummaryMOs = CoreData.fetch(from: BoardSummaryMO.tableName, sort: [("date", .descending), ("boardIndex16", .ascending)]) as! [BoardSummaryMO]
         for boardSummaryMO in boardSummaryMOs {

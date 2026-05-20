@@ -82,6 +82,7 @@ enum ThemeBackgroundColorName: CaseIterable {
     case destructiveButton
     case background
     case alternate
+    case subtle
     case windowBackground
     case tile
     case contrastTile
@@ -400,6 +401,7 @@ class Themes {
                 .destructiveButton           : ThemeColor(#colorLiteral(red: 0.9981788993, green: 0.2295429707, blue: 0.1891850233, alpha: 1), nil, .darkBackground),
                 .background                  : ThemeColor(#colorLiteral(red: 0.999904573, green: 1, blue: 0.9998808503, alpha: 1), #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1), .lightBackground, .darkBackground),
                 .alternate                   : ThemeColor(#colorLiteral(red: 0.8784313725, green: 0.8784313725, blue: 0.8784313725, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1), .midBackground, .darkBackground),
+                .subtle                      : ThemeColor(#colorLiteral(red: 0.9725490196, green: 0.9725490196, blue: 0.9725490196, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1), .midBackground, .darkBackground),
                 .windowBackground            : ThemeColor(#colorLiteral(red: 0.3686274886, green: 0.3686274886, blue: 0.3686274886, alpha: 1), #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1), .lightBackground, .darkBackground),
                 .contrastTile                : ThemeColor(#colorLiteral(red: 0, green: 0.5690457821, blue: 0.5746168494, alpha: 1), #colorLiteral(red: 0.4756349325, green: 0.4756467342, blue: 0.4756404161, alpha: 1), .darkBackground, .darkBackground),
                 .tile                        : ThemeColor(#colorLiteral(red: 0.5, green: 0.8086761682, blue: 0.8080882377, alpha: 1), #colorLiteral(red: 0.2, green: 0.2, blue: 0.2, alpha: 1), .midBackground, .darkBackground),

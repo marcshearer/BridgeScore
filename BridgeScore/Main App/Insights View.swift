@@ -31,6 +31,7 @@ struct InsightsView: View {
     @State var buttonId: [UUID:UUID] = [:]
     @State fileprivate var displayMode: InsightDisplayMode = .loading
     @State fileprivate var isEditing: Bool = false
+    @State var showPrompts: Bool = false
     @StateObject private var scrollSync = ScrollSync<ScrollViews>()
     @State var activeColumn: Int? = nil
     @State var horizontalScroll: Bool = false
@@ -129,6 +130,12 @@ struct InsightsView: View {
                 }, content: { boardSummary in
                     showDetails(boardSummary: boardSummary, frame: geometry.frame(in: .global))
                 })
+                .sheet(isPresented: $showPrompts, onDismiss: {
+                    runReport()
+                }) {
+                    InsightsPromptEntryView(report: report)
+                }
+                .allowsHitTesting(!isEditing && !showPrompts && showBoardSummary == nil)
             }
             
         }
@@ -140,7 +147,7 @@ struct InsightsView: View {
         }
     }
     
-    func setupCompletion() {
+    func runReport() {
         displayMode = .loading
         sortIndex = []
         filteredIndex = []
@@ -164,6 +171,14 @@ struct InsightsView: View {
                     Text("Insights - \(report.values.viewName)")
                     
                     Spacer()
+                    
+                    if !report.values.prompts.isEmpty {
+                        Button("􀌆") {
+                            showPrompts = true
+                        }
+                    }
+                    
+                    Spacer().frame(width: 40)
                     
                     Button("\("􀈎")") {
                         isEditing = true
@@ -390,7 +405,7 @@ struct InsightsView: View {
         let height = min(max(1024, frame.height - 10), (frame.height))
         return ZStack{
             Color.black.opacity(0.4)
-            InsightsSetupView(report: report, data: boardSummaries.first, dismissView: $dismissView, completion: setupCompletion)
+            InsightsSetupView(report: report, data: boardSummaries.first, dismissView: $dismissView, completion: runReport)
                 .frame(width: width, height: height)
                 .interactiveDismissDisabled()
         }
@@ -483,8 +498,6 @@ struct InsightsView: View {
         var sortDirections: [SortDirection]
         
         do {
-            try report.refresh()
-            
             // Filter at bottom level
             boardSummaries = await filterService.filterData(report: report, allBoardSummaries: allBoardSummaries)
             
@@ -601,7 +614,6 @@ struct InsightsView: View {
                     if changed(levelIndex) {
                         var discarded = false
                         // First check for recalculation
-                        print("\(lastIndex()) \(levelIndex)")
                         try recalculate(levelIndex: levelIndex, boardSummary: sortIndex[lastIndex()].source! as BoardSummaryExtension) { column, value in
                             totals[levelIndex][column]!.set(value: value)
                         }

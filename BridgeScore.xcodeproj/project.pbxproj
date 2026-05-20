@@ -106,6 +106,7 @@
 		B25F653A27EDEEF400FDD6B1 /* Scorecard Ranking View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25F653927EDEEF400FDD6B1 /* Scorecard Ranking View.swift */; };
 		B25F653C27F0507600FDD6B1 /* Scorecard Traveller View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B25F653B27F0507600FDD6B1 /* Scorecard Traveller View.swift */; };
 		B2633A0E27AC3A460081B258 /* Layout List View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2633A0D27AC3A460081B258 /* Layout List View.swift */; };
+		B26345EB2FBCD43D009377E7 /* Insights Prompt Entry View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26345EA2FBCD434009377E7 /* Insights Prompt Entry View.swift */; };
 		B263B2062D49FDB600E13B04 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B263B2052D49FDB600E13B04 /* WidgetKit.framework */; };
 		B263B2082D49FDB600E13B04 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B263B2072D49FDB600E13B04 /* SwiftUI.framework */; };
 		B26BCDFA2799A1AC00B73501 /* Bridge Score App.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26BCDF92799A1AC00B73501 /* Bridge Score App.swift */; };
@@ -314,6 +315,7 @@
 		B25F653927EDEEF400FDD6B1 /* Scorecard Ranking View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Ranking View.swift"; sourceTree = "<group>"; };
 		B25F653B27F0507600FDD6B1 /* Scorecard Traveller View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Traveller View.swift"; sourceTree = "<group>"; };
 		B2633A0D27AC3A460081B258 /* Layout List View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Layout List View.swift"; sourceTree = "<group>"; };
+		B26345EA2FBCD434009377E7 /* Insights Prompt Entry View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Insights Prompt Entry View.swift"; sourceTree = "<group>"; };
 		B263B2032D49FDB500E13B04 /* BridgeScore WidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "BridgeScore WidgetExtension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
 		B263B2052D49FDB600E13B04 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
 		B263B2072D49FDB600E13B04 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
@@ -753,6 +755,7 @@
 				B23F362F2FB0DB3D009C2AA9 /* Insights Sort Level View.swift */,
 				B22305942FBB60A5005A555E /* Insights Prompt View.swift */,
 				B22305DD2FBC0BEA005A555E /* Insights Prompt Value View.swift */,
+				B26345EA2FBCD434009377E7 /* Insights Prompt Entry View.swift */,
 				B23F362B2FB04AA6009C2AA9 /* Insights Storage View.swift */,
 				B2EEFC772AAB5BE4005A1ECA /* Analysis Viewer.swift */,
 			);
@@ -986,6 +989,7 @@
 				B2BBC8B827BBF4B100D51A26 /* Table Managed Object.swift in Sources */,
 				B20095E12D4A00830051B8E3 /* Intent Actions.swift in Sources */,
 				B26BCE502799AD8900B73501 /* Other Extensions.swift in Sources */,
+				B26345EB2FBCD43D009377E7 /* Insights Prompt Entry View.swift in Sources */,
 				B26BCE472799AD8900B73501 /* Utility.swift in Sources */,
 				B21CC0BC279FDD3A001AECC1 /* Scorecard Detail View.swift in Sources */,
 				B2EB3D68279D65CC00D64225 /* Player Managed Object.swift in Sources */,

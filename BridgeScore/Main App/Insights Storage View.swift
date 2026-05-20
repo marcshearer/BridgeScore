@@ -16,7 +16,7 @@ struct InsightsReportViewStorage : View {
     var body: some View {
         HStack {
             VStack {
-                Spacer().frame(height: 120)
+                Spacer().frame(height: 80)
                 InsightsSetupButton(text: "Load View") {
                     showLoadDialog = true
                 }
@@ -106,7 +106,7 @@ struct InsightsReportViewStorageLoadDialog: View {
     var body: some View {
         let defaultUrl = InsightsReportViewStorage.url(for: UserDefault.defaultViewName.string)
        
-        Banner(title: Binding.constant("Load View"), alternateStyle: true, back: false, leftTitle: false)
+        Banner(title: Binding.constant("Load View"), alternateColor: true, height: 80, back: false, leftTitle: false)
         VStack {
             Spacer().frame(height: 20)
             Top {
@@ -189,7 +189,7 @@ struct InsightsReportViewStorageSaveDialog: View {
         let defaultUrl = InsightsReportViewStorage.url(for: UserDefault.defaultViewName.string)
         
         StandardView("Save View") {
-            Banner(title: Binding.constant("Save View"), alternateStyle: true, back: false, leftTitle: false)
+            Banner(title: Binding.constant("Save View"), alternateColor: true, height: 80, back: false, leftTitle: false)
             VStack {
                 Spacer().frame(height: 20)
                 Top {

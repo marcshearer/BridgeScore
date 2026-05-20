@@ -23,7 +23,7 @@ struct InsightsPromptsView : View {
                     .font(defaultFont)
                     .frame(height: 40)
             }
-            .frame(height: 120)
+            .frame(height: 40)
             promptView()
             Spacer()
         }
@@ -171,8 +171,7 @@ struct InsightsPromptView : View {
     @State var promptTypePickerSelection: Int = 0
     @State var typePickerSelection: Int = 0
     @State var defaultValue: String = ""
-    @State var typeId = UUID()
-
+    
     var body: some View {
         VStack(spacing: 0) {
             Banner(title: Binding.constant("\(editMode.string.capitalized) Prompt"), alternateColor: true, height: 80)
@@ -260,7 +259,6 @@ struct InsightsPromptView : View {
                     .opacity(canEditType ? 1 : 0.3)
                     .offset(x: -8)
                 }
-                .id(typeId)
                 .frame(width: 240, height: 40)
                 .palette(.alternate)
                 .cornerRadius(8)
@@ -325,7 +323,6 @@ struct InsightsPromptView : View {
         }
         canSave = (editPrompt.name != "" && editPrompt.promptText != "" && checkType)
         canEditType = (editPrompt.promptType.type == nil)
-        typeId = UUID()
     }
     
     var emptyDefaultValue: String {
@@ -357,8 +354,8 @@ struct InsightsPromptView : View {
     }
 }
 
-enum InsightsPromptEditField : Int, Equatable, Hashable, CaseIterable {
-    case name = 0
-    case promptText = 1
-    case defaultValue = 2
+enum InsightsPromptEditField : InsightsFocusIndexBridge {
+    case name
+    case promptText
+    case defaultValue
 }

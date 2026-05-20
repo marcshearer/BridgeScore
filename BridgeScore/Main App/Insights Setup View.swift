@@ -33,7 +33,7 @@ struct InsightsSetupView : View {
                     InsightsPromptsView(report: report).layoutPriority(1)
                     Spacer().layoutPriority(1)
                 }
-                Spacer().frame(width: 30)
+                Spacer().frame(width: 50)
                 InsightsReportViewStorage(report: report)
                 Spacer().frame(width: 30)
             }
@@ -54,8 +54,9 @@ struct InsightsChooseColumnsView : View {
     
     var body: some View {
         VStack(spacing: 0) {
-            Spacer().frame(height: 40)
+            Spacer().frame(height: 20)
             HStack(spacing: 0) {
+                Spacer()
                 HStack(spacing: 0) {
                     Spacer()
                     Text("Drag columns to report sections")
@@ -67,7 +68,7 @@ struct InsightsChooseColumnsView : View {
                 Spacer()
             }
             .frame(height: 40)
-            Spacer().frame(height: 40)
+            Spacer().frame(height: 20)
             HStack(spacing: 0) {
                 VStack(spacing: 0) {
                     InsightsColumnListView(report: report, data: data, title: "Not Used", columns: report.availableColumns, listType: .availableColumns, allowDrag: true, specificDrop: false, selectedListType: $selectedListType, onDropReceived: onDropReceived)
@@ -75,14 +76,22 @@ struct InsightsChooseColumnsView : View {
                     InsightsColumnListView(report: report, data: data, title: "Calculated", columns: $report.values.calculatedColumns, listType: .calculatedColumns, allowDrag: true, showEdit: true, showInsert: true, showRemove: true, selectedListType: $selectedListType)
                     Spacer()
                 }
-                Spacer().frame(width: 30)
+                MiddleCentered(width: 80) {
+                    VStack {
+                        Spacer()
+                        Image(systemName: "arrowshape.right").font(bannerFont)
+                        Spacer()
+                        Spacer()
+                        Image(systemName: "arrowshape.right").font(bannerFont)
+                        Spacer()
+                    }
+                }
                 VStack(spacing: 0) {
                     InsightsColumnListView(report: report, data: data, title: "Pinned", columns: $report.values.pinnedColumns, listType: .pinnedColumns, allowDrag: true, showRemove: true, specificDrop: true, height: 240, selectedListType: $selectedListType, onDropReceived: onDropReceived)
                     Spacer().frame(height: 40)
                     InsightsColumnListView(report: report, data: data, title: "Not Pinned", columns: $report.values.unpinnedColumns, listType: .unpinnedColumns, allowDrag: true, showRemove: true, specificDrop: true, selectedListType: $selectedListType, onDropReceived: onDropReceived)
                     Spacer()
                 }
-                Spacer()
             }
             Spacer().frame(height: 50)
             Spacer()
@@ -452,6 +461,8 @@ enum ListType : Codable {
     case functions
     
     var isColumns: Bool { self != .functions }
+    
+    var isSortColumn: Bool { isColumns && self != .promptColumns }
 }
 
 struct InsightsSetupTransfer : Codable, Transferable {
