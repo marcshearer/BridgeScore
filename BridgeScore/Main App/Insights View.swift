@@ -16,7 +16,24 @@ enum ScrollViews : CaseIterable, Hashable {
  enum InsightDisplayMode {
      case building
      case loading
+     case preparing
      case displaying
+     case stopped
+     
+     var text: String {
+         switch self {
+         case .building:
+             "Building Data..."
+         case .loading:
+             "Loading Data..."
+         case .preparing:
+             "Preparing View..."
+         case .stopped:
+             "View Stopped"
+         default:
+             ""
+         }
+     }
 }
 
 struct InsightsView: View {
@@ -62,11 +79,12 @@ struct InsightsView: View {
                             }
                         }
                         .frame(height: 80)
-                        if displayMode == .loading {
-                            MiddleCenteredText(text: "Loading...")
+                        switch displayMode {
+                        case .building, .loading, .preparing, .stopped:
+                            MiddleCenteredText(text: displayMode.text)
                                 .font(bigFont)
                                 .palette(.background, .theme)
-                        } else {
+                        default:
                             ScrollViewReader { proxy in
                                 ScrollView(.vertical) {
                                     HStack(spacing: 0) {
@@ -130,10 +148,14 @@ struct InsightsView: View {
                 }, content: { boardSummary in
                     showDetails(boardSummary: boardSummary, frame: geometry.frame(in: .global))
                 })
-                .sheet(isPresented: $showPrompts, onDismiss: {
-                    runReport()
-                }) {
-                    InsightsPromptEntryView(report: report)
+                .sheet(isPresented: $showPrompts) {
+                    InsightsPromptEntryView(report: report) { (run) in
+                        if run {
+                            runReport()
+                        } else {
+                            displayMode = .stopped
+                        }
+                    }
                 }
                 .allowsHitTesting(!isEditing && !showPrompts && showBoardSummary == nil)
             }
@@ -148,7 +170,7 @@ struct InsightsView: View {
     }
     
     func runReport() {
-        displayMode = .loading
+        displayMode = .preparing
         sortIndex = []
         filteredIndex = []
         Task(priority: .userInitiated) {
@@ -174,6 +196,9 @@ struct InsightsView: View {
                     
                     if !report.values.prompts.isEmpty {
                         Button("􀌆") {
+                            displayMode = .loading
+                            sortIndex = []
+                            filteredIndex = []
                             showPrompts = true
                         }
                     }
@@ -473,18 +498,17 @@ struct InsightsView: View {
         await allBoardSummaries = Insights.load()
         if allBoardSummaries.isEmpty {
             // TODO Shouldn't need this
+            displayMode = .building
             await Insights.build()
             await allBoardSummaries = Insights.load()
         }
-        Task(priority: .userInitiated) {
-            if let errorMessage = await reload() {
-                MessageBox.shared.show(errorMessage)
-            }
-            await MainActor.run {
-                displayMode = .displaying
-            }
+        if !report.values.prompts.isEmpty {
+            showPrompts = true
+        } else {
+            runReport()
         }
     }
+    
     
     func reload() async -> String? {
         var recalculationIndexes: [String:Int] = [:]

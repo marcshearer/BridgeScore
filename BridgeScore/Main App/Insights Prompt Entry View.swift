@@ -11,6 +11,7 @@ struct InsightsPromptEntryView : View {
     @Environment(\.dismiss) var dismiss
     @ObservedObject var report: Report
     @State var focus: Int? = nil
+    var onCompletion: (Bool)->()
     
     var body: some View {
         let prompts = report.values.prompts
@@ -57,13 +58,13 @@ struct InsightsPromptEntryView : View {
                 HStack {
                     Spacer()
                     InsightsSetupButton(text: "Exit") {
-                        Utility.mainThread {
-                            dismiss()
-                        }
+                        onCompletion(false)
+                        forceDismiss()
                     }
                     Spacer().frame(width: 100)
                     InsightsSetupButton(text: "Display View") {
-                        dismiss()
+                        onCompletion(true)
+                        forceDismiss()
                     }
                     Spacer()
                 }
