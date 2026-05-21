@@ -500,9 +500,7 @@ struct InsightsView: View {
         let defaultUrl = InsightsReportViewStorage.url(for: UserDefault.defaultViewName.string)
         if !InsightsReportViewStorage.load(report: report, from: defaultUrl) {
             do {
-                let level = CalculatedSortLevel(isBoard: true)
-                level.selectionLogic = [.variable(.age),.comparisonOperator(.lessThan),.literal(CalculatedLiteral(characters: "30", type: .numeric))]
-                try report.update(from: ReportValues(pinnedColumns: InsightColumn.defaultPinnedColumns, unpinnedColumns: InsightColumn.defaultColumns, levels: [level]))
+                try InsightsReportViewStorage.createEmptyView(report: report)
             } catch {
                 // Just ignore for now
                 print(error)
@@ -594,8 +592,7 @@ struct InsightsView: View {
                         }
                         
                         // Insert a sub-total and zero the running total if changed
-                        let lastIndex = boardIndex + inserted - 1
-                        try insertTotals(startLevelIndex: 1, lastIndex: { lastIndex }, changed: { levelIndex in changed[levelIndex] }) { (levelIndex) in
+                        try insertTotals(startLevelIndex: 1, lastBoardIndex: { boardIndex + inserted - 1 }, changed: { levelIndex in changed[levelIndex] }) { (levelIndex) in
                             // Setup zeroed totals
                             totals[levelIndex] = [:]
                             for column in referenced {
@@ -628,7 +625,7 @@ struct InsightsView: View {
                     boardIndex += 1
                 }
                 // Insert final totals
-                try insertTotals(startLevelIndex: 0, lastIndex: { sortIndex.count - 1 }, changed: { _ in true}, zeroTotals: { _ in })
+                try insertTotals(startLevelIndex: 0, lastBoardIndex: { sortIndex.count - 1 }, changed: { _ in true}, zeroTotals: { _ in })
                 
                 // Resort to move totals in front of data
                 try sortIndex.sort(by: { try SortIndex.sort($0, $1, directions: sortDirections)})
@@ -663,7 +660,7 @@ struct InsightsView: View {
         
         return errorMessage
         
-        func insertTotals(startLevelIndex: Int, lastIndex: ()->Int, changed: (Int)->Bool, zeroTotals: (Int)->()) throws {
+        func insertTotals(startLevelIndex: Int, lastBoardIndex: ()->Int, changed: (Int)->Bool, zeroTotals: (Int)->()) throws {
             // Note this function reads and updates values in caller
             // Parameters are only for things that are different between final totals and previous ones
             for levelIndex in (startLevelIndex...levels.count).reversed() {
@@ -671,22 +668,26 @@ struct InsightsView: View {
                     if changed(levelIndex) {
                         var discarded = false
                         // First check for recalculation
-                        try recalculate(levelIndex: levelIndex, boardSummary: sortIndex[lastIndex()].source! as BoardSummaryExtension) { column, value in
-                            totals[levelIndex][column]!.set(value: value)
-                        }
-                        if levelIndex != 0 {
-                            // Remove it if selected out
-                            discarded = try applySubtotalSelection(levelIndex: levelIndex, boardSummary: sortIndex[lastIndex()].source! as BoardSummaryExtension)
-                        }
-                        if !discarded && (levelIndex == 0 || levels[levelIndex - 1].subtotal) {
-                            // Now insert it
-                            let boardSummary = sortIndex[lastIndex()].source! as BoardSummaryExtension
-                            let levelKey = (levelIndex == 0 ? "" : (levels[levelIndex - 1].key!.textValue(report: report, boardSummary: boardSummary)))
-                            let levelState: SortDataState = (levelIndex == 0 ? .expanded : (levels[levelIndex - 1].defaultState))
-                            var sortKeys = sortIndex[firstIndex[levelIndex]].keys
-                            sortKeys[levels.count] = CalculatedValue(levelIndex)
-                            sortIndex.insert(SortData(rowType: .total, totalLevel: levelIndex, levelKey: levelKey, keys: sortKeys, source: boardSummary, totals: totals[levelIndex], state: levelState), at: boardIndex + inserted)
-                            inserted += 1
+                        let startBoardIndex = totals[levelIndex][referenced.first!]!.startIndex ?? 0
+                        if startBoardIndex <= lastBoardIndex() {
+                            try recalculate(levelIndex: levelIndex, boardSummary: sortIndex[lastBoardIndex()].source! as BoardSummaryExtension) { column, value in
+                                totals[levelIndex][column]!.set(value: value)
+                            }
+                            if levelIndex != 0 {
+                                // Remove it if selected out
+                                discarded = try applySubtotalSelection(levelIndex: levelIndex, boardSummary: sortIndex[lastBoardIndex()].source! as BoardSummaryExtension)
+                            }
+                            if !discarded && (levelIndex == 0 || levels[levelIndex - 1].subtotal) {
+                                // Now insert it unless it is a total of zero records
+                                let lastBoardIndex = lastBoardIndex()
+                                let boardSummary = sortIndex[lastBoardIndex].source! as BoardSummaryExtension
+                                let levelKey = (levelIndex == 0 ? "" : (levels[levelIndex - 1].key!.textValue(report: report, boardSummary: boardSummary)))
+                                let levelState: SortDataState = (levelIndex == 0 ? .expanded : (levels[levelIndex - 1].defaultState))
+                                var sortKeys = sortIndex[startBoardIndex].keys
+                                sortKeys[levels.count] = CalculatedValue(levelIndex)
+                                sortIndex.insert(SortData(rowType: .total, totalLevel: levelIndex, levelKey: levelKey, keys: sortKeys, source: boardSummary, totals: totals[levelIndex], state: levelState), at: boardIndex + inserted)
+                                inserted += 1
+                            }
                         }
                         zeroTotals(levelIndex)
                     }
@@ -697,10 +698,10 @@ struct InsightsView: View {
         func applySubtotalSelection(levelIndex: Int, boardSummary: BoardSummaryExtension) throws -> Bool {
             if try !levels[levelIndex - 1].value(report: report, viewModel: boardSummary, level: levelIndex, evaluate: evaluateColumn) {
                 // Failed selection - need to remove the rows from the sort index and reduce all higher level totals
-                for rightIndex in 0..<levelIndex {
+                for higherLevelIndex in 0..<levelIndex {
                     // Reduce higher level subtotals and grand totals by this amount
                     for column in referenced {
-                        totals[rightIndex][column]!.subtract(totals[levelIndex][column]!)
+                        totals[higherLevelIndex][column]!.subtract(totals[levelIndex][column]!)
                     }
                 }
                 // Now remove all the entries back to startIndex

@@ -25,6 +25,15 @@ struct InsightsReportViewStorage : View {
                     showSaveDialog = true
                 }
                 Spacer().frame(height: 40)
+                InsightsSetupButton(text: "Create View") {
+                    do {
+                        try InsightsReportViewStorage.createEmptyView(report: report)
+                        report.objectWillChange.send()
+                    } catch {
+                        fatalError()
+                    }
+                }
+                Spacer().frame(height: 40)
                 InsightsSetupButton(text: "Delete View") {
                     showRemoveDialog = true
                 }
@@ -93,6 +102,12 @@ struct InsightsReportViewStorage : View {
         } else {
             return []
         }
+    }
+    
+    static func createEmptyView(report: Report) throws {
+        let level = CalculatedSortLevel(isBoard: true)
+        level.selectionLogic = [.variable(.age),.comparisonOperator(.lessThan),.literal(CalculatedLiteral(characters: "30", type: .numeric))]
+        try report.update(from: ReportValues(viewName: "", pinnedColumns: InsightColumn.defaultPinnedColumns, unpinnedColumns: InsightColumn.defaultColumns, levels: [level]))
     }
 }
 
