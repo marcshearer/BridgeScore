@@ -215,6 +215,9 @@ class CalculatedColumn : Codable, Equatable, Hashable, Identifiable, ObservableO
     var logic: [CalculatedElement] = []
     var recalculationIndex: Int = 0
     
+    init() {
+    }
+    
     var name: String {
         var result: String = ""
         var words = title.split(separator: " ").map{ String($0.capitalized) }.filter({$0.trim() != ""})
@@ -256,6 +259,30 @@ class CalculatedColumn : Codable, Equatable, Hashable, Identifiable, ObservableO
         case totalType
         case recalculate
         case logic
+    }
+    
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        title = try container.decodeIfPresent(String.self, forKey: .title) ?? ""
+        do {
+            type = try container.decodeIfPresent(CalculatedType.self, forKey: .type) ?? .numeric
+        } catch {
+            self.type = .numeric
+        }
+        decimalPlaces = try container.decodeIfPresent(Int.self, forKey: .decimalPlaces) ?? 0
+        align = try container.decodeIfPresent(CalculatedAlignment.self, forKey: .align) ?? .right
+        width = try container.decodeIfPresent(Int.self, forKey: .width) ?? 80
+        blankIf = try container.decodeIfPresent(CalculatedBlankIf.self, forKey: .blankIf) ?? .none
+        percent = try container.decodeIfPresent(Bool.self, forKey: .percent) ?? false
+        visibility = try container.decodeIfPresent(CalculatedVisibility.self, forKey: .visibility) ?? .both
+        totalType = try container.decodeIfPresent(CalculatedTotalType.self, forKey: .totalType) ?? .average
+        recalculate = try container.decodeIfPresent(Bool.self, forKey: .recalculate) ?? false
+        do {
+            logic = try container.decodeIfPresent([CalculatedElement].self, forKey: .logic) ?? []
+        } catch {
+            self.logic = []
+        }
     }
     
     func refresh(report: Report) throws {
@@ -572,12 +599,16 @@ class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had 
     
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        isBoard = try container.decode(Bool.self, forKey: .isBoard)
+        isBoard = try container.decodeIfPresent(Bool.self, forKey: .isBoard) ?? false
         key = try container.decodeIfPresent(InsightColumn.self, forKey: .key) ?? nil
         direction = try container.decodeIfPresent(SortDirection.self, forKey: .direction) ?? .ascending
-        subtotal = try container.decode(Bool.self, forKey: .subtotal)
+        subtotal = try container.decodeIfPresent(Bool.self, forKey: .subtotal) ?? false
         defaultState = try container.decodeIfPresent(SortDataState.self, forKey: .defaultState) ?? .expanded
-        selectionLogic = try container.decode([CalculatedElement].self, forKey: .selectionLogic)
+        do {
+            selectionLogic = try container.decodeIfPresent([CalculatedElement].self, forKey: .selectionLogic) ?? []
+        } catch {
+            selectionLogic = []
+        }
     }
     
     func hash(into hasher: inout Hasher) {

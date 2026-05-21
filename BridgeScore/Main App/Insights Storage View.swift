@@ -98,6 +98,8 @@ struct InsightsReportViewStorage : View {
 
 struct InsightsReportViewStorageLoadDialog: View {
     @ObservedObject var report: Report
+    var forceDismiss: Bool = false
+    var completion: (()->())? = nil
     
     @Environment(\.dismiss) var dismiss
     @State private var files: [URL] = []
@@ -105,79 +107,90 @@ struct InsightsReportViewStorageLoadDialog: View {
     
     var body: some View {
         let defaultUrl = InsightsReportViewStorage.url(for: UserDefault.defaultViewName.string)
-       
-        Banner(title: Binding.constant("Load View"), alternateColor: true, height: 80, back: false, leftTitle: false)
-        VStack {
-            Spacer().frame(height: 20)
-            Top {
-                Leading(padding: 30) {
-                    Text("Select view to load:")
-                }
-                Spacer().frame(height: 10)
-                Centered(padding: 20) {
-                    Middle(padding: 10) {
-                        ScrollView(.vertical) {
-                            LazyVStack(spacing: 0) {
-                                ForEach(files, id: \.self) { url in
-                                    Centered(padding: 20) {
-                                        HStack {
-                                            Spacer().frame(width: 10)
-                                            Text(url.deletingPathExtension().lastPathComponent)
-                                            Spacer()
-                                            LeadingText(url == defaultUrl ? " (default)" : "")
-                                                .frame(width: 80)
-                                                .foregroundColor(Palette.background.faintText)
+        
+        PopupStandardView("Load Insight View") {
+            Banner(title: Binding.constant("Load View"), alternateColor: true, height: 80, back: false, leftTitle: false)
+            VStack {
+                Spacer().frame(height: 20)
+                Top {
+                    Leading(padding: 30) {
+                        Text("Select view to load:")
+                    }
+                    Spacer().frame(height: 10)
+                    Centered(padding: 20) {
+                        Middle(padding: 10) {
+                            ScrollView(.vertical) {
+                                LazyVStack(spacing: 0) {
+                                    ForEach(files, id: \.self) { url in
+                                        Centered(padding: 20) {
+                                            HStack {
+                                                Spacer().frame(width: 10)
+                                                Text(url.deletingPathExtension().lastPathComponent)
+                                                Spacer()
+                                                LeadingText(url == defaultUrl ? " (default)" : "")
+                                                    .frame(width: 80)
+                                                    .foregroundColor(Palette.background.faintText)
+                                            }
+                                            .frame(minWidth: 200)
+                                            .contentShape(Rectangle())
+                                            .frame(height: 30)
+                                            .palette(loadUrl == url ? .alternate : .clear)
+                                            .cornerRadius(8)
                                         }
-                                        .frame(minWidth: 200)
-                                        .contentShape(Rectangle())
-                                        .frame(height: 30)
-                                        .palette(loadUrl == url ? .alternate : .clear)
-                                        .cornerRadius(8)
-                                    }
-                                    .onTapGesture {
-                                        loadUrl = url
-                                    }
-                                    .onTapGesture(count: 2) {
-                                        loadUrl = url
-                                        loadUrl(url: loadUrl!)
+                                        .onTapGesture {
+                                            loadUrl = url
+                                        }
+                                        .onTapGesture(count: 2) {
+                                            loadUrl = url
+                                            loadUrl(url: loadUrl!)
+                                        }
                                     }
                                 }
                             }
                         }
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(Palette.gridLine, lineWidth: 2))
                     }
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .stroke(Palette.gridLine, lineWidth: 2))
                 }
-            }
-            MiddleCentered {
-                HStack {
-                    InsightsSetupButton(text: "Cancel") {
-                        dismiss()
+                MiddleCentered {
+                    HStack {
+                        InsightsSetupButton(text: "Cancel") {
+                            forceDismiss()
+                        }
+                        .keyboardShortcut(.cancelAction)
+                        Spacer().frame(width: 50)
+                        InsightsSetupButton(text: "Load") {
+                            loadUrl(url: loadUrl!)
+                        }
+                        .disabled(loadUrl == nil)
                     }
-                    .keyboardShortcut(.cancelAction)
-                    Spacer().frame(width: 50)
-                    InsightsSetupButton(text: "Load") {
-                        loadUrl(url: loadUrl!)
-                    }
-                    .disabled(loadUrl == nil)
                 }
+                .frame(height: 80)
             }
-            .frame(height: 80)
-        }
-        .onAppear {
-            files = InsightsReportViewStorage.loadFileList()
+            .onAppear {
+                files = InsightsReportViewStorage.loadFileList()
+            }
         }
     }
     
     func loadUrl(url: URL) {
-        InsightsReportViewStorage.load(report: report, from: url)
-        dismiss()
+        if InsightsReportViewStorage.load(report: report, from: url) {
+            if forceDismiss {
+                forceDismiss()
+            } else {
+                dismiss()
+            }
+            completion?()
+        } else {
+            MessageBox.shared.show("Failed to load view")
+        }
     }
 }
 
 struct InsightsReportViewStorageSaveDialog: View {
     @ObservedObject var report: Report
+    var forceDismiss: Bool = false
     
     @Environment(\.dismiss) var dismiss
     @State private var files: [URL] = []
@@ -188,7 +201,7 @@ struct InsightsReportViewStorageSaveDialog: View {
     var body: some View {
         let defaultUrl = InsightsReportViewStorage.url(for: UserDefault.defaultViewName.string)
         
-        StandardView("Save View") {
+        PopupStandardView("Save Insight View") {
             Banner(title: Binding.constant("Save View"), alternateColor: true, height: 80, back: false, leftTitle: false)
             VStack {
                 Spacer().frame(height: 20)
@@ -256,7 +269,11 @@ struct InsightsReportViewStorageSaveDialog: View {
                 MiddleCentered {
                     HStack {
                         InsightsSetupButton(text: "Cancel") {
-                            dismiss()
+                            if forceDismiss {
+                                forceDismiss()
+                            } else {
+                                dismiss()
+                            }
                         }
                         .keyboardShortcut(.cancelAction)
                         Spacer().frame(width: 50)
@@ -270,20 +287,27 @@ struct InsightsReportViewStorageSaveDialog: View {
                 }
                 .frame(height: 80)
             }
-        }
-        .onAppear {
-            files = InsightsReportViewStorage.loadFileList()
-            filename = report.values.viewName
+            .onAppear {
+                files = InsightsReportViewStorage.loadFileList()
+                filename = report.values.viewName
+            }
         }
     }
     
     func saveUrl(url: URL) {
         report.values.viewName = filename
-        InsightsReportViewStorage.save(report: report, to: saveUrl!)
-        if saveAsDefault {
-            UserDefault.defaultViewName.set(filename)
+        if InsightsReportViewStorage.save(report: report, to: saveUrl!) {
+            if saveAsDefault {
+                UserDefault.defaultViewName.set(filename)
+            }
+            if forceDismiss {
+                forceDismiss()
+            } else {
+                dismiss()
+            }
+        } else {
+            MessageBox.shared.show("Failed to save view")
         }
-        dismiss()
     }
 }
 

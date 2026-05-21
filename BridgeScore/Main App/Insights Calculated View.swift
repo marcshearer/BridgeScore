@@ -308,12 +308,7 @@ struct InsightsCalculatedColumnView : View {
         default:
             -1
         }
-        let names = report.values.calculatedColumns.compactMap { item -> String? in
-            if case let .calculated(calculated) = item {
-                return calculated.name
-            }
-            return nil
-        }
+        let names = report.values.calculatedColumns.map{$0.name}
         let duplicates = names.enumerated().filter({ $1 == editColumn.name && $0 != index })
         if duplicates.count > 0 {
             duplicateMessage = "Duplicate description with '\(report.values.calculatedColumns[duplicates.first!.offset].title)'"

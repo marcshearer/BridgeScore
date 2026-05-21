@@ -82,8 +82,9 @@ class Insights {
     }
     
     static func buildBoardSummary(boardSummary: BoardSummaryViewModel, scorecard: ScorecardViewModel, board: BoardViewModel, table: TableViewModel, travellers:  [TravellerViewModel], allTravellers:  [TravellerViewModel], doubleDummys: [SeatPlayer:[Suit:DoubleDummyViewModel]]) {
+        let otherPlayer = MasterData.shared.player(name: otherPlayer)!
         
-        boardSummary.partner = scorecard.partner
+        boardSummary.partner = (scorecard.type.eventType == .individual ? otherPlayer :  scorecard.partner)
         boardSummary.location = scorecard.location
         boardSummary.date = scorecard.date
         boardSummary.session = scorecard.sessions == 1 ? 0 : board.session
@@ -94,7 +95,7 @@ class Insights {
         boardSummary.boardScoreType = scorecard.type.boardScoreType
         boardSummary.contract = board.contract
         boardSummary.declarer = SeatPlayer(sitting: table.sitting, seat: board.declarer)
-        boardSummary.made = board.made
+        boardSummary.made = (board.contract.level == .passout ? 0 : board.made)
         boardSummary.score = Int(board.score ?? 0)
         boardSummary.fieldSize = travellers.count + 1
         

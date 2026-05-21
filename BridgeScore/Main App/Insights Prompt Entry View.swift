@@ -17,7 +17,7 @@ struct InsightsPromptEntryView : View {
         let prompts = report.values.prompts
         
         VStack {
-            Banner(title: Binding.constant("Customise Your View"), height: 80, back: false, leftTitle: false)
+            Banner(title: Binding.constant("View Settings"), height: 80, back: false, leftTitle: false)
             VStack(spacing: 0) {
                 Spacer().frame(height: 30)
                 HStack {

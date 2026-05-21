@@ -516,7 +516,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         case .contractRedouble:
             return summaryValue(boardSummary.contract.double == .redoubled)
         case .contractMade:
-            return summaryValue(boardSummary.contract.compact + " " + Scorecard.madeString(made: boardSummary.made ?? 0))
+            return summaryValue(boardSummary.contract.level == .passout ? boardSummary.contract.string : boardSummary.contract.compact + " " + Scorecard.madeString(made: boardSummary.made ?? 0))
         case .declarer:
             return summaryValue(boardSummary.declarer.simple)
         case .declarerPair:
@@ -651,7 +651,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             case .contract:
                 boardSummary.contract.colorCompact
             case .contractMade:
-                boardSummary.contract.colorCompact + " " + AttributedString(Scorecard.madeString(made: boardSummary.made ?? 0))
+                boardSummary.contract.level == .passout ? boardSummary.contract.colorString :  boardSummary.contract.colorCompact + " " + AttributedString(Scorecard.madeString(made: boardSummary.made ?? 0))
             case .made:
                 AttributedString(Scorecard.madeString(made: boardSummary.made ?? 0))
             case .levelType:

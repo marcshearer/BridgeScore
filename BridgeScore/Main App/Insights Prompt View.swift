@@ -171,26 +171,11 @@ struct InsightsPromptView : View {
     @State var promptTypePickerSelection: Int = 0
     @State var typePickerSelection: Int = 0
     @State var defaultValue: String = ""
+    @State var duplicateMessage: String = ""
     
     var body: some View {
         VStack(spacing: 0) {
             Banner(title: Binding.constant("\(editMode.string.capitalized) Prompt"), alternateColor: true, height: 80)
-            Spacer().frame(height: 30)
-            HStack {
-                Spacer().frame(width: 40)
-                HStack(spacing: 0) {
-                    Text("Name:")
-                    Spacer()
-                }
-                .frame(width: 120)
-                InsightsTextView(text: $editPrompt.name, fieldType: InsightsPromptEditField.name, focus: $focused, onChange: { newValue in
-                    checkAvailable()
-                })
-                .frame(width: 240, height: 40)
-                .palette(.alternate)
-                .cornerRadius(8)
-                Spacer()
-            }
             Spacer().frame(height: 30)
             HStack {
                 Spacer().frame(width: 40)
@@ -205,6 +190,8 @@ struct InsightsPromptView : View {
                 .frame(width: 240, height: 40)
                 .palette(.alternate)
                 .cornerRadius(8)
+                Text(duplicateMessage)
+                    .foregroundColor(Palette.background.strongText)
                 Spacer()
             }
             Spacer().frame(height: 30)
@@ -321,7 +308,19 @@ struct InsightsPromptView : View {
         case .string:
             break
         }
-        canSave = (editPrompt.name != "" && editPrompt.promptText != "" && checkType)
+        
+        // Check for duplicate name
+        editPrompt.name = stripped(name: editPrompt.promptText)
+        let names = report.values.prompts.map{$0.promptColumn!.name}
+        let duplicates = names.enumerated().filter({ stripped(name: $1.lowercased()) ==  stripped(name: editPrompt.name) && $0 != index })
+        if let (_, duplicateName) = duplicates.first {
+            let duplicate = report.values.prompts.first(where: {$0.promptColumn!.name == duplicateName})!
+            duplicateMessage = "Duplicate with '\(duplicate.promptColumn!.promptText)'"
+        } else {
+            duplicateMessage = ""
+        }
+        
+        canSave = (editPrompt.name != "" && editPrompt.promptText != "" && checkType && duplicates.count == 0)
         canEditType = (editPrompt.promptType.type == nil)
     }
     
@@ -334,6 +333,18 @@ struct InsightsPromptView : View {
         case .boolean:
             "false"
         }
+    }
+    
+    func stripped(name: String) -> String {
+        var result = ""
+        let components = name.split { !$0.isLetter && !$0.isNumber }
+    if let first = components.first {
+            result = first.lowercased()
+        }
+        for component in components.dropFirst() {
+            result += component.capitalized
+        }
+        return result
     }
     
     func save() {

@@ -49,6 +49,7 @@ struct InsightsView: View {
     @State fileprivate var displayMode: InsightDisplayMode = .loading
     @State fileprivate var isEditing: Bool = false
     @State var showPrompts: Bool = false
+    @State var showLoad: Bool = false
     @StateObject private var scrollSync = ScrollSync<ScrollViews>()
     @State var activeColumn: Int? = nil
     @State var horizontalScroll: Bool = false
@@ -157,6 +158,16 @@ struct InsightsView: View {
                         }
                     }
                 }
+                .sheet(isPresented: $showLoad) {
+                    InsightsReportViewStorageLoadDialog(report: report, forceDismiss: true) {
+                        if !report.values.prompts.isEmpty {
+                            showLoad = false
+                            showPrompts = true
+                        } else {
+                            runReport()
+                        }
+                    }
+                }
                 .allowsHitTesting(!isEditing && !showPrompts && showBoardSummary == nil)
             }
             
@@ -201,14 +212,19 @@ struct InsightsView: View {
                             filteredIndex = []
                             showPrompts = true
                         }
+                        Spacer().frame(width: 40)
                     }
-                    
-                    Spacer().frame(width: 40)
                     
                     Button("\("􀈎")") {
                         isEditing = true
                     }
             
+                    Spacer().frame(width: 40)
+                    
+                    Button("􀤁") {
+                        showLoad = true
+                    }
+                    
                     Spacer().frame(width: 40)
                     
                     Button("􀆄") {
@@ -520,6 +536,7 @@ struct InsightsView: View {
         var boardIndex: Int = 0
         var inserted = 0
         var sortDirections: [SortDirection]
+        var firstIndex: [Int] = []
         
         do {
             // Filter at bottom level
@@ -535,20 +552,24 @@ struct InsightsView: View {
                     let value = try level.key!.value(report: report, viewModel: boardSummary)
                     sortKeys.append(value)
                 }
+                // Add dummy entry for total level
+                sortKeys.append(CalculatedValue(Int.max))
+                // Add to index
                 sortIndex.append(SortData(rowType: .data, keys: sortKeys, source: boardSummary))
             }
             
             if !sortIndex.isEmpty {
                 // Execute the sort
                 sortDirections = levels.map{$0.direction}
-                if !sortDirections.isEmpty {
-                    try sortIndex.sort(by: { try SortIndex.sort($0, $1, directions: sortDirections)})
-                }
+                sortDirections.append(.ascending)
+                firstIndex = Array(repeating: 0, count: sortDirections.count)
+                
+                try sortIndex.sort(by: { try SortIndex.sort($0, $1, directions: sortDirections)})
                 // Build totals and sub-totals
                 referenced = try report.referencedColumns.filter{$0.visibility != .none && $0.visibility != .boardOnly}
                 
                 // 0 index is grand total followed by others
-                for levelIndex in 0...sortDirections.count {
+                for levelIndex in 0...levels.count {
                     totals.append([:])
                     for column in referenced {
                         totals[levelIndex][column] = InsightTotal()
@@ -559,8 +580,8 @@ struct InsightsView: View {
                 while boardIndex + inserted < sortIndex.count {
                     // Check if changed
                     var changed = Array(repeating: false, count: levels.count + 1)
-                    if boardIndex > 0 && !sortDirections.isEmpty {
-                        for levelIndex in 1...sortDirections.count {
+                    if boardIndex > 0 && !levels.isEmpty {
+                        for levelIndex in 1...levels.count {
                             if levels[levelIndex - 1].isTotalling {
                                 if levelIndex >= 2 && changed[levelIndex - 1] {
                                     // Higher level key has changed
@@ -581,6 +602,11 @@ struct InsightsView: View {
                                 totals[levelIndex][column] = InsightTotal()
                             }
                         }
+                        for levelIndex in 0...levels.count {
+                            if changed[levelIndex] {
+                                firstIndex[levelIndex] = boardIndex + inserted
+                            }
+                        }
                     }
                     // Add current row to totals
                     for column in referenced {
@@ -588,10 +614,12 @@ struct InsightsView: View {
                         let numeric =
                         if value.isBoolean {
                             Float(value.boolean! ? 1 : 0)
-                        } else {
+                        } else if value.isNumeric{
                             value.numeric!
+                        } else {
+                            Float(0)
                         }
-                        for levelIndex in 0...sortDirections.count {
+                        for levelIndex in 0...levels.count {
                             if levelIndex == 0 || levels[levelIndex - 1].subtotal {
                                 totals[levelIndex][column]!.add(index: boardIndex + inserted, value: numeric)
                             }
@@ -601,10 +629,13 @@ struct InsightsView: View {
                 }
                 // Insert final totals
                 try insertTotals(startLevelIndex: 0, lastIndex: { sortIndex.count - 1 }, changed: { _ in true}, zeroTotals: { _ in })
+                
+                // Resort to move totals in front of data
+                try sortIndex.sort(by: { try SortIndex.sort($0, $1, directions: sortDirections)})
 
                 // Build pointer from row to subtotals (excluding grand total)
                 var totalIndex: [Int?] = Array(repeating: nil, count : sortIndex.count)
-                for index in (0..<sortIndex.count).reversed() {
+                for index in (0..<sortIndex.count) {
                     if sortIndex[index].rowType == .total {
                         // Total - fill it in and clear anything at a lower level
                         let level = sortIndex[index].totalLevel!
@@ -633,7 +664,9 @@ struct InsightsView: View {
         return errorMessage
         
         func insertTotals(startLevelIndex: Int, lastIndex: ()->Int, changed: (Int)->Bool, zeroTotals: (Int)->()) throws {
-            for levelIndex in (startLevelIndex...sortDirections.count).reversed() {
+            // Note this function reads and updates values in caller
+            // Parameters are only for things that are different between final totals and previous ones
+            for levelIndex in (startLevelIndex...levels.count).reversed() {
                 if levelIndex == 0 || levels[levelIndex - 1].isTotalling {
                     if changed(levelIndex) {
                         var discarded = false
@@ -650,7 +683,9 @@ struct InsightsView: View {
                             let boardSummary = sortIndex[lastIndex()].source! as BoardSummaryExtension
                             let levelKey = (levelIndex == 0 ? "" : (levels[levelIndex - 1].key!.textValue(report: report, boardSummary: boardSummary)))
                             let levelState: SortDataState = (levelIndex == 0 ? .expanded : (levels[levelIndex - 1].defaultState))
-                            sortIndex.insert(SortData(rowType: .total, totalLevel: levelIndex, levelKey: levelKey, keys: sortIndex[boardIndex + inserted - 1].keys, source: boardSummary, totals: totals[levelIndex], state: levelState), at: boardIndex + inserted)
+                            var sortKeys = sortIndex[firstIndex[levelIndex]].keys
+                            sortKeys[levels.count] = CalculatedValue(levelIndex)
+                            sortIndex.insert(SortData(rowType: .total, totalLevel: levelIndex, levelKey: levelKey, keys: sortKeys, source: boardSummary, totals: totals[levelIndex], state: levelState), at: boardIndex + inserted)
                             inserted += 1
                         }
                         zeroTotals(levelIndex)

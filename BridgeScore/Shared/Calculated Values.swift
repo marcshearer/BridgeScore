@@ -41,7 +41,6 @@ enum CalculatedElement : Equatable, Codable, Hashable {
     case punctuation(CalculatedPunctuation)
     case endOfCalculation
     
-    
     var string : String {
         switch self {
         case .bracket(let bracket):
@@ -243,6 +242,7 @@ enum CalculatedFunction : String, CaseIterable, Codable {
     case uppercased = "uppercased"
     case capitalized = "capitalized"
     case match = "match"
+    case safeDivide = "safeDivide"
     
     var string: String { self.rawValue }
     
@@ -252,7 +252,7 @@ enum CalculatedFunction : String, CaseIterable, Codable {
             return (min: 2, max: nil)
         case .abs:
             return (min: 1, max: 1)
-        case .mod, .match:
+        case .mod, .match, .safeDivide:
             return (min: 2, max: 2)
         case .lowercased, .uppercased, .capitalized:
             return (min: 1, max: 1)
@@ -812,6 +812,8 @@ indirect enum CalculatedParseNode : Equatable {
                 return CalculatedValue(values[0].string!.capitalized)
             case .match:
                 return CalculatedValue((values[0].string! == "") || (values[0].string!.lowercased() == values[1].string!.lowercased()))
+            case .safeDivide:
+                return CalculatedValue(values[1].numeric! == 0 ? 0 : (values[0].numeric! / values[1].numeric!))
             }
         }
     }
