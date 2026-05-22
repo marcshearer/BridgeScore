@@ -15,16 +15,34 @@ struct InsightsTextView<EditField:InsightsFocusIndexBridge> : View  {
     var placeholder: String = ""
     var spellCheckingType: UITextSpellCheckingType = .no
     var readOnly: Bool = false
+    var clearTextButton: Bool = true
     var setFocus: ((FocusDirection) -> Void)? = nil
     var onConfirm: (() -> Void)? = nil
     var onChange: ((String)->())? = nil
+    
+    @State private var clearTrigger: Bool = false
     
     var body: some View {
         HStack {
             Spacer().frame(width: 8)
             ZStack {
-                InsightsTextViewRepresentable(text: $text, fieldType: fieldType, focus: $focus, spellCheckingType: spellCheckingType, readOnly: readOnly, setFocus: setFocus ?? defaultSetFocus, onConfirm: onConfirm, onChange: onChange)
+                HStack {
+                    InsightsTextViewRepresentable(text: $text, fieldType: fieldType, focus: $focus, spellCheckingType: spellCheckingType, readOnly: readOnly, clearTrigger: $clearTrigger, setFocus: setFocus ?? defaultSetFocus, onConfirm: onConfirm, onChange: { newValue in
+                        clearTrigger.toggle()
+                        onChange?(newValue)
+                    })
                     .fixedSize(horizontal: false, vertical: true)
+                    if clearTextButton && text != "" {
+                        Button {
+                            text = ""
+                            clearTrigger.toggle()
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(Palette.clearText)
+                        }
+                        Spacer().frame(width: 5)
+                    }
+                }
                 if text == "" && placeholder != "" {
                     LeadingText(placeholder).opacity(0.5)
                 }
@@ -56,10 +74,12 @@ struct InsightsTextViewRepresentable<EditField:InsightsFocusIndexBridge>: UIView
     @Binding var focus: EditField?
     var spellCheckingType: UITextSpellCheckingType = .no
     var readOnly: Bool = false
+    @Binding var clearTrigger: Bool
     var setFocus: ((FocusDirection)->())? = nil
     var onConfirm: (()->())? = nil
     var onChange: ((String)->())? = nil
 
+    
     func makeUIView(context: Context) -> UITextView {
         let textView = InsightsUITextView<EditField>(fieldType: fieldType, setFocus: setFocus, onConfirm: onConfirm)
         textView.delegate = context.coordinator
@@ -76,9 +96,15 @@ struct InsightsTextViewRepresentable<EditField:InsightsFocusIndexBridge>: UIView
     }
 
     func updateUIView(_ uiView: UITextView, context: Context) {
+        // Wake up when clear text pressed
+        _ = clearTrigger
+        
         // Safe sync to prevent infinite update loops
         if uiView.text != text {
             uiView.text = text
+            uiView.textStorage.setAttributedString(NSAttributedString(string: text))
+            uiView.layoutManager.ensureLayout(for: uiView.textContainer)
+            uiView.font = .systemFont(ofSize: 16)
         }
         
         if focus == fieldType {
@@ -103,10 +129,10 @@ struct InsightsTextViewRepresentable<EditField:InsightsFocusIndexBridge>: UIView
         init(_ parent: InsightsTextViewRepresentable) { self.parent = parent }
         
         func textViewDidChange(_ textView: UITextView) {
-            // This forces your state variable to update instantly on every keypress
-            // Your computed property validation will light up your Save button instantly!
-            parent.text = textView.text
-            parent.onChange?(textView.text)
+            if parent.text != textView.text {
+                parent.text = textView.text
+                parent.onChange?(textView.text)
+            }
         }
     }
 }

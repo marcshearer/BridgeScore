@@ -15,8 +15,10 @@ struct CalculatedValuesView<Focus:InsightsFocusIndexBridge> : View {
     var previousFocusValue: Focus? = nil
     @Binding var focus: Focus?
     var color: ThemeBackgroundColorName
+    var clearTextButton: Bool = true
     var onChange: (()->())?
     
+    @State private var triggerId: UUID = UUID()
     @State private var literalCursor: Int? = nil
     
     var body: some View {
@@ -29,6 +31,7 @@ struct CalculatedValuesView<Focus:InsightsFocusIndexBridge> : View {
                 HStack {
                     Spacer().frame(width: 4)
                     KeyDetectorView(processKey: processKey, fieldType: fieldType, nextFocusValue: nextFocusValue, previousFocusValue: previousFocusValue, focus: $focus)
+                        .id(triggerId)
                     Spacer()
                     ScrollViewReader { proxy in
                         ScrollView(.horizontal) {
@@ -95,6 +98,23 @@ struct CalculatedValuesView<Focus:InsightsFocusIndexBridge> : View {
                         }
                         .frame(height: 50)
                         .contentMargins(.bottom, 10, for: .scrollContent)
+                    }
+                    if clearTextButton && !logic.isEmpty {
+                        VStack(spacing: 0) {
+                            Spacer().frame(height: 7)
+                            HStack {
+                                Button {
+                                    logic = []
+                                    triggerId = UUID()
+                                } label: {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundColor(Palette.clearText)
+                                }
+                                Spacer().frame(width: 5)
+                            }
+                            Spacer()
+                        }
+                        .frame(height: 50)
                     }
                     Spacer().frame(width: 4)
                 }

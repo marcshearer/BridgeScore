@@ -226,6 +226,7 @@ struct InsightsSortLevelView : View {
     @State var resultType: CalculatedType?
     @State var showErrorMessage: Bool = false
     @State var selectedListType: ListType? = nil
+    @State var canSave: Bool = false
     
     var binding: Binding<String> { Binding(
         get: { self.editSortLevel.key?.title ?? "" },
@@ -245,9 +246,23 @@ struct InsightsSortLevelView : View {
                     .frame(width: 200)
                     HStack {
                         Spacer().frame(width: 8)
-                        InsightsTextView(text: binding, fieldType: .sortKey, focus: $focus, placeholder: "Drop a field here", readOnly: true)
+                        InsightsTextView(text: binding, fieldType: .sortKey, focus: $focus, placeholder: "Drop a field here", readOnly: true, clearTextButton: false)
+                        if editSortLevel.key != nil {
+                            Button {
+                                editSortLevel.key = nil
+                                focus = nil
+                                Utility.executeAfter(delay: 0.1) {
+                                    focus = .selectionLogic
+                                }
+                                checkCanSave()
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(Palette.clearText)
+                            }
+                        }
                         Spacer()
                     }
+
                     .frame(width: 250, height: 40)
                     .palette(.alternate)
                     .cornerRadius(8)
@@ -408,6 +423,7 @@ struct InsightsSortLevelView : View {
             Utility.mainThread {
                 editSortLevel.copy(from: sortLevel)
                 updateLogic()
+                checkCanSave()
                 focus = (editSortLevel.subtotal ? .selectionLogic : nil)
             }
         }
@@ -442,6 +458,7 @@ struct InsightsSortLevelView : View {
                 }
             }
         }
+        checkCanSave()
     }
     
     func save() {
@@ -461,11 +478,11 @@ struct InsightsSortLevelView : View {
         dismiss()
     }
     
-    var canSave: Bool {
+    func checkCanSave() {
         if editSortLevel.isBoard {
-            !editSortLevel.selectionLogic.isEmpty && resultType == .boolean
+            canSave = (!editSortLevel.selectionLogic.isEmpty && resultType == .boolean)
         } else {
-            (editSortLevel.selectionLogic.isEmpty || resultType == .boolean) && editSortLevel.key != nil
+            canSave = ((editSortLevel.selectionLogic.isEmpty || resultType == .boolean) && editSortLevel.key != nil)
         }
     }
     

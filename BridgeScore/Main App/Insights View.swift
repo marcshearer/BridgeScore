@@ -728,7 +728,7 @@ struct InsightsView: View {
         }
         
         func recalculate(levelIndex: Int, boardSummary: BoardSummaryExtension, update: (InsightColumn, Float)->()) throws {
-            for column in totals[levelIndex].keys.sorted(by: { (recalculationIndexes[$0.name] ?? 0) < (recalculationIndexes[$1.name] ?? 0)}) {
+            for column in totals[levelIndex].keys.filter({$0.isCalculated}).sorted(by: { (recalculationIndexes[$0.calculatedColumn!.name] ?? 0) < (recalculationIndexes[$1.calculatedColumn!.name] ?? 0)}) {
                 if case .calculated(let calculated) = column {
                     if calculated.recalculate {
                         if let newValue = try recalculateValue(levelIndex: levelIndex, column: column, boardSummary: boardSummary) {

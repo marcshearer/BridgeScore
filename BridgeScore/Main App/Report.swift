@@ -150,8 +150,8 @@ class Report: ObservableObject {
         var recalculationIndexes: [String: Int] = [:]
         var index = 1
         for calculatedColumn in values.calculatedColumns {
-            if case .calculated = calculatedColumn {
-                recalculationIndexes[calculatedColumn.name] = index
+            if case .calculated(let calculation) = calculatedColumn {
+                recalculationIndexes[calculation.name] = index
             }
             referencedColumns[calculatedColumn] = try CalculatedColumn.referencedColumns(report: self, column: calculatedColumn)
         }
@@ -176,7 +176,7 @@ class Report: ObservableObject {
         // Insert the results back into the report
         for calculatedColumn in values.calculatedColumns {
             if case .calculated(let calculation) = calculatedColumn {
-                calculation.recalculationIndex = recalculationIndexes[calculatedColumn.name]!
+                calculation.recalculationIndex = recalculationIndexes[calculation.name]!
             }
         }
         
