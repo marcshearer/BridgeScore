@@ -415,14 +415,6 @@ struct InsightsCalculatedColumnView : View {
         canSave = !editColumn.name.isEmpty && !editColumn.logic.isEmpty
     }
     
-    func calculatedVariableSelected(selected: CalculatedColumn) {
-        editColumn.logic.insert(.calculatedVariable(selected), at: cursor)
-        cursor += 1
-        updateLogic()
-        focus = .logic
-        canSave = !editColumn.name.isEmpty && !editColumn.logic.isEmpty
-    }
-    
     func functionSelected(selected: CalculatedFunction) {
         editColumn.logic.insert(contentsOf: [.function(selected), .bracket(.open), .bracket(.close)], at: cursor)
         cursor += 2

@@ -11,16 +11,18 @@ struct BannerOption {
     let image: AnyView?
     let text: String?
     let likeBack: Bool
+    let padding: CGFloat?
     let color: PaletteColor?
     @Binding var isEnabled: Bool
     @Binding var isHidden: Bool
     let menu: Bool
     let action: ()->()
     
-    init(image: AnyView? = nil, text: String? = nil, color: PaletteColor? = nil, likeBack: Bool = false, isEnabled: Binding<Bool>? = nil, isHidden: Binding<Bool>? = nil, menu: Bool = false, action: @escaping ()->()) {
+    init(image: AnyView? = nil, text: String? = nil, color: PaletteColor? = nil, likeBack: Bool = false, padding: CGFloat? = nil, isEnabled: Binding<Bool>? = nil, isHidden: Binding<Bool>? = nil, menu: Bool = false, action: @escaping ()->()) {
         self.image = image
         self.text = text
         self.likeBack = likeBack
+        self.padding = padding
         self.color = color
         self.action = action
         self._isEnabled = isEnabled ?? Binding.constant(true)
@@ -228,7 +230,9 @@ struct Banner_Buttons : View {
                                     Spacer().frame(height: 6)
                                 }
                                 HStack {
-                                    if !option.likeBack {
+                                    if option.padding != nil {
+                                        // No padding this side - all trailing
+                                    } else if !option.likeBack {
                                         Spacer().frame(width: 16)
                                     }
                                     if option.image != nil {
@@ -243,7 +247,9 @@ struct Banner_Buttons : View {
                                                 view.bold()
                                             }
                                     }
-                                    if !option.likeBack {
+                                    if let padding = option.padding {
+                                        Spacer().frame(width: padding)
+                                    } else if !option.likeBack {
                                         Spacer().frame(width: 16)
                                     }
                                 }

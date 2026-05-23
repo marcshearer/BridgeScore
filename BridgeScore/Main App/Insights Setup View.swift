@@ -20,30 +20,32 @@ struct InsightsSetupView : View {
     )}
     
     var body: some View {
-        VStack(spacing: 0) {
-            Banner(title: title, height: 80, backAction: {
-                completion() ; return true
-            }, escapeToDismiss: true)
-            HStack(spacing: 0) {
-                Spacer().frame(width: 30)
-                InsightsChooseColumnsView(report: report, data: data)
-                Spacer().frame(width: 30)
-                VStack(spacing: 0) {
-                    InsightsSortLevelsView(report: report).layoutPriority(1)
-                    InsightsPromptsView(report: report).layoutPriority(1)
-                    Spacer().layoutPriority(1)
+        StandardView("Insights Setup") {
+            VStack(spacing: 0) {
+                Banner(title: title, height: 80, backAction: {
+                    completion() ; return true
+                }, escapeToDismiss: true)
+                HStack(spacing: 0) {
+                    Spacer().frame(width: 30)
+                    InsightsChooseColumnsView(report: report, data: data)
+                    Spacer().frame(width: 30)
+                    VStack(spacing: 0) {
+                        InsightsSortLevelsView(report: report).layoutPriority(1)
+                        InsightsPromptsView(report: report).layoutPriority(1)
+                        Spacer().layoutPriority(1)
+                    }
+                    Spacer().frame(width: 50)
+                    InsightsReportViewStorage(report: report)
+                    Spacer().frame(width: 30)
                 }
-                Spacer().frame(width: 50)
-                InsightsReportViewStorage(report: report)
-                Spacer().frame(width: 30)
             }
+            .onChange(of: dismissView) {
+                completion()
+                dismiss()
+            }
+            .palette(.background)
+            .cornerRadius(20)
         }
-        .onChange(of: dismissView) {
-            completion()
-            dismiss()
-        }
-        .palette(.background)
-        .cornerRadius(20)
     }
 }
 
@@ -383,8 +385,7 @@ struct InsightsColumnListView : View {
                         }
                         if showRemove {
                             Button {
-                                columns.removeAll(where: {$0 == selected})
-                                selected = nil
+                                checkAndRemove(column: selected)
                             } label: {
                                 Image(systemName: "minus")
                                     .contentShape(Rectangle())
@@ -424,6 +425,67 @@ struct InsightsColumnListView : View {
             .cornerRadius(8)
         }
         .frame(width: 200)
+    }
+    
+    func checkAndRemove(column: InsightColumn?) {
+        var okToRemove = true
+        if let column = column {
+            if case .calculated(let calculated) = column {
+                
+                // Check if used in other calculated columns
+                for otherColumn in report.values.calculatedColumns {
+                    if otherColumn != column {
+                        if case .calculated(let otherCalculated) = otherColumn {
+                            for element in otherCalculated.logic {
+                                if case .variable(let logicVariable) = element {
+                                    if case .calculated(let logicCalculated) = logicVariable {
+                                        if logicCalculated.name == calculated.name {
+                                            MessageBox.shared.show("This column is referenced by calculated column '\(otherCalculated.name)'.\n\nYou must remove this column from that calculation before removing it here.")
+                                            okToRemove = false
+                                            break
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if !okToRemove {
+                            break
+                        }
+                    }
+                }
+                
+                // Check if used in sort/selection logic
+                for (index, level) in report.values.levels.enumerated() {
+                    for element in level.selectionLogic {
+                        if case .variable(let logicVariable) = element {
+                            if case .calculated(let logicCalculated) = logicVariable {
+                                if logicCalculated.name == calculated.name {
+                                    MessageBox.shared.show("This column is referenced by \(level.isBoard ? "the main selection logic" : "sort level \(index) selection logic").\n\nYou must remove this column from that logic before removing it here.")
+                                    okToRemove = false
+                                    break
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Now check the sort key
+                    if case .calculated(let keyCalculated) = level.key {
+                        if keyCalculated.name == calculated.name {
+                            MessageBox.shared.show("This column is the sort key for sort level \(index).\n\nYou must change that sort key before removing it here.")
+                            okToRemove = false
+                            break
+                        }
+                    }
+                }
+                
+                if okToRemove {
+                    report.values.pinnedColumns.removeAll(where: {$0.name == column.name})
+                    report.values.unpinnedColumns.removeAll(where: {$0.name == column.name})
+                    columns.removeAll(where: {$0.name == column.name})
+                    selected = nil
+                }
+            }
+        }
     }
     
     func tapHandler(column: InsightColumn, count: Int = 1) {

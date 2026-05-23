@@ -300,8 +300,8 @@ struct ScorecardListView: View, DropDelegate {
     
     func bannerMenuOptions() -> [BannerOption] {
         var menuOptions: [BannerOption] = []
-        menuOptions = [BannerOption(image: AnyView(Image(systemName: "sparkles")), likeBack: true, menu: false, action: { destination = .insights }),
-                       BannerOption(image: AnyView(Image(systemName: "chart.xyaxis.line")), likeBack: true, menu: false, action: { destination = .stats }),
+        menuOptions = [BannerOption(image: AnyView(Image(systemName: "sparkles")), likeBack: true, padding: 30, menu: false, action: { destination = .insights }),
+                       BannerOption(image: AnyView(Image(systemName: "chart.xyaxis.line")), likeBack: true, padding: 40, menu: false, action: { destination = .stats }),
                        BannerOption(text: "Templates", menu: true, action: { destination = .layoutSetup }),
                        BannerOption(text: "Players", menu: true,  action: { destination = .playerSetup }),
                        BannerOption(text: "Locations", menu: true, action: { destination = .locationSetup }),

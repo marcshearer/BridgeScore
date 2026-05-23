@@ -495,15 +495,6 @@ struct InsightsSortLevelView : View {
         }
     }
     
-    func calculatedVariableSelected(selected: CalculatedColumn) {
-        if editSortLevel.isBoard || editSortLevel.subtotal {
-            editSortLevel.selectionLogic.insert(.calculatedVariable(selected), at: cursor)
-            cursor += 1
-            updateLogic()
-            focus = .selectionLogic
-        }
-    }
-    
     func functionSelected(selected: CalculatedFunction) {
         if editSortLevel.isBoard || editSortLevel.subtotal {
             editSortLevel.selectionLogic.insert(contentsOf: [.function(selected), .bracket(.open), .bracket(.close)], at: cursor)

@@ -33,7 +33,6 @@ enum CalculatedElement : Equatable, Codable, Hashable {
     case bracket(CalculatedBracket)
     case literal(CalculatedLiteral)
     case variable(InsightColumn)
-    case calculatedVariable(CalculatedColumn)
     case operatorSymbol(CalculatedOperator)
     case logicalOperator(CalculatedLogicalOperator)
     case comparisonOperator(CalculatedComparisonOperator)
@@ -50,8 +49,6 @@ enum CalculatedElement : Equatable, Codable, Hashable {
         case .literal(let literal):
             literal.string
         case .variable(let variable):
-            variable.name
-        case .calculatedVariable(let variable):
             variable.name
         case .operatorSymbol(let binaryOperator):
             binaryOperator.string
@@ -82,12 +79,6 @@ enum CalculatedElement : Equatable, Codable, Hashable {
             }
         case .variable(let lhsValue):
             if case .variable(let rhsValue) = rhs {
-                return lhsValue == rhsValue
-            } else {
-                return false
-            }
-        case .calculatedVariable(let lhsValue):
-            if case .calculatedVariable(let rhsValue) = rhs {
                 return lhsValue == rhsValue
             } else {
                 return false
