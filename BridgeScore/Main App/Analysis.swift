@@ -852,7 +852,7 @@ enum AnalysisSummaryStatus: Comparable {
     var image: some View {
         switch self {
         case .good:
-            Image(systemName: "checkmark.circle.fill").foregroundColor(Color(#colorLiteral(red: 0.5, green: 1, blue: 0.5, alpha: 1)))
+            Image(systemName: "checkmark.circle.fill").foregroundColor(Color(tintColor))
         case .ok, .rejected:
             Image(systemName: "circle").foregroundColor(Palette.background.text)
         case .bad:
@@ -865,7 +865,7 @@ enum AnalysisSummaryStatus: Comparable {
     var uiImage: UIImage {
         switch self {
         case .good:
-            UIImage(systemName: "checkmark.circle.fill")!.asTemplate.withTintColor(UIColor(Color(#colorLiteral(red: 0.5, green: 1, blue: 0.5, alpha: 1))))
+            UIImage(systemName: "checkmark.circle.fill")!.asTemplate.withTintColor(tintColor)
         case .ok, .rejected:
             UIImage(systemName: "circle")!.asTemplate.withTintColor(UIColor(Color(Palette.background.text)))
         case .bad:

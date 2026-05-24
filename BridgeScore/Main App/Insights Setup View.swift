@@ -20,7 +20,7 @@ struct InsightsSetupView : View {
     )}
     
     var body: some View {
-        StandardView("Insights Setup") {
+        PopupStandardView("Insights Setup") {
             VStack(spacing: 0) {
                 Banner(title: title, height: 80, backAction: {
                     completion() ; return true
@@ -38,6 +38,7 @@ struct InsightsSetupView : View {
                     InsightsReportViewStorage(report: report)
                     Spacer().frame(width: 30)
                 }
+                Spacer()
             }
             .onChange(of: dismissView) {
                 completion()
@@ -45,6 +46,67 @@ struct InsightsSetupView : View {
             }
             .palette(.background)
             .cornerRadius(20)
+        }
+    }
+    
+    static func checkAndRemoveColumn(report: Report, column: InsightColumn?, completion: (() -> Void)? = nil) {
+        var okToRemove = true
+        if let column = column {
+            if column.isCalculated || column.isPrompt {
+                // Check if used in other calculated columns
+                for otherColumn in report.values.calculatedColumns {
+                    if otherColumn != column {
+                        if case .calculated(let otherCalculated) = otherColumn {
+                            for element in otherCalculated.logic {
+                                if case .variable(let logicVariable) = element {
+                                    if logicVariable.name == column.name {
+                                        MessageBox.shared.show("This column is referenced by calculated column '\(otherCalculated.name)'.\n\nYou must remove this column from that calculation before removing it here.")
+                                        okToRemove = false
+                                        break
+                                    }
+                                }
+                            }
+                        }
+                        if !okToRemove {
+                            break
+                        }
+                    }
+                }
+                
+                // Check if used in sort/selection logic
+                for (index, level) in report.values.levels.enumerated() {
+                    for element in level.selectionLogic {
+                        if case .variable(let logicVariable) = element {
+                            if logicVariable.name == column.name {
+                                MessageBox.shared.show("This column is referenced by \(level.isBoard ? "the main selection logic" : "sort level \(index) selection logic").\n\nYou must remove this column from that logic before removing it here.")
+                                okToRemove = false
+                                break
+                            }
+                        }
+                    }
+                    
+                    // Now check the sort key
+                    if let key = level.key {
+                        if key.name == column.name {
+                            MessageBox.shared.show("This column is the sort key for sort level \(index).\n\nYou must change that sort key before removing it here.")
+                            okToRemove = false
+                            break
+                        }
+                    }
+                }
+                
+                if okToRemove {
+                    report.values.pinnedColumns.removeAll(where: {$0.name == column.name})
+                    report.values.unpinnedColumns.removeAll(where: {$0.name == column.name})
+                    if column.isCalculated {
+                        report.values.calculatedColumns.removeAll(where: {$0.name == column.name})
+                    } else if column.isPrompt {
+                        report.values.prompts.removeAll(where: {$0.name == column.name})
+                    }
+                    report.objectWillChange.send()
+                    completion?()
+                }
+            }
         }
     }
 }
@@ -380,14 +442,20 @@ struct InsightsColumnListView : View {
                                 showCalculatedColumn = true
                             } label: {
                                 Image(systemName: "plus")
+                                    .frame(width: 44, height: 40)
+                                    .background(Color.clear)
                                     .contentShape(Rectangle())
                             }
                         }
                         if showRemove {
                             Button {
-                                checkAndRemove(column: selected)
+                                InsightsSetupView.checkAndRemoveColumn(report: report, column: selected, completion:  {
+                                    self.selected = nil
+                                })
                             } label: {
                                 Image(systemName: "minus")
+                                    .frame(width: 44, height: 40)
+                                    .background(Color.clear)
                                     .contentShape(Rectangle())
                             }
                             .opacity(selected == nil ? 0.3 : 1)
@@ -427,67 +495,6 @@ struct InsightsColumnListView : View {
         .frame(width: 200)
     }
     
-    func checkAndRemove(column: InsightColumn?) {
-        var okToRemove = true
-        if let column = column {
-            if case .calculated(let calculated) = column {
-                
-                // Check if used in other calculated columns
-                for otherColumn in report.values.calculatedColumns {
-                    if otherColumn != column {
-                        if case .calculated(let otherCalculated) = otherColumn {
-                            for element in otherCalculated.logic {
-                                if case .variable(let logicVariable) = element {
-                                    if case .calculated(let logicCalculated) = logicVariable {
-                                        if logicCalculated.name == calculated.name {
-                                            MessageBox.shared.show("This column is referenced by calculated column '\(otherCalculated.name)'.\n\nYou must remove this column from that calculation before removing it here.")
-                                            okToRemove = false
-                                            break
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        if !okToRemove {
-                            break
-                        }
-                    }
-                }
-                
-                // Check if used in sort/selection logic
-                for (index, level) in report.values.levels.enumerated() {
-                    for element in level.selectionLogic {
-                        if case .variable(let logicVariable) = element {
-                            if case .calculated(let logicCalculated) = logicVariable {
-                                if logicCalculated.name == calculated.name {
-                                    MessageBox.shared.show("This column is referenced by \(level.isBoard ? "the main selection logic" : "sort level \(index) selection logic").\n\nYou must remove this column from that logic before removing it here.")
-                                    okToRemove = false
-                                    break
-                                }
-                            }
-                        }
-                    }
-                    
-                    // Now check the sort key
-                    if case .calculated(let keyCalculated) = level.key {
-                        if keyCalculated.name == calculated.name {
-                            MessageBox.shared.show("This column is the sort key for sort level \(index).\n\nYou must change that sort key before removing it here.")
-                            okToRemove = false
-                            break
-                        }
-                    }
-                }
-                
-                if okToRemove {
-                    report.values.pinnedColumns.removeAll(where: {$0.name == column.name})
-                    report.values.unpinnedColumns.removeAll(where: {$0.name == column.name})
-                    columns.removeAll(where: {$0.name == column.name})
-                    selected = nil
-                }
-            }
-        }
-    }
-    
     func tapHandler(column: InsightColumn, count: Int = 1) {
         if showEdit && count == 2 {
             editCalculated(column)
@@ -524,7 +531,7 @@ enum ListType : Codable {
     
     var isColumns: Bool { self != .functions }
     
-    var isSortColumn: Bool { isColumns && self != .promptColumns }
+    var isNonPromptColumn: Bool { isColumns && self != .promptColumns }
 }
 
 struct InsightsSetupTransfer : Codable, Transferable {

@@ -453,7 +453,7 @@ struct InsightsView: View {
         .background(BackgroundBlurView(opacity: 0.0))
         .edgesIgnoringSafeArea(.all)
         .onTapGesture {
-            dismissView = true
+            // dismissView = true // TODO Really want this reinstated but causes view to disappear randomly
         }
     }
     

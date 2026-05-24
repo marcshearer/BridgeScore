@@ -157,7 +157,6 @@ struct BiddingAnnounceView : View {
                         .foregroundColor(Palette.input.faintText.opacity(0.5))
                     Spacer()
                 }
-                .debugPrint(bids.lastAdded)
             }
             Spacer()
         }

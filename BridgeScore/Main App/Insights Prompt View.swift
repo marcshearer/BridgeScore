@@ -86,21 +86,20 @@ struct InsightsPromptsView : View {
                             }
                         } label: {
                             Image(systemName: "plus")
+                                .frame(width: 44, height: 40)
+                                .background(Color.clear)
                                 .contentShape(Rectangle())
                         }
-                        if selected != nil {
-                            Button {
-                                if let index = report.values.prompts.firstIndex(where: {$0.promptColumn! == selected!}) {
-                                    report.values.prompts.remove(at: index)
-                                    selected = nil
-                                }
-                            } label: {
-                                Image(systemName: "minus")
-                                    .contentShape(Rectangle())
-                            }
-                            .opacity(selected == nil ? 0.3 : 1)
-                            .disabled(selected == nil)
+                        Button {
+                            InsightsSetupView.checkAndRemoveColumn(report: report, column: .prompt(prompt: selected!), completion:  {
+                                self.selected = nil
+                            })
+                        } label: {
+                            Image(systemName: "minus")
+                                .contentShape(Rectangle())
                         }
+                        .opacity(selected == nil ? 0.3 : 1)
+                        .disabled(selected == nil)
                         Spacer()
                     }
                     .palette(.contrastTile, clear: true)

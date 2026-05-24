@@ -142,6 +142,8 @@ struct InsightsSortLevelsView : View {
                             }
                         } label: {
                             Image(systemName: "plus")
+                                .frame(width: 44, height: 40)
+                                .background(Color.clear)
                                 .contentShape(Rectangle())
                         }
                         if selected != nil, !selected!.isBoard {
@@ -432,7 +434,7 @@ struct InsightsSortLevelView : View {
     func onDropReceived(dropped: [InsightsSetupTransfer]) -> Bool {
         var result = false
         if let dropped = dropped.first {
-            if dropped.source.isSortColumn  {
+            if dropped.source.isNonPromptColumn  {
                 editSortLevel.key = dropped.column
                 updateLogic()
                 result = true

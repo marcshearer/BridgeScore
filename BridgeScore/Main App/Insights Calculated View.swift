@@ -91,7 +91,7 @@ struct InsightsCalculatedColumnView : View {
                 Spacer().frame(width: 100)
             }
             HStack {
-                Spacer().frame(maxWidth: 100)
+                Spacer().frame(maxWidth: 10)
                 VStack(spacing: 0) {
                     MiddleCentered(height: 60) { Image(systemName: "arrowshape.up").font(bannerFont) }
                     InsightsColumnListView(report: report, data: data, title: "Data columns", columns: report.allColumns, listType: .allColumns, allowDrag: true, selectedListType: $selectedListType, onSelect: variableSelected)
@@ -101,6 +101,12 @@ struct InsightsCalculatedColumnView : View {
                 VStack(spacing: 0) {
                     MiddleCentered(height: 60) { Image(systemName: "arrowshape.up").font(bannerFont) }
                     InsightsColumnListView(report: report, data: data, title: "Calculated columns", columns: calculatedColumns, listType: .calculatedColumns, allowDrag: true, selectedListType: $selectedListType, onSelect: variableSelected)
+                }
+                .frame(width: 200)
+                Spacer().frame(maxWidth: 60)
+                VStack(spacing: 0) {
+                    MiddleCentered(height: 60) { Image(systemName: "arrowshape.up").font(bannerFont) }
+                    InsightsColumnListView(report: report, data: data, title: "Prompt columns", columns: $report.values.prompts, listType: .promptColumns, allowDrag: true, selectedListType: $selectedListType, onSelect: variableSelected)
                 }
                 .frame(width: 200)
                 Spacer().frame(maxWidth: 60)
