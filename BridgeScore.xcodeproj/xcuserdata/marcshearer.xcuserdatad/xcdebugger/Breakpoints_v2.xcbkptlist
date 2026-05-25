@@ -46,8 +46,8 @@
             filePath = "BridgeScore/Main App/Insights View.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "708"
-            endingLineNumber = "708"
+            startingLineNumber = "707"
+            endingLineNumber = "707"
             landmarkName = "applySubtotalSelection(levelIndex:boardSummary:)"
             landmarkType = "9">
          </BreakpointContent>
@@ -62,8 +62,8 @@
             filePath = "BridgeScore/Main App/Insights View.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "701"
-            endingLineNumber = "701"
+            startingLineNumber = "700"
+            endingLineNumber = "700"
             landmarkName = "applySubtotalSelection(levelIndex:boardSummary:)"
             landmarkType = "9">
          </BreakpointContent>

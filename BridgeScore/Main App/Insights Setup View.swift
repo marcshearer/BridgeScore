@@ -41,12 +41,19 @@ struct InsightsSetupView : View {
                 Spacer()
             }
             .onChange(of: dismissView) {
-                completion()
-                dismiss()
+                if dismissView == true {
+                    completion()
+                    forceDismiss()
+                }
             }
             .palette(.background)
             .cornerRadius(20)
         }
+        .onAppear {
+            dismissView = false
+        }
+        .allowsHitTesting(true)
+        .onTapGesture { }
     }
     
     static func checkAndRemoveColumn(report: Report, column: InsightColumn?, completion: (() -> Void)? = nil) {
@@ -442,7 +449,7 @@ struct InsightsColumnListView : View {
                                 showCalculatedColumn = true
                             } label: {
                                 Image(systemName: "plus")
-                                    .frame(width: 44, height: 40)
+                                    .frame(width: 30, height: 40)
                                     .background(Color.clear)
                                     .contentShape(Rectangle())
                             }
@@ -454,7 +461,7 @@ struct InsightsColumnListView : View {
                                 })
                             } label: {
                                 Image(systemName: "minus")
-                                    .frame(width: 44, height: 40)
+                                    .frame(width: 30, height: 40)
                                     .background(Color.clear)
                                     .contentShape(Rectangle())
                             }

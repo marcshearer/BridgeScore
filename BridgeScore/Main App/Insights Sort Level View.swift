@@ -142,7 +142,7 @@ struct InsightsSortLevelsView : View {
                             }
                         } label: {
                             Image(systemName: "plus")
-                                .frame(width: 44, height: 40)
+                                .frame(width: 30, height: 40)
                                 .background(Color.clear)
                                 .contentShape(Rectangle())
                         }

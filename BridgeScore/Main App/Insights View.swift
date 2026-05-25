@@ -337,7 +337,7 @@ struct InsightsView: View {
                         } label: {
                             Image(systemName: data.wrappedValue.state == .expanded ? "minus" : "plus")
                                 .id(buttonId[data.wrappedValue.id, default: UUID()])
-                                .frame(width: 44, height: rowHeight)
+                                .frame(width: 30, height: rowHeight)
                                 .background(Color.clear)
                                 .contentShape(Rectangle())
                         }
@@ -448,12 +448,11 @@ struct InsightsView: View {
             Color.black.opacity(0.4)
             InsightsSetupView(report: report, data: boardSummaries.first, dismissView: $dismissView, completion: runReport)
                 .frame(width: width, height: height)
-                .interactiveDismissDisabled()
         }
         .background(BackgroundBlurView(opacity: 0.0))
         .edgesIgnoringSafeArea(.all)
         .onTapGesture {
-            // dismissView = true // TODO Really want this reinstated but causes view to disappear randomly
+            dismissView = true
         }
     }
     

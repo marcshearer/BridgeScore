@@ -171,7 +171,11 @@ struct InsightsReportViewStorageLoadDialog: View {
                 MiddleCentered {
                     HStack {
                         InsightsSetupButton(text: "Cancel") {
-                            forceDismiss()
+                            if forceDismiss {
+                                forceDismiss()
+                            } else {
+                                dismiss()
+                            }
                         }
                         .keyboardShortcut(.cancelAction)
                         Spacer().frame(width: 50)
