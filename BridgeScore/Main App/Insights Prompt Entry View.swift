@@ -37,6 +37,7 @@ struct InsightsPromptEntryView : View {
                                             .frame(width: 300)
                                             HStack {
                                                 InsightsPromptValueView(prompt: prompt, value: prompt.value!.textBinding, fieldType: index, focus: $focus, onChange: { newValue in
+                                                    prompt.value!.lastBindingString = newValue
                                                 })
                                                 .frame(width: 300, height: 40)
                                                 Spacer()

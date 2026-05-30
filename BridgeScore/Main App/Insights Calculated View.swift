@@ -21,7 +21,6 @@ struct InsightsCalculatedColumnView : View {
     @State var canSave: Bool = true
     @State var align: CalculatedAlignment = .right
     @State var resultType: CalculatedType?
-    @State var notNumeric: Bool = true
     @State var showErrorMessage: Bool = false
     @State var showDuplicateMessage: Bool = false
     @State var referencedVariables: [CalculatedColumn] = []
@@ -184,7 +183,7 @@ struct InsightsCalculatedColumnView : View {
                                         Spacer()
                                     }
                                     .frame(width: 120)
-                                    StepperInput(field: $editColumn.decimalPlaces, isEnabled: !notNumeric, minValue: {0}, maxValue: {4}, increment: {1}, height: 30, width: 100, inlineTitle: false)
+                                    StepperInput(field: $editColumn.decimalPlaces, isEnabled: resultType != .string, minValue: {0}, maxValue: {4}, increment: {1}, height: 30, width: 100, inlineTitle: false)
                                         .frame(width: 140)
                                     Spacer()
                                 }
@@ -203,7 +202,7 @@ struct InsightsCalculatedColumnView : View {
                                         }
                                     }
                                     .pickerStyle(.segmented)
-                                    .disabled(notNumeric)
+                                    .disabled(resultType == .string)
                                     .frame(width: 300)
                                     Spacer()
                                 }
@@ -214,8 +213,9 @@ struct InsightsCalculatedColumnView : View {
                                         Spacer()
                                     }
                                     .frame(width: 120)
-                                    InputToggle(field: $editColumn.percent, disabled: $notNumeric, width: 80, inlineTitle: false)
+                                    InputToggle(field: $editColumn.percent, disabled: Binding.constant(false), width: 80, inlineTitle: false)
                                         .frame(width: 40)
+                                        .disabled(resultType == .string)
                                     Spacer()
                                 }
                                 Spacer()
@@ -328,7 +328,6 @@ struct InsightsCalculatedColumnView : View {
         canSave = !editColumn.name.isEmpty && !editColumn.logic.isEmpty
         let parser = CalculatedParser(report: report, tokens: editColumn.logic)
         resultType = nil
-        notNumeric = true
         errorMessage = ""
         parser.parse() { (tree, message) in
             if let message = message {
@@ -336,7 +335,6 @@ struct InsightsCalculatedColumnView : View {
             } else if let tree = tree {
                 do {
                     resultType = try tree.type(variableType: variableType)
-                    notNumeric = !resultType!.isNumeric
                 } catch let error as CalculatedError {
                     errorMessage = error.errorDescription
                 } catch {

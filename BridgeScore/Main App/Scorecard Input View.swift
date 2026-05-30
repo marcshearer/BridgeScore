@@ -933,7 +933,8 @@ class ScorecardInputUIView : UIView, ScorecardDelegate, UITableViewDataSource, U
                 let section = itemNumber - 1
                 switch column {
                 case .sitting:
-                        // Sitting changed - update declarer and points etc
+                    // Sitting changed - update declarer and points etc - also changed to update the sitting field itself
+                    self.updateTableCell(section: itemNumber - 1, columnType: .sitting)
                     let boards = scorecard.boardsTable
                     for index in 1...boards {
                         let row = index - 1
@@ -2010,9 +2011,9 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
                 (table?.sitting ?? .unknown != .unknown && !Scorecard.current.isImported)
             case .made:
                 board.contract.isValid && !Scorecard.current.isImported
-            case .score, .versus, .sitting, .contract:
+            case .score, .versus, .contract:
                 !Scorecard.current.isImported
-            case .responsible, .comment:
+            case .responsible, .comment, .sitting:
                 true
             default:
                 false
@@ -2867,7 +2868,25 @@ class ScorecardInputCollectionCell: UICollectionViewCell, ScrollPickerDelegate, 
         scorecardDelegate?.scorecardChanged(type: rowType, itemNumber: itemNumber)
         let width: CGFloat = (MyApp.format == .phone ? 50 : 70)
         let space = (frame.width - width) / 2
-        if !Scorecard.current.isImported {
+        if Scorecard.current.isImported {
+            let swapSeat = table.sitting.partner
+            MessageBox.shared.show("Would you like to swap the sitting position to \(swapSeat.string)?\n\nNote that this will affect all tables in this session where you are sitting \(table.sitting.string)", cancelText: "Cancel", okText: "Swap", okAction: { [self] in
+                // Swap then names for my pair in our ranking for this session
+                if let ranking = Scorecard.myRanking(session: table.session) {
+                    let myName = ranking.players[table.sitting]
+                    ranking.players[table.sitting] = ranking.players[swapSeat]
+                    ranking.players[swapSeat] = myName
+                }
+                // Swap other tables in this session where we were sitting this way
+                for (_, otherTable) in Scorecard.current.tables.filter({$0.key != table.table && $0.value.session == table.session && $0.value.sitting == table.sitting}) {
+                    otherTable.sitting = swapSeat
+                    scorecardDelegate?.scorecardChanged(type: .table, itemNumber: otherTable.table, column: .sitting, refresh: true)
+                }
+                // Now update this table
+                seatPicker.set(swapSeat)
+                enumPickerDidChange(to: swapSeat)
+            })
+        } else {
             let selected = Seat.allCases.firstIndex(where: {$0 == table.sitting}) ?? 0
             scorecardDelegate?.scorecardScrollPickerPopup(values: Seat.allCases.map{ScrollPickerEntry(title: $0.short, caption: $0.string)}, maxValues: 9, selected: selected, defaultValue: nil, frame: CGRect(x: frame.minX + space, y: frame.minY, width: width, height: frame.height), in: superview!, topPadding: 20, bottomPadding: 4) { [self] (selected, keyAction) in
                 let seat = Seat.allCases[selected!]

@@ -23,7 +23,7 @@ struct InsightsSetupView : View {
         PopupStandardView("Insights Setup") {
             VStack(spacing: 0) {
                 Banner(title: title, height: 80, backAction: {
-                    completion() ; return true
+                    completion() ; forceDismiss() ; return false
                 }, escapeToDismiss: true)
                 HStack(spacing: 0) {
                     Spacer().frame(width: 30)
@@ -193,8 +193,12 @@ struct InsightsChooseColumnsView : View {
                                     break // No need to do anything - will recalculated when added to the other group
                                 case .pinnedColumns:
                                     report.values.pinnedColumns.move(fromOffsets: IndexSet([currentIndex]), toOffset: beforeIndex)
+                                    report.objectWillChange.send()
+                                    result = true
                                 case .unpinnedColumns:
                                     report.values.unpinnedColumns.move(fromOffsets: IndexSet([currentIndex]), toOffset: beforeIndex)
+                                    report.objectWillChange.send()
+                                    result = true
                                 default:
                                     break
                                 }

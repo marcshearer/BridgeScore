@@ -245,7 +245,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         case .compDeclarer:
             "Compete By"
         case .compDdMade:
-            "Compete Made"
+            "Compete DD Made"
         case .compDdScore:
             "Compete DD Score"
         case .compMakeScore:
@@ -443,7 +443,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         let value = try self.insightValue(report: report, boardSummary: boardSummary)
         switch self {
         case .compDdMade, .compDdScore, .ddTricks,.totalTricksDd:
-            return CalculatedValue(value.numeric! < 0 ? 0 : value.numeric!)
+            return CalculatedValue(value.numeric! <= -999 ? 0 : value.numeric!)
         default:
             return value
         }
@@ -560,11 +560,11 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         case .suitType:
             return summaryValue(boardSummary.contract.suitType.string)
         case .levelType:
-            return summaryValue("\(boardSummary.contract.levelType.rawValue)")
+            return summaryValue("\(boardSummary.contract.levelType.string)")
         case .totalTricks:
             return summaryValue(boardSummary.totalTricks)
         case .totalTricksDd:
-            return summaryValue(boardSummary.ddTricks[.we]! < 0 || boardSummary.ddTricks[.they]! < 0 ? 0 : boardSummary.totalTricksDd)
+            return summaryValue(boardSummary.ddTricks[.we]! <= -999 || boardSummary.ddTricks[.they]! <= -999 ? 0 : boardSummary.totalTricksDd)
         case .passout:
             return summaryValue(boardSummary.passout)
         case .partScore(let pairType):
@@ -654,6 +654,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
                 boardSummary.contract.level == .passout ? boardSummary.contract.colorString :  boardSummary.contract.colorCompact + " " + AttributedString(Scorecard.madeString(made: boardSummary.made ?? 0))
             case .made:
                 AttributedString(Scorecard.madeString(made: boardSummary.made ?? 0))
+            case .score:
+                AttributedString(formattedScore(score: boardSummary.score))
             case .levelType:
                 AttributedString(boardSummary.contract.levelType.string)
             case .compContract:
@@ -661,11 +663,11 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             case .compDeclarer:
                 AttributedString(!boardSummary.isCompetitive ? "" : text)
             case .compDdMade:
-                AttributedString(!boardSummary.isCompetitive || (boardSummary.compDdMade ?? -1) < 0 ? "" : text)
+                AttributedString(!boardSummary.isCompetitive || (boardSummary.compDdMade ?? -999) <= -999 ? "" : text)
             case .compDdScore:
-                AttributedString(!boardSummary.isCompetitive || (boardSummary.compDdMade ?? -1) < 0 ? "" : text)
+                AttributedString(!boardSummary.isCompetitive || (boardSummary.compDdMade ?? -999) <= -999 ? "" : formattedScore(score: boardSummary.compDdScore))
             case .compMakeScore:
-                AttributedString(!boardSummary.isCompetitive ? "" : text)
+                AttributedString(!boardSummary.isCompetitive ? "" : formattedScore(score: boardSummary.compMakeScore))
             case .compMakeOdds:
                 AttributedString(!boardSummary.isCompetitive ? "" : text)
             case .suit(let pairType):
@@ -675,16 +677,20 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             case .modeTricks(let pairType):
                 AttributedString(boardSummary.suit[pairType]! == .blank ? "" : text)
             case .ddTricks(let pairType):
-                AttributedString(boardSummary.ddTricks[pairType]! < 0 ? "" : boardSummary.suit[pairType]! == .blank ? "" : text)
+                AttributedString(boardSummary.ddTricks[pairType]! <= -999 ? "" : boardSummary.suit[pairType]! == .blank ? "" : text)
             case .fit(let pairType):
                 AttributedString(boardSummary.suit[pairType]! == .blank ? "" : text)
             case .totalTricksDd:
-                AttributedString(boardSummary.ddTricks[.we]! < 0 || boardSummary.ddTricks[.they]! < 0 ? "" : text)
+                AttributedString(boardSummary.ddTricks[.we]! <= -999 || boardSummary.ddTricks[.they]! <= -999 ? "" : text)
             default:
                 AttributedString(text)
             }
         } catch {
             return AttributedString("ERROR")
+        }
+        
+        func formattedScore(score: Int) -> String {
+            "\(boardSummary.boardScoreType.prefix(score: Float(score)))\(score)\(boardSummary.boardScoreType.shortSuffix)"
         }
     }
     
@@ -692,7 +698,9 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         switch self {
         case .eventDesc:
             180
-        case .date, .location, .suitType, .levelType, .eventType:
+        case .date:
+            130
+        case .location, .suitType, .levelType, .eventType:
             120
         case .partner, .contractMade, .boardScoreType, .declarer:
             100

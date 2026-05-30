@@ -7,22 +7,6 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "BFEC34D2-D361-4832-9521-762CA0A7C79A"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "BridgeScore/Main App/Insights.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "13"
-            endingLineNumber = "13"
-            landmarkName = "build()"
-            landmarkType = "7">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
             uuid = "32C23D31-B53B-488C-8CED-2BF9C9ED494C"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
@@ -39,33 +23,33 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "50A75D03-A1B0-41B4-88F0-4E9A31A7037A"
+            uuid = "3B08A263-2CAA-4053-B9A4-FDE8B5E18625"
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "BridgeScore/Main App/Insights View.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "707"
-            endingLineNumber = "707"
-            landmarkName = "applySubtotalSelection(levelIndex:boardSummary:)"
+            startingLineNumber = "772"
+            endingLineNumber = "772"
+            landmarkName = "selectRow(boardSummary:)"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "C42D1015-81D5-4757-8C01-DE5071A3D3EF"
-            shouldBeEnabled = "No"
+            uuid = "A0A85DC6-4632-4DC6-A599-6EF1F4DE91A8"
+            shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "BridgeScore/Main App/Insights View.swift"
+            filePath = "BridgeScore/Main App/Insights.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "700"
-            endingLineNumber = "700"
-            landmarkName = "applySubtotalSelection(levelIndex:boardSummary:)"
-            landmarkType = "9">
+            startingLineNumber = "14"
+            endingLineNumber = "14"
+            landmarkName = "build()"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

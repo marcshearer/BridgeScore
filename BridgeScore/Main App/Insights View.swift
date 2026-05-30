@@ -442,7 +442,7 @@ struct InsightsView: View {
     }
     
     func showSetup(frame: CGRect) -> some View {
-        let width = min(1400, frame.width) // Allow for safe area
+        let width = min(1600, frame.width) // Allow for safe area
         let height = min(max(1024, frame.height - 10), (frame.height))
         return ZStack{
             Color.black.opacity(0.4)

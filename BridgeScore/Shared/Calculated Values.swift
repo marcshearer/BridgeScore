@@ -276,6 +276,7 @@ class CalculatedValue : Codable, Equatable, Hashable {
     var string: String?
     var boolean: Bool?
     var type: CalculatedType
+    var lastBindingString: String? = nil
     
     init(numeric: Float, string: String, boolean: Bool, type: CalculatedType) {
         self.numeric = numeric
@@ -316,7 +317,30 @@ class CalculatedValue : Codable, Equatable, Hashable {
         }
     }
     
-    var text: String { (isNumeric ? "\(numeric!)" : (isString ? string! : "\(boolean!)"))}
+    var text: String {
+        switch type {
+        case .numeric:
+            if let lastBindingString = lastBindingString {
+                if lastBindingString.contains(".") {
+                    if Float(lastBindingString) == Float(numeric!) {
+                        return lastBindingString
+                    } else {
+                        return "\(numeric!)"
+                    }
+                } else if lastBindingString == "" {
+                    return ""
+                } else {
+                    return "\(Int(numeric!))"
+                }
+            } else {
+                return "\(numeric!)"
+            }
+        case .string:
+            return string!
+        default:
+            return "\(boolean!)"
+        }
+    }
     
     var textBinding: Binding<String> {
         Binding(
@@ -324,6 +348,7 @@ class CalculatedValue : Codable, Equatable, Hashable {
             set: { newValue in
                 switch self.type {
                 case .numeric:
+                    self.lastBindingString = newValue
                     self.numeric = Float(newValue) ?? 0
                 case .boolean:
                     self.boolean = (newValue.lowercased() == "true")

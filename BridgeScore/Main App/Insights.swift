@@ -11,13 +11,15 @@ class Insights {
     
     static func build() async {
         initialise() // TODO Remove
-        let cutoff = cutoff(date: "01/01/2010") // TODO Remove
+        let cutoff = stringToDate(date: "01/01/2010") // TODO Remove
+        let matchDate = stringToDate(date: "11/03/2026")
+        let matchBoard = 16
         
         let boardMOs = CoreData.fetch(from: BoardMO.tableName) as! [BoardMO]
         for boardMO in boardMOs {
             if let scorecard = MasterData.shared.scorecard(id: boardMO.scorecardId), boardMO.contract.level != .blank, boardMO.madeEntered {
                 if scorecard.importSource != .none  && scorecard.date >= cutoff {
-
+                    
                     // Setup board
                     let board = BoardViewModel(scorecard: scorecard, boardMO: boardMO)
                     let boardFilter = NSPredicate(format: "scorecardId = %@ and boardIndex16 = %i", boardMO.scorecardId as NSUUID, boardMO.boardIndex)
@@ -30,6 +32,10 @@ class Insights {
                     } else {
                         // New
                         boardSummary = BoardSummaryViewModel(scorecard: scorecard, boardIndex: board.boardIndex)
+                    }
+                    
+                    if scorecard.date == matchDate && board.boardIndex == matchBoard {
+                        print(board.contract.string)
                     }
             
                     // Load table
@@ -114,9 +120,9 @@ class Insights {
                     boardSummary.gameOdds = (suitTricks[pairType]!.count(where: {$0 >= suit.gameTricks}) * 100) / suitTricks[pairType]!.count
                     boardSummary.slamOdds = (suitTricks[pairType]!.count(where: {$0 >= Values.smallSlamLevel.tricks}) * 100) / suitTricks[pairType]!.count
                 }
-                boardSummary.medianTricks[pairType] = median(in: suitTricks[pairType]!) ?? -1
-                boardSummary.modeTricks[pairType] = mode(in: suitTricks[pairType]!) ?? -1
-                boardSummary.ddTricks[pairType] = doubleDummys[pairType.seatPlayers.first!]?[suit]?.tricks ?? -1
+                boardSummary.medianTricks[pairType] = median(in: suitTricks[pairType]!) ?? -999
+                boardSummary.modeTricks[pairType] = mode(in: suitTricks[pairType]!) ?? -999
+                boardSummary.ddTricks[pairType] = doubleDummys[pairType.seatPlayers.first!]?[suit]?.tricks ?? -999
                 
                 let allDeclareTravellers = allTravellers.filter({$0.declarer.pair == match})
                 boardSummary.partScore[pairType] = Int(allDeclareTravellers.filter({$0.contract.levelType == .partScore}).count * 100 / allTravellers.count)
@@ -256,7 +262,7 @@ class Insights {
         }
     }
     
-    private static func cutoff(date: String) -> Date {
+    private static func stringToDate(date: String) -> Date {
         let formatter = DateFormatter()
         formatter.dateFormat = "dd/MM/yyyy"
         return formatter.date(from: date)!
