@@ -128,10 +128,12 @@ struct HandViewer: View {
                                 Rectangle().fill(.clear)
                                 VStack {
                                     HandViewContract(traveller: $traveller, sitting: $sitting)
-                                    if showClaim || bidAnnounce == "" {
+                                    if showClaim || (bidAnnounce == "" && trickNumber != 0) {
                                         HandViewTrickCount(traveller: $traveller, sitting: $sitting, tricks: $tricks, trickNumber: $trickNumber, showClaim: $showClaim)
-                                    } else {
+                                    } else if bidAnnounce != "" {
                                         HandViewBidAnnounce(announce: $bidAnnounce)
+                                    } else if Scorecard.current.scorecard!.type.eventType == .teams {
+                                        HandViewCrossImps(sitting: $sitting, traveller: $traveller)
                                     }
                                     Spacer()
                                     if traveller.contract.level != .passout && tricks.count > 0 {
@@ -354,6 +356,26 @@ struct HandViewer: View {
         }
     }
     
+    struct HandViewCrossImps: View {
+        @Binding var sitting: Seat
+        @Binding var traveller: TravellerViewModel
+        
+        var body: some View {
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    let xImps = traveller.nsXImps * Float(sitting.pair == .ns ? 1 : -1)
+                    let xImpsFormatted = xImps.formatted(.number.sign(strategy: .always(includingZero: false)).precision(.fractionLength(1)))
+                    Text("\(xImpsFormatted) xImps")
+                        .font(.title)
+                    Spacer()
+                }
+                Spacer()
+            }
+        }
+    }
+
     struct HandViewHand: View {
         @Binding var board: BoardViewModel
         @Binding var traveller: TravellerViewModel
@@ -757,7 +779,7 @@ struct HandViewer: View {
                 }
                 .foregroundColor(Palette.handTable.contrastText)
                 Spacer()
-            }.font(.title2).minimumScaleFactor(0.5).lineLimit(1).minimumScaleFactor(0.5)
+            }.font(.title2).minimumScaleFactor(0.8).lineLimit(1)
         }
     }
     
