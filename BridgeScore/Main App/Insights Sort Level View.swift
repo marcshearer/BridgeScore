@@ -339,7 +339,7 @@ struct InsightsSortLevelView : View {
                         Spacer()
                     }
                     .frame(width: 200)
-                    CalculatedValuesView(logic: $editSortLevel.selectionLogic, cursor: $cursor, fieldType: .selectionLogic, nextFocusValue: .sortKey, previousFocusValue: .sortKey, focus: $focus, color: .alternate) {
+                    CalculatedValuesView(logic: $editSortLevel.selectionLogic, cursor: $cursor, fieldType: .selectionLogic, nextFocusValue: .sortKey, previousFocusValue: .sortKey, focus: $focus, height: (editSortLevel.isBoard ? 114 : 50), color: .alternate) {
                         updateLogic()
                     }
                 }

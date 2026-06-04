@@ -83,7 +83,7 @@ struct InsightsCalculatedColumnView : View {
                     Spacer()
                 }
                 .frame(width: 120)
-                CalculatedValuesView(logic: $editColumn.logic, cursor: $cursor, fieldType: InsightsCalculatedEditField.logic, nextFocusValue: .description, previousFocusValue:  .description, focus: $focus, color: .alternate) {
+                CalculatedValuesView(logic: $editColumn.logic, cursor: $cursor, fieldType: InsightsCalculatedEditField.logic, nextFocusValue: .description, previousFocusValue:  .description, focus: $focus, height: 82, color: .alternate) {
                     updateLogic()
                 }
                 .cornerRadius(8)

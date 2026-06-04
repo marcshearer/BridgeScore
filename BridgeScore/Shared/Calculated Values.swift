@@ -1015,8 +1015,8 @@ class CalculatedParser {
     }
     
     func parseExpression3() throws -> CalculatedParseNode {
-        if current == .operatorSymbol(.minus) || current == .operatorSymbol(.plus) {
-            // Unary minus or plus
+        if current == .operatorSymbol(.not) || current == .operatorSymbol(.minus) || current == .operatorSymbol(.plus) {
+            // Unary not, minus or plus
             if case .operatorSymbol(let op) = nextSymbol() {
                 let expression = try parseExpression3()
                 return .unaryOp(op: op, value: expression)

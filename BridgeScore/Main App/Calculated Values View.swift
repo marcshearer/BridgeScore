@@ -14,6 +14,8 @@ struct CalculatedValuesView<Focus:InsightsFocusIndexBridge> : View {
     var nextFocusValue: Focus? = nil
     var previousFocusValue: Focus? = nil
     @Binding var focus: Focus?
+    var height: CGFloat = 50
+    var rowHeight: CGFloat = 32
     var color: ThemeBackgroundColorName
     var clearTextButton: Bool = true
     var onChange: (()->())?
@@ -23,85 +25,96 @@ struct CalculatedValuesView<Focus:InsightsFocusIndexBridge> : View {
     
     var body: some View {
         ZStack {
-            Rectangle().frame(height: 40)
+            Rectangle().frame(height: height)
                 .foregroundColor(PaletteColor(color).background)
                 .cornerRadius(8)
             VStack {
-                Spacer().frame(height: 15)
+                Spacer().frame(height: 5)
                 HStack {
                     Spacer().frame(width: 4)
                     KeyDetectorView(processKey: processKey, fieldType: fieldType, nextFocusValue: nextFocusValue, previousFocusValue: previousFocusValue, focus: $focus)
                         .id(triggerId)
                     Spacer()
                     ScrollViewReader { proxy in
-                        ScrollView(.horizontal) {
-                            HStack(spacing: 0) {
-                                ForEach(0..<logic.count + 1, id: \.self) { index in
-                                    HStack(spacing: 0) {
-                                        // Preceding cursor
-                                        HStack(spacing: 0) {
-                                            if index == cursor && literalCursor == nil && focus == fieldType {
-                                                HStack(spacing: 0) {
-                                                    Spacer()
-                                                    cursorBar
-                                                    Spacer()
-                                                }
-                                                .frame(width: 8)
-                                            } else {
-                                                HStack(spacing: 0) {
-                                                    Text("").frame(width: 8, height: 30)
-                                                }
-                                            }
-                                        }
-                                        if index <= logic.count - 1 {
-                                            let string = logic[index].string
-                                            if case let .literal(literal) = logic[index] {
-                                                // Text with literal cursor - separate output of each character
-                                                ForEach(0..<string.count, id: \.self) { characterIndex in
-                                                    let cIndex = string.index(string.startIndex, offsetBy: characterIndex)
-                                                    let character = string[cIndex]
-                                                    if let literalCursor = literalCursor {
-                                                        if (characterIndex == (literalCursor + literal.literalCursorOffset)) && (cursor == index) {
-                                                            cursorBar
-                                                        }
+                        //GeometryReader { viewGeometry in
+                            ScrollView(.vertical) {
+                                FlowLayout(alignment: .leading, spacing: 0) {
+                                    ForEach(0..<logic.count + 1, id: \.self) { index in
+                                        HStack(alignment: .center, spacing: 0) {
+                                            // Preceding cursor
+                                            HStack(spacing: 0) {
+                                                if index == cursor && literalCursor == nil && focus == fieldType {
+                                                    HStack(spacing: 0) {
+                                                        Spacer()
+                                                        cursorBar
+                                                        Spacer()
                                                     }
-                                                    Text(String(character))
-                                                        .onTapGesture {
-                                                            focus = fieldType
-                                                            cursor = index
-                                                            literalCursor = characterIndex
-                                                        }
+                                                    .frame(width: 10)
+                                                } else {
+                                                    HStack(spacing: 0) {
+                                                        Text("").frame(width: 8)
+                                                    }
                                                 }
-                                            } else {
-                                                // Non-literal
-                                                Text(string)
+                                            }
+                                            .frame(height: rowHeight)
+                                            if index <= logic.count - 1 {
+                                                let string = logic[index].string
+                                                if case let .literal(literal) = logic[index] {
+                                                    // Text with literal cursor - separate output of each character
+                                                    ForEach(0..<string.count, id: \.self) { characterIndex in
+                                                        let cIndex = string.index(string.startIndex, offsetBy: characterIndex)
+                                                        let character = string[cIndex]
+                                                        if let literalCursor = literalCursor {
+                                                            if (characterIndex == (literalCursor + literal.literalCursorOffset)) && (cursor == index) {
+                                                                HStack(spacing: 0) {
+                                                                    Spacer()
+                                                                    cursorBar
+                                                                    Spacer()
+                                                                }
+                                                                .frame(width: 2, height: rowHeight)
+                                                            }
+                                                        }
+                                                        Text(String(character))
+                                                            .onTapGesture {
+                                                                focus = fieldType
+                                                                cursor = index
+                                                                literalCursor = characterIndex
+                                                            }
+                                                            .frame(height: rowHeight)
+                                                    }
+                                                } else {
+                                                    // Non-literal
+                                                    Text(string)
+                                                        .frame(height: rowHeight)
+                                                }
                                             }
                                         }
+                                        .id(index)
+                                        .contentShape(Rectangle())
+                                        .onTapGesture {
+                                            focus = fieldType
+                                            cursor = index
+                                            literalCursor = nil
+                                        }
                                     }
-                                    .id(index)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        focus = fieldType
-                                        cursor = index
-                                        literalCursor = nil
-                                    }
+                                    Spacer()
                                 }
-                                Spacer()
+                                Spacer().frame(width: 4)
                             }
-                            Spacer().frame(width: 4)
-                        }
-                        .onChange(of: cursor) {
-                            withAnimation {
-                                proxy.scrollTo(cursor, anchor: nil)
+                            .scrollIndicators(.automatic)
+                            .onChange(of: cursor) {
+                                withAnimation {
+                                    proxy.scrollTo(cursor, anchor: nil)
+                                }
+                                
                             }
-                            
-                        }
-                        .frame(height: 50)
-                        .contentMargins(.bottom, 10, for: .scrollContent)
+                            .frame(height: height - 10)
+                            //.contentMargins(.bottom, 10, for: .scrollContent)
+                        //}
                     }
                     if clearTextButton && !logic.isEmpty {
                         VStack(spacing: 0) {
-                            Spacer().frame(height: 7)
+                            Spacer().frame(height: 12)
                             HStack {
                                 Button {
                                     logic = []
@@ -114,7 +127,7 @@ struct CalculatedValuesView<Focus:InsightsFocusIndexBridge> : View {
                             }
                             Spacer()
                         }
-                        .frame(height: 50)
+                        .frame(height: height)
                     }
                     Spacer().frame(width: 4)
                 }
@@ -514,3 +527,67 @@ struct CalculatedValuesView<Focus:InsightsFocusIndexBridge> : View {
     }
 }
 
+struct FlowLayout: Layout {
+    var alignment: Alignment = .leading
+    var spacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let result = arrangeSubviews(proposal: proposal, subviews: subviews)
+        return CGSize(width: proposal.width ?? result.size.width, height: result.size.height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let result = arrangeSubviews(proposal: proposal, subviews: subviews)
+        var lineIndex = 0
+        var x = bounds.minX
+        var y = bounds.minY
+
+        for (index, subview) in subviews.enumerated() {
+            if lineIndex < result.lineStarts.count, index == result.lineStarts[lineIndex] {
+                if lineIndex > 0 {
+                    y += result.lineHeights[lineIndex - 1] + spacing
+                }
+                x = bounds.minX
+                lineIndex += 1
+            }
+            
+            let size = subview.sizeThatFits(.unspecified)
+            subview.place(at: CGPoint(x: x, y: y), proposal: .unspecified)
+            x += size.width + spacing
+        }
+    }
+
+    private func arrangeSubviews(proposal: ProposedViewSize, subviews: Subviews) -> (size: CGSize, lineStarts: [Int], lineHeights: [CGFloat]) {
+        let maxWidth = proposal.width ?? .infinity
+        var currentX: CGFloat = 0
+        var currentY: CGFloat = 0
+        var maxLineHeight: CGFloat = 0
+        var totalWidth: CGFloat = 0
+        
+        var lineStarts: [Int] = [0]
+        var lineHeights: [CGFloat] = []
+        
+        for (index, subview) in subviews.enumerated() {
+            let size = subview.sizeThatFits(.unspecified)
+            
+            if currentX + size.width > maxWidth && currentX > 0 {
+                lineHeights.append(maxLineHeight)
+                currentY += maxLineHeight + spacing
+                totalWidth = max(totalWidth, currentX - spacing)
+                
+                currentX = 0
+                maxLineHeight = 0
+                lineStarts.append(index)
+            }
+            
+            currentX += size.width + spacing
+            maxLineHeight = max(maxLineHeight, size.height)
+        }
+        
+        lineHeights.append(maxLineHeight)
+        totalWidth = max(totalWidth, currentX - spacing)
+        let totalHeight = currentY + maxLineHeight
+        
+        return (CGSize(width: totalWidth, height: totalHeight), lineStarts, lineHeights)
+    }
+}
