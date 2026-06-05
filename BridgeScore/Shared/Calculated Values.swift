@@ -234,6 +234,7 @@ enum CalculatedFunction : String, CaseIterable, Codable {
     case capitalized = "capitalized"
     case match = "match"
     case safeDivide = "safeDivide"
+    case formatMade = "formatMade"
     
     var string: String { self.rawValue }
     
@@ -241,7 +242,7 @@ enum CalculatedFunction : String, CaseIterable, Codable {
         switch self {
         case .min, .max, .average, .sum:
             return (min: 2, max: nil)
-        case .abs:
+        case .abs, .formatMade:
             return (min: 1, max: 1)
         case .mod, .match, .safeDivide:
             return (min: 2, max: 2)
@@ -261,7 +262,7 @@ enum CalculatedFunction : String, CaseIterable, Codable {
 
     var type: CalculatedType {
         switch self {
-        case .lowercased, .uppercased, .capitalized:
+        case .lowercased, .uppercased, .capitalized, .formatMade:
                 .string
         case .match:
                 .boolean
@@ -830,6 +831,9 @@ indirect enum CalculatedParseNode : Equatable {
                 return CalculatedValue((values[0].string! == "") || (values[0].string!.lowercased() == values[1].string!.lowercased()))
             case .safeDivide:
                 return CalculatedValue(values[1].numeric! == 0 ? 0 : (values[0].numeric! / values[1].numeric!))
+            case .formatMade:
+                let made = values[0].numeric ?? 0
+                return CalculatedValue(Scorecard.madeString(made: Int(made)))
             }
         }
     }

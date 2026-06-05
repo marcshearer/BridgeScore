@@ -37,8 +37,8 @@ public class BoardSummaryMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var compContractSuit16: Int16 ; @EnumProperty(\BoardSummaryMO.compContractSuit16) public var compContractSuit: Suit
     @NSManaged public var compContractDouble16: Int16 ; @EnumProperty(\BoardSummaryMO.compContractDouble16) public var compContractDouble: ContractDouble
     @NSManaged public var compDeclarer16: Int16 ; @EnumProperty(\BoardSummaryMO.compDeclarer16) public var compDeclarer: PairType
-    @NSManaged public var compDdMade16: Int16
-    @NSManaged public var compDdMadeEntered: Bool
+    @NSManaged public var compDdTricks16: Int16
+    @NSManaged public var compDdTricksEntered: Bool
     @NSManaged public var compDdScore16: Int16 ; @IntProperty(\BoardSummaryMO.compDdScore16) public var compDdScore: Int
     @NSManaged public var compMakeScore16: Int16 ; @IntProperty(\BoardSummaryMO.compMakeScore16) public var compMakeScore: Int
     @NSManaged public var compMakeOdds16: Int16 ; @IntProperty(\BoardSummaryMO.compMakeOdds16) public var compMakeOdds: Int
@@ -87,15 +87,15 @@ public class BoardSummaryMO: NSManagedObject, ManagedObject, Identifiable {
         }
     }
     
-    public var compDdMade: Int? {
-        get { (self.compDdMadeEntered ? Int(self.compDdMade16) : nil) }
+    public var compDdTricks: Int? {
+        get { (self.compDdTricksEntered ? Int(self.compDdTricks16) : nil) }
         set {
             if let newValue = newValue {
-                self.compDdMade16 = Int16(newValue)
-                self.compDdMadeEntered = true
+                self.compDdTricks16 = Int16(newValue)
+                self.compDdTricksEntered = true
             } else {
-                self.compDdMade16 = 0
-                self.compDdMadeEntered = false
+                self.compDdTricks16 = 0
+                self.compDdTricksEntered = false
             }
         }
     }

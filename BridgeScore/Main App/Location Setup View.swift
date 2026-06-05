@@ -151,6 +151,27 @@ struct LocationDetailView : View {
                             
                             Input(title: "Short name", field: $selected.short, placeHolder: "Optional shorter name")
                             
+                            Spacer().frame(height: 8)
+                            HStack {
+                                HStack {
+                                    Spacer().frame(width: 8)
+                                    Text("Level:")
+                                    Spacer()
+                                }
+                                .frame(width: 180)
+                                Spacer().frame(width: 16)
+                                Picker("Level", selection: $selected.level) {
+                                    ForEach(LocationLevel.allCases, id: \.self) { level in
+                                        Text(level.string)
+                                            .tag(level)
+                                    }
+                                }
+                                .pickerStyle(.segmented)
+                                .frame(width: 240)
+                                Spacer()
+                            }
+                            Spacer().frame(height: 4)
+
                             Input(title: "BridgeWebs Id", field: $selected.bridgeWebsId, autoCapitalize: .none, autoCorrect: false)
                             
                             if selected.retired {

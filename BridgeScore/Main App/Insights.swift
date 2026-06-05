@@ -9,16 +9,18 @@ import CoreData
 
 class Insights {
     
-    static func build() async {
-        initialise() // TODO Remove
-        let cutoff = stringToDate(date: "01/01/2010") // TODO Remove
-        let matchDate = stringToDate(date: "11/03/2026")
-        let matchBoard = 16
-        
-        let boardMOs = CoreData.fetch(from: BoardMO.tableName) as! [BoardMO]
+    static func update(full: Bool = false) async {
+        if full {
+            initialise()
+        }
+                
+        let lastInsightsUpdated = full ? Date.distantPast : (UserDefault.lastInsightUpdate.date ?? Date.distantPast)
+        let insightsUpdated = Date()
+        let datePredicate = NSPredicate(format: "dateUpdated >= %@", lastInsightsUpdated as NSDate)
+        let boardMOs = CoreData.fetch(from: BoardMO.tableName, filter: datePredicate) as! [BoardMO]
         for boardMO in boardMOs {
             if let scorecard = MasterData.shared.scorecard(id: boardMO.scorecardId), boardMO.contract.level != .blank, boardMO.madeEntered {
-                if scorecard.importSource != .none  && scorecard.date >= cutoff {
+                if scorecard.importSource != .none  {
                     
                     // Setup board
                     let board = BoardViewModel(scorecard: scorecard, boardMO: boardMO)
@@ -32,10 +34,6 @@ class Insights {
                     } else {
                         // New
                         boardSummary = BoardSummaryViewModel(scorecard: scorecard, boardIndex: board.boardIndex)
-                    }
-                    
-                    if scorecard.date == matchDate && board.boardIndex == matchBoard {
-                        print(board.contract.string)
                     }
             
                     // Load table
@@ -84,6 +82,7 @@ class Insights {
                     }
                 }
             }
+            UserDefault.lastInsightUpdate.set(insightsUpdated)
         }
     }
     
@@ -136,19 +135,19 @@ class Insights {
             // Consider competition
             boardSummary.compContract = Contract()
             boardSummary.compDeclarer = .unknown
-            boardSummary.compDdMade = nil
+            boardSummary.compDdTricks = nil
             boardSummary.compMakeOdds = 0
             boardSummary.compDdScore = 0
-            if boardSummary.declare[.we]! >= 20 && boardSummary.declare[.they]! >= 20 && boardSummary.suit[.we] != .noTrumps && boardSummary.contract.levelType == .partScore {
+            if boardSummary.declare[.we]! >= 20 && boardSummary.declare[.they]! >= 20 && boardSummary.suit[.we] != .noTrumps && boardSummary.contract.levelType == .partScore && boardSummary.suit[.we] != boardSummary.suit[.they] {
                 // Competitive auction where we have a suit
                 if boardSummary.declarer.pairType == .we && (board.made ?? 1) < 0 {
                     // We went off - consider not competing - assume they are in 1 less of their suit
-                    if let contract = Contract(lower: boardSummary.contract, suit: boardSummary.suit[.they]!) {
+                    if let contract = Contract(lower: boardSummary.contract, suit: boardSummary.suit[.they]!), contract.level != .blank {
                         boardSummary.compContract = contract
                         boardSummary.compDeclarer = .they
                         boardSummary.compMakeOdds = (suitTricks[.they]!.count(where: {$0 >= contract.tricks}) * 100) / suitTricks[.they]!.count
                         if let ddTricks = boardSummary.ddTricks[.they], ddTricks > 0 {
-                            boardSummary.compDdMade = ddTricks - contract.tricks
+                            boardSummary.compDdTricks = ddTricks
                         }
                     }
                 } else if boardSummary.declarer.pairType == .they && (board.made ?? 1) >= 0 {
@@ -158,7 +157,7 @@ class Insights {
                         boardSummary.compDeclarer = .we
                         boardSummary.compMakeOdds = (suitTricks[.we]!.count(where: {$0 >= contract.tricks}) * 100) / suitTricks[.we]!.count
                         if let ddTricks = boardSummary.ddTricks[.we] , ddTricks > 0 {
-                            boardSummary.compDdMade = ddTricks - contract.tricks
+                            boardSummary.compDdTricks = ddTricks
                         }
                     }
                 }
@@ -166,8 +165,8 @@ class Insights {
                     if boardSummary.boardScoreType == .percent {
                         let makePoints = points(boardSummary: boardSummary, board: board, table: table, made: 0)
                         boardSummary.compMakeScore = rescoreMps(from: makePoints, travellers: travellers, vulnerability: board.vulnerability, seat: table.sitting)
-                        if let ddMade = boardSummary.compDdMade {
-                            let ddPoints = points(boardSummary: boardSummary, board: board, table: table, made: ddMade)
+                        if let ddTricks = boardSummary.compDdTricks {
+                            let ddPoints = points(boardSummary: boardSummary, board: board, table: table, made: ddTricks - boardSummary.compContract.tricks)
                             boardSummary.compDdScore = rescoreMps(from: ddPoints, travellers: travellers, vulnerability: board.vulnerability, seat: table.sitting)
                         }
                     }
@@ -240,7 +239,7 @@ class Insights {
         // TODO Remove
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: BoardSummaryMO.tableName)
         do {
-            let count = try CoreData.context.count(for: fetchRequest)
+            let _ = try CoreData.context.count(for: fetchRequest)
         } catch {
 
         }

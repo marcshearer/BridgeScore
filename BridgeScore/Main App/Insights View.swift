@@ -14,7 +14,7 @@ enum ScrollViews : CaseIterable, Hashable {
 }
 
  enum InsightDisplayMode {
-     case building
+     case updating
      case loading
      case preparing
      case displaying
@@ -22,8 +22,8 @@ enum ScrollViews : CaseIterable, Hashable {
      
      var text: String {
          switch self {
-         case .building:
-             "Building Data..."
+         case .updating:
+             "Refreshing Data..."
          case .loading:
              "Loading Data..."
          case .preparing:
@@ -81,7 +81,7 @@ struct InsightsView: View {
                         }
                         .frame(height: 80)
                         switch displayMode {
-                        case .building, .loading, .preparing, .stopped:
+                        case .updating, .loading, .preparing, .stopped:
                             MiddleCenteredText(text: displayMode.text)
                                 .font(bigFont)
                                 .palette(.background, .theme)
@@ -508,13 +508,9 @@ struct InsightsView: View {
     }
     func loadData() async {
         // Load master data
+        displayMode = .updating
+        await Insights.update()
         await allBoardSummaries = Insights.load()
-        if allBoardSummaries.isEmpty {
-            // TODO Shouldn't need this
-            displayMode = .building
-            await Insights.build()
-            await allBoardSummaries = Insights.load()
-        }
         if !report.values.prompts.isEmpty {
             showPrompts = true
         } else {
@@ -637,7 +633,7 @@ struct InsightsView: View {
                         let level = sortIndex[index].totalLevel!
                         totalIndex[level] = index
                         for subIndex in (level + 1)..<(sortIndex.count) {
-                            totalIndex[subIndex] = 0
+                            totalIndex[subIndex] = nil
                         }
                     }
                     sortIndex[index].totalIndex = totalIndex
@@ -785,7 +781,7 @@ actor DataFilterService {
     }
 }
 
-class InsightTotal:Comparable {
+class InsightTotal : Comparable {
     var startIndex: Int?
     var count: Int?
     var value: Float?

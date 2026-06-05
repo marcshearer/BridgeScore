@@ -337,3 +337,12 @@ fileprivate class Set {
     }
 }
 
+public enum LocationLevel : Int, CaseIterable {
+    case club = 0
+    case district = 1
+    case national = 2
+    
+    var string: String {
+        "\(self)".capitalized
+    }
+}

@@ -37,9 +37,18 @@ public class BoardMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var optimumMade16: Int16
     @NSManaged public var optimumNsPoints16: Int16
     @NSManaged public var optimumEntered: Bool
+    @NSManaged public var dateUpdated: Date?
     
     convenience init() {
         self.init(context: CoreData.context)
+    }
+    
+    public override func willSave() {
+        // Set date updated while avoiding cycling
+        super.willSave()
+        if (isInserted || isUpdated) && !changedValues().keys.contains("dateUpdated") {
+            setPrimitiveValue(Date(), forKey: "dateUpdated")
+        }
     }
     
     public var boardIndex: Int {

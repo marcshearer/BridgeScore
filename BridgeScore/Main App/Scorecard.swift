@@ -344,6 +344,8 @@ class Scorecard {
             }
         }
         
+        removeBoardSummaries(scorecard: scorecard)
+        
         clear()
     }
     
@@ -374,6 +376,17 @@ class Scorecard {
     
     public func removeDoubleDummy(board: Int) {
         
+    }
+    
+    public func removeBoardSummaries(scorecard: ScorecardViewModel) {
+        let scorecardFilter = NSPredicate(format: "scorecardId = %@", scorecard.scorecardId as NSUUID)
+        let boardSummaryMOs = CoreData.fetch(from: BoardSummaryMO.tableName, filter: scorecardFilter) as! [BoardSummaryMO]
+
+        CoreData.update {
+            for boardSummaryMO in boardSummaryMOs {
+                CoreData.context.delete(boardSummaryMO)
+            }
+        }
     }
     
     public func addNew() {
@@ -412,6 +425,7 @@ class Scorecard {
                 board.save()
             }
         }
+        removeBoardSummaries(scorecard: scorecard!)
     }
     
     

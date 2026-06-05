@@ -284,6 +284,8 @@
 		B23ADBED27B1CC68001B6B38 /* Notes.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Notes.txt; sourceTree = "<group>"; };
 		B23ADBF127B25356001B6B38 /* List Tile View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "List Tile View.swift"; sourceTree = "<group>"; };
 		B23ADBF327B28D68001B6B38 /* Local Authentication.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Local Authentication.swift"; sourceTree = "<group>"; };
+		B23DCA0B2FD2D80A00E92FB4 /* BridgeScore Version 2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "BridgeScore Version 2.xcdatamodel"; sourceTree = "<group>"; };
+		B23DCA0C2FD2DC1D00E92FB4 /* BridgeScore Version 3.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "BridgeScore Version 3.xcdatamodel"; sourceTree = "<group>"; };
 		B23F362B2FB04AA6009C2AA9 /* Insights Storage View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Insights Storage View.swift"; sourceTree = "<group>"; };
 		B23F362D2FB0DAF7009C2AA9 /* Insights Calculated View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Insights Calculated View.swift"; sourceTree = "<group>"; };
 		B23F362F2FB0DB3D009C2AA9 /* Insights Sort Level View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Insights Sort Level View.swift"; sourceTree = "<group>"; };
@@ -1477,9 +1479,11 @@
 		B26BCE70279B188600B73501 /* BridgeScore.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
+				B23DCA0C2FD2DC1D00E92FB4 /* BridgeScore Version 3.xcdatamodel */,
+				B23DCA0B2FD2D80A00E92FB4 /* BridgeScore Version 2.xcdatamodel */,
 				B26BCE71279B188600B73501 /* BridgeScore.xcdatamodel */,
 			);
-			currentVersion = B26BCE71279B188600B73501 /* BridgeScore.xcdatamodel */;
+			currentVersion = B23DCA0C2FD2DC1D00E92FB4 /* BridgeScore Version 3.xcdatamodel */;
 			path = BridgeScore.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;

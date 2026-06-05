@@ -264,32 +264,30 @@ struct InsightsSortLevelView : View {
                         }
                         Spacer()
                     }
-
                     .frame(width: 250, height: 40)
                     .palette(.alternate)
                     .cornerRadius(8)
                     .dropDestination(for: InsightsSetupTransfer.self) { droppedColumns, _ in
                         return onDropReceived(dropped: droppedColumns)
                     }
-                    Spacer()
-                }
-                Spacer().frame(height: 20)
-                HStack {
-                    Spacer().frame(width: 40)
+                    Spacer().frame(width: 50)
                     HStack {
-                        Text("Sort Direction:")
+                        Spacer().frame(width: 40)
+                        HStack {
+                            Text("Sort Direction:")
+                            Spacer()
+                        }
+                        .frame(width: 200)
+                        Picker("Sort Direction", selection: $editSortLevel.direction) {
+                            ForEach(SortDirection.allCases, id: \.self) { align in
+                                Text(align.string)
+                                    .tag(align)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(width: 240)
                         Spacer()
                     }
-                    .frame(width: 200)
-                    Picker("Sort Direction", selection: $editSortLevel.direction) {
-                        ForEach(SortDirection.allCases, id: \.self) { align in
-                            Text(align.string)
-                                .tag(align)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-                    .frame(width: 240)
-                    Spacer()
                 }
                 Spacer().frame(height: 20)
                 HStack {
@@ -299,38 +297,40 @@ struct InsightsSortLevelView : View {
                         Spacer()
                     }
                     .frame(width: 200)
-                    Middle {
-                        InputToggle(field: $editSortLevel.subtotal, disabled: Binding.constant(false), topSpace: 10, width: 80, inlineTitle: false) { newValue in
-                            if !editSortLevel.subtotal {
-                                editSortLevel.selectionLogic = []
-                            }
-                            report.objectWillChange.send()
-                        }
-                        .frame(width: 40)
-                    }
-                    .frame(height: 30)
-                    Spacer()
-                }
-                Spacer().frame(height: 20)
-                HStack {
-                    Spacer().frame(width: 40)
                     HStack {
-                        Text("Default state:")
+                        Middle {
+                            InputToggle(field: $editSortLevel.subtotal, disabled: Binding.constant(false), topSpace: 10, width: 80, inlineTitle: false) { newValue in
+                                if !editSortLevel.subtotal {
+                                    editSortLevel.selectionLogic = []
+                                }
+                                report.objectWillChange.send()
+                            }
+                            .frame(width: 40)
+                        }
                         Spacer()
                     }
-                    .frame(width: 200)
-                    Picker("Default state", selection: $editSortLevel.defaultState) {
-                        ForEach(SortDataState.allCases, id: \.self) { state in
-                            Text(state.string)
-                                .tag(state)
+                    .frame(width: 250, height: 30)
+                    Spacer().frame(width: 50)
+                    HStack {
+                        Spacer().frame(width: 40)
+                        HStack {
+                            Text("Default state:")
+                            Spacer()
                         }
+                        .frame(width: 200)
+                        Picker("Default state", selection: $editSortLevel.defaultState) {
+                            ForEach(SortDataState.allCases, id: \.self) { state in
+                                Text(state.string)
+                                    .tag(state)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        .frame(width: 240)
+                        Spacer()
                     }
-                    .pickerStyle(.segmented)
-                    .frame(width: 240)
-                    Spacer()
                 }
-                Spacer().frame(height: 20)
             }
+            Spacer().frame(height: 20)
             HStack {
                 Spacer().frame(width: 40)
                 HStack {

@@ -24,6 +24,7 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
     @Published public var responsible: Responsible = .unknown
     @Published public var hand: String = ""
     @Published public var optimumScore: OptimumScore?
+    @Published public var dateUpdated: Date?
     @Published public var doubleDummy: [Seat:[Suit:DoubleDummyViewModel]] = [:]
     @Published public var override: [Pair:[Suit:OverrideViewModel]] = [:]
     
@@ -174,6 +175,7 @@ public class BoardViewModel : NSObject, ObservableObject, Identifiable {
             self.responsible = mo.responsible
             self.hand = mo.hand
             self.optimumScore = mo.optimumScore
+            self.dateUpdated = mo.dateUpdated
             self.doubleDummy = [:]
             for (declarer, suitDictionary) in doubleDummyMO {
                 for (suit, mo) in suitDictionary {

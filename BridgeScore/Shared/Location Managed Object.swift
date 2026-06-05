@@ -18,6 +18,7 @@ public class LocationMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var name: String
     @NSManaged public var short: String
     @NSManaged public var bridgewebsId: String
+    @NSManaged public var level16: Int16
     @NSManaged public var retired: Bool
 
     convenience init() {
@@ -30,9 +31,15 @@ public class LocationMO: NSManagedObject, ManagedObject, Identifiable {
         set { self.sequence16 = Int16(newValue)}
     }
     
+    public var level : LocationLevel {
+        get { LocationLevel(rawValue: Int(level16)) ?? .club }
+        set { level16 = Int16(newValue.rawValue) }
+    }
+    
     public override var description: String {
         "Location: \(self.name)"
     }
+    
     public override var debugDescription: String { self.description }
 
 }

@@ -961,7 +961,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                             board.doubleDummy[declarer] = [:]
                             for suit in [Suit.clubs, . diamonds, .hearts, .spades, .noTrumps] {
                                 let made = Int(elements[index])
-                                board.doubleDummy[declarer]![suit] = (made == 1 ? nil : made)
+                                board.doubleDummy[declarer]![suit] = (made == 0 ? nil : made)
                                 index += 1
                             }
                         }

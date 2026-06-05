@@ -30,7 +30,7 @@ public class BoardSummaryViewModel : NSObject, ObservableObject, Identifiable {
     @Published public var slamOdds: Int = 0
     @Published public var compContract = Contract()
     @Published public var compDeclarer: PairType = .we
-    @Published public var compDdMade: Int? = nil
+    @Published public var compDdTricks: Int? = nil
     @Published public var compDdScore: Int = 0
     @Published public var compMakeScore: Int = 0
     @Published public var compMakeOdds: Int = 0
@@ -89,7 +89,7 @@ public class BoardSummaryViewModel : NSObject, ObservableObject, Identifiable {
                 self.slamOdds != mo.slamOdds ||
                 self.compContract != Contract(level: mo.compContractLevel, suit: mo.compContractSuit, double: mo.compContractDouble) ||
                 self.compDeclarer != mo.compDeclarer ||
-                self.compDdMade != (mo.compDdMadeEntered ? mo.compDdMade : nil) ||
+                self.compDdTricks != (mo.compDdTricksEntered ? mo.compDdTricks : nil) ||
                 self.compDdScore != mo.compDdScore ||
                 self.compMakeScore != mo.compMakeScore ||
                 self.compMakeOdds != mo.compMakeOdds ||
@@ -150,7 +150,7 @@ public class BoardSummaryViewModel : NSObject, ObservableObject, Identifiable {
             self.slamOdds = mo.slamOdds
             self.compContract = Contract(level: mo.compContractLevel, suit: mo.compContractSuit, double: mo.compContractDouble)
             self.compDeclarer = mo.compDeclarer
-            self.compDdMade = (mo.compDdMadeEntered ? mo.compDdMade : nil)
+            self.compDdTricks = (mo.compDdTricksEntered ? mo.compDdTricks : nil)
             self.compDdScore = mo.compDdScore
             self.compMakeScore = mo.compMakeScore
             self.compMakeOdds = mo.compMakeOdds
@@ -206,7 +206,7 @@ public class BoardSummaryViewModel : NSObject, ObservableObject, Identifiable {
             mo.compContractSuit = compContract.suit
             mo.compContractDouble = compContract.double
             mo.compDeclarer = compDeclarer
-            mo.compDdMade = compDdMade
+            mo.compDdTricks = compDdTricks
             mo.compDdScore = compDdScore
             mo.compMakeScore = compMakeScore
             mo.compMakeOdds = compMakeOdds

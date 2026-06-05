@@ -17,6 +17,7 @@ public class LocationViewModel : ObservableObject, Identifiable, Equatable, Cust
     @Published public var name: String
     @Published public var short: String
     @Published public var bridgeWebsId: String
+    @Published public var level: LocationLevel
     @Published public var retired: Bool
     
     // Linked managed objects - should only be referenced in this and the Data classes
@@ -45,6 +46,7 @@ public class LocationViewModel : ObservableObject, Identifiable, Equatable, Cust
                 self.name != mo.name ||
                 self.short != mo.short ||
                 self.bridgeWebsId != mo.bridgewebsId ||
+                self.level != mo.level ||
                 self.retired != mo.retired {
                     result = true
             }
@@ -60,6 +62,7 @@ public class LocationViewModel : ObservableObject, Identifiable, Equatable, Cust
         self.name = ""
         self.short = ""
         self.bridgeWebsId = ""
+        self.level = .club
         self.retired = false
         self.setupMappings()
     }
@@ -96,6 +99,7 @@ public class LocationViewModel : ObservableObject, Identifiable, Equatable, Cust
             self.name = mo.name
             self.short = mo.short
             self.bridgeWebsId = mo.bridgewebsId
+            self.level = mo.level
             self.retired = mo.retired
         }
     }
@@ -106,6 +110,7 @@ public class LocationViewModel : ObservableObject, Identifiable, Equatable, Cust
         self.name = from.name
         self.short = from.short
         self.bridgeWebsId = from.bridgeWebsId
+        self.level = from.level
         self.retired = from.retired
         self.locationMO = from.locationMO
     }
@@ -116,6 +121,7 @@ public class LocationViewModel : ObservableObject, Identifiable, Equatable, Cust
         self.locationMO!.name = self.name
         self.locationMO!.short = self.short
         self.locationMO!.bridgewebsId = self.bridgeWebsId
+        self.locationMO!.level = self.level
         self.locationMO!.retired = self.retired
     }
 

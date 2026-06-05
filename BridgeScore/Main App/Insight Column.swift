@@ -37,6 +37,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     case age
     case vulnerability
     case eventType
+    case eventLevel
     case boardScoreType
     case contract
     case contractLevel
@@ -45,6 +46,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     case contractRedouble
     case contractMade
     case made
+    case tricks
     case declarer
     case declarerPair
     case score
@@ -52,8 +54,9 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     case gameOdds
     case slamOdds
     case compContract
+    case compContractLevel
     case compDeclarer
-    case compDdMade
+    case compDdTricks
     case compDdScore
     case compMakeScore
     case compMakeOdds
@@ -93,10 +96,12 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         .sessionNumber,
         .contract,
         .made,
+        .tricks,
         .contractLevel,
         .contractSuit,
         .contractDouble,
         .contractRedouble,
+        .compContractLevel,
         .age,
         .passout,
         .partScore(pairType: .we),
@@ -120,6 +125,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
      .boardNumber,
      .vulnerability,
      .eventType,
+     .eventLevel,
      .boardScoreType,
      .contract,
      .contractLevel,
@@ -127,6 +133,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
      .contractDouble,
      .contractRedouble,
      .made,
+     .tricks,
      .contractMade,
      .declarer,
      .declarerPair,
@@ -164,8 +171,9 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
      .totalTricks,
      .totalTricksDd,
      .compContract,
+     .compContractLevel,
      .compDeclarer,
-     .compDdMade,
+     .compDdTricks,
      .compDdScore,
      .compMakeScore,
      .compMakeOdds]
@@ -212,6 +220,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             "Vul"
         case .eventType:
             "Type"
+        case .eventLevel:
+            "Event Level"
         case .boardScoreType:
             "Score Type"
         case .contract:
@@ -226,6 +236,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             "Contract Redouble"
         case .made:
             "Made"
+        case .tricks:
+            "Tricks Made"
         case .contractMade:
             "Contract / Made"
         case .declarer:
@@ -242,10 +254,12 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             "Slam Odds%"
         case .compContract:
             "Compete Contract"
+        case .compContractLevel:
+            "Compete Contract Level"
         case .compDeclarer:
             "Compete By"
-        case .compDdMade:
-            "Compete DD Made"
+        case .compDdTricks:
+            "Compete DD Tricks"
         case .compDdScore:
             "Compete DD Score"
         case .compMakeScore:
@@ -257,11 +271,11 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         case .declare(let pairType):
             "\(pairType.string) Declare%"
         case .medianTricks(let pairType):
-            "\(pairType.string) Median Made"
+            "\(pairType.string) Median Tricks"
         case .modeTricks(let pairType):
-            "\(pairType.string) Mode Made"
+            "\(pairType.string) Mode Tricks"
         case .ddTricks(let pairType):
-            "\(pairType.string) DD Made"
+            "\(pairType.string) DD Tricks"
         case .fit(let pairType):
             "\(pairType.string) Fit"
         case .points(let seatPlayer):
@@ -324,6 +338,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
                 .string
         case .eventType:
                 .string
+        case .eventLevel:
+                .string
         case .boardScoreType:
                 .string
         case .contract:
@@ -337,6 +353,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         case .contractRedouble:
                 .boolean
         case .made:
+                .numeric
+        case .tricks:
                 .numeric
         case .contractMade:
                 .string
@@ -354,9 +372,11 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
                 .percent
         case .compContract:
                 .string
+        case .compContractLevel:
+                .numeric
         case .compDeclarer:
                 .string
-        case .compDdMade:
+        case .compDdTricks:
                 .numeric
         case .compDdScore:
                 .numeric
@@ -442,7 +462,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         let boardSummary = viewModel as! BoardSummaryViewModel
         let value = try self.insightValue(report: report, boardSummary: boardSummary)
         switch self {
-        case .compDdMade, .compDdScore, .ddTricks,.totalTricksDd:
+        case .compDdTricks, .compDdScore, .ddTricks,.totalTricksDd:
             return CalculatedValue(value.numeric! <= -999 ? 0 : value.numeric!)
         default:
             return value
@@ -503,6 +523,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             return summaryValue(boardSummary.vulnerability.string)
         case .eventType:
             return summaryValue(boardSummary.eventType.string)
+        case .eventLevel:
+            return summaryValue(boardSummary.location!.level.string)
         case .boardScoreType:
             return summaryValue(boardSummary.boardScoreType.brief)
         case .contract:
@@ -523,6 +545,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             return summaryValue(boardSummary.declarer.pairType.string)
         case .made:
             return summaryValue(boardSummary.made ?? 0)
+        case .tricks:
+            return summaryValue((boardSummary.made ?? 0) + boardSummary.contract.level.tricks)
         case .score:
             return summaryValue(boardSummary.score)
         case .fieldSize:
@@ -533,10 +557,12 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             return summaryValue(boardSummary.slamOdds)
         case .compContract:
             return summaryValue(boardSummary.compContract.compact)
+        case .compContractLevel:
+            return summaryValue(boardSummary.compContract.level.number)
         case .compDeclarer:
             return summaryValue(boardSummary.compDeclarer.string)
-        case .compDdMade:
-            return summaryValue(boardSummary.compDdMade ?? 0)
+        case .compDdTricks:
+            return summaryValue(boardSummary.compDdTricks ?? 0)
         case .compDdScore:
             return summaryValue(boardSummary.compDdScore)
         case .compMakeScore:
@@ -662,10 +688,10 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
                 !boardSummary.isCompetitive ? "" : boardSummary.compContract.colorCompact
             case .compDeclarer:
                 AttributedString(!boardSummary.isCompetitive ? "" : text)
-            case .compDdMade:
-                AttributedString(!boardSummary.isCompetitive || (boardSummary.compDdMade ?? -999) <= -999 ? "" : text)
+            case .compDdTricks:
+                AttributedString(!boardSummary.isCompetitive || (boardSummary.compDdTricks ?? -999) <= -999 ? "" : text)
             case .compDdScore:
-                AttributedString(!boardSummary.isCompetitive || (boardSummary.compDdMade ?? -999) <= -999 ? "" : formattedScore(score: boardSummary.compDdScore))
+                AttributedString(!boardSummary.isCompetitive || (boardSummary.compDdTricks ?? -999) <= -999 ? "" : formattedScore(score: boardSummary.compDdScore))
             case .compMakeScore:
                 AttributedString(!boardSummary.isCompetitive ? "" : formattedScore(score: boardSummary.compMakeScore))
             case .compMakeOdds:
@@ -700,11 +726,11 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             180
         case .date:
             130
-        case .location, .suitType, .levelType, .eventType:
+        case .location, .suitType, .levelType, .eventType, .eventLevel:
             120
         case .partner, .contractMade, .boardScoreType, .declarer:
             100
-        case .contract, .compContract, .compDeclarer:
+        case .contract, .compContract, .compDeclarer, .compContractLevel:
             90
         case .calculated(let calculated):
             CGFloat(calculated.width)
@@ -728,7 +754,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         switch self {
         case .eventDesc:
             .left
-        case .boardIndex, .sessionNumber, .boardNumber, .vulnerability, .eventType, .boardScoreType, .contract, .contractMade, .declarer, .made, .compContract, .compDeclarer, .suit, .suitType, .levelType, .partner, .location, .date:
+        case .boardIndex, .sessionNumber, .boardNumber, .vulnerability, .eventType, .eventLevel, .boardScoreType, .contract, .contractMade, .declarer, .made, .compContract, .compDeclarer, .suit, .suitType, .levelType, .partner, .location, .date:
             .center
         case .calculated(let calculated):
             calculated.align
@@ -739,7 +765,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     
     var blankIf: CalculatedBlankIf {
         switch self {
-        case .sessionNumber, .contractLevel, .fieldSize , .gameOdds, .slamOdds, .compDdScore, .compMakeScore, .compMakeOdds, .medianTricks, .modeTricks, .ddTricks, .fit, .points, .totalTricks, .totalTricksDd, .passout, .partScore, .game, .smallSlam, .grandSlam:
+        case .sessionNumber, .contractLevel, .fieldSize , .gameOdds, .slamOdds, .compContractLevel, .compDdScore, .compMakeScore, .compMakeOdds, .medianTricks, .modeTricks, .ddTricks, .fit, .points, .totalTricks, .totalTricksDd, .passout, .partScore, .game, .smallSlam, .grandSlam:
             .zero
         case .calculated(let calculated):
             calculated.blankIf

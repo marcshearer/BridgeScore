@@ -11,7 +11,7 @@
         <attribute name="contractDouble16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="contractLevel16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="contractSuit16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
-        <attribute name="dateUpdated" optional="YES" attributeType="Date" defaultDateTimeInterval="802347240" usesScalarValueType="NO"/>
+        <attribute name="dateUpdated" optional="YES" attributeType="Date" defaultDateTimeInterval="802263600" usesScalarValueType="NO"/>
         <attribute name="dealer16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="declarer16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="hand" optional="YES" attributeType="String"/>
