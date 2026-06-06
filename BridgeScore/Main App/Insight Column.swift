@@ -26,159 +26,342 @@ enum InsightColumnType {
     
 }
 
+class InsightColumnConfig : Codable, Equatable, Hashable, Identifiable, ObservableObject {
+    var title: String = ""
+    var width: Int = 80
+    var align: CalculatedAlignment = .right
+    var blankIf: CalculatedBlankIf = .none
+    var visibility: CalculatedVisibility = .both
+    var totalType: CalculatedTotalType = .average
+    
+    init() {
+    }
+    
+    convenience init(from column: InsightColumn) {
+        self.init()
+        title = column.title
+        width = Int(column.width)
+        align = column.align
+        blankIf = column.blankIf
+        visibility = column.visibility
+        totalType = column.totalType ?? .average
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(title)
+        hasher.combine(width)
+        hasher.combine(align)
+        hasher.combine(blankIf)
+        hasher.combine(visibility)
+        hasher.combine(totalType)
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case title
+        case width
+        case align
+        case blankIf
+        case visibility
+        case totalType
+    }
+    
+    required init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        title = try container.decodeIfPresent(String.self, forKey: .title) ?? ""
+        width = try container.decodeIfPresent(Int.self, forKey: .width) ?? 80
+        align = try container.decodeIfPresent(CalculatedAlignment.self, forKey: .align) ?? .right
+        blankIf = try container.decodeIfPresent(CalculatedBlankIf.self, forKey: .blankIf) ?? .none
+        visibility = try container.decodeIfPresent(CalculatedVisibility.self, forKey: .visibility) ?? .both
+        totalType = try container.decodeIfPresent(CalculatedTotalType.self, forKey: .totalType) ?? .average
+    }
+    
+    func copy(from: InsightColumnConfig) {
+        self.title = from.title
+        self.width = from.width
+        self.align = from.align
+        self.blankIf = from.blankIf
+        self.visibility = from.visibility
+        self.totalType = from.totalType
+    }
+    
+    static func == (lhs: InsightColumnConfig, rhs: InsightColumnConfig) -> Bool {
+        return lhs.title == rhs.title && lhs.align == rhs.align && lhs.width == rhs.width && lhs.blankIf == rhs.blankIf && lhs.visibility == rhs.visibility && lhs.totalType == rhs.totalType
+    }
+}
+
+
+
 enum InsightColumn : Codable, Hashable, Equatable, Transferable {
-    case eventDesc
-    case boardIndex
-    case sessionNumber
-    case boardNumber
-    case partner
-    case location
-    case date
-    case age
-    case vulnerability
-    case eventType
-    case eventLevel
-    case boardScoreType
-    case contract
-    case contractLevel
-    case contractSuit
-    case contractDouble
-    case contractRedouble
-    case contractMade
-    case made
-    case tricks
-    case declarer
-    case declarerPair
-    case score
-    case fieldSize
-    case gameOdds
-    case slamOdds
-    case compContract
-    case compContractLevel
-    case compDeclarer
-    case compDdTricks
-    case compDdScore
-    case compMakeScore
-    case compMakeOdds
-    case suit(pairType: PairType)
-    case declare(pairType: PairType)
-    case medianTricks(pairType: PairType)
-    case modeTricks(pairType: PairType)
-    case ddTricks(pairType: PairType)
-    case fit(pairType: PairType)
-    case points(seatPlayer: SeatPlayer)
-    case suitType
-    case levelType
-    case totalTricks
-    case totalTricksDd
-    case passout
-    case partScore(pairType: PairType)
-    case game(pairType: PairType)
-    case smallSlam(pairType: PairType)
-    case grandSlam(pairType: PairType)
+    case eventDesc(config: InsightColumnConfig? = nil)
+    case boardIndex(config: InsightColumnConfig? = nil)
+    case sessionNumber(config: InsightColumnConfig? = nil)
+    case boardNumber(config: InsightColumnConfig? = nil)
+    case partner(config: InsightColumnConfig? = nil)
+    case location(config: InsightColumnConfig? = nil)
+    case date(config: InsightColumnConfig? = nil)
+    case age(config: InsightColumnConfig? = nil)
+    case vulnerability(config: InsightColumnConfig? = nil)
+    case eventType(config: InsightColumnConfig? = nil)
+    case eventLevel(config: InsightColumnConfig? = nil)
+    case boardScoreType(config: InsightColumnConfig? = nil)
+    case contract(config: InsightColumnConfig? = nil)
+    case contractLevel(config: InsightColumnConfig? = nil)
+    case contractSuit(config: InsightColumnConfig? = nil)
+    case contractDouble(config: InsightColumnConfig? = nil)
+    case contractRedouble(config: InsightColumnConfig? = nil)
+    case contractMade(config: InsightColumnConfig? = nil)
+    case made(config: InsightColumnConfig? = nil)
+    case tricks(config: InsightColumnConfig? = nil)
+    case declarer(config: InsightColumnConfig? = nil)
+    case declarerPair(config: InsightColumnConfig? = nil)
+    case score(config: InsightColumnConfig? = nil)
+    case fieldSize(config: InsightColumnConfig? = nil)
+    case gameOdds(config: InsightColumnConfig? = nil)
+    case slamOdds(config: InsightColumnConfig? = nil)
+    case compContract(config: InsightColumnConfig? = nil)
+    case compContractLevel(config: InsightColumnConfig? = nil)
+    case compDeclarer(config: InsightColumnConfig? = nil)
+    case compDdTricks(config: InsightColumnConfig? = nil)
+    case compDdScore(config: InsightColumnConfig? = nil)
+    case compMakeScore(config: InsightColumnConfig? = nil)
+    case compMakeOdds(config: InsightColumnConfig? = nil)
+    case suit(config: InsightColumnConfig? = nil, pairType: PairType)
+    case declare(config: InsightColumnConfig? = nil, pairType: PairType)
+    case medianTricks(config: InsightColumnConfig? = nil, pairType: PairType)
+    case modeTricks(config: InsightColumnConfig? = nil, pairType: PairType)
+    case ddTricks(config: InsightColumnConfig? = nil, pairType: PairType)
+    case fit(config: InsightColumnConfig? = nil, pairType: PairType)
+    case points(config: InsightColumnConfig? = nil, seatPlayer: SeatPlayer)
+    case suitType(config: InsightColumnConfig? = nil)
+    case levelType(config: InsightColumnConfig? = nil)
+    case totalTricks(config: InsightColumnConfig? = nil)
+    case totalTricksDd(config: InsightColumnConfig? = nil)
+    case passout(config: InsightColumnConfig? = nil)
+    case partScore(config: InsightColumnConfig? = nil, pairType: PairType)
+    case game(config: InsightColumnConfig? = nil, pairType: PairType)
+    case smallSlam(config: InsightColumnConfig? = nil, pairType: PairType)
+    case grandSlam(config: InsightColumnConfig? = nil, pairType: PairType)
     case spacer
     case calculated(column: CalculatedColumn)
     case prompt(prompt: CalculatedPrompt)
+    
+    var config: InsightColumnConfig? {
+        let mirror = Mirror(reflecting: self)
+        guard let configValue = mirror.children.first?.value else { return nil }
+        if let directConfig = configValue as? InsightColumnConfig {
+            return directConfig
+        }
+        let tupleMirror = Mirror(reflecting: configValue)
+        if let tupleValue = tupleMirror.children.first?.value {
+            return tupleValue as? InsightColumnConfig
+        }
+        return nil
+    }
     
     static var transferRepresentation: some TransferRepresentation {
         CodableRepresentation(contentType: .data)
     }
     
     static let defaultPinnedColumns: [InsightColumn] =
-    [.eventDesc,
-     .location,
-     .partner,
-     .date,
-     .boardNumber]
+    [.eventDesc(config: nil),
+     .location(config: nil),
+     .partner(config: nil),
+     .date(config: nil),
+     .boardNumber(config: nil)]
     
     static let defaultExcludeColumns: [InsightColumn] = [
-        .boardIndex,
-        .sessionNumber,
-        .contract,
-        .made,
-        .tricks,
-        .contractLevel,
-        .contractSuit,
-        .contractDouble,
-        .contractRedouble,
-        .compContractLevel,
-        .age,
-        .passout,
-        .partScore(pairType: .we),
-        .game(pairType: .we),
-        .smallSlam(pairType: .we),
-        .grandSlam(pairType: .we),
-        .passout,
-        .partScore(pairType: .they),
-        .game(pairType: .they),
-        .smallSlam(pairType: .they),
-        .grandSlam(pairType: .they)
+        .boardIndex(config: nil),
+        .sessionNumber(config: nil),
+        .contract(config: nil),
+        .made(config: nil),
+        .tricks(config: nil),
+        .contractLevel(config: nil),
+        .contractSuit(config: nil),
+        .contractDouble(config: nil),
+        .contractRedouble(config: nil),
+        .compContractLevel(config: nil),
+        .age(config: nil),
+        .passout(config: nil),
+        .partScore(config: nil, pairType: .we),
+        .game(config: nil, pairType: .we),
+        .smallSlam(config: nil, pairType: .we),
+        .grandSlam(config: nil, pairType: .we),
+        .passout(config: nil),
+        .partScore(config: nil, pairType: .they),
+        .game(config: nil, pairType: .they),
+        .smallSlam(config: nil, pairType: .they),
+        .grandSlam(config: nil, pairType: .they)
     ]
     
     static let allColumns: [InsightColumn] =
-    [.eventDesc,
-     .location,
-     .partner,
-     .date,
-     .age,
-     .sessionNumber,
-     .boardNumber,
-     .vulnerability,
-     .eventType,
-     .eventLevel,
-     .boardScoreType,
-     .contract,
-     .contractLevel,
-     .contractSuit,
-     .contractDouble,
-     .contractRedouble,
-     .made,
-     .tricks,
-     .contractMade,
-     .declarer,
-     .declarerPair,
-     .score,
-     .fieldSize,
-     .gameOdds,
-     .slamOdds,
+    [.eventDesc(config: nil),
+     .location(config: nil),
+     .partner(config: nil),
+     .date(config: nil),
+     .age(config: nil),
+     .sessionNumber(config: nil),
+     .boardNumber(config: nil),
+     .vulnerability(config: nil),
+     .eventType(config: nil),
+     .eventLevel(config: nil),
+     .boardScoreType(config: nil),
+     .contract(config: nil),
+     .contractLevel(config: nil),
+     .contractSuit(config: nil),
+     .contractDouble(config: nil),
+     .contractRedouble(config: nil),
+     .made(config: nil),
+     .tricks(config: nil),
+     .contractMade(config: nil),
+     .declarer(config: nil),
+     .declarerPair(config: nil),
+     .score(config: nil),
+     .fieldSize(config: nil),
+     .gameOdds(config: nil),
+     .slamOdds(config: nil),
      .suit(pairType: .we),
      .declare(pairType: .we),
      .medianTricks(pairType: .we),
      .modeTricks(pairType: .we),
      .ddTricks(pairType: .we),
-     .fit(pairType: .we),
-     .suit(pairType: .they),
-     .declare(pairType: .they),
-     .medianTricks(pairType: .they),
-     .modeTricks(pairType: .they),
-     .ddTricks(pairType: .they),
-     .fit(pairType: .they),
-     .passout,
-     .partScore(pairType: .we),
-     .game(pairType: .we),
-     .smallSlam(pairType: .we),
-     .grandSlam(pairType: .we),
-     .partScore(pairType: .they),
-     .game(pairType: .they),
-     .smallSlam(pairType: .they),
-     .grandSlam(pairType: .they),
-     .points(seatPlayer: .player),
-     .points(seatPlayer: .partner),
-     .points(seatPlayer: .lhOpponent),
-     .points(seatPlayer: .rhOpponent),
-     .suitType,
-     .levelType,
-     .totalTricks,
-     .totalTricksDd,
-     .compContract,
-     .compContractLevel,
-     .compDeclarer,
-     .compDdTricks,
-     .compDdScore,
-     .compMakeScore,
-     .compMakeOdds]
+     .fit(config: nil, pairType: .we),
+     .suit(config: nil, pairType: .they),
+     .declare(config: nil, pairType: .they),
+     .medianTricks(config: nil, pairType: .they),
+     .modeTricks(config: nil, pairType: .they),
+     .ddTricks(config: nil, pairType: .they),
+     .fit(config: nil, pairType: .they),
+     .passout(config: nil),
+     .partScore(config: nil, pairType: .we),
+     .game(config: nil, pairType: .we),
+     .smallSlam(config: nil, pairType: .we),
+     .grandSlam(config: nil, pairType: .we),
+     .partScore(config: nil, pairType: .they),
+     .game(config: nil, pairType: .they),
+     .smallSlam(config: nil, pairType: .they),
+     .grandSlam(config: nil, pairType: .they),
+     .points(config: nil, seatPlayer: .player),
+     .points(config: nil, seatPlayer: .partner),
+     .points(config: nil, seatPlayer: .lhOpponent),
+     .points(config: nil, seatPlayer: .rhOpponent),
+     .suitType(config: nil),
+     .levelType(config: nil),
+     .totalTricks(config: nil),
+     .totalTricksDd(config: nil),
+     .compContract(config: nil),
+     .compContractLevel(config: nil),
+     .compDeclarer(config: nil),
+     .compDdTricks(config: nil),
+     .compDdScore(config: nil),
+     .compMakeScore(config: nil),
+     .compMakeOdds(config: nil)]
     
     static let defaultColumns = InsightColumn.allColumns.filter{!defaultPinnedColumns.contains($0) && !defaultExcludeColumns.contains($0)}
+    
+    static func updateConfig(column: InsightColumn, config: InsightColumnConfig?) -> InsightColumn {
+        switch column {
+        case eventDesc:
+                .eventDesc(config: config)
+        case boardIndex:
+                .boardIndex(config: config)
+        case sessionNumber:
+                .sessionNumber(config: config)
+        case boardNumber:
+                .boardNumber(config: config)
+        case partner:
+                .partner(config: config)
+        case location:
+                .location(config: config)
+        case date:
+                .date(config: config)
+        case age:
+                .age(config: config)
+        case vulnerability:
+                .vulnerability(config: config)
+        case eventType:
+                .eventType(config: config)
+        case eventLevel:
+                .eventLevel(config: config)
+        case boardScoreType:
+                .boardScoreType(config: config)
+        case contract:
+                .contract(config: config)
+        case contractLevel:
+                .contractLevel(config: config)
+        case contractSuit:
+                .contractSuit(config: config)
+        case contractDouble:
+                .contractDouble(config: config)
+        case contractRedouble:
+                .contractRedouble(config: config)
+        case contractMade:
+                .contractMade(config: config)
+        case made:
+                .made(config: config)
+        case tricks:
+                .tricks(config: config)
+        case declarer:
+                .declarer(config: config)
+        case declarerPair:
+                .declarerPair(config: config)
+        case score:
+                .score(config: config)
+        case fieldSize:
+                .fieldSize(config: config)
+        case gameOdds:
+                .gameOdds(config: config)
+        case slamOdds:
+                .slamOdds(config: config)
+        case compContract:
+                .compContract(config: config)
+        case compContractLevel:
+                .compContractLevel(config: config)
+        case compDeclarer:
+                .compDeclarer(config: config)
+        case compDdTricks:
+                .compDdTricks(config: config)
+        case compDdScore:
+                .compDdScore(config: config)
+        case compMakeScore:
+                .compMakeScore(config: config)
+        case compMakeOdds:
+                .compMakeOdds(config: config)
+        case suit(_, let pairType):
+                .suit(config: config, pairType: pairType)
+        case declare(_, let pairType):
+                .declare(config: config, pairType: pairType)
+        case medianTricks(_, let pairType):
+                .medianTricks(config: config, pairType: pairType)
+        case modeTricks(_, let pairType):
+                .modeTricks(config: config, pairType: pairType)
+        case ddTricks(_, let pairType):
+                .ddTricks(config: config, pairType: pairType)
+        case fit(_, let pairType):
+                .fit(config: config, pairType: pairType)
+        case points(_, let seatPlayer):
+                .points(config: config, seatPlayer: seatPlayer)
+        case suitType:
+                .suitType(config: config)
+        case levelType:
+                .levelType(config: config)
+        case totalTricks:
+                .totalTricks(config: config)
+        case totalTricksDd:
+                .totalTricksDd(config: config)
+        case passout:
+                .passout(config: config)
+        case partScore(_, let pairType):
+                .partScore(config: config, pairType: pairType)
+        case game(_, let pairType):
+                .game(config: config, pairType: pairType)
+        case smallSlam(_, let pairType):
+                .smallSlam(config: config, pairType: pairType)
+        case grandSlam(_, let pairType):
+                .grandSlam(config: config, pairType: pairType)
+        default:
+            column
+        }
+    }
     
     var name: String {
         var result = "\(self)"
@@ -186,9 +369,9 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             result = start
         }
         switch self {
-        case .suit(let pairType), .declare(let pairType), .medianTricks(let pairType), .modeTricks(let pairType), .ddTricks(let pairType), .fit(let pairType), .partScore(let pairType), .game(let pairType), .smallSlam(let pairType), .grandSlam(let pairType):
+        case .suit(_, let pairType), .declare(_, let pairType), .medianTricks(_, let pairType), .modeTricks(_, let pairType), .ddTricks(_, let pairType), .fit(_, let pairType), .partScore(_, let pairType), .game(_, let pairType), .smallSlam(_, let pairType), .grandSlam(_, let pairType):
             result += pairType.string
-        case .points(let seatPlayer):
+        case .points(_, let seatPlayer):
             result += seatPlayer.suffix
         case .calculated(let calculated):
             result = "calc.\(calculated.name)"
@@ -201,109 +384,113 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     }
     
     var title: String {
-        switch self {
-        case .eventDesc:
-            "Event Description"
-        case .sessionNumber:
-            "Session"
-        case .boardIndex, .boardNumber:
-            "Board"
-        case .location:
-            "Location"
-        case .partner:
-            "Partner"
-        case .date:
-            "Date"
-        case .age:
-            "Age"
-        case .vulnerability:
-            "Vul"
-        case .eventType:
-            "Type"
-        case .eventLevel:
-            "Event Level"
-        case .boardScoreType:
-            "Score Type"
-        case .contract:
-            "Contract"
-        case .contractLevel:
-            "Contract Level"
-        case .contractSuit:
-            "Contract Suit"
-        case .contractDouble:
-            "Contract Double"
-        case .contractRedouble:
-            "Contract Redouble"
-        case .made:
-            "Made"
-        case .tricks:
-            "Tricks Made"
-        case .contractMade:
-            "Contract / Made"
-        case .declarer:
-            "By"
-        case .declarerPair:
-            "By Pair"
-        case .score:
-            "Score"
-        case .fieldSize:
-            "Field Size"
-        case .gameOdds:
-            "Game Odds%"
-        case .slamOdds:
-            "Slam Odds%"
-        case .compContract:
-            "Compete Contract"
-        case .compContractLevel:
-            "Compete Contract Level"
-        case .compDeclarer:
-            "Compete By"
-        case .compDdTricks:
-            "Compete DD Tricks"
-        case .compDdScore:
-            "Compete DD Score"
-        case .compMakeScore:
-            "Compete Make Score"
-        case .compMakeOdds:
-            "Compete Make Odds"
-        case .suit(let pairType):
-            "\(pairType.string) Suit"
-        case .declare(let pairType):
-            "\(pairType.string) Declare%"
-        case .medianTricks(let pairType):
-            "\(pairType.string) Median Tricks"
-        case .modeTricks(let pairType):
-            "\(pairType.string) Mode Tricks"
-        case .ddTricks(let pairType):
-            "\(pairType.string) DD Tricks"
-        case .fit(let pairType):
-            "\(pairType.string) Fit"
-        case .points(let seatPlayer):
-            "\(seatPlayer.string) Points"
-        case .suitType:
-            "Suit Type"
-        case .levelType:
-            "Level Type"
-        case .totalTricks:
-            "Total Tricks"
-        case .totalTricksDd:
-            "Total Tricks DD"
-        case .passout:
-            "Passout"
-        case .partScore(let seatPlayer):
-            "\(seatPlayer.string) Part Score"
-        case .game(let seatPlayer):
-            "\(seatPlayer.string) Game"
-        case .smallSlam(let seatPlayer):
-            "\(seatPlayer.string) Small Slam"
-        case .grandSlam(let seatPlayer):
-            "\(seatPlayer.string) Grand Slam"
-        case .spacer:
-            ""
-        case .calculated(let column):
-            column.title
-        case .prompt(let prompt):
-            prompt.promptText
+        if let config = self.config {
+            config.title
+        } else {
+            switch self {
+            case .eventDesc:
+                "Event Description"
+            case .sessionNumber:
+                "Session"
+            case .boardIndex, .boardNumber:
+                "Board"
+            case .location:
+                "Location"
+            case .partner:
+                "Partner"
+            case .date:
+                "Date"
+            case .age:
+                "Age"
+            case .vulnerability:
+                "Vul"
+            case .eventType:
+                "Type"
+            case .eventLevel:
+                "Event Level"
+            case .boardScoreType:
+                "Score Type"
+            case .contract:
+                "Contract"
+            case .contractLevel:
+                "Contract Level"
+            case .contractSuit:
+                "Contract Suit"
+            case .contractDouble:
+                "Contract Double"
+            case .contractRedouble:
+                "Contract Redouble"
+            case .made:
+                "Made"
+            case .tricks:
+                "Tricks Made"
+            case .contractMade:
+                "Contract / Made"
+            case .declarer:
+                "By"
+            case .declarerPair:
+                "By Pair"
+            case .score:
+                "Score"
+            case .fieldSize:
+                "Field Size"
+            case .gameOdds:
+                "Game Odds%"
+            case .slamOdds:
+                "Slam Odds%"
+            case .compContract:
+                "Compete Contract"
+            case .compContractLevel:
+                "Compete Contract Level"
+            case .compDeclarer:
+                "Compete By"
+            case .compDdTricks:
+                "Compete DD Tricks"
+            case .compDdScore:
+                "Compete DD Score"
+            case .compMakeScore:
+                "Compete Make Score"
+            case .compMakeOdds:
+                "Compete Make Odds"
+            case .suit(_, let pairType):
+                "\(pairType.string) Suit"
+            case .declare(_, let pairType):
+                "\(pairType.string) Declare%"
+            case .medianTricks(_, let pairType):
+                "\(pairType.string) Median Tricks"
+            case .modeTricks(_, let pairType):
+                "\(pairType.string) Mode Tricks"
+            case .ddTricks(_, let pairType):
+                "\(pairType.string) DD Tricks"
+            case .fit(_, let pairType):
+                "\(pairType.string) Fit"
+            case .points(_, let seatPlayer):
+                "\(seatPlayer.string) Points"
+            case .suitType:
+                "Suit Type"
+            case .levelType:
+                "Level Type"
+            case .totalTricks:
+                "Total Tricks"
+            case .totalTricksDd:
+                "Total Tricks DD"
+            case .passout:
+                "Passout"
+            case .partScore(_, let seatPlayer):
+                "\(seatPlayer.string) Part Score"
+            case .game(_, let seatPlayer):
+                "\(seatPlayer.string) Game"
+            case .smallSlam(_, let seatPlayer):
+                "\(seatPlayer.string) Small Slam"
+            case .grandSlam(_, let seatPlayer):
+                "\(seatPlayer.string) Grand Slam"
+            case .spacer:
+                ""
+            case .calculated(let column):
+                column.title
+            case .prompt(let prompt):
+                prompt.promptText
+            }
         }
     }
     
@@ -418,35 +605,43 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     }
     
     var visibility: CalculatedVisibility {
-        switch self {
-        case .boardIndex, .boardNumber, .sessionNumber:
-            .boardOnly
-        case .calculated(let calculated):
-            calculated.visibility
-        default:
-            switch type {
-            case .numeric:
-                    .both
-            case .boolean:
-                    .both
-            case .string:
+        if let config = self.config {
+            config.visibility
+        } else {
+            switch self {
+            case .boardIndex, .boardNumber, .sessionNumber:
                     .boardOnly
+            case .calculated(let calculated):
+                calculated.visibility
+            default:
+                switch type {
+                case .numeric:
+                        .both
+                case .boolean:
+                        .both
+                case .string:
+                        .boardOnly
+                }
             }
         }
     }
     
     var totalType: CalculatedTotalType? {
-        switch self {
-        case .contractDouble:
-            .total
-        case .contractRedouble:
-            .total
-        case .made:
-            .total
-        case .calculated(let calculated):
-            calculated.totalType
-        default:
-            .average
+        if let config = self.config {
+            config.totalType
+        } else {
+            switch self {
+            case .contractDouble:
+                    .total
+            case .contractRedouble:
+                    .total
+            case .made:
+                    .total
+            case .calculated(let calculated):
+                calculated.totalType
+            default:
+                    .average
+            }
         }
     }
     
@@ -569,19 +764,19 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             return summaryValue(boardSummary.compMakeScore)
         case .compMakeOdds:
             return summaryValue(boardSummary.compMakeOdds)
-        case .suit(let pairType):
+        case .suit(_, let pairType):
             return summaryValue(boardSummary.suit[pairType]!.string)
-        case .declare(let pairType):
+        case .declare(_, let pairType):
             return summaryValue(boardSummary.declare[pairType]!)
-        case .medianTricks(let pairType):
+        case .medianTricks(_, let pairType):
             return summaryValue(boardSummary.medianTricks[pairType]!)
-        case .modeTricks(let pairType):
+        case .modeTricks(_, let pairType):
             return summaryValue(boardSummary.modeTricks[pairType]!)
-        case .ddTricks(let pairType):
+        case .ddTricks(_, let pairType):
             return summaryValue(boardSummary.ddTricks[pairType]!)
-        case .fit(let pairType):
+        case .fit(_, let pairType):
             return summaryValue(boardSummary.fit[pairType]!)
-        case .points(let seatPlayer):
+        case .points(_, let seatPlayer):
             return summaryValue(boardSummary.points[seatPlayer]!)
         case .suitType:
             return summaryValue(boardSummary.contract.suitType.string)
@@ -593,13 +788,13 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             return summaryValue(boardSummary.ddTricks[.we]! <= -999 || boardSummary.ddTricks[.they]! <= -999 ? 0 : boardSummary.totalTricksDd)
         case .passout:
             return summaryValue(boardSummary.passout)
-        case .partScore(let pairType):
+        case .partScore(_, let pairType):
             return summaryValue(boardSummary.partScore[pairType]!)
-        case .game(let pairType):
+        case .game(_, let pairType):
             return summaryValue(boardSummary.game[pairType]!)
-        case .smallSlam(let pairType):
+        case .smallSlam(_, let pairType):
             return summaryValue(boardSummary.smallSlam[pairType]!)
-        case .grandSlam(let pairType):
+        case .grandSlam(_, let pairType):
             return summaryValue(boardSummary.grandSlam[pairType]!)
         case .spacer:
             return CalculatedValue("")
@@ -696,15 +891,15 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
                 AttributedString(!boardSummary.isCompetitive ? "" : formattedScore(score: boardSummary.compMakeScore))
             case .compMakeOdds:
                 AttributedString(!boardSummary.isCompetitive ? "" : text)
-            case .suit(let pairType):
+            case .suit(_, let pairType):
                 boardSummary.suit[pairType]!.colorString
-            case .medianTricks(let pairType):
+            case .medianTricks(_, let pairType):
                 AttributedString(boardSummary.suit[pairType]! == .blank ? "" : text)
-            case .modeTricks(let pairType):
+            case .modeTricks(_, let pairType):
                 AttributedString(boardSummary.suit[pairType]! == .blank ? "" : text)
-            case .ddTricks(let pairType):
+            case .ddTricks(_, let pairType):
                 AttributedString(boardSummary.ddTricks[pairType]! <= -999 ? "" : boardSummary.suit[pairType]! == .blank ? "" : text)
-            case .fit(let pairType):
+            case .fit(_, let pairType):
                 AttributedString(boardSummary.suit[pairType]! == .blank ? "" : text)
             case .totalTricksDd:
                 AttributedString(boardSummary.ddTricks[.we]! <= -999 || boardSummary.ddTricks[.they]! <= -999 ? "" : text)
@@ -721,23 +916,27 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     }
     
     var width: CGFloat {
-        switch self {
-        case .eventDesc:
-            180
-        case .date:
-            130
-        case .location, .suitType, .levelType, .eventType, .eventLevel:
-            120
-        case .partner, .contractMade, .boardScoreType, .declarer:
-            100
-        case .contract, .compContract, .compDeclarer, .compContractLevel:
-            90
-        case .calculated(let calculated):
-            CGFloat(calculated.width)
-        case .spacer:
-            0
-        default:
-            80
+        if let config = self.config {
+            CGFloat(config.width)
+        } else {
+            switch self {
+            case .eventDesc:
+                180
+            case .date:
+                130
+            case .location, .suitType, .levelType, .eventType, .eventLevel:
+                120
+            case .partner, .contractMade, .boardScoreType, .declarer:
+                100
+            case .contract, .compContract, .compDeclarer, .compContractLevel:
+                90
+            case .calculated(let calculated):
+                CGFloat(calculated.width)
+            case .spacer:
+                0
+            default:
+                80
+            }
         }
     }
     
@@ -751,15 +950,19 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     }
     
     var align: CalculatedAlignment {
-        switch self {
-        case .eventDesc:
-            .left
-        case .boardIndex, .sessionNumber, .boardNumber, .vulnerability, .eventType, .eventLevel, .boardScoreType, .contract, .contractMade, .declarer, .made, .compContract, .compDeclarer, .suit, .suitType, .levelType, .partner, .location, .date:
-            .center
-        case .calculated(let calculated):
-            calculated.align
-        default:
-            .right
+        if let config = self.config {
+            config.align
+        } else {
+            switch self {
+            case .eventDesc:
+                    .left
+            case .boardIndex, .sessionNumber, .boardNumber, .vulnerability, .eventType, .eventLevel, .boardScoreType, .contract, .contractMade, .declarer, .made, .compContract, .compDeclarer, .suit, .suitType, .levelType, .partner, .location, .date:
+                    .center
+            case .calculated(let calculated):
+                calculated.align
+            default:
+                    .right
+            }
         }
     }
     

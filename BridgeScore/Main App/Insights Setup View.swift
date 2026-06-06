@@ -56,10 +56,10 @@ struct InsightsSetupView : View {
         .onTapGesture { }
     }
     
-    static func checkAndRemoveColumn(report: Report, column: InsightColumn?, completion: (() -> Void)? = nil) {
+    static func checkAndRemoveColumn(report: Report, column: InsightColumn?, listType: ListType, completion: (() -> Void)? = nil) {
         var okToRemove = true
         if let column = column {
-            if column.isCalculated || column.isPrompt {
+            if (column.isCalculated && listType == .calculatedColumns) || (column.isPrompt && listType == .promptColumns) {
                 // Check if used in other calculated columns
                 for otherColumn in report.values.calculatedColumns {
                     if otherColumn != column {
@@ -101,8 +101,14 @@ struct InsightsSetupView : View {
                         }
                     }
                 }
-                
-                if okToRemove {
+            }
+            if okToRemove {
+                switch listType {
+                case .pinnedColumns:
+                    report.values.pinnedColumns.removeAll(where: {$0.name == column.name})
+                case .unpinnedColumns:
+                    report.values.unpinnedColumns.removeAll(where: {$0.name == column.name})
+                case .calculatedColumns, .promptColumns:
                     report.values.pinnedColumns.removeAll(where: {$0.name == column.name})
                     report.values.unpinnedColumns.removeAll(where: {$0.name == column.name})
                     if column.isCalculated {
@@ -110,9 +116,11 @@ struct InsightsSetupView : View {
                     } else if column.isPrompt {
                         report.values.prompts.removeAll(where: {$0.name == column.name})
                     }
-                    report.objectWillChange.send()
-                    completion?()
+                default:
+                    break
                 }
+                report.objectWillChange.send()
+                completion?()
             }
         }
     }
@@ -158,9 +166,9 @@ struct InsightsChooseColumnsView : View {
                     }
                 }
                 VStack(spacing: 0) {
-                    InsightsColumnListView(report: report, data: data, title: "Pinned", columns: $report.values.pinnedColumns, listType: .pinnedColumns, allowDrag: true, showRemove: true, specificDrop: true, height: 240, selectedListType: $selectedListType, onDropReceived: onDropReceived)
+                    InsightsColumnListView(report: report, data: data, title: "Pinned", columns: $report.values.pinnedColumns, listType: .pinnedColumns, allowDrag: true, showConfig: true, showRemove: true, specificDrop: true, height: 240, selectedListType: $selectedListType, onDropReceived: onDropReceived)
                     Spacer().frame(height: 40)
-                    InsightsColumnListView(report: report, data: data, title: "Not Pinned", columns: $report.values.unpinnedColumns, listType: .unpinnedColumns, allowDrag: true, showRemove: true, specificDrop: true, selectedListType: $selectedListType, onDropReceived: onDropReceived)
+                    InsightsColumnListView(report: report, data: data, title: "Not Pinned", columns: $report.values.unpinnedColumns, listType: .unpinnedColumns, allowDrag: true, showConfig: true, showRemove: true, specificDrop: true, selectedListType: $selectedListType, onDropReceived: onDropReceived)
                     Spacer()
                 }
             }
@@ -336,6 +344,7 @@ struct InsightsColumnListView : View {
     var allowSelect: Bool = true
     var allowDrag: Bool
     var showEdit: Bool = false
+    var showConfig: Bool = false
     var showInsert: Bool = false
     var showRemove: Bool = false
     var specificDrop: Bool = true
@@ -345,14 +354,16 @@ struct InsightsColumnListView : View {
     var onDropReceived: ((_ target: ListType, _ droppedColumns: [InsightsSetupTransfer], _ before: InsightColumn?) -> Bool)?
     
     @State private var selected: InsightColumn? = nil
-    @State private var showCalculatedColumn: Bool = false
+    @State private var showCalculatedColumnEditor: Bool = false
+    @State private var showConfigEditor: Bool = false
     @State private var column = CalculatedColumn()
+    @State private var configColumn: InsightColumn = .spacer
     @State private var editMode: InsightEditMode? = nil
     
     var body: some View {
         VStack(spacing: 0) {
             VStack(spacing: 0) {
-                let showBottomBar = (showInsert || ((showRemove || showEdit) && selected != nil))
+                let showBottomBar = (showInsert || ((showRemove || showEdit || showConfig) && selected != nil))
                 Grid(horizontalSpacing: 0, verticalSpacing: 0) {
                     GridRow {
                         HStack {
@@ -434,7 +445,7 @@ struct InsightsColumnListView : View {
                     if height == nil {
                         Spacer()
                     }
-                    HStack {
+                    HStack(spacing: 0) {
                         Spacer().frame(width: 20)
                         if showEdit {
                             Button {
@@ -446,11 +457,26 @@ struct InsightsColumnListView : View {
                             .opacity(selected == nil ? 0.3 : 1)
                             .disabled(selected == nil)
                         }
+                        if showConfig {
+                            switch selected! {
+                            case .calculated, .prompt:
+                                EmptyView().frame(width: 0)
+                            default:
+                                Button {
+                                    editConfig(selected!)
+                                } label: {
+                                    Text("Configure")
+                                }
+                                .contentShape(Rectangle())
+                                .opacity(selected == nil ? 0.3 : 1)
+                                .disabled(selected == nil)
+                            }
+                        }
                         if showInsert {
                             Button {
                                 editMode = .create
                                 column = CalculatedColumn()
-                                showCalculatedColumn = true
+                                showCalculatedColumnEditor = true
                             } label: {
                                 Image(systemName: "plus")
                                     .frame(width: 30, height: 40)
@@ -460,8 +486,9 @@ struct InsightsColumnListView : View {
                         }
                         if showRemove {
                             Button {
-                                InsightsSetupView.checkAndRemoveColumn(report: report, column: selected, completion:  {
-                                    self.selected = nil
+                                let index = columns.firstIndex(of: selected!)!
+                                InsightsSetupView.checkAndRemoveColumn(report: report, column: selected, listType: listType, completion:  {
+                                    self.selected = (index < columns.count ? columns[index] : nil)
                                 })
                             } label: {
                                 Image(systemName: "minus")
@@ -495,9 +522,20 @@ struct InsightsColumnListView : View {
                     return onDropReceived!(listType, droppedColumns, nil)
                 }
             }
-            .fullScreenCover(isPresented: $showCalculatedColumn) {
+            .fullScreenCover(isPresented: $showCalculatedColumnEditor) {
                 FullScreenView(minWidth: 1600, minHeight: 1200, escapeToDismiss: false) {
                     InsightsCalculatedColumnView(report: report, column: $column, data: data, editMode: editMode!)
+                }
+            }
+            .fullScreenCover(isPresented: $showConfigEditor) {
+                FullScreenView(minWidth: 700, minHeight: (configColumn.type == .numeric ? 600 : 400), escapeToDismiss: false) {
+                    InsightsConfigView(report: report, column: configColumn, editMode: editMode!, completion: { config in
+                        if case .amend(let index) = editMode! {
+                            let newColumn = InsightColumn.updateConfig(column: configColumn, config: config)
+                            columns[index] = newColumn
+                            report.objectWillChange.send()
+                        }
+                    })
                 }
             }
             .palette(.mutedTile)
@@ -509,6 +547,8 @@ struct InsightsColumnListView : View {
     func tapHandler(column: InsightColumn, count: Int = 1) {
         if showEdit && count == 2 {
             editCalculated(column)
+        } else if showConfig && count == 2 {
+            editConfig(column)
         } else if let onSelect = onSelect {
             onSelect(column)
             selected = nil
@@ -524,9 +564,17 @@ struct InsightsColumnListView : View {
             if let index = columns.firstIndex(where: { $0 == column }) {
                 editMode = .amend(index: index)
                 self.column = calculated
-                showCalculatedColumn = true
+                showCalculatedColumnEditor = true
             }
         default: break
+        }
+    }
+    
+    func editConfig(_ column: InsightColumn) {
+        if let index = columns.firstIndex(where: { $0 == column }) {
+            editMode = .amend(index: index)
+            self.configColumn = column
+            showConfigEditor = true
         }
     }
 }

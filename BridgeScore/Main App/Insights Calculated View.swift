@@ -425,7 +425,7 @@ struct InsightsCalculatedColumnView : View {
         updateLogic()
         focus = .logic
         canSave = !editColumn.name.isEmpty && !editColumn.logic.isEmpty
-}
+    }
     
     func variableType(variable: InsightColumn) throws -> CalculatedType? {
         return variable.type

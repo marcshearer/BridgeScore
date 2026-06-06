@@ -106,7 +106,7 @@ struct InsightsReportViewStorage : View {
     
     static func createEmptyView(report: Report) throws {
         let level = CalculatedSortLevel(isBoard: true)
-        level.selectionLogic = [.variable(.age),.comparisonOperator(.lessThan),.literal(CalculatedLiteral(characters: "30", type: .numeric))]
+        level.selectionLogic = [.variable(.age(config: nil)),.comparisonOperator(.lessThan),.literal(CalculatedLiteral(characters: "30", type: .numeric))]
         try report.update(from: ReportValues(viewName: "", pinnedColumns: InsightColumn.defaultPinnedColumns, unpinnedColumns: InsightColumn.defaultColumns, levels: [level]))
     }
 }

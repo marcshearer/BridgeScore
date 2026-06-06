@@ -194,6 +194,7 @@
 		B2CC509927BE21060050F22C /* Scroll Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CC509827BE21060050F22C /* Scroll Picker.swift */; };
 		B2CC509E27BE22210050F22C /* Enum Picker.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CC509D27BE22210050F22C /* Enum Picker.swift */; };
 		B2CD8E722D3BE80F00E0B3DD /* UITextView Wrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2CD8E712D3BE80700E0B3DD /* UITextView Wrapper.swift */; };
+		B2DA48292FD42E400076D177 /* Insights Config View.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2DA48282FD42E380076D177 /* Insights Config View.swift */; };
 		B2DADE5127E7A06E009F7572 /* Import BBO.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2DADE5027E7A06E009F7572 /* Import BBO.swift */; };
 		B2E0914C2F9B842600E5C5F1 /* Bridge Scorecard.icon in Resources */ = {isa = PBXBuildFile; fileRef = B2E0914B2F9B842600E5C5F1 /* Bridge Scorecard.icon */; };
 		B2E1B76827DC71E300204CAC /* User Defaults.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E1B76727DC71E300204CAC /* User Defaults.swift */; };
@@ -410,6 +411,7 @@
 		B2CC509D27BE22210050F22C /* Enum Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Enum Picker.swift"; sourceTree = "<group>"; };
 		B2CC509F27BE22900050F22C /* Obsolete Contract Picker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Obsolete Contract Picker.swift"; sourceTree = "<group>"; };
 		B2CD8E712D3BE80700E0B3DD /* UITextView Wrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UITextView Wrapper.swift"; sourceTree = "<group>"; };
+		B2DA48282FD42E380076D177 /* Insights Config View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Insights Config View.swift"; sourceTree = "<group>"; };
 		B2DADE5027E7A06E009F7572 /* Import BBO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Import BBO.swift"; sourceTree = "<group>"; };
 		B2E0914B2F9B842600E5C5F1 /* Bridge Scorecard.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = "Bridge Scorecard.icon"; sourceTree = "<group>"; };
 		B2E1B76727DC71E300204CAC /* User Defaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "User Defaults.swift"; sourceTree = "<group>"; };
@@ -757,6 +759,7 @@
 				B2746FC02F9F2BBA00716D08 /* Insights View.swift */,
 				B2A724D02FA61BF400C574DC /* Insights Setup View.swift */,
 				B23F362D2FB0DAF7009C2AA9 /* Insights Calculated View.swift */,
+				B2DA48282FD42E380076D177 /* Insights Config View.swift */,
 				B23F362F2FB0DB3D009C2AA9 /* Insights Sort Level View.swift */,
 				B22305942FBB60A5005A555E /* Insights Prompt View.swift */,
 				B22305DD2FBC0BEA005A555E /* Insights Prompt Value View.swift */,
@@ -1108,6 +1111,7 @@
 				B204175827CE58CD00A3EFA8 /* Debug Utilities.swift in Sources */,
 				B2CD8E722D3BE80F00E0B3DD /* UITextView Wrapper.swift in Sources */,
 				B24BC3A327F42EEA00576D50 /* Flags.swift in Sources */,
+				B2DA48292FD42E400076D177 /* Insights Config View.swift in Sources */,
 				B2B1D58D2B04C3DB007A2977 /* Ranking Table View Model.swift in Sources */,
 				B25417882D37F35C0092A4C0 /* Scorecard Type View.swift in Sources */,
 				B217314427D026050096DAE8 /* Undo Handler.swift in Sources */,

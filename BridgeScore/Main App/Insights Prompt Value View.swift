@@ -12,6 +12,7 @@ struct InsightsPromptValueView<EditValue:InsightsFocusIndexBridge> : View {
     @Binding var value: String
     var fieldType: EditValue
     @Binding var focus: EditValue?
+    var onEscapePressed: (()->())? = nil
     var onChange: ((String) -> ())? = nil
     
     @State var pickerValue: Int = 0
@@ -54,7 +55,7 @@ struct InsightsPromptValueView<EditValue:InsightsFocusIndexBridge> : View {
                 .pickerStyle(.segmented)
                 .frame(width: 280, height: 40)
             default:
-                InsightsTextView(text: $value, fieldType: fieldType, focus: $focus, onChange: { newValue in
+                InsightsTextView(text: $value, fieldType: fieldType, focus: $focus, onEscapePressed: onEscapePressed, onChange: { newValue in
                     onChange?(value)
                 })
                 .frame(width: 280, height: 40)

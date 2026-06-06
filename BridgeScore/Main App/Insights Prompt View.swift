@@ -91,7 +91,7 @@ struct InsightsPromptsView : View {
                                 .contentShape(Rectangle())
                         }
                         Button {
-                            InsightsSetupView.checkAndRemoveColumn(report: report, column: .prompt(prompt: selected!), completion:  {
+                            InsightsSetupView.checkAndRemoveColumn(report: report, column: .prompt(prompt: selected!), listType: .promptColumns, completion:  {
                                 self.selected = nil
                             })
                         } label: {
@@ -258,9 +258,9 @@ struct InsightsPromptView : View {
                     Spacer()
                 }
                 .frame(width: 120)
-                InsightsPromptValueView(prompt: editPrompt, value: $editPrompt.defaultValue, fieldType: InsightsPromptEditField.defaultValue, focus: $focused) { newValue in
+                InsightsPromptValueView(prompt: editPrompt, value: $editPrompt.defaultValue, fieldType: InsightsPromptEditField.defaultValue, focus: $focused, onChange: { newValue in
                     checkAvailable()
-                }
+                })
                 Spacer()
             }
             Spacer().frame(height: 40)

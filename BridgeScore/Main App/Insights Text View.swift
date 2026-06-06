@@ -17,7 +17,8 @@ struct InsightsTextView<EditField:InsightsFocusIndexBridge> : View  {
     var readOnly: Bool = false
     var clearTextButton: Bool = true
     var setFocus: ((FocusDirection) -> Void)? = nil
-    var onConfirm: (() -> Void)? = nil
+    var onEscapePressed: (()->())? = nil
+    var onConfirm: (() -> ())? = nil
     var onChange: ((String)->())? = nil
     
     @State private var clearTrigger: Bool = false
@@ -27,7 +28,7 @@ struct InsightsTextView<EditField:InsightsFocusIndexBridge> : View  {
             Spacer().frame(width: 8)
             ZStack {
                 HStack {
-                    InsightsTextViewRepresentable(text: $text, fieldType: fieldType, focus: $focus, spellCheckingType: spellCheckingType, readOnly: readOnly, clearTrigger: $clearTrigger, setFocus: setFocus ?? defaultSetFocus, onConfirm: onConfirm, onChange: { newValue in
+                    InsightsTextViewRepresentable(text: $text, fieldType: fieldType, focus: $focus, spellCheckingType: spellCheckingType, readOnly: readOnly, clearTrigger: $clearTrigger, onEscapePressed: onEscapePressed, setFocus: setFocus ?? defaultSetFocus, onConfirm: onConfirm, onChange: { newValue in
                         clearTrigger.toggle()
                         onChange?(newValue)
                     })
@@ -75,10 +76,10 @@ struct InsightsTextViewRepresentable<EditField:InsightsFocusIndexBridge>: UIView
     var spellCheckingType: UITextSpellCheckingType = .no
     var readOnly: Bool = false
     @Binding var clearTrigger: Bool
+    var onEscapePressed: (()->())? = nil
     var setFocus: ((FocusDirection)->())? = nil
     var onConfirm: (()->())? = nil
     var onChange: ((String)->())? = nil
-
     
     func makeUIView(context: Context) -> UITextView {
         let textView = InsightsUITextView<EditField>(fieldType: fieldType, setFocus: setFocus, onConfirm: onConfirm)
@@ -92,6 +93,7 @@ struct InsightsTextViewRepresentable<EditField:InsightsFocusIndexBridge>: UIView
         textView.smartQuotesType = .no
         textView.smartDashesType = .no
         textView.isEditable = !readOnly
+        textView.onEscapePressed = onEscapePressed
         return textView
     }
 
@@ -139,13 +141,15 @@ struct InsightsTextViewRepresentable<EditField:InsightsFocusIndexBridge>: UIView
 
 class InsightsUITextView<EditField:InsightsFocusIndexBridge>: UITextView {
     var fieldType: EditField?
+    var onEscapePressed: (()->())? = nil
     var setFocus: ((FocusDirection)->())? = nil
     var onConfirm: (()->())? = nil
     
     
-    convenience init(fieldType: EditField? = nil, setFocus: ((FocusDirection)->())? = nil, onConfirm: (()->())? = nil) {
+    convenience init(fieldType: EditField? = nil, onEscapePressed: (()->())? = nil, setFocus: ((FocusDirection)->())? = nil, onConfirm: (()->())? = nil) {
         self.init()
         self.fieldType = fieldType
+        self.onEscapePressed = onEscapePressed
         self.setFocus = setFocus
         self.onConfirm = onConfirm
     }
@@ -188,7 +192,10 @@ class InsightsUITextView<EditField:InsightsFocusIndexBridge>: UITextView {
         
         let tabCommand = UIKeyCommand(input: "\t", modifierFlags: [], action: #selector(handleTab))
         
-        return[returnCommand, enterCommand, shiftTabCommand, tabCommand]
+        let escapeCommand = UIKeyCommand(input: UIKeyCommand.inputEscape, modifierFlags: [], action: #selector(handleEscapeKey)
+        )
+        
+        return[returnCommand, enterCommand, shiftTabCommand, tabCommand, escapeCommand]
 
     }
     
@@ -202,6 +209,10 @@ class InsightsUITextView<EditField:InsightsFocusIndexBridge>: UITextView {
     
     @objc func handleReturn(sender: UIKeyCommand) {
         onConfirm?()
+    }
+    
+    @objc private func handleEscapeKey() {
+        onEscapePressed?()
     }
 }
 

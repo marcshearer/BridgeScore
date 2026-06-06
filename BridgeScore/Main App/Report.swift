@@ -200,22 +200,17 @@ class Report: ObservableObject {
     }
 }
 
-class CalculatedColumn : Codable, Equatable, Hashable, Identifiable, ObservableObject {
+class CalculatedColumn : InsightColumnConfig {
     var id = UUID()
-    var title: String = ""
     var type: CalculatedType = .numeric
     var decimalPlaces: Int = 0
-    var width: Int = 80
-    var align: CalculatedAlignment = .right
-    var blankIf: CalculatedBlankIf = .none
     var percent: Bool = false
-    var visibility: CalculatedVisibility = .both
-    var totalType: CalculatedTotalType = .average
     var recalculate: Bool = false
     var logic: [CalculatedElement] = []
     var recalculationIndex: Int = 0
     
-    init() {
+    override init() {
+        super.init()
     }
     
     var name: String {
@@ -231,7 +226,7 @@ class CalculatedColumn : Codable, Equatable, Hashable, Identifiable, ObservableO
     
     var tree: CalculatedParseNode?
     
-    func hash(into hasher: inout Hasher) {
+    override func hash(into hasher: inout Hasher) {
         hasher.combine(id)
         hasher.combine(title)
         hasher.combine(type)
@@ -248,15 +243,9 @@ class CalculatedColumn : Codable, Equatable, Hashable, Identifiable, ObservableO
     
     enum CodingKeys: String, CodingKey {
         case id
-        case title
         case type
         case decimalPlaces
-        case align
-        case width
-        case blankIf
         case percent
-        case visibility
-        case totalType
         case recalculate
         case logic
     }
@@ -264,25 +253,31 @@ class CalculatedColumn : Codable, Equatable, Hashable, Identifiable, ObservableO
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         id = try container.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
-        title = try container.decodeIfPresent(String.self, forKey: .title) ?? ""
         do {
             type = try container.decodeIfPresent(CalculatedType.self, forKey: .type) ?? .numeric
         } catch {
             self.type = .numeric
         }
         decimalPlaces = try container.decodeIfPresent(Int.self, forKey: .decimalPlaces) ?? 0
-        align = try container.decodeIfPresent(CalculatedAlignment.self, forKey: .align) ?? .right
-        width = try container.decodeIfPresent(Int.self, forKey: .width) ?? 80
-        blankIf = try container.decodeIfPresent(CalculatedBlankIf.self, forKey: .blankIf) ?? .none
         percent = try container.decodeIfPresent(Bool.self, forKey: .percent) ?? false
-        visibility = try container.decodeIfPresent(CalculatedVisibility.self, forKey: .visibility) ?? .both
-        totalType = try container.decodeIfPresent(CalculatedTotalType.self, forKey: .totalType) ?? .average
         recalculate = try container.decodeIfPresent(Bool.self, forKey: .recalculate) ?? false
         do {
             logic = try container.decodeIfPresent([CalculatedElement].self, forKey: .logic) ?? []
         } catch {
             self.logic = []
         }
+        try super.init(from: decoder)
+    }
+    
+    override func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(id, forKey: .id)
+        try container.encode(type, forKey: .type)
+        try container.encode(decimalPlaces, forKey: .decimalPlaces)
+        try container.encode(percent, forKey: .percent)
+        try container.encode(recalculate, forKey: .recalculate)
+        try container.encode(logic, forKey: .logic)
+        try super.encode(to: encoder)
     }
     
     func refresh(report: Report) throws {

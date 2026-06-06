@@ -36,7 +36,12 @@ struct InsightsPromptEntryView : View {
                                             }
                                             .frame(width: 300)
                                             HStack {
-                                                InsightsPromptValueView(prompt: prompt, value: prompt.value!.textBinding, fieldType: index, focus: $focus, onChange: { newValue in
+                                                InsightsPromptValueView(prompt: prompt, value: prompt.value!.textBinding, fieldType: index, focus: $focus,
+                                                onEscapePressed: {
+                                                    onCompletion(false)
+                                                    forceDismiss()
+                                                },
+                                                onChange: { newValue in
                                                     prompt.value!.lastBindingString = newValue
                                                 })
                                                 .frame(width: 300, height: 40)
@@ -62,6 +67,7 @@ struct InsightsPromptEntryView : View {
                         onCompletion(false)
                         forceDismiss()
                     }
+                    .keyboardShortcut(.cancelAction)
                     Spacer().frame(width: 100)
                     InsightsSetupButton(text: "Display View") {
                         onCompletion(true)

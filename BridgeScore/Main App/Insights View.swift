@@ -230,8 +230,8 @@ struct InsightsView: View {
                     Button("􀆄") {
                         dismiss()
                     }
-                    .disabled(isEditing)
                     .keyboardShortcut(.cancelAction)
+                    .disabled(isEditing)
                     
                     Spacer()
                         .frame(width: 20)
