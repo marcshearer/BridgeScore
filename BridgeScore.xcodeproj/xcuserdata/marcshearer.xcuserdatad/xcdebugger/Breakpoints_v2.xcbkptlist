@@ -18,36 +18,6 @@
             endingLineNumber = "732"
             landmarkName = "recalculate(levelIndex:boardSummary:update:)"
             landmarkType = "9">
-            <Locations>
-               <Location
-                  uuid = "22826D37-CCBC-4C10-899F-DA4F3967B980 - 37420b93204a32b2"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "recalculate(levelIndex: Swift.Int, boardSummary: Bridge_Score.BoardSummaryExtension, update: (Bridge_Score.InsightColumn, Swift.Float) -&gt; ()) throws -&gt; ()"
-                  moduleName = "Bridge Score.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/marcshearer/Documents/Xcode%20projects/BridgeScore/BridgeScore/Main%20App/Insights%20View.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "733"
-                  endingLineNumber = "733">
-               </Location>
-               <Location
-                  uuid = "22826D37-CCBC-4C10-899F-DA4F3967B980 - 37420b93204a3253"
-                  shouldBeEnabled = "Yes"
-                  ignoreCount = "0"
-                  continueAfterRunningActions = "No"
-                  symbolName = "recalculate(levelIndex: Swift.Int, boardSummary: Bridge_Score.BoardSummaryExtension, update: (Bridge_Score.InsightColumn, Swift.Float) -&gt; ()) throws -&gt; ()"
-                  moduleName = "Bridge Score.debug.dylib"
-                  usesParentBreakpointCondition = "Yes"
-                  urlString = "file:///Users/marcshearer/Documents/Xcode%20projects/BridgeScore/BridgeScore/Main%20App/Insights%20View.swift"
-                  startingColumnNumber = "9223372036854775807"
-                  endingColumnNumber = "9223372036854775807"
-                  startingLineNumber = "732"
-                  endingLineNumber = "732">
-               </Location>
-            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

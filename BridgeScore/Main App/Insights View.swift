@@ -206,7 +206,7 @@ struct InsightsView: View {
                     Spacer()
                     
                     if !report.values.prompts.isEmpty {
-                        Button("􀌆") {
+                        Button("\(Image(systemName: "slider.horizontal.3"))") {
                             displayMode = .loading
                             sortIndex = []
                             filteredIndex = []
@@ -215,19 +215,19 @@ struct InsightsView: View {
                         Spacer().frame(width: 40)
                     }
                     
-                    Button("\("􀈎")") {
+                    Button("\(Image(systemName: "square.and.pencil"))") {
                         isEditing = true
                     }
             
                     Spacer().frame(width: 40)
                     
-                    Button("􀤁") {
+                    Button("\(Image(systemName: "menubar.arrow.down.rectangle"))") {
                         showLoad = true
                     }
                     
                     Spacer().frame(width: 40)
                     
-                    Button("􀆄") {
+                    Button("\(Image(systemName: "xmark"))") {
                         dismiss()
                     }
                     .keyboardShortcut(.cancelAction)
