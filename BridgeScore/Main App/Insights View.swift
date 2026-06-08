@@ -532,6 +532,9 @@ struct InsightsView: View {
         var firstIndex: [Int] = []
         
         do {
+            // Refresh report
+            try report.refresh(includePrompts: false)
+            
             // Filter at bottom level
             boardSummaries = await filterService.filterData(report: report, allBoardSummaries: allBoardSummaries)
             
@@ -723,6 +726,14 @@ struct InsightsView: View {
         }
         
         func recalculate(levelIndex: Int, boardSummary: BoardSummaryExtension, update: (InsightColumn, Float)->()) throws {
+            for column in totals[levelIndex].keys.filter({$0.isPrompt}) {
+                if case .prompt(let prompt) = column {
+                    // Prompts are always effectively recalculated - i.e. have a constant value
+                    if let value = prompt.value, value.isNumeric {
+                        update(column, value.numeric!)
+                    }
+                }
+            }
             for column in totals[levelIndex].keys.filter({$0.isCalculated}).sorted(by: { (recalculationIndexes[$0.calculatedColumn!.name] ?? 0) < (recalculationIndexes[$1.calculatedColumn!.name] ?? 0)}) {
                 if case .calculated(let calculated) = column {
                     if calculated.recalculate {

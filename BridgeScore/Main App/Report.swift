@@ -183,7 +183,7 @@ class Report: ObservableObject {
         return recalculationIndexes
     }
     
-    func refresh() throws {
+    func refresh(includePrompts: Bool = true) throws {
         for column in values.calculatedColumns {
             if case .calculated(let calculation) = column {
                 try calculation.refresh(report: self)
@@ -192,9 +192,11 @@ class Report: ObservableObject {
         for sort in values.levels {
             try sort.refresh(report: self)
         }
-        for prompt in values.prompts {
-            if case .prompt(let prompt) = prompt {
-                prompt.refresh(report: self)
+        if includePrompts {
+            for prompt in values.prompts {
+                if case .prompt(let prompt) = prompt {
+                    prompt.refresh(report: self)
+                }
             }
         }
     }
