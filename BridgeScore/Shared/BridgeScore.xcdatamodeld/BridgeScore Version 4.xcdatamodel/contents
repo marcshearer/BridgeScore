@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="24901" systemVersion="25F80" minimumToolsVersion="Automatic" sourceLanguage="Swift" userDefinedModelVersionIdentifier="">
+    <entity name="BBOName" representedClassName="BBONameMO" syncable="YES">
+        <attribute name="bboName" optional="YES" attributeType="String"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="Board" representedClassName="BoardMO" syncable="YES">
+        <attribute name="boardIndex16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="boardNumber16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="comment" optional="YES" attributeType="String"/>
+        <attribute name="contractDouble16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="contractLevel16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="contractSuit16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="dateUpdated" optional="YES" attributeType="Date" defaultDateTimeInterval="802347240" usesScalarValueType="NO"/>
+        <attribute name="dealer16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="declarer16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="hand" optional="YES" attributeType="String"/>
+        <attribute name="made16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="madeEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="optimumContractDouble16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="optimumContractLevel16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="optimumContractSuit16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="optimumDeclarer16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="optimumEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="optimumMade16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="optimumNsPoints16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="responsible16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="scorecardId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="scoreEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="scoreValue" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="session16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="vulnerability16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="BoardSummary" representedClassName="BoardSummaryMO" syncable="YES">
+        <attribute name="boardIndex16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="boardNumber16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="boardScoreType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="compContractDouble16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="compContractLevel16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="compContractSuit16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="compDdScore16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="compDdTricks16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="compDdTricksEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="compDeclarer16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="compMakeOdds16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="compMakeScore16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="contDdTricks16" optional="YES" attributeType="Integer 16" defaultValueString="-999" usesScalarValueType="YES"/>
+        <attribute name="contractDouble16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="contractLevel16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="contractSuit16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="ddMadeThey16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="ddMadeWe16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="ddTricksThey16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="ddTricksWe16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="declarer16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="declareThey16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="declareWe16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="eventType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="fieldSize16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="fitThey16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="fitWe16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="gameOdds16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="gameThey16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="gameWe16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="grandSlamThey16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="grandSlamWe16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="locationId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="made16" optional="YES" attributeType="Integer 16" usesScalarValueType="YES"/>
+        <attribute name="madeEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="medianTricksThey16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="medianTricksWe16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="modeTricksThey16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="modeTricksWe16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="partnerId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="partScoreThey16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="partScoreWe16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="passout16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="pointsLhOpponent16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="pointsPartner16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="pointsPlayer16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="pointsRhOpponent16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="score16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="scorecardId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="session16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="slamOdds16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="smallSlamThey16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="smallSlamWe16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="suitThey16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="suitWe16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="totalTricks16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="totalTricksDd16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="vulnerability16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="DoubleDummy" representedClassName="DoubleDummyMO" syncable="YES">
+        <attribute name="boardIndex16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="declarer16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="scorecardId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="suit16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="tricks16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="Layout" representedClassName="LayoutMO" syncable="YES">
+        <attribute name="aggregateType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="aggregateVpType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="boards16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="boardScoreType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="boardScoreVpType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="boardsTable16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="desc" optional="YES" attributeType="String"/>
+        <attribute name="displayDetail" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="eventType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="headToHead" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="layoutId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="locationId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="manualTotals" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="partnerId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="regularDay16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="resetNumbers" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="scorecardDesc" optional="YES" attributeType="String"/>
+        <attribute name="sequence16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sessions16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="type16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="Location" representedClassName="LocationMO" syncable="YES">
+        <attribute name="bridgewebsId" optional="YES" attributeType="String"/>
+        <attribute name="level16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="location" optional="YES" attributeType="String"/>
+        <attribute name="locationId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="retired" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="sequence16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="short" optional="YES" attributeType="String" defaultValueString=""/>
+    </entity>
+    <entity name="Override" representedClassName="OverrideMO" syncable="YES">
+        <attribute name="boardIndex16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="declarer16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="made16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="madeEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="scorecardId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="suit16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="Player" representedClassName="PlayerMO" syncable="YES">
+        <attribute name="bboName" optional="YES" attributeType="String"/>
+        <attribute name="email" optional="YES" attributeType="String"/>
+        <attribute name="isSelf" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="name" optional="YES" attributeType="String"/>
+        <attribute name="playerId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="retired" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="sequence16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="Ranking" representedClassName="RankingMO" syncable="YES">
+        <attribute name="east" optional="YES" attributeType="String"/>
+        <attribute name="ewXImps" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="north" optional="YES" attributeType="String"/>
+        <attribute name="nsXImps" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="number16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="points" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="ranking16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="score" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="scorecardId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="section16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="session16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="south" optional="YES" attributeType="String"/>
+        <attribute name="tie" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="way16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="west" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="RankingTable" representedClassName="RankingTableMO" syncable="YES">
+        <attribute name="nsScoreEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="nsScoreValue" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="number16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="scorecardId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="section16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="table16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="way16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="Scorecard" representedClassName="ScorecardMO" syncable="YES">
+        <attribute name="aggregateType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="aggregateVpType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="boards16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="boardScoreType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="boardScoreVpType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="boardsTable16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="comment" optional="YES" attributeType="String"/>
+        <attribute name="date" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="desc" optional="YES" attributeType="String"/>
+        <attribute name="entry16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="eventType16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="headToHead" optional="YES" attributeType="Boolean" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="importNext16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="importSource16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="locationId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="manualTotals" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="maxScoreEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="maxScoreValue" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="partnerId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="position16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="resetNumbers" attributeType="Boolean" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="scorecardId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="scoreEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="scorerId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="scoreValue" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="sequence16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sessions16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sharedBy" optional="YES" attributeType="String"/>
+        <attribute name="sharedWith" optional="YES" attributeType="String"/>
+        <attribute name="type16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
+    <entity name="Table" representedClassName="TableMO" syncable="YES">
+        <attribute name="partner" optional="YES" attributeType="String"/>
+        <attribute name="scorecardId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="scoreEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="scoreValue" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="sitting16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="table16" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="versus" optional="YES" attributeType="String"/>
+    </entity>
+    <entity name="Traveller" representedClassName="TravellerMO" syncable="YES">
+        <attribute name="biddingRejected" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="boardIndex16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="contractDouble16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="contractLevel16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="contractSuit16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="declarer16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="eastEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="eastSection16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="eastValue" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="lead" optional="YES" attributeType="String"/>
+        <attribute name="made16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="northEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="northSection16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="northValue" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="nsScore" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="nsXImps" optional="YES" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
+        <attribute name="playData" optional="YES" attributeType="String"/>
+        <attribute name="playRejected" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="scorecardId" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="southEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="southSection16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="southValue" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="westEntered" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="westSection16" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="westValue" optional="YES" attributeType="Integer 16" defaultValueString="0" usesScalarValueType="YES"/>
+    </entity>
+</model>

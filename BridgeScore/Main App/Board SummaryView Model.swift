@@ -24,6 +24,9 @@ public class BoardSummaryViewModel : NSObject, ObservableObject, Identifiable {
     @Published public var contract = Contract()
     @Published public var declarer: SeatPlayer = .player
     @Published public var made: Int? = nil
+    @Published public var contDdTricks: Int = 0
+    @Published public var contMedianTricks: Int = 0
+    @Published public var contModeTricks: Int = 0
     @Published public var score: Int = 0
     @Published public var fieldSize: Int = 0
     @Published public var gameOdds: Int = 0
@@ -83,6 +86,9 @@ public class BoardSummaryViewModel : NSObject, ObservableObject, Identifiable {
                 self.contract != Contract(level: mo.contractLevel, suit: mo.contractSuit, double: mo.contractDouble) ||
                 self.declarer != mo.declarer ||
                 self.made != (mo.madeEntered ? mo.made : nil) ||
+                self.contDdTricks != mo.contDdTricks ||
+                self.contMedianTricks != mo.contMedianTricks ||
+                self.contModeTricks != mo.contModeTricks ||
                 self.score != mo.score ||
                 self.fieldSize != mo.fieldSize ||
                 self.gameOdds != mo.gameOdds ||
@@ -144,6 +150,9 @@ public class BoardSummaryViewModel : NSObject, ObservableObject, Identifiable {
             self.contract = Contract(level: mo.contractLevel, suit: mo.contractSuit, double: mo.contractDouble)
             self.declarer = mo.declarer
             self.made = mo.made
+            self.contDdTricks = mo.contDdTricks
+            self.contMedianTricks = mo.contMedianTricks
+            self.contModeTricks = mo.contModeTricks
             self.score = mo.score
             self.fieldSize = mo.fieldSize
             self.gameOdds = mo.gameOdds
@@ -198,6 +207,9 @@ public class BoardSummaryViewModel : NSObject, ObservableObject, Identifiable {
             mo.contractDouble = contract.double
             mo.declarer = declarer
             mo.made = made
+            mo.contDdTricks = contDdTricks
+            mo.contMedianTricks = contMedianTricks
+            mo.contModeTricks = contModeTricks
             mo.score = score
             mo.fieldSize = fieldSize
             mo.gameOdds = gameOdds

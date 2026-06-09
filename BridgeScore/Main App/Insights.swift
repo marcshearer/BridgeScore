@@ -101,26 +101,33 @@ class Insights {
         boardSummary.contract = board.contract
         boardSummary.declarer = SeatPlayer(sitting: table.sitting, seat: board.declarer)
         boardSummary.made = (board.contract.level == .passout ? 0 : board.made)
+        boardSummary.contDdTricks = doubleDummys[boardSummary.declarer]?[boardSummary.contract.suit]?.tricks ?? -999
+        let declareTravellers = travellers.filter({$0.declarer.pair == board.declarer.pair})
+        // Can remove a traveller matching the actual contract to get median and mode of the other values
+        let suitTravellers = (board.contract.suit == .blank ? [] : declareTravellers.filter({$0.contract.suit == board.contract.suit})).removing(where: {$0.made == boardSummary.made})
+        let suitTricks = suitTravellers.map({$0.contract.tricks + $0.made})
+        boardSummary.contMedianTricks = median(in: suitTricks) ?? -999
+        boardSummary.contModeTricks = mode(in: suitTricks) ?? -999
         boardSummary.score = Int(board.score ?? 0)
         boardSummary.fieldSize = travellers.count + 1
         
-        var suitTravellers: [PairType:[TravellerViewModel]] = [:]
-        var suitTricks: [PairType: [Int]] = [:]
+        var pairSuitTravellers: [PairType:[TravellerViewModel]] = [:]
+        var pairSuitTricks: [PairType: [Int]] = [:]
         if travellers.count > 0 {
             for pairType in PairType.validCases {
                 let match = table.sitting.pair.offset(by: pairType)
-                let declareTravellers = travellers.filter({$0.declarer.pair == match})
-                let suit = mode(in: declareTravellers.map{$0.contract.suit}) ?? .blank
+                let pairDeclareTravellers = travellers.filter({$0.declarer.pair == match})
+                let suit = mode(in: pairDeclareTravellers.map{$0.contract.suit}) ?? .blank
                 boardSummary.suit[pairType] = suit
-                boardSummary.declare[pairType] = Int((declareTravellers.count * 100) / travellers.count)
-                suitTravellers[pairType] = (suit == .blank ? [] : declareTravellers.filter({$0.contract.suit == suit}))
-                suitTricks[pairType] = suitTravellers[pairType]!.map({$0.contract.tricks + $0.made})
-                if pairType == .we && suitTricks[pairType]!.count > 0 {
-                    boardSummary.gameOdds = (suitTricks[pairType]!.count(where: {$0 >= suit.gameTricks}) * 100) / suitTricks[pairType]!.count
-                    boardSummary.slamOdds = (suitTricks[pairType]!.count(where: {$0 >= Values.smallSlamLevel.tricks}) * 100) / suitTricks[pairType]!.count
+                boardSummary.declare[pairType] = Int((pairDeclareTravellers.count * 100) / travellers.count)
+                pairSuitTravellers[pairType] = (suit == .blank ? [] : pairDeclareTravellers.filter({$0.contract.suit == suit}))
+                pairSuitTricks[pairType] = pairSuitTravellers[pairType]!.map({$0.contract.tricks + $0.made})
+                if pairType == .we && pairSuitTricks[pairType]!.count > 0 {
+                    boardSummary.gameOdds = (pairSuitTricks[pairType]!.count(where: {$0 >= suit.gameTricks}) * 100) / pairSuitTricks[pairType]!.count
+                    boardSummary.slamOdds = (pairSuitTricks[pairType]!.count(where: {$0 >= Values.smallSlamLevel.tricks}) * 100) / pairSuitTricks[pairType]!.count
                 }
-                boardSummary.medianTricks[pairType] = median(in: suitTricks[pairType]!) ?? -999
-                boardSummary.modeTricks[pairType] = mode(in: suitTricks[pairType]!) ?? -999
+                boardSummary.medianTricks[pairType] = median(in: pairSuitTricks[pairType]!) ?? -999
+                boardSummary.modeTricks[pairType] = mode(in: pairSuitTricks[pairType]!) ?? -999
                 boardSummary.ddTricks[pairType] = doubleDummys[pairType.seatPlayers.first!]?[suit]?.tricks ?? -999
                 
                 let allDeclareTravellers = allTravellers.filter({$0.declarer.pair == match})
@@ -145,7 +152,7 @@ class Insights {
                     if let contract = Contract(lower: boardSummary.contract, suit: boardSummary.suit[.they]!), contract.level != .blank {
                         boardSummary.compContract = contract
                         boardSummary.compDeclarer = .they
-                        boardSummary.compMakeOdds = (suitTricks[.they]!.count(where: {$0 >= contract.tricks}) * 100) / suitTricks[.they]!.count
+                        boardSummary.compMakeOdds = (pairSuitTricks[.they]!.count(where: {$0 >= contract.tricks}) * 100) / pairSuitTricks[.they]!.count
                         if let ddTricks = boardSummary.ddTricks[.they], ddTricks > 0 {
                             boardSummary.compDdTricks = ddTricks
                         }
@@ -155,7 +162,7 @@ class Insights {
                     if let contract = Contract(higher: boardSummary.contract, suit: boardSummary.suit[.we]!) {
                         boardSummary.compContract = contract
                         boardSummary.compDeclarer = .we
-                        boardSummary.compMakeOdds = (suitTricks[.we]!.count(where: {$0 >= contract.tricks}) * 100) / suitTricks[.we]!.count
+                        boardSummary.compMakeOdds = (pairSuitTricks[.we]!.count(where: {$0 >= contract.tricks}) * 100) / pairSuitTricks[.we]!.count
                         if let ddTricks = boardSummary.ddTricks[.we] , ddTricks > 0 {
                             boardSummary.compDdTricks = ddTricks
                         }
@@ -225,8 +232,22 @@ class Insights {
         }
         return counts.max(by: { $0.value < $1.value })?.key
     }
+        
+    static func mode(in array: [Int]) -> Int? {
+        // If there are repeats of maximum counts then return average
+        if array.isEmpty {
+            return nil
+        }
+        let counts = array.reduce(into: [:]) { counts, element in
+            counts[element, default: 0] += 1
+        }
+        let maxCount = counts.values.max()!
+        let modes = counts.filter{ $0.value == maxCount }.map{ $0.key }
+        let sum = modes.reduce(0,+)
+        return Int(Float(sum) / Float(modes.count))
+    }
     
-    static func median(in array: [Int]) -> Int? {
+    static func median<T: Comparable>(in array: [T]) -> T? {
         if array.isEmpty {
             nil
         } else {
@@ -277,5 +298,15 @@ class BoardSummaryExtension : BoardSummaryViewModel {
         super.init(scorecard: scorecard, boardIndex: boardSummaryMO.boardIndex)
         self.boardSummaryMO = boardSummaryMO
         self.revert()
+    }
+}
+
+extension Array where Element == TravellerViewModel {
+    func removing(where match: (Element)->Bool) -> [Element] {
+        var result = self
+        if let index = self.firstIndex(where: {match($0)}) {
+            result.remove(at: index)
+        }
+        return result
     }
 }

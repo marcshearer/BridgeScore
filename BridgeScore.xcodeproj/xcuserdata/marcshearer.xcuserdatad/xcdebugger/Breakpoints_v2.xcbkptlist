@@ -3,22 +3,4 @@
    uuid = "F2E722FD-D002-4B6B-BE04-5A64A89F3EA3"
    type = "1"
    version = "2.0">
-   <Breakpoints>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            uuid = "22826D37-CCBC-4C10-899F-DA4F3967B980"
-            shouldBeEnabled = "Yes"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
-            filePath = "BridgeScore/Main App/Insights View.swift"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "732"
-            endingLineNumber = "732"
-            landmarkName = "recalculate(levelIndex:boardSummary:update:)"
-            landmarkType = "9">
-         </BreakpointContent>
-      </BreakpointProxy>
-   </Breakpoints>
 </Bucket>

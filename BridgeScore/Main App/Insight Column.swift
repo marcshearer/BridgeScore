@@ -115,6 +115,9 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     case declarer(config: InsightColumnConfig? = nil)
     case declarerPair(config: InsightColumnConfig? = nil)
     case score(config: InsightColumnConfig? = nil)
+    case contDdTricks(config: InsightColumnConfig? = nil)
+    case contMedianTricks(config: InsightColumnConfig? = nil)
+    case contModeTricks(config: InsightColumnConfig? = nil)
     case fieldSize(config: InsightColumnConfig? = nil)
     case gameOdds(config: InsightColumnConfig? = nil)
     case slamOdds(config: InsightColumnConfig? = nil)
@@ -216,6 +219,9 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
      .declarer(config: nil),
      .declarerPair(config: nil),
      .score(config: nil),
+     .contDdTricks(config: nil),
+     .contMedianTricks(config: nil),
+     .contModeTricks(config: nil),
      .fieldSize(config: nil),
      .gameOdds(config: nil),
      .slamOdds(config: nil),
@@ -306,6 +312,12 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
                 .declarerPair(config: config)
         case score:
                 .score(config: config)
+        case contDdTricks:
+                .contDdTricks(config: config)
+        case contMedianTricks:
+                .contMedianTricks(config: config)
+        case contModeTricks:
+                .contModeTricks(config: config)
         case fieldSize:
                 .fieldSize(config: config)
         case gameOdds:
@@ -432,6 +444,12 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
                 "By Pair"
             case .score:
                 "Score"
+            case .contDdTricks:
+                "Contract DD tricks"
+            case .contMedianTricks:
+                "Contract Median tricks"
+            case .contModeTricks:
+                "Contract Mode tricks"
             case .fieldSize:
                 "Field Size"
             case .gameOdds:
@@ -551,6 +569,12 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
                 .string
         case .score:
                 .numeric
+        case .contDdTricks:
+                .numeric
+        case .contMedianTricks:
+                .numeric
+        case .contModeTricks:
+                .numeric
         case .fieldSize:
                 .numeric
         case .gameOdds:
@@ -657,7 +681,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
         let boardSummary = viewModel as! BoardSummaryViewModel
         let value = try self.insightValue(report: report, boardSummary: boardSummary)
         switch self {
-        case .compDdTricks, .compDdScore, .ddTricks,.totalTricksDd:
+        case .compDdTricks, .compDdScore, .ddTricks,.totalTricksDd, .contDdTricks:
             return CalculatedValue(value.numeric! <= -999 ? 0 : value.numeric!)
         default:
             return value
@@ -744,6 +768,12 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             return summaryValue((boardSummary.made ?? 0) + boardSummary.contract.level.tricks)
         case .score:
             return summaryValue(boardSummary.score)
+        case .contDdTricks:
+            return summaryValue(boardSummary.contDdTricks)
+        case .contMedianTricks:
+            return summaryValue(boardSummary.contMedianTricks)
+        case .contModeTricks:
+            return summaryValue(boardSummary.contModeTricks)
         case .fieldSize:
             return summaryValue(boardSummary.fieldSize)
         case .gameOdds:
@@ -877,6 +907,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
                 AttributedString(Scorecard.madeString(made: boardSummary.made ?? 0))
             case .score:
                 AttributedString(formattedScore(score: boardSummary.score))
+            case .contDdTricks:
+                AttributedString(boardSummary.contDdTricks <= -999 ? "" : text)
             case .levelType:
                 AttributedString(boardSummary.contract.levelType.string)
             case .compContract:

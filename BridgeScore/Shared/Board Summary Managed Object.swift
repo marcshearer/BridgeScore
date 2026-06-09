@@ -30,6 +30,9 @@ public class BoardSummaryMO: NSManagedObject, ManagedObject, Identifiable {
     @NSManaged public var made16: Int16
     @NSManaged public var madeEntered: Bool
     @NSManaged public var score16: Int16 ; @IntProperty(\BoardSummaryMO.score16) public var score: Int
+    @NSManaged public var contDdTricks16:Int16  ; @IntProperty(\BoardSummaryMO.contDdTricks16) public var contDdTricks: Int
+    @NSManaged public var contMedianTricks16:Int16  ; @IntProperty(\BoardSummaryMO.contMedianTricks16) public var contMedianTricks: Int
+    @NSManaged public var contModeTricks16:Int16  ; @IntProperty(\BoardSummaryMO.contModeTricks16) public var contModeTricks: Int
     @NSManaged public var fieldSize16: Int16 ; @IntProperty(\BoardSummaryMO.fieldSize16) public var fieldSize: Int
     @NSManaged public var gameOdds16: Int16 ; @IntProperty(\BoardSummaryMO.gameOdds16) public var gameOdds: Int
     @NSManaged public var slamOdds16: Int16 ; @IntProperty(\BoardSummaryMO.slamOdds16) public var slamOdds: Int
