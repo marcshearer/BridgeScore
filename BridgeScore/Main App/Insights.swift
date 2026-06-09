@@ -10,12 +10,13 @@ import CoreData
 class Insights {
     
     static func update(full: Bool = false) async {
-        if full {
+        let lastInsightsUpdated = full ? Date.distantPast : (UserDefault.lastInsightUpdate.date ?? Date.distantPast)
+        let insightsUpdated = Date()
+        
+        if full || (DayNumber(from: insightsUpdated) - DayNumber(from: lastInsightsUpdated)) > (3 * 365) {
             initialise()
         }
                 
-        let lastInsightsUpdated = full ? Date.distantPast : (UserDefault.lastInsightUpdate.date ?? Date.distantPast)
-        let insightsUpdated = Date()
         let datePredicate = NSPredicate(format: "dateUpdated >= %@", lastInsightsUpdated as NSDate)
         let boardMOs = CoreData.fetch(from: BoardMO.tableName, filter: datePredicate) as! [BoardMO]
         for boardMO in boardMOs {

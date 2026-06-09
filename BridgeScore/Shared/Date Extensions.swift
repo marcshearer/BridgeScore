@@ -84,4 +84,8 @@ extension Date {
         guard let firstOfYear = calendar.date(from: calendar.dateComponents([.year], from: date)) else { return nil}
         return calendar.date(byAdding: .year, value: years, to: firstOfYear)
     }
+    
+    var dayNumber: DayNumber {
+        DayNumber(from: self)
+    }
 }

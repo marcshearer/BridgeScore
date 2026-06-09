@@ -376,6 +376,7 @@
 		B28E4EE927B566300059819C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		B291525A2FD7672600886446 /* BridgeScore Version 4.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "BridgeScore Version 4.xcdatamodel"; sourceTree = "<group>"; };
 		B291525B2FD7C89800886446 /* BridgeScore Version 5.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "BridgeScore Version 5.xcdatamodel"; sourceTree = "<group>"; };
+		B291525C2FD7FBDC00886446 /* BridgeScore Version 6.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "BridgeScore Version 6.xcdatamodel"; sourceTree = "<group>"; };
 		B29BBA772D33D0A10032BC2F /* Scorecard Type Classes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Scorecard Type Classes.swift"; sourceTree = "<group>"; };
 		B29BBA792D33D1540032BC2F /* Contract Classes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Contract Classes.swift"; sourceTree = "<group>"; };
 		B2A2053427AFC2E400C83C88 /* Player Setup View.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Player Setup View.swift"; sourceTree = "<group>"; };
@@ -1485,13 +1486,14 @@
 		B26BCE70279B188600B73501 /* BridgeScore.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (
+				B291525C2FD7FBDC00886446 /* BridgeScore Version 6.xcdatamodel */,
 				B291525B2FD7C89800886446 /* BridgeScore Version 5.xcdatamodel */,
 				B291525A2FD7672600886446 /* BridgeScore Version 4.xcdatamodel */,
 				B23DCA0C2FD2DC1D00E92FB4 /* BridgeScore Version 3.xcdatamodel */,
 				B23DCA0B2FD2D80A00E92FB4 /* BridgeScore Version 2.xcdatamodel */,
 				B26BCE71279B188600B73501 /* BridgeScore.xcdatamodel */,
 			);
-			currentVersion = B291525B2FD7C89800886446 /* BridgeScore Version 5.xcdatamodel */;
+			currentVersion = B291525C2FD7FBDC00886446 /* BridgeScore Version 6.xcdatamodel */;
 			path = BridgeScore.xcdatamodeld;
 			sourceTree = "<group>";
 			versionGroupType = wrapper.xcdatamodel;

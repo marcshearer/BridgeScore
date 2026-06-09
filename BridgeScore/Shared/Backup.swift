@@ -32,7 +32,7 @@ class Backup {
         _ = (try! fileManager.createDirectory(at: thisBackupUrl, withIntermediateDirectories: true))
         _ = (try! fileManager.createDirectory(at: assetsBackupUrl, withIntermediateDirectories: true))
 
-        for entity in MyApp.databaseTables {
+        for entity in MyApp.databaseTables.filter({$0.name != BoardSummaryMO.tableName }) {
             Backup.shared.backup(entity)
         }
     }
@@ -40,7 +40,7 @@ class Backup {
     public func restore(dateString: String) {
         let thisBackupUrl = databaseBackupsUrl.appendingPathComponent(dateString)
 
-        for entity in /*MyApp.databaseTables { // */ [DoubleDummyMO.entity(),BoardSummaryMO.entity(),LocationMO.entity()] {
+        for entity in MyApp.databaseTables.filter({$0.name != BoardSummaryMO.tableName }) {
             Backup.shared.restore(entity, directory: thisBackupUrl)
         }
         MasterData.shared.load()
