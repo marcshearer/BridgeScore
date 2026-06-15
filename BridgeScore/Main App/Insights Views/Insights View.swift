@@ -14,6 +14,7 @@ enum ScrollViews : CaseIterable, Hashable {
 }
 
  enum InsightDisplayMode {
+     case noData
      case updating
      case loading
      case preparing
@@ -22,6 +23,8 @@ enum ScrollViews : CaseIterable, Hashable {
      
      var text: String {
          switch self {
+         case .noData:
+             "No Matching Data"
          case .updating:
              "Refreshing Data..."
          case .loading:
@@ -54,8 +57,10 @@ struct InsightsView: View {
     @State var activeColumn: Int? = nil
     @State var horizontalScroll: Bool = false
     @State var scrollWidth: CGFloat = 0
+    @State var lowestTotalLevel: [SortTotalType:Int] = [:] // Dictionary contains lowest level for axis
     @State var gridColumns: Int = 1
-    @State var gridPrefixes: [Int:String] = [:]
+    @State var gridPrefixes: [String] = []
+    @State var gridTotals: [SortData] = []
     let rowHeight: CGFloat = 30
     
     var body: some View {
@@ -85,7 +90,7 @@ struct InsightsView: View {
                         }
                         .frame(height: 80)
                         switch displayMode {
-                        case .updating, .loading, .preparing, .stopped:
+                        case .updating, .loading, .preparing, .stopped, .noData:
                             MiddleCenteredText(text: displayMode.text)
                                 .font(bigFont)
                                 .palette(.background, .theme)
@@ -93,24 +98,27 @@ struct InsightsView: View {
                             // Main values
                             ScrollViewReader { proxy in
                                 ScrollView(.vertical) {
-                                    HStack(spacing: 0) {
-                                        HStack {
-                                            LazyVStack(alignment: .leading, spacing: 0) {
-                                                ForEach($filteredIndex, id: \.id) { rowData in
-                                                    rowView(data: rowData, columns: report.values.pinnedColumns, pinned: true)
-                                                        .zIndex(1)
+                                    VStack(spacing: 0) {
+                                        HStack(spacing: 0) {
+                                            HStack {
+                                                LazyVStack(alignment: .leading, spacing: 0) {
+                                                    ForEach($filteredIndex, id: \.id) { rowData in
+                                                        rowView(data: rowData, columns: report.values.pinnedColumns, pinned: true)
+                                                            .zIndex(1)
+                                                    }
+                                                }
+                                                .frame(width: report.values.pinnedColumns.map{$0.width}.reduce(0, +) + 40)
+                                            }
+                                            HorizontalScrollView(id: .data, widths: unpinnedWidths + [spacerWidth], scrollSync: scrollSync, activeColumn: $activeColumn) {
+                                                LazyVStack(alignment: .leading, spacing: 0) {
+                                                    ForEach($filteredIndex, id: \.id) { rowData in
+                                                        rowView(data: rowData, columns: report.values.unpinnedColumns, pinned: false)
+                                                            .id(rowData.id)
+                                                    }
                                                 }
                                             }
-                                            .frame(width: report.values.pinnedColumns.map{$0.width}.reduce(0, +) + 40)
                                         }
-                                        HorizontalScrollView(id: .data, widths: unpinnedWidths + [spacerWidth], scrollSync: scrollSync, activeColumn: $activeColumn) {
-                                            LazyVStack(alignment: .leading, spacing: 0) {
-                                                ForEach($filteredIndex, id: \.id) { rowData in
-                                                    rowView(data: rowData, columns: report.values.unpinnedColumns, pinned: false)
-                                                        .id(rowData.id)
-                                                }
-                                            }
-                                        }
+                                        Color.black.frame(height: 3)
                                     }
                                 }
                                 .ignoresSafeArea(edges: .bottom)
@@ -198,7 +206,7 @@ struct InsightsView: View {
                 MessageBox.shared.show(errorMessage)
             }
             await MainActor.run {
-                displayMode = .displaying
+                displayMode = filteredIndex.isEmpty ? .noData : .displaying
             }
         }
     }
@@ -262,38 +270,40 @@ struct InsightsView: View {
     }
     
     func headerView(columns: [InsightColumn], pinned: Bool) -> some View {
-        HStack(spacing: 0) {
-            if pinned {
-                Color.clear.frame(width: 20, height: 80)
-            }
-            ForEach(0..<(pinned ? 1 : gridColumns) * columns.count, id: \.self) { combinedIndex in
-                let gridColumnIndex = combinedIndex / columns.count
-                let columnIndex = combinedIndex % columns.count
-                let column = columns[columnIndex]
-                HStack(spacing: 0) {
-                    if column.align != .left {
-                        Spacer()
-                    }
-                    let prefix = (pinned ? "" : gridPrefixes[gridColumnIndex] ?? "")
-                    Text("\(prefix == "" ? "" : "\(prefix) ")\(column.title)")
-                        .lineLimit(nil)
-                        .multilineTextAlignment(column.align.textAlignment)
-                    if column.align != .right {
-                        Spacer()
-                    }
+        VStack(spacing: 0) {
+            HStack(alignment: .bottom, spacing: 0) {
+                if pinned {
+                    Color.clear.frame(width: 20)
                 }
-                .frame(width: column.width, height: 80)
+                ForEach(0..<(pinned ? 1 : gridColumns) * columns.count, id: \.self) { combinedIndex in
+                    let gridColumnIndex = combinedIndex / columns.count
+                    let columnIndex = combinedIndex % columns.count
+                    let column = columns[columnIndex]
+                    HStack(spacing: 0) {
+                        if column.align != .left {
+                            Spacer()
+                        }
+                        let prefix = (pinned || gridColumnIndex > gridPrefixes.count - 1 ? "" : gridPrefixes[gridColumnIndex])
+                        Text("\(prefix == "" ? "" : "\(prefix) ")\(column.title)")
+                            .lineLimit(nil)
+                            .multilineTextAlignment(column.align.textAlignment)
+                        if column.align != .right {
+                            Spacer()
+                        }
+                    }
+                    .frame(width: column.width)
+                }
+                if !pinned {
+                    Color.clear.frame(width: spacerWidth)
+                        .debugPrint("\(spacerWidth) \(scrollWidth) \(unpinnedTotalWidth)")
+                } else {
+                    Color.clear.frame(width: 20)
+                }
             }
-            if !pinned {
-                Color.clear.frame(width: spacerWidth, height: 80)
-                .debugPrint("\(spacerWidth) \(scrollWidth) \(unpinnedTotalWidth)")
-            } else {
-                 Color.clear.frame(width: 20, height: 80)
-            }
+            .frame(height: 70)
+            Spacer().frame(height: 10)
         }
-        .if(pinned) { view in
-            view.debugPrint("Header \(columns.map{$0.width}.reduce(0,+) + 40)")
-        }
+        .frame(height: 80)
         .palette(.contrastTile)
     }
     
@@ -387,12 +397,15 @@ struct InsightsView: View {
     
     func rowViewTotalValues(data: Binding<SortData>, columns: [InsightColumn], replaceTotal: Bool = false) -> some View {
         HStack(spacing: 0) {
-            ForEach(0..<(gridColumns*columns.count), id: \.self) { combinedIndex in
+            ForEach(0..<(gridColumns * columns.count), id: \.self) { combinedIndex in
                 let gridColumnIndex = combinedIndex / columns.count
                 let columnIndex = combinedIndex % columns.count
                 let gridColumn = data.wrappedValue.linked.isEmpty ? data.wrappedValue : data.wrappedValue.linked[gridColumnIndex]
                 let column = columns[columnIndex]
                 HStack(spacing: 0) {
+                    if report.values.gridMode && columnIndex == 0 {
+                        line(gridIndex: gridColumnIndex, allLines: columns.count > 1)
+                    }
                     if column.align != .left {
                         Spacer()
                     }
@@ -409,6 +422,9 @@ struct InsightsView: View {
                     if column.align != .right {
                         Spacer()
                     }
+                    if report.values.gridMode && combinedIndex == gridColumns * columns.count - 1 {
+                        line(gridIndex: 0)
+                    }
                 }
                 .bold()
                 .frame(width: column.width, height: rowHeight)
@@ -416,6 +432,16 @@ struct InsightsView: View {
                 .padding(.horizontal, 0)
             }
             Color.clear.frame(width: spacerWidth, height: rowHeight)
+        }
+    }
+    
+    func line(gridIndex: Int, allLines: Bool = false) -> some View {
+        HStack(spacing: 0) {
+            if gridIndex == 0 || gridTotals[gridIndex - 1].xTotalLevel != gridTotals[gridIndex].xTotalLevel || allLines {
+                let level = (gridIndex == 0 ? gridTotals[gridIndex].xTotalLevel! : min(gridTotals[gridIndex - 1].xTotalLevel!, gridTotals[gridIndex].xTotalLevel!))
+                let thickness = (lowestTotalLevel[.xAxis]! + (allLines ? 1 : 0) - level)
+                Color.black.frame(width: CGFloat(thickness), height: rowHeight)
+            }
         }
     }
     
@@ -576,7 +602,7 @@ struct InsightsView: View {
         let filterService = DataFilterService()
         var referenced: Set<InsightColumn> = []
         let sortDirections = levels.mapValues{ $0.map{$0.direction} }
-        let lowestTotalLevel = levels.mapValues { $0.count } // Dictionary contains lowest level for axis
+        lowestTotalLevel = levels.mapValues { $0.count }
         
         do {
             // Refresh report
@@ -675,21 +701,23 @@ struct InsightsView: View {
                         for levelIndex in (-1..<lowestTotalLevel[axis]!).reversed() {
                             
                             // Recalculate the last level totals added and discard if fail total selection
-                            for (index, total) in axisTotals[axis]![levelIndex + 1]!.enumerated().reversed() {
-                                
-                                try recalculate(total: total) { column, value in
-                                    axisTotals[axis]![levelIndex + 1]![index].set(column: column, value: value)
-                                }
-                                
-                                if levelIndex >= 0 {
-                                    // Discard if necessary
-                                    let discarded = try applySubtotalSelection(total: total)
-                                    if discarded {
-                                        // Remove it - note this might still be pointed to by subsidiary data, but not a problem as won't be working up to it
-                                        axisTotals[axis]![levelIndex + 1]!.remove(at: index)
-                                    } else {
-                                        // Set the level key
-                                        total.levelKey = levels[axis]![levelIndex].key!.textValue(report: report, boardSummary: total.source!)
+                            if let levelTotals = axisTotals[axis]?[levelIndex + 1], !levelTotals.isEmpty {
+                                for (index, total) in axisTotals[axis]![levelIndex + 1]!.enumerated().reversed() {
+                                    
+                                    try recalculate(total: total) { column, value in
+                                        axisTotals[axis]![levelIndex + 1]![index].set(column: column, value: value)
+                                    }
+                                    
+                                    if levelIndex >= 0 {
+                                        // Discard if necessary
+                                        let discarded = try applySubtotalSelection(total: total)
+                                        if discarded {
+                                            // Remove it - note this might still be pointed to by subsidiary data, but not a problem as won't be working up to it
+                                            axisTotals[axis]![levelIndex + 1]!.remove(at: index)
+                                        } else {
+                                            // Set the level key
+                                            total.levelKey = levels[axis]![levelIndex].key!.textValue(report: report, boardSummary: total.source!)
+                                        }
                                     }
                                 }
                             }
@@ -727,8 +755,9 @@ struct InsightsView: View {
                 recalculateGrid()
                 // Now build output list (recursively)
                 unfilteredIndex = []
-                let grandTotal = axisTotals[.yAxis]![0]!.first!
-                try addToUnfilteredIndex(element: grandTotal)
+                if let grandTotal = axisTotals[.yAxis]?[0]?.first {
+                    try addToUnfilteredIndex(element: grandTotal)
+                }
             }
             
             filterData()
@@ -747,36 +776,37 @@ struct InsightsView: View {
         func recalculateGrid() {
             gridColumns = max(1, axisTotals[.xAxis]!.values.map{$0.count}.reduce(0,+))
             if report.values.gridMode {
-                let columnKeys = recurseXKeys(xElement: axisTotals[.xAxis]![0]!.first!)
-                for (columnNumber, column) in columnKeys.enumerated() {
-                    if column.isEmpty {
-                        gridPrefixes[columnNumber] = "Total"
+                gridTotals = recurseTotals(xElement: axisTotals[.xAxis]![0]!.first!)
+                for total in gridTotals {
+                    let xKeys = total.xKeys
+                    if xKeys.isEmpty {
+                        gridPrefixes.append("Total")
                     } else {
                         var words: [String] = []
-                        for key in column {
+                        for key in xKeys {
                             let components = key.text.split(separator: " ")
                             if components.isEmpty {
                                 words.append("Blank")
                             } else {
                                 words.append(String(components.first!))
                             }
-                            gridPrefixes[columnNumber] = words.joined(separator: " ")
                         }
+                        gridPrefixes.append(words.joined(separator: " "))
                     }
                 }
             } else {
-                gridPrefixes = [:]
+                gridPrefixes = []
             }
         }
         
-        func recurseXKeys(xElement: SortData) -> [[CalculatedValue]] {
+        func recurseTotals(xElement: SortData) -> [SortData] {
             if xElement.cellType == .total {
                 let level = xElement.xTotalLevel!
-                var result = [xElement.xKeys]
+                var result = [xElement]
                 if level < lowestTotalLevel[.xAxis]! {
                     // A higher level total/subtotal - add next lower level
                     for index in xElement.firstIndex!...xElement.lastIndex! {
-                        result.append(contentsOf: recurseXKeys(xElement: axisTotals[.xAxis]![level + 1]![index]))
+                        result.append(contentsOf: recurseTotals(xElement: axisTotals[.xAxis]![level + 1]![index]))
                     }
                 }
                 return result
