@@ -9,14 +9,16 @@ import SwiftUI
 
 class ReportValues: Codable {
     var viewName: String
+    var gridMode: Bool
     var pinnedColumns: [InsightColumn]
     var unpinnedColumns: [InsightColumn]
     var calculatedColumns: [InsightColumn]
     var prompts: [InsightColumn]
     var levels: [CalculatedSortLevel]
     
-    init(viewName: String = "", pinnedColumns: [InsightColumn], unpinnedColumns: [InsightColumn], calculatedColumns: [InsightColumn] = [], prompts: [InsightColumn] = [], levels: [CalculatedSortLevel] = [CalculatedSortLevel(isBoard: true)]) {
+    init(viewName: String = "", gridMode: Bool = false, pinnedColumns: [InsightColumn], unpinnedColumns: [InsightColumn], calculatedColumns: [InsightColumn] = [], prompts: [InsightColumn] = [], levels: [CalculatedSortLevel] = [CalculatedSortLevel(type: .board)]) {
         self.viewName = viewName
+        self.gridMode = gridMode
         self.pinnedColumns = pinnedColumns
         self.unpinnedColumns = unpinnedColumns
         self.calculatedColumns = calculatedColumns
@@ -27,15 +29,12 @@ class ReportValues: Codable {
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.viewName = try container.decodeIfPresent(String.self, forKey: .viewName) ?? ""
+        self.gridMode = try container.decodeIfPresent(Bool.self, forKey: .gridMode) ?? false
         self.pinnedColumns = try container.decodeIfPresent([InsightColumn].self, forKey: .pinnedColumns) ?? []
         self.unpinnedColumns = try container.decodeIfPresent([InsightColumn].self, forKey: .unpinnedColumns) ?? []
         self.calculatedColumns = try container.decodeIfPresent([InsightColumn].self, forKey: .calculatedColumns) ?? []
         self.levels = try container.decodeIfPresent([CalculatedSortLevel].self, forKey: .levels) ?? []
         self.prompts = try container.decodeIfPresent([InsightColumn].self, forKey: .prompts) ?? []
-    }
-    
-    var unpinnedSpacerColumns: [InsightColumn] {
-        unpinnedColumns + [InsightColumn.spacer]
     }
 }
 
@@ -76,12 +75,13 @@ class Report: ObservableObject {
     static var parses = 0
     static var selectionParses = 0
     
-    init(viewName: String = "", pinnedColumns: [InsightColumn] = [], unpinnedColumns: [InsightColumn] = [], calculatedColumns: [InsightColumn] = [], prompts: [InsightColumn] = [], levels: [CalculatedSortLevel] = [CalculatedSortLevel(isBoard: true)]) {
-        self.values = ReportValues(viewName: viewName, pinnedColumns: pinnedColumns, unpinnedColumns: unpinnedColumns, calculatedColumns: calculatedColumns, prompts: prompts, levels: levels)
+    init(viewName: String = "", gridMode: Bool = false, pinnedColumns: [InsightColumn] = [], unpinnedColumns: [InsightColumn] = [], calculatedColumns: [InsightColumn] = [], prompts: [InsightColumn] = [], levels: [CalculatedSortLevel] = [CalculatedSortLevel(type: .board)]) {
+        self.values = ReportValues(viewName: viewName, gridMode: gridMode, pinnedColumns: pinnedColumns, unpinnedColumns: unpinnedColumns, calculatedColumns: calculatedColumns, prompts: prompts, levels: levels)
     }
     
     func update(from newValues: ReportValues) throws {
         values.viewName = newValues.viewName
+        values.gridMode = newValues.gridMode
         values.pinnedColumns = []
         values.unpinnedColumns = []
         values.calculatedColumns = []
@@ -116,7 +116,7 @@ class Report: ObservableObject {
             }
             for column in values.calculatedColumns {
                 add(column)
-                try action(column)
+                try action(column, from: column.calculatedColumn!)
             }
             for level in values.levels {
                 if let column = level.key {
@@ -132,7 +132,7 @@ class Report: ObservableObject {
                 result.insert(column)
             }
             
-            func action(_ column: InsightColumn) throws -> () {
+            func action(_ column: InsightColumn, from: CalculatedColumn?) throws -> () {
                 add(column)
                 if case .calculated(let calculated) = column {
                     try calculated.traverse(self, action)
@@ -141,6 +141,24 @@ class Report: ObservableObject {
         }
     }
     
+    var xLevels: [CalculatedSortLevel] {
+        let xLevels = values.levels.filter({$0.levelType == .xAxis})
+        if false && xLevels.isEmpty {
+            return [CalculatedSortLevel(type: .xAxis)]
+        } else {
+            return xLevels
+        }
+    }
+    
+    var yLevels: [CalculatedSortLevel] {
+        let yLevels = values.levels.filter({$0.levelType == .yAxis})
+        if yLevels.isEmpty {
+            return [CalculatedSortLevel(type: .yAxis)]
+        } else {
+            return yLevels
+        }
+    }
+        
     func generateRecalculationIndexes() throws -> [String: Int] {
         // Note that although these are put back into the reports values, the old values will
         // be cached in parse trees etc and those valuese will be stale. Much better to use the return dictionary
@@ -332,10 +350,10 @@ class CalculatedColumn : InsightColumnConfig {
         }
     }
     
-    func traverse(_ report: Report, _ calculatedAction: (InsightColumn) throws -> ()) throws {
+    func traverse(_ report: Report, _ calculatedAction: (InsightColumn,CalculatedColumn?) throws -> ()) throws {
         prepareTree(report: report)
         if let tree = tree {
-            try tree.traverse(calculatedAction)
+            try tree.traverse(from: self, calculatedAction)
         } else {
             throw CalculatedError.errorEvaluatingCalculatedColumn(name)
         }
@@ -357,7 +375,7 @@ class CalculatedColumn : InsightColumnConfig {
             result.insert(column)
         }
         
-        func action(_ column: InsightColumn) throws -> () {
+        func action(_ column: InsightColumn, from: CalculatedColumn?) throws -> () {
             add(column)
             if case .calculated(let calculated) = column {
                 try calculated.traverse(report, action)
@@ -471,9 +489,26 @@ enum CalculatedVisibility : Int, Equatable, Hashable, Codable, CaseIterable {
     }
 }
 
+enum CalculatedSortLevelType: Int, Codable {
+    case board = 0
+    case yAxis = 1
+    case xAxis = 2
+    
+    func string(gridMode: Bool, level: Int? = nil) -> String {
+        switch self {
+        case .board:
+            "Board Level Selection"
+        case .yAxis:
+            "\(gridMode ? "Y Axis" : "View") \(level == nil ? "" : "Level \(level!)") Sort Key"
+        case .xAxis:
+            "X Axis \(level == nil ? "" : "Level \(level!)") Sort Key"
+        }
+    }
+}
+
 class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had to be a struct to refresh parent view!
     var id: UUID = UUID()
-    var isBoard: Bool
+    var levelType: CalculatedSortLevelType
     var key: InsightColumn?
     var direction: SortDirection
     var subtotal: Bool
@@ -483,7 +518,11 @@ class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had 
     var selectionTree: CalculatedParseNode?
     
     var isTotalling: Bool {
-        !isBoard && (subtotal || !selectionLogic.isEmpty)
+        levelType != .board && (subtotal || !selectionLogic.isEmpty)
+    }
+    
+    var combinedState: SortDataState {
+        subtotal ? defaultState : .hidden
     }
     
     func value<ViewModel>(report: Report, viewModel: ViewModel, level: Int, evaluate: @escaping (ViewModel, InsightColumn) throws -> CalculatedValue?) throws -> Bool {
@@ -497,10 +536,10 @@ class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had 
                 if value.isBoolean, let boolean = value.boolean {
                     return boolean
                 } else {
-                    throw CalculatedError.errorEvaluatingSelection(isBoard ? "board level" : "level \(level)")
+                    throw CalculatedError.errorEvaluatingSelection(levelType.string(gridMode: report.values.gridMode, level: level))
                 }
             } else {
-                throw CalculatedError.errorEvaluatingSelection(isBoard ? "board level" : "level \(level)")
+                throw CalculatedError.errorEvaluatingSelection(levelType.string(gridMode: report.values.gridMode,level: level))
             }
         }
     }
@@ -560,24 +599,24 @@ class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had 
         }
     }
     
-    func traverse(_ report: Report, _ action: (InsightColumn) throws -> ()) throws {
+    func traverse(_ report: Report, _ action: (InsightColumn,CalculatedColumn?) throws -> ()) throws {
         prepareTree(report: report)
         if let tree = selectionTree {
-            try tree.traverse(action)
+            try tree.traverse(from: nil, action)
         }
     }
     
-    init(isBoard: Bool = false) {
-        self.isBoard = isBoard
-        self.key = nil
+    init(type: CalculatedSortLevelType = .board, key: InsightColumn = .spacer, subTotal: Bool = false) {
+        self.levelType = type
+        self.key = key
         self.direction = .ascending
-        self.subtotal = false
+        self.subtotal = subTotal
         self.defaultState = .expanded
         self.selectionLogic = []
     }
     
     func copy(from: CalculatedSortLevel) {
-        self.isBoard = from.isBoard
+        self.levelType = from.levelType
         self.key = from.key
         self.direction = from.direction
         self.subtotal = from.subtotal
@@ -586,7 +625,7 @@ class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had 
     }
     
     enum CodingKeys: String, CodingKey {
-        case isBoard
+        case levelType
         case key
         case direction
         case subtotal
@@ -596,7 +635,7 @@ class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had 
     
     required init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        isBoard = try container.decodeIfPresent(Bool.self, forKey: .isBoard) ?? false
+        levelType = try container.decodeIfPresent(CalculatedSortLevelType.self, forKey: .levelType) ?? .board
         key = try container.decodeIfPresent(InsightColumn.self, forKey: .key) ?? nil
         direction = try container.decodeIfPresent(SortDirection.self, forKey: .direction) ?? .ascending
         subtotal = try container.decodeIfPresent(Bool.self, forKey: .subtotal) ?? false
@@ -609,7 +648,7 @@ class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had 
     }
     
     func hash(into hasher: inout Hasher) {
-        hasher.combine(isBoard)
+        hasher.combine(levelType)
         hasher.combine(key)
         hasher.combine(direction)
         hasher.combine(subtotal)
@@ -618,7 +657,7 @@ class CalculatedSortLevel : Codable, Equatable, Hashable, Identifiable { // Had 
     }
     
     static func == (lhs: CalculatedSortLevel, rhs: CalculatedSortLevel) -> Bool {
-        return lhs.isBoard == rhs.isBoard && lhs.key == rhs.key && lhs.direction == rhs.direction && lhs.subtotal == rhs.subtotal && lhs.defaultState == rhs.defaultState && lhs.selectionLogic == rhs.selectionLogic
+        return lhs.levelType == rhs.levelType && lhs.key == rhs.key && lhs.direction == rhs.direction && lhs.subtotal == rhs.subtotal && lhs.defaultState == rhs.defaultState && lhs.selectionLogic == rhs.selectionLogic
     }
     
     var selectionLogicString: String {

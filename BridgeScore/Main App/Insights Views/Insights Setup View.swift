@@ -35,7 +35,25 @@ struct InsightsSetupView : View {
                         Spacer().layoutPriority(1)
                     }
                     Spacer().frame(width: 50)
-                    InsightsReportViewStorage(report: report)
+                    VStack(spacing: 0) {
+                        Spacer().frame(height: 20)
+                        Text("Grid Mode")
+                            .font(defaultFont)
+                            .frame(height: 40)
+                        Spacer().frame(height: 20)
+                        Picker("", selection: $report.values.gridMode) {
+                            Text("Off").tag(false)
+                            Text("On").tag(true)
+                        }
+                        .onChange(of: report.values.gridMode) {
+                            report.objectWillChange.send()
+                        }
+                        .pickerStyle(.segmented)
+                        Spacer().frame(height: 40)
+                        InsightsReportViewStorage(report: report)
+                        Spacer()
+                    }
+                    .frame(width: 130)
                     Spacer().frame(width: 30)
                 }
                 Spacer()
@@ -85,7 +103,7 @@ struct InsightsSetupView : View {
                     for element in level.selectionLogic {
                         if case .variable(let logicVariable) = element {
                             if logicVariable.name == column.name {
-                                MessageBox.shared.show("This column is referenced by \(level.isBoard ? "the main selection logic" : "sort level \(index) selection logic").\n\nYou must remove this column from that logic before removing it here.")
+                                MessageBox.shared.show("This column is referenced by \(level.levelType == .board ? "the main selection logic" : "\(level.levelType.string(gridMode: report.values.gridMode)) selection logic").\n\nYou must remove this column from that logic before removing it here.")
                                 okToRemove = false
                                 break
                             }
@@ -427,7 +445,19 @@ struct InsightsColumnListView : View {
                                     tapHandler(column: showColumn)
                                 }
                                 .onTapGesture(count: 2) {
-                                    tapHandler(column: showColumn, count: 2)
+                                    switch showColumn {
+                                    case .calculated:
+                                        if listType != .calculatedColumns {
+                                            break
+                                        } else {
+                                            tapHandler(column: showColumn, count: 2)
+                                        }
+                                    case .prompt:
+                                        break
+                                    default:
+                                        tapHandler(column: showColumn, count: 2)
+                                    }
+                                    
                                 }
                             }
                         }

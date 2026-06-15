@@ -466,6 +466,32 @@
 			path = "Apple Intelligence";
 			sourceTree = "<group>";
 		};
+		B23FB1D82FDBC6DD00C47E89 /* Insights */ = {
+			isa = PBXGroup;
+			children = (
+				B207711A2F9D28AB00DB6C18 /* Insights.swift */,
+				B2029F732FAB4D1F00634061 /* Insight Column.swift */,
+				B2029F752FAB4D6C00634061 /* Report.swift */,
+			);
+			path = Insights;
+			sourceTree = "<group>";
+		};
+		B23FB1D92FDBC79A00C47E89 /* Insights Views */ = {
+			isa = PBXGroup;
+			children = (
+				B2746FC02F9F2BBA00716D08 /* Insights View.swift */,
+				B2A724D02FA61BF400C574DC /* Insights Setup View.swift */,
+				B23F362D2FB0DAF7009C2AA9 /* Insights Calculated View.swift */,
+				B2DA48282FD42E380076D177 /* Insights Config View.swift */,
+				B23F362F2FB0DB3D009C2AA9 /* Insights Sort Level View.swift */,
+				B22305942FBB60A5005A555E /* Insights Prompt View.swift */,
+				B22305DD2FBC0BEA005A555E /* Insights Prompt Value View.swift */,
+				B26345EA2FBCD434009377E7 /* Insights Prompt Entry View.swift */,
+				B23F362B2FB04AA6009C2AA9 /* Insights Storage View.swift */,
+			);
+			path = "Insights Views";
+			sourceTree = "<group>";
+		};
 		B240141627CB4FF900C3117F /* Obsolete Views */ = {
 			isa = PBXGroup;
 			children = (
@@ -542,6 +568,8 @@
 			children = (
 				B26BCE242799AA6C00B73501 /* Standard Components */,
 				B26BCE252799AA7900B73501 /* View Models */,
+				B23FB1D82FDBC6DD00C47E89 /* Insights */,
+				B23FB1D92FDBC79A00C47E89 /* Insights Views */,
 				B26BCE6D279AEB4C00B73501 /* Main Views */,
 				B2BAD9B727F757AA008D0160 /* Imports */,
 				B2A2053327AFBFB900C83C88 /* Setup Views */,
@@ -696,9 +724,6 @@
 				B26BCE532799AE4D00B73501 /* Master Data.swift */,
 				B2EB3D78279DB80000D64225 /* Scorecard.swift */,
 				B2AB6ECA2AC2CCA900ED002A /* Analysis.swift */,
-				B207711A2F9D28AB00DB6C18 /* Insights.swift */,
-				B2029F732FAB4D1F00634061 /* Insight Column.swift */,
-				B2029F752FAB4D6C00634061 /* Report.swift */,
 				B27AD1322F693ADF00890600 /* Rescore.swift */,
 				B29BBA772D33D0A10032BC2F /* Scorecard Type Classes.swift */,
 				B29BBA792D33D1540032BC2F /* Contract Classes.swift */,
@@ -759,15 +784,6 @@
 				B22F55442A9CF33F0058443D /* Hand Viewer.swift */,
 				B217C8D62F7E6D8F006F02A3 /* Bidding Viewer.swift */,
 				B217C8D42F7E548A006F02A3 /* Bidding Editor View.swift */,
-				B2746FC02F9F2BBA00716D08 /* Insights View.swift */,
-				B2A724D02FA61BF400C574DC /* Insights Setup View.swift */,
-				B23F362D2FB0DAF7009C2AA9 /* Insights Calculated View.swift */,
-				B2DA48282FD42E380076D177 /* Insights Config View.swift */,
-				B23F362F2FB0DB3D009C2AA9 /* Insights Sort Level View.swift */,
-				B22305942FBB60A5005A555E /* Insights Prompt View.swift */,
-				B22305DD2FBC0BEA005A555E /* Insights Prompt Value View.swift */,
-				B26345EA2FBCD434009377E7 /* Insights Prompt Entry View.swift */,
-				B23F362B2FB04AA6009C2AA9 /* Insights Storage View.swift */,
 				B2EEFC772AAB5BE4005A1ECA /* Analysis Viewer.swift */,
 			);
 			name = "Main Views";

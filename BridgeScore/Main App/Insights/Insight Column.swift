@@ -144,6 +144,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     case game(config: InsightColumnConfig? = nil, pairType: PairType)
     case smallSlam(config: InsightColumnConfig? = nil, pairType: PairType)
     case grandSlam(config: InsightColumnConfig? = nil, pairType: PairType)
+    case count(config: InsightColumnConfig? = nil)
     case spacer
     case calculated(column: CalculatedColumn)
     case prompt(prompt: CalculatedPrompt)
@@ -204,6 +205,7 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
      .age(config: nil),
      .sessionNumber(config: nil),
      .boardNumber(config: nil),
+     .count(config: nil),
      .vulnerability(config: nil),
      .eventType(config: nil),
      .eventLevel(config: nil),
@@ -266,110 +268,112 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     
     static func updateConfig(column: InsightColumn, config: InsightColumnConfig?) -> InsightColumn {
         switch column {
-        case eventDesc:
+        case .eventDesc:
                 .eventDesc(config: config)
-        case boardIndex:
+        case .boardIndex:
                 .boardIndex(config: config)
-        case sessionNumber:
+        case .sessionNumber:
                 .sessionNumber(config: config)
-        case boardNumber:
+        case .boardNumber:
                 .boardNumber(config: config)
-        case partner:
+        case .partner:
                 .partner(config: config)
-        case location:
+        case .location:
                 .location(config: config)
-        case date:
+        case .date:
                 .date(config: config)
-        case age:
+        case .age:
                 .age(config: config)
-        case vulnerability:
+        case .vulnerability:
                 .vulnerability(config: config)
-        case eventType:
+        case .eventType:
                 .eventType(config: config)
-        case eventLevel:
+        case .eventLevel:
                 .eventLevel(config: config)
-        case boardScoreType:
+        case .boardScoreType:
                 .boardScoreType(config: config)
-        case contract:
+        case .contract:
                 .contract(config: config)
-        case contractLevel:
+        case .contractLevel:
                 .contractLevel(config: config)
-        case contractSuit:
+        case .contractSuit:
                 .contractSuit(config: config)
-        case contractDouble:
+        case .contractDouble:
                 .contractDouble(config: config)
-        case contractRedouble:
+        case .contractRedouble:
                 .contractRedouble(config: config)
-        case contractMade:
+        case .contractMade:
                 .contractMade(config: config)
-        case made:
+        case .made:
                 .made(config: config)
-        case tricks:
+        case .tricks:
                 .tricks(config: config)
-        case declarer:
+        case .declarer:
                 .declarer(config: config)
-        case declarerPair:
+        case .declarerPair:
                 .declarerPair(config: config)
-        case score:
+        case .score:
                 .score(config: config)
-        case contDdTricks:
+        case .contDdTricks:
                 .contDdTricks(config: config)
-        case contMedianTricks:
+        case .contMedianTricks:
                 .contMedianTricks(config: config)
-        case contModeTricks:
+        case .contModeTricks:
                 .contModeTricks(config: config)
-        case fieldSize:
+        case .fieldSize:
                 .fieldSize(config: config)
-        case gameOdds:
+        case .gameOdds:
                 .gameOdds(config: config)
-        case slamOdds:
+        case .slamOdds:
                 .slamOdds(config: config)
-        case compContract:
+        case .compContract:
                 .compContract(config: config)
-        case compContractLevel:
+        case .compContractLevel:
                 .compContractLevel(config: config)
-        case compDeclarer:
+        case .compDeclarer:
                 .compDeclarer(config: config)
-        case compDdTricks:
+        case .compDdTricks:
                 .compDdTricks(config: config)
-        case compDdScore:
+        case .compDdScore:
                 .compDdScore(config: config)
-        case compMakeScore:
+        case .compMakeScore:
                 .compMakeScore(config: config)
-        case compMakeOdds:
+        case .compMakeOdds:
                 .compMakeOdds(config: config)
-        case suit(_, let pairType):
+        case .suit(_, let pairType):
                 .suit(config: config, pairType: pairType)
-        case declare(_, let pairType):
+        case .declare(_, let pairType):
                 .declare(config: config, pairType: pairType)
-        case medianTricks(_, let pairType):
+        case .medianTricks(_, let pairType):
                 .medianTricks(config: config, pairType: pairType)
-        case modeTricks(_, let pairType):
+        case .modeTricks(_, let pairType):
                 .modeTricks(config: config, pairType: pairType)
-        case ddTricks(_, let pairType):
+        case .ddTricks(_, let pairType):
                 .ddTricks(config: config, pairType: pairType)
-        case fit(_, let pairType):
+        case .fit(_, let pairType):
                 .fit(config: config, pairType: pairType)
-        case points(_, let seatPlayer):
+        case .points(_, let seatPlayer):
                 .points(config: config, seatPlayer: seatPlayer)
-        case suitType:
+        case .suitType:
                 .suitType(config: config)
-        case levelType:
+        case .levelType:
                 .levelType(config: config)
-        case totalTricks:
+        case .totalTricks:
                 .totalTricks(config: config)
-        case totalTricksDd:
+        case .totalTricksDd:
                 .totalTricksDd(config: config)
-        case passout:
+        case .passout:
                 .passout(config: config)
-        case partScore(_, let pairType):
+        case .partScore(_, let pairType):
                 .partScore(config: config, pairType: pairType)
-        case game(_, let pairType):
+        case .game(_, let pairType):
                 .game(config: config, pairType: pairType)
-        case smallSlam(_, let pairType):
+        case .smallSlam(_, let pairType):
                 .smallSlam(config: config, pairType: pairType)
-        case grandSlam(_, let pairType):
+        case .grandSlam(_, let pairType):
                 .grandSlam(config: config, pairType: pairType)
+        case .count:
+            .count(config: config)
         default:
             column
         }
@@ -502,6 +506,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
                 "\(seatPlayer.string) Small Slam"
             case .grandSlam(_, let seatPlayer):
                 "\(seatPlayer.string) Grand Slam"
+            case .count:
+                "Count"
             case .spacer:
                 ""
             case .calculated(let column):
@@ -619,6 +625,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
                 .numeric
         case .passout, .partScore, .game, .smallSlam, .grandSlam:
                 .percent
+        case .count:
+                .numeric
         case .spacer:
                 .string
         case .calculated(let column):
@@ -661,6 +669,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
                     .total
             case .made:
                     .total
+            case .count:
+                    .total
             case .calculated(let calculated):
                 calculated.totalType
             default:
@@ -671,6 +681,14 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
     
     func value<ViewModel: NSObject>(report: Report, viewModel: ViewModel) throws -> CalculatedValue {
         let value = try insightValue(report: report, boardSummary: viewModel as! BoardSummaryViewModel)
+        if self.insightType == .percent {
+            value.numeric! /= 100
+        }
+        return value
+    }
+    
+    func sortValue<ViewModel: NSObject>(report: Report, viewModel: ViewModel) throws -> CalculatedValue {
+        let value = try sortValue(report: report, boardSummary: viewModel as! BoardSummaryViewModel)
         if self.insightType == .percent {
             value.numeric! /= 100
         }
@@ -826,6 +844,8 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             return summaryValue(boardSummary.smallSlam[pairType]!)
         case .grandSlam(_, let pairType):
             return summaryValue(boardSummary.grandSlam[pairType]!)
+        case .count:
+            return summaryValue(1)
         case .spacer:
             return CalculatedValue("")
         case .calculated(let column):
@@ -836,6 +856,31 @@ enum InsightColumn : Codable, Hashable, Equatable, Transferable {
             }
         case .prompt(let prompt):
             return prompt.value ?? prompt.calculatedDefaultValue
+        }
+    }
+    
+    func sortValue(report: Report, boardSummary: BoardSummaryViewModel) throws -> CalculatedValue {
+        switch self {
+        case .levelType:
+            CalculatedValue(boardSummary.contract.levelType.rawValue, overrideText: boardSummary.contract.levelType.string)
+        case .suitType:
+            CalculatedValue(boardSummary.contract.suitType.rawValue, overrideText: boardSummary.contract.suitType.string)
+        case .eventLevel:
+            CalculatedValue(boardSummary.location!.level.rawValue, overrideText: boardSummary.location!.level.string)
+        case .contract:
+            CalculatedValue((((boardSummary.contract.level.rawValue * 100) + boardSummary.contract.suit.rawValue) * 100) + boardSummary.contract.double.rawValue, overrideText: boardSummary.contract.compact)
+        case .contractSuit:
+            CalculatedValue(boardSummary.contract.suit.rawValue, overrideText: boardSummary.contract.suit.string)
+        case .declarer:
+            CalculatedValue(boardSummary.declarer.rawValue, overrideText: boardSummary.declarer.string)
+        case .declarerPair:
+            CalculatedValue(boardSummary.declarer.pairType.rawValue, overrideText: boardSummary.declarer.pairType.string)
+        case .compContract:
+            CalculatedValue((((boardSummary.compContract.level.rawValue * 100) + boardSummary.compContract.suit.rawValue) * 100) + boardSummary.compContract.levelType.rawValue, overrideText: boardSummary.compContract.compact)
+        case .compDeclarer:
+            CalculatedValue(boardSummary.compDeclarer.rawValue, overrideText: boardSummary.compDeclarer.string)
+        default:
+            try self.insightValue(report: report, boardSummary: boardSummary)
         }
     }
     

@@ -278,32 +278,36 @@ class CalculatedValue : Codable, Equatable, Hashable {
     var boolean: Bool?
     var type: CalculatedType
     var lastBindingString: String? = nil
+    var overrideText: String? = nil
     
-    init(numeric: Float, string: String, boolean: Bool, type: CalculatedType) {
+    init(numeric: Float, string: String, boolean: Bool, type: CalculatedType, overrideText: String? = nil) {
         self.numeric = numeric
         self.string = string
         self.boolean = boolean
         self.type = type
+        self.overrideText = overrideText
     }
     
-    init(_ numeric: Float) {
+    init(_ numeric: Float, overrideText: String? = nil) {
         self.numeric = numeric
         self.type = .numeric
+        self.overrideText = overrideText
     }
     
-    init(_ integer: Int) {
-        self.numeric = Float(integer)
-        self.type = .numeric
+    convenience init(_ integer: Int, overrideText: String? = nil) {
+        self.init(Float(integer), overrideText: overrideText)
     }
     
-    init(_ string: String) {
+    init(_ string: String, overrideText: String? = nil) {
         self.string = string
         self.type = .string
+        self.overrideText = overrideText
     }
     
-    init(_ boolean: Bool) {
+    init(_ boolean: Bool, overrideText: String? = nil) {
         self.boolean = boolean
         self.type = .boolean
+        self.overrideText = overrideText
     }
     
     public func hash(into hasher: inout Hasher) {
@@ -319,27 +323,31 @@ class CalculatedValue : Codable, Equatable, Hashable {
     }
     
     var text: String {
-        switch type {
-        case .numeric:
-            if let lastBindingString = lastBindingString {
-                if lastBindingString.contains(".") {
-                    if Float(lastBindingString) == Float(numeric!) {
-                        return lastBindingString
+        if let overrideText = overrideText {
+            return overrideText
+        } else {
+            switch type {
+            case .numeric:
+                if let lastBindingString = lastBindingString {
+                    if lastBindingString.contains(".") {
+                        if Float(lastBindingString) == Float(numeric!) {
+                            return lastBindingString
+                        } else {
+                            return "\(numeric!)"
+                        }
+                    } else if lastBindingString == "" {
+                        return ""
                     } else {
-                        return "\(numeric!)"
+                        return "\(Int(numeric!))"
                     }
-                } else if lastBindingString == "" {
-                    return ""
                 } else {
-                    return "\(Int(numeric!))"
+                    return "\(numeric!)"
                 }
-            } else {
-                return "\(numeric!)"
+            case .string:
+                return string!
+            default:
+                return "\(boolean!)"
             }
-        case .string:
-            return string!
-        default:
-            return "\(boolean!)"
         }
     }
     
@@ -678,28 +686,28 @@ indirect enum CalculatedParseNode : Equatable {
         }
     }
     
-    public func traverse(_ action: (InsightColumn) throws -> ()) throws {
+    public func traverse(from: CalculatedColumn?, _ action: (InsightColumn, CalculatedColumn?) throws -> ()) throws {
         switch self {
         case .variable(let variable):
-            try action(variable)
+            try action(variable, from)
         case .binaryOp(let lhs, _, let rhs):
-            try lhs.traverse(action)
-            try rhs.traverse(action)
+            try lhs.traverse(from: from, action)
+            try rhs.traverse(from: from, action)
         case .unaryOp( _, let value):
-            try value.traverse(action)
+            try value.traverse(from: from, action)
         case .logicalOp(let lhs, _, let rhs):
-            try lhs.traverse(action)
-            try rhs.traverse(action)
+            try lhs.traverse(from: from, action)
+            try rhs.traverse(from: from, action)
         case .comparisonOp(let lhs, _, let rhs):
-            try lhs.traverse(action)
-            try rhs.traverse(action)
+            try lhs.traverse(from: from, action)
+            try rhs.traverse(from: from, action)
         case .ternaryOp(let condition, let ifTrue, let ifFalse):
-            try condition.traverse(action)
-            try ifTrue.traverse(action)
-            try ifFalse.traverse(action)
+            try condition.traverse(from: from, action)
+            try ifTrue.traverse(from: from, action)
+            try ifFalse.traverse(from: from, action)
         case .function(_, let arguments):
             for argument in arguments {
-                try argument.traverse(action)
+                try argument.traverse(from: from, action)
             }
         default:
             break
@@ -870,7 +878,7 @@ enum CalculatedError: Error {
         case .invalidToken(let token):
             return "Invalid token: \(token)"
         case .circularReference(let name):
-            return "Circular reference to calculated column: '\(name)'"
+            return "Circular reference to this calculated column in: '\(name)'"
         case .invalidVariableName(let name):
             return "Invalid variable name \(name)"
         case .divideByZero:

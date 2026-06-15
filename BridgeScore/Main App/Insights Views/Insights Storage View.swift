@@ -16,7 +16,11 @@ struct InsightsReportViewStorage : View {
     var body: some View {
         HStack {
             VStack {
-                Spacer().frame(height: 80)
+                Spacer().frame(height: 20)
+                Text("Storage")
+                    .font(defaultFont)
+                    .frame(height: 40)
+                Spacer().frame(height: 20)
                 InsightsSetupButton(text: "Load View") {
                     showLoadDialog = true
                 }
@@ -37,7 +41,6 @@ struct InsightsReportViewStorage : View {
                 InsightsSetupButton(text: "Delete View") {
                     showRemoveDialog = true
                 }
-                Spacer()
             }
         }
         .sheet(isPresented: $showLoadDialog) {
@@ -105,7 +108,7 @@ struct InsightsReportViewStorage : View {
     }
     
     static func createEmptyView(report: Report) throws {
-        let level = CalculatedSortLevel(isBoard: true)
+        let level = CalculatedSortLevel(type: .board)
         level.selectionLogic = [.variable(.age(config: nil)),.comparisonOperator(.lessThan),.literal(CalculatedLiteral(characters: "30", type: .numeric))]
         try report.update(from: ReportValues(viewName: "", pinnedColumns: InsightColumn.defaultPinnedColumns, unpinnedColumns: InsightColumn.defaultColumns, levels: [level]))
     }
@@ -114,6 +117,7 @@ struct InsightsReportViewStorage : View {
 struct InsightsReportViewStorageLoadDialog: View {
     @ObservedObject var report: Report
     var forceDismiss: Bool = false
+    var clearPrevious: (()->())? = nil
     var completion: (()->())? = nil
     
     @Environment(\.dismiss) var dismiss
@@ -157,6 +161,7 @@ struct InsightsReportViewStorageLoadDialog: View {
                                         }
                                         .onTapGesture(count: 2) {
                                             loadUrl = url
+                                            clearPrevious?()
                                             loadUrl(url: loadUrl!)
                                         }
                                     }
@@ -415,6 +420,7 @@ struct InsightsReportViewStorageRemoveDialog: View {
 struct InsightsSetupButton : View {
     @Environment(\.isEnabled) private var isEnabled
     var text: String
+    var palette: ThemeBackgroundColorName? = nil
     var action: ()->()
     
     var body : some View {
@@ -426,7 +432,7 @@ struct InsightsSetupButton : View {
             }
             .frame(width: 130, height: 40)
             .font(inputTitleFont)
-            .palette(isEnabled ? .enabledButton : .disabledButton)
+            .palette(palette != nil ? palette! : (isEnabled ? .enabledButton : .disabledButton))
             .opacity(isEnabled ? 1 : 0.7)
             .cornerRadius(6)
         }

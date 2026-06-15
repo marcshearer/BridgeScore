@@ -18,12 +18,14 @@ struct InsightsPromptsView : View {
     var body: some View {
         
         VStack {
-            Top(padding: 40) {
+            Spacer().frame(height: 10)
+            Top(padding: 0) {
                 CenteredText("View Prompts")
                     .font(defaultFont)
                     .frame(height: 40)
             }
             .frame(height: 40)
+            Spacer().frame(height: 20)
             promptView()
             Spacer()
         }
@@ -38,7 +40,7 @@ struct InsightsPromptsView : View {
     func promptView() -> some View {
         VStack(spacing: 0) {
             let prompts = report.values.prompts
-            let bodyHeight: CGFloat = min(280, max(40, CGFloat(40 * (report.values.prompts.count))))
+            let bodyHeight: CGFloat = min(((report.values.gridMode ? 3 : 4) * 40), max(40, CGFloat(40 * (report.values.prompts.count)))) + 20
             ZStack {
                 VStack(spacing: 0) {
                     VStack(spacing: 0) {

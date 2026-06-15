@@ -12,22 +12,37 @@ struct InsightsSortLevelsView : View {
     
     @State private var showSortLevel: ShowSortLevel? = nil
     @State private var sortLevel: CalculatedSortLevel = CalculatedSortLevel()
-    @State var selected: CalculatedSortLevel? = nil
+    @State var selected: [CalculatedSortLevelType : CalculatedSortLevel] = [:]
     @State private var refreshId = UUID()
     
     var body: some View {
         
-        Top(padding: 20) {
+        Top(padding: 0) {
+            Spacer().frame(height: 20)
             CenteredText("View Selection")
                 .font(defaultFont)
                 .frame(height: 40)
             Spacer().frame(height: 20)
             selectionView()
-            CenteredText("View Sorting")
-                .font(defaultFont)
-                .frame(height: 40)
+            Spacer().frame(height: 10)
+            HStack {
+                Spacer()
+                Text(report.values.gridMode ? "Y-Axis Sorting" : "View Sorting")
+                    .font(defaultFont)
+                Spacer()
+            }
+            .frame(height: 40)
             Spacer().frame(height: 20)
-            sortView()
+            sortView(levelType: .yAxis)
+            if report.values.gridMode {
+                Spacer().frame(height: 10)
+                CenteredText("X-Axis Sorting")
+                    .font(defaultFont)
+                    .frame(height: 40)
+                Spacer().frame(height: 20)
+                sortView(levelType: .xAxis)
+            }
+            
         }
         .fullScreenCover(item: $showSortLevel) { showSortLevel in
             FullScreenView(minWidth: 1600, minHeight: 1200) {
@@ -41,7 +56,7 @@ struct InsightsSortLevelsView : View {
     
     func selectionView() -> some View {
         HStack(spacing: 0) {
-            let level = report.values.levels.first!
+            let level = report.values.levels.filter({$0.levelType == .board}).first!
             let bodyHeight: CGFloat = 40
             ZStack {
                 VStack(spacing: 0) {
@@ -69,7 +84,7 @@ struct InsightsSortLevelsView : View {
                             Text(level.selectionLogicString)
                         }
                         .onTapGesture(count: 2) {
-                            selected = level
+                            selected[level.levelType] = level
                             editSortLevel(level)
                         }
                         .id(refreshId)
@@ -93,10 +108,10 @@ struct InsightsSortLevelsView : View {
         }
     }
     
-    func sortView() -> some View {
+    func sortView(levelType: CalculatedSortLevelType) -> some View {
         HStack(spacing: 0) {
-            let levels = report.values.levels
-            let bodyHeight: CGFloat = min(160, max(40, CGFloat(40 * (report.values.levels.count - 1))))
+            let levels = report.values.levels.filter{$0.levelType == levelType}
+            let bodyHeight: CGFloat = min(((report.values.gridMode ? 2 : 4) * 40), max(40, CGFloat(40 * levels.count))) + 20
             ZStack {
                 VStack(spacing: 0) {
                     VStack(spacing: 0) {
@@ -117,9 +132,9 @@ struct InsightsSortLevelsView : View {
                         .palette(.contrastTile, clear: true)
                     ScrollView(.vertical) {
                         VStack(spacing: 0) {
-                            ForEach(1..<levels.count, id: \.self) { index in
+                            ForEach(0..<levels.count, id: \.self) { index in
                                 let level = levels[index]
-                                gridRowValues(index: index, level: level)
+                                gridRowValues(index: index + 1, level: level)
                                     .id(refreshId)
                             }
                         }
@@ -128,16 +143,16 @@ struct InsightsSortLevelsView : View {
                     HStack {
                         Spacer().frame(width: 20)
                         Button {
-                            editSortLevel(selected!)
+                            editSortLevel(selected[levelType]!)
                         } label: {
                             Text("Edit")
                         }
                         .contentShape(Rectangle())
-                        .opacity(selected == nil ? 0.3 : 1)
-                        .disabled(selected == nil)
+                        .opacity(selected[levelType] == nil ? 0.3 : 1)
+                        .disabled(selected[levelType] == nil)
                         Button {
-                            if let index = (selected == nil ? report.values.levels.count - 1 : report.values.levels.firstIndex(where: {$0 == selected!})) {
-                                sortLevel = CalculatedSortLevel()
+                            if let index = (selected[levelType] == nil ? levels.count - 1 : levels.firstIndex(where: {$0 == selected[levelType]!})) {
+                                sortLevel = CalculatedSortLevel(type: levelType)
                                 showSortLevel = ShowSortLevel(index: index + 1, editMode: .create)
                             }
                         } label: {
@@ -146,18 +161,18 @@ struct InsightsSortLevelsView : View {
                                 .background(Color.clear)
                                 .contentShape(Rectangle())
                         }
-                        if selected != nil, !selected!.isBoard {
+                        if selected[levelType] != nil {
                             Button {
-                                if let index = report.values.levels.firstIndex(where: {$0 == selected!}) {
+                                if let index = report.values.levels.firstIndex(where: {$0 == selected[levelType]!}) {
                                     report.values.levels.remove(at: index)
-                                    selected = nil
+                                    selected[levelType] = nil
                                 }
                             } label: {
                                 Image(systemName: "minus")
                                     .contentShape(Rectangle())
                             }
-                            .opacity(selected == nil ? 0.3 : 1)
-                            .disabled(selected == nil)
+                            .opacity(selected[levelType] == nil ? 0.3 : 1)
+                            .disabled(selected[levelType] == nil)
                         }
                         Spacer()
                     }
@@ -194,14 +209,14 @@ struct InsightsSortLevelsView : View {
                     .palette(.tile, clear: true)
         }
         .palette(.tile, clear: true)
-        .if(selected == level) { view in
+        .if(selected[level.levelType] == level) { view in
             view.palette(.alternate)
         }
         .onTapGesture {
-            selected = level
+            selected[level.levelType] = level
         }
         .onTapGesture(count: 2) {
-            selected = level
+            selected[level.levelType] = level
             editSortLevel(level)
         }
     }
@@ -219,7 +234,7 @@ struct InsightsSortLevelView : View {
     @Binding var sortLevel: CalculatedSortLevel
     @State var index: Int
     @State var editMode: InsightEditMode
-    @Binding var selected: CalculatedSortLevel?
+    @Binding var selected: [CalculatedSortLevelType:CalculatedSortLevel]
     
     @State var errorMessage: String = ""
     @State var cursor: Int = 0
@@ -234,11 +249,15 @@ struct InsightsSortLevelView : View {
         get: { self.editSortLevel.key?.title ?? "" },
         set: { _ in })}
     
+    var title: Binding<String> { Binding(
+        get: { "\(editMode.string.capitalized) \(sortLevel.levelType.string(gridMode: report.values.gridMode,level: index + 1))" },
+        set: { _ in })}
+    
     var body: some View {
         VStack(spacing: 0) {
-            Banner(title: Binding.constant("\(editMode.string.capitalized) \(sortLevel.isBoard ? "Board Selection" : "Sort Level \(index)")"), alternateColor: true, height: 80)
+            Banner(title: title, alternateColor: true, height: 80)
             Spacer().frame(height: 30)
-            if !editSortLevel.isBoard {
+            if editSortLevel.levelType != .board {
                 HStack {
                     Spacer().frame(width: 40)
                     HStack(spacing: 0) {
@@ -302,6 +321,9 @@ struct InsightsSortLevelView : View {
                             InputToggle(field: $editSortLevel.subtotal, disabled: Binding.constant(false), topSpace: 10, width: 80, inlineTitle: false) { newValue in
                                 if !editSortLevel.subtotal {
                                     editSortLevel.selectionLogic = []
+                                    editSortLevel.defaultState = .hidden
+                                } else {
+                                    editSortLevel.defaultState = .expanded
                                 }
                                 report.objectWillChange.send()
                             }
@@ -319,13 +341,13 @@ struct InsightsSortLevelView : View {
                         }
                         .frame(width: 200)
                         Picker("Default state", selection: $editSortLevel.defaultState) {
-                            ForEach(SortDataState.allCases, id: \.self) { state in
-                                Text(state.string)
-                                    .tag(state)
+                            ForEach([SortDataState.expanded, .collapsed], id: \.self) { state in
+                                Text(state.string).tag(state)
                             }
                         }
                         .pickerStyle(.segmented)
                         .frame(width: 240)
+                        .disabled(!editSortLevel.subtotal)
                         Spacer()
                     }
                 }
@@ -335,19 +357,19 @@ struct InsightsSortLevelView : View {
                 Spacer().frame(width: 40)
                 HStack {
                     HStack(spacing: 0) {
-                        Text("\(sortLevel.isBoard ? "Board" : "Subtotal") selection logic:")
+                        Text("\(sortLevel.levelType == .board ? "Board" : "Subtotal") selection logic:")
                         Spacer()
                     }
                     .frame(width: 200)
-                    CalculatedValuesView(logic: $editSortLevel.selectionLogic, cursor: $cursor, fieldType: .selectionLogic, nextFocusValue: .sortKey, previousFocusValue: .sortKey, focus: $focus, height: (editSortLevel.isBoard ? 114 : 50), color: .alternate) {
+                    CalculatedValuesView(logic: $editSortLevel.selectionLogic, cursor: $cursor, fieldType: .selectionLogic, nextFocusValue: .sortKey, previousFocusValue: .sortKey, focus: $focus, height: (editSortLevel.levelType == .board ? 114 : 50), color: .alternate) {
                         updateLogic()
                     }
                 }
-                .disabled(!editSortLevel.subtotal && !editSortLevel.isBoard)
-                .opacity(editSortLevel.subtotal || editSortLevel.isBoard ? 1 : 0.3)
+                .disabled(!editSortLevel.subtotal && editSortLevel.levelType != .board)
+                .opacity(editSortLevel.subtotal || editSortLevel.levelType == .board ? 1 : 0.3)
                 HStack {
                     Spacer().frame(width: 20)
-                    if editSortLevel.isBoard {
+                    if editSortLevel.levelType == .board {
                         Text(resultType == nil ? (editSortLevel.selectionLogic.isEmpty ? "No logic - Show all" : "Invalid logic") : (resultType == .boolean ? "Correct" : "Invalid - Must be a boolean result"))
                     } else {
                         Text(resultType == nil ? (editSortLevel.selectionLogic.isEmpty ? "Correct" : "Invalid logic") : (resultType == .boolean ? "Correct" : "Invalid - Must be a boolean result"))
@@ -469,11 +491,11 @@ struct InsightsSortLevelView : View {
         case .create:
             sortLevel.copy(from: editSortLevel)
             report.values.levels.insert(sortLevel, at: index)
-            selected = sortLevel
+            selected[sortLevel.levelType] = sortLevel
         case .amend(let index):
             sortLevel.copy(from: editSortLevel)
             report.values.levels[index].copy(from: sortLevel)
-            selected = sortLevel
+            selected[sortLevel.levelType] = sortLevel
         default:
             break
         }
@@ -481,7 +503,7 @@ struct InsightsSortLevelView : View {
     }
     
     func checkCanSave() {
-        if editSortLevel.isBoard {
+        if editSortLevel.levelType == .board {
             canSave = (!editSortLevel.selectionLogic.isEmpty && resultType == .boolean)
         } else {
             canSave = ((editSortLevel.selectionLogic.isEmpty || resultType == .boolean) && editSortLevel.key != nil)
@@ -489,7 +511,7 @@ struct InsightsSortLevelView : View {
     }
     
     func variableSelected(selected: InsightColumn) {
-        if editSortLevel.isBoard || editSortLevel.subtotal {
+        if editSortLevel.levelType == .board || editSortLevel.subtotal {
             editSortLevel.selectionLogic.insert(.variable(selected), at: cursor)
             cursor += 1
             updateLogic()
@@ -498,7 +520,7 @@ struct InsightsSortLevelView : View {
     }
     
     func functionSelected(selected: CalculatedFunction) {
-        if editSortLevel.isBoard || editSortLevel.subtotal {
+        if editSortLevel.levelType == .board || editSortLevel.subtotal {
             editSortLevel.selectionLogic.insert(contentsOf: [.function(selected), .bracket(.open), .bracket(.close)], at: cursor)
             cursor += 2
             updateLogic()

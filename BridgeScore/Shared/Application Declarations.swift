@@ -242,10 +242,10 @@ public enum PairType: Int, Codable, CaseIterable {
 }
 
 public enum SuitType: Int, CaseIterable {
-    case major
-    case minor
-    case noTrumps
-    case unknown
+    case major = 1
+    case minor = 2
+    case noTrumps = 3
+    case unknown = 0
     
     init(suit: Suit) {
         switch suit {

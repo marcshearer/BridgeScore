@@ -344,7 +344,7 @@ struct InsightsCalculatedColumnView : View {
                     // Traverse the tree looking for duplicates
                     referencedVariables = [editColumn]
                     do {
-                        try tree.traverse(traverseCalculatedColumn)
+                        try tree.traverse(from: editColumn, traverseCalculatedColumn)
                     } catch let error as CalculatedError {
                         errorMessage = error.errorDescription
                         resultType = nil
@@ -362,11 +362,10 @@ struct InsightsCalculatedColumnView : View {
         
         return
         
-        func traverseCalculatedColumn(variable: InsightColumn) throws {
-            let otherReferencedVariables = referencedVariables.filter({$0 != editColumn})
+        func traverseCalculatedColumn(variable: InsightColumn, from: CalculatedColumn?) throws {
             if case let .calculated(calculated) = variable {
-                if otherReferencedVariables.contains(where: { $0.name == calculated.name }) {
-                    throw CalculatedError.circularReference(calculated.title)
+                if calculated.name == editColumn.name {
+                    throw CalculatedError.circularReference(from!.title)
                 } else {
                     // Need to carry on going down in this variable's logic
                     referencedVariables.append(calculated)
