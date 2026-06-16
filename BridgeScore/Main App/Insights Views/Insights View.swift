@@ -379,25 +379,11 @@ struct InsightsView: View {
                 HStack(spacing: 0) {
                     Spacer().frame(width: CGFloat(data.wrappedValue.yTotalLevel! * 20))
                     HStack(spacing: 0) {
-                        Button {
-                            buttonId[data.wrappedValue.id, default: UUID()] = UUID()
-                            let newState = data.wrappedValue.state.inverse
-                            data.wrappedValue.state = newState
-                            if newState == .expanded && report.values.gridMode && data.wrappedValue.yTotalLevel == lowestTotalLevel[.yAxis]! {
-                                // Only allow one bottom row to be expanded in grid mode
-                                gridRowExpanded?.state = .collapsed
-                                gridRowExpanded = data.wrappedValue
-                            } else if newState == .collapsed && gridRowExpanded == data.wrappedValue {
-                                gridRowExpanded = nil
-                            }
-                            filterData()
-                        } label: {
-                            Image(systemName: data.wrappedValue.state == .expanded ? "minus" : "plus")
-                                .id(buttonId[data.wrappedValue.id, default: UUID()])
-                                .frame(width: 30, height: rowHeight)
-                                .background(Color.clear)
-                                .contentShape(Rectangle())
-                        }
+                        Image(systemName: data.wrappedValue.state == .expanded ? "minus" : "plus")
+                            .id(buttonId[data.wrappedValue.id, default: UUID()])
+                            .frame(width: 30, height: rowHeight)
+                            .background(Color.clear)
+                            .contentShape(Rectangle())
                     }
                     .frame(width: 30)
                     Text(data.wrappedValue.yTotalLevel == 0 ? "Grand Total" : "\(bottomGridLevel ? "" : "Total for " )\(data.wrappedValue.levelKey!)")
@@ -408,6 +394,19 @@ struct InsightsView: View {
             }
             .frame(width: width, height: rowHeight)
             .fixedSize()
+        }
+        .onTapGesture {
+            buttonId[data.wrappedValue.id, default: UUID()] = UUID()
+            let newState = data.wrappedValue.state.inverse
+            data.wrappedValue.state = newState
+            if newState == .expanded && report.values.gridMode && data.wrappedValue.yTotalLevel == lowestTotalLevel[.yAxis]! {
+                // Only allow one bottom row to be expanded in grid mode
+                gridRowExpanded?.state = .collapsed
+                gridRowExpanded = data.wrappedValue
+            } else if newState == .collapsed && gridRowExpanded == data.wrappedValue {
+                gridRowExpanded = nil
+            }
+            filterData()
         }
         .onAppear {
             buttonId[data.wrappedValue.id] = UUID()
