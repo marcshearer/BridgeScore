@@ -61,6 +61,7 @@ struct InsightsView: View {
     @State var gridColumns: Int = 1
     @State var gridPrefixes: [String] = []
     @State var gridTotals: [SortData] = []
+    @State var gridRowExpanded: SortData? = nil
     let rowHeight: CGFloat = 30
     
     var body: some View {
@@ -326,19 +327,27 @@ struct InsightsView: View {
             if pinned {
                 Color.clear.frame(width: 20, height: rowHeight)
             }
-            ForEach(0..<columns.count, id: \.self) { columnIndex in
+            ForEach(0..<(pinned ? 1 : gridColumns) * columns.count, id: \.self) { combinedIndex in
+                let gridColumnIndex = combinedIndex / columns.count
+                let columnIndex = combinedIndex % columns.count
                 let column = columns[columnIndex]
                 HStack {
+                    if !pinned && report.values.gridMode && columnIndex == 0 {
+                        line(gridIndex: gridColumnIndex, allLines: columns.count > 1)
+                    }
                     if column.align != .left {
                         Spacer()
                     }
-                    if column.visibility.isInBoard {
+                    if column.visibility.isInBoard && isInColumn(index: gridColumnIndex, sortData: data.wrappedValue) {
                         Text(column.textValue(report: report, boardSummary: boardSummary))
                     } else {
                         Text("")
                     }
                     if column.align != .right {
                         Spacer()
+                    }
+                    if !pinned && report.values.gridMode && combinedIndex == gridColumns * columns.count - 1 {
+                        line(gridIndex: 0)
                     }
                 }
                 .frame(width: column.width, height: rowHeight)
@@ -358,6 +367,10 @@ struct InsightsView: View {
         }
     }
     
+    func isInColumn(index: Int, sortData: SortData) -> Bool {
+        !report.values.gridMode || (gridTotals[index].xKeys == Array(sortData.xKeys.prefix(gridTotals[index].xTotalLevel!)))
+    }
+    
     func rowViewTotalHeading(data: Binding<SortData>, columns: [InsightColumn], replaceTotal: Bool = false,) -> some View {
         HStack(spacing: 0) {
             let width = columns.map({$0.width}).reduce(0,+) + 40
@@ -366,18 +379,24 @@ struct InsightsView: View {
                 HStack(spacing: 0) {
                     Spacer().frame(width: CGFloat(data.wrappedValue.yTotalLevel! * 20))
                     HStack(spacing: 0) {
-                        if !bottomGridLevel {
-                            Button {
-                                buttonId[data.wrappedValue.id, default: UUID()] = UUID()
-                                data.wrappedValue.state = data.wrappedValue.state.inverse
-                                filterData()
-                            } label: {
-                                Image(systemName: data.wrappedValue.state == .expanded ? "minus" : "plus")
-                                    .id(buttonId[data.wrappedValue.id, default: UUID()])
-                                    .frame(width: 30, height: rowHeight)
-                                    .background(Color.clear)
-                                    .contentShape(Rectangle())
+                        Button {
+                            buttonId[data.wrappedValue.id, default: UUID()] = UUID()
+                            let newState = data.wrappedValue.state.inverse
+                            data.wrappedValue.state = newState
+                            if newState == .expanded && report.values.gridMode && data.wrappedValue.yTotalLevel == lowestTotalLevel[.yAxis]! {
+                                // Only allow one bottom row to be expanded in grid mode
+                                gridRowExpanded?.state = .collapsed
+                                gridRowExpanded = data.wrappedValue
+                            } else if newState == .collapsed && gridRowExpanded == data.wrappedValue {
+                                gridRowExpanded = nil
                             }
+                            filterData()
+                        } label: {
+                            Image(systemName: data.wrappedValue.state == .expanded ? "minus" : "plus")
+                                .id(buttonId[data.wrappedValue.id, default: UUID()])
+                                .frame(width: 30, height: rowHeight)
+                                .background(Color.clear)
+                                .contentShape(Rectangle())
                         }
                     }
                     .frame(width: 30)
@@ -477,7 +496,7 @@ struct InsightsView: View {
         } else {
             switch level {
             case nil:
-                    .background
+                (report.values.gridMode ? .gridDetail : .background)
             case 0:
                     .grandTotal
             case 1:
@@ -598,11 +617,13 @@ struct InsightsView: View {
         let axisTypes = [SortTotalType.yAxis, .xAxis]
         let levels: [SortTotalType:[CalculatedSortLevel]] = [.xAxis: report.xLevels, .yAxis: report.yLevels]
         var cellTotals: [[CalculatedValue]:[[CalculatedValue]:SortData]] = [:]
+        var rowTotals: [[CalculatedValue]:[SortData]] = [:]
         var axisTotals: [SortTotalType:[Int:[SortData]]] = [:] // [axis:[level:[Totals]]]
         let filterService = DataFilterService()
         var referenced: Set<InsightColumn> = []
         let sortDirections = levels.mapValues{ $0.map{$0.direction} }
         lowestTotalLevel = levels.mapValues { $0.count }
+        gridRowExpanded = nil
         
         do {
             // Refresh report
@@ -661,7 +682,8 @@ struct InsightsView: View {
                         // Last for these keys - save it
                         currentCell!.set(totals: runningTotals)
                         currentCell!.lastIndex = boardIndex
-                        cellTotals[sortElement.yKeys, default: [:]][sortElement.xKeys] = currentCell
+                        cellTotals[sortElement.yKeys, default: [:]][sortElement.xKeys] = currentCell!
+                        rowTotals[sortElement.yKeys, default: []].append(currentCell!)
                         
                         // Now add it to row and column totals
                         for axis in axisTypes {
@@ -825,7 +847,15 @@ struct InsightsView: View {
                     for index in element.firstIndex!...element.lastIndex! {
                         try addToUnfilteredIndex(element: axisTotals[.yAxis]![level + 1]![index])
                     }
-                } else if !report.values.gridMode {
+                } else if report.values.gridMode {
+                    // A bottom level total of a grid - add in the records
+                    let row = rowTotals[element.yKeys]!
+                    for cell in row {
+                        for index in cell.firstIndex!...cell.lastIndex! {
+                            try addToUnfilteredIndex(element: sortIndex[index])
+                        }
+                    }
+                } else  {
                     // A bottom level total of a non-grid - add in the records
                     for index in element.firstIndex!...element.lastIndex! {
                         try addToUnfilteredIndex(element: sortIndex[index])

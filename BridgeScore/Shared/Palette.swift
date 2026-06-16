@@ -41,6 +41,7 @@ class Palette {
     @BackgroundColor(.subtotal1) static var subtotal1
     @BackgroundColor(.subtotal2) static var subtotal2
     @BackgroundColor(.subtotal3) static var subtotal3
+    @BackgroundColor(.gridDetail) static var gridDetail
     @BackgroundColor(.autoComplete) static var autoComplete
     @BackgroundColor(.autoCompleteSelected) static var autoCompleteSelected
     @BackgroundColor(.contractSelected) static var contractSelected

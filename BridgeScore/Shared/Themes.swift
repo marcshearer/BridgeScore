@@ -101,6 +101,7 @@ enum ThemeBackgroundColorName: CaseIterable {
     case subtotal1
     case subtotal2
     case subtotal3
+    case gridDetail
     case autoComplete
     case autoCompleteSelected
     case contractSelected
@@ -421,6 +422,7 @@ class Themes {
                 .subtotal1                   : ThemeColor(#colorLiteral(red: 0.8039215686, green: 0.8039215686, blue: 1, alpha: 1), nil, .lightBackground),
                 .subtotal2                   : ThemeColor(#colorLiteral(red: 0.8823529412, green: 0.8823529412, blue: 1, alpha: 1), nil, .lightBackground),
                 .subtotal3                   : ThemeColor(#colorLiteral(red: 0.9607843137, green: 0.9607843137, blue: 1, alpha: 1), nil, .lightBackground),
+                .gridDetail                  : ThemeColor(#colorLiteral(red: 0.9411764706, green: 0.9411764706, blue: 0.9411764706, alpha: 1), nil, .lightBackground),
                 .autoComplete                : ThemeColor(#colorLiteral(red: 0.9019607843, green: 0.9019607843, blue: 1, alpha: 1), #colorLiteral(red: 0.5741485357, green: 0.5741624236, blue: 0.574154973, alpha: 1), .lightBackground, .lightBackground),
                 .autoCompleteSelected        : ThemeColor(#colorLiteral(red: 0, green: 0.3921568627, blue: 0.7058823529, alpha: 1), #colorLiteral(red: 0.5741485357, green: 0.5741624236, blue: 0.574154973, alpha: 1), .darkBackground,  .lightBackground),
                 .contractSelected            : ThemeColor(#colorLiteral(red: 0.0166248735, green: 0.4766505957, blue: 0.9990670085, alpha: 1), nil, .darkBackground),
