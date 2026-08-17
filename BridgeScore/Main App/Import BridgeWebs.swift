@@ -545,6 +545,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
     private var tag: String?
     private var skipSession: Bool = true
     private var matchSessionId: Bool
+    private var teamNumberMap: [String: Int] = [:]
 
     init(scorecard: ScorecardViewModel, title: String, data: Data, date: Date?, location: LocationViewModel?, session: Int? = nil, matchSessionId: Bool, swapPartner: Bool = false, swapTeamMates: Bool = false, completion: @escaping (ImportedBridgeWebsScorecard?, String?)->()) {
         self.namesElement = false
@@ -581,14 +582,15 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 }
             case "pair":
                 if let components = columns.element(index)?.components(separatedBy: ":") {
+                    importedRanking.pair = components.first!
                     if importedRanking.number == nil || importedRanking.way != nil {
                         // Don't overwrite if filled from team and don't have a pair direction
                         let (number, way) = splitPairId(id: components.first!)
                         if number != nil {
                             importedRanking.number = number
                             importedRanking.full = components.first!
-                            eventType = .pairs
-                            if way != nil {
+                            // eventType = .pairs  - Removed this as incorrectly setting teams events to pairs
+                            if way != nil && importedRanking.way == nil {
                                 importedRanking.way = way
                             }
                         }
@@ -596,6 +598,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                 }
             case "team":
                 if let components = columns.element(index)?.components(separatedBy: ":") {
+                    importedRanking.team = components.last!
                     if importedRanking.number == nil {
                         // Don't overwrite pair number
                         importedRanking.number = Int(components.first!)
@@ -643,10 +646,17 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
             case "ns", "ew":
                 let pair = Pair(string: heading.uppercased())
                 if let string = columns.element(index) {
-                    let (number, _) = splitPairId(id: string)
-                    if number != nil {
+                    if let teamNumber = self.teamNumberMap[string] {
+                        // Have adjusted team number - use this instead
                         for seat in pair.seats {
-                            importedTraveller.ranking[seat] = number
+                            importedTraveller.ranking[seat] = teamNumber
+                        }
+                    } else {
+                        let (number, _) = splitPairId(id: string)
+                        if number != nil {
+                            for seat in pair.seats {
+                                importedTraveller.ranking[seat] = number
+                            }
                         }
                     }
                 }
@@ -898,108 +908,112 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
         } else if element == .view {
             skipSession = false
             if let view = Int(string) {
+                if zone == .rankings {
+                    // Leaving rankings - make any necessary adjustments
+                    adjustRankings()
+                }
                 zone = Zone(rawValue: view) ?? .unknown
                 hand = nil
                 dealer = nil
                 vulnerability = nil
             }
         } else if !skipSession {
-        switch element {
-        case .board:
-            switch zone {
-            case .travellers:
-                if let number = Int(string) {
-                    boardNumber = number
-                    if boards[boardNumber] == nil {
-                        boards[boardNumber] = ImportedBoard(boardNumber: number)
-                    }
-                }
-            default:
-                break
-            }
-        case .columns:
-            headings = string.components(separatedBy: ";")
-        case .row:
-            let values = string.components(separatedBy: ";")
-            switch zone {
-            case .rankings:
-                initRanking(columns: values)
-            case .travellers:
-                initTraveller(columns: values)
-            default:
-                break
-            }
-        case .type:
-            switch zone {
-            case .rankings:
-                switch string.lowercased() {
-                case "s":
-                    players = 2
-                    eventType = .pairs
-                case "4", "8":
-                    players = 4
-                    eventType = .teams
-                default:
-                    players = 2
-                }
-            default:
-                break
-            }
-        case .hand:
-            switch zone {
-            case .travellers:
-                if let board = boards[boardNumber] {
-                    let elements = string.components(separatedBy: ";")
-                    // First 16 elements are cards
-                    board.hand = elements[0...15].joined(separator: ",")
-                    // 17-20 are HCP of each hand
-                    // 21-40 are double dummy tricks
-                    board.doubleDummy = [:]
-                    if elements.count >= 40 {
-                        var index = 20
-                        for declarer in [Seat.north, .south, .east, .west] {
-                            board.doubleDummy[declarer] = [:]
-                            for suit in [Suit.clubs, . diamonds, .hearts, .spades, .noTrumps] {
-                                let made = Int(elements[index])
-                                board.doubleDummy[declarer]![suit] = (made == 0 ? nil : made)
-                                index += 1
-                            }
+            switch element {
+            case .board:
+                switch zone {
+                case .travellers:
+                    if let number = Int(string) {
+                        boardNumber = number
+                        if boards[boardNumber] == nil {
+                            boards[boardNumber] = ImportedBoard(boardNumber: number)
                         }
                     }
-                    // 41 is the optimum score
-                    if elements.count >= 41 {
-                        board.optimumScore = OptimumScore(string: elements[40], vulnerability: Vulnerability(board: boardNumber))
+                default:
+                    break
+                }
+            case .columns:
+                headings = string.components(separatedBy: ";")
+            case .row:
+                let values = string.components(separatedBy: ";")
+                switch zone {
+                case .rankings:
+                    initRanking(columns: values)
+                case .travellers:
+                    initTraveller(columns: values)
+                default:
+                    break
+                }
+            case .type:
+                switch zone {
+                case .rankings:
+                    switch string.lowercased() {
+                    case "s":
+                        players = 2
+                        eventType = .pairs
+                    case "4", "8":
+                        players = 4
+                        eventType = .teams
+                    default:
+                        players = 2
                     }
+                default:
+                    break
+                }
+            case .hand:
+                switch zone {
+                case .travellers:
+                    if let board = boards[boardNumber] {
+                        let elements = string.components(separatedBy: ";")
+                        // First 16 elements are cards
+                        board.hand = elements[0...15].joined(separator: ",")
+                        // 17-20 are HCP of each hand
+                        // 21-40 are double dummy tricks
+                        board.doubleDummy = [:]
+                        if elements.count >= 40 {
+                            var index = 20
+                            for declarer in [Seat.north, .south, .east, .west] {
+                                board.doubleDummy[declarer] = [:]
+                                for suit in [Suit.clubs, . diamonds, .hearts, .spades, .noTrumps] {
+                                    let made = Int(elements[index])
+                                    board.doubleDummy[declarer]![suit] = (made == 0 ? nil : made)
+                                    index += 1
+                                }
+                            }
+                        }
+                        // 41 is the optimum score
+                        if elements.count >= 41 {
+                            board.optimumScore = OptimumScore(string: elements[40], vulnerability: Vulnerability(board: boardNumber))
+                        }
                         
-                }
-            default:
-                break
-            }
-        case .dealer:
-            switch zone {
-            case .travellers:
-                if let number = Int(string) {
-                    if number != Seat.dealer(board: boardNumber).rawValue {
-                        fatalError("Wrong dealer")
                     }
+                default:
+                    break
                 }
-            default:
-                break
-            }
-        case .vulnerability:
-            switch zone {
-            case .travellers:
-                if let number = Int(string) {
-                    if number != Vulnerability(board: boardNumber).rawValue {
-                        fatalError("Wrong vulnerability")
+            case .dealer:
+                switch zone {
+                case .travellers:
+                    if let number = Int(string) {
+                        if number != Seat.dealer(board: boardNumber).rawValue {
+                            fatalError("Wrong dealer")
+                        }
                     }
+                default:
+                    break
+                }
+            case .vulnerability:
+                switch zone {
+                case .travellers:
+                    if let number = Int(string) {
+                        if number != Vulnerability(board: boardNumber).rawValue {
+                            fatalError("Wrong vulnerability")
+                        }
+                    }
+                default:
+                    break
                 }
             default:
                 break
             }
-        default:
-            break
-        }
         }
     }
     
@@ -1014,6 +1028,31 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
     func parserDidEndDocument(_ parser: XMLParser) {
         initComplete()
     }
+    
+    func adjustRankings() {
+        // Called when all rankings have been imported
+        if eventType == .teams {
+            // Check that we can uniquely identify each pair
+            let uniqueRankings = Set(rankings.map{[AnyHashable($0.number ?? -Int.max), AnyHashable($0.way?.rawValue ?? -Int.max)]})
+            if uniqueRankings.count != rankings.count {
+                var nextNumber = 1
+                teamNumberMap = [:]
+                // Duplicate rankings - need to use uniquified pair number instead
+                for ranking in rankings {
+                    if let pairNumber = ranking.pair {
+                        if let existing = teamNumberMap[pairNumber] {
+                            ranking.number = existing
+                        } else {
+                            ranking.number = nextNumber
+                            nextNumber += 1
+                            teamNumberMap[pairNumber] = ranking.number
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
 }
 
 class ImportBridgeWebsListParser {

@@ -916,6 +916,8 @@ class ImportedScorecard: NSObject, ObservableObject {
 class ImportedRanking : Identifiable, Equatable {
     public var id = UUID()
     public var number: Int?
+    public var team: String? // Used by Bridgewebs import internally
+    public var pair: String? // Used by Bridgewebs import internally
     public var section: Int = 1
     public var full: String?
     public var players: [Seat:String] = [:]
