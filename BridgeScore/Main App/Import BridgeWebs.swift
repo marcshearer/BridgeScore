@@ -1031,22 +1031,22 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
     
     func adjustRankings() {
         // Called when all rankings have been imported
-        if eventType == .teams {
-            // Check that we can uniquely identify each pair
-            let uniqueRankings = Set(rankings.map{[AnyHashable($0.number ?? -Int.max), AnyHashable($0.way?.rawValue ?? -Int.max)]})
-            if uniqueRankings.count != rankings.count {
-                var nextNumber = 1
-                teamNumberMap = [:]
-                // Duplicate rankings - need to use uniquified pair number instead
-                for ranking in rankings {
-                    if let pairNumber = ranking.pair {
-                        if let existing = teamNumberMap[pairNumber] {
-                            ranking.number = existing
-                        } else {
-                            ranking.number = nextNumber
-                            nextNumber += 1
-                            teamNumberMap[pairNumber] = ranking.number
-                        }
+        
+        // Check that we can uniquely identify each pair
+        let uniqueRankings = Set(rankings.map{[AnyHashable($0.number ?? -Int.max),
+                                               AnyHashable((eventType != .teams ? 0 : ($0.way?.rawValue ?? -Int.max)))]})
+        if uniqueRankings.count != rankings.count {
+            var nextNumber = 1
+            teamNumberMap = [:]
+            // Duplicate rankings - need to use uniquified pair number instead
+            for ranking in rankings {
+                if let pairNumber = ranking.pair {
+                    if let existing = teamNumberMap[pairNumber] {
+                        ranking.number = existing
+                    } else {
+                        ranking.number = nextNumber
+                        nextNumber += 1
+                        teamNumberMap[pairNumber] = ranking.number
                     }
                 }
             }
