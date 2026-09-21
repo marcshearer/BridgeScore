@@ -7,17 +7,47 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "E12664AC-2E2F-40CF-8482-8BB2A756A11B"
-            shouldBeEnabled = "No"
+            uuid = "E44ADB0F-EFC2-4D97-9083-37EED84F472F"
+            shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "BridgeScore/Main App/Import BridgeWebs.swift"
+            filePath = "BridgeScore/Main App/Scorecard Ranking View.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "649"
-            endingLineNumber = "649"
-            landmarkName = "initTraveller(columns:)"
+            startingLineNumber = "248"
+            endingLineNumber = "248"
+            landmarkName = "collectionView(_:cellForItemAt:)"
             landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "E44ADB0F-EFC2-4D97-9083-37EED84F472F - f4445218c761161a"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #2 (Swift.Array&lt;Swift.String&gt;) -&gt; () in Bridge_Score.ScorecardRankingView.collectionView(_: __C.UICollectionView, cellForItemAt: Foundation.IndexPath) -&gt; __C.UICollectionViewCell"
+                  moduleName = "Bridge Score.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/marcshearer/Documents/Xcode%20projects/BridgeScore/BridgeScore/Main%20App/Scorecard%20Ranking%20View.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "248"
+                  endingLineNumber = "248">
+               </Location>
+               <Location
+                  uuid = "E44ADB0F-EFC2-4D97-9083-37EED84F472F - fd3a8541c6c4bca"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "closure #1 (Bridge_Score.RankingViewModel, Bridge_Score.RankingViewModel) -&gt; Swift.Bool in closure #2 (Swift.Array&lt;Swift.String&gt;) -&gt; () in Bridge_Score.ScorecardRankingView.collectionView(_: __C.UICollectionView, cellForItemAt: Foundation.IndexPath) -&gt; __C.UICollectionViewCell"
+                  moduleName = "Bridge Score.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/marcshearer/Documents/Xcode%20projects/BridgeScore/BridgeScore/Main%20App/Scorecard%20Ranking%20View.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "248"
+                  endingLineNumber = "248">
+               </Location>
+            </Locations>
          </BreakpointContent>
       </BreakpointProxy>
    </Breakpoints>

@@ -590,7 +590,7 @@ class ImportedBridgeWebsScorecard: ImportedScorecard, XMLParserDelegate {
                             importedRanking.number = number
                             importedRanking.full = components.first!
                             // eventType = .pairs  - Removed this as incorrectly setting teams events to pairs
-                            if way != nil && importedRanking.way == nil {
+                            if way != nil { // importedRanking.way == nil {
                                 importedRanking.way = way
                             }
                         }
