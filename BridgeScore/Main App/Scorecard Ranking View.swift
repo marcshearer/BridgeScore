@@ -26,6 +26,12 @@ enum RankingColumnType: Int, Codable {
     }
 }
 
+enum RankingSequence {
+    case ranking
+    case nsXImps
+    case ewXImps
+}
+
 struct RankingColumn: Codable, Equatable {
     var type: RankingColumnType
     var heading: String?
@@ -80,6 +86,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
     private var rankingColumns: [RankingColumn] = []
     private var headingColumns: [RankingColumn] = []
     private var rankings: [[RankingViewModel]] = []
+    private var rankingSequence: RankingSequence = .ranking
     private var multiTables = false
     private var multiSections = false
     private var multiWays = false
@@ -141,7 +148,7 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
             }
         }
     }
-
+    
     // MARK: - TableView Delegates ================================================================ -
     
     func numberOfSections(in tableView: UITableView) -> Int {
@@ -233,21 +240,21 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
                 let item = index % totalRankings
                 let ranking = rankings[grouping][item]
                 let column = rankingColumns[indexPath.item]
-                cell.set(from: self, scorecard: Scorecard.current.scorecard!, ranking: ranking, roundsTag: RankingRowType.rounds.tagOffset + (collectionView.tag % tagMultiplier), rowType: .ranking, column: column) { (players) in
+                cell.set(from: self, scorecard: Scorecard.current.scorecard!, item: item, rankingSequence: rankingSequence, ranking: ranking, roundsTag: RankingRowType.rounds.tagOffset + (collectionView.tag % tagMultiplier), rowType: .ranking, column: column) { (players) in
                     self.replaceNames(values: players, ranking: ranking)
                 }
                 return cell
             case .title:
                 let cell = ScorecardRankingCollectionCell.dequeue(collectionView, for: indexPath)
                 let column = rankingColumns[indexPath.item]
-                cell.setTitle(column: column)
+                cell.setTitle(column: column, tapAction: titleTapped)
                 return cell
             case .heading:
                 let cell = ScorecardRankingCollectionCell.dequeue(collectionView, for: indexPath)
                 let grouping = collectionView.tag % tagMultiplier
                 let ranking = rankings[grouping][0]
                 let column = headingColumns[indexPath.item]
-                cell.set(from: self, scorecard: Scorecard.current.scorecard!, ranking: ranking, rowType: .heading, column: column)
+                cell.set(from: self, scorecard: Scorecard.current.scorecard!, rankingSequence: rankingSequence, ranking: ranking, rowType: .heading, column: column)
                 return cell
             case .rounds:
                 let cell = ScorecardRankingRoundCollectionCell.dequeue(collectionView, for: indexPath)
@@ -263,6 +270,32 @@ class ScorecardRankingView: UIView, UITableViewDataSource, UITableViewDelegate, 
         }
     }
     
+    func titleTapped(column: RankingColumn) {
+        var sortCondition: ((RankingViewModel, RankingViewModel)->Bool)?
+        switch column.type {
+        case .nsXImps:
+            if rankingSequence != .nsXImps {
+                sortCondition = { ($0.xImps[.ns] ?? 0) > ($1.xImps[.ns] ?? 0) }
+                rankingSequence = .nsXImps
+            }
+        case .ewXImps:
+            if rankingSequence != .ewXImps {
+                sortCondition = { ($0.xImps[.ew] ?? 0) > ($1.xImps[.ew] ?? 0) }
+                rankingSequence = .ewXImps
+            }
+        default:
+            if rankingSequence != .ranking {
+                sortCondition = { $0.ranking < $1.ranking }
+                rankingSequence = .ranking
+            }
+        }
+        if let sortCondition = sortCondition {
+            for group in 0..<rankings.count {
+                rankings[group].sort(by: { sortCondition($0, $1) })
+                valuesTableView.reloadData()
+            }
+        }
+    }
     
     // MARK: - Tap handlers ============================================================================ -
     
@@ -568,7 +601,8 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
     private var column: RankingColumn!
     private var scorecard: ScorecardViewModel!
     private var ranking: RankingViewModel!
-    private var tapAction: (([String]) ->())?
+    private var tapAction: (([String])->())?
+    private var titleTapAction: ((RankingColumn)->())?
     private var roundCollectionView: UICollectionView!
 
     override init(frame: CGRect) {
@@ -630,8 +664,10 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         roundCollectionView.isHidden = true
     }
     
-    func setTitle(column: RankingColumn) {
+    func setTitle(column: RankingColumn, tapAction: ((RankingColumn)->())? = nil) {
         self.column = column
+        self.titleTapAction = tapAction
+        self.rowType = .title
         label.backgroundColor = UIColor(Palette.gridTitle.background)
         label.textColor = UIColor(Palette.gridTitle.text)
         label.font = titleFont.bold
@@ -657,10 +693,11 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
                 break
             }
             label.text = column.heading
+            label.isUserInteractionEnabled = true
         }
     }
  
-    func set(from sourceView: UICollectionViewDataSource & UICollectionViewDelegate, scorecard: ScorecardViewModel, ranking: RankingViewModel, roundsTag: Int = 0, rowType: RankingRowType, column: RankingColumn, tapAction: (([String])->())? = nil) {
+    func set(from sourceView: UICollectionViewDataSource & UICollectionViewDelegate, scorecard: ScorecardViewModel, item: Int? = nil, rankingSequence: RankingSequence, ranking: RankingViewModel, roundsTag: Int = 0, rowType: RankingRowType, column: RankingColumn, tapAction: (([String])->())? = nil) {
         self.scorecard = scorecard
         self.ranking = ranking
         self.tapAction = tapAction
@@ -676,7 +713,16 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
         
         switch column.type {
         case .ranking:
-            label.text = "\(ranking.ranking)\(ranking.tie ? " =" : "")"
+            switch rankingSequence {
+            case .nsXImps, .ewXImps:
+                if let item = item {
+                    label.text = "\(item + 1)"
+                } else {
+                    label.text = ""
+                }
+            default:
+                label.text = "\(ranking.ranking)\(ranking.tie ? " =" : "")"
+            }
         case .number:
             label.text = "\(ranking.number)"
         case .players:
@@ -741,16 +787,20 @@ class ScorecardRankingCollectionCell: UICollectionViewCell {
     }
     
     @objc private func tapped(_ sender: Any) {
-        var players: [String] = []
-        for seat in Seat.paired {
-            if let player = ranking.players[seat] {
-                if players.first(where: {$0 == player}) == nil {
-                    players.append(player)
+        switch rowType {
+        case .title:
+            titleTapAction?(column)
+        default:
+            var players: [String] = []
+            for seat in Seat.paired {
+                if let player = ranking.players[seat] {
+                    if players.first(where: {$0 == player}) == nil {
+                        players.append(player)
+                    }
                 }
             }
+            tapAction?(players)
         }
-
-        tapAction?(players)
     }
 }
 
