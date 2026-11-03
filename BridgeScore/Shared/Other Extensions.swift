@@ -474,6 +474,10 @@ extension Int {
         return (self == 0 ? 0 : (self > 0 ? 1 : -1))
     }
     
+    func toString() -> String {
+        return "\(self)"
+    }
+    
     var ordinal: String? {
         let ordinalFormatter = NumberFormatter()
         ordinalFormatter.numberStyle = .ordinal
@@ -493,6 +497,15 @@ extension View {
         } else {
             self
         }
+    }
+}
+
+extension Binding where Value == String? {
+    var coalesced: Binding<String> {
+        Binding<String>(
+            get: {self.wrappedValue ?? ""},
+            set: { _ in }
+        )
     }
 }
 

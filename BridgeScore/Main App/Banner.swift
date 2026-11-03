@@ -51,6 +51,7 @@ struct Banner: View {
     var backText: String? = nil
     var backImage: AnyView? = AnyView(Image(systemName: "chevron.left"))
     var backAction: (()->(Bool))?
+    var backForceDismiss = false
     var escapeToDismiss: Bool = false
     var leftTitle: Bool?
     var optionMode: BannerOptionMode = .none
@@ -155,7 +156,11 @@ struct Banner: View {
     func backPressed() {
         if backEnabled?() ?? true {
             if backAction?() ?? true {
-                self.presentationMode.wrappedValue.dismiss()
+                if backForceDismiss {
+                    self.forceDismiss()
+                } else {
+                    self.presentationMode.wrappedValue.dismiss()
+                }
             }
         }
     }

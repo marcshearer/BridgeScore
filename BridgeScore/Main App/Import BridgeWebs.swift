@@ -80,8 +80,8 @@ struct ImportBridgeWebsScorecard: View {
             case .getFile:
                 downloadingFile
             case .confirm:
-                let importedScorecard = Binding.constant(importedBridgeWebsScorecard as ImportedScorecard)
-                importedBridgeWebsScorecard.confirmDetails(importedScorecard: importedScorecard, settings: (scorecard.isMultiSession ? nil : settings), onError: {
+                let importedScorecard = importedBridgeWebsScorecard as ImportedScorecard
+                ImportedScorecardConfirmDetails(importedScorecard: importedScorecard, settings: (scorecard.isMultiSession ? nil : settings), onError: {
                     presentationMode.wrappedValue.dismiss()
                 }, completion: {
                     phase = .importing

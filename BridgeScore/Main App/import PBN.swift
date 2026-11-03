@@ -71,8 +71,8 @@ struct ImportPBNScorecard: View {
                     }
                 }
             } else if !importing {
-                let importedScorecard = Binding.constant(importedPBNScorecard as ImportedScorecard)
-                importedPBNScorecard.confirmDetails(importedScorecard: importedScorecard, onError: {
+                let importedScorecard = importedPBNScorecard as ImportedScorecard
+                ImportedScorecardConfirmDetails(importedScorecard: importedScorecard, onError: {
                     presentationMode.wrappedValue.dismiss()
                 }, completion: {
                     importing = true

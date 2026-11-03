@@ -81,8 +81,8 @@ struct ImportUsebioScorecard: View {
                     fileList
                 }
             } else if !importing {
-                let importedScorecard = Binding.constant(importedUsebioScorecard as ImportedScorecard)
-                importedUsebioScorecard.confirmDetails(importedScorecard: importedScorecard, onError: {
+                let importedScorecard = importedUsebioScorecard as ImportedScorecard
+                ImportedScorecardConfirmDetails(importedScorecard: importedScorecard, onError: {
                     presentationMode.wrappedValue.dismiss()
                 }, completion: {
                     importing = true

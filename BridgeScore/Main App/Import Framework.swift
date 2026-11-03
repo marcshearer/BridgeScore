@@ -706,122 +706,6 @@ class ImportedScorecard: NSObject, ObservableObject {
         }
     }
     
-    public func confirmDetails(importedScorecard: Binding<ImportedScorecard>, suffix: String = "", settings: (()->())? = nil, onError: @escaping ()->(), completion: @escaping ()->()) -> some View {
-        @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
-        @OptionalStringBinding(importedScorecard.wrappedValue.title) var titleBinding
-        @OptionalStringBinding(Utility.dateString(importedScorecard.wrappedValue.date, format: "EEEE d MMMM yyyy")) var dateBinding
-        @OptionalStringBinding(importedScorecard.wrappedValue.partner?.name) var partnerBinding
-        @OptionalStringBinding("\(importedScorecard.wrappedValue.boardCount ?? 0)") var boardCountBinding
-        @OptionalStringBinding("\(importedScorecard.wrappedValue.boardsTable ?? 0)") var boardsTableBinding
-
-        var editSession: Binding<Int> {
-            Binding {
-                self.scorecard.importNext
-            } set: { (newValue) in
-                self.scorecard.importNext = newValue
-            }
-        }
-        
-        return VStack(spacing: 0) {
-            
-            Banner(title: Binding.constant("Confirm Import Details\(suffix)"), backImage: Banner.crossImage, optionMode: (settings == nil ? .none : .buttons), options: (settings != nil ? settingsOption(settings!) : nil))
-            Spacer().frame(height: 16)
-            
-            if scorecard.isMultiSession {
-                
-                InsetView(title: "Import Settings") {
-                    VStack(spacing: 0) {
-                
-                        StepperInput(title: "Import for session", field: editSession, label: sessionLabel, minValue: {1}, maxValue: { self.scorecard.sessions}, onChange: { (value) in
-                            self.session = value
-                        })
-                        
-                        Spacer().frame(height: 16)
-                    }
-                }
-            }
-            
-            InsetView(title: "\((importSource ?? .none).from) Import Details") {
-                VStack(spacing: 0) {
-                    
-                    Input(title: "Title", field: titleBinding, asText: true)
-                    Input(title: "Date", field: dateBinding, asText: true)
-                    Input(title: "Partner", field: partnerBinding, asText: true)
-                    
-                    Spacer().frame(height: 8)
-                    Separator()
-                    Spacer().frame(height: 8)
-
-                    Input(title: (scorecard.isMultiSession ? "Boards / Session" : "Total Boards"), field: boardCountBinding, asText: true)
-                    Input(title: "Boards / Table", field: boardsTableBinding, topSpace: 0, asText: true)
-                    
-                    Spacer()
-                }
-            }
-
-            if !importedScorecard.wrappedValue.warnings.isEmpty {
-                
-                InsetView(title: "Warnings") {
-                    ScrollView {
-                        VStack(spacing: 0) {
-                            Spacer().frame(height: 16)
-                            ForEach(importedScorecard.wrappedValue.warnings, id: \.self) { (warning) in
-                                HStack {
-                                    Spacer().frame(width: 8)
-                                    Text(warning)
-                                    Spacer()
-                                }
-                                .frame(height: 30)
-                            }
-                            Spacer().frame(height: 16)
-                        }
-                    }
-                }
-            }
-            
-            VStack {
-                Spacer().frame(height: 16)
-                HStack {
-                    Spacer()
-                    VStack {
-                        Spacer()
-                        HStack {
-                            Spacer()
-                            Text("Confirm")
-                            Spacer()
-                        }
-                        Spacer()
-                    }
-                    .foregroundColor(Palette.highlightButton.text)
-                    .background(Palette.highlightButton.background)
-                    .frame(width: 120, height: 40)
-                    .cornerRadius(10)
-                    .onTapGesture {
-                        Utility.mainThread {
-                            completion()
-                        }
-                    }
-                    Spacer()
-                }
-                Spacer().frame(height: 16)
-            }
-        }
-        .onAppear {
-            if self.scorecard.isMultiSession {
-                self.session = min(self.scorecard.importNext, self.scorecard.sessions)
-            }
-        }
-        .background(Palette.alternate.background)
-    }
-    
-    private func sessionLabel(value: Int) -> String {
-        return "Session \(value) of \(scorecard.sessions)"
-    }
-    
-    private func settingsOption(_ action: @escaping ()->()) -> [BannerOption] {
-        [BannerOption(image: AnyView(Image(systemName: "gearshape")), likeBack: true, action: action)]
-    }
-    
     internal func checkRankings() {
         var minFound: Int?
         var errorMessage: String?
@@ -910,6 +794,124 @@ class ImportedScorecard: NSObject, ObservableObject {
                 }
             }
         }
+    }
+}
+
+struct ImportedScorecardConfirmDetails: View {
+    @ObservedObject var importedScorecard: ImportedScorecard
+    var suffix: String = ""
+    var settings: (()->())? = nil
+    var onError: ()->(), completion: ()->()
+    @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
+    
+    var editSession: Binding<Int> {
+        Binding {
+            importedScorecard.scorecard.importNext
+        } set: { (newValue) in
+            importedScorecard.scorecard.importNext = newValue
+        }
+    }
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            
+            Banner(title: Binding.constant("Confirm Import Details\(suffix)"), backImage: Banner.crossImage, optionMode: (settings == nil ? .none : .buttons), options: (settings != nil ? settingsOption(settings!) : nil))
+            Spacer().frame(height: 16)
+            
+            if importedScorecard.scorecard.isMultiSession {
+                
+                InsetView(title: "Import Settings") {
+                    VStack(spacing: 0) {
+                        
+                        StepperInput(title: "Import for session", field: editSession, label: sessionLabel, minValue: {1}, maxValue: { self.importedScorecard.scorecard.sessions}, onChange: { (value) in
+                            self.importedScorecard.session = value
+                        })
+                        
+                        Spacer().frame(height: 16)
+                    }
+                }
+            }
+            
+            InsetView(title: "\((importedScorecard.importSource ?? .none).from) Import Details") {
+                VStack(spacing: 0) {
+                    
+                    Display(title: "Title", field: importedScorecard.title ?? "").id(ObjectIdentifier(importedScorecard))
+                    Display(title: "Date", field: Utility.dateString(importedScorecard.date, format: "EEEE d MMMM yyyy"))
+                    Display(title: "Partner", field: importedScorecard.partner?.name ?? "")
+                    
+                    Spacer().frame(height: 8)
+                    Separator()
+                    Spacer().frame(height: 8)
+                    
+                    let title = (importedScorecard.scorecard.isMultiSession ? "Boards / Session" : "Total Boards")
+                    Display(title: title, field: "\(importedScorecard.boardCount ?? 0)")
+                    Display(title: "Boards / Table", field: "\(importedScorecard.boardsTable ?? 0)", topSpace: 0)
+                    
+                    Spacer()
+                }
+            }
+            
+            if !importedScorecard.warnings.isEmpty {
+                
+                InsetView(title: "Warnings") {
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            Spacer().frame(height: 16)
+                            ForEach(importedScorecard.warnings, id: \.self) { (warning) in
+                                HStack {
+                                    Spacer().frame(width: 8)
+                                    Text(warning)
+                                    Spacer()
+                                }
+                                .frame(height: 30)
+                            }
+                            Spacer().frame(height: 16)
+                        }
+                    }
+                }
+            }
+            
+            VStack {
+                Spacer().frame(height: 16)
+                HStack {
+                    Spacer()
+                    VStack {
+                        Spacer()
+                        HStack {
+                            Spacer()
+                            Text("Confirm")
+                            Spacer()
+                        }
+                        Spacer()
+                    }
+                    .foregroundColor(Palette.highlightButton.text)
+                    .background(Palette.highlightButton.background)
+                    .frame(width: 120, height: 40)
+                    .cornerRadius(10)
+                    .onTapGesture {
+                        Utility.mainThread {
+                            completion()
+                        }
+                    }
+                    Spacer()
+                }
+                Spacer().frame(height: 16)
+            }
+        }
+        .onAppear {
+            if importedScorecard.scorecard.isMultiSession {
+                self.importedScorecard.session = min(importedScorecard.scorecard.importNext, importedScorecard.scorecard.sessions)
+            }
+        }
+        .background(Palette.alternate.background)
+    }
+    
+    private func settingsOption(_ action: @escaping ()->()) -> [BannerOption] {
+        [BannerOption(image: AnyView(Image(systemName: "gearshape")), likeBack: true, action: action)]
+    }
+    
+    private func sessionLabel(value: Int) -> String {
+        return "Session \(value) of \(importedScorecard.scorecard.sessions)"
     }
 }
 

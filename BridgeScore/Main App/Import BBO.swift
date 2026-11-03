@@ -57,11 +57,11 @@ class ImportBBO {
     
     public class func createImportedScorecardFrom(fileURL: URL, scorecard: ScorecardViewModel) -> ImportedBBOScorecard? {
         // Version for lookup of directory
-        if let contents = try? String(contentsOf: fileURL) {
+        if let contents = try? String(contentsOf: fileURL, encoding: .utf8) {
             let lines = contents.replacingOccurrences(of: "\r\n", with: "\n").components(separatedBy: "\n")
             let imported = ImportedBBOScorecard(lines: lines, scorecard: scorecard)
             if let pbnURL = URL(string: fileURL.absoluteString.replacingOccurrences(of: ".csv", with: ".pbn")) {
-                if let contents = try? String(contentsOf: pbnURL) {
+                if let contents = try? String(contentsOf: pbnURL, encoding: .utf8) {
                     let lines = contents.replacingOccurrences(of: "\r\n", with: "\n").components(separatedBy: "\n")
                     imported.importOptimum(lines: lines, scorecard: scorecard)
                 }
@@ -95,25 +95,18 @@ struct ImportBBOScorecard: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     @ObservedObject var scorecard: ScorecardViewModel
     var completion: (()->())? = nil
-    private let uttypes = [UTType.data]
+    private let uttypes = [UTType.fileURL, .data, .item]
     @State private var selected: String? = nil
     @State private var importedBBOScorecards: [ImportedBBOScorecard] = []
     @State private var importSequence = Int.max
     @State private var dropZoneEntered = false
     @State private var droppedFiles: [(filename: String, contents: String)] = []
-    @State private var importedBBOScorecard: ImportedBBOScorecard? = nil
-    var importedScorecard: Binding<ImportedScorecard> {
-        Binding {
-            importedBBOScorecard! as ImportedScorecard
-        } set: { (newValue) in
-            self.importedScorecard.wrappedValue = importedBBOScorecard! as ImportedScorecard
-        }
-    }
-    
+    @State private var listMode = false
+
     var body: some View {
         StandardView("Detail") {
             if selected == nil {
-                if MyApp.target == .macOS {
+                if MyApp.target == .macOS && !listMode {
                     dropZone
                 } else {
                     fileList
@@ -121,42 +114,47 @@ struct ImportBBOScorecard: View {
             } else {
                 if importSequence < importedBBOScorecards.count {
                     let suffix = (scorecard.isMultiSession && (scorecard.sessions > 1) && importedBBOScorecards.count > 1 ? " (\(importSequence + 1) of \(importedBBOScorecards.count))" : "")
-                    importedBBOScorecard?.confirmDetails(importedScorecard: importedScorecard, suffix: suffix, onError: {
-                        presentationMode.wrappedValue.dismiss()
-                    }, completion: {
-                        importedBBOScorecard!.importScorecard()
-                        completion?()
-                        if scorecard.importNext >= scorecard.sessions {
-                            importedBBOScorecard!.prepareForNext()
+                    if true {
+                        ImportedScorecardConfirmDetails(importedScorecard: importedBBOScorecards[importSequence] as ImportedScorecard, suffix: suffix, onError: {
                             presentationMode.wrappedValue.dismiss()
-                        } else {
-                            MessageBox.shared.show("Session \(scorecard.importNext) imported successfully", okText: "Continue", okAction: {
-                                importedBBOScorecard!.prepareForNext()
-                                if importSequence >= importedBBOScorecards.count - 1 {
-                                    selected = nil
-                                } else {
-                                    // Get ready for next session
-                                    importSequence += 1
-                                    importedBBOScorecard = importedBBOScorecards[importSequence]
-                                    importedBBOScorecard?.session = scorecard.importNext
-                                }
-                            })
-                        }
-                    })
+                        }, completion: {
+                            importedBBOScorecards[importSequence].importScorecard()
+                            completion?()
+                            if scorecard.importNext >= scorecard.sessions {
+                                importedBBOScorecards[importSequence].prepareForNext()
+                                presentationMode.wrappedValue.dismiss()
+                            } else {
+                                MessageBox.shared.show("Session \(scorecard.importNext) imported successfully", okText: "Continue", okAction: {
+                                    Utility.mainThread {
+                                        importedBBOScorecards[importSequence].prepareForNext()
+                                        if importSequence >= importedBBOScorecards.count - 1 {
+                                            selected = nil
+                                        } else {
+                                            // Get ready for next session
+                                            importSequence += 1
+                                            importedBBOScorecards[importSequence].session = scorecard.importNext
+                                        }
+                                    }
+                                })
+                            }
+                        })
+                    }
                 }
             }
         }
         .onChange(of: importSequence) {
-            if importSequence < importedBBOScorecards.count {
-                importedBBOScorecards[importSequence].lastMinuteValidate()
-                importedBBOScorecard = importedBBOScorecards[importSequence]
+            Utility.mainThread {
+                if importSequence < importedBBOScorecards.count {
+                    importedBBOScorecards[importSequence].lastMinuteValidate()
+                }
             }
         }
     }
     
     var dropZone: some View {
         VStack(spacing: 0) {
-            Banner(title: Binding.constant("Drop BBO Files"), backImage: Banner.crossImage)
+            let options = [BannerOption(image: AnyView(Image(systemName: "list.bullet")), likeBack: true, action: { listMode = true })]
+            Banner(title: Binding.constant("Drop BBO Files"), backImage: Banner.crossImage, backForceDismiss: true, optionMode: .buttons, options: options)
             HStack {
                 Spacer().frame(width: 50)
                 VStack {
@@ -179,8 +177,34 @@ struct ImportBBOScorecard: View {
                         .overlay(RoundedRectangle(cornerRadius: 30)
                             .strokeBorder(style: StrokeStyle(lineWidth: 5, dash: [10, 5]))
                             .foregroundColor(Palette.gridLine))
+                        FileDropZone(isHovering: $dropZoneEntered) { files in
+                            droppedFiles = files
+                        }
                     }
-                    .onDrop(of: uttypes, delegate: ScorecardDropFiles(dropZoneEntered: $dropZoneEntered, droppedFiles: $droppedFiles))
+                    /*
+                    .onDrop(of: [.item], isTargeted: $dropZoneEntered) { providers in
+                        let group = DispatchGroup()
+                        var files: [(filename: String, contents: String)] = []
+                        for provider in providers {
+                            if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
+                                group.enter()
+                                provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, error in
+                                    defer { group.leave() }
+                                    if let url = item as? URL, let filename = url.suggestedFilename, let contents = try? String(contentsOf: url, encoding: .utf8) {
+                                        files.append((filename: filename, contents: contents))
+                                    }
+                                }
+                            }
+                        }
+                        group.notify(queue: .main) {
+                            if !files.isEmpty {
+                                droppedFiles = files
+                            }
+                        }
+                        return true
+                    }
+                    // .onDrop(of: uttypes, delegate: ScorecardDropFiles(dropZoneEntered: $dropZoneEntered, droppedFiles: $droppedFiles))
+                     */
                     Spacer().frame(height: 50)
                 }
                 Spacer().frame(width: 50)
@@ -251,11 +275,11 @@ struct ImportBBOScorecard: View {
                             }
                             .frame(width: 190)
                             Spacer().frame(width: 16)
-                            Text((fileData[index].text).replacingOccurrences(of: "_", with: " "))
+                            Text((fileData[index].text).replacingOccurrences(of: "_", with: " ") + " " + (fileData[index].number?.toString() ?? ""))
                             Spacer()
                             Spacer().frame(width: 16)
                         }
-                        .font(.title2)
+                        .font(.body)
                         .minimumScaleFactor(0.5)
                         
                         Spacer().frame(height: 8)
