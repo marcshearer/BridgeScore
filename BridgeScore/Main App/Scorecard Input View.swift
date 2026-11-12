@@ -462,7 +462,6 @@ struct ImportBBOScorecardView : View {
                             isNotImported = false
                             tableRefresh = true
                         }
-                        isPresented = false
                     })
                     .frame(width: 600, height: 700)
                     .cornerRadius(20)

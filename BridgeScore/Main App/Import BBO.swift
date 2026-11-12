@@ -213,8 +213,8 @@ struct ImportBBOScorecard: View {
     
     func processDroppedFiles() -> [ImportFileData] {
         let fileData = decompose(droppedFiles.map{URL(string: $0.filename)!})
-        // Process files in name order since first component is session number - hence chronological
-        for (index, file) in fileData.sorted(by: {$0.text < $1.text}).enumerated() {
+        // Process files in session number order  - hence chronological (almost)
+        for (index, file) in fileData.sorted(by: {($0.number ?? 0) < ($1.number ?? 0)}).enumerated() {
             // Add content
             file.contents = droppedFiles[index].contents
         }
