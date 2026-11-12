@@ -10,6 +10,7 @@ import UniformTypeIdentifiers
 
 struct FileDropZone: UIViewRepresentable {
     @Binding var isHovering: Bool
+    var allowedTypes: [UTType]
     var processResults: ([(filename: String, contents: String)])->()
     
     func makeUIView(context: Context) -> UIView {
@@ -26,19 +27,31 @@ struct FileDropZone: UIViewRepresentable {
     func updateUIView(_ uiView: UIView, context: Context) {}
     
     func makeCoordinator() -> Coordinator {
-        Coordinator(parent: self)
+        Coordinator(parent: self, allowedTypes: allowedTypes)
     }
     
     class Coordinator: NSObject, UIDropInteractionDelegate {
         var parent: FileDropZone
+        let allowedTypes: [UTType]
         
-        init(parent: FileDropZone) {
+        init(parent: FileDropZone, allowedTypes: [UTType]) {
             self.parent = parent
+            self.allowedTypes = allowedTypes
+        }
+        
+        private func isAllowed(_ provider: NSItemProvider) -> Bool {
+            provider.registeredTypeIdentifiers.contains { id in
+                if let type = UTType(id) {
+                    return allowedTypes.contains { type.conforms(to: $0) }
+                } else {
+                    return false
+                }
+            }
         }
         
         // Force the pipeline to say "yes" instantly on hover
         func dropInteraction(_ interaction: UIDropInteraction, canHandle session: UIDropSession) -> Bool {
-            return true
+            !session.items.isEmpty && session.items.allSatisfy { isAllowed($0.itemProvider) }
         }
         
         func dropInteraction(_ interaction: UIDropInteraction, sessionDidEnter session: UIDropSession) {
@@ -49,6 +62,12 @@ struct FileDropZone: UIViewRepresentable {
         
         func dropInteraction(_ interaction: UIDropInteraction, sessionDidUpdate session: UIDropSession) -> UIDropProposal {
             return UIDropProposal(operation: .copy)
+        }
+        
+        func dropInteraction(_ interaction: UIDropInteraction, sessionDidEnd session: UIDropSession) {
+            DispatchQueue.main.async {
+                self.parent.isHovering = false
+            }
         }
         
         func dropInteraction(_ interaction: UIDropInteraction, sessionDidExit session: UIDropSession) {
@@ -68,27 +87,22 @@ struct FileDropZone: UIViewRepresentable {
             for item in session.items {
                 let provider = item.itemProvider
                 
-                if provider.hasItemConformingToTypeIdentifier("public.item") {
+                print("types: ",provider.registeredTypeIdentifiers, "name: ", provider.suggestedName ?? "-")
+                if let type = provider.registeredTypeIdentifiers.first {
                     group.enter()
-                    
-                    provider.loadInPlaceFileRepresentation(forTypeIdentifier: "public.item") { url, isInPlace, error in
+                    let start = Date()
+                    print("load start:", provider.registeredTypeIdentifiers)
+                    provider.loadInPlaceFileRepresentation(forTypeIdentifier: type) { item, _, error in
                         defer { group.leave() }
-                        
-                        if let url = url {
-                            let coordinator = NSFileCoordinator()
-                            var coordinatorError: NSError?
-                            
-                            coordinator.coordinate(readingItemAt: url, options: .withoutChanges, error: &coordinatorError) { coordinatedURL in
-                                if let contents = try? String(contentsOf: coordinatedURL, encoding: .utf8) {
-                                    results.append((filename: url.lastPathComponent, contents: contents))
-                                }
-                            }
+                        if let url = item, let contents = try? String(contentsOf: url, encoding: .utf8) {
+                            print("load done after", Date().timeIntervalSince(start), "url:", url as Any, "error:", error as Any)
+                            let filename = url.lastPathComponent
+                            results.append((filename: filename, contents: contents))
                         }
                     }
                 }
             }
             
-            // 4. Return the entire collection batch safely to your main thread
             group.notify(queue: .main) {
                 if !results.isEmpty {
                     self.parent.processResults(results)
@@ -96,4 +110,8 @@ struct FileDropZone: UIViewRepresentable {
             }
         }
     }
+}
+
+extension UTType {
+    static let pbn = UTType(importedAs: "com.sheareronline.pbn")
 }

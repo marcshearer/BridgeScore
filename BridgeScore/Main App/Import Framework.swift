@@ -801,8 +801,9 @@ struct ImportedScorecardConfirmDetails: View {
     @ObservedObject var importedScorecard: ImportedScorecard
     var suffix: String = ""
     var settings: (()->())? = nil
-    var onError: ()->(), completion: ()->()
-    @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
+    var backAction: (()->(Bool))?
+    var onError: ()->()
+    var completion: ()->()
     
     var editSession: Binding<Int> {
         Binding {
@@ -815,7 +816,7 @@ struct ImportedScorecardConfirmDetails: View {
     var body: some View {
         VStack(spacing: 0) {
             
-            Banner(title: Binding.constant("Confirm Import Details\(suffix)"), backImage: Banner.crossImage, optionMode: (settings == nil ? .none : .buttons), options: (settings != nil ? settingsOption(settings!) : nil))
+            Banner(title: Binding.constant("Confirm Import Details\(suffix)"), backImage: Banner.crossImage, backAction: backAction, optionMode: (settings == nil ? .none : .buttons), options: (settings != nil ? settingsOption(settings!) : nil))
             Spacer().frame(height: 16)
             
             if importedScorecard.scorecard.isMultiSession {

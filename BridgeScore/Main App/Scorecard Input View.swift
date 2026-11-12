@@ -194,18 +194,24 @@ struct ScorecardInputView: View {
     
     var body: some View {
         StandardView("Input", slideInId: id) {
-            VStack(spacing: 0) {
-                // Just to trigger view refresh
-                if refreshTableTotals { EmptyView() }
-                
-                // Banner
-                Banner(title: title, back: true, backAction: backAction, leftTitle: true, optionMode: .both, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: nil, menuId: id, options: bannerOptions(isNotImported: $isNotImported), disabled: $disableBanner)
-                    .disabled(disableBanner)
-                GeometryReader { geometry in
-                    ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), refreshTableTotals: $refreshTableTotals, viewType: $viewType, hideRejected: $hideRejected, inputDetail: $inputDetail, tableRefresh: $tableRefresh, showRankings: $showRankings, disableBanner: $disableBanner, handViewer: $handViewer, handBoard: $handBoard, handTraveller: $handTraveller, handSitting: $handSitting, uiView: $uiView, analysisViewer: $analysisViewer)
-                        .ignoresSafeArea(edges: .all)
+            ZStack {
+                VStack(spacing: 0) {
+                    // Just to trigger view refresh
+                    if refreshTableTotals { EmptyView() }
+                    
+                    // Banner
+                    Banner(title: title, back: true, backAction: backAction, leftTitle: true, optionMode: .both, menuImage: AnyView(Image(systemName: "gearshape")), menuTitle: nil, menuId: id, options: bannerOptions(isNotImported: $isNotImported), disabled: $disableBanner)
+                        .disabled(disableBanner)
+                    GeometryReader { geometry in
+                        ScorecardInputUIViewWrapper(scorecard: scorecard, frame: geometry.frame(in: .local), refreshTableTotals: $refreshTableTotals, viewType: $viewType, hideRejected: $hideRejected, inputDetail: $inputDetail, tableRefresh: $tableRefresh, showRankings: $showRankings, disableBanner: $disableBanner, handViewer: $handViewer, handBoard: $handBoard, handTraveller: $handTraveller, handSitting: $handSitting, uiView: $uiView, analysisViewer: $analysisViewer)
+                            .ignoresSafeArea(edges: .all)
+                    }
                 }
-            }.undoManager(canUndo: $canUndo, canRedo: $canRedo)
+                .undoManager(canUndo: $canUndo, canRedo: $canRedo)
+                if importBboScorecard {
+                    ImportBBOScorecardView(scorecard: scorecard, viewType: $viewType, isNotImported: $isNotImported, tableRefresh: $tableRefresh, isPresented: $importBboScorecard)
+                }
+            }
         }
         .onChange(of: uiView) {
             // Seem to need this to trigger refresh
@@ -238,20 +244,6 @@ struct ScorecardInputView: View {
             }
             .background(BackgroundBlurView(opacity: 0.0))
             .edgesIgnoringSafeArea(.all)
-        }
-        .sheet(isPresented: $importBboScorecard, onDismiss: {
-            UndoManager.clearActions()
-            if scorecard.importSource != .none {
-                isNotImported = false
-                tableRefresh = true
-            }
-        }) {
-            ImportBBOScorecard(scorecard: scorecard) {
-                if Scorecard.current.isImported {
-                    viewType = .analysis
-                }
-                scorecard.saveScorecard()
-            }
         }
         .sheet(isPresented: $importBwScorecard, onDismiss: {
             UndoManager.clearActions()
@@ -441,6 +433,44 @@ struct ScorecardInputView: View {
         scorecard.saveScorecard()
         WidgetCenter.shared.reloadTimelines(ofKind: lastScorecardWidgetKind)
         return true
+    }
+}
+
+struct ImportBBOScorecardView : View {
+    @ObservedObject var scorecard: ScorecardViewModel
+    @Binding var viewType: ViewType
+    @Binding var isNotImported: Bool
+    @Binding var tableRefresh: Bool
+    @Binding var isPresented: Bool
+    
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.4)
+            HStack {
+                Spacer()
+                VStack {
+                    Spacer()
+                    ImportBBOScorecard(scorecard: scorecard, backAction: {
+                        isPresented = false ; return false
+                    }, completion: {
+                        if Scorecard.current.isImported {
+                            viewType = .analysis
+                        }
+                        scorecard.saveScorecard()
+                        UndoManager.clearActions()
+                        if scorecard.importSource != .none {
+                            isNotImported = false
+                            tableRefresh = true
+                        }
+                        isPresented = false
+                    })
+                    .frame(width: 600, height: 700)
+                    .cornerRadius(20)
+                    Spacer()
+                }
+                Spacer()
+            }
+        }
     }
 }
 

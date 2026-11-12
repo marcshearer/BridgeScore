@@ -94,6 +94,7 @@ class ImportBBO {
 struct ImportBBOScorecard: View {
     @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     @ObservedObject var scorecard: ScorecardViewModel
+    var backAction: (()->(Bool))?
     var completion: (()->())? = nil
     private let uttypes = [UTType.fileURL, .data, .item]
     @State private var selected: String? = nil
@@ -115,14 +116,14 @@ struct ImportBBOScorecard: View {
                 if importSequence < importedBBOScorecards.count {
                     let suffix = (scorecard.isMultiSession && (scorecard.sessions > 1) && importedBBOScorecards.count > 1 ? " (\(importSequence + 1) of \(importedBBOScorecards.count))" : "")
                     if true {
-                        ImportedScorecardConfirmDetails(importedScorecard: importedBBOScorecards[importSequence] as ImportedScorecard, suffix: suffix, onError: {
-                            presentationMode.wrappedValue.dismiss()
+                        ImportedScorecardConfirmDetails(importedScorecard: importedBBOScorecards[importSequence] as ImportedScorecard, suffix: suffix, backAction: backAction, onError: {
+                            dismiss()
                         }, completion: {
                             importedBBOScorecards[importSequence].importScorecard()
                             completion?()
                             if scorecard.importNext >= scorecard.sessions {
                                 importedBBOScorecards[importSequence].prepareForNext()
-                                presentationMode.wrappedValue.dismiss()
+                                dismiss()
                             } else {
                                 MessageBox.shared.show("Session \(scorecard.importNext) imported successfully", okText: "Continue", okAction: {
                                     Utility.mainThread {
@@ -154,7 +155,7 @@ struct ImportBBOScorecard: View {
     var dropZone: some View {
         VStack(spacing: 0) {
             let options = [BannerOption(image: AnyView(Image(systemName: "list.bullet")), likeBack: true, action: { listMode = true })]
-            Banner(title: Binding.constant("Drop BBO Files"), backImage: Banner.crossImage, backForceDismiss: true, optionMode: .buttons, options: options)
+            Banner(title: Binding.constant("Drop BBO Files"), backImage: Banner.crossImage, backAction: backAction, optionMode: .buttons, options: options)
             HStack {
                 Spacer().frame(width: 50)
                 VStack {
@@ -177,34 +178,10 @@ struct ImportBBOScorecard: View {
                         .overlay(RoundedRectangle(cornerRadius: 30)
                             .strokeBorder(style: StrokeStyle(lineWidth: 5, dash: [10, 5]))
                             .foregroundColor(Palette.gridLine))
-                        FileDropZone(isHovering: $dropZoneEntered) { files in
+                        FileDropZone(isHovering: $dropZoneEntered, allowedTypes: [.pbn, .commaSeparatedText, .item]) { files in
                             droppedFiles = files
                         }
                     }
-                    /*
-                    .onDrop(of: [.item], isTargeted: $dropZoneEntered) { providers in
-                        let group = DispatchGroup()
-                        var files: [(filename: String, contents: String)] = []
-                        for provider in providers {
-                            if provider.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) {
-                                group.enter()
-                                provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { item, error in
-                                    defer { group.leave() }
-                                    if let url = item as? URL, let filename = url.suggestedFilename, let contents = try? String(contentsOf: url, encoding: .utf8) {
-                                        files.append((filename: filename, contents: contents))
-                                    }
-                                }
-                            }
-                        }
-                        group.notify(queue: .main) {
-                            if !files.isEmpty {
-                                droppedFiles = files
-                            }
-                        }
-                        return true
-                    }
-                    // .onDrop(of: uttypes, delegate: ScorecardDropFiles(dropZoneEntered: $dropZoneEntered, droppedFiles: $droppedFiles))
-                     */
                     Spacer().frame(height: 50)
                 }
                 Spacer().frame(width: 50)
@@ -223,6 +200,14 @@ struct ImportBBOScorecard: View {
                     droppedFiles = []
                 }
             }
+        }
+    }
+    
+    func dismiss() {
+        if let backAction = backAction {
+            _ = backAction()
+        } else {
+            presentationMode.wrappedValue.dismiss()
         }
     }
     
@@ -248,7 +233,7 @@ struct ImportBBOScorecard: View {
     
     var fileList: some View {
         VStack(spacing: 0) {
-            Banner(title: Binding.constant("Choose file to import"), backImage: Banner.crossImage)
+            Banner(title: Binding.constant("Choose file to import"), backImage: Banner.crossImage, backAction: backAction)
             Spacer().frame(height: 16)
             if let files = try? FileManager.default.contentsOfDirectory(at: ImportedScorecard.importsURL, includingPropertiesForKeys: nil).filter({$0.relativeString.right(4) == ".csv"}) {
                 let baseDate = Date(timeIntervalSinceReferenceDate: 0)
@@ -307,18 +292,18 @@ struct ImportBBOScorecard: View {
         if let scorer = scorecard.scorer {
             if scorer.bboName == "" {
                 MessageBox.shared.show("In order to import a scorecard the player defined as yourself must have a BBO name", okAction: {
-                    presentationMode.wrappedValue.dismiss()
+                    dismiss()
                 })
             } else if scorecard.partner?.bboName ?? "" == "" {
                 MessageBox.shared.show("In order to import a scorecard your partner must have a BBO name", okAction: {
-                    presentationMode.wrappedValue.dismiss()
+                    dismiss()
                 })
             } else {
                 result = true
             }
         } else {
             MessageBox.shared.show("In order to import a scorecard a player must be defined as yourself", okAction: {
-                presentationMode.wrappedValue.dismiss()
+                dismiss()
             })
         }
         return result
