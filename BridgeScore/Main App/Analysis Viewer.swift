@@ -1763,8 +1763,12 @@ struct AnalysisViewer: View {
                         existing.levelRange = true
                         existing.contract.level = ContractLevel(rawValue: min(existing.contract.level.rawValue, summary.contract.level.rawValue))!
                     }
-                    if !existing.leadRange && existing.lead != summary.lead {
+                    if existing.lead != summary.lead {
                         existing.leadRange = true
+                        if traveller == self.traveller {
+                            // Overwrite lead with lead at table being shown
+                            existing.lead = traveller.lead
+                        }
                     }
                 } else {
                     result.append(summary)
@@ -1776,25 +1780,25 @@ struct AnalysisViewer: View {
 }
 
 class TravellerSummary: Equatable, Identifiable, Hashable {
-    var board: BoardViewModel
-    var contract: Contract
-    var declarer: Seat
+    let board: BoardViewModel
+    let traveller: TravellerExtension
+    let sitting: Seat
+    let contract: Contract
+    let declarer: Seat
     var lead: String
-    var made: Int
-    var tricksMade: Int
-    var nsPoints: Int
-    var nsScore: Float
+    let made: Int
+    let tricksMade: Int
+    let nsPoints: Int
+    let nsScore: Float
     var levelRange: Bool
     var leadRange: Bool
     var frequency: Int
-    fileprivate var outcomeLevel: OutcomeLevel
-    var leadString: AttributedString
-    var madeString: String
-    var pointsString: String
-    var scoreString: String
+    fileprivate let outcomeLevel: OutcomeLevel
     
     init(board: BoardViewModel, traveller: TravellerExtension, sitting: Seat) {
         self.board = board
+        self.traveller = traveller
+        self.sitting = sitting
         self.contract = Contract(copying: traveller.contract)
         self.declarer = traveller.declarer
         self.lead = traveller.lead
@@ -1806,11 +1810,22 @@ class TravellerSummary: Equatable, Identifiable, Hashable {
         self.levelRange = false
         self.leadRange = false
         self.outcomeLevel = traveller.outcomeLevel
-        self.madeString = traveller.tricksMadeString
-        self.leadString = traveller.leadString
-        self.pointsString = traveller.pointsString(board: board, sitting: sitting)
-        self.scoreString = traveller.scoreString(sitting: sitting)
     }
+    
+    public var leadString: AttributedString {
+        let suitString = lead.right(1)
+        let suit = Suit(string: suitString)
+        let card = lead == "" ? "" : (lead.left(lead.count - 1) + suit.contrast)
+        return AttributedString(card, color: suit.color)
+    }
+    
+    public var madeString: String {
+        (contract.level == .passout) ? "" : "\(tricksMade)"
+    }
+    
+    public var pointsString: String { traveller.pointsString(board: board, sitting: sitting) }
+    
+    public var scoreString: String { traveller.scoreString(sitting: sitting) }
     
     public func hash(into hasher: inout Hasher) {
         hasher.combine(board)
